@@ -422,8 +422,8 @@ let rec simplify ?(extract = true) (e : expr) : expr =
           let x1' = nland64 (Int64.shift_right x1 (l1 * 8)) d1
           and x2' = nland64 (Int64.shift_right x2 (l2 * 8)) d2 in
           let x = Int64.(shift_left x2' (Int.( * ) d1 8) lor x1') in
-          Concat (Extract (Num (I64 x), d1 + d2, 0), se)
-      | _ -> Concat (e1', e2'))
+          Extract (Num (I64 x), d1 + d2, 0) ++ se
+      | _ -> e1' ++ e2')
   | _ -> e
 
 let mk_relop ?(reduce : bool = true) (e : expr) (t : num_type) : expr =
