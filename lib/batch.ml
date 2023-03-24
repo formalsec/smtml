@@ -71,7 +71,7 @@ let value_of_const model (c, t) =
     | F32Type -> F32 (Int64.to_int32_exn v)
     | F64Type -> F64 v
   in
-  Option.map ~f:f interp
+  Option.map ~f interp
 
 let get_model (s : t) : Model.model =
   match Solver.get_model s.solver with
@@ -83,7 +83,7 @@ let model (s : t) : Model.model =
   get_model s
 
 let model_binds (model : Model.model) (vars : (string * num_type) list) :
-    (string * Num.t) list = 
+    (string * Num.t) list =
   List.fold_left ~init:[]
     ~f:(fun a (x, t) ->
       let v = value_of_const model (symbolic t x, t) in
