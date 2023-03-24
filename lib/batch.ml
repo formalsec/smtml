@@ -66,9 +66,9 @@ let value_of_const model (c, t) =
         int64_of_fp e ebits (sbits - 1)
     in
     match t with
-    | I32Type -> I32 (Int64.to_int32_exn v)
+    | I32Type -> I32 (Int64.to_int32_trunc v)
     | I64Type -> I64 v
-    | F32Type -> F32 (Int64.to_int32_exn v)
+    | F32Type -> F32 (Int64.to_int32_trunc v)
     | F64Type -> F64 v
   in
   Option.map ~f interp
