@@ -1,22 +1,15 @@
 open Base
 open Types
 
-type t = I32 of Int32.t | I64 of Int64.t | F32 of Int32.t | F64 of Int64.t
+type t = (Int32.t, Int64.t, Int32.t, Int64.t) op
 
-let (=) (n1 : t) (n2 : t) : bool =
+let ( = ) (n1 : t) (n2 : t) : bool =
   match (n1, n2) with
   | I32 i1, I32 i2 -> Int32.(i1 = i2)
   | I64 i1, I64 i2 -> Int64.(i1 = i2)
   | F32 i1, F32 i2 -> Int32.(i1 = i2)
   | F64 i1, F64 i2 -> Int64.(i1 = i2)
   | _, _ -> false
-
-let type_of (n : t) : num_type =
-  match n with
-  | I32 _ -> I32Type
-  | I64 _ -> I64Type
-  | F32 _ -> F32Type
-  | F64 _ -> F64Type
 
 let default_value (t : num_type) : t =
   match t with
@@ -31,3 +24,5 @@ let string_of_num (n : t) : string =
   | I64 i -> Int64.to_string i ^ "L"
   | F32 f -> Float.to_string (Int32.float_of_bits f)
   | F64 f -> Float.to_string (Int64.float_of_bits f)
+
+let num_of_bool (b : bool) : t = I32 (if b then 1l else 0l)
