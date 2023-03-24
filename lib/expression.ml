@@ -307,7 +307,8 @@ let rec simplify ?(extract = true) (e : expr) : expr =
               let v = Eval_numeric.eval_binop (I32 Add) v1 v2 in
               Binop (I32 Sub, x, Num v)
           | _, _ -> Binop (I32 op, e1', e2'))
-      | (bop, Num (I32 1l) | Num (I32 1l), bop) when is_relop bop && (Caml.(=) op And) ->
+      | (bop, Num (I32 1l) | Num (I32 1l), bop)
+        when is_relop bop && Caml.( = ) op And ->
           bop
       | _ -> Binop (I32 op, e1', e2'))
   | Binop (I64 op, e1, e2) -> (
@@ -315,8 +316,7 @@ let rec simplify ?(extract = true) (e : expr) : expr =
       match (e1', e2') with
       | SymPtr (b1, os1), SymPtr (b2, os2) -> (
           match op with
-          | Sub when Int32.(b1 = b2) ->
-              simplify (Binop (I64 Sub, os1, os2))
+          | Sub when Int32.(b1 = b2) -> simplify (Binop (I64 Sub, os1, os2))
           | _ -> Binop (I64 op, e1', e2'))
       | SymPtr (base, offset), _ -> (
           match op with
@@ -336,8 +336,7 @@ let rec simplify ?(extract = true) (e : expr) : expr =
       | Num (I64 0L), _ -> (
           match op with
           | Add | Or | Sub -> e2'
-          | And | DivS | DivU | Mul | RemS | RemU ->
-              Num (I64 0L)
+          | And | DivS | DivU | Mul | RemS | RemU -> Num (I64 0L)
           | _ -> Binop (I64 op, e1', e2'))
       | _, Num (I64 0L) -> (
           match op with
@@ -357,8 +356,8 @@ let rec simplify ?(extract = true) (e : expr) : expr =
               let v = Eval_numeric.eval_binop (I64 Add) v1 v2 in
               Binop (I64 Sub, x, Num v)
           | _, _ -> Binop (I64 op, e1', e2'))
-      | (bop, Num (I64 1L) | Num (I64 1L), bop) when is_relop bop && (Caml.(=) op And)
-        ->
+      | (bop, Num (I64 1L) | Num (I64 1L), bop)
+        when is_relop bop && Caml.( = ) op And ->
           bop
       | _ -> Binop (I64 op, e1', e2'))
   | Relop (I32 op, e1, e2) -> (
@@ -382,7 +381,7 @@ let rec simplify ?(extract = true) (e : expr) : expr =
           | LtU when b1 = b2 -> Relop (I32 LtU, os1, os2)
           | LeU when b1 = b2 -> Relop (I32 LeU, os1, os2)
           | LtU -> Relop (I32 LtU, Num (I32 b1), Num (I32 b2))
-          | LeU -> Relop (I32 LeU, Num (I32  b1), Num (I32 b2))
+          | LeU -> Relop (I32 LeU, Num (I32 b1), Num (I32 b2))
           | GtU when b1 = b2 -> Relop (I32 GtU, os1, os2)
           | GeU when b1 = b2 -> Relop (I32 GeU, os1, os2)
           | GtU -> Relop (I32 GtU, Num (I32 b1), Num (I32 b2))
@@ -413,7 +412,8 @@ let rec simplify ?(extract = true) (e : expr) : expr =
           and x2' = nland32 (Int32.shift_right x2 (l2 * 8)) d2 in
           let x = Int32.(shift_left x2' (Int.( * ) d1 8) lor x1') in
           Extract (Num (I32 x), d1 + d2, 0)
-      | Extract (s1, h, m1), Extract (s2, m2, l) when (Caml.(=) s1 s2) && m1 = m2 ->
+      | Extract (s1, h, m1), Extract (s2, m2, l)
+        when Caml.( = ) s1 s2 && m1 = m2 ->
           Extract (s1, h, l)
       | ( Extract (Num (I64 x2), h2, l2),
           Concat (Extract (Num (I64 x1), h1, l1), se) )

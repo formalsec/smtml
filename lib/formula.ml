@@ -1,3 +1,5 @@
+open Base
+
 type formula =
   | True
   | False
@@ -18,13 +20,13 @@ let rec negate (f : formula) : formula =
   | Relop e -> Relop (Expression.negate_relop e)
 
 let conjunct (conds : formula list) : formula =
-  if conds = [] then True
+  if List.is_empty conds then True
   else
     let rec loop (acc : t) = function
       | [] -> acc
       | h :: t -> loop (And (acc, h)) t
     in
-    loop (List.hd conds) (List.tl conds)
+    loop (List.hd_exn conds) (List.tl_exn conds)
 
 let rec to_string_aux (p : Expression.t -> string) (f : formula) : string =
   match f with
@@ -52,7 +54,7 @@ let rec length (e : formula) : int =
   | Or (c1, c2) -> 1 + length c1 + length c2
 
 let to_formulas (pc : Expression.t list) : formula list =
-  List.map (fun e -> Relop e) pc
+  List.map ~f:(fun e -> Relop e) pc
 
 let to_formula (pc : Expression.t list) : formula = conjunct (to_formulas pc)
 

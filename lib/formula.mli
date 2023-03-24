@@ -1,3 +1,5 @@
+open Base
+
 type formula =
   | True
   | False

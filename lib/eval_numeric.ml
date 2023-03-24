@@ -43,11 +43,11 @@ module I32Op = struct
   let shr_s x y = shift shift_right x y
   let shr_u x y = shift shift_right_logical x y
 
-  let unop (op : I32.unop) : (Num.t -> Num.t) =
+  let unop (op : I32.unop) : Num.t -> Num.t =
     let f = match op with Clz -> clz in
     fun v -> to_value (of_int_exn (f (of_value 1 v)))
 
-  let binop (op : I32.binop) : (Num.t -> Num.t -> Num.t) =
+  let binop (op : I32.binop) : Num.t -> Num.t -> Num.t =
     let f =
       match op with
       | Add -> ( + )
@@ -66,7 +66,7 @@ module I32Op = struct
     in
     fun v1 v2 -> to_value (f (of_value 1 v1) (of_value 2 v2))
 
-  let relop op : (Num.t -> Num.t -> bool)=
+  let relop op : Num.t -> Num.t -> bool =
     let f =
       match op with
       | Eq -> ( = )
@@ -117,11 +117,11 @@ module I64Op = struct
   let shr_s x y = shift shift_right x y
   let shr_u x y = shift shift_right_logical x y
 
-  let unop op : (Num.t -> Num.t) =
+  let unop op : Num.t -> Num.t =
     let f = match op with Clz -> clz in
     fun v -> to_value (of_int_exn (f (of_value 1 v)))
 
-  let binop op : (Num.t -> Num.t -> Num.t) =
+  let binop op : Num.t -> Num.t -> Num.t =
     let f =
       match op with
       | Add -> ( + )
@@ -140,7 +140,7 @@ module I64Op = struct
     in
     fun v1 v2 -> to_value (f (of_value 1 v1) (of_value 2 v2))
 
-  let relop op : (Num.t -> Num.t -> bool) =
+  let relop op : Num.t -> Num.t -> bool =
     let f =
       match op with
       | Eq -> ( = )

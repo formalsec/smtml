@@ -1,3 +1,4 @@
+open Base
 open Types
 
 exception DivideByZero
