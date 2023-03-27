@@ -14,7 +14,7 @@ module I32Op = struct
   open Int32
 
   let bitwidth = 32
-  let to_value i = I32 i
+  let to_value i : Num.t = I32 i
 
   let of_value n v : t =
     of_arg (fun v -> match v with I32 i -> i | _ -> raise (Num I32Type)) n v
@@ -88,7 +88,7 @@ module I64Op = struct
   open Int64
 
   let bitwidth = 64
-  let to_value i = I64 i
+  let to_value i : Num.t = I64 i
 
   let of_value n v : int64 =
     of_arg (fun v -> match v with I64 i -> i | _ -> raise (Num I64Type)) n v
@@ -161,7 +161,7 @@ module F32Op = struct
   open Types.F32
   open Float
 
-  let to_value f = F32 f
+  let to_value f : Num.t = F32 f
 
   let of_value =
     of_arg (fun v -> match v with F32 f -> f | _ -> raise (Num F32Type))
@@ -210,7 +210,7 @@ module F64Op = struct
   open Types.F64
   open Float
 
-  let to_value f = F64 f
+  let to_value f : Num.t = F64 f
 
   let of_value =
     of_arg (fun v -> match v with F64 f -> f | _ -> raise (Num F64Type))
@@ -295,7 +295,7 @@ module I32CvtOp = struct
         raise IntegerOverflow
       else F32Op.of_float xf
 
-  let cvtop op v =
+  let cvtop op v : Num.t =
     match op with
     | WrapI64 -> I32 (Int64.to_int32_exn (I64Op.of_value 1 v))
     | TruncSF32 -> I32 (trunc_f32_s (F32Op.of_value 1 v))
@@ -355,7 +355,7 @@ module I64CvtOp = struct
         lxor min_value
       else F64Op.of_float xf
 
-  let cvtop op v =
+  let cvtop op v : Num.t =
     match op with
     | ExtendSI32 -> I64 (of_int32_exn (I32Op.of_value 1 v))
     | ExtendUI32 -> I64 (extend_i32_u (I32Op.of_value 1 v))
@@ -410,7 +410,7 @@ module F32CvtOp = struct
           to_float (shift_right_logical x 12 lor r)
           *. (* TODO(ocaml-4.03): 0x1p12 *) 4096.0)
 
-  let cvtop op v =
+  let cvtop op v : Num.t =
     match op with
     | DemoteF64 -> F32 (demote_f64 (F64Op.of_value 1 v))
     | ConvertSI32 -> F32 (convert_i32_s (I32Op.of_value 1 v))
@@ -462,7 +462,7 @@ module F64CvtOp = struct
         if x >= zero then to_float x
         else to_float (shift_right_logical x 1 lor (x land 1L)) *. 2.0)
 
-  let cvtop op v =
+  let cvtop op v : Num.t =
     match op with
     | PromoteF32 -> F64 (promote_f32 (F32Op.of_value 1 v))
     | ConvertSI32 -> F64 (convert_i32_s (I32Op.of_value 1 v))
@@ -476,6 +476,7 @@ end
 (* Dispatch *)
 
 let op i32 i64 f32 f64 = function
+  | Int _ -> failwith "eval_numeric: Integer evaluations not supported"
   | I32 x -> i32 x
   | I64 x -> i64 x
   | F32 x -> f32 x

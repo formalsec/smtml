@@ -3,43 +3,29 @@ open Base
 type binop =
   | Add
   | Mul
-  | DivU
-  | RemU
-  | ShrU
+  | Div
+  | Rem
   | And
   | Sub
   | Shl
-  | DivS
-  | RemS
-  | ShrS
+  | ShrA
+  | ShrL
   | Or
   | Xor
 
-type unop = Clz (*  Falta:  Ctz | Popcnt *)
-type relop = Eq | LtU | LtS | LeU | LeS | Ne | GtU | GtS | GeU | GeS
+type unop
+type relop = Eq | Lt | Le | Ne | Gt | Ge
 
-type cvtop =
-  | TruncSF32
-  | TruncUF32
-  | TruncSF64
-  | TruncUF64
-  | ReinterpretFloat
-  | WrapI64
-  | ExtendSI32
-  | ExtendUI32
+type cvtop
 
-let neg_relop (op : relop) : relop =
+let neg_relop (op : relop) : relop = 
   match op with
   | Eq -> Ne
   | Ne -> Eq
-  | LtU -> GeU
-  | LtS -> GeS
-  | GtU -> LeU
-  | GtS -> LeS
-  | LeU -> GtU
-  | LeS -> GtS
-  | GeU -> LtU
-  | GeS -> LtS
+  | Lt -> Ge
+  | Gt -> Le
+  | Le -> Gt
+  | Ge -> Lt
 
 (*  String representation of an i32 binary operation  *)
 let string_of_binop (op : binop) : string =
@@ -48,15 +34,13 @@ let string_of_binop (op : binop) : string =
   | And -> "And"
   | Or -> "Or"
   | Sub -> "Sub"
-  | DivS -> "DivS"
-  | DivU -> "DivU"
+  | Div -> "Div"
   | Xor -> "Xor"
   | Mul -> "Mul"
   | Shl -> "Shl"
-  | ShrS -> "ShrS"
-  | ShrU -> "ShrU"
-  | RemS -> "RemS"
-  | RemU -> "RemU"
+  | ShrA -> "ShrA"
+  | ShrL -> "ShrU"
+  | Rem -> "Rem"
 
 let pp_string_of_binop (op : binop) : string =
   match op with
@@ -64,56 +48,36 @@ let pp_string_of_binop (op : binop) : string =
   | And -> "&"
   | Or -> "|"
   | Sub -> "-"
-  | DivS -> "/"
-  | DivU -> "/u"
+  | Div -> "/"
   | Xor -> "^"
   | Mul -> "*"
   | Shl -> "<<"
-  | ShrS -> ">>"
-  | ShrU -> ">>u"
-  | RemS -> "%"
-  | RemU -> "%u"
+  | ShrA -> ">>a"
+  | ShrL -> ">>l"
+  | Rem -> "%"
 
 (*  String representation of an i32 unary operation  *)
-let string_of_unop (op : unop) : string = match op with Clz -> "Clz"
-let pp_string_of_unop (op : unop) : string = match op with Clz -> "Clz"
+let string_of_unop (_ : unop) : string = assert false
+let pp_string_of_unop (_ : unop) : string = assert false
 
 (*  String representation of an i32 relative operation  *)
 let string_of_relop (op : relop) : string =
   match op with
   | Eq -> "Eq"
   | Ne -> "Ne"
-  | LtU -> "LtU"
-  | LtS -> "LtS"
-  | GtU -> "GtU"
-  | GtS -> "GtS"
-  | LeU -> "LeU"
-  | LeS -> "LeS"
-  | GeU -> "GeU"
-  | GeS -> "GeS"
+  | Lt -> "Lt"
+  | Gt -> "Gt"
+  | Le -> "Le"
+  | Ge -> "Ge"
 
 let pp_string_of_relop (op : relop) : string =
   match op with
   | Eq -> "=="
   | Ne -> "!="
-  | LtU -> "<"
-  | LtS -> "<"
-  | GtU -> ">"
-  | GtS -> ">"
-  | LeU -> "<="
-  | LeS -> "<="
-  | GeU -> ">="
-  | GeS -> ">="
+  | Lt -> "<"
+  | Gt -> ">"
+  | Le -> "<="
+  | Ge -> ">="
 
-let string_of_cvtop (op : cvtop) : string =
-  match op with
-  | WrapI64 -> "WrapI64"
-  | TruncSF32 -> "TruncSF32"
-  | TruncUF32 -> "TruncUF32"
-  | TruncSF64 -> "TruncSF64"
-  | TruncUF64 -> "TruncUF64"
-  | ReinterpretFloat -> "ReinterpretFloat"
-  | ExtendSI32 -> "ExtendSI32"
-  | ExtendUI32 -> "ExtendUI32"
-
-let pp_string_of_cvtop (op : cvtop) : string = string_of_cvtop op
+let string_of_cvtop (_ : cvtop) : string = assert false
+let pp_string_of_cvtop (_ : cvtop) : string = assert false

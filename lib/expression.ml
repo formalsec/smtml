@@ -1,6 +1,8 @@
 open Base
 open Types
 
+exception InvalidRelop
+
 type expr =
   | Num of Num.t
   | SymPtr of Int32.t * expr
@@ -22,11 +24,12 @@ let symbolic (t : num_type) (x : String.t) : expr = Symbolic (t, x)
 let negate_relop (e : expr) : expr =
   match e with
   (* Relop *)
+  | Relop (Int op, e1, e2) -> Relop (Int (I.neg_relop op), e1, e2)
   | Relop (I32 op, e1, e2) -> Relop (I32 (I32.neg_relop op), e1, e2)
   | Relop (I64 op, e1, e2) -> Relop (I64 (I64.neg_relop op), e1, e2)
   | Relop (F32 op, e1, e2) -> Relop (F32 (F32.neg_relop op), e1, e2)
   | Relop (F64 op, e1, e2) -> Relop (F64 (F64.neg_relop op), e1, e2)
-  | _ -> failwith "Not a relop"
+  | _ -> raise InvalidRelop
 
 (** Measure complexity of formulas *)
 let rec length (e : expr) : Int.t =
@@ -64,6 +67,7 @@ let rec to_string (e : expr) : String.t =
   | Unop (op, e) ->
       let str_op =
         match op with
+        | Int op -> I.string_of_unop op
         | I32 op -> I32.string_of_unop op
         | I64 op -> I64.string_of_unop op
         | F32 op -> F32.string_of_unop op
@@ -73,6 +77,7 @@ let rec to_string (e : expr) : String.t =
   | Binop (op, e1, e2) ->
       let str_op =
         match op with
+        | Int op -> I.string_of_binop op
         | I32 op -> I32.string_of_binop op
         | I64 op -> I64.string_of_binop op
         | F32 op -> F32.string_of_binop op
@@ -82,6 +87,7 @@ let rec to_string (e : expr) : String.t =
   | Relop (op, e1, e2) ->
       let str_op =
         match op with
+        | Int op -> I.string_of_relop op
         | I32 op -> I32.string_of_relop op
         | I64 op -> I64.string_of_relop op
         | F32 op -> F32.string_of_relop op
@@ -91,6 +97,7 @@ let rec to_string (e : expr) : String.t =
   | Cvtop (op, e) ->
       let str_op =
         match op with
+        | Int op -> I.string_of_cvtop op
         | I32 op -> I32.string_of_cvtop op
         | I64 op -> I64.string_of_cvtop op
         | F32 op -> F32.string_of_cvtop op
@@ -113,6 +120,7 @@ let rec pp_to_string (e : expr) : String.t =
   | Unop (op, e) ->
       let str_op =
         match op with
+        | Int op -> I.pp_string_of_unop op
         | I32 op -> I32.pp_string_of_unop op
         | I64 op -> I64.pp_string_of_unop op
         | F32 op -> F32.pp_string_of_unop op
@@ -122,6 +130,7 @@ let rec pp_to_string (e : expr) : String.t =
   | Binop (op, e1, e2) ->
       let str_op =
         match op with
+        | Int op -> I.pp_string_of_binop op
         | I32 op -> I32.pp_string_of_binop op
         | I64 op -> I64.pp_string_of_binop op
         | F32 op -> F32.pp_string_of_binop op
@@ -131,6 +140,7 @@ let rec pp_to_string (e : expr) : String.t =
   | Relop (op, e1, e2) ->
       let str_op =
         match op with
+        | Int op -> I.pp_string_of_relop op
         | I32 op -> I32.pp_string_of_relop op
         | I64 op -> I64.pp_string_of_relop op
         | F32 op -> F32.pp_string_of_relop op
@@ -140,6 +150,7 @@ let rec pp_to_string (e : expr) : String.t =
   | Cvtop (op, e) ->
       let str_op =
         match op with
+        | Int op -> I.pp_string_of_cvtop op
         | I32 op -> I32.pp_string_of_cvtop op
         | I64 op -> I64.pp_string_of_cvtop op
         | F32 op -> F32.pp_string_of_cvtop op
@@ -168,7 +179,7 @@ let string_of_values (el : value List.t) : String.t =
 let rec type_of (e : expr) : num_type =
   let rec concat_length (e' : expr) : Int.t =
     match e' with
-    | Num n -> size (Types.type_of n)
+    | Num n -> size (Types.type_of_num n)
     | SymPtr _ -> 4
     | Binop (op, _, _) -> size (Types.type_of op)
     | Unop (op, _) -> size (Types.type_of op)
@@ -179,7 +190,7 @@ let rec type_of (e : expr) : num_type =
     | Extract (_, h, l) -> h - l
   in
   match e with
-  | Num n -> Types.type_of n
+  | Num n -> Types.type_of_num n
   | SymPtr _ -> I32Type
   | Binop (op, _, _) -> Types.type_of op
   | Unop (op, _) -> Types.type_of op
@@ -433,6 +444,7 @@ let mk_relop ?(reduce : bool = true) (e : expr) (t : num_type) : expr =
     let zero = Num.default_value t in
     let e' =
       match t with
+      | IntType -> Relop (Int Ne, e, Num zero)
       | I32Type -> Relop (I32 Ne, e, Num zero)
       | I64Type -> Relop (I64 Ne, e, Num zero)
       | F32Type -> Relop (F32 Ne, e, Num zero)
