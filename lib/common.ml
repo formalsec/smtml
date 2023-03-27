@@ -2,13 +2,15 @@ open Base
 open Z3
 open Types
 
+exception Error of string
+
 let ctx =
   Z3.mk_context
     [ ("model", "true"); ("proof", "false"); ("unsat_core", "false") ]
 
 (** Sorts *)
+let int_sort = Arithmetic.Integer.mk_sort ctx
 let bv32_sort = BitVector.mk_sort ctx 32
-
 let bv64_sort = BitVector.mk_sort ctx 64
 let fp32_sort = FloatingPoint.mk_sort_single ctx
 let fp64_sort = FloatingPoint.mk_sort_double ctx
@@ -21,6 +23,7 @@ let rtz = FloatingPoint.RoundingMode.mk_rtz ctx
 (** Match WASM Type with Z3 Sort *)
 let get_sort (e : Types.num_type) : Z3.Sort.sort =
   match e with
+  | Types.IntType -> int_sort
   | Types.I32Type -> bv32_sort
   | Types.I64Type -> bv64_sort
   | Types.F32Type -> fp32_sort
@@ -31,6 +34,40 @@ let encode_bool (to_bv : bool) (cond : Expr.expr) : Expr.expr =
   let bv_true = BitVector.mk_numeral ctx "1" 32
   and bv_false = BitVector.mk_numeral ctx "0" 32 in
   if to_bv then Boolean.mk_ite ctx cond bv_true bv_false else cond
+
+module IntZ3Op = struct
+  open I
+
+  let encode_num (i : Int.t) : Expr.expr = Expr.mk_numeral_int ctx i int_sort
+  let encode_unop (_ : unop) (_ : Expr.expr) : Expr.expr = assert false
+
+  let encode_binop (op : binop) (e1 : Expr.expr) (e2 : Expr.expr) : Expr.expr =
+    let op' =
+      match op with
+      | Add -> fun v1 v2 -> Arithmetic.mk_add ctx [ v1; v2 ]
+      | Sub -> fun v1 v2 -> Arithmetic.mk_sub ctx [ v1; v2 ]
+      | Mul -> fun v1 v2 -> Arithmetic.mk_mul ctx [ v1; v2 ]
+      | Div -> Arithmetic.mk_div ctx
+      | Rem -> Arithmetic.Integer.mk_rem ctx
+      | _ -> raise (Error "Unsupported integer operations")
+    in
+    op' e1 e2
+
+  let encode_relop (op : relop) (e1 : Expr.expr) (e2 : Expr.expr) : Expr.expr =
+    let op' =
+      match op with
+      | Eq -> Boolean.mk_eq ctx
+      | Ne -> fun v1 v2 -> Boolean.mk_not ctx (Boolean.mk_eq ctx v1 v2)
+      | Lt -> Arithmetic.mk_lt ctx
+      | Gt -> Arithmetic.mk_gt ctx
+      | Le -> Arithmetic.mk_le ctx
+      | Ge -> Arithmetic.mk_ge ctx
+    in
+    op' e1 e2
+
+  let encode_cvtop (_ : cvtop) (_ : Expr.expr) : Expr.expr = assert false
+
+end
 
 module I32Z3Op = struct
   open I32
@@ -270,32 +307,58 @@ module F64Z3Op = struct
     op' e
 end
 
-let op i32 i64 f32 f64 = function
+let num i i32 i64 f32 f64 : Num.t -> Expr.expr = function
+  | Int x -> i x
+  | I32 x -> i32 x
+  | I64 x -> i64 x
+  | F32 x -> f32 x
+  | F64 x -> f64 x
+
+let op i i32 i64 f32 f64 = function
+  | Int x -> i x
   | I32 x -> i32 x
   | I64 x -> i64 x
   | F32 x -> f32 x
   | F64 x -> f64 x
 
 let encode_num =
-  op I32Z3Op.encode_num I64Z3Op.encode_num F32Z3Op.encode_num F64Z3Op.encode_num
+  num
+    IntZ3Op.encode_num
+    I32Z3Op.encode_num
+    I64Z3Op.encode_num
+    F32Z3Op.encode_num
+    F64Z3Op.encode_num
 
 let encode_unop =
-  op I32Z3Op.encode_unop I64Z3Op.encode_unop F32Z3Op.encode_unop
+  op
+    IntZ3Op.encode_unop
+    I32Z3Op.encode_unop
+    I64Z3Op.encode_unop
+    F32Z3Op.encode_unop
     F64Z3Op.encode_unop
 
 let encode_binop =
-  op I32Z3Op.encode_binop I64Z3Op.encode_binop F32Z3Op.encode_binop
+  op
+    IntZ3Op.encode_binop
+    I32Z3Op.encode_binop
+    I64Z3Op.encode_binop
+    F32Z3Op.encode_binop
     F64Z3Op.encode_binop
 
 let encode_relop ~to_bv =
   op
+    IntZ3Op.encode_relop
     (I32Z3Op.encode_relop ~to_bv)
     (I64Z3Op.encode_relop ~to_bv)
     (F32Z3Op.encode_relop ~to_bv)
     (F64Z3Op.encode_relop ~to_bv)
 
 let encode_cvtop =
-  op I32Z3Op.encode_cvtop I64Z3Op.encode_cvtop F32Z3Op.encode_cvtop
+  op
+    IntZ3Op.encode_cvtop
+    I32Z3Op.encode_cvtop
+    I64Z3Op.encode_cvtop
+    F32Z3Op.encode_cvtop
     F64Z3Op.encode_cvtop
 
 let rec encode_expr ?(bool_to_bv = false) (e : Expression.t) : Expr.expr =
@@ -309,10 +372,16 @@ let rec encode_expr ?(bool_to_bv = false) (e : Expression.t) : Expr.expr =
   | Unop (op, e) ->
       let e' = encode_expr e in
       encode_unop op e'
+  | Binop (Int op, e1, e2) ->
+      let e1' = encode_expr e1 and e2' = encode_expr e2 in
+      encode_binop (Int op) e1' e2'
   | Binop (op, e1, e2) ->
       let e1' = encode_expr ~bool_to_bv:true e1
       and e2' = encode_expr ~bool_to_bv:true e2 in
       encode_binop op e1' e2'
+  | Relop (Int op, e1, e2) ->
+      let e1' = encode_expr e1 and e2' = encode_expr e2 in
+      encode_relop ~to_bv:false (Int op) e1' e2'
   | Relop (op, e1, e2) ->
       let e1' = encode_expr ~bool_to_bv:true e1
       and e2' = encode_expr ~bool_to_bv:true e2 in
@@ -346,6 +415,10 @@ let set (s : string) (i : int) (n : char) =
   let bs = Bytes.of_string s in
   Bytes.set bs i n;
   Bytes.to_string bs
+
+let int64_of_int (i : Expr.expr) : int64 =
+  assert (Expr.is_numeral i);
+  Int64.of_string (Arithmetic.Integer.numeral_to_string i)
 
 let int64_of_bv (bv : Expr.expr) : int64 =
   assert (Expr.is_numeral bv);

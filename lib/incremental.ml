@@ -43,20 +43,24 @@ let fork (e : t) (co : Expression.t) : bool * bool =
   let negated_co = Expression.negate_relop co in
   (check e [ co ], check e [ negated_co ])
 
-let value_of_const model c =
+let value_of_const (model : Model.model) (c : Expression.t) : Num.t option =
   let interp = Model.get_const_interp_e model (encode_expr c) in
-  let f e =
+  let f e : Num.t =
     let v =
-      if BitVector.is_bv e then int64_of_bv e
-      else
+      match Sort.get_sort_kind (Expr.get_sort e) with
+      | Z3enums.INT_SORT -> int64_of_int e
+      | Z3enums.BV_SORT -> int64_of_bv e
+      | Z3enums.FLOATING_POINT_SORT ->
         let ebits = FloatingPoint.get_ebits ctx (Expr.get_sort e)
         and sbits = FloatingPoint.get_sbits ctx (Expr.get_sort e) in
         int64_of_fp e ebits (sbits - 1)
+      | _ -> assert false
     in
     match Expression.type_of c with
-    | I32Type -> I32 (Int64.to_int32_exn v)
+    | IntType -> Int (Int64.to_int_trunc v)
+    | I32Type -> I32 (Int64.to_int32_trunc v)
     | I64Type -> I64 v
-    | F32Type -> F32 (Int64.to_int32_exn v)
+    | F32Type -> F32 (Int64.to_int32_trunc v)
     | F64Type -> F64 v
   in
   Option.map ~f interp
