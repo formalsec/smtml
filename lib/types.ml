@@ -6,7 +6,7 @@ type ('i, 'i32, 'i64, 'f32, 'f64) num =
   | I64 of 'i64
   | F32 of 'f32
   | F64 of 'f64
-
+  
 type ('i, 'str, 'i32, 'i64, 'f32, 'f64) op =
   | Int of 'i
   | Str of 'str
