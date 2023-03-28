@@ -14,9 +14,7 @@ let bv32_sort = BitVector.mk_sort ctx 32
 let bv64_sort = BitVector.mk_sort ctx 64
 let fp32_sort = FloatingPoint.mk_sort_single ctx
 let fp64_sort = FloatingPoint.mk_sort_double ctx
-
 let rne = FloatingPoint.RoundingMode.mk_rne ctx
-
 let rtz = FloatingPoint.RoundingMode.mk_rtz ctx
 
 let get_sort (e : Types.expr_type) : Z3.Sort.sort =
@@ -72,10 +70,7 @@ module StrZ3Op = struct
   let encode_str (s : String.t) : Expr.expr = Seq.mk_string ctx s
 
   let encode_unop (op : unop) (e : Expr.expr) : Expr.expr =
-    let op' =
-      match op with
-      | Len -> Seq.mk_seq_length ctx
-    in
+    let op' = match op with Len -> Seq.mk_seq_length ctx in
     op' e
 
   let encode_binop (op : binop) (e1 : Expr.expr) (e2 : Expr.expr) : Expr.expr =
@@ -251,7 +246,7 @@ module F32Z3Op = struct
     let op' =
       match op with
       | Eq -> FloatingPoint.mk_eq ctx
-      | Ne -> fun x1 x2 -> FloatingPoint.mk_eq ctx x1 x2 |> Boolean.mk_not ctx 
+      | Ne -> fun x1 x2 -> FloatingPoint.mk_eq ctx x1 x2 |> Boolean.mk_not ctx
       | Lt -> FloatingPoint.mk_lt ctx
       | Le -> FloatingPoint.mk_leq ctx
       | Gt -> FloatingPoint.mk_gt ctx
@@ -337,8 +332,7 @@ module F64Z3Op = struct
     op' e
 end
 
-let num i i32 i64 f32 f64 : Num.t -> Expr.expr = function
-  | Int x -> i x
+let num i32 i64 f32 f64 : Num.t -> Expr.expr = function
   | I32 x -> i32 x
   | I64 x -> i64 x
   | F32 x -> f32 x
@@ -353,8 +347,8 @@ let op i s i32 i64 f32 f64 = function
   | F64 x -> f64 x
 
 let encode_num =
-  num IntZ3Op.encode_num I32Z3Op.encode_num I64Z3Op.encode_num
-    F32Z3Op.encode_num F64Z3Op.encode_num
+  num I32Z3Op.encode_num I64Z3Op.encode_num F32Z3Op.encode_num
+    F64Z3Op.encode_num
 
 let encode_unop =
   op IntZ3Op.encode_unop StrZ3Op.encode_unop I32Z3Op.encode_unop
@@ -378,8 +372,9 @@ let encode_cvtop =
 let rec encode_expr ?(bool_to_bv = false) (e : Expression.t) : Expr.expr =
   let open Expression in
   match e with
-  | Num v -> encode_num v
-  | Str s -> StrZ3Op.encode_str s
+  | Val (Int i) -> IntZ3Op.encode_num i
+  | Val (Num v) -> encode_num v
+  | Val (Str s) -> StrZ3Op.encode_str s
   | SymPtr (base, offset) ->
       let base' = encode_num (I32 base) in
       let offset' = encode_expr offset in
@@ -470,32 +465,29 @@ let int64_of_fp (fp : Expr.expr) (ebits : int) (sbits : int) : int64 =
     Int64.(fp_sign lor (exponent lor fraction))
 
 let value_of_const (model : Model.model) ((c, t) : Expression.t * expr_type) :
-    Num.t option =
+    Expression.value option =
   let interp = Model.eval model (encode_expr c) true in
-  let f (e : Expr.expr) : Num.t =
-    let v =
-      match Sort.get_sort_kind (Expr.get_sort e) with
-      | Z3enums.INT_SORT -> int64_of_int e
-      | Z3enums.SEQ_SORT -> raise (Error "Not implemented")
-      | Z3enums.BV_SORT -> int64_of_bv e
-      | Z3enums.FLOATING_POINT_SORT ->
-          let ebits = FloatingPoint.get_ebits ctx (Expr.get_sort e)
-          and sbits = FloatingPoint.get_sbits ctx (Expr.get_sort e) in
-          int64_of_fp e ebits (sbits - 1)
-      | _ -> assert false
-    in
-    match t with
-    | `IntType -> Int (Int64.to_int_trunc v)
-    | `StrType -> raise (Error "Not implemented")
-    | `I32Type -> I32 (Int64.to_int32_trunc v)
-    | `I64Type -> I64 v
-    | `F32Type -> F32 (Int64.to_int32_trunc v)
-    | `F64Type -> F64 v
+  let f (e : Expr.expr) : Expression.value =
+    match (t, Sort.get_sort_kind (Expr.get_sort e)) with
+    | `IntType, Z3enums.INT_SORT -> Int (Int64.to_int_trunc (int64_of_int e))
+    | `StrType, Z3enums.SEQ_SORT -> Str (Expr.to_string e)
+    | `I32Type, Z3enums.BV_SORT ->
+        Num (I32 (Int64.to_int32_trunc (int64_of_bv e)))
+    | `I64Type, Z3enums.BV_SORT -> Num (I64 (int64_of_bv e))
+    | `F32Type, Z3enums.FLOATING_POINT_SORT ->
+        let ebits = FloatingPoint.get_ebits ctx (Expr.get_sort e)
+        and sbits = FloatingPoint.get_sbits ctx (Expr.get_sort e) in
+        Num (F32 (Int64.to_int32_trunc (int64_of_fp e ebits (sbits - 1))))
+    | `F64Type, Z3enums.FLOATING_POINT_SORT ->
+        let ebits = FloatingPoint.get_ebits ctx (Expr.get_sort e)
+        and sbits = FloatingPoint.get_sbits ctx (Expr.get_sort e) in
+        Num (F64 (int64_of_fp e ebits (sbits - 1)))
+    | _ -> assert false
   in
   Option.map ~f interp
 
 let model_binds (model : Model.model) (vars : (string * expr_type) list) :
-    (string * Num.t) list =
+    (string * Expression.value) list =
   List.fold_left ~init:[]
     ~f:(fun a (x, t) ->
       let v = value_of_const model (Expression.symbolic t x, t) in
@@ -503,7 +495,7 @@ let model_binds (model : Model.model) (vars : (string * expr_type) list) :
     vars
 
 let value_binds (model : Model.model) (vars : (string * expr_type) list) :
-    (string * Num.t) list =
+    (string * Expression.value) list =
   model_binds model vars
 
 let string_binds (m : Model.model) (_ : (string * expr_type) list) :

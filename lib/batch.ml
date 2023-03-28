@@ -64,7 +64,7 @@ let model (s : t) : Model.model =
   assert (check s []);
   get_model s
 
-let value_binds (s : t) vars : (string * Num.t) list =
+let value_binds (s : t) vars : (string * Expression.value) list =
   let m = model s in
   Common.value_binds m vars
 

@@ -26,7 +26,8 @@ val check : t -> Expression.t list -> bool
 val fork : t -> Expression.t -> bool * bool
 (** [fork solver e] checks the satisfiability of the fork on the condition [e] *)
 
-val value_binds : t -> (string * expr_type) list -> (string * Num.t) list
+val value_binds :
+  t -> (string * expr_type) list -> (string * Expression.value) list
 
 val string_binds :
   t -> (string * expr_type) list -> (string * string * string) list

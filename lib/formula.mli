@@ -12,7 +12,6 @@ type t = formula
 
 val ( && ) : t -> t -> t
 val ( || ) : t -> t -> t
-
 val negate : formula -> formula
 val conjunct : formula list -> formula
 val length : formula -> int
