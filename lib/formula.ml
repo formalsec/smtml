@@ -10,6 +10,10 @@ type formula =
 
 type t = formula
 
+let ( ! ) (f : t) : t = Not f
+let ( && ) (f1 : t) (f2 : t) : t = And (f1, f2)
+let ( || ) (f1 : t) (f2 : t) : t = Or (f1, f2)
+
 let rec negate (f : formula) : formula =
   match f with
   | True -> False
