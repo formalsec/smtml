@@ -64,13 +64,14 @@ let model (s : t) : Model.model =
   assert (check s []);
   get_model s
 
-let value_of_const (model : Model.model) ((c, t) : Expression.t * num_type) :
+let value_of_const (model : Model.model) ((c, t) : Expression.t * expr_type) :
     Num.t option =
   let interp = Model.eval model (encode_expr c) true in
   let f (e : Expr.expr) : Num.t =
     let v =
       match Sort.get_sort_kind (Expr.get_sort e) with
       | Z3enums.INT_SORT -> int64_of_int e
+      | Z3enums.SEQ_SORT -> raise (Error "Not implemented")
       | Z3enums.BV_SORT -> int64_of_bv e
       | Z3enums.FLOATING_POINT_SORT ->
         let ebits = FloatingPoint.get_ebits ctx (Expr.get_sort e)
@@ -79,15 +80,16 @@ let value_of_const (model : Model.model) ((c, t) : Expression.t * num_type) :
       | _ -> assert false
     in
     match t with
-    | IntType -> Int (Int64.to_int_trunc v)
-    | I32Type -> I32 (Int64.to_int32_trunc v)
-    | I64Type -> I64 v
-    | F32Type -> F32 (Int64.to_int32_trunc v)
-    | F64Type -> F64 v
+    | `IntType -> Int (Int64.to_int_trunc v)
+    | `StrType -> raise (Error "Not implemented")
+    | `I32Type -> I32 (Int64.to_int32_trunc v)
+    | `I64Type -> I64 v
+    | `F32Type -> F32 (Int64.to_int32_trunc v)
+    | `F64Type -> F64 v
   in
   Option.map ~f interp
 
-let model_binds (model : Model.model) (vars : (string * num_type) list) :
+let model_binds (model : Model.model) (vars : (string * expr_type) list) :
     (string * Num.t) list =
   List.fold_left ~init:[]
     ~f:(fun a (x, t) ->
@@ -95,7 +97,7 @@ let model_binds (model : Model.model) (vars : (string * num_type) list) :
       Option.fold ~init:a ~f:(fun a v' -> (x, v') :: a) v)
     vars
 
-let value_binds (s : t) (vars : (string * num_type) list) :
+let value_binds (s : t) (vars : (string * expr_type) list) :
     (string * Num.t) list =
   let model = model s in
   model_binds model vars

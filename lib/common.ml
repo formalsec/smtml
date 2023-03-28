@@ -10,6 +10,7 @@ let ctx =
 
 (** Sorts *)
 let int_sort = Arithmetic.Integer.mk_sort ctx
+let str_sort = Seq.mk_string_sort ctx
 let bv32_sort = BitVector.mk_sort ctx 32
 let bv64_sort = BitVector.mk_sort ctx 64
 let fp32_sort = FloatingPoint.mk_sort_single ctx
@@ -21,13 +22,14 @@ let rne = FloatingPoint.RoundingMode.mk_rne ctx
 let rtz = FloatingPoint.RoundingMode.mk_rtz ctx
 
 (** Match WASM Type with Z3 Sort *)
-let get_sort (e : Types.num_type) : Z3.Sort.sort =
+let get_sort (e : Types.expr_type) : Z3.Sort.sort =
   match e with
-  | Types.IntType -> int_sort
-  | Types.I32Type -> bv32_sort
-  | Types.I64Type -> bv64_sort
-  | Types.F32Type -> fp32_sort
-  | Types.F64Type -> fp64_sort
+  | `IntType -> int_sort
+  | `StrType -> str_sort
+  | `I32Type -> bv32_sort
+  | `I64Type -> bv64_sort
+  | `F32Type -> fp32_sort
+  | `F64Type -> fp64_sort
 
 (** Bool helper - cast bool to bv *)
 let encode_bool (to_bv : bool) (cond : Expr.expr) : Expr.expr =
@@ -66,6 +68,25 @@ module IntZ3Op = struct
     op' e1 e2
 
   let encode_cvtop (_ : cvtop) (_ : Expr.expr) : Expr.expr = assert false
+
+end
+
+module StrZ3Op = struct
+  open S
+  let encode_str (s : String.t) : Expr.expr = Seq.mk_string ctx s
+
+  let encode_unop (_ : unop) (_ : Expr.expr) : Expr.expr =
+    raise (Error "Not implemented")
+
+  let encode_binop (_: binop) (_: Expr.expr) (_: Expr.expr) : Expr.expr =
+    raise (Error "Not implemented")
+
+  let encode_relop (_ : relop) (_ : Expr.expr) (_ : Expr.expr) : Expr.expr =
+    raise (Error "Not implemented")
+
+  let encode_cvtop (_ : cvtop) (_ : Expr.expr) : Expr.expr =
+    raise (Error "Not implemented")
+
 
 end
 
@@ -314,8 +335,9 @@ let num i i32 i64 f32 f64 : Num.t -> Expr.expr = function
   | F32 x -> f32 x
   | F64 x -> f64 x
 
-let op i i32 i64 f32 f64 = function
+let op i s i32 i64 f32 f64 = function
   | Int x -> i x
+  | Str x -> s x
   | I32 x -> i32 x
   | I64 x -> i64 x
   | F32 x -> f32 x
@@ -332,6 +354,7 @@ let encode_num =
 let encode_unop =
   op
     IntZ3Op.encode_unop
+    StrZ3Op.encode_unop
     I32Z3Op.encode_unop
     I64Z3Op.encode_unop
     F32Z3Op.encode_unop
@@ -340,6 +363,7 @@ let encode_unop =
 let encode_binop =
   op
     IntZ3Op.encode_binop
+    StrZ3Op.encode_binop
     I32Z3Op.encode_binop
     I64Z3Op.encode_binop
     F32Z3Op.encode_binop
@@ -348,6 +372,7 @@ let encode_binop =
 let encode_relop ~to_bv =
   op
     IntZ3Op.encode_relop
+    StrZ3Op.encode_relop
     (I32Z3Op.encode_relop ~to_bv)
     (I64Z3Op.encode_relop ~to_bv)
     (F32Z3Op.encode_relop ~to_bv)
@@ -356,6 +381,7 @@ let encode_relop ~to_bv =
 let encode_cvtop =
   op
     IntZ3Op.encode_cvtop
+    StrZ3Op.encode_cvtop
     I32Z3Op.encode_cvtop
     I64Z3Op.encode_cvtop
     F32Z3Op.encode_cvtop
@@ -365,6 +391,7 @@ let rec encode_expr ?(bool_to_bv = false) (e : Expression.t) : Expr.expr =
   let open Expression in
   match e with
   | Num v -> encode_num v
+  | Str s -> StrZ3Op.encode_str s
   | SymPtr (base, offset) ->
       let base' = encode_num (I32 base) in
       let offset' = encode_expr offset in

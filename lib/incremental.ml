@@ -49,6 +49,7 @@ let value_of_const (model : Model.model) (c : Expression.t) : Num.t option =
     let v =
       match Sort.get_sort_kind (Expr.get_sort e) with
       | Z3enums.INT_SORT -> int64_of_int e
+      | Z3enums.SEQ_SORT -> raise (Error "Not implemented")
       | Z3enums.BV_SORT -> int64_of_bv e
       | Z3enums.FLOATING_POINT_SORT ->
         let ebits = FloatingPoint.get_ebits ctx (Expr.get_sort e)
@@ -57,11 +58,12 @@ let value_of_const (model : Model.model) (c : Expression.t) : Num.t option =
       | _ -> assert false
     in
     match Expression.type_of c with
-    | IntType -> Int (Int64.to_int_trunc v)
-    | I32Type -> I32 (Int64.to_int32_trunc v)
-    | I64Type -> I64 v
-    | F32Type -> F32 (Int64.to_int32_trunc v)
-    | F64Type -> F64 v
+    | `IntType -> Int (Int64.to_int_trunc v)
+    | `StrType -> raise (Error "Not implemented")
+    | `I32Type -> I32 (Int64.to_int32_trunc v)
+    | `I64Type -> I64 v
+    | `F32Type -> F32 (Int64.to_int32_trunc v)
+    | `F64Type -> F64 v
   in
   Option.map ~f interp
 

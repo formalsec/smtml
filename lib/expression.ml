@@ -4,13 +4,14 @@ open Types
 exception InvalidRelop
 
 type expr =
+  | Str of String.t
   | Num of Num.t
   | SymPtr of Int32.t * expr
   | Binop of binop * expr * expr
   | Unop of unop * expr
   | Relop of relop * expr * expr
   | Cvtop of cvtop * expr
-  | Symbolic of num_type * String.t
+  | Symbolic of expr_type * String.t
   | Extract of expr * Int.t * Int.t
   | Concat of expr * expr
 
@@ -19,7 +20,7 @@ type pc = expr List.t
 type value = Num.t * expr
 
 let ( ++ ) (e1 : expr) (e2 : expr) = Concat (e1, e2)
-let symbolic (t : num_type) (x : String.t) : expr = Symbolic (t, x)
+let symbolic (t : expr_type) (x : String.t) : expr = Symbolic (t, x)
 
 let negate_relop (e : expr) : expr =
   match e with
@@ -34,6 +35,7 @@ let negate_relop (e : expr) : expr =
 (** Measure complexity of formulas *)
 let rec length (e : expr) : Int.t =
   match e with
+  | Str _ -> 1
   | Num _ -> 1
   | SymPtr _ -> 1
   | Unop (_, e) -> 1 + length e
@@ -45,8 +47,9 @@ let rec length (e : expr) : Int.t =
   | Concat (e1, e2) -> 1 + length e1 + length e2
 
 (** Retrieves the symbolic variables *)
-let rec get_symbols (e : expr) : (String.t * num_type) List.t =
+let rec get_symbols (e : expr) : (String.t * expr_type) List.t =
   match e with
+  | Str _ -> []
   | Num _ -> []
   | SymPtr (_, offset) -> get_symbols offset
   | Unop (_, e1) -> get_symbols e1
@@ -60,6 +63,7 @@ let rec get_symbols (e : expr) : (String.t * num_type) List.t =
 (**  String representation of a expr  *)
 let rec to_string (e : expr) : String.t =
   match e with
+  | Str s -> "(Str \"" ^ s ^ "\")"
   | Num n -> Num.string_of_num n
   | SymPtr (base, offset) ->
       let str_o = to_string offset in
@@ -68,6 +72,7 @@ let rec to_string (e : expr) : String.t =
       let str_op =
         match op with
         | Int op -> I.string_of_unop op
+        | Str op -> S.string_of_unop op
         | I32 op -> I32.string_of_unop op
         | I64 op -> I64.string_of_unop op
         | F32 op -> F32.string_of_unop op
@@ -78,6 +83,7 @@ let rec to_string (e : expr) : String.t =
       let str_op =
         match op with
         | Int op -> I.string_of_binop op
+        | Str op -> S.string_of_binop op
         | I32 op -> I32.string_of_binop op
         | I64 op -> I64.string_of_binop op
         | F32 op -> F32.string_of_binop op
@@ -88,6 +94,7 @@ let rec to_string (e : expr) : String.t =
       let str_op =
         match op with
         | Int op -> I.string_of_relop op
+        | Str op -> S.string_of_relop op
         | I32 op -> I32.string_of_relop op
         | I64 op -> I64.string_of_relop op
         | F32 op -> F32.string_of_relop op
@@ -98,13 +105,14 @@ let rec to_string (e : expr) : String.t =
       let str_op =
         match op with
         | Int op -> I.string_of_cvtop op
+        | Str op -> S.string_of_cvtop op
         | I32 op -> I32.string_of_cvtop op
         | I64 op -> I64.string_of_cvtop op
         | F32 op -> F32.string_of_cvtop op
         | F64 op -> F64.string_of_cvtop op
       in
       "(" ^ str_op ^ " " ^ to_string e ^ ")"
-  | Symbolic (t, x) -> "(" ^ string_of_num_type t ^ " #" ^ x ^ ")"
+  | Symbolic (t, x) -> "(" ^ string_of_type t ^ " #" ^ x ^ ")"
   | Extract (e, h, l) ->
       "(Extract " ^ to_string e ^ ", " ^ Int.to_string h ^ " " ^ Int.to_string l
       ^ ")"
@@ -112,6 +120,7 @@ let rec to_string (e : expr) : String.t =
 
 let rec pp_to_string (e : expr) : String.t =
   match e with
+  | Str s -> "\"" ^ s ^ "\""
   | Num n -> Num.string_of_num n
   | SymPtr (base, offset) ->
       let str_o = pp_to_string offset in
@@ -121,6 +130,7 @@ let rec pp_to_string (e : expr) : String.t =
       let str_op =
         match op with
         | Int op -> I.pp_string_of_unop op
+        | Str op -> S.pp_string_of_unop op
         | I32 op -> I32.pp_string_of_unop op
         | I64 op -> I64.pp_string_of_unop op
         | F32 op -> F32.pp_string_of_unop op
@@ -131,6 +141,7 @@ let rec pp_to_string (e : expr) : String.t =
       let str_op =
         match op with
         | Int op -> I.pp_string_of_binop op
+        | Str op -> S.pp_string_of_binop op
         | I32 op -> I32.pp_string_of_binop op
         | I64 op -> I64.pp_string_of_binop op
         | F32 op -> F32.pp_string_of_binop op
@@ -141,6 +152,7 @@ let rec pp_to_string (e : expr) : String.t =
       let str_op =
         match op with
         | Int op -> I.pp_string_of_relop op
+        | Str op -> S.pp_string_of_relop op
         | I32 op -> I32.pp_string_of_relop op
         | I64 op -> I64.pp_string_of_relop op
         | F32 op -> F32.pp_string_of_relop op
@@ -151,6 +163,7 @@ let rec pp_to_string (e : expr) : String.t =
       let str_op =
         match op with
         | Int op -> I.pp_string_of_cvtop op
+        | Str op -> S.pp_string_of_cvtop op
         | I32 op -> I32.pp_string_of_cvtop op
         | I64 op -> I64.pp_string_of_cvtop op
         | F32 op -> F32.pp_string_of_cvtop op
@@ -176,9 +189,10 @@ let string_of_values (el : value List.t) : String.t =
     ~f:(fun a (n, e) -> a ^ Num.string_of_num n ^ ", " ^ pp_to_string e ^ "\n")
     el
 
-let rec type_of (e : expr) : num_type =
+let rec type_of (e : expr) : expr_type =
   let rec concat_length (e' : expr) : Int.t =
     match e' with
+    | Str _ -> assert false
     | Num n -> size (Types.type_of_num n)
     | SymPtr _ -> 4
     | Binop (op, _, _) -> size (Types.type_of op)
@@ -190,8 +204,9 @@ let rec type_of (e : expr) : num_type =
     | Extract (_, h, l) -> h - l
   in
   match e with
+  | Str _ -> `StrType
   | Num n -> Types.type_of_num n
-  | SymPtr _ -> I32Type
+  | SymPtr _ -> `I32Type
   | Binop (op, _, _) -> Types.type_of op
   | Unop (op, _) -> Types.type_of op
   | Relop (op, _, _) -> Types.type_of op
@@ -199,8 +214,8 @@ let rec type_of (e : expr) : num_type =
   | Symbolic (t, _) -> t
   | Extract (_, h, l) -> (
       match h - l with
-      | 4 -> I32Type
-      | 8 -> I64Type
+      | 4 -> `I32Type
+      | 8 -> `I64Type
       | _ -> failwith "unsupported type length")
   | Concat (e1, e2) -> (
       let len = concat_length (e1 ++ e2) in
@@ -208,13 +223,14 @@ let rec type_of (e : expr) : num_type =
         if len < 4 then size (type_of e1) + size (type_of e2) else len
       in
       match len with
-      | 4 -> I32Type
-      | 8 -> I64Type
+      | 4 -> `I32Type
+      | 8 -> `I64Type
       | _ -> failwith "unsupported type length")
 
 let rec get_ptr (e : expr) : Num.t Option.t =
   (* FIXME: this function can be "simplified" *)
   match e with
+  | Str _ -> None
   | Num _ -> None
   | SymPtr (base, _) -> Some (I32 base)
   | Unop (_, e) -> get_ptr e
@@ -444,11 +460,11 @@ let mk_relop ?(reduce : bool = true) (e : expr) (t : num_type) : expr =
     let zero = Num.default_value t in
     let e' =
       match t with
-      | IntType -> Relop (Int Ne, e, Num zero)
-      | I32Type -> Relop (I32 Ne, e, Num zero)
-      | I64Type -> Relop (I64 Ne, e, Num zero)
-      | F32Type -> Relop (F32 Ne, e, Num zero)
-      | F64Type -> Relop (F64 Ne, e, Num zero)
+      | `IntType -> Relop (Int Ne, e, Num zero)
+      | `I32Type -> Relop (I32 Ne, e, Num zero)
+      | `I64Type -> Relop (I64 Ne, e, Num zero)
+      | `F32Type -> Relop (F32 Ne, e, Num zero)
+      | `F64Type -> Relop (F64 Ne, e, Num zero)
     in
     simplify e'
 

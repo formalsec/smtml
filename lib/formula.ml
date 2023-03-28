@@ -58,7 +58,7 @@ let to_formulas (pc : Expression.t list) : formula list =
 
 let to_formula (pc : Expression.t list) : formula = conjunct (to_formulas pc)
 
-let rec get_vars (e : formula) : (string * Types.num_type) list =
+let rec get_vars (e : formula) : (string * Types.expr_type) list =
   match e with
   | True | False -> []
   | Not c -> get_vars c

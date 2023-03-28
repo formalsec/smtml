@@ -14,11 +14,11 @@ let ( = ) (n1 : t) (n2 : t) : bool =
 
 let default_value (t : num_type) : t =
   match t with
-  | IntType -> Int 0
-  | I32Type -> I32 0l
-  | I64Type -> I64 0L
-  | F32Type -> F32 (Int32.bits_of_float 0.0)
-  | F64Type -> F64 (Int64.bits_of_float 0.0)
+  | `IntType -> Int 0
+  | `I32Type -> I32 0l
+  | `I64Type -> I64 0L
+  | `F32Type -> F32 (Int32.bits_of_float 0.0)
+  | `F64Type -> F64 (Int64.bits_of_float 0.0)
 
 let string_of_num (n : t) : string =
   match n with

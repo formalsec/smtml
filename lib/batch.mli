@@ -32,9 +32,9 @@ val get_model : t -> Model.model
 (** [get_model solver] get the last model produced by the solver *)
 
 val model_binds :
-  Model.model -> (string * num_type) list -> (string * Num.t) list
+  Model.model -> (string * expr_type) list -> (string * Num.t) list
 
-val value_binds : t -> (string * num_type) list -> (string * Num.t) list
+val value_binds : t -> (string * expr_type) list -> (string * Num.t) list
 
 val string_binds :
-  t -> (string * num_type) list -> (string * string * string) list
+  t -> (string * expr_type) list -> (string * string * string) list

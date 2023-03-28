@@ -17,4 +17,4 @@ val to_formulas : Expression.t list -> formula list
 val to_formula : Expression.t list -> formula
 val to_string : formula -> string
 val pp_to_string : formula -> string
-val get_vars : formula -> (string * Types.num_type) list
+val get_vars : formula -> (string * Types.expr_type) list

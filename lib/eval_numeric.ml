@@ -17,7 +17,7 @@ module I32Op = struct
   let to_value i : Num.t = I32 i
 
   let of_value n v : t =
-    of_arg (fun v -> match v with I32 i -> i | _ -> raise (Num I32Type)) n v
+    of_arg (fun v -> match v with I32 i -> i | _ -> raise (Num `I32Type)) n v
 
   let cmp_u x op y = op (x + min_value) (y + min_value)
   let lt_u x y = cmp_u x ( < ) y
@@ -91,7 +91,7 @@ module I64Op = struct
   let to_value i : Num.t = I64 i
 
   let of_value n v : int64 =
-    of_arg (fun v -> match v with I64 i -> i | _ -> raise (Num I64Type)) n v
+    of_arg (fun v -> match v with I64 i -> i | _ -> raise (Num `I64Type)) n v
 
   let cmp_u x op y = op (x + min_value) (y + min_value)
   let lt_u x y = cmp_u x ( < ) y
@@ -164,7 +164,7 @@ module F32Op = struct
   let to_value f : Num.t = F32 f
 
   let of_value =
-    of_arg (fun v -> match v with F32 f -> f | _ -> raise (Num F32Type))
+    of_arg (fun v -> match v with F32 f -> f | _ -> raise (Num `F32Type))
 
   let of_float = Int32.bits_of_float
   let to_float = Int32.float_of_bits
@@ -213,7 +213,7 @@ module F64Op = struct
   let to_value f : Num.t = F64 f
 
   let of_value =
-    of_arg (fun v -> match v with F64 f -> f | _ -> raise (Num F64Type))
+    of_arg (fun v -> match v with F64 f -> f | _ -> raise (Num `F64Type))
 
   let of_float = Int64.bits_of_float
   let to_float = Int64.float_of_bits
@@ -303,8 +303,8 @@ module I32CvtOp = struct
     | TruncSF64 -> I32 (trunc_f64_s (F64Op.of_value 1 v))
     | TruncUF64 -> I32 (trunc_f64_u (F64Op.of_value 1 v))
     | ReinterpretFloat -> I32 (F32Op.of_value 1 v)
-    | ExtendSI32 -> raise (TypeError (1, v, I32Type))
-    | ExtendUI32 -> raise (TypeError (1, v, I32Type))
+    | ExtendSI32 -> raise (TypeError (1, v, `I32Type))
+    | ExtendUI32 -> raise (TypeError (1, v, `I32Type))
 end
 
 module I64CvtOp = struct
@@ -364,7 +364,7 @@ module I64CvtOp = struct
     | TruncSF64 -> I64 (trunc_f64_s (F64Op.of_value 1 v))
     | TruncUF64 -> I64 (trunc_f64_u (F64Op.of_value 1 v))
     | ReinterpretFloat -> I64 (F64Op.of_value 1 v)
-    | WrapI64 -> raise (TypeError (1, v, I64Type))
+    | WrapI64 -> raise (TypeError (1, v, `I64Type))
 end
 
 module F32CvtOp = struct
@@ -418,7 +418,7 @@ module F32CvtOp = struct
     | ConvertSI64 -> F32 (convert_i64_s (I64Op.of_value 1 v))
     | ConvertUI64 -> F32 (convert_i64_u (I64Op.of_value 1 v))
     | ReinterpretInt -> F32 (I32Op.of_value 1 v)
-    | PromoteF32 -> raise (TypeError (1, v, F32Type))
+    | PromoteF32 -> raise (TypeError (1, v, `F32Type))
 end
 
 module F64CvtOp = struct
@@ -470,7 +470,7 @@ module F64CvtOp = struct
     | ConvertSI64 -> F64 (convert_i64_s (I64Op.of_value 1 v))
     | ConvertUI64 -> F64 (convert_i64_u (I64Op.of_value 1 v))
     | ReinterpretInt -> F64 (I64Op.of_value 1 v)
-    | DemoteF64 -> raise (TypeError (1, v, F64Type))
+    | DemoteF64 -> raise (TypeError (1, v, `F64Type))
 end
 
 (* Dispatch *)
@@ -481,6 +481,7 @@ let op i32 i64 f32 f64 = function
   | I64 x -> i64 x
   | F32 x -> f32 x
   | F64 x -> f64 x
+  | Str _ -> assert false
 
 let eval_unop = op I32Op.unop I64Op.unop F32Op.unop F64Op.unop
 let eval_binop = op I32Op.binop I64Op.binop F32Op.binop F64Op.binop
