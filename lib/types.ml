@@ -6,7 +6,7 @@ type ('i, 'i32, 'i64, 'f32, 'f64) num =
   | I64 of 'i64
   | F32 of 'f32
   | F64 of 'f64
-  
+
 type ('i, 'str, 'i32, 'i64, 'f32, 'f64) op =
   | Int of 'i
   | Str of 'str
@@ -50,9 +50,7 @@ let size_of_num_type (t : num_type) : int =
   match t with `I32Type | `F32Type -> 4 | `IntType | `I64Type | `F64Type -> 8
 
 let size (t : expr_type) : int =
-  match t with
-  | #num_type as t' -> size_of_num_type t'
-  | `StrType -> 0
+  match t with #num_type as t' -> size_of_num_type t' | `StrType -> 0
 
 let string_of_num_type (t : num_type) : string =
   match t with

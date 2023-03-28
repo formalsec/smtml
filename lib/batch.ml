@@ -74,9 +74,9 @@ let value_of_const (model : Model.model) ((c, t) : Expression.t * expr_type) :
       | Z3enums.SEQ_SORT -> raise (Error "Not implemented")
       | Z3enums.BV_SORT -> int64_of_bv e
       | Z3enums.FLOATING_POINT_SORT ->
-        let ebits = FloatingPoint.get_ebits ctx (Expr.get_sort e)
-        and sbits = FloatingPoint.get_sbits ctx (Expr.get_sort e) in
-        int64_of_fp e ebits (sbits - 1)
+          let ebits = FloatingPoint.get_ebits ctx (Expr.get_sort e)
+          and sbits = FloatingPoint.get_sbits ctx (Expr.get_sort e) in
+          int64_of_fp e ebits (sbits - 1)
       | _ -> assert false
     in
     match t with
