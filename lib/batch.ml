@@ -8,7 +8,8 @@ exception Unknown
 type t = { solver : s; pc : Expression.pc ref }
 and s = Solver.solver
 
-let time_solver = ref 0.0
+let solver_time = ref 0.0
+let solver_count = ref 0
 
 let time_call f acc =
   let start = Caml.Sys.time () in
@@ -41,7 +42,8 @@ let formulas_to_smt2_file output_dir =
 let check (s : t) (es : Expression.t list) : bool =
   let es' = es @ !(s.pc) in
   let formulas' = List.map ~f:encode_formula (to_formulas es') in
-  let sat = time_call (fun () -> Solver.check s.solver formulas') time_solver in
+  solver_count := !solver_count + 1;
+  let sat = time_call (fun () -> Solver.check s.solver formulas') solver_time in
   let b =
     match sat with
     | Solver.SATISFIABLE -> true

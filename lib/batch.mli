@@ -6,7 +6,8 @@ open Expression
 type t = { solver : s; pc : pc ref }
 and s = Solver.solver
 
-val time_solver : float ref
+val solver_time : float ref
+val solver_count : int ref
 val create : unit -> t
 
 val clone : t -> t

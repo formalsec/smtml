@@ -5,7 +5,8 @@ open Common
 
 exception Unknown
 
-let time_solver = ref 0.0
+let solver_time = ref 0.0
+let solver_count = ref 0
 
 let time_call f acc =
   let start = Caml.Sys.time () in
@@ -29,7 +30,8 @@ let add (e : t) (c : Expression.t) : unit =
 let check (e : t) (vs : Expression.t list) : bool =
   let vs' = List.map ~f:(encode_expr ~bool_to_bv:false) vs in
   let b =
-    let sat = time_call (fun () -> Solver.check e.solver vs') time_solver in
+    solver_count := !solver_count + 1;
+    let sat = time_call (fun () -> Solver.check e.solver vs') solver_time in
     match sat with
     | Solver.SATISFIABLE -> true
     | Solver.UNKNOWN ->
