@@ -50,9 +50,7 @@ let size_of_num_type (t : num_type) : int =
   match t with `I32Type | `F32Type -> 4 | `IntType | `I64Type | `F64Type -> 8
 
 let size (t : expr_type) : int =
-  match t with
-  | #num_type as t' -> size_of_num_type t'
-  | `StrType -> 0
+  match t with #num_type as t' -> size_of_num_type t' | `StrType -> 0
 
 let string_of_num_type (t : num_type) : string =
   match t with

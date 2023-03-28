@@ -10,6 +10,7 @@ let ctx =
 
 (** Sorts *)
 let int_sort = Arithmetic.Integer.mk_sort ctx
+
 let str_sort = Seq.mk_string_sort ctx
 let bv32_sort = BitVector.mk_sort ctx 32
 let bv64_sort = BitVector.mk_sort ctx 64
@@ -68,17 +69,17 @@ module IntZ3Op = struct
     op' e1 e2
 
   let encode_cvtop (_ : cvtop) (_ : Expr.expr) : Expr.expr = assert false
-
 end
 
 module StrZ3Op = struct
   open S
+
   let encode_str (s : String.t) : Expr.expr = Seq.mk_string ctx s
 
   let encode_unop (_ : unop) (_ : Expr.expr) : Expr.expr =
     raise (Error "Not implemented")
 
-  let encode_binop (_: binop) (_: Expr.expr) (_: Expr.expr) : Expr.expr =
+  let encode_binop (_ : binop) (_ : Expr.expr) (_ : Expr.expr) : Expr.expr =
     raise (Error "Not implemented")
 
   let encode_relop (_ : relop) (_ : Expr.expr) (_ : Expr.expr) : Expr.expr =
@@ -86,8 +87,6 @@ module StrZ3Op = struct
 
   let encode_cvtop (_ : cvtop) (_ : Expr.expr) : Expr.expr =
     raise (Error "Not implemented")
-
-
 end
 
 module I32Z3Op = struct
@@ -344,48 +343,27 @@ let op i s i32 i64 f32 f64 = function
   | F64 x -> f64 x
 
 let encode_num =
-  num
-    IntZ3Op.encode_num
-    I32Z3Op.encode_num
-    I64Z3Op.encode_num
-    F32Z3Op.encode_num
-    F64Z3Op.encode_num
+  num IntZ3Op.encode_num I32Z3Op.encode_num I64Z3Op.encode_num
+    F32Z3Op.encode_num F64Z3Op.encode_num
 
 let encode_unop =
-  op
-    IntZ3Op.encode_unop
-    StrZ3Op.encode_unop
-    I32Z3Op.encode_unop
-    I64Z3Op.encode_unop
-    F32Z3Op.encode_unop
-    F64Z3Op.encode_unop
+  op IntZ3Op.encode_unop StrZ3Op.encode_unop I32Z3Op.encode_unop
+    I64Z3Op.encode_unop F32Z3Op.encode_unop F64Z3Op.encode_unop
 
 let encode_binop =
-  op
-    IntZ3Op.encode_binop
-    StrZ3Op.encode_binop
-    I32Z3Op.encode_binop
-    I64Z3Op.encode_binop
-    F32Z3Op.encode_binop
-    F64Z3Op.encode_binop
+  op IntZ3Op.encode_binop StrZ3Op.encode_binop I32Z3Op.encode_binop
+    I64Z3Op.encode_binop F32Z3Op.encode_binop F64Z3Op.encode_binop
 
 let encode_relop ~to_bv =
-  op
-    IntZ3Op.encode_relop
-    StrZ3Op.encode_relop
+  op IntZ3Op.encode_relop StrZ3Op.encode_relop
     (I32Z3Op.encode_relop ~to_bv)
     (I64Z3Op.encode_relop ~to_bv)
     (F32Z3Op.encode_relop ~to_bv)
     (F64Z3Op.encode_relop ~to_bv)
 
 let encode_cvtop =
-  op
-    IntZ3Op.encode_cvtop
-    StrZ3Op.encode_cvtop
-    I32Z3Op.encode_cvtop
-    I64Z3Op.encode_cvtop
-    F32Z3Op.encode_cvtop
-    F64Z3Op.encode_cvtop
+  op IntZ3Op.encode_cvtop StrZ3Op.encode_cvtop I32Z3Op.encode_cvtop
+    I64Z3Op.encode_cvtop F32Z3Op.encode_cvtop F64Z3Op.encode_cvtop
 
 let rec encode_expr ?(bool_to_bv = false) (e : Expression.t) : Expr.expr =
   let open Expression in
