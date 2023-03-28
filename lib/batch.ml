@@ -1,13 +1,11 @@
 open Base
 open Z3
-open Types
 open Common
 open Formula
-open Expression
 
 exception Unknown
 
-type t = { solver : s; pc : pc ref }
+type t = { solver : s; pc : Expression.pc ref }
 and s = Solver.solver
 
 let time_solver = ref 0.0
@@ -53,7 +51,7 @@ let check (s : t) (es : Expression.t list) : bool =
   b
 
 let fork (s : t) (e : Expression.t) : bool * bool =
-  (check s [ e ], check s [ negate_relop e ])
+  (check s [ e ], check s [ Expression.negate_relop e ])
 
 let get_model (s : t) : Model.model =
   match Solver.get_model s.solver with
@@ -64,42 +62,10 @@ let model (s : t) : Model.model =
   assert (check s []);
   get_model s
 
-let value_of_const (model : Model.model) ((c, t) : Expression.t * expr_type) :
-    Num.t option =
-  let interp = Model.eval model (encode_expr c) true in
-  let f (e : Expr.expr) : Num.t =
-    let v =
-      match Sort.get_sort_kind (Expr.get_sort e) with
-      | Z3enums.INT_SORT -> int64_of_int e
-      | Z3enums.SEQ_SORT -> raise (Error "Not implemented")
-      | Z3enums.BV_SORT -> int64_of_bv e
-      | Z3enums.FLOATING_POINT_SORT ->
-          let ebits = FloatingPoint.get_ebits ctx (Expr.get_sort e)
-          and sbits = FloatingPoint.get_sbits ctx (Expr.get_sort e) in
-          int64_of_fp e ebits (sbits - 1)
-      | _ -> assert false
-    in
-    match t with
-    | `IntType -> Int (Int64.to_int_trunc v)
-    | `StrType -> raise (Error "Not implemented")
-    | `I32Type -> I32 (Int64.to_int32_trunc v)
-    | `I64Type -> I64 v
-    | `F32Type -> F32 (Int64.to_int32_trunc v)
-    | `F64Type -> F64 v
-  in
-  Option.map ~f interp
+let value_binds (s : t) vars : (string * Num.t) list =
+  let m = model s in
+  Common.value_binds m vars
 
-let model_binds (model : Model.model) (vars : (string * expr_type) list) :
-    (string * Num.t) list =
-  List.fold_left ~init:[]
-    ~f:(fun a (x, t) ->
-      let v = value_of_const model (symbolic t x, t) in
-      Option.fold ~init:a ~f:(fun a v' -> (x, v') :: a) v)
-    vars
-
-let value_binds (s : t) (vars : (string * expr_type) list) :
-    (string * Num.t) list =
-  let model = model s in
-  model_binds model vars
-
-let string_binds _ _ = []
+let string_binds (s : t) vars : (string * string * string) list =
+  let m = model s in
+  Common.string_binds m vars

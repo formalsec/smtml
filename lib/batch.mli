@@ -25,15 +25,6 @@ val check : t -> Expression.t list -> bool
 val fork : t -> Expression.t -> bool * bool
 (** [fork solver e] checks the satisfiability of the fork on the condition [e] *)
 
-val model : t -> Model.model
-(** [model solver] get a model for the current state of the solver *)
-
-val get_model : t -> Model.model
-(** [get_model solver] get the last model produced by the solver *)
-
-val model_binds :
-  Model.model -> (string * expr_type) list -> (string * Num.t) list
-
 val value_binds : t -> (string * expr_type) list -> (string * Num.t) list
 
 val string_binds :

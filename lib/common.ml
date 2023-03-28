@@ -458,3 +458,51 @@ let int64_of_fp (fp : Expr.expr) (ebits : int) (sbits : int) : int64 =
     and exponent = Int64.shift_left (List.nth_exn bit_list 1) sbits
     and fraction = List.nth_exn bit_list 2 in
     Int64.(fp_sign lor (exponent lor fraction))
+
+let value_of_const (model : Model.model) ((c, t) : Expression.t * expr_type) :
+    Num.t option =
+  let interp = Model.eval model (encode_expr c) true in
+  let f (e : Expr.expr) : Num.t =
+    let v =
+      match Sort.get_sort_kind (Expr.get_sort e) with
+      | Z3enums.INT_SORT -> int64_of_int e
+      | Z3enums.SEQ_SORT -> raise (Error "Not implemented")
+      | Z3enums.BV_SORT -> int64_of_bv e
+      | Z3enums.FLOATING_POINT_SORT ->
+          let ebits = FloatingPoint.get_ebits ctx (Expr.get_sort e)
+          and sbits = FloatingPoint.get_sbits ctx (Expr.get_sort e) in
+          int64_of_fp e ebits (sbits - 1)
+      | _ -> assert false
+    in
+    match t with
+    | `IntType -> Int (Int64.to_int_trunc v)
+    | `StrType -> raise (Error "Not implemented")
+    | `I32Type -> I32 (Int64.to_int32_trunc v)
+    | `I64Type -> I64 v
+    | `F32Type -> F32 (Int64.to_int32_trunc v)
+    | `F64Type -> F64 v
+  in
+  Option.map ~f interp
+
+let model_binds (model : Model.model) (vars : (string * expr_type) list) :
+    (string * Num.t) list =
+  List.fold_left ~init:[]
+    ~f:(fun a (x, t) ->
+      let v = value_of_const model (Expression.symbolic t x, t) in
+      Option.fold ~init:a ~f:(fun a v' -> (x, v') :: a) v)
+    vars
+
+let value_binds (model : Model.model) (vars : (string * expr_type) list) :
+    (string * Num.t) list =
+  model_binds model vars
+
+let string_binds (m : Model.model) (_ : (string * expr_type) list) :
+    (string * string * string) list =
+  List.map (Model.get_const_decls m) ~f:(fun const ->
+      let sort = Sort.to_string (FuncDecl.get_range const)
+      and name = Symbol.to_string (FuncDecl.get_name const)
+      and interp =
+        Batteries.Option.map_default Expr.to_string ""
+          (Model.get_const_interp m const)
+      in
+      (sort, name, interp))

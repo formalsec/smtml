@@ -2,7 +2,6 @@ open Base
 open Z3
 open Types
 open Common
-open Expression
 
 exception Unknown
 
@@ -73,24 +72,13 @@ let model (e : t) : Model.model =
   Option.value_exn (Solver.get_model e.solver)
 
 (** fails if solver isn't currently SAT *)
-let value_binds (e : t) vars : (string * Num.t) list =
+let value_binds (e : t) (vars : (string * expr_type) list) :
+    (string * Num.t) list =
   let m = model e in
-  List.fold_left ~init:[]
-    ~f:(fun a (x, t) ->
-      let v = value_of_const m (symbolic t x) in
-      Option.fold ~init:a ~f:(fun a v' -> (x, v') :: a) v)
-    vars
+  Common.value_binds m vars
 
 (** fails if solver isn't currently SAT *)
-let string_binds (e : t) _ : (string * string * string) list =
+let string_binds (e : t) (vars : (string * expr_type) list) :
+    (string * string * string) list =
   let m = model e in
-  List.map
-    ~f:(fun const ->
-      let sort = Sort.to_string (FuncDecl.get_range const)
-      and name = Symbol.to_string (FuncDecl.get_name const)
-      and interp =
-        Option.value_map ~default:"" ~f:Expr.to_string
-          (Model.get_const_interp m const)
-      in
-      (sort, name, interp))
-    (Model.get_const_decls m)
+  Common.string_binds m vars
