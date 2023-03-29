@@ -16,7 +16,8 @@ let time_call f acc =
 type s = Solver.solver
 type t = { solver : s; pc : Formula.t ref }
 
-let create () : t = { solver = Solver.mk_solver ctx None; pc = ref (Formula.create ()) }
+let create () : t =
+  { solver = Solver.mk_solver ctx None; pc = ref (Formula.create ()) }
 
 let clone (e : t) : t =
   { solver = Solver.translate e.solver ctx; pc = ref !(e.pc) }
@@ -27,12 +28,14 @@ let add (e : t) (c : Expression.t) : unit =
   Solver.add e.solver [ ec ]
 
 let add_formula (e : t) (f : Formula.t) : unit =
-  e.pc := Formula.conjunct [f ;!(e.pc)];
+  e.pc := Formula.conjunct [ f; !(e.pc) ];
   let ef = encode_formula f in
   Solver.add e.solver [ ef ]
 
 let check (e : t) (expr : Expression.t option) : bool =
-  let expr' = Option.to_list (Option.map (encode_expr ~bool_to_bv:false) expr) in
+  let expr' =
+    Option.to_list (Option.map (encode_expr ~bool_to_bv:false) expr)
+  in
   let b =
     solver_count := !solver_count + 1;
     let sat = time_call (fun () -> Solver.check e.solver expr') solver_time in
@@ -48,8 +51,7 @@ let fork (s : t) (e : Expression.t) : bool * bool =
   (check s (Some e), check s (Some (Expression.negate_relop e)))
 
 (** fails if solver isn't currently SAT *)
-let model (e : t) : Model.model =
-  Option.get (Solver.get_model e.solver)
+let model (e : t) : Model.model = Option.get (Solver.get_model e.solver)
 
 (** fails if solver isn't currently SAT *)
 let value_binds (e : t) (vars : (string * expr_type) list) :

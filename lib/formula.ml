@@ -10,8 +10,7 @@ type formula =
 
 type t = formula
 
-let create () : t =
-  True
+let create () : t = True
 
 let add_constraint ?(neg : bool = false) (e : Expression.t) (pc : t) : t =
   let cond =
@@ -21,7 +20,7 @@ let add_constraint ?(neg : bool = false) (e : Expression.t) (pc : t) : t =
   match (cond, pc) with
   | None, _ -> pc
   | Some cond, True -> Relop cond
-  | Some cond, _ -> And ((Relop cond), pc)
+  | Some cond, _ -> And (Relop cond, pc)
 
 let rec negate (f : t) : t =
   match f with
@@ -55,9 +54,7 @@ let rec to_string_aux (p : Expression.t -> string) (f : t) : string =
   | Relop e -> p e
 
 let to_string (f : t) : string = to_string_aux Expression.to_string f
-
-let pp_to_string (f : t) : string =
-  to_string_aux Expression.pp_to_string f
+let pp_to_string (f : t) : string = to_string_aux Expression.pp_to_string f
 
 let rec length (e : t) : int =
   match e with

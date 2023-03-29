@@ -15,13 +15,17 @@ let time_call f acc =
   acc := !acc +. (Caml.Sys.time () -. start);
   ret
 
-let create () = { solver = Solver.mk_solver ctx None; pc = ref (Formula.create ()) }
+let create () =
+  { solver = Solver.mk_solver ctx None; pc = ref (Formula.create ()) }
+
 let interrupt () = Tactic.interrupt ctx
 let clone (s : t) : t = { s with pc = ref !(s.pc) }
-let add (s : t) (e : Expression.t) : unit = s.pc := Formula.add_constraint e !(s.pc)
+
+let add (s : t) (e : Expression.t) : unit =
+  s.pc := Formula.add_constraint e !(s.pc)
 
 let add_formula (s : t) (f : Formula.t) : unit =
-  s.pc := Formula.conjunct [f ;!(s.pc)]
+  s.pc := Formula.conjunct [ f; !(s.pc) ]
 
 (*
 let formulas_to_smt2_file output_dir =
@@ -43,7 +47,9 @@ let formulas_to_smt2_file output_dir =
 let ccheck (s : t) (formula : Formula.t) : bool =
   let expression = encode_formula formula in
   solver_count := !solver_count + 1;
-  let sat = time_call (fun () -> Solver.check s.solver [expression]) solver_time in
+  let sat =
+    time_call (fun () -> Solver.check s.solver [ expression ]) solver_time
+  in
   let b =
     match sat with
     | Solver.SATISFIABLE -> true
@@ -54,13 +60,16 @@ let ccheck (s : t) (formula : Formula.t) : bool =
 
 let check (s : t) (expr : Expression.t option) : bool =
   let formula = !(s.pc) in
-  let formula = match expr with
-  | Some expr -> Formula.add_constraint expr formula
-  | None -> formula
+  let formula =
+    match expr with
+    | Some expr -> Formula.add_constraint expr formula
+    | None -> formula
   in
   let expression = encode_formula formula in
   solver_count := !solver_count + 1;
-  let sat = time_call (fun () -> Solver.check s.solver [expression]) solver_time in
+  let sat =
+    time_call (fun () -> Solver.check s.solver [ expression ]) solver_time
+  in
   let b =
     match sat with
     | Solver.SATISFIABLE -> true
@@ -72,8 +81,7 @@ let check (s : t) (expr : Expression.t option) : bool =
 let fork (s : t) (e : Expression.t) : bool * bool =
   (check s (Some e), check s (Some (Expression.negate_relop e)))
 
-let model (s : t) : Model.model =
-  Option.get (Solver.get_model s.solver)
+let model (s : t) : Model.model = Option.get (Solver.get_model s.solver)
 
 let value_binds (s : t) vars : (string * Num.t) list =
   let m = model s in
