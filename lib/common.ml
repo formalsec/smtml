@@ -488,8 +488,7 @@ let value_of_const (model : Model.model) ((c, t) : Expression.t * expr_type) :
 
 let model_binds (model : Model.model) (vars : (string * expr_type) list) :
     (string * Expression.value) list =
-  List.fold_left vars ~init:[]
-    ~f:(fun a (x, t) ->
+  List.fold_left vars ~init:[] ~f:(fun a (x, t) ->
       let v = value_of_const model (Expression.symbolic t x, t) in
       Option.fold ~init:a ~f:(fun a v' -> (x, v') :: a) v)
 

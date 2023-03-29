@@ -1,2 +1,7 @@
-(test
- (name encoding))
+(library
+ (name unit_tests)
+ (modules test_integers)
+ (inline_tests)
+ (preprocess
+   (pps ppx_inline_test))
+ (libraries encoding))

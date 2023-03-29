@@ -19,7 +19,7 @@
  (name encoding)
  (synopsis "A short synopsis")
  (description "A longer description")
- (depends ocaml dune base)
+ (depends ocaml dune base ppx_inline_tests)
  (tags
   (topics "to describe" your project)))
 
