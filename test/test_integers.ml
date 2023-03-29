@@ -9,6 +9,7 @@ let int_pos = Val (Int Int.one)
 let int_neg = Val (Int Int.minus_one)
 let int_zero = Val (Int Int.zero)
 let int_symb = Symbolic (`IntType, "x")
+
 (* Encoding *)
 let%test_unit _ = encode int_pos
 let%test_unit _ = encode int_neg

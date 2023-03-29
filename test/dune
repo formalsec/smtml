@@ -1,7 +1,7 @@
 (library
  (name unit_tests)
- (modules test_integers)
+ (modules test_integers test_strings)
  (inline_tests)
  (preprocess
-   (pps ppx_inline_test))
+  (pps ppx_inline_test))
  (libraries encoding))
