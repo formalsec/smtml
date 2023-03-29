@@ -21,9 +21,9 @@ val add : t -> Expression.t -> unit
 val add_formula : t -> Formula.t -> unit
 (** [add solver f] adds formula [f] to [solver] *)
 
-val ccheck : t -> Formula.t -> bool
-(** [ccheck solver [e1; ...; en]] checks the satisfiability of [e1, ..., en]
-    without adding the expressions as assertions to the solver *)
+val check_formulas : t -> Formula.t list -> bool
+(** [check_formulas solver [e1; ...; en]] checks the satisfiability of
+    [e1, ..., en] without adding the expressions as assertions to the solver *)
 
 val check : t -> Expression.t option -> bool
 (** [check solver [e1; ...; en]] checks the satisfiability of the

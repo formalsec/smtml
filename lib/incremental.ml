@@ -1,3 +1,4 @@
+open Base
 open Z3
 open Types
 open Common
@@ -34,7 +35,7 @@ let add_formula (e : t) (f : Formula.t) : unit =
 
 let check (e : t) (expr : Expression.t option) : bool =
   let expr' =
-    Option.to_list (Option.map (encode_expr ~bool_to_bv:false) expr)
+    Option.to_list (Option.map ~f:(encode_expr ~bool_to_bv:false) expr)
   in
   let b =
     solver_count := !solver_count + 1;
@@ -51,16 +52,17 @@ let fork (s : t) (e : Expression.t) : bool * bool =
   (check s (Some e), check s (Some (Expression.negate_relop e)))
 
 (** fails if solver isn't currently SAT *)
-let model (e : t) : Model.model = Option.get (Solver.get_model e.solver)
+let model_exn (e : t) : Model.model =
+  Option.value_exn (Solver.get_model e.solver)
 
 (** fails if solver isn't currently SAT *)
 let value_binds (e : t) (vars : (string * expr_type) list) :
     (string * Num.t) list =
-  let m = model e in
+  let m = model_exn e in
   Common.value_binds m vars
 
 (** fails if solver isn't currently SAT *)
 let string_binds (e : t) (vars : (string * expr_type) list) :
     (string * string * string) list =
-  let m = model e in
+  let m = model_exn e in
   Common.string_binds m vars

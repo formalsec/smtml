@@ -1,3 +1,4 @@
+open Base
 open Z3
 open Common
 
@@ -44,11 +45,11 @@ let formulas_to_smt2_file output_dir =
          (List.hd_exn f))
     *)
 
-let ccheck (s : t) (formula : Formula.t) : bool =
-  let expression = encode_formula formula in
+let check_formulas (s : t) (formulas : Formula.t list) : bool =
+  let expressions = List.map ~f:encode_formula formulas in
   solver_count := !solver_count + 1;
   let sat =
-    time_call (fun () -> Solver.check s.solver [ expression ]) solver_time
+    time_call (fun () -> Solver.check s.solver expressions) solver_time
   in
   let b =
     match sat with
@@ -59,13 +60,12 @@ let ccheck (s : t) (formula : Formula.t) : bool =
   b
 
 let check (s : t) (expr : Expression.t option) : bool =
-  let formula = !(s.pc) in
-  let formula =
-    match expr with
-    | Some expr -> Formula.add_constraint expr formula
-    | None -> formula
+  let expression =
+    encode_formula
+      (Option.fold ~init:!(s.pc)
+         ~f:(fun f e -> Formula.add_constraint e f)
+         expr)
   in
-  let expression = encode_formula formula in
   solver_count := !solver_count + 1;
   let sat =
     time_call (fun () -> Solver.check s.solver [ expression ]) solver_time
@@ -81,12 +81,13 @@ let check (s : t) (expr : Expression.t option) : bool =
 let fork (s : t) (e : Expression.t) : bool * bool =
   (check s (Some e), check s (Some (Expression.negate_relop e)))
 
-let model (s : t) : Model.model = Option.get (Solver.get_model s.solver)
+let model_exn (s : t) : Model.model =
+  Option.value_exn (Solver.get_model s.solver)
 
 let value_binds (s : t) vars : (string * Num.t) list =
-  let m = model s in
+  let m = model_exn s in
   Common.value_binds m vars
 
 let string_binds (s : t) vars : (string * string * string) list =
-  let m = model s in
+  let m = model_exn s in
   Common.string_binds m vars
