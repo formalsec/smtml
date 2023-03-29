@@ -52,11 +52,8 @@ let model (e : t) : Model.model =
 (** fails if solver isn't currently SAT *)
 let value_binds (e : t) (vars : (string * expr_type) list) :
     (string * Expression.value) list =
-  let m = model e in
-  Common.value_binds m vars
+  Common.value_binds (model e) vars
 
 (** fails if solver isn't currently SAT *)
-let string_binds (e : t) (vars : (string * expr_type) list) :
-    (string * string * string) list =
-  let m = model e in
-  Common.string_binds m vars
+let string_binds (e : t) : (string * string * string) list =
+  Common.string_binds (model e)

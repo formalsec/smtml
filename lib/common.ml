@@ -434,7 +434,7 @@ let int64_of_bv (bv : Expr.expr) : int64 =
   assert (Expr.is_numeral bv);
   Int64.of_string (BitVector.numeral_to_string bv)
 
-let int64_of_fp (fp : Expr.expr) (ebits : int) (sbits : int) : int64 =
+let int64_of_fp (fp : Expr.expr) ~(ebits : int) ~(sbits : int) : int64 =
   assert (Expr.is_numeral fp);
   if FloatingPoint.is_numeral_nan ctx fp then
     if FloatingPoint.is_numeral_negative ctx fp then
@@ -476,30 +476,28 @@ let value_of_const (model : Model.model) ((c, t) : Expression.t * expr_type) :
     | `I64Type, Z3enums.BV_SORT -> Num (I64 (int64_of_bv e))
     | `F32Type, Z3enums.FLOATING_POINT_SORT ->
         let ebits = FloatingPoint.get_ebits ctx (Expr.get_sort e)
-        and sbits = FloatingPoint.get_sbits ctx (Expr.get_sort e) in
-        Num (F32 (Int64.to_int32_trunc (int64_of_fp e ebits (sbits - 1))))
+        and sbits = FloatingPoint.get_sbits ctx (Expr.get_sort e) - 1 in
+        Num (F32 (Int64.to_int32_trunc (int64_of_fp e ~ebits ~sbits)))
     | `F64Type, Z3enums.FLOATING_POINT_SORT ->
         let ebits = FloatingPoint.get_ebits ctx (Expr.get_sort e)
-        and sbits = FloatingPoint.get_sbits ctx (Expr.get_sort e) in
-        Num (F64 (int64_of_fp e ebits (sbits - 1)))
+        and sbits = FloatingPoint.get_sbits ctx (Expr.get_sort e) - 1 in
+        Num (F64 (int64_of_fp e ~ebits ~sbits))
     | _ -> assert false
   in
   Option.map ~f interp
 
 let model_binds (model : Model.model) (vars : (string * expr_type) list) :
     (string * Expression.value) list =
-  List.fold_left ~init:[]
+  List.fold_left vars ~init:[]
     ~f:(fun a (x, t) ->
       let v = value_of_const model (Expression.symbolic t x, t) in
       Option.fold ~init:a ~f:(fun a v' -> (x, v') :: a) v)
-    vars
 
 let value_binds (model : Model.model) (vars : (string * expr_type) list) :
     (string * Expression.value) list =
   model_binds model vars
 
-let string_binds (m : Model.model) (_ : (string * expr_type) list) :
-    (string * string * string) list =
+let string_binds (m : Model.model) : (string * string * string) list =
   List.map (Model.get_const_decls m) ~f:(fun const ->
       let sort = Sort.to_string (FuncDecl.get_range const)
       and name = Symbol.to_string (FuncDecl.get_name const)

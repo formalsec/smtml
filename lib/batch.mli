@@ -29,5 +29,4 @@ val fork : t -> Expression.t -> bool * bool
 val value_binds :
   t -> (string * expr_type) list -> (string * Expression.value) list
 
-val string_binds :
-  t -> (string * expr_type) list -> (string * string * string) list
+val string_binds : t -> (string * string * string) list

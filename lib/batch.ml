@@ -65,9 +65,7 @@ let model (s : t) : Model.model =
   get_model s
 
 let value_binds (s : t) vars : (string * Expression.value) list =
-  let m = model s in
-  Common.value_binds m vars
+  Common.value_binds (model s) vars
 
-let string_binds (s : t) vars : (string * string * string) list =
-  let m = model s in
-  Common.string_binds m vars
+let string_binds (s : t) : (string * string * string) list =
+  Common.string_binds (model s)
