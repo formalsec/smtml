@@ -26,7 +26,7 @@ let get_sort (e : Types.expr_type) : Z3.Sort.sort =
   | `F32Type -> fp32_sort
   | `F64Type -> fp64_sort
 
-let encode_bool (to_bv : bool) (cond : Expr.expr) : Expr.expr =
+let encode_bool ~(to_bv : bool) (cond : Expr.expr) : Expr.expr =
   let bv_true = BitVector.mk_numeral ctx "1" 32
   and bv_false = BitVector.mk_numeral ctx "0" 32 in
   if to_bv then Boolean.mk_ite ctx cond bv_true bv_false else cond
@@ -53,7 +53,7 @@ module IntZ3Op = struct
     let op' =
       match op with
       | Eq -> Boolean.mk_eq ctx
-      | Ne -> fun v1 v2 -> Boolean.mk_not ctx (Boolean.mk_eq ctx v1 v2)
+      | Ne -> fun v1 v2 -> Boolean.mk_eq ctx v1 v2 |> Boolean.mk_not ctx
       | Lt -> Arithmetic.mk_lt ctx
       | Gt -> Arithmetic.mk_gt ctx
       | Le -> Arithmetic.mk_le ctx
@@ -137,7 +137,7 @@ module I32Z3Op = struct
       | GeU -> BitVector.mk_uge ctx
       | GeS -> BitVector.mk_sge ctx
     in
-    encode_bool to_bv (op' e1 e2)
+    encode_bool ~to_bv (op' e1 e2)
 
   let encode_cvtop (op : cvtop) (e : Expr.expr) : Expr.expr =
     let op' =
@@ -195,7 +195,7 @@ module I64Z3Op = struct
       | GeU -> BitVector.mk_uge ctx
       | GeS -> BitVector.mk_sge ctx
     in
-    encode_bool to_bv (op' e1 e2)
+    encode_bool ~to_bv (op' e1 e2)
 
   let encode_cvtop (op : cvtop) (e : Expr.expr) : Expr.expr =
     let op' =
@@ -252,7 +252,7 @@ module F32Z3Op = struct
       | Gt -> FloatingPoint.mk_gt ctx
       | Ge -> FloatingPoint.mk_geq ctx
     in
-    encode_bool to_bv (op' e1 e2)
+    encode_bool ~to_bv (op' e1 e2)
 
   let encode_cvtop (op : cvtop) (e : Expr.expr) : Expr.expr =
     let op' =
@@ -311,7 +311,7 @@ module F64Z3Op = struct
       | Gt -> FloatingPoint.mk_gt ctx
       | Ge -> FloatingPoint.mk_geq ctx
     in
-    encode_bool to_bv (op' e1 e2)
+    encode_bool ~to_bv (op' e1 e2)
 
   let encode_cvtop (op : cvtop) (e : Expr.expr) : Expr.expr =
     let op' =
@@ -346,26 +346,26 @@ let op i s i32 i64 f32 f64 = function
   | F32 x -> f32 x
   | F64 x -> f64 x
 
-let encode_num =
+let encode_num : Num.t -> Expr.expr =
   num I32Z3Op.encode_num I64Z3Op.encode_num F32Z3Op.encode_num
     F64Z3Op.encode_num
 
-let encode_unop =
+let encode_unop : unop -> Expr.expr -> Expr.expr =
   op IntZ3Op.encode_unop StrZ3Op.encode_unop I32Z3Op.encode_unop
     I64Z3Op.encode_unop F32Z3Op.encode_unop F64Z3Op.encode_unop
 
-let encode_binop =
+let encode_binop : binop -> Expr.expr -> Expr.expr -> Expr.expr =
   op IntZ3Op.encode_binop StrZ3Op.encode_binop I32Z3Op.encode_binop
     I64Z3Op.encode_binop F32Z3Op.encode_binop F64Z3Op.encode_binop
 
-let encode_relop ~to_bv =
+let encode_relop ~to_bv : relop -> Expr.expr -> Expr.expr -> Expr.expr =
   op IntZ3Op.encode_relop StrZ3Op.encode_relop
     (I32Z3Op.encode_relop ~to_bv)
     (I64Z3Op.encode_relop ~to_bv)
     (F32Z3Op.encode_relop ~to_bv)
     (F64Z3Op.encode_relop ~to_bv)
 
-let encode_cvtop =
+let encode_cvtop : cvtop -> Expr.expr -> Expr.expr =
   op IntZ3Op.encode_cvtop StrZ3Op.encode_cvtop I32Z3Op.encode_cvtop
     I64Z3Op.encode_cvtop F32Z3Op.encode_cvtop F64Z3Op.encode_cvtop
 
