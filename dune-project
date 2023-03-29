@@ -5,22 +5,12 @@
 (generate_opam_files true)
 
 (source
- (github username/reponame))
-
-(authors "Author Name")
-
-(maintainers "Maintainer Name")
+ (github wasp-platform/encoding))
 
 (license LICENSE)
 
-(documentation https://url/to/documentation)
-
 (package
  (name encoding)
- (synopsis "A short synopsis")
- (description "A longer description")
- (depends ocaml dune base ppx_inline_tests)
- (tags
-  (topics "to describe" your project)))
-
-; See the complete stanza docs at https://dune.readthedocs.io/en/stable/dune-files.html#dune-project
+ (synopsis "Encoding library")
+ (description "OCaml Z3 symbolic value encoding library")
+ (depends ocaml dune base ppx_inline_tests))
