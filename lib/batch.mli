@@ -1,9 +1,8 @@
 open Base
 open Z3
 open Types
-open Expression
 
-type t = { solver : s; pc : pc ref }
+type t = { solver : s; pc : Formula.t ref }
 and s = Solver.solver
 
 val solver_time : float ref
@@ -19,9 +18,17 @@ val interrupt : unit -> unit
 val add : t -> Expression.t -> unit
 (** [add solver e] adds assertion [e] to [solver] *)
 
-val check : t -> Expression.t list -> bool
-(** [check solver [e1; ...; en]] checks the satisfiability of [e1, ..., en]
+val add_formula : t -> Formula.t -> unit
+(** [add solver f] adds formula [f] to [solver] *)
+
+val ccheck : t -> Formula.t -> bool
+(** [ccheck solver [e1; ...; en]] checks the satisfiability of [e1, ..., en]
     without adding the expressions as assertions to the solver *)
+
+val check : t -> Expression.t option -> bool
+(** [check solver [e1; ...; en]] checks the satisfiability of the
+    existing pc with [e1, ..., en] but without adding the expressions
+    as assertions to the solver *)
 
 val fork : t -> Expression.t -> bool * bool
 (** [fork solver e] checks the satisfiability of the fork on the condition [e] *)

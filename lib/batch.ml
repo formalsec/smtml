@@ -1,11 +1,9 @@
-open Base
 open Z3
 open Common
-open Formula
 
 exception Unknown
 
-type t = { solver : s; pc : Expression.pc ref }
+type t = { solver : s; pc : Formula.t ref }
 and s = Solver.solver
 
 let solver_time = ref 0.0
@@ -17,10 +15,13 @@ let time_call f acc =
   acc := !acc +. (Caml.Sys.time () -. start);
   ret
 
-let create () = { solver = Solver.mk_solver ctx None; pc = ref [] }
+let create () = { solver = Solver.mk_solver ctx None; pc = ref (Formula.create ()) }
 let interrupt () = Tactic.interrupt ctx
 let clone (s : t) : t = { s with pc = ref !(s.pc) }
-let add (s : t) (e : Expression.t) : unit = s.pc := e :: !(s.pc)
+let add (s : t) (e : Expression.t) : unit = s.pc := Formula.add_constraint e !(s.pc)
+
+let add_formula (s : t) (f : Formula.t) : unit =
+  s.pc := Formula.conjunct [f ;!(s.pc)]
 
 (*
 let formulas_to_smt2_file output_dir =
@@ -39,11 +40,27 @@ let formulas_to_smt2_file output_dir =
          (List.hd_exn f))
     *)
 
-let check (s : t) (es : Expression.t list) : bool =
-  let es' = es @ !(s.pc) in
-  let formulas' = List.map ~f:encode_formula (to_formulas es') in
+let ccheck (s : t) (formula : Formula.t) : bool =
+  let expression = encode_formula formula in
   solver_count := !solver_count + 1;
-  let sat = time_call (fun () -> Solver.check s.solver formulas') solver_time in
+  let sat = time_call (fun () -> Solver.check s.solver [expression]) solver_time in
+  let b =
+    match sat with
+    | Solver.SATISFIABLE -> true
+    | Solver.UNSATISFIABLE -> false
+    | Solver.UNKNOWN -> raise Unknown
+  in
+  b
+
+let check (s : t) (expr : Expression.t option) : bool =
+  let formula = !(s.pc) in
+  let formula = match expr with
+  | Some expr -> Formula.add_constraint expr formula
+  | None -> formula
+  in
+  let expression = encode_formula formula in
+  solver_count := !solver_count + 1;
+  let sat = time_call (fun () -> Solver.check s.solver [expression]) solver_time in
   let b =
     match sat with
     | Solver.SATISFIABLE -> true
@@ -53,16 +70,10 @@ let check (s : t) (es : Expression.t list) : bool =
   b
 
 let fork (s : t) (e : Expression.t) : bool * bool =
-  (check s [ e ], check s [ Expression.negate_relop e ])
-
-let get_model (s : t) : Model.model =
-  match Solver.get_model s.solver with
-  | Some m -> m
-  | None -> assert false (* should not happen after sat check *)
+  (check s (Some e), check s (Some (Expression.negate_relop e)))
 
 let model (s : t) : Model.model =
-  assert (check s []);
-  get_model s
+  Option.get (Solver.get_model s.solver)
 
 let value_binds (s : t) vars : (string * Num.t) list =
   let m = model s in
