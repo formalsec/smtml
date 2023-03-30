@@ -52,6 +52,13 @@ let check (s : t) (es : Expression.t list) : bool =
   in
   b
 
+let eval (s : t) (e : Expression.t) (es : Expression.t list) : 
+    Expression.value option =
+  let es' = List.map ~f:encode_expr es in
+  ignore (time_call (fun () -> Solver.check s.solver es') solver_time);
+  let model = Solver.get_model s.solver in
+  Option.value_map model ~default:None ~f:(fun m -> value_of_const m e)
+
 let fork (s : t) (e : Expression.t) : bool * bool =
   (check s [ e ], check s [ Expression.negate_relop e ])
 

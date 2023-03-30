@@ -464,9 +464,10 @@ let int64_of_fp (fp : Expr.expr) ~(ebits : int) ~(sbits : int) : int64 =
     and fraction = List.nth_exn bit_list 2 in
     Int64.(fp_sign lor (exponent lor fraction))
 
-let value_of_const (model : Model.model) ((c, t) : Expression.t * expr_type) :
+let value_of_const (model : Model.model) (c : Expression.t) :
     Expression.value option =
-  let interp = Model.eval model (encode_expr c) true in
+  let t = Expression.type_of c
+  and interp = Model.eval model (encode_expr c) true in
   let f (e : Expr.expr) : Expression.value =
     match (t, Sort.get_sort_kind (Expr.get_sort e)) with
     | `IntType, Z3enums.INT_SORT -> Int (Int64.to_int_trunc (int64_of_int e))
@@ -489,7 +490,7 @@ let value_of_const (model : Model.model) ((c, t) : Expression.t * expr_type) :
 let model_binds (model : Model.model) (vars : (string * expr_type) list) :
     (string * Expression.value) list =
   List.fold_left vars ~init:[] ~f:(fun a (x, t) ->
-      let v = value_of_const model (Expression.symbolic t x, t) in
+      let v = value_of_const model (Expression.symbolic t x) in
       Option.fold ~init:a ~f:(fun a v' -> (x, v') :: a) v)
 
 let value_binds (model : Model.model) (vars : (string * expr_type) list) :

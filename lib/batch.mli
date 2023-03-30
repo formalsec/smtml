@@ -3,6 +3,8 @@ open Z3
 open Types
 open Expression
 
+exception Unknown
+
 type t = { solver : s; pc : pc ref }
 and s = Solver.solver
 
@@ -22,6 +24,10 @@ val add : t -> Expression.t -> unit
 val check : t -> Expression.t list -> bool
 (** [check solver [e1; ...; en]] checks the satisfiability of [e1, ..., en]
     without adding the expressions as assertions to the solver *)
+
+val eval : t -> Expression.t -> Expression.t list -> Expression.value option
+(** [eval solver e es] evaluates a possible value of the const [e] in the 
+    the context of the assertions [es] *)
 
 val fork : t -> Expression.t -> bool * bool
 (** [fork solver e] checks the satisfiability of the fork on the condition [e] *)

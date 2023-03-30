@@ -34,8 +34,7 @@ let check (e : t) (vs : Expression.t list) : bool =
     let sat = time_call (fun () -> Solver.check e.solver vs') solver_time in
     match sat with
     | Solver.SATISFIABLE -> true
-    | Solver.UNKNOWN ->
-        failwith ("unknown: " ^ Solver.get_reason_unknown e.solver) (* fail? *)
+    | Solver.UNKNOWN -> raise Unknown
     | Solver.UNSATISFIABLE -> false
   in
   b
