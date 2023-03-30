@@ -15,23 +15,31 @@ let time_call f acc =
   ret
 
 type s = Solver.solver
-type t = { solver : s; pc : Expression.pc ref }
+type t = { solver : s; pc : Formula.t ref }
 
-let create () : t = { solver = Solver.mk_solver ctx None; pc = ref [] }
+let create () : t =
+  { solver = Solver.mk_solver ctx None; pc = ref (Formula.create ()) }
 
 let clone (e : t) : t =
   { solver = Solver.translate e.solver ctx; pc = ref !(e.pc) }
 
 let add (e : t) (c : Expression.t) : unit =
-  e.pc := c :: !(e.pc);
+  e.pc := Formula.add_constraint c !(e.pc);
   let ec = encode_expr ~bool_to_bv:false c in
   Solver.add e.solver [ ec ]
 
-let check (e : t) (vs : Expression.t list) : bool =
-  let vs' = List.map ~f:(encode_expr ~bool_to_bv:false) vs in
+let add_formula (e : t) (f : Formula.t) : unit =
+  e.pc := Formula.conjunct [ f; !(e.pc) ];
+  let ef = encode_formula f in
+  Solver.add e.solver [ ef ]
+
+let check (e : t) (expr : Expression.t option) : bool =
+  let expr' =
+    Option.to_list (Option.map ~f:(encode_expr ~bool_to_bv:false) expr)
+  in
   let b =
     solver_count := !solver_count + 1;
-    let sat = time_call (fun () -> Solver.check e.solver vs') solver_time in
+    let sat = time_call (fun () -> Solver.check e.solver expr') solver_time in
     match sat with
     | Solver.SATISFIABLE -> true
     | Solver.UNKNOWN -> raise Unknown
@@ -39,20 +47,18 @@ let check (e : t) (vs : Expression.t list) : bool =
   in
   b
 
-let fork (e : t) (co : Expression.t) : bool * bool =
-  let negated_co = Expression.negate_relop co in
-  (check e [ co ], check e [ negated_co ])
+let fork (s : t) (e : Expression.t) : bool * bool =
+  (check s (Some e), check s (Some (Expression.negate_relop e)))
 
 (** fails if solver isn't currently SAT *)
-let model (e : t) : Model.model =
-  assert (check e []);
+let model_exn (e : t) : Model.model =
   Option.value_exn (Solver.get_model e.solver)
 
 (** fails if solver isn't currently SAT *)
 let value_binds (e : t) (vars : (string * expr_type) list) :
     (string * Expression.value) list =
-  Common.value_binds (model e) vars
+  Common.value_binds (model_exn e) vars
 
 (** fails if solver isn't currently SAT *)
 let string_binds (e : t) : (string * string * string) list =
-  Common.string_binds (model e)
+  Common.string_binds (model_exn e)

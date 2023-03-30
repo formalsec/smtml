@@ -502,7 +502,7 @@ let string_binds (m : Model.model) : (string * string * string) list =
       let sort = Sort.to_string (FuncDecl.get_range const)
       and name = Symbol.to_string (FuncDecl.get_name const)
       and interp =
-        Batteries.Option.map_default Expr.to_string ""
+        Option.value_map ~default:"" ~f:Expr.to_string
           (Model.get_const_interp m const)
       in
       (sort, name, interp))

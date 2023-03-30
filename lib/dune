@@ -1,4 +1,4 @@
 (library
  (name encoding)
  (public_name encoding)
- (libraries base batteries z3))
+ (libraries base z3))

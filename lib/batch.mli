@@ -1,11 +1,10 @@
 open Base
 open Z3
 open Types
-open Expression
 
 exception Unknown
 
-type t = { solver : s; pc : pc ref }
+type t = { solver : s; pc : Formula.t ref }
 and s = Solver.solver
 
 val solver_time : float ref
@@ -21,9 +20,20 @@ val interrupt : unit -> unit
 val add : t -> Expression.t -> unit
 (** [add solver e] adds assertion [e] to [solver] *)
 
-val check : t -> Expression.t list -> bool
-(** [check solver [e1; ...; en]] checks the satisfiability of [e1, ..., en]
-    without adding the expressions as assertions to the solver *)
+val add_formula : t -> Formula.t -> unit
+(** [add solver f] adds formula [f] to [solver] *)
+
+val check_formulas : t -> Formula.t list -> bool
+(** [check_formulas solver [e1; ...; en]] checks the satisfiability of
+    [e1, ..., en] without adding the expressions as assertions to the solver *)
+
+val check_sat : t -> Expression.t list -> bool
+(** [check_sat solver [e1; ...; en]] checks the satisfiability of the
+    existing pc with [e1, ..., en] but without adding the expressions
+    as assertions to the solver *)
+
+val check : t -> Expression.t option -> bool
+(** [check solver e] *)
 
 val eval : t -> Expression.t -> Expression.t list -> Expression.value option
 (** [eval solver e es] evaluates a possible value of the const [e] in the 
