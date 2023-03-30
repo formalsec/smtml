@@ -14,12 +14,12 @@ let%test_unit _ = encode str_symb
 
 (* Satisfiability *)
 let%test _ =
-  Batch.check solver
+  Batch.check_sat solver
     [ Relop (Int I.Ge, Unop (Str S.Len, str_symb), Unop (Str S.Len, str)) ]
 
 let%test _ =
   not
-    (Batch.check solver
+    (Batch.check_sat solver
        [
          Relop (Int I.Eq, Unop (Str S.Len, str_symb), Val (Int 4));
          Relop (Int I.Eq, Unop (Str S.Len, str_symb), Unop (Str S.Len, str));

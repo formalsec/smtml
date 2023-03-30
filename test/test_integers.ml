@@ -16,5 +16,5 @@ let%test_unit _ = encode int_neg
 let%test_unit _ = encode int_zero
 let%test_unit _ = encode int_symb
 (* Satisfiability *)
-let%test _ = Batch.check solver [ Relop (Int I.Gt, int_symb, int_zero) ]
-let%test _ = Batch.check solver [ Relop (Int I.Gt, int_pos, int_neg) ]
+let%test _ = Batch.check_sat solver [ Relop (Int I.Gt, int_symb, int_zero) ]
+let%test _ = Batch.check_sat solver [ Relop (Int I.Gt, int_pos, int_neg) ]
