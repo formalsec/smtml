@@ -39,10 +39,7 @@ module IntZ3Op = struct
   let encode_num (i : Int.t) : Expr.expr = Expr.mk_numeral_int ctx i int_sort
 
   let encode_unop (op : unop) (e : Expr.expr) : Expr.expr =
-    let op' =
-      match op with Neg -> fun v1 -> Arithmetic.mk_unary_minus ctx v1
-      (* | _ -> raise (Error "Unsupported integer operations") *)
-    in
+    let op' = match op with Neg -> Arithmetic.mk_unary_minus ctx in
     op' e
 
   let encode_binop (op : binop) (e1 : Expr.expr) (e2 : Expr.expr) : Expr.expr =
