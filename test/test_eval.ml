@@ -4,14 +4,18 @@ open Expression
 
 let solver = Batch.create ()
 let int_symb = Symbolic (`IntType, "x")
+let bool_symb = Symbolic (`BoolType, "y")
 
 (* Satisfiability *)
-let%test "eval_unsat" =
-  let unsat = Relop (Int I.Eq, Val (Int 0), Val (Int 1)) in
-  Option.is_none (Batch.eval solver int_symb [ unsat ])
+let%test "test_unsat" =
+  Option.is_none (Batch.eval solver int_symb [ Val (Bool false) ])
 
-let%test "eval_unconstrained" = Option.is_some (Batch.eval solver int_symb [])
+let%test "test_unconstrained" = Option.is_some (Batch.eval solver int_symb [])
 
-let%test "eval_constrained" =
+let%test "test_constrained_int" =
   Some (Int 5)
   = Batch.eval solver int_symb [ Relop (Int I.Eq, int_symb, Val (Int 5)) ]
+
+let%test "test_constrained_bool" =
+  let pc = [ Relop (Bool B.Eq, bool_symb, Val (Bool true)) ] in
+  Some (Bool true) = Batch.eval solver bool_symb pc
