@@ -62,9 +62,7 @@ let check_formulas (s : t) (formulas : Formula.t list) : bool =
 let check_sat (s : t) (es : Expression.t list) : bool =
   let es' = List.map ~f:encode_expr es in
   solver_count := !solver_count + 1;
-  let sat =
-    time_call (fun () -> Solver.check s.solver es') solver_time
-  in
+  let sat = time_call (fun () -> Solver.check s.solver es') solver_time in
   match sat with
   | Solver.SATISFIABLE -> true
   | Solver.UNSATISFIABLE -> false

@@ -3,7 +3,7 @@ open Types
 
 exception InvalidRelop
 
-type value = Int of Int.t | Num of Num.t | Str of String.t
+type value = Int of Int.t | Bool of Bool.t | Num of Num.t | Str of String.t
 
 type expr =
   | Val of value
@@ -62,6 +62,7 @@ let rec get_symbols (e : expr) : (String.t * expr_type) List.t =
 let rec to_string (e : expr) : String.t =
   match e with
   | Val (Int i) -> Int.to_string i
+  | Val (Bool b) -> Bool.to_string b
   | Val (Num n) -> Num.string_of_num n
   | Val (Str s) -> "(Str \"" ^ s ^ "\")"
   | SymPtr (base, offset) ->
@@ -71,6 +72,7 @@ let rec to_string (e : expr) : String.t =
       let str_op =
         match op with
         | Int op -> I.string_of_unop op
+        | Bool op -> B.string_of_unop op
         | Str op -> S.string_of_unop op
         | I32 op -> I32.string_of_unop op
         | I64 op -> I64.string_of_unop op
@@ -82,6 +84,7 @@ let rec to_string (e : expr) : String.t =
       let str_op =
         match op with
         | Int op -> I.string_of_binop op
+        | Bool op -> B.string_of_binop op
         | Str op -> S.string_of_binop op
         | I32 op -> I32.string_of_binop op
         | I64 op -> I64.string_of_binop op
@@ -93,6 +96,7 @@ let rec to_string (e : expr) : String.t =
       let str_op =
         match op with
         | Int op -> I.string_of_relop op
+        | Bool op -> B.string_of_relop op
         | Str op -> S.string_of_relop op
         | I32 op -> I32.string_of_relop op
         | I64 op -> I64.string_of_relop op
@@ -104,6 +108,7 @@ let rec to_string (e : expr) : String.t =
       let str_op =
         match op with
         | Int op -> I.string_of_cvtop op
+        | Bool op -> B.string_of_cvtop op
         | Str op -> S.string_of_cvtop op
         | I32 op -> I32.string_of_cvtop op
         | I64 op -> I64.string_of_cvtop op
@@ -120,6 +125,7 @@ let rec to_string (e : expr) : String.t =
 let rec pp_to_string (e : expr) : String.t =
   match e with
   | Val (Int i) -> Int.to_string i
+  | Val (Bool b) -> Bool.to_string b
   | Val (Num n) -> Num.string_of_num n
   | Val (Str s) -> "\"" ^ s ^ "\")"
   | SymPtr (base, offset) ->
@@ -130,6 +136,7 @@ let rec pp_to_string (e : expr) : String.t =
       let str_op =
         match op with
         | Int op -> I.pp_string_of_unop op
+        | Bool op -> B.pp_string_of_unop op
         | Str op -> S.pp_string_of_unop op
         | I32 op -> I32.pp_string_of_unop op
         | I64 op -> I64.pp_string_of_unop op
@@ -141,6 +148,7 @@ let rec pp_to_string (e : expr) : String.t =
       let str_op =
         match op with
         | Int op -> I.pp_string_of_binop op
+        | Bool op -> B.pp_string_of_binop op
         | Str op -> S.pp_string_of_binop op
         | I32 op -> I32.pp_string_of_binop op
         | I64 op -> I64.pp_string_of_binop op
@@ -152,6 +160,7 @@ let rec pp_to_string (e : expr) : String.t =
       let str_op =
         match op with
         | Int op -> I.pp_string_of_relop op
+        | Bool op -> B.pp_string_of_relop op
         | Str op -> S.pp_string_of_relop op
         | I32 op -> I32.pp_string_of_relop op
         | I64 op -> I64.pp_string_of_relop op
@@ -163,6 +172,7 @@ let rec pp_to_string (e : expr) : String.t =
       let str_op =
         match op with
         | Int op -> I.pp_string_of_cvtop op
+        | Bool op -> B.pp_string_of_cvtop op
         | Str op -> S.pp_string_of_cvtop op
         | I32 op -> I32.pp_string_of_cvtop op
         | I64 op -> I64.pp_string_of_cvtop op
@@ -192,7 +202,7 @@ let string_of_values (el : (Num.t * t) List.t) : String.t =
 let rec type_of (e : expr) : expr_type =
   let rec concat_length (e' : expr) : Int.t =
     match e' with
-    | Val (Int _) | Val (Str _) -> assert false
+    | Val (Bool _) | Val (Int _) | Val (Str _) -> assert false
     | Val (Num n) -> size (Types.type_of_num n)
     | SymPtr _ -> 4
     | Binop (op, _, _) -> size (Types.type_of op)
@@ -204,6 +214,7 @@ let rec type_of (e : expr) : expr_type =
     | Extract (_, h, l) -> h - l
   in
   match e with
+  | Val (Bool _) -> `BoolType
   | Val (Int _) -> `IntType
   | Val (Num n) -> Types.type_of_num n
   | Val (Str _) -> `StrType
