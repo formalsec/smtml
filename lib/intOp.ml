@@ -1,7 +1,7 @@
 open Base
 
 type binop = Add | Mul | Div | Rem | And | Sub | Shl | ShrA | ShrL | Or | Xor
-type unop
+type unop = Neg
 type relop = Eq | Lt | Le | Ne | Gt | Ge
 type cvtop
 
@@ -44,8 +44,8 @@ let pp_string_of_binop (op : binop) : string =
   | Rem -> "%"
 
 (*  String representation of an i32 unary operation  *)
-let string_of_unop (_ : unop) : string = assert false
-let pp_string_of_unop (_ : unop) : string = assert false
+let string_of_unop (op : unop) : string = match op with Neg -> "Neg"
+let pp_string_of_unop (op : unop) : string = match op with Neg -> "-"
 
 (*  String representation of an i32 relative operation  *)
 let string_of_relop (op : relop) : string =
