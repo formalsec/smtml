@@ -1,4 +1,3 @@
-open Base
 open Encoding
 open Types
 open Expression
@@ -14,5 +13,5 @@ let%test "eval_unsat" =
 let%test "eval_unconstrained" = Option.is_some (Batch.eval solver int_symb [])
 
 let%test "eval_constrained" =
-  Caml.( = ) (Option.some (Int 5))
-    (Batch.eval solver int_symb [ Relop (Int I.Eq, int_symb, Val (Int 5)) ])
+  Some (Int 5)
+  = Batch.eval solver int_symb [ Relop (Int I.Eq, int_symb, Val (Int 5)) ]
