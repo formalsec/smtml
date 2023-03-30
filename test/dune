@@ -1,6 +1,6 @@
 (library
  (name unit_tests)
- (modules test_integers test_strings)
+ (modules test_integers test_strings test_eval test_optimizer)
  (inline_tests)
  (preprocess
   (pps ppx_inline_test))
