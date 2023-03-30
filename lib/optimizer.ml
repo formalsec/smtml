@@ -30,12 +30,12 @@ let check (opt : t) e (pc : Expression.t list) obj =
   pop opt;
   model
 
-let maximize (opt : t) (e : Expression.t)
-    (pc : Expression.t list) : Expression.value option =
+let maximize (opt : t) (e : Expression.t) (pc : Expression.t list) :
+    Expression.value option =
   let model = check opt e pc Optimize.maximize in
   Option.value_map model ~default:None ~f:(fun m -> value_of_const m e)
 
-let minimize (opt : t) (e : Expression.t)
-    (pc : Expression.t list) : Expression.value option =
+let minimize (opt : t) (e : Expression.t) (pc : Expression.t list) :
+    Expression.value option =
   let model = check opt e pc Optimize.minimize in
   Option.value_map model ~default:None ~f:(fun m -> value_of_const m e)

@@ -52,7 +52,7 @@ let check (s : t) (es : Expression.t list) : bool =
   in
   b
 
-let eval (s : t) (e : Expression.t) (es : Expression.t list) : 
+let eval (s : t) (e : Expression.t) (es : Expression.t list) :
     Expression.value option =
   let es' = List.map ~f:encode_expr es in
   ignore (time_call (fun () -> Solver.check s.solver es') solver_time);
