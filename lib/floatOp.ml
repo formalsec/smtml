@@ -3,6 +3,7 @@ open Base
 type binop = Add | Sub | Mul | Div | Min | Max (*  Falta: | CopySign *)
 type unop = Neg | Abs | Sqrt | Nearest (*  Falta: | Ceil | Floor | Trunc *)
 type relop = Eq | Ne | Lt | Le | Gt | Ge
+type triop
 
 type cvtop =
   | DemoteF64
@@ -86,3 +87,5 @@ let string_of_cvtop (op : cvtop) : string =
   | PromoteF32 -> "PromoteF32"
 
 let pp_string_of_cvtop (op : cvtop) : string = string_of_cvtop op
+let string_of_triop (_ : triop) : string = assert false
+let pp_string_of_triop (_ : triop) : string = assert false

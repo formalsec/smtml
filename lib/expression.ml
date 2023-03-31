@@ -9,6 +9,7 @@ type expr =
   | Val of value
   | SymPtr of Int32.t * expr
   | Binop of binop * expr * expr
+  | Triop of triop * expr * expr * expr
   | Unop of unop * expr
   | Relop of relop * expr * expr
   | Cvtop of cvtop * expr
@@ -39,6 +40,7 @@ let rec length (e : expr) : Int.t =
   | SymPtr _ -> 1
   | Unop (_, e) -> 1 + length e
   | Binop (_, e1, e2) -> 1 + length e1 + length e2
+  | Triop (_, e1, e2, e3) -> 1 + length e1 + length e2 + length e3
   | Relop (_, e1, e2) -> 1 + length e1 + length e2
   | Cvtop (_, e) -> 1 + length e
   | Symbolic (_, _) -> 1
@@ -52,6 +54,7 @@ let rec get_symbols (e : expr) : (String.t * expr_type) List.t =
   | SymPtr (_, offset) -> get_symbols offset
   | Unop (_, e1) -> get_symbols e1
   | Binop (_, e1, e2) -> get_symbols e1 @ get_symbols e2
+  | Triop (_, e1, e2, e3) -> get_symbols e1 @ get_symbols e2 @ get_symbols e3
   | Relop (_, e1, e2) -> get_symbols e1 @ get_symbols e2
   | Cvtop (_, e) -> get_symbols e
   | Symbolic (t, x) -> [ (x, t) ]
@@ -104,6 +107,18 @@ let rec to_string (e : expr) : String.t =
         | F64 op -> F64.string_of_relop op
       in
       "(" ^ str_op ^ " " ^ to_string e1 ^ ", " ^ to_string e2 ^ ")"
+  | Triop (op, e1, e2, e3) ->
+    let str_op =
+      match op with
+      | Int op -> I.string_of_triop op
+      | Bool op -> B.string_of_triop op
+      | Str op -> S.string_of_triop op
+      | I32 op -> I32.string_of_triop op
+      | I64 op -> I64.string_of_triop op
+      | F32 op -> F32.string_of_triop op
+      | F64 op -> F64.string_of_triop op
+    in
+    "(" ^ str_op ^ " " ^ to_string e1 ^ ", " ^ to_string e2 ^ ", " ^ to_string e3 ^ ")"
   | Cvtop (op, e) ->
       let str_op =
         match op with
@@ -156,6 +171,18 @@ let rec pp_to_string (e : expr) : String.t =
         | F64 op -> F64.pp_string_of_binop op
       in
       "(" ^ str_op ^ " " ^ pp_to_string e1 ^ ", " ^ pp_to_string e2 ^ ")"
+      | Triop (op, e1, e2, e3) ->
+        let str_op =
+          match op with
+          | Int op -> I.pp_string_of_triop op
+          | Bool op -> B.pp_string_of_triop op
+          | Str op -> S.pp_string_of_triop op
+          | I32 op -> I32.pp_string_of_triop op
+          | I64 op -> I64.pp_string_of_triop op
+          | F32 op -> F32.pp_string_of_triop op
+          | F64 op -> F64.pp_string_of_triop op
+        in
+        "(" ^ str_op ^ " " ^ pp_to_string e1 ^ ", " ^ pp_to_string e2 ^ pp_to_string e3 ^ ")"
   | Relop (op, e1, e2) ->
       let str_op =
         match op with
@@ -206,6 +233,7 @@ let rec type_of (e : expr) : expr_type =
     | Val (Num n) -> size (Types.type_of_num n)
     | SymPtr _ -> 4
     | Binop (op, _, _) -> size (Types.type_of op)
+    | Triop (op, _, _, _) -> size (Types.type_of op)
     | Unop (op, _) -> size (Types.type_of op)
     | Relop (op, _, _) -> size (Types.type_of op)
     | Cvtop (op, _) -> size (Types.type_of op)
@@ -220,6 +248,7 @@ let rec type_of (e : expr) : expr_type =
   | Val (Str _) -> `StrType
   | SymPtr _ -> `I32Type
   | Binop (op, _, _) -> Types.type_of op
+  | Triop (op, _, _, _) -> Types.type_of op
   | Unop (op, _) -> Types.type_of op
   | Relop (op, _, _) -> Types.type_of op
   | Cvtop (op, _) -> Types.type_of op
@@ -248,6 +277,11 @@ let rec get_ptr (e : expr) : Num.t Option.t =
   | Binop (_, e1, e2) ->
       let p1 = get_ptr e1 in
       if Option.is_some p1 then p1 else get_ptr e2
+  | Triop (_, e1, e2, e3) ->
+      let p1 = get_ptr e1 in
+      if Option.is_some p1 then p1 else
+        let p2 = get_ptr e2 in 
+        if Option.is_some p2 then p2 else get_ptr e3
   | Relop (_, e1, e2) ->
       let p1 = get_ptr e1 in
       if Option.is_some p1 then p1 else get_ptr e2

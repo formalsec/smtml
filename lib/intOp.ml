@@ -3,6 +3,7 @@ open Base
 type binop = Add | Mul | Div | Rem | And | Sub | Shl | ShrA | ShrL | Or | Xor
 type unop = Neg
 type relop = Eq | Lt | Le | Ne | Gt | Ge
+type triop
 type cvtop
 
 let neg_relop (op : relop) : relop =
@@ -68,3 +69,6 @@ let pp_string_of_relop (op : relop) : string =
 
 let string_of_cvtop (_ : cvtop) : string = assert false
 let pp_string_of_cvtop (_ : cvtop) : string = assert false
+
+let string_of_triop (_ : triop) : string = assert false
+let pp_string_of_triop (_ : triop) : string = assert false

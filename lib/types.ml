@@ -23,6 +23,9 @@ module I64 = BvOp
 module F32 = FloatOp
 module F64 = FloatOp
 
+type triop =
+  (I.triop, B.triop, S.triop, I32.triop, I64.triop, F32.triop, F64.triop) op
+
 type binop =
   (I.binop, B.binop, S.binop, I32.binop, I64.binop, F32.binop, F64.binop) op
 
