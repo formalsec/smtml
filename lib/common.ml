@@ -455,28 +455,24 @@ let rec encode_expr ?(bool_to_bv = false) (e : Expression.t) : Expr.expr =
   | Unop (op, e) ->
       let e' = encode_expr e in
       encode_unop op e'
-  | Binop (Int op, e1, e2) ->
+  | Binop (Int _ as op, e1, e2) | Binop (Bool _ as op, e1, e2) ->
       let e1' = encode_expr e1 and e2' = encode_expr e2 in
-      encode_binop (Int op) e1' e2'
+      encode_binop op e1' e2'
   | Binop (op, e1, e2) ->
-      let e1' = encode_expr ~bool_to_bv e1
-      and e2' = encode_expr ~bool_to_bv e2 in
+      let e1' = encode_expr ~bool_to_bv:true e1
+      and e2' = encode_expr ~bool_to_bv:true e2 in
       encode_binop op e1' e2'
   | Triop (op, e1, e2, e3) ->
       let e1' = encode_expr ~bool_to_bv e1
       and e2' = encode_expr ~bool_to_bv e2
       and e3' = encode_expr ~bool_to_bv e3 in
-
       encode_triop op e1' e2' e3'
-  | Relop (Int op, e1, e2) ->
+  | Relop (Int _ as op, e1, e2) | Relop (Bool _ as op, e1, e2)->
       let e1' = encode_expr e1 and e2' = encode_expr e2 in
-      encode_relop ~to_bv:false (Int op) e1' e2'
-  | Relop (Bool op, e1, e2) ->
-      let e1' = encode_expr e1 and e2' = encode_expr e2 in
-      encode_relop ~to_bv:false (Bool op) e1' e2'
+      encode_relop ~to_bv:false op e1' e2'
   | Relop (op, e1, e2) ->
-      let e1' = encode_expr ~bool_to_bv:false e1
-      and e2' = encode_expr ~bool_to_bv:false e2 in
+      let e1' = encode_expr ~bool_to_bv:true e1
+      and e2' = encode_expr ~bool_to_bv:true e2 in
       encode_relop ~to_bv:bool_to_bv op e1' e2'
   | Cvtop (op, e) ->
       let e' = encode_expr e in
