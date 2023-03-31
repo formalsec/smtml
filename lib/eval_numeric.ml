@@ -481,7 +481,7 @@ let op i32 i64 f32 f64 = function
   | I64 x -> i64 x
   | F32 x -> f32 x
   | F64 x -> f64 x
-  | Str _ -> assert false
+  | Str _ | Bool _ -> assert false
 
 let eval_unop = op I32Op.unop I64Op.unop F32Op.unop F64Op.unop
 let eval_binop = op I32Op.binop I64Op.binop F32Op.binop F64Op.binop

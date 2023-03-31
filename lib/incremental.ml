@@ -42,8 +42,7 @@ let check (e : t) (expr : Expression.t option) : bool =
     let sat = time_call (fun () -> Solver.check e.solver expr') solver_time in
     match sat with
     | Solver.SATISFIABLE -> true
-    | Solver.UNKNOWN ->
-        failwith ("unknown: " ^ Solver.get_reason_unknown e.solver) (* fail? *)
+    | Solver.UNKNOWN -> raise Unknown
     | Solver.UNSATISFIABLE -> false
   in
   b
@@ -57,12 +56,9 @@ let model_exn (e : t) : Model.model =
 
 (** fails if solver isn't currently SAT *)
 let value_binds (e : t) (vars : (string * expr_type) list) :
-    (string * Num.t) list =
-  let m = model_exn e in
-  Common.value_binds m vars
+    (string * Expression.value) list =
+  Common.value_binds (model_exn e) vars
 
 (** fails if solver isn't currently SAT *)
-let string_binds (e : t) (vars : (string * expr_type) list) :
-    (string * string * string) list =
-  let m = model_exn e in
-  Common.string_binds m vars
+let string_binds (e : t) : (string * string * string) list =
+  Common.string_binds (model_exn e)

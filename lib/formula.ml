@@ -10,6 +10,8 @@ type formula =
 
 type t = formula
 
+let ( && ) (f1 : t) (f2 : t) : t = And (f1, f2)
+let ( || ) (f1 : t) (f2 : t) : t = Or (f1, f2)
 let create () : t = True
 
 let add_constraint ?(neg : bool = false) (e : Expression.t) (pc : t) : t =

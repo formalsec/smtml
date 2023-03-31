@@ -59,6 +59,15 @@ let check_formulas (s : t) (formulas : Formula.t list) : bool =
   in
   b
 
+let check_sat (s : t) (es : Expression.t list) : bool =
+  let es' = List.map ~f:encode_expr es in
+  solver_count := !solver_count + 1;
+  let sat = time_call (fun () -> Solver.check s.solver es') solver_time in
+  match sat with
+  | Solver.SATISFIABLE -> true
+  | Solver.UNSATISFIABLE -> false
+  | Solver.UNKNOWN -> raise Unknown
+
 let check (s : t) (expr : Expression.t option) : bool =
   let expression =
     encode_formula
@@ -78,16 +87,21 @@ let check (s : t) (expr : Expression.t option) : bool =
   in
   b
 
+let eval (s : t) (e : Expression.t) (es : Expression.t list) :
+    Expression.value option =
+  let es' = List.map ~f:encode_expr es in
+  ignore (time_call (fun () -> Solver.check s.solver es') solver_time);
+  let model = Solver.get_model s.solver in
+  Option.value_map model ~default:None ~f:(fun m -> value_of_const m e)
+
 let fork (s : t) (e : Expression.t) : bool * bool =
   (check s (Some e), check s (Some (Expression.negate_relop e)))
 
 let model_exn (s : t) : Model.model =
   Option.value_exn (Solver.get_model s.solver)
 
-let value_binds (s : t) vars : (string * Num.t) list =
-  let m = model_exn s in
-  Common.value_binds m vars
+let value_binds (s : t) vars : (string * Expression.value) list =
+  Common.value_binds (model_exn s) vars
 
-let string_binds (s : t) vars : (string * string * string) list =
-  let m = model_exn s in
-  Common.string_binds m vars
+let string_binds (s : t) : (string * string * string) list =
+  Common.string_binds (model_exn s)

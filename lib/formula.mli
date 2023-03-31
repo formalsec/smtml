@@ -10,6 +10,8 @@ type formula =
 
 type t = formula
 
+val ( && ) : t -> t -> t
+val ( || ) : t -> t -> t
 val create : unit -> t
 val add_constraint : ?neg:bool -> Expression.t -> t -> t
 val negate : t -> t

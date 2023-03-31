@@ -8,32 +8,27 @@ let ctx =
   Z3.mk_context
     [ ("model", "true"); ("proof", "false"); ("unsat_core", "false") ]
 
-(** Sorts *)
 let int_sort = Arithmetic.Integer.mk_sort ctx
-
+let bool_sort = Boolean.mk_sort ctx
 let str_sort = Seq.mk_string_sort ctx
 let bv32_sort = BitVector.mk_sort ctx 32
 let bv64_sort = BitVector.mk_sort ctx 64
 let fp32_sort = FloatingPoint.mk_sort_single ctx
 let fp64_sort = FloatingPoint.mk_sort_double ctx
-
-(** Rounding Modes *)
 let rne = FloatingPoint.RoundingMode.mk_rne ctx
-
 let rtz = FloatingPoint.RoundingMode.mk_rtz ctx
 
-(** Match WASM Type with Z3 Sort *)
 let get_sort (e : Types.expr_type) : Z3.Sort.sort =
   match e with
   | `IntType -> int_sort
+  | `BoolType -> bool_sort
   | `StrType -> str_sort
   | `I32Type -> bv32_sort
   | `I64Type -> bv64_sort
   | `F32Type -> fp32_sort
   | `F64Type -> fp64_sort
 
-(** Bool helper - cast bool to bv *)
-let encode_bool (to_bv : bool) (cond : Expr.expr) : Expr.expr =
+let encode_bool ~(to_bv : bool) (cond : Expr.expr) : Expr.expr =
   let bv_true = BitVector.mk_numeral ctx "1" 32
   and bv_false = BitVector.mk_numeral ctx "0" 32 in
   if to_bv then Boolean.mk_ite ctx cond bv_true bv_false else cond
@@ -42,7 +37,10 @@ module IntZ3Op = struct
   open I
 
   let encode_num (i : Int.t) : Expr.expr = Expr.mk_numeral_int ctx i int_sort
-  let encode_unop (_ : unop) (_ : Expr.expr) : Expr.expr = assert false
+
+  let encode_unop (op : unop) (e : Expr.expr) : Expr.expr =
+    let op' = match op with Neg -> Arithmetic.mk_unary_minus ctx in
+    op' e
 
   let encode_binop (op : binop) (e1 : Expr.expr) (e2 : Expr.expr) : Expr.expr =
     let op' =
@@ -60,11 +58,40 @@ module IntZ3Op = struct
     let op' =
       match op with
       | Eq -> Boolean.mk_eq ctx
-      | Ne -> fun v1 v2 -> Boolean.mk_not ctx (Boolean.mk_eq ctx v1 v2)
+      | Ne -> fun v1 v2 -> Boolean.mk_eq ctx v1 v2 |> Boolean.mk_not ctx
       | Lt -> Arithmetic.mk_lt ctx
       | Gt -> Arithmetic.mk_gt ctx
       | Le -> Arithmetic.mk_le ctx
       | Ge -> Arithmetic.mk_ge ctx
+    in
+    op' e1 e2
+
+  let encode_cvtop (_ : cvtop) (_ : Expr.expr) : Expr.expr = assert false
+end
+
+module BoolZ3Op = struct
+  open B
+
+  let encode_bool (b : Bool.t) : Expr.expr = Boolean.mk_val ctx b
+
+  let encode_unop (op : unop) (e : Expr.expr) : Expr.expr =
+    let op' = match op with Not -> Boolean.mk_not ctx in
+    op' e
+
+  let encode_binop (op : binop) (e1 : Expr.expr) (e2 : Expr.expr) : Expr.expr =
+    let op' =
+      match op with
+      | And -> fun v1 v2 -> Boolean.mk_and ctx [ v1; v2 ]
+      | Or -> fun v1 v2 -> Boolean.mk_or ctx [ v1; v2 ]
+      | Xor -> Boolean.mk_xor ctx
+    in
+    op' e1 e2
+
+  let encode_relop (op : relop) (e1 : Expr.expr) (e2 : Expr.expr) : Expr.expr =
+    let op' =
+      match op with
+      | Eq -> Boolean.mk_eq ctx
+      | Ne -> fun v1 v2 -> Boolean.mk_eq ctx v1 v2 |> Boolean.mk_not ctx
     in
     op' e1 e2
 
@@ -76,14 +103,26 @@ module StrZ3Op = struct
 
   let encode_str (s : String.t) : Expr.expr = Seq.mk_string ctx s
 
-  let encode_unop (_ : unop) (_ : Expr.expr) : Expr.expr =
-    raise (Error "Not implemented")
+  let encode_unop (op : unop) (e : Expr.expr) : Expr.expr =
+    let op' = match op with Len -> Seq.mk_seq_length ctx in
+    op' e
 
-  let encode_binop (_ : binop) (_ : Expr.expr) (_ : Expr.expr) : Expr.expr =
-    raise (Error "Not implemented")
+  let encode_binop (op : binop) (e1 : Expr.expr) (e2 : Expr.expr) : Expr.expr =
+    let op' =
+      match op with
+      | Nth ->
+          fun v1 v2 ->
+            Seq.mk_seq_extract ctx v1 v2 (Expr.mk_numeral_int ctx 1 int_sort)
+    in
+    op' e1 e2
 
-  let encode_relop (_ : relop) (_ : Expr.expr) (_ : Expr.expr) : Expr.expr =
-    raise (Error "Not implemented")
+  let encode_relop (op : relop) (e1 : Expr.expr) (e2 : Expr.expr) : Expr.expr =
+    let op' =
+      match op with
+      | Eq -> Boolean.mk_eq ctx
+      | Ne -> fun v1 v2 -> Boolean.mk_eq ctx v1 v2 |> Boolean.mk_not ctx
+    in
+    op' e1 e2
 
   let encode_cvtop (_ : cvtop) (_ : Expr.expr) : Expr.expr =
     raise (Error "Not implemented")
@@ -122,7 +161,7 @@ module I32Z3Op = struct
     let op' =
       match op with
       | Eq -> Boolean.mk_eq ctx
-      | Ne -> fun x1 x2 -> Boolean.mk_not ctx (Boolean.mk_eq ctx x1 x2)
+      | Ne -> fun x1 x2 -> Boolean.mk_eq ctx x1 x2 |> Boolean.mk_not ctx
       | LtU -> BitVector.mk_ult ctx
       | LtS -> BitVector.mk_slt ctx
       | LeU -> BitVector.mk_ule ctx
@@ -132,7 +171,7 @@ module I32Z3Op = struct
       | GeU -> BitVector.mk_uge ctx
       | GeS -> BitVector.mk_sge ctx
     in
-    encode_bool to_bv (op' e1 e2)
+    encode_bool ~to_bv (op' e1 e2)
 
   let encode_cvtop (op : cvtop) (e : Expr.expr) : Expr.expr =
     let op' =
@@ -180,7 +219,7 @@ module I64Z3Op = struct
     let op' =
       match op with
       | Eq -> Boolean.mk_eq ctx
-      | Ne -> fun x1 x2 -> Boolean.mk_not ctx (Boolean.mk_eq ctx x1 x2)
+      | Ne -> fun x1 x2 -> Boolean.mk_eq ctx x1 x2 |> Boolean.mk_not ctx
       | LtU -> BitVector.mk_ult ctx
       | LtS -> BitVector.mk_slt ctx
       | LeU -> BitVector.mk_ule ctx
@@ -190,7 +229,7 @@ module I64Z3Op = struct
       | GeU -> BitVector.mk_uge ctx
       | GeS -> BitVector.mk_sge ctx
     in
-    encode_bool to_bv (op' e1 e2)
+    encode_bool ~to_bv (op' e1 e2)
 
   let encode_cvtop (op : cvtop) (e : Expr.expr) : Expr.expr =
     let op' =
@@ -241,13 +280,13 @@ module F32Z3Op = struct
     let op' =
       match op with
       | Eq -> FloatingPoint.mk_eq ctx
-      | Ne -> fun x1 x2 -> Boolean.mk_not ctx (FloatingPoint.mk_eq ctx x1 x2)
+      | Ne -> fun x1 x2 -> FloatingPoint.mk_eq ctx x1 x2 |> Boolean.mk_not ctx
       | Lt -> FloatingPoint.mk_lt ctx
       | Le -> FloatingPoint.mk_leq ctx
       | Gt -> FloatingPoint.mk_gt ctx
       | Ge -> FloatingPoint.mk_geq ctx
     in
-    encode_bool to_bv (op' e1 e2)
+    encode_bool ~to_bv (op' e1 e2)
 
   let encode_cvtop (op : cvtop) (e : Expr.expr) : Expr.expr =
     let op' =
@@ -300,13 +339,13 @@ module F64Z3Op = struct
     let op' =
       match op with
       | Eq -> FloatingPoint.mk_eq ctx
-      | Ne -> fun x1 x2 -> Boolean.mk_not ctx (FloatingPoint.mk_eq ctx x1 x2)
+      | Ne -> fun x1 x2 -> FloatingPoint.mk_eq ctx x1 x2 |> Boolean.mk_not ctx
       | Lt -> FloatingPoint.mk_lt ctx
       | Le -> FloatingPoint.mk_leq ctx
       | Gt -> FloatingPoint.mk_gt ctx
       | Ge -> FloatingPoint.mk_geq ctx
     in
-    encode_bool to_bv (op' e1 e2)
+    encode_bool ~to_bv (op' e1 e2)
 
   let encode_cvtop (op : cvtop) (e : Expr.expr) : Expr.expr =
     let op' =
@@ -327,49 +366,54 @@ module F64Z3Op = struct
     op' e
 end
 
-let num i i32 i64 f32 f64 : Num.t -> Expr.expr = function
-  | Int x -> i x
+let num i32 i64 f32 f64 : Num.t -> Expr.expr = function
   | I32 x -> i32 x
   | I64 x -> i64 x
   | F32 x -> f32 x
   | F64 x -> f64 x
 
-let op i s i32 i64 f32 f64 = function
+let op i b s i32 i64 f32 f64 = function
   | Int x -> i x
+  | Bool x -> b x
   | Str x -> s x
   | I32 x -> i32 x
   | I64 x -> i64 x
   | F32 x -> f32 x
   | F64 x -> f64 x
 
-let encode_num =
-  num IntZ3Op.encode_num I32Z3Op.encode_num I64Z3Op.encode_num
-    F32Z3Op.encode_num F64Z3Op.encode_num
+let encode_num : Num.t -> Expr.expr =
+  num I32Z3Op.encode_num I64Z3Op.encode_num F32Z3Op.encode_num
+    F64Z3Op.encode_num
 
-let encode_unop =
-  op IntZ3Op.encode_unop StrZ3Op.encode_unop I32Z3Op.encode_unop
-    I64Z3Op.encode_unop F32Z3Op.encode_unop F64Z3Op.encode_unop
+let encode_unop : unop -> Expr.expr -> Expr.expr =
+  op IntZ3Op.encode_unop BoolZ3Op.encode_unop StrZ3Op.encode_unop
+    I32Z3Op.encode_unop I64Z3Op.encode_unop F32Z3Op.encode_unop
+    F64Z3Op.encode_unop
 
-let encode_binop =
-  op IntZ3Op.encode_binop StrZ3Op.encode_binop I32Z3Op.encode_binop
-    I64Z3Op.encode_binop F32Z3Op.encode_binop F64Z3Op.encode_binop
+let encode_binop : binop -> Expr.expr -> Expr.expr -> Expr.expr =
+  op IntZ3Op.encode_binop BoolZ3Op.encode_binop StrZ3Op.encode_binop
+    I32Z3Op.encode_binop I64Z3Op.encode_binop F32Z3Op.encode_binop
+    F64Z3Op.encode_binop
 
-let encode_relop ~to_bv =
-  op IntZ3Op.encode_relop StrZ3Op.encode_relop
+let encode_relop ~to_bv : relop -> Expr.expr -> Expr.expr -> Expr.expr =
+  op IntZ3Op.encode_relop BoolZ3Op.encode_relop StrZ3Op.encode_relop
     (I32Z3Op.encode_relop ~to_bv)
     (I64Z3Op.encode_relop ~to_bv)
     (F32Z3Op.encode_relop ~to_bv)
     (F64Z3Op.encode_relop ~to_bv)
 
-let encode_cvtop =
-  op IntZ3Op.encode_cvtop StrZ3Op.encode_cvtop I32Z3Op.encode_cvtop
-    I64Z3Op.encode_cvtop F32Z3Op.encode_cvtop F64Z3Op.encode_cvtop
+let encode_cvtop : cvtop -> Expr.expr -> Expr.expr =
+  op IntZ3Op.encode_cvtop BoolZ3Op.encode_cvtop StrZ3Op.encode_cvtop
+    I32Z3Op.encode_cvtop I64Z3Op.encode_cvtop F32Z3Op.encode_cvtop
+    F64Z3Op.encode_cvtop
 
 let rec encode_expr ?(bool_to_bv = false) (e : Expression.t) : Expr.expr =
   let open Expression in
   match e with
-  | Num v -> encode_num v
-  | Str s -> StrZ3Op.encode_str s
+  | Val (Int i) -> IntZ3Op.encode_num i
+  | Val (Bool b) -> BoolZ3Op.encode_bool b
+  | Val (Num v) -> encode_num v
+  | Val (Str s) -> StrZ3Op.encode_str s
   | SymPtr (base, offset) ->
       let base' = encode_num (I32 base) in
       let offset' = encode_expr offset in
@@ -377,16 +421,16 @@ let rec encode_expr ?(bool_to_bv = false) (e : Expression.t) : Expr.expr =
   | Unop (op, e) ->
       let e' = encode_expr e in
       encode_unop op e'
-  | Binop (Int op, e1, e2) ->
+  | Binop (Int _ as op, e1, e2) | Binop (Bool _ as op, e1, e2) ->
       let e1' = encode_expr e1 and e2' = encode_expr e2 in
-      encode_binop (Int op) e1' e2'
+      encode_binop op e1' e2'
   | Binop (op, e1, e2) ->
       let e1' = encode_expr ~bool_to_bv:true e1
       and e2' = encode_expr ~bool_to_bv:true e2 in
       encode_binop op e1' e2'
-  | Relop (Int op, e1, e2) ->
+  | Relop (Int _ as op, e1, e2) | Relop (Bool _ as op, e1, e2)->
       let e1' = encode_expr e1 and e2' = encode_expr e2 in
-      encode_relop ~to_bv:false (Int op) e1' e2'
+      encode_relop ~to_bv:false op e1' e2'
   | Relop (op, e1, e2) ->
       let e1' = encode_expr ~bool_to_bv:true e1
       and e2' = encode_expr ~bool_to_bv:true e2 in
@@ -429,7 +473,7 @@ let int64_of_bv (bv : Expr.expr) : int64 =
   assert (Expr.is_numeral bv);
   Int64.of_string (BitVector.numeral_to_string bv)
 
-let int64_of_fp (fp : Expr.expr) (ebits : int) (sbits : int) : int64 =
+let int64_of_fp (fp : Expr.expr) ~(ebits : int) ~(sbits : int) : int64 =
   assert (Expr.is_numeral fp);
   if FloatingPoint.is_numeral_nan ctx fp then
     if FloatingPoint.is_numeral_negative ctx fp then
@@ -459,45 +503,41 @@ let int64_of_fp (fp : Expr.expr) (ebits : int) (sbits : int) : int64 =
     and fraction = List.nth_exn bit_list 2 in
     Int64.(fp_sign lor (exponent lor fraction))
 
-let value_of_const (model : Model.model) ((c, t) : Expression.t * expr_type) :
-    Num.t option =
-  let interp = Model.eval model (encode_expr c) true in
-  let f (e : Expr.expr) : Num.t =
-    let v =
-      match Sort.get_sort_kind (Expr.get_sort e) with
-      | Z3enums.INT_SORT -> int64_of_int e
-      | Z3enums.SEQ_SORT -> raise (Error "Not implemented")
-      | Z3enums.BV_SORT -> int64_of_bv e
-      | Z3enums.FLOATING_POINT_SORT ->
-          let ebits = FloatingPoint.get_ebits ctx (Expr.get_sort e)
-          and sbits = FloatingPoint.get_sbits ctx (Expr.get_sort e) in
-          int64_of_fp e ebits (sbits - 1)
-      | _ -> assert false
-    in
-    match t with
-    | `IntType -> Int (Int64.to_int_trunc v)
-    | `StrType -> raise (Error "Not implemented")
-    | `I32Type -> I32 (Int64.to_int32_trunc v)
-    | `I64Type -> I64 v
-    | `F32Type -> F32 (Int64.to_int32_trunc v)
-    | `F64Type -> F64 v
+let value_of_const (model : Model.model) (c : Expression.t) :
+    Expression.value option =
+  let t = Expression.type_of c
+  and interp = Model.eval model (encode_expr c) true in
+  let f (e : Expr.expr) : Expression.value =
+    match (t, Sort.get_sort_kind (Expr.get_sort e)) with
+    | `IntType, Z3enums.INT_SORT -> Int (Int64.to_int_trunc (int64_of_int e))
+    | `BoolType, Z3enums.BOOL_SORT -> Bool (Bool.of_string (Expr.to_string e))
+    | `StrType, Z3enums.SEQ_SORT -> Str (Expr.to_string e)
+    | `I32Type, Z3enums.BV_SORT ->
+        Num (I32 (Int64.to_int32_trunc (int64_of_bv e)))
+    | `I64Type, Z3enums.BV_SORT -> Num (I64 (int64_of_bv e))
+    | `F32Type, Z3enums.FLOATING_POINT_SORT ->
+        let ebits = FloatingPoint.get_ebits ctx (Expr.get_sort e)
+        and sbits = FloatingPoint.get_sbits ctx (Expr.get_sort e) - 1 in
+        Num (F32 (Int64.to_int32_trunc (int64_of_fp e ~ebits ~sbits)))
+    | `F64Type, Z3enums.FLOATING_POINT_SORT ->
+        let ebits = FloatingPoint.get_ebits ctx (Expr.get_sort e)
+        and sbits = FloatingPoint.get_sbits ctx (Expr.get_sort e) - 1 in
+        Num (F64 (int64_of_fp e ~ebits ~sbits))
+    | _ -> assert false
   in
   Option.map ~f interp
 
 let model_binds (model : Model.model) (vars : (string * expr_type) list) :
-    (string * Num.t) list =
-  List.fold_left ~init:[]
-    ~f:(fun a (x, t) ->
-      let v = value_of_const model (Expression.symbolic t x, t) in
+    (string * Expression.value) list =
+  List.fold_left vars ~init:[] ~f:(fun a (x, t) ->
+      let v = value_of_const model (Expression.symbolic t x) in
       Option.fold ~init:a ~f:(fun a v' -> (x, v') :: a) v)
-    vars
 
 let value_binds (model : Model.model) (vars : (string * expr_type) list) :
-    (string * Num.t) list =
+    (string * Expression.value) list =
   model_binds model vars
 
-let string_binds (m : Model.model) (_ : (string * expr_type) list) :
-    (string * string * string) list =
+let string_binds (m : Model.model) : (string * string * string) list =
   List.map (Model.get_const_decls m) ~f:(fun const ->
       let sort = Sort.to_string (FuncDecl.get_range const)
       and name = Symbol.to_string (FuncDecl.get_name const)
