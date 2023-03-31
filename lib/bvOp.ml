@@ -118,6 +118,5 @@ let string_of_cvtop (op : cvtop) : string =
   | ExtendUI32 -> "ExtendUI32"
 
 let pp_string_of_cvtop (op : cvtop) : string = string_of_cvtop op
-
 let string_of_triop (_ : triop) : string = assert false
 let pp_string_of_triop (_ : triop) : string = assert false

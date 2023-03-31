@@ -108,17 +108,18 @@ let rec to_string (e : expr) : String.t =
       in
       "(" ^ str_op ^ " " ^ to_string e1 ^ ", " ^ to_string e2 ^ ")"
   | Triop (op, e1, e2, e3) ->
-    let str_op =
-      match op with
-      | Int op -> I.string_of_triop op
-      | Bool op -> B.string_of_triop op
-      | Str op -> S.string_of_triop op
-      | I32 op -> I32.string_of_triop op
-      | I64 op -> I64.string_of_triop op
-      | F32 op -> F32.string_of_triop op
-      | F64 op -> F64.string_of_triop op
-    in
-    "(" ^ str_op ^ " " ^ to_string e1 ^ ", " ^ to_string e2 ^ ", " ^ to_string e3 ^ ")"
+      let str_op =
+        match op with
+        | Int op -> I.string_of_triop op
+        | Bool op -> B.string_of_triop op
+        | Str op -> S.string_of_triop op
+        | I32 op -> I32.string_of_triop op
+        | I64 op -> I64.string_of_triop op
+        | F32 op -> F32.string_of_triop op
+        | F64 op -> F64.string_of_triop op
+      in
+      "(" ^ str_op ^ " " ^ to_string e1 ^ ", " ^ to_string e2 ^ ", "
+      ^ to_string e3 ^ ")"
   | Cvtop (op, e) ->
       let str_op =
         match op with
@@ -171,18 +172,19 @@ let rec pp_to_string (e : expr) : String.t =
         | F64 op -> F64.pp_string_of_binop op
       in
       "(" ^ str_op ^ " " ^ pp_to_string e1 ^ ", " ^ pp_to_string e2 ^ ")"
-      | Triop (op, e1, e2, e3) ->
-        let str_op =
-          match op with
-          | Int op -> I.pp_string_of_triop op
-          | Bool op -> B.pp_string_of_triop op
-          | Str op -> S.pp_string_of_triop op
-          | I32 op -> I32.pp_string_of_triop op
-          | I64 op -> I64.pp_string_of_triop op
-          | F32 op -> F32.pp_string_of_triop op
-          | F64 op -> F64.pp_string_of_triop op
-        in
-        "(" ^ str_op ^ " " ^ pp_to_string e1 ^ ", " ^ pp_to_string e2 ^ pp_to_string e3 ^ ")"
+  | Triop (op, e1, e2, e3) ->
+      let str_op =
+        match op with
+        | Int op -> I.pp_string_of_triop op
+        | Bool op -> B.pp_string_of_triop op
+        | Str op -> S.pp_string_of_triop op
+        | I32 op -> I32.pp_string_of_triop op
+        | I64 op -> I64.pp_string_of_triop op
+        | F32 op -> F32.pp_string_of_triop op
+        | F64 op -> F64.pp_string_of_triop op
+      in
+      "(" ^ str_op ^ " " ^ pp_to_string e1 ^ ", " ^ pp_to_string e2
+      ^ pp_to_string e3 ^ ")"
   | Relop (op, e1, e2) ->
       let str_op =
         match op with
@@ -279,8 +281,9 @@ let rec get_ptr (e : expr) : Num.t Option.t =
       if Option.is_some p1 then p1 else get_ptr e2
   | Triop (_, e1, e2, e3) ->
       let p1 = get_ptr e1 in
-      if Option.is_some p1 then p1 else
-        let p2 = get_ptr e2 in 
+      if Option.is_some p1 then p1
+      else
+        let p2 = get_ptr e2 in
         if Option.is_some p2 then p2 else get_ptr e3
   | Relop (_, e1, e2) ->
       let p1 = get_ptr e1 in

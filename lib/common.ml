@@ -68,7 +68,9 @@ module IntZ3Op = struct
 
   let encode_cvtop (_ : cvtop) (_ : Expr.expr) : Expr.expr = assert false
 
-  let encode_triop (_ : triop) (_ : Expr.expr) (_ : Expr.expr) (_ : Expr.expr) : Expr.expr = assert false
+  let encode_triop (_ : triop) (_ : Expr.expr) (_ : Expr.expr) (_ : Expr.expr) :
+      Expr.expr =
+    assert false
 end
 
 module BoolZ3Op = struct
@@ -98,8 +100,10 @@ module BoolZ3Op = struct
     op' e1 e2
 
   let encode_cvtop (_ : cvtop) (_ : Expr.expr) : Expr.expr = assert false
-  let encode_triop (_ : triop) (_ : Expr.expr) (_ : Expr.expr) (_ : Expr.expr) : Expr.expr = assert false
 
+  let encode_triop (_ : triop) (_ : Expr.expr) (_ : Expr.expr) (_ : Expr.expr) :
+      Expr.expr =
+    assert false
 end
 
 module StrZ3Op = struct
@@ -128,12 +132,10 @@ module StrZ3Op = struct
     in
     op' e1 e2
 
-
-  let encode_triop (op : triop) (e1 : Expr.expr) (e2 : Expr.expr) (e3 : Expr.expr) : Expr.expr = 
-    let op' = 
-    match op with
-    | SubStr -> Seq.mk_seq_extract ctx
-  in op' e1 e2 e3
+  let encode_triop (op : triop) (e1 : Expr.expr) (e2 : Expr.expr)
+      (e3 : Expr.expr) : Expr.expr =
+    let op' = match op with SubStr -> Seq.mk_seq_extract ctx in
+    op' e1 e2 e3
 
   let encode_cvtop (_ : cvtop) (_ : Expr.expr) : Expr.expr =
     raise (Error "Not implemented")
@@ -196,7 +198,9 @@ module I32Z3Op = struct
     in
     op' e
 
-    let encode_triop (_ : triop) (_ : Expr.expr) (_ : Expr.expr) (_ : Expr.expr) : Expr.expr = assert false
+  let encode_triop (_ : triop) (_ : Expr.expr) (_ : Expr.expr) (_ : Expr.expr) :
+      Expr.expr =
+    assert false
 end
 
 module I64Z3Op = struct
@@ -258,8 +262,10 @@ module I64Z3Op = struct
       | WrapI64 -> assert false
     in
     op' e
-    let encode_triop (_ : triop) (_ : Expr.expr) (_ : Expr.expr) (_ : Expr.expr) : Expr.expr = assert false
 
+  let encode_triop (_ : triop) (_ : Expr.expr) (_ : Expr.expr) (_ : Expr.expr) :
+      Expr.expr =
+    assert false
 end
 
 module F32Z3Op = struct
@@ -319,8 +325,10 @@ module F32Z3Op = struct
       | PromoteF32 -> assert false
     in
     op' e
-    let encode_triop (_ : triop) (_ : Expr.expr) (_ : Expr.expr) (_ : Expr.expr) : Expr.expr = assert false
 
+  let encode_triop (_ : triop) (_ : Expr.expr) (_ : Expr.expr) (_ : Expr.expr) :
+      Expr.expr =
+    assert false
 end
 
 module F64Z3Op = struct
@@ -381,8 +389,10 @@ module F64Z3Op = struct
       | DemoteF64 -> assert false
     in
     op' e
-    let encode_triop (_ : triop) (_ : Expr.expr) (_ : Expr.expr) (_ : Expr.expr) : Expr.expr = assert false
 
+  let encode_triop (_ : triop) (_ : Expr.expr) (_ : Expr.expr) (_ : Expr.expr) :
+      Expr.expr =
+    assert false
 end
 
 let num i32 i64 f32 f64 : Num.t -> Expr.expr = function
@@ -418,7 +428,7 @@ let encode_triop : triop -> Expr.expr -> Expr.expr -> Expr.expr -> Expr.expr =
   op IntZ3Op.encode_triop BoolZ3Op.encode_triop StrZ3Op.encode_triop
     I32Z3Op.encode_triop I64Z3Op.encode_triop F32Z3Op.encode_triop
     F64Z3Op.encode_triop
-    
+
 let encode_relop ~to_bv : relop -> Expr.expr -> Expr.expr -> Expr.expr =
   op IntZ3Op.encode_relop BoolZ3Op.encode_relop StrZ3Op.encode_relop
     (I32Z3Op.encode_relop ~to_bv)
@@ -456,7 +466,7 @@ let rec encode_expr ?(bool_to_bv = false) (e : Expression.t) : Expr.expr =
       let e1' = encode_expr ~bool_to_bv e1
       and e2' = encode_expr ~bool_to_bv e2
       and e3' = encode_expr ~bool_to_bv e3 in
-      
+
       encode_triop op e1' e2' e3'
   | Relop (Int op, e1, e2) ->
       let e1' = encode_expr e1 and e2' = encode_expr e2 in

@@ -11,8 +11,6 @@ let string_of_binop (op : binop) : string = match op with Nth -> "nth"
 let pp_string_of_binop (op : binop) : string = string_of_binop op
 let string_of_unop (op : unop) : string = match op with Len -> "len"
 let pp_string_of_unop (op : unop) : string = string_of_unop op
-
-
 let string_of_triop (op : triop) : string = match op with SubStr -> "s_substr"
 let pp_string_of_triop (op : triop) : string = string_of_triop op
 

@@ -69,6 +69,5 @@ let pp_string_of_relop (op : relop) : string =
 
 let string_of_cvtop (_ : cvtop) : string = assert false
 let pp_string_of_cvtop (_ : cvtop) : string = assert false
-
 let string_of_triop (_ : triop) : string = assert false
 let pp_string_of_triop (_ : triop) : string = assert false
