@@ -17,6 +17,7 @@ type binop =
 
 type unop = Clz (*  Falta:  Ctz | Popcnt *)
 type relop = Eq | LtU | LtS | LeU | LeS | Ne | GtU | GtS | GeU | GeS
+type triop
 
 type cvtop =
   | TruncSF32
@@ -117,3 +118,5 @@ let string_of_cvtop (op : cvtop) : string =
   | ExtendUI32 -> "ExtendUI32"
 
 let pp_string_of_cvtop (op : cvtop) : string = string_of_cvtop op
+let string_of_triop (_ : triop) : string = assert false
+let pp_string_of_triop (_ : triop) : string = assert false
