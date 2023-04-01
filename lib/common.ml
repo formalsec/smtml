@@ -550,7 +550,7 @@ let value_of_const (model : Model.model) (c : Expression.t) :
     match (t, Sort.get_sort_kind (Expr.get_sort e)) with
     | `IntType, Z3enums.INT_SORT -> Int (Int64.to_int_trunc (int64_of_int e))
     | `BoolType, Z3enums.BOOL_SORT -> Bool (Bool.of_string (Expr.to_string e))
-    | `StrType, Z3enums.SEQ_SORT -> Str (Expr.to_string e)
+    | `StrType, Z3enums.SEQ_SORT -> Str (Seq.get_string ctx e)
     | `I32Type, Z3enums.BV_SORT ->
         Num (I32 (Int64.to_int32_trunc (int64_of_bv e)))
     | `I64Type, Z3enums.BV_SORT -> Num (I64 (int64_of_bv e))
