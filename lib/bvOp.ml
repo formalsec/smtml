@@ -15,7 +15,7 @@ type binop =
   | Or
   | Xor
 
-type unop = Clz (*  Falta:  Ctz | Popcnt *)
+type unop = Not | Clz (*  Falta:  Ctz | Popcnt *)
 type relop = Eq | LtU | LtS | LeU | LeS | Ne | GtU | GtS | GeU | GeS
 type triop
 
@@ -76,8 +76,11 @@ let pp_string_of_binop (op : binop) : string =
   | RemU -> "%u"
 
 (*  String representation of an i32 unary operation  *)
-let string_of_unop (op : unop) : string = match op with Clz -> "Clz"
-let pp_string_of_unop (op : unop) : string = match op with Clz -> "Clz"
+let string_of_unop (op : unop) : string =
+  match op with Clz -> "Clz" | Not -> "Not"
+
+let pp_string_of_unop (op : unop) : string =
+  match op with Clz -> "Clz" | Not -> "Not"
 
 (*  String representation of an i32 relative operation  *)
 let string_of_relop (op : relop) : string =
