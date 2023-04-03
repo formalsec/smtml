@@ -147,8 +147,13 @@ module I32Z3Op = struct
   let encode_num (i : Int32.t) : Expr.expr =
     Expr.mk_numeral_int ctx (Int32.to_int_exn i) bv32_sort
 
-  let encode_unop (_ : unop) (_ : Expr.expr) : Expr.expr =
-    failwith "Zi32: encode_unop: Construct not supported yet"
+  let encode_unop (op : unop) (e : Expr.expr) : Expr.expr =
+    let op' =
+      match op with
+      | Not -> BitVector.mk_not ctx
+      | Clz -> failwith "I32Z3Op: Clz not supported yet"
+    in
+    op' e
 
   let encode_binop (op : binop) (e1 : Expr.expr) (e2 : Expr.expr) : Expr.expr =
     let op' =
@@ -213,7 +218,7 @@ module I64Z3Op = struct
     let op' =
       match op with
       | Not -> BitVector.mk_not ctx
-      | _ -> failwith "Zi64: encode_unop: Construct not supported yet"
+      | Clz -> failwith "I64Z3Op: clz supported yet"
     in
     op' e
 
@@ -254,7 +259,6 @@ module I64Z3Op = struct
     encode_bool ~to_bv (op' e1 e2)
 
   let encode_cvtop (op : cvtop) (e : Expr.expr) : Expr.expr =
-    (* let _ = raise (Error (Sort.to_string (Expr.get_sort e))) in *)
     let op' =
       match op with
       | ExtendSI32 -> BitVector.mk_sign_ext ctx 32

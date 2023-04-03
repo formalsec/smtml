@@ -45,15 +45,9 @@ module I32Op = struct
 
   let unop (op : I32.unop) : Num.t -> Num.t =
     let f =
-      match op with
-      | Clz -> clz
-      | Not -> (
-          fun x ->
-            match Int32.to_int (bit_not x) with
-            | Some x' -> x'
-            | _ -> raise (Num `I32Type))
+      match op with Clz -> fun i -> of_int_trunc (clz i) | Not -> bit_not
     in
-    fun v -> to_value (of_int_exn (f (of_value 1 v)))
+    fun v -> to_value (f (of_value 1 v))
 
   let binop (op : I32.binop) : Num.t -> Num.t -> Num.t =
     let f =
@@ -126,16 +120,8 @@ module I64Op = struct
   let shr_u x y = shift shift_right_logical x y
 
   let unop op : Num.t -> Num.t =
-    let f =
-      match op with
-      | Clz -> clz
-      | Not -> (
-          fun x ->
-            match Int64.to_int (bit_not x) with
-            | Some x' -> x'
-            | _ -> raise (Num `I64Type))
-    in
-    fun v -> to_value (of_int_exn (f (of_value 1 v)))
+    let f = match op with Clz -> fun i -> of_int (clz i) | Not -> bit_not in
+    fun v -> to_value (f (of_value 1 v))
 
   let binop op : Num.t -> Num.t -> Num.t =
     let f =
