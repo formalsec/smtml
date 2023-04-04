@@ -1,6 +1,6 @@
 open Base
 
-type binop = Add | Sub | Mul | Div | Min | Max (*  Falta: | CopySign *)
+type binop = Add | Sub | Mul | Div | Min | Max | Rem (*  Falta: | CopySign *)
 type unop = Neg | Abs | Sqrt | Nearest (*  Falta: | Ceil | Floor | Trunc *)
 type relop = Eq | Ne | Lt | Le | Gt | Ge
 type triop
@@ -32,6 +32,7 @@ let string_of_binop (op : binop) : string =
   | Div -> "Div"
   | Min -> "Min"
   | Max -> "Max"
+  | Rem -> "Rem"
 
 let pp_string_of_binop (op : binop) : string =
   match op with
@@ -41,6 +42,7 @@ let pp_string_of_binop (op : binop) : string =
   | Div -> "/"
   | Min -> "Min"
   | Max -> "Max"
+  | Rem -> "%"
 
 (*  String representation of an f32 unary operation  *)
 let string_of_unop (op : unop) : string =

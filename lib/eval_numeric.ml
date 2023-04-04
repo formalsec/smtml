@@ -188,6 +188,7 @@ module F32Op = struct
       | Sub -> ( - )
       | Mul -> ( * )
       | Div -> ( / )
+      | Rem -> ( % )
       | Min -> min
       | Max -> max
     in
@@ -237,6 +238,7 @@ module F64Op = struct
       | Sub -> ( - )
       | Mul -> ( * )
       | Div -> ( / )
+      | Rem -> ( % )
       | Min -> min
       | Max -> max
     in

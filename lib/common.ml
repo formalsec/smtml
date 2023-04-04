@@ -121,6 +121,7 @@ module StrZ3Op = struct
       | Nth ->
           fun v1 v2 ->
             Seq.mk_seq_extract ctx v1 v2 (Expr.mk_numeral_int ctx 1 int_sort)
+      | Concat -> fun v1 v2 -> Seq.mk_seq_concat ctx [ v1; v2 ]
     in
     op' e1 e2
 
@@ -303,6 +304,7 @@ module F32Z3Op = struct
       | Div -> FloatingPoint.mk_div ctx rne
       | Min -> FloatingPoint.mk_min ctx
       | Max -> FloatingPoint.mk_max ctx
+      | Rem -> FloatingPoint.mk_rem ctx
     in
     op' e1 e2
 
@@ -366,6 +368,7 @@ module F64Z3Op = struct
       | Div -> FloatingPoint.mk_div ctx rne
       | Min -> FloatingPoint.mk_min ctx
       | Max -> FloatingPoint.mk_max ctx
+      | Rem -> FloatingPoint.mk_rem ctx
     in
     op' e1 e2
 
