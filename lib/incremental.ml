@@ -20,6 +20,8 @@ type t = { solver : s; pc : Formula.t ref }
 let create () : t =
   { solver = Solver.mk_solver ctx None; pc = ref (Formula.create ()) }
 
+let interrupt () = Tactic.interrupt ctx
+
 let clone (e : t) : t =
   { solver = Solver.translate e.solver ctx; pc = ref !(e.pc) }
 
