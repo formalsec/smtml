@@ -20,8 +20,8 @@ let default_value (t : num_type) : t =
 
 let string_of_num (n : t) : string =
   match n with
-  | I32 i -> Int32.to_string i ^ "l"
-  | I64 i -> Int64.to_string i ^ "L"
+  | I32 i -> Int32.to_string i
+  | I64 i -> Int64.to_string i
   | F32 f -> Float.to_string (Int32.float_of_bits f)
   | F64 f -> Float.to_string (Int64.float_of_bits f)
 
