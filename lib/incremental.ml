@@ -52,15 +52,11 @@ let check (e : t) (expr : Expression.t option) : bool =
 let fork (s : t) (e : Expression.t) : bool * bool =
   (check s (Some e), check s (Some (Expression.negate_relop e)))
 
-(** fails if solver isn't currently SAT *)
-let model_exn (e : t) : Model.model =
-  Option.value_exn (Solver.get_model e.solver)
+let model (e : t) : Model.model Option.t = Solver.get_model e.solver
 
-(** fails if solver isn't currently SAT *)
 let value_binds (e : t) (vars : (string * expr_type) list) :
     (string * Expression.value) list =
-  Common.value_binds (model_exn e) vars
+  Option.value_map (model e) ~default:[] ~f:(fun m -> Common.value_binds m vars)
 
-(** fails if solver isn't currently SAT *)
 let string_binds (e : t) : (string * string * string) list =
-  Common.string_binds (model_exn e)
+  Option.value_map (model e) ~default:[] ~f:Common.string_binds
