@@ -70,10 +70,15 @@ let to_formulas (pc : Expression.t list) : t list =
 
 let to_formula (pc : Expression.t list) : t = conjunct (to_formulas pc)
 
-let rec get_vars (e : t) : (string * Types.expr_type) list =
-  match e with
-  | True | False -> []
-  | Not c -> get_vars c
-  | And (c1, c2) -> get_vars c1 @ get_vars c2
-  | Or (c1, c2) -> get_vars c1 @ get_vars c2
-  | Relop e -> Expression.get_symbols e
+let rec get_symbols (e : t) : (string * Types.expr_type) list =
+  let symbols =
+    match e with
+    | True | False -> []
+    | Not c -> get_symbols c
+    | And (c1, c2) -> get_symbols c1 @ get_symbols c2
+    | Or (c1, c2) -> get_symbols c1 @ get_symbols c2
+    | Relop e -> Expression.get_symbols e
+  in
+  let equal (x1, _) (x2, _) = String.equal x1 x2 in
+  List.fold symbols ~init:[]
+    ~f:(fun accum x -> if List.mem accum x ~equal then accum else x :: accum)

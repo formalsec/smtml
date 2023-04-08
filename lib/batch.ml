@@ -87,21 +87,19 @@ let check (s : t) (expr : Expression.t option) : bool =
   in
   b
 
+let fork (s : t) (e : Expression.t) : bool * bool =
+  (check s (Some e), check s (Some (Expression.negate_relop e)))
+
+let model (s : t) : Model.model Option.t = Solver.get_model s.solver
+
 let eval (s : t) (e : Expression.t) (es : Expression.t list) :
     Expression.value option =
   let es' = List.map ~f:encode_expr es in
   ignore (time_call (fun () -> Solver.check s.solver es') solver_time);
-  let model = Solver.get_model s.solver in
-  Option.value_map model ~default:None ~f:(fun m -> value_of_const m e)
-
-let fork (s : t) (e : Expression.t) : bool * bool =
-  (check s (Some e), check s (Some (Expression.negate_relop e)))
-
-let model_exn (s : t) : Model.model =
-  Option.value_exn (Solver.get_model s.solver)
+  Option.value_map (model s) ~default:None ~f:(fun m -> value_of_const m e)
 
 let value_binds (s : t) vars : (string * Expression.value) list =
-  Common.value_binds (model_exn s) vars
+  Option.value_map (model s) ~default:[] ~f:(fun m -> Common.value_binds m vars)
 
 let string_binds (s : t) : (string * string * string) list =
-  Common.string_binds (model_exn s)
+  Option.value_map (model s) ~default:[] ~f:Common.string_binds
