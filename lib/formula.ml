@@ -80,5 +80,5 @@ let rec get_symbols (e : t) : (string * Types.expr_type) list =
     | Relop e -> Expression.get_symbols e
   in
   let equal (x1, _) (x2, _) = String.equal x1 x2 in
-  List.fold symbols ~init:[]
-    ~f:(fun accum x -> if List.mem accum x ~equal then accum else x :: accum)
+  List.fold symbols ~init:[] ~f:(fun accum x ->
+      if List.mem accum x ~equal then accum else x :: accum)

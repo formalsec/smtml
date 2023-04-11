@@ -28,36 +28,16 @@ let add (s : t) (e : Expression.t) : unit =
 let add_formula (s : t) (f : Formula.t) : unit =
   s.pc := Formula.conjunct [ f; !(s.pc) ]
 
-(*
-let formulas_to_smt2_file output_dir =
-  let counter = ref 0 in
-  let file () : string =
-    let () = Int.incr counter in
-    Printf.sprintf "query-%d.smt2" !counter
-  in
-  fun f status ->
-    Params.set_print_mode ctx Z3enums.PRINT_SMTLIB2_COMPLIANT;
-    let query_out = Caml.Filename.concat output_dir "queries" in
-    let query_file = Caml.Filename.concat query_out (file ()) in
-    ignore (Unix.system ("mkdir -p " ^ query_out));
-    Io.save_file query_file
-      (SMT.benchmark_to_smtstring ctx query_file "" status "" (List.tl_exn f)
-         (List.hd_exn f))
-    *)
-
 let check_formulas (s : t) (formulas : Formula.t list) : bool =
   let expressions = List.map ~f:encode_formula formulas in
   solver_count := !solver_count + 1;
   let sat =
     time_call (fun () -> Solver.check s.solver expressions) solver_time
   in
-  let b =
-    match sat with
-    | Solver.SATISFIABLE -> true
-    | Solver.UNSATISFIABLE -> false
-    | Solver.UNKNOWN -> raise Unknown
-  in
-  b
+  match sat with
+  | Solver.SATISFIABLE -> true
+  | Solver.UNSATISFIABLE -> false
+  | Solver.UNKNOWN -> raise Unknown
 
 let check_sat (s : t) (es : Expression.t list) : bool =
   let es' = List.map ~f:encode_expr es in
