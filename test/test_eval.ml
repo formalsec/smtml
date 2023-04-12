@@ -1,21 +1,19 @@
 open Encoding
-open Types
-open Expression
 
 let solver = Batch.create ()
-let int_symb = Symbolic (`IntType, "x")
-let bool_symb = Symbolic (`BoolType, "y")
+let int_symb = Expression.mk_symbolic `IntType "x"
+let bool_symb = Expression.mk_symbolic `BoolType "y"
 
 (* Satisfiability *)
 let%test "test_unsat" =
-  Option.is_none (Batch.eval solver int_symb [ Val (Bool false) ])
+  Option.is_none (Batch.eval solver int_symb [ Boolean.mk_val false ])
 
 let%test "test_unconstrained" = Option.is_some (Batch.eval solver int_symb [])
 
 let%test "test_constrained_int" =
-  Some (Int 5)
-  = Batch.eval solver int_symb [ Relop (Int I.Eq, int_symb, Val (Int 5)) ]
+  Some (Expression.Int 5)
+  = Batch.eval solver int_symb [ Integer.mk_eq int_symb (Integer.mk_val 5) ]
 
 let%test "test_constrained_bool" =
-  let pc = [ Relop (Bool B.Eq, bool_symb, Val (Bool true)) ] in
-  Some (Bool true) = Batch.eval solver bool_symb pc
+  let pc = [ Boolean.mk_eq bool_symb (Boolean.mk_val true) ] in
+  Some (Expression.Bool true) = Batch.eval solver bool_symb pc

@@ -1,11 +1,11 @@
 open Encoding
-open Types
-open Expression
 
 let solver = Batch.create ()
 let encode e = try ignore (Common.encode_expr e) with exn -> raise exn
-let str = Val (Str "abc")
-let str_symb = Symbolic (`StrType, "x")
+let str = Strings.mk_val "abc"
+let str_symb = Expression.mk_symbolic `StrType "x"
+let int_zero = Integer.mk_val 0
+let int_two = Integer.mk_val 2
 
 (* Encoding *)
 let%test_unit _ = encode str
@@ -14,23 +14,22 @@ let%test_unit _ = encode str_symb
 (* Satisfiability *)
 let%test "test_concrete_len" =
   Batch.check_sat solver
-    [ Relop (Int I.Ge, Unop (Str S.Len, str_symb), Unop (Str S.Len, str)) ]
+    [ Integer.mk_ge (Strings.mk_len str_symb) (Strings.mk_len str) ]
 
 let%test "test_constrained_len" =
   not
     (Batch.check_sat solver
        [
-         Relop (Int I.Eq, Unop (Str S.Len, str_symb), Val (Int 4));
-         Relop (Int I.Eq, Unop (Str S.Len, str_symb), Unop (Str S.Len, str));
+         Integer.mk_eq (Strings.mk_len str_symb) (Integer.mk_val 4);
+         Integer.mk_eq (Strings.mk_len str_symb) (Strings.mk_len str);
        ])
 
 let%test "test_concrete_substr" =
   let pc =
     [
-      Relop
-        ( Str S.Eq,
-          Triop (Str S.SubStr, str, Val (Int 0), Val (Int 2)),
-          Val (Str "ab") );
+      Strings.mk_eq
+        (Strings.mk_substr str ~pos:int_zero ~len:int_two)
+        (Strings.mk_val "ab");
     ]
   in
   Batch.check_sat solver pc
@@ -38,12 +37,10 @@ let%test "test_concrete_substr" =
 let%test "test_symb_substr" =
   let pc =
     [
-      Relop (Str S.Eq, str_symb, str);
-      Relop
-        ( Int I.Eq,
-          Unop
-            (Str S.Len, Triop (Str S.SubStr, str_symb, Val (Int 0), Val (Int 2))),
-          Val (Int 2) );
+      Strings.mk_eq str_symb str;
+      Integer.mk_eq
+        (Strings.mk_len (Strings.mk_substr str_symb ~pos:int_zero ~len:int_two))
+        (Integer.mk_val 2);
     ]
   in
-  Some (Str "abc") = Batch.eval solver str_symb pc
+  Some (Expression.Str "abc") = Batch.eval solver str_symb pc
