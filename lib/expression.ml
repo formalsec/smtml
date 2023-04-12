@@ -21,7 +21,7 @@ type t = expr
 type pc = expr List.t
 
 let ( ++ ) (e1 : expr) (e2 : expr) = Concat (e1, e2)
-let symbolic (t : expr_type) (x : String.t) : expr = Symbolic (t, x)
+let mk_symbolic (t : expr_type) (x : String.t) : expr = Symbolic (t, x)
 
 let negate_relop (e : expr) : expr =
   match e with
@@ -75,6 +75,7 @@ let rec to_string (e : expr) : String.t =
       let str_op =
         match op with
         | Int op -> I.string_of_unop op
+        | Real op -> R.string_of_unop op
         | Bool op -> B.string_of_unop op
         | Str op -> S.string_of_unop op
         | I32 op -> I32.string_of_unop op
@@ -87,6 +88,7 @@ let rec to_string (e : expr) : String.t =
       let str_op =
         match op with
         | Int op -> I.string_of_binop op
+        | Real op -> R.string_of_binop op
         | Bool op -> B.string_of_binop op
         | Str op -> S.string_of_binop op
         | I32 op -> I32.string_of_binop op
@@ -99,6 +101,7 @@ let rec to_string (e : expr) : String.t =
       let str_op =
         match op with
         | Int op -> I.string_of_relop op
+        | Real op -> R.string_of_relop op
         | Bool op -> B.string_of_relop op
         | Str op -> S.string_of_relop op
         | I32 op -> I32.string_of_relop op
@@ -111,6 +114,7 @@ let rec to_string (e : expr) : String.t =
       let str_op =
         match op with
         | Int op -> I.string_of_triop op
+        | Real op -> R.string_of_triop op
         | Bool op -> B.string_of_triop op
         | Str op -> S.string_of_triop op
         | I32 op -> I32.string_of_triop op
@@ -124,6 +128,7 @@ let rec to_string (e : expr) : String.t =
       let str_op =
         match op with
         | Int op -> I.string_of_cvtop op
+        | Real op -> R.string_of_cvtop op
         | Bool op -> B.string_of_cvtop op
         | Str op -> S.string_of_cvtop op
         | I32 op -> I32.string_of_cvtop op
@@ -152,6 +157,7 @@ let rec pp_to_string (e : expr) : String.t =
       let str_op =
         match op with
         | Int op -> I.pp_string_of_unop op
+        | Real op -> R.pp_string_of_unop op
         | Bool op -> B.pp_string_of_unop op
         | Str op -> S.pp_string_of_unop op
         | I32 op -> I32.pp_string_of_unop op
@@ -164,6 +170,7 @@ let rec pp_to_string (e : expr) : String.t =
       let str_op =
         match op with
         | Int op -> I.pp_string_of_binop op
+        | Real op -> R.pp_string_of_binop op
         | Bool op -> B.pp_string_of_binop op
         | Str op -> S.pp_string_of_binop op
         | I32 op -> I32.pp_string_of_binop op
@@ -176,6 +183,7 @@ let rec pp_to_string (e : expr) : String.t =
       let str_op =
         match op with
         | Int op -> I.pp_string_of_triop op
+        | Real op -> R.pp_string_of_triop op
         | Bool op -> B.pp_string_of_triop op
         | Str op -> S.pp_string_of_triop op
         | I32 op -> I32.pp_string_of_triop op
@@ -189,6 +197,7 @@ let rec pp_to_string (e : expr) : String.t =
       let str_op =
         match op with
         | Int op -> I.pp_string_of_relop op
+        | Real op -> R.pp_string_of_relop op
         | Bool op -> B.pp_string_of_relop op
         | Str op -> S.pp_string_of_relop op
         | I32 op -> I32.pp_string_of_relop op
@@ -201,6 +210,7 @@ let rec pp_to_string (e : expr) : String.t =
       let str_op =
         match op with
         | Int op -> I.pp_string_of_cvtop op
+        | Real op -> R.pp_string_of_cvtop op
         | Bool op -> B.pp_string_of_cvtop op
         | Str op -> S.pp_string_of_cvtop op
         | I32 op -> I32.pp_string_of_cvtop op

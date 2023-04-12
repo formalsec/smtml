@@ -424,6 +424,7 @@ module F32CvtOp = struct
     | ConvertSI64 -> F32 (convert_i64_s (I64Op.of_value 1 v))
     | ConvertUI64 -> F32 (convert_i64_u (I64Op.of_value 1 v))
     | ReinterpretInt -> F32 (I32Op.of_value 1 v)
+    | ReinterpretStr -> assert false
     | PromoteF32 -> raise (TypeError (1, v, `F32Type))
 end
 
@@ -476,6 +477,7 @@ module F64CvtOp = struct
     | ConvertSI64 -> F64 (convert_i64_s (I64Op.of_value 1 v))
     | ConvertUI64 -> F64 (convert_i64_u (I64Op.of_value 1 v))
     | ReinterpretInt -> F64 (I64Op.of_value 1 v)
+    | ReinterpretStr -> assert false
     | DemoteF64 -> raise (TypeError (1, v, `F64Type))
 end
 
@@ -483,6 +485,7 @@ end
 
 let op i32 i64 f32 f64 = function
   | Int _ -> failwith "eval_numeric: Integer evaluations not supported"
+  | Real _ -> failwith "eval_numeric: Float evaluations not supported"
   | I32 x -> i32 x
   | I64 x -> i64 x
   | F32 x -> f32 x

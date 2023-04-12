@@ -9,6 +9,7 @@ let ctx =
     [ ("model", "true"); ("proof", "false"); ("unsat_core", "false") ]
 
 let int_sort = Arithmetic.Integer.mk_sort ctx
+let real_sort = Arithmetic.Real.mk_sort ctx
 let bool_sort = Boolean.mk_sort ctx
 let str_sort = Seq.mk_string_sort ctx
 let bv32_sort = BitVector.mk_sort ctx 32
@@ -21,6 +22,7 @@ let rtz = FloatingPoint.RoundingMode.mk_rtz ctx
 let get_sort (e : Types.expr_type) : Z3.Sort.sort =
   match e with
   | `IntType -> int_sort
+  | `RealType -> real_sort
   | `BoolType -> bool_sort
   | `StrType -> str_sort
   | `I32Type -> bv32_sort
@@ -335,7 +337,7 @@ module F32Z3Op = struct
       | ConvertUI64 ->
           fun bv -> FloatingPoint.mk_to_fp_unsigned ctx rne bv fp32_sort
       | ReinterpretInt -> fun bv -> FloatingPoint.mk_to_fp_bv ctx bv fp32_sort
-      | PromoteF32 -> assert false
+      | ReinterpretStr | PromoteF32 -> assert false
     in
     op' e
 
@@ -401,7 +403,7 @@ module F64Z3Op = struct
       | ConvertUI64 ->
           fun bv -> FloatingPoint.mk_to_fp_unsigned ctx rne bv fp64_sort
       | ReinterpretInt -> fun bv -> FloatingPoint.mk_to_fp_bv ctx bv fp64_sort
-      | DemoteF64 -> assert false
+      | ReinterpretStr | DemoteF64 -> assert false
     in
     op' e
 
@@ -418,6 +420,7 @@ let num i32 i64 f32 f64 : Num.t -> Expr.expr = function
 
 let op i b s i32 i64 f32 f64 = function
   | Int x -> i x
+  | Real _ -> assert false
   | Bool x -> b x
   | Str x -> s x
   | I32 x -> i32 x
@@ -590,7 +593,7 @@ let value_of_const (model : Model.model) (c : Expression.t) :
 let model_binds (model : Model.model) (vars : (string * expr_type) list) :
     (string * Expression.value) list =
   List.fold_left vars ~init:[] ~f:(fun a (x, t) ->
-      let v = value_of_const model (Expression.symbolic t x) in
+      let v = value_of_const model (Expression.mk_symbolic t x) in
       Option.fold ~init:a ~f:(fun a v' -> (x, v') :: a) v)
 
 let value_binds (model : Model.model) (vars : (string * expr_type) list) :
