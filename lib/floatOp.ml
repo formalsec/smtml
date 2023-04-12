@@ -19,6 +19,7 @@ type cvtop =
   | ConvertSI64
   | ConvertUI64
   | ReinterpretInt
+  | ReinterpretStr
   | PromoteF32
 
 let neg_relop (op : relop) : relop =
@@ -95,6 +96,7 @@ let string_of_cvtop (op : cvtop) : string =
   | ConvertSI64 -> "ConvertSI64"
   | ConvertUI64 -> "ConvertUI64"
   | ReinterpretInt -> "ReinterpretInt"
+  | ReinterpretStr -> "ReinterpretStr"
   | PromoteF32 -> "PromoteF32"
 
 let pp_string_of_cvtop (op : cvtop) : string = string_of_cvtop op
