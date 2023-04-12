@@ -28,6 +28,10 @@ let add (s : t) (e : Expression.t) : unit =
 let add_formula (s : t) (f : Formula.t) : unit =
   s.pc := Formula.conjunct [ f; !(s.pc) ]
 
+
+let set_default_axioms (s : Solver.solver) : unit =
+  Solver.add s (List.map ~f:encode_formula Axioms.axioms)
+
 (*
 let formulas_to_smt2_file output_dir =
   let counter = ref 0 in

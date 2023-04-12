@@ -4,7 +4,7 @@ type binop = Nth | Concat
 type unop = Len
 type relop = Eq | Ne
 type triop = SubStr
-type cvtop = ToFloat
+type cvtop = ToFloat | ToInt
 
 let neg_relop (op : relop) : relop = match op with Eq -> Ne | Ne -> Eq
 
@@ -23,5 +23,7 @@ let string_of_relop (op : relop) : string =
 let pp_string_of_relop (op : relop) : string =
   match op with Eq -> "==" | Ne -> "!="
 
-let string_of_cvtop (op : cvtop) : string = match op with ToFloat -> "ToFloat"
+let string_of_cvtop (op : cvtop) : string =
+  match op with ToFloat -> "ToFloat" | ToInt -> "ToInt"
+
 let pp_string_of_cvtop (op : cvtop) : string = string_of_cvtop op

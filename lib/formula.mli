@@ -7,6 +7,10 @@ type formula =
   | And of formula * formula
   | Or of formula * formula
   | Relop of Expression.t
+  | Axiom of
+      at * (string * Types.expr_type) list * formula * Expression.t list list
+
+and at = Forall | Exists
 
 type t = formula
 
@@ -21,7 +25,7 @@ val to_formulas : Expression.t list -> t list
 val to_formula : Expression.t list -> t
 val to_string : t -> string
 val pp_to_string : t -> string
-
+val get_vars : t -> (string * Types.expr_type) list
 val get_symbols : t -> (string * Types.expr_type) list
 (** [get_vars f] get the list of unique symbols and their types in
     the formula [f] *)

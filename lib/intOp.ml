@@ -4,7 +4,7 @@ type binop = Add | Mul | Div | Rem | And | Sub | Shl | ShrA | ShrL | Or | Xor
 type unop = Neg
 type relop = Eq | Lt | Le | Ne | Gt | Ge
 type triop
-type cvtop
+type cvtop = ToStr
 
 let neg_relop (op : relop) : relop =
   match op with
@@ -67,7 +67,9 @@ let pp_string_of_relop (op : relop) : string =
   | Le -> "<="
   | Ge -> ">="
 
-let string_of_cvtop (_ : cvtop) : string = assert false
-let pp_string_of_cvtop (_ : cvtop) : string = assert false
+let string_of_cvtop (op : cvtop) : string =
+  match op with ToStr -> "IntToString"
+
+let pp_string_of_cvtop (op : cvtop) : string = string_of_cvtop op
 let string_of_triop (_ : triop) : string = assert false
 let pp_string_of_triop (_ : triop) : string = assert false
