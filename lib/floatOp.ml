@@ -1,7 +1,14 @@
 open Base
 
 type binop = Add | Sub | Mul | Div | Min | Max | Rem (*  Falta: | CopySign *)
-type unop = Neg | Abs | Sqrt | Nearest (*  Falta: | Ceil | Floor | Trunc *)
+
+type unop =
+  | Neg
+  | Abs
+  | Sqrt
+  | Nearest
+  | IsNan (*  Falta: | Ceil | Floor | Trunc *)
+
 type relop = Eq | Ne | Lt | Le | Gt | Ge
 type triop
 
@@ -51,6 +58,7 @@ let string_of_unop (op : unop) : string =
   | Abs -> "Abs"
   | Sqrt -> "Sqrt"
   | Nearest -> "Nearest"
+  | IsNan -> "IsNan"
 
 let pp_string_of_unop (op : unop) : string =
   match op with
@@ -58,6 +66,7 @@ let pp_string_of_unop (op : unop) : string =
   | Abs -> "Abs"
   | Sqrt -> "Sqrt"
   | Nearest -> "Nearest"
+  | IsNan -> "IsNan"
 
 (*  String representation of an f32 relative operation  *)
 let string_of_relop (op : relop) : string =

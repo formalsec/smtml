@@ -324,6 +324,7 @@ module F32Z3Op = struct
       | Abs -> FloatingPoint.mk_abs ctx
       | Sqrt -> FloatingPoint.mk_sqrt ctx rne
       | Nearest -> FloatingPoint.mk_round_to_integral ctx rne
+      | IsNan -> FloatingPoint.mk_is_nan ctx
     in
     op' e
 
@@ -388,6 +389,7 @@ module F64Z3Op = struct
       | Abs -> FloatingPoint.mk_abs ctx
       | Sqrt -> FloatingPoint.mk_sqrt ctx rne
       | Nearest -> FloatingPoint.mk_round_to_integral ctx rne
+      | IsNan -> FloatingPoint.mk_is_nan ctx
     in
     op' e
 
@@ -571,6 +573,12 @@ let rec encode_formula (a : Formula.t) : Expr.expr =
         match t with Formula.Forall -> true | Formula.Exists -> false
       in
       encode_quantifier t' vars body' patterns'
+
+let expr_to_smtstring (es : Expression.t list) (status : bool) =
+  let es' = List.map ~f:encode_expr es in
+  Params.set_print_mode ctx Z3enums.PRINT_SMTLIB2_COMPLIANT;
+  SMT.benchmark_to_smtstring ctx "" "" (Bool.to_string status) ""
+    (List.tl_exn es') (List.hd_exn es')
 
 let set (s : string) (i : int) (n : char) =
   let bs = Bytes.of_string s in

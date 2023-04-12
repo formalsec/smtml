@@ -17,7 +17,7 @@ val clone : t -> t
 val interrupt : unit -> unit
 (** [interrupt ()] sends interrupt signal to SMT solver *)
 
-val set_default_axioms : s -> unit
+val set_default_axioms : Solver.solver -> unit
 (** add default axioms to solver *)
 
 val add : t -> Expression.t -> unit
