@@ -19,28 +19,6 @@ let fp64_sort = FloatingPoint.mk_sort_double ctx
 let rne = FloatingPoint.RoundingMode.mk_rne ctx
 let rtz = FloatingPoint.RoundingMode.mk_rtz ctx
 
-type ops = {
-  str2flt : FuncDecl.func_decl;
-  int2str : FuncDecl.func_decl;
-  str2int : FuncDecl.func_decl;
-}
-
-let axiomatised_operations =
-  {
-    str2flt =
-      FuncDecl.mk_func_decl ctx
-        (Symbol.mk_string ctx "StringToFloat")
-        [ str_sort ] fp64_sort;
-    int2str =
-      FuncDecl.mk_func_decl ctx
-        (Symbol.mk_string ctx "IntToString")
-        [ int_sort ] str_sort;
-    str2int =
-      FuncDecl.mk_func_decl ctx
-        (Symbol.mk_string ctx "StringToInt")
-        [ str_sort ] int_sort;
-  }
-
 let get_sort (e : Types.expr_type) : Z3.Sort.sort =
   match e with
   | `IntType -> int_sort
@@ -60,6 +38,8 @@ let encode_bool ~(to_bv : bool) (cond : Expr.expr) : Expr.expr =
 module IntZ3Op = struct
   open I
 
+  let int2str = FuncDecl.mk_func_decl_s ctx "IntToString" [ int_sort ] str_sort
+  let str2int = FuncDecl.mk_func_decl_s ctx "StringToInt" [ str_sort ] int_sort
   let encode_num (i : Int.t) : Expr.expr = Expr.mk_numeral_int ctx i int_sort
 
   let encode_unop (op : unop) (e : Expr.expr) : Expr.expr =
@@ -93,7 +73,67 @@ module IntZ3Op = struct
   let encode_cvtop (op : cvtop) (e : Expr.expr) : Expr.expr =
     let op' =
       match op with
-      | ToStr -> fun v -> Expr.mk_app ctx axiomatised_operations.int2str [ v ]
+      | ToString -> fun v -> FuncDecl.apply int2str [ v ]
+      | OfString -> fun v -> FuncDecl.apply str2int [ v ]
+    in
+    op' e
+
+  let encode_triop (_ : triop) (_ : Expr.expr) (_ : Expr.expr) (_ : Expr.expr) :
+      Expr.expr =
+    assert false
+end
+
+module RealZ3Op = struct
+  open R
+
+  let real2str =
+    FuncDecl.mk_func_decl_s ctx "RealToString" [ real_sort ] str_sort
+
+  let str2real =
+    FuncDecl.mk_func_decl_s ctx "StringToReal" [ str_sort ] real_sort
+
+  let encode_num (f : Float.t) : Expr.expr =
+    Arithmetic.Real.mk_numeral_s ctx (Float.to_string f)
+
+  let encode_unop (op : unop) (e : Expr.expr) : Expr.expr =
+    let op' =
+      match op with
+      | Neg -> Arithmetic.mk_unary_minus ctx
+      | Abs | Sqrt | Nearest | IsNan -> assert false
+    in
+    op' e
+
+  let encode_binop (op : binop) (e1 : Expr.expr) (e2 : Expr.expr) : Expr.expr =
+    let op' =
+      match op with
+      | Add -> fun v1 v2 -> Arithmetic.mk_add ctx [ v1; v2 ]
+      | Sub -> fun v1 v2 -> Arithmetic.mk_sub ctx [ v1; v2 ]
+      | Mul -> fun v1 v2 -> Arithmetic.mk_mul ctx [ v1; v2 ]
+      | Div -> Arithmetic.mk_div ctx
+      | _ -> raise (Error "Unsupported integer operations")
+    in
+    op' e1 e2
+
+  let encode_relop (op : relop) (e1 : Expr.expr) (e2 : Expr.expr) : Expr.expr =
+    let op' =
+      match op with
+      | Eq -> Boolean.mk_eq ctx
+      | Ne -> fun v1 v2 -> Boolean.mk_eq ctx v1 v2 |> Boolean.mk_not ctx
+      | Lt -> Arithmetic.mk_lt ctx
+      | Gt -> Arithmetic.mk_gt ctx
+      | Le -> Arithmetic.mk_le ctx
+      | Ge -> Arithmetic.mk_ge ctx
+    in
+    op' e1 e2
+
+  let encode_cvtop (op : cvtop) (e : Expr.expr) : Expr.expr =
+    let op' =
+      match op with
+      | ToString -> fun v -> FuncDecl.apply real2str [ v ]
+      | OfString -> fun v -> FuncDecl.apply str2real [ v ]
+      | DemoteF64 | ConvertSI32 | ConvertUI32 | ConvertSI64 | ConvertUI64
+      | ReinterpretInt | PromoteF32 ->
+          assert false
     in
     op' e
 
@@ -167,13 +207,7 @@ module StrZ3Op = struct
     let op' = match op with SubStr -> Seq.mk_seq_extract ctx in
     op' e1 e2 e3
 
-  let encode_cvtop (op : cvtop) (e : Expr.expr) : Expr.expr =
-    let op' =
-      match op with
-      | ToInt -> fun v -> Expr.mk_app ctx axiomatised_operations.str2int [ v ]
-      | ToFloat -> fun v -> Expr.mk_app ctx axiomatised_operations.str2flt [ v ]
-    in
-    op' e
+  let encode_cvtop (_ : cvtop) (_ : Expr.expr) : Expr.expr = assert false
 end
 
 module I32Z3Op = struct
@@ -316,6 +350,9 @@ end
 module F32Z3Op = struct
   open F32
 
+  let f322str = FuncDecl.mk_func_decl_s ctx "F32ToString" [ fp32_sort ] str_sort
+  let str2f32 = FuncDecl.mk_func_decl_s ctx "StringToF32" [ str_sort ] fp32_sort
+
   let encode_num (f : Int32.t) : Expr.expr =
     FloatingPoint.mk_numeral_f ctx (Int32.float_of_bits f) fp32_sort
 
@@ -369,7 +406,9 @@ module F32Z3Op = struct
       | ConvertUI64 ->
           fun bv -> FloatingPoint.mk_to_fp_unsigned ctx rne bv fp32_sort
       | ReinterpretInt -> fun bv -> FloatingPoint.mk_to_fp_bv ctx bv fp32_sort
-      | ReinterpretStr | PromoteF32 -> assert false
+      | ToString -> fun v -> FuncDecl.apply f322str [ v ]
+      | OfString -> fun v -> FuncDecl.apply str2f32 [ v ]
+      | PromoteF32 -> assert false
     in
     op' e
 
@@ -380,6 +419,9 @@ end
 
 module F64Z3Op = struct
   open F64
+
+  let f642str = FuncDecl.mk_func_decl_s ctx "F64ToString" [ fp64_sort ] str_sort
+  let str2f64 = FuncDecl.mk_func_decl_s ctx "StringToF64" [ str_sort ] fp64_sort
 
   let encode_num (f : Int64.t) : Expr.expr =
     FloatingPoint.mk_numeral_f ctx (Int64.float_of_bits f) fp64_sort
@@ -435,7 +477,9 @@ module F64Z3Op = struct
       | ConvertUI64 ->
           fun bv -> FloatingPoint.mk_to_fp_unsigned ctx rne bv fp64_sort
       | ReinterpretInt -> fun bv -> FloatingPoint.mk_to_fp_bv ctx bv fp64_sort
-      | ReinterpretStr | DemoteF64 -> assert false
+      | ToString -> fun v -> FuncDecl.apply f642str [ v ]
+      | OfString -> fun v -> FuncDecl.apply str2f64 [ v ]
+      | DemoteF64 -> assert false
     in
     op' e
 
@@ -450,9 +494,9 @@ let num i32 i64 f32 f64 : Num.t -> Expr.expr = function
   | F32 x -> f32 x
   | F64 x -> f64 x
 
-let op i b s i32 i64 f32 f64 = function
+let op i r b s i32 i64 f32 f64 = function
   | Int x -> i x
-  | Real _ -> assert false
+  | Real x -> r x
   | Bool x -> b x
   | Str x -> s x
   | I32 x -> i32 x
@@ -465,36 +509,56 @@ let encode_num : Num.t -> Expr.expr =
     F64Z3Op.encode_num
 
 let encode_unop : unop -> Expr.expr -> Expr.expr =
-  op IntZ3Op.encode_unop BoolZ3Op.encode_unop StrZ3Op.encode_unop
-    I32Z3Op.encode_unop I64Z3Op.encode_unop F32Z3Op.encode_unop
-    F64Z3Op.encode_unop
+  op IntZ3Op.encode_unop RealZ3Op.encode_unop BoolZ3Op.encode_unop
+    StrZ3Op.encode_unop I32Z3Op.encode_unop I64Z3Op.encode_unop
+    F32Z3Op.encode_unop F64Z3Op.encode_unop
 
 let encode_binop : binop -> Expr.expr -> Expr.expr -> Expr.expr =
-  op IntZ3Op.encode_binop BoolZ3Op.encode_binop StrZ3Op.encode_binop
-    I32Z3Op.encode_binop I64Z3Op.encode_binop F32Z3Op.encode_binop
-    F64Z3Op.encode_binop
+  op IntZ3Op.encode_binop RealZ3Op.encode_binop BoolZ3Op.encode_binop
+    StrZ3Op.encode_binop I32Z3Op.encode_binop I64Z3Op.encode_binop
+    F32Z3Op.encode_binop F64Z3Op.encode_binop
 
 let encode_triop : triop -> Expr.expr -> Expr.expr -> Expr.expr -> Expr.expr =
-  op IntZ3Op.encode_triop BoolZ3Op.encode_triop StrZ3Op.encode_triop
-    I32Z3Op.encode_triop I64Z3Op.encode_triop F32Z3Op.encode_triop
-    F64Z3Op.encode_triop
+  op IntZ3Op.encode_triop RealZ3Op.encode_triop BoolZ3Op.encode_triop
+    StrZ3Op.encode_triop I32Z3Op.encode_triop I64Z3Op.encode_triop
+    F32Z3Op.encode_triop F64Z3Op.encode_triop
 
 let encode_relop ~to_bv : relop -> Expr.expr -> Expr.expr -> Expr.expr =
-  op IntZ3Op.encode_relop BoolZ3Op.encode_relop StrZ3Op.encode_relop
+  op IntZ3Op.encode_relop RealZ3Op.encode_relop BoolZ3Op.encode_relop
+    StrZ3Op.encode_relop
     (I32Z3Op.encode_relop ~to_bv)
     (I64Z3Op.encode_relop ~to_bv)
     (F32Z3Op.encode_relop ~to_bv)
     (F64Z3Op.encode_relop ~to_bv)
 
 let encode_cvtop : cvtop -> Expr.expr -> Expr.expr =
-  op IntZ3Op.encode_cvtop BoolZ3Op.encode_cvtop StrZ3Op.encode_cvtop
-    I32Z3Op.encode_cvtop I64Z3Op.encode_cvtop F32Z3Op.encode_cvtop
-    F64Z3Op.encode_cvtop
+  op IntZ3Op.encode_cvtop RealZ3Op.encode_cvtop BoolZ3Op.encode_cvtop
+    StrZ3Op.encode_cvtop I32Z3Op.encode_cvtop I64Z3Op.encode_cvtop
+    F32Z3Op.encode_cvtop F64Z3Op.encode_cvtop
+
+let encode_quantifier (t : bool) (vars_list : (string * Types.expr_type) list)
+    (body : Expr.expr) (patterns : Quantifier.Pattern.pattern list) : Expr.expr
+    =
+  if List.length vars_list > 0 then
+    let quantified_assertion =
+      Quantifier.mk_quantifier_const ctx t
+        (List.map
+           ~f:(fun (v, s) -> Expr.mk_const_s ctx v (get_sort s))
+           vars_list)
+        body None patterns [] None None
+    in
+    let quantified_assertion =
+      Quantifier.expr_of_quantifier quantified_assertion
+    in
+    let quantified_assertion = Expr.simplify quantified_assertion None in
+    quantified_assertion
+  else body
 
 let rec encode_expr ?(bool_to_bv = false) (e : Expression.t) : Expr.expr =
   let open Expression in
   match e with
   | Val (Int i) -> IntZ3Op.encode_num i
+  | Val (Real r) -> RealZ3Op.encode_num r
   | Val (Bool b) -> BoolZ3Op.encode_bool b
   | Val (Num v) -> encode_num v
   | Val (Str s) -> StrZ3Op.encode_str s
@@ -534,47 +598,13 @@ let rec encode_expr ?(bool_to_bv = false) (e : Expression.t) : Expr.expr =
   | Concat (e1, e2) ->
       let e1' = encode_expr e1 and e2' = encode_expr e2 in
       BitVector.mk_concat ctx e1' e2'
-
-let encode_quantifier (t : bool) (vars_list : (string * Types.expr_type) list)
-    (body : Expr.expr) (patterns : Quantifier.Pattern.pattern list) : Expr.expr
-    =
-  if List.length vars_list > 0 then
-    let quantified_assertion =
-      Quantifier.mk_quantifier_const ctx t
-        (List.map
-           ~f:(fun (v, s) -> Expr.mk_const_s ctx v (get_sort s))
-           vars_list)
-        body None patterns [] None None
-    in
-    let quantified_assertion =
-      Quantifier.expr_of_quantifier quantified_assertion
-    in
-    let quantified_assertion = Expr.simplify quantified_assertion None in
-    quantified_assertion
-  else body
-
-let encode_pattern (pattern : Expression.expr list) =
-  Quantifier.mk_pattern ctx (List.map ~f:encode_expr pattern)
-
-let rec encode_formula (a : Formula.t) : Expr.expr =
-  let open Formula in
-  match a with
-  | True -> Boolean.mk_true ctx
-  | False -> Boolean.mk_false ctx
-  | Relop e -> encode_expr e
-  | Not c -> Boolean.mk_not ctx (encode_formula c)
-  | And (c1, c2) ->
-      let c1' = encode_formula c1 and c2' = encode_formula c2 in
-      Boolean.mk_and ctx [ c1'; c2' ]
-  | Or (c1, c2) ->
-      let c1' = encode_formula c1 and c2' = encode_formula c2 in
-      Boolean.mk_or ctx [ c1'; c2' ]
   | Quantifier (t, vars, body, patterns) ->
-      let body' = encode_formula body in
-      let patterns' = List.map ~f:encode_pattern patterns in
-      let t' =
-        match t with Formula.Forall -> true | Formula.Exists -> false
+      let body' = encode_expr body in
+      let encode_pattern p =
+        Quantifier.mk_pattern ctx (List.map ~f:encode_expr p)
       in
+      let patterns' = List.map ~f:encode_pattern patterns in
+      let t' = match t with Forall -> true | Exists -> false in
       encode_quantifier t' vars body' patterns'
 
 let expr_to_smtstring (es : Expression.t list) (status : bool) =

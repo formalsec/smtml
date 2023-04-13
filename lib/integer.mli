@@ -54,3 +54,9 @@ val mk_gt : Expression.t -> Expression.t -> Expression.t
 
 val mk_ge : Expression.t -> Expression.t -> Expression.t
 (** [mk_ge i1 i2] create an expression representing [i1 >= i2]. *)
+
+val mk_to_string : Expression.t -> Expression.t
+(** [mk_to_string s] create an expression representing a string *)
+
+val mk_of_string : Expression.t -> Expression.t
+(** [mk_of_string s] create an expression representing an integer *)

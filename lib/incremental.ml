@@ -35,7 +35,9 @@ let check (e : t) (expr : Expression.t option) : bool =
   in
   let b =
     solver_count := !solver_count + 1;
-    let sat = time_call (fun () -> Z3.Solver.check e.solver expr') solver_time in
+    let sat =
+      time_call (fun () -> Z3.Solver.check e.solver expr') solver_time
+    in
     match sat with
     | Z3.Solver.SATISFIABLE -> true
     | Z3.Solver.UNKNOWN -> raise Unknown

@@ -424,8 +424,8 @@ module F32CvtOp = struct
     | ConvertSI64 -> F32 (convert_i64_s (I64Op.of_value 1 v))
     | ConvertUI64 -> F32 (convert_i64_u (I64Op.of_value 1 v))
     | ReinterpretInt -> F32 (I32Op.of_value 1 v)
-    | ReinterpretStr -> assert false
     | PromoteF32 -> raise (TypeError (1, v, `F32Type))
+    | ToString | OfString -> assert false
 end
 
 module F64CvtOp = struct
@@ -477,8 +477,8 @@ module F64CvtOp = struct
     | ConvertSI64 -> F64 (convert_i64_s (I64Op.of_value 1 v))
     | ConvertUI64 -> F64 (convert_i64_u (I64Op.of_value 1 v))
     | ReinterpretInt -> F64 (I64Op.of_value 1 v)
-    | ReinterpretStr -> assert false
     | DemoteF64 -> raise (TypeError (1, v, `F64Type))
+    | ToString | OfString -> assert false
 end
 
 (* Dispatch *)

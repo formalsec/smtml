@@ -19,8 +19,9 @@ type cvtop =
   | ConvertSI64
   | ConvertUI64
   | ReinterpretInt
-  | ReinterpretStr
   | PromoteF32
+  | ToString
+  | OfString
 
 let neg_relop (op : relop) : relop =
   match op with
@@ -96,8 +97,9 @@ let string_of_cvtop (op : cvtop) : string =
   | ConvertSI64 -> "ConvertSI64"
   | ConvertUI64 -> "ConvertUI64"
   | ReinterpretInt -> "ReinterpretInt"
-  | ReinterpretStr -> "ReinterpretStr"
   | PromoteF32 -> "PromoteF32"
+  | ToString -> "ToString"
+  | OfString -> "ToString"
 
 let pp_string_of_cvtop (op : cvtop) : string = string_of_cvtop op
 let string_of_triop (_ : triop) : string = assert false

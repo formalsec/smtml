@@ -54,3 +54,6 @@ let mk_gt (e1 : Expression.t) (e2 : Expression.t) : Expression.t =
 
 let mk_ge (e1 : Expression.t) (e2 : Expression.t) : Expression.t =
   Relop (Int I.Ge, e1, e2)
+
+let mk_to_string (e : Expression.t) : Expression.t = Cvtop (Int I.ToString, e)
+let mk_of_string (e : Expression.t) : Expression.t = Cvtop (Int I.OfString, e)

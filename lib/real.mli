@@ -4,18 +4,6 @@ val mk_val : float -> Expression.t
 val mk_neg : Expression.t -> Expression.t
 (** [mk_neg f] create an expression representing [-f]. *)
 
-val mk_abs : Expression.t -> Expression.t
-(** [mk_abs f] create an expression representing [abs(f)]. *)
-
-val mk_sqrt : Expression.t -> Expression.t
-(** [mk_sqrt f] create an expression representing [sqrt(f)]. *)
-
-val mk_nearest : Expression.t -> Expression.t
-(** [mk_nearest f] create an expression representing [round_nearest(f)]. *)
-
-val mk_is_nan : Expression.t -> Expression.t
-(** [mk_is_nan f] create an expression representing [is_nan(f)]. *)
-
 val mk_add : Expression.t -> Expression.t -> Expression.t
 (** [mk_add f1 f2] create an expression representing [f1 + f2]. *)
 
@@ -27,15 +15,6 @@ val mk_mul : Expression.t -> Expression.t -> Expression.t
 
 val mk_div : Expression.t -> Expression.t -> Expression.t
 (** [mk_div f1 f2] create an expression representing [f1 / f2]. *)
-
-val mk_min : Expression.t -> Expression.t -> Expression.t
-(** [mk_min f1 f2] create an expression representing [min f1 f2]. *)
-
-val mk_max : Expression.t -> Expression.t -> Expression.t
-(** [mk_max f1 f2] create an expression representing [max f1 f2]. *)
-
-val mk_rem : Expression.t -> Expression.t -> Expression.t
-(** [mk_rem f1 f2] create an expression representing [f1 % f2]. *)
 
 val mk_eq : Expression.t -> Expression.t -> Expression.t
 (** [mk_eq f1 f2] create an expression representing [f1 = f2]. *)
@@ -54,3 +33,9 @@ val mk_gt : Expression.t -> Expression.t -> Expression.t
 
 val mk_ge : Expression.t -> Expression.t -> Expression.t
 (** [mk_ge f1 f2] create an expression representing [f1 >= f2]. *)
+
+val mk_to_string : Expression.t -> Expression.t
+(** [mk_to_string f] create an expression representing a string *)
+
+val mk_of_string : Expression.t -> Expression.t
+(** [mk_of_string f] create an expression representing a real *)

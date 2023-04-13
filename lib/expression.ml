@@ -87,7 +87,7 @@ let get_symbols (e : expr) : (String.t * expr_type) List.t =
   in
   let equal (x1, _) (x2, _) = String.equal x1 x2 in
   List.fold (symbols e) ~init:[] ~f:(fun accum x ->
-    if List.mem accum x ~equal then accum else x :: accum)
+      if List.mem accum x ~equal then accum else x :: accum)
 
 (**  String representation of a expr  *)
 let rec to_string (e : expr) : String.t =
@@ -173,7 +173,7 @@ let rec to_string (e : expr) : String.t =
   | Concat (e1, e2) -> "(Concat " ^ to_string e1 ^ " " ^ to_string e2 ^ ")"
   | Quantifier (qt, vars, body, _) ->
       let qt' = match qt with Forall -> "Forall" | Exists -> "Exists" in
-      let xs' = String.concat ~sep:", " (List.map ~f:(fun (x, _ ) -> x) vars) in
+      let xs' = String.concat ~sep:", " (List.map ~f:(fun (x, _) -> x) vars) in
       qt' ^ "(" ^ xs' ^ ")" ^ to_string body
 
 let rec pp_to_string (e : expr) : String.t =
@@ -261,7 +261,7 @@ let rec pp_to_string (e : expr) : String.t =
       "(" ^ str_e1 ^ " ++ " ^ str_e2 ^ ")"
   | Quantifier (qt, vars, body, _) ->
       let qt' = match qt with Forall -> "Forall" | Exists -> "Exists" in
-      let xs' = String.concat ~sep:", " (List.map ~f:(fun (x, _ ) -> x) vars) in
+      let xs' = String.concat ~sep:", " (List.map ~f:(fun (x, _) -> x) vars) in
       qt' ^ "(" ^ xs' ^ ")" ^ pp_to_string body
 
 (**  String representation of a list of path conditions  *)
@@ -279,8 +279,8 @@ let string_of_values (el : (Num.t * t) List.t) : String.t =
 let rec type_of (e : expr) : expr_type =
   let rec concat_length (e' : expr) : Int.t =
     match e' with
-    | Quantifier _
-    | Val (Bool _) | Val (Real _) | Val (Int _) | Val (Str _) -> assert false
+    | Quantifier _ | Val (Bool _) | Val (Real _) | Val (Int _) | Val (Str _) ->
+        assert false
     | Val (Num n) -> size (Types.type_of_num n)
     | SymPtr _ -> 4
     | Binop (op, _, _) -> size (Types.type_of op)
@@ -324,8 +324,7 @@ let rec type_of (e : expr) : expr_type =
 let rec get_ptr (e : expr) : Num.t Option.t =
   (* FIXME: this function can be "simplified" *)
   match e with
-  | Quantifier _
-  | Val _ -> None
+  | Quantifier _ | Val _ -> None
   | SymPtr (base, _) -> Some (I32 base)
   | Unop (_, e) -> get_ptr e
   | Binop (_, e1, e2) ->
