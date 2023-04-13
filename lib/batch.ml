@@ -28,6 +28,10 @@ let add (s : t) (e : Expression.t) : unit =
 let add_formula (s : t) (f : Formula.t) : unit =
   s.pc := Formula.conjunct [ f; !(s.pc) ]
 
+
+let set_default_axioms (s : Solver.solver) : unit =
+  Solver.add s (List.map ~f:encode_formula Axioms.axioms)
+  
 let check_formulas (s : t) (formulas : Formula.t list) : bool =
   let expressions = List.map ~f:encode_formula formulas in
   solver_count := !solver_count + 1;

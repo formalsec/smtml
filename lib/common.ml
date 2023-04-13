@@ -19,6 +19,28 @@ let fp64_sort = FloatingPoint.mk_sort_double ctx
 let rne = FloatingPoint.RoundingMode.mk_rne ctx
 let rtz = FloatingPoint.RoundingMode.mk_rtz ctx
 
+type ops = {
+  str2flt : FuncDecl.func_decl;
+  int2str : FuncDecl.func_decl;
+  str2int : FuncDecl.func_decl;
+}
+
+let axiomatised_operations =
+  {
+    str2flt =
+      FuncDecl.mk_func_decl ctx
+        (Symbol.mk_string ctx "StringToFloat")
+        [ str_sort ] fp64_sort;
+    int2str =
+      FuncDecl.mk_func_decl ctx
+        (Symbol.mk_string ctx "IntToString")
+        [ int_sort ] str_sort;
+    str2int =
+      FuncDecl.mk_func_decl ctx
+        (Symbol.mk_string ctx "StringToInt")
+        [ str_sort ] int_sort;
+  }
+
 let get_sort (e : Types.expr_type) : Z3.Sort.sort =
   match e with
   | `IntType -> int_sort
@@ -68,7 +90,12 @@ module IntZ3Op = struct
     in
     op' e1 e2
 
-  let encode_cvtop (_ : cvtop) (_ : Expr.expr) : Expr.expr = assert false
+  let encode_cvtop (op : cvtop) (e : Expr.expr) : Expr.expr =
+    let op' =
+      match op with
+      | ToStr -> fun v -> Expr.mk_app ctx axiomatised_operations.int2str [ v ]
+    in
+    op' e
 
   let encode_triop (_ : triop) (_ : Expr.expr) (_ : Expr.expr) (_ : Expr.expr) :
       Expr.expr =
@@ -140,8 +167,13 @@ module StrZ3Op = struct
     let op' = match op with SubStr -> Seq.mk_seq_extract ctx in
     op' e1 e2 e3
 
-  let encode_cvtop (_ : cvtop) (_ : Expr.expr) : Expr.expr =
-    raise (Error "Not implemented")
+  let encode_cvtop (op : cvtop) (e : Expr.expr) : Expr.expr =
+    let op' =
+      match op with
+      | ToInt -> fun v -> Expr.mk_app ctx axiomatised_operations.str2int [ v ]
+      | ToFloat -> fun v -> Expr.mk_app ctx axiomatised_operations.str2flt [ v ]
+    in
+    op' e
 end
 
 module I32Z3Op = struct
@@ -503,6 +535,27 @@ let rec encode_expr ?(bool_to_bv = false) (e : Expression.t) : Expr.expr =
       let e1' = encode_expr e1 and e2' = encode_expr e2 in
       BitVector.mk_concat ctx e1' e2'
 
+let encode_quantifier (t : bool) (vars_list : (string * Types.expr_type) list)
+    (body : Expr.expr) (patterns : Quantifier.Pattern.pattern list) : Expr.expr
+    =
+  if List.length vars_list > 0 then
+    let quantified_assertion =
+      Quantifier.mk_quantifier_const ctx t
+        (List.map
+           ~f:(fun (v, s) -> Expr.mk_const_s ctx v (get_sort s))
+           vars_list)
+        body None patterns [] None None
+    in
+    let quantified_assertion =
+      Quantifier.expr_of_quantifier quantified_assertion
+    in
+    let quantified_assertion = Expr.simplify quantified_assertion None in
+    quantified_assertion
+  else body
+
+let encode_pattern (pattern : Expression.expr list) =
+  Quantifier.mk_pattern ctx (List.map ~f:encode_expr pattern)
+
 let rec encode_formula (a : Formula.t) : Expr.expr =
   let open Formula in
   match a with
@@ -516,6 +569,13 @@ let rec encode_formula (a : Formula.t) : Expr.expr =
   | Or (c1, c2) ->
       let c1' = encode_formula c1 and c2' = encode_formula c2 in
       Boolean.mk_or ctx [ c1'; c2' ]
+  | Axiom (t, vars, body, patterns) ->
+      let body' = encode_formula body in
+      let patterns' = List.map ~f:encode_pattern patterns in
+      let t' =
+        match t with Formula.Forall -> true | Formula.Exists -> false
+      in
+      encode_quantifier t' vars body' patterns'
 
 let expr_to_smtstring (es : Expression.t list) (status : bool) =
   let es' = List.map ~f:encode_expr es in
