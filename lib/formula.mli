@@ -7,7 +7,7 @@ type formula =
   | And of formula * formula
   | Or of formula * formula
   | Relop of Expression.t
-  | Axiom of
+  | Quantifier of
       at * (string * Types.expr_type) list * formula * Expression.t list list
 
 and at = Forall | Exists

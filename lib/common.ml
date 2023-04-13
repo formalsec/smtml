@@ -569,7 +569,7 @@ let rec encode_formula (a : Formula.t) : Expr.expr =
   | Or (c1, c2) ->
       let c1' = encode_formula c1 and c2' = encode_formula c2 in
       Boolean.mk_or ctx [ c1'; c2' ]
-  | Axiom (t, vars, body, patterns) ->
+  | Quantifier (t, vars, body, patterns) ->
       let body' = encode_formula body in
       let patterns' = List.map ~f:encode_pattern patterns in
       let t' =

@@ -2,7 +2,7 @@ open Types
 
 let axioms =
   [
-    Formula.Axiom
+    Formula.Quantifier
       ( Formula.Forall,
         [ ("x", `StrType) ],
         Formula.Relop
