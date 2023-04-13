@@ -1,16 +1,11 @@
-open Types
-
 let axioms =
   [
-    Formula.Quantifier
-      ( Formula.Forall,
+    Expression.Quantifier
+      ( Expression.Forall,
         [ ("x", `StrType) ],
-        Formula.Relop
-          (Relop
-             ( Str S.Eq,
-               Expression.Cvtop
-                 ( Int I.ToStr,
-                   Expression.Cvtop (Str S.ToInt, Symbolic (`StrType, "x")) ),
-               Symbolic (`StrType, "x") )),
-        [ [ Expression.Cvtop (Str S.ToInt, Symbolic (`StrType, "x")) ] ] );
+          Strings.mk_eq
+             (Integer.mk_to_string
+                (Integer.mk_of_string (Expression.mk_symbolic `StrType "x")))
+             (Expression.mk_symbolic `StrType "x"),
+        [ [ Integer.mk_of_string (Expression.mk_symbolic `StrType "x") ] ] );
   ]

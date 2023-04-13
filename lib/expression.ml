@@ -3,30 +3,51 @@ open Types
 
 exception InvalidRelop
 
-type value = Int of Int.t | Bool of Bool.t | Num of Num.t | Str of String.t
+type qt = Forall | Exists
+
+type value =
+  | Int of Int.t
+  | Real of Float.t
+  | Bool of Bool.t
+  | Num of Num.t
+  | Str of String.t
 
 type expr =
   | Val of value
   | SymPtr of Int32.t * expr
-  | Binop of binop * expr * expr
-  | Triop of triop * expr * expr * expr
   | Unop of unop * expr
+  | Binop of binop * expr * expr
   | Relop of relop * expr * expr
   | Cvtop of cvtop * expr
+  | Triop of triop * expr * expr * expr
   | Symbolic of expr_type * String.t
   | Extract of expr * Int.t * Int.t
   | Concat of expr * expr
+  | Quantifier of qt * (string * expr_type) list * expr * expr list list
 
 type t = expr
 type pc = expr List.t
 
 let ( ++ ) (e1 : expr) (e2 : expr) = Concat (e1, e2)
 let mk_symbolic (t : expr_type) (x : String.t) : expr = Symbolic (t, x)
+let is_num (e : expr) : Bool.t = match e with Val (Num _) -> true | _ -> false
+let is_val (e : expr) : Bool.t = match e with Val _ -> true | _ -> false
+let is_unop (e : expr) : Bool.t = match e with Unop _ -> true | _ -> false
+let is_relop (e : expr) : Bool.t = match e with Relop _ -> true | _ -> false
+let is_binop (e : expr) : Bool.t = match e with Binop _ -> true | _ -> false
+let is_cvtop (e : expr) : Bool.t = match e with Cvtop _ -> true | _ -> false
+let is_triop (e : expr) : Bool.t = match e with Triop _ -> true | _ -> false
+
+let is_concrete (e : expr) : Bool.t =
+  match e with Val _ | SymPtr (_, Val _) -> true | _ -> false
 
 let negate_relop (e : expr) : expr =
   match e with
   (* Relop *)
   | Relop (Int op, e1, e2) -> Relop (Int (I.neg_relop op), e1, e2)
+  | Relop (Real op, e1, e2) -> Relop (Real (R.neg_relop op), e1, e2)
+  | Relop (Bool op, e1, e2) -> Relop (Bool (B.neg_relop op), e1, e2)
+  | Relop (Str op, e1, e2) -> Relop (Str (S.neg_relop op), e1, e2)
   | Relop (I32 op, e1, e2) -> Relop (I32 (I32.neg_relop op), e1, e2)
   | Relop (I64 op, e1, e2) -> Relop (I64 (I64.neg_relop op), e1, e2)
   | Relop (F32 op, e1, e2) -> Relop (F32 (F32.neg_relop op), e1, e2)
@@ -46,25 +67,33 @@ let rec length (e : expr) : Int.t =
   | Symbolic (_, _) -> 1
   | Extract (e, _, _) -> 1 + length e
   | Concat (e1, e2) -> 1 + length e1 + length e2
+  | Quantifier (_, _, body, _) -> length body
 
 (** Retrieves the symbolic variables *)
-let rec get_symbols (e : expr) : (String.t * expr_type) List.t =
-  match e with
-  | Val _ -> []
-  | SymPtr (_, offset) -> get_symbols offset
-  | Unop (_, e1) -> get_symbols e1
-  | Binop (_, e1, e2) -> get_symbols e1 @ get_symbols e2
-  | Triop (_, e1, e2, e3) -> get_symbols e1 @ get_symbols e2 @ get_symbols e3
-  | Relop (_, e1, e2) -> get_symbols e1 @ get_symbols e2
-  | Cvtop (_, e) -> get_symbols e
-  | Symbolic (t, x) -> [ (x, t) ]
-  | Extract (e, _, _) -> get_symbols e
-  | Concat (e1, e2) -> get_symbols e1 @ get_symbols e2
+let get_symbols (e : expr) : (String.t * expr_type) List.t =
+  let rec symbols e =
+    match e with
+    | Val _ -> []
+    | SymPtr (_, offset) -> symbols offset
+    | Unop (_, e1) -> symbols e1
+    | Binop (_, e1, e2) -> symbols e1 @ symbols e2
+    | Triop (_, e1, e2, e3) -> symbols e1 @ symbols e2 @ symbols e3
+    | Relop (_, e1, e2) -> symbols e1 @ symbols e2
+    | Cvtop (_, e) -> symbols e
+    | Symbolic (t, x) -> [ (x, t) ]
+    | Extract (e, _, _) -> symbols e
+    | Concat (e1, e2) -> symbols e1 @ symbols e2
+    | Quantifier (_, vars, _, _) -> vars
+  in
+  let equal (x1, _) (x2, _) = String.equal x1 x2 in
+  List.fold (symbols e) ~init:[] ~f:(fun accum x ->
+    if List.mem accum x ~equal then accum else x :: accum)
 
 (**  String representation of a expr  *)
 let rec to_string (e : expr) : String.t =
   match e with
   | Val (Int i) -> Int.to_string i
+  | Val (Real i) -> Float.to_string i
   | Val (Bool b) -> Bool.to_string b
   | Val (Num n) -> Num.string_of_num n
   | Val (Str s) -> "(Str \"" ^ s ^ "\")"
@@ -142,10 +171,15 @@ let rec to_string (e : expr) : String.t =
       "(Extract " ^ to_string e ^ ", " ^ Int.to_string h ^ " " ^ Int.to_string l
       ^ ")"
   | Concat (e1, e2) -> "(Concat " ^ to_string e1 ^ " " ^ to_string e2 ^ ")"
+  | Quantifier (qt, vars, body, _) ->
+      let qt' = match qt with Forall -> "Forall" | Exists -> "Exists" in
+      let xs' = String.concat ~sep:", " (List.map ~f:(fun (x, _ ) -> x) vars) in
+      qt' ^ "(" ^ xs' ^ ")" ^ to_string body
 
 let rec pp_to_string (e : expr) : String.t =
   match e with
   | Val (Int i) -> Int.to_string i
+  | Val (Real f) -> Float.to_string f
   | Val (Bool b) -> Bool.to_string b
   | Val (Num n) -> Num.string_of_num n
   | Val (Str s) -> "\"" ^ s ^ "\")"
@@ -225,6 +259,10 @@ let rec pp_to_string (e : expr) : String.t =
   | Concat (e1, e2) ->
       let str_e1 = pp_to_string e1 and str_e2 = pp_to_string e2 in
       "(" ^ str_e1 ^ " ++ " ^ str_e2 ^ ")"
+  | Quantifier (qt, vars, body, _) ->
+      let qt' = match qt with Forall -> "Forall" | Exists -> "Exists" in
+      let xs' = String.concat ~sep:", " (List.map ~f:(fun (x, _ ) -> x) vars) in
+      qt' ^ "(" ^ xs' ^ ")" ^ pp_to_string body
 
 (**  String representation of a list of path conditions  *)
 let string_of_pc (pc : pc) : String.t =
@@ -241,7 +279,8 @@ let string_of_values (el : (Num.t * t) List.t) : String.t =
 let rec type_of (e : expr) : expr_type =
   let rec concat_length (e' : expr) : Int.t =
     match e' with
-    | Val (Bool _) | Val (Int _) | Val (Str _) -> assert false
+    | Quantifier _
+    | Val (Bool _) | Val (Real _) | Val (Int _) | Val (Str _) -> assert false
     | Val (Num n) -> size (Types.type_of_num n)
     | SymPtr _ -> 4
     | Binop (op, _, _) -> size (Types.type_of op)
@@ -254,6 +293,7 @@ let rec type_of (e : expr) : expr_type =
     | Extract (_, h, l) -> h - l
   in
   match e with
+  | Val (Real _) -> `RealType
   | Val (Bool _) -> `BoolType
   | Val (Int _) -> `IntType
   | Val (Num n) -> Types.type_of_num n
@@ -279,10 +319,12 @@ let rec type_of (e : expr) : expr_type =
       | 4 -> `I32Type
       | 8 -> `I64Type
       | _ -> failwith "unsupported type length")
+  | Quantifier _ -> assert false
 
 let rec get_ptr (e : expr) : Num.t Option.t =
   (* FIXME: this function can be "simplified" *)
   match e with
+  | Quantifier _
   | Val _ -> None
   | SymPtr (base, _) -> Some (I32 base)
   | Unop (_, e) -> get_ptr e
@@ -317,12 +359,6 @@ let concretize_ptr (e : expr) : Num.t Option.t =
 
 let concretize_base_ptr (e : expr) : Int32.t Option.t =
   match e with SymPtr (base, _) -> Some base | _ -> None
-
-let is_num (e : expr) : Bool.t = match e with Val (Num _) -> true | _ -> false
-let is_relop (e : expr) : Bool.t = match e with Relop _ -> true | _ -> false
-
-let is_concrete (e : expr) : Bool.t =
-  match e with Val _ | SymPtr (_, Val _) -> true | _ -> false
 
 let to_relop (e : expr) : expr Option.t =
   if is_concrete e then None
@@ -529,6 +565,16 @@ let mk_relop ?(reduce : bool = true) (e : expr) (t : num_type) : expr =
       | `F64Type -> Relop (F64 Ne, e, Val zero)
     in
     simplify e'
+
+let add_constraint ?(neg : bool = false) (e : expr) (pc : expr) : expr =
+  let cond =
+    let c = to_relop (simplify e) in
+    if neg then Option.map ~f:negate_relop c else c
+  in
+  match (cond, pc) with
+  | None, _ -> pc
+  | Some cond, Val (Bool true) -> cond
+  | Some cond, _ -> Binop (Bool B.And, cond, pc)
 
 let insert_pc ?(neg : bool = false) (e : expr) (pc : pc) : pc =
   let cond =

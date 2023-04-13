@@ -1,5 +1,4 @@
 open Base
-open Z3
 open Types
 open Common
 
@@ -14,26 +13,21 @@ let time_call f acc =
   acc := !acc +. (Caml.Sys.time () -. start);
   ret
 
-type s = Solver.solver
-type t = { solver : s; pc : Formula.t ref }
+type s = Z3.Solver.solver
+type t = { solver : s; pc : Expression.t ref }
 
 let create () : t =
-  { solver = Solver.mk_solver ctx None; pc = ref (Formula.create ()) }
+  { solver = Z3.Solver.mk_solver ctx None; pc = ref (Boolean.mk_val true) }
 
-let interrupt () = Tactic.interrupt ctx
+let interrupt () = Z3.Tactic.interrupt ctx
 
 let clone (e : t) : t =
-  { solver = Solver.translate e.solver ctx; pc = ref !(e.pc) }
+  { solver = Z3.Solver.translate e.solver ctx; pc = ref !(e.pc) }
 
 let add (e : t) (c : Expression.t) : unit =
-  e.pc := Formula.add_constraint c !(e.pc);
+  e.pc := Expression.add_constraint c !(e.pc);
   let ec = encode_expr ~bool_to_bv:false c in
-  Solver.add e.solver [ ec ]
-
-let add_formula (e : t) (f : Formula.t) : unit =
-  e.pc := Formula.conjunct [ f; !(e.pc) ];
-  let ef = encode_formula f in
-  Solver.add e.solver [ ef ]
+  Z3.Solver.add e.solver [ ec ]
 
 let check (e : t) (expr : Expression.t option) : bool =
   let expr' =
@@ -41,18 +35,18 @@ let check (e : t) (expr : Expression.t option) : bool =
   in
   let b =
     solver_count := !solver_count + 1;
-    let sat = time_call (fun () -> Solver.check e.solver expr') solver_time in
+    let sat = time_call (fun () -> Z3.Solver.check e.solver expr') solver_time in
     match sat with
-    | Solver.SATISFIABLE -> true
-    | Solver.UNKNOWN -> raise Unknown
-    | Solver.UNSATISFIABLE -> false
+    | Z3.Solver.SATISFIABLE -> true
+    | Z3.Solver.UNKNOWN -> raise Unknown
+    | Z3.Solver.UNSATISFIABLE -> false
   in
   b
 
 let fork (s : t) (e : Expression.t) : bool * bool =
   (check s (Some e), check s (Some (Expression.negate_relop e)))
 
-let model (e : t) : Model.model Option.t = Solver.get_model e.solver
+let model (e : t) : Z3.Model.model Option.t = Z3.Solver.get_model e.solver
 
 let value_binds (e : t) (vars : (string * expr_type) list) :
     (string * Expression.value) list =
