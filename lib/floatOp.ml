@@ -1,8 +1,16 @@
 open Base
 
-type binop = Add | Sub | Mul | Div | Min | Max (*  Falta: | CopySign *)
-type unop = Neg | Abs | Sqrt | Nearest (*  Falta: | Ceil | Floor | Trunc *)
+type binop = Add | Sub | Mul | Div | Min | Max | Rem (*  Falta: | CopySign *)
+
+type unop =
+  | Neg
+  | Abs
+  | Sqrt
+  | Nearest
+  | IsNan (*  Falta: | Ceil | Floor | Trunc *)
+
 type relop = Eq | Ne | Lt | Le | Gt | Ge
+type triop
 
 type cvtop =
   | DemoteF64
@@ -12,6 +20,8 @@ type cvtop =
   | ConvertUI64
   | ReinterpretInt
   | PromoteF32
+  | ToString
+  | OfString
 
 let neg_relop (op : relop) : relop =
   match op with
@@ -31,6 +41,7 @@ let string_of_binop (op : binop) : string =
   | Div -> "Div"
   | Min -> "Min"
   | Max -> "Max"
+  | Rem -> "Rem"
 
 let pp_string_of_binop (op : binop) : string =
   match op with
@@ -40,6 +51,7 @@ let pp_string_of_binop (op : binop) : string =
   | Div -> "/"
   | Min -> "Min"
   | Max -> "Max"
+  | Rem -> "%"
 
 (*  String representation of an f32 unary operation  *)
 let string_of_unop (op : unop) : string =
@@ -48,6 +60,7 @@ let string_of_unop (op : unop) : string =
   | Abs -> "Abs"
   | Sqrt -> "Sqrt"
   | Nearest -> "Nearest"
+  | IsNan -> "IsNan"
 
 let pp_string_of_unop (op : unop) : string =
   match op with
@@ -55,6 +68,7 @@ let pp_string_of_unop (op : unop) : string =
   | Abs -> "Abs"
   | Sqrt -> "Sqrt"
   | Nearest -> "Nearest"
+  | IsNan -> "IsNan"
 
 (*  String representation of an f32 relative operation  *)
 let string_of_relop (op : relop) : string =
@@ -84,5 +98,9 @@ let string_of_cvtop (op : cvtop) : string =
   | ConvertUI64 -> "ConvertUI64"
   | ReinterpretInt -> "ReinterpretInt"
   | PromoteF32 -> "PromoteF32"
+  | ToString -> "ToString"
+  | OfString -> "ToString"
 
 let pp_string_of_cvtop (op : cvtop) : string = string_of_cvtop op
+let string_of_triop (_ : triop) : string = assert false
+let pp_string_of_triop (_ : triop) : string = assert false

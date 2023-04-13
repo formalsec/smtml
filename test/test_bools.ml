@@ -1,15 +1,9 @@
 open Encoding
-open Types
-open Expression
 
 let solver = Batch.create ()
-let int_symb = Symbolic (`IntType, "x")
-let bool_symb = Symbolic (`BoolType, "y")
-
-(* Satisfiability *)
+let int_symb = Expression.mk_symbolic `IntType "x"
+let bool_symb = Expression.mk_symbolic `BoolType "y"
 
 let%test "test_not" =
-  let pc =
-    [ Unop (Bool B.Not, Relop (Bool B.Eq, bool_symb, Val (Bool true))) ]
-  in
-  Some (Bool false) = Batch.eval solver bool_symb pc
+  let pc = [ Boolean.mk_not (Boolean.mk_eq bool_symb (Boolean.mk_val true)) ] in
+  Some (Expression.Bool false) = Batch.eval solver bool_symb pc

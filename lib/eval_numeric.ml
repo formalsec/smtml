@@ -44,8 +44,10 @@ module I32Op = struct
   let shr_u x y = shift shift_right_logical x y
 
   let unop (op : I32.unop) : Num.t -> Num.t =
-    let f = match op with Clz -> clz in
-    fun v -> to_value (of_int_exn (f (of_value 1 v)))
+    let f =
+      match op with Clz -> fun i -> of_int_trunc (clz i) | Not -> bit_not
+    in
+    fun v -> to_value (f (of_value 1 v))
 
   let binop (op : I32.binop) : Num.t -> Num.t -> Num.t =
     let f =
@@ -118,8 +120,8 @@ module I64Op = struct
   let shr_u x y = shift shift_right_logical x y
 
   let unop op : Num.t -> Num.t =
-    let f = match op with Clz -> clz in
-    fun v -> to_value (of_int_exn (f (of_value 1 v)))
+    let f = match op with Clz -> fun i -> of_int (clz i) | Not -> bit_not in
+    fun v -> to_value (f (of_value 1 v))
 
   let binop op : Num.t -> Num.t -> Num.t =
     let f =
@@ -176,6 +178,7 @@ module F32Op = struct
       | Abs -> abs
       | Sqrt -> sqrt
       | Nearest -> round_nearest
+      | IsNan -> assert false
     in
     fun v -> to_value (of_float (f (to_float (of_value 1 v))))
 
@@ -186,6 +189,7 @@ module F32Op = struct
       | Sub -> ( - )
       | Mul -> ( * )
       | Div -> ( / )
+      | Rem -> ( % )
       | Min -> min
       | Max -> max
     in
@@ -225,6 +229,7 @@ module F64Op = struct
       | Abs -> abs
       | Sqrt -> sqrt
       | Nearest -> round_nearest
+      | IsNan -> assert false
     in
     fun v -> to_value (of_float (f (to_float (of_value 1 v))))
 
@@ -235,6 +240,7 @@ module F64Op = struct
       | Sub -> ( - )
       | Mul -> ( * )
       | Div -> ( / )
+      | Rem -> ( % )
       | Min -> min
       | Max -> max
     in
@@ -419,6 +425,7 @@ module F32CvtOp = struct
     | ConvertUI64 -> F32 (convert_i64_u (I64Op.of_value 1 v))
     | ReinterpretInt -> F32 (I32Op.of_value 1 v)
     | PromoteF32 -> raise (TypeError (1, v, `F32Type))
+    | ToString | OfString -> assert false
 end
 
 module F64CvtOp = struct
@@ -471,12 +478,14 @@ module F64CvtOp = struct
     | ConvertUI64 -> F64 (convert_i64_u (I64Op.of_value 1 v))
     | ReinterpretInt -> F64 (I64Op.of_value 1 v)
     | DemoteF64 -> raise (TypeError (1, v, `F64Type))
+    | ToString | OfString -> assert false
 end
 
 (* Dispatch *)
 
 let op i32 i64 f32 f64 = function
   | Int _ -> failwith "eval_numeric: Integer evaluations not supported"
+  | Real _ -> failwith "eval_numeric: Float evaluations not supported"
   | I32 x -> i32 x
   | I64 x -> i64 x
   | F32 x -> f32 x

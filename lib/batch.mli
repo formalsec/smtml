@@ -4,7 +4,7 @@ open Types
 
 exception Unknown
 
-type t = { solver : s; pc : Formula.t ref }
+type t = { solver : s; pc : Expression.t ref }
 and s = Solver.solver
 
 val solver_time : float ref
@@ -17,15 +17,11 @@ val clone : t -> t
 val interrupt : unit -> unit
 (** [interrupt ()] sends interrupt signal to SMT solver *)
 
+val set_default_axioms : Solver.solver -> unit
+(** add default axioms to solver *)
+
 val add : t -> Expression.t -> unit
 (** [add solver e] adds assertion [e] to [solver] *)
-
-val add_formula : t -> Formula.t -> unit
-(** [add solver f] adds formula [f] to [solver] *)
-
-val check_formulas : t -> Formula.t list -> bool
-(** [check_formulas solver [e1; ...; en]] checks the satisfiability of
-    [e1, ..., en] without adding the expressions as assertions to the solver *)
 
 val check_sat : t -> Expression.t list -> bool
 (** [check_sat solver [e1; ...; en]] checks the satisfiability of the
