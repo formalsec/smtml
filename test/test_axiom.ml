@@ -12,7 +12,7 @@ let int_zero = Val (Int Int.zero)
 let str_symb = Symbolic (`StrType, "x")
 
 let axiom =
-  Formula.Axiom
+  Formula.Quantifier
     ( Formula.Forall,
       [ ("x", `StrType) ],
       Formula.Relop

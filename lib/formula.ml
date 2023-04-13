@@ -7,7 +7,7 @@ type formula =
   | And of formula * formula
   | Or of formula * formula
   | Relop of Expression.t
-  | Axiom of
+  | Quantifier of
       at * (string * Types.expr_type) list * formula * Expression.t list list
 
 and at = Forall | Exists
@@ -37,7 +37,7 @@ let rec negate (f : t) : t =
   | Or (c1, c2) -> And (negate c1, negate c2)
   | Relop e -> Relop (Expression.negate_relop e)
   (*TODO: axiom negation*)
-  | Axiom (t, vars, body, patterns) -> Axiom (t, vars, body, patterns)
+  | Quantifier (t, vars, body, patterns) -> Quantifier (t, vars, body, patterns)
 
 let conjunct (conds : t list) : t =
   if List.is_empty conds then True
@@ -83,7 +83,7 @@ let rec to_string_aux (p : Expression.t -> string) (f : t) : string =
       let c1_str = to_string_aux p c1 and c2_str = to_string_aux p c2 in
       "(" ^ c1_str ^ " \\/ " ^ c2_str ^ ")"
   | Relop e -> p e
-  | Axiom (at, vars, body, patterns) -> 
+  | Quantifier (at, vars, body, patterns) -> 
       let at' = 
       match at with
       | Forall -> "Forall"
@@ -104,7 +104,7 @@ let rec length (e : t) : int =
   | Not c -> 1 + length c
   | And (c1, c2) -> 1 + length c1 + length c2
   | Or (c1, c2) -> 1 + length c1 + length c2
-  | Axiom (_, _, body, _) -> length body
+  | Quantifier (_, _, body, _) -> length body
 
 let to_formulas (pc : Expression.t list) : t list =
   List.map ~f:(fun e -> Relop e) pc
@@ -121,7 +121,7 @@ let rec get_symbols (e : t) : (string * Types.expr_type) list =
     | And (c1, c2) -> get_symbols c1 @ get_symbols c2
     | Or (c1, c2) -> get_symbols c1 @ get_symbols c2
     | Relop e -> Expression.get_symbols e
-    | Axiom (_, vars, _, _) -> vars
+    | Quantifier (_, vars, _, _) -> vars
   in
   let equal (x1, _) (x2, _) = String.equal x1 x2 in
   List.fold symbols ~init:[]
