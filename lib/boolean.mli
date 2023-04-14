@@ -1,20 +1,22 @@
-val mk_val : bool -> Expression.t
+open Expression
+
+val mk_val : bool -> expr
 (** [mk_val b] creates a concrete boolean value. *)
 
-val mk_not : Expression.t -> Expression.t
+val mk_not : expr -> expr
 (** [mk_not e] create an expression representing [not e]. *)
 
-val mk_and : Expression.t -> Expression.t -> Expression.t
+val mk_and : expr -> expr -> expr
 (** [mk_and e1 e2] create an expression representing [e1 and e2]. *)
 
-val mk_or : Expression.t -> Expression.t -> Expression.t
+val mk_or : expr -> expr -> expr
 (** [mk_or e1 e2] create an expression representing [e1 or e2]. *)
 
-val mk_xor : Expression.t -> Expression.t -> Expression.t
+val mk_xor : expr -> expr -> expr
 (** [mk_xor e1 e2] create an expression representing [e1 xor e2]. *)
 
-val mk_eq : Expression.t -> Expression.t -> Expression.t
+val mk_eq : expr -> expr -> expr
 (** [mk_eq e1 e2] create an expression representing [e1 = e2]. *)
 
-val mk_ne : Expression.t -> Expression.t -> Expression.t
+val mk_ne : expr -> expr -> expr
 (** [mk_ne e1 e2] create an expression representing [not (e1 = e2)]. *)

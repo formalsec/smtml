@@ -4,13 +4,13 @@ open Types
 
 exception Error of string
 
-let mk_val (f : float) (t : Types.num_type) : Expression.t =
+let mk_val (f : float) (t : num_type) : expr =
   match t with
   | `F32Type -> Val (Num (F32 (Int32.bits_of_float f)))
   | `F64Type -> Val (Num (F64 (Int64.bits_of_float f)))
   | _ -> raise (Error ("mk_val: invalid type '" ^ string_of_num_type t ^ "'"))
 
-let mk_neg (e : Expression.t) (t : Types.num_type) : Expression.t =
+let mk_neg (e : expr) (t : num_type) : expr =
   let op =
     match t with
     | `F32Type -> F32 F32.Neg
@@ -19,7 +19,7 @@ let mk_neg (e : Expression.t) (t : Types.num_type) : Expression.t =
   in
   Unop (op, e)
 
-let mk_abs (e : Expression.t) (t : Types.num_type) : Expression.t =
+let mk_abs (e : expr) (t : num_type) : expr =
   let op =
     match t with
     | `F32Type -> F32 F32.Abs
@@ -28,7 +28,7 @@ let mk_abs (e : Expression.t) (t : Types.num_type) : Expression.t =
   in
   Unop (op, e)
 
-let mk_sqrt (e : Expression.t) (t : Types.num_type) : Expression.t =
+let mk_sqrt (e : expr) (t : num_type) : expr =
   let op =
     match t with
     | `F32Type -> F32 F32.Sqrt
@@ -38,7 +38,7 @@ let mk_sqrt (e : Expression.t) (t : Types.num_type) : Expression.t =
   in
   Unop (op, e)
 
-let mk_nearest (e : Expression.t) (t : Types.num_type) : Expression.t =
+let mk_nearest (e : expr) (t : num_type) : expr =
   let op =
     match t with
     | `F32Type -> F32 F32.Nearest
@@ -49,7 +49,7 @@ let mk_nearest (e : Expression.t) (t : Types.num_type) : Expression.t =
   in
   Unop (op, e)
 
-let mk_is_nan (e : Expression.t) (t : Types.num_type) : Expression.t =
+let mk_is_nan (e : expr) (t : num_type) : expr =
   let op =
     match t with
     | `F32Type -> F32 F32.IsNan
@@ -59,8 +59,7 @@ let mk_is_nan (e : Expression.t) (t : Types.num_type) : Expression.t =
   in
   Unop (op, e)
 
-let mk_add (e1 : Expression.t) (e2 : Expression.t) (t : Types.num_type) :
-    Expression.t =
+let mk_add (e1 : expr) (e2 : expr) (t : num_type) : expr =
   let op =
     match t with
     | `F32Type -> F32 F32.Add
@@ -69,8 +68,7 @@ let mk_add (e1 : Expression.t) (e2 : Expression.t) (t : Types.num_type) :
   in
   Binop (op, e1, e2)
 
-let mk_sub (e1 : Expression.t) (e2 : Expression.t) (t : Types.num_type) :
-    Expression.t =
+let mk_sub (e1 : expr) (e2 : expr) (t : num_type) : expr =
   let op =
     match t with
     | `F32Type -> F32 F32.Sub
@@ -79,8 +77,7 @@ let mk_sub (e1 : Expression.t) (e2 : Expression.t) (t : Types.num_type) :
   in
   Binop (op, e1, e2)
 
-let mk_mul (e1 : Expression.t) (e2 : Expression.t) (t : Types.num_type) :
-    Expression.t =
+let mk_mul (e1 : expr) (e2 : expr) (t : num_type) : expr =
   let op =
     match t with
     | `F32Type -> F32 F32.Mul
@@ -89,8 +86,7 @@ let mk_mul (e1 : Expression.t) (e2 : Expression.t) (t : Types.num_type) :
   in
   Binop (op, e1, e2)
 
-let mk_div (e1 : Expression.t) (e2 : Expression.t) (t : Types.num_type) :
-    Expression.t =
+let mk_div (e1 : expr) (e2 : expr) (t : num_type) : expr =
   let op =
     match t with
     | `F32Type -> F32 F32.Div
@@ -99,8 +95,7 @@ let mk_div (e1 : Expression.t) (e2 : Expression.t) (t : Types.num_type) :
   in
   Binop (op, e1, e2)
 
-let mk_min (e1 : Expression.t) (e2 : Expression.t) (t : Types.num_type) :
-    Expression.t =
+let mk_min (e1 : expr) (e2 : expr) (t : num_type) : expr =
   let op =
     match t with
     | `F32Type -> F32 F32.Min
@@ -109,8 +104,7 @@ let mk_min (e1 : Expression.t) (e2 : Expression.t) (t : Types.num_type) :
   in
   Binop (op, e1, e2)
 
-let mk_max (e1 : Expression.t) (e2 : Expression.t) (t : Types.num_type) :
-    Expression.t =
+let mk_max (e1 : expr) (e2 : expr) (t : num_type) : expr =
   let op =
     match t with
     | `F32Type -> F32 F32.Max
@@ -119,8 +113,7 @@ let mk_max (e1 : Expression.t) (e2 : Expression.t) (t : Types.num_type) :
   in
   Binop (op, e1, e2)
 
-let mk_rem (e1 : Expression.t) (e2 : Expression.t) (t : Types.num_type) :
-    Expression.t =
+let mk_rem (e1 : expr) (e2 : expr) (t : num_type) : expr =
   let op =
     match t with
     | `F32Type -> F32 F32.Rem
@@ -129,8 +122,7 @@ let mk_rem (e1 : Expression.t) (e2 : Expression.t) (t : Types.num_type) :
   in
   Binop (op, e1, e2)
 
-let mk_eq (e1 : Expression.t) (e2 : Expression.t) (t : Types.num_type) :
-    Expression.t =
+let mk_eq (e1 : expr) (e2 : expr) (t : num_type) : expr =
   let op =
     match t with
     | `F32Type -> F32 F32.Eq
@@ -139,8 +131,7 @@ let mk_eq (e1 : Expression.t) (e2 : Expression.t) (t : Types.num_type) :
   in
   Relop (op, e1, e2)
 
-let mk_ne (e1 : Expression.t) (e2 : Expression.t) (t : Types.num_type) :
-    Expression.t =
+let mk_ne (e1 : expr) (e2 : expr) (t : num_type) : expr =
   let op =
     match t with
     | `F32Type -> F32 F32.Ne
@@ -149,8 +140,7 @@ let mk_ne (e1 : Expression.t) (e2 : Expression.t) (t : Types.num_type) :
   in
   Relop (op, e1, e2)
 
-let mk_lt (e1 : Expression.t) (e2 : Expression.t) (t : Types.num_type) :
-    Expression.t =
+let mk_lt (e1 : expr) (e2 : expr) (t : num_type) : expr =
   let op =
     match t with
     | `F32Type -> F32 F32.Lt
@@ -159,8 +149,7 @@ let mk_lt (e1 : Expression.t) (e2 : Expression.t) (t : Types.num_type) :
   in
   Relop (op, e1, e2)
 
-let mk_le (e1 : Expression.t) (e2 : Expression.t) (t : Types.num_type) :
-    Expression.t =
+let mk_le (e1 : expr) (e2 : expr) (t : num_type) : expr =
   let op =
     match t with
     | `F32Type -> F32 F32.Le
@@ -169,8 +158,7 @@ let mk_le (e1 : Expression.t) (e2 : Expression.t) (t : Types.num_type) :
   in
   Relop (op, e1, e2)
 
-let mk_gt (e1 : Expression.t) (e2 : Expression.t) (t : Types.num_type) :
-    Expression.t =
+let mk_gt (e1 : expr) (e2 : expr) (t : num_type) : expr =
   let op =
     match t with
     | `F32Type -> F32 F32.Gt
@@ -179,8 +167,7 @@ let mk_gt (e1 : Expression.t) (e2 : Expression.t) (t : Types.num_type) :
   in
   Relop (op, e1, e2)
 
-let mk_ge (e1 : Expression.t) (e2 : Expression.t) (t : Types.num_type) :
-    Expression.t =
+let mk_ge (e1 : expr) (e2 : expr) (t : num_type) : expr =
   let op =
     match t with
     | `F32Type -> F32 F32.Ge
