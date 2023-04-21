@@ -1,7 +1,7 @@
 open Encoding
 
 let solver = Batch.create ()
-let encode e = try ignore (Common.encode_expr e) with exn -> raise exn
+let encode e = try ignore (Z3_mappings.encode_expr e) with exn -> raise exn
 let int_pos = Integer.mk_val Int.one
 let int_neg = Integer.mk_val Int.minus_one
 let int_zero = Integer.mk_val Int.zero

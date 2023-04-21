@@ -1,6 +1,6 @@
 open Base
 open Types
-open Common
+open Z3_mappings
 
 exception Unknown
 
@@ -52,7 +52,7 @@ let model (e : t) : Z3.Model.model Option.t = Z3.Solver.get_model e.solver
 
 let value_binds (e : t) (vars : (string * expr_type) list) :
     (string * Expression.value) list =
-  Option.value_map (model e) ~default:[] ~f:(fun m -> Common.value_binds m vars)
+  Option.value_map (model e) ~default:[] ~f:(fun m -> value_binds m vars)
 
 let string_binds (e : t) : (string * string * string) list =
-  Option.value_map (model e) ~default:[] ~f:Common.string_binds
+  Option.value_map (model e) ~default:[] ~f:string_binds
