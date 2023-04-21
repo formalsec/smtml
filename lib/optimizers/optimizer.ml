@@ -1,6 +1,6 @@
 open Base
 open Z3
-open Common
+open Z3_mappings
 
 exception Unknown
 

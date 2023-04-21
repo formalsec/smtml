@@ -1,5 +1,5 @@
 open Base
-open Common
+open Z3_mappings
 
 exception Unknown
 
@@ -67,7 +67,7 @@ let eval (s : t) (e : Expression.t) (es : Expression.t list) :
   Option.value_map (model s) ~default:None ~f:(fun m -> value_of_const m e)
 
 let value_binds (s : t) vars : (string * Expression.value) list =
-  Option.value_map (model s) ~default:[] ~f:(fun m -> Common.value_binds m vars)
+  Option.value_map (model s) ~default:[] ~f:(fun m -> value_binds m vars)
 
 let string_binds (s : t) : (string * string * string) list =
-  Option.value_map (model s) ~default:[] ~f:Common.string_binds
+  Option.value_map (model s) ~default:[] ~f:string_binds

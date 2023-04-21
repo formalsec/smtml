@@ -1,7 +1,7 @@
 open Encoding
 
 let solver = Batch.create ()
-let encode e = try ignore (Common.encode_expr e) with exn -> raise exn
+let encode e = try ignore (Z3_mappings.encode_expr e) with exn -> raise exn
 let str = Strings.mk_val "abc"
 let str_symb = Expression.mk_symbolic `StrType "x"
 let int_zero = Integer.mk_val 0
