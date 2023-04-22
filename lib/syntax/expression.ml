@@ -20,7 +20,7 @@ type expr =
   | Relop of relop * expr * expr
   | Cvtop of cvtop * expr
   | Triop of triop * expr * expr * expr
-  | Symbolic of expr_type * String.t
+  | Symbol of expr_type * String.t
   | Extract of expr * Int.t * Int.t
   | Concat of expr * expr
   | Quantifier of qt * (string * expr_type) list * expr * expr list list
@@ -29,7 +29,7 @@ type t = expr
 type pc = expr List.t
 
 let ( ++ ) (e1 : expr) (e2 : expr) = Concat (e1, e2)
-let mk_symbolic (t : expr_type) (x : String.t) : expr = Symbolic (t, x)
+let mk_symbol (t : expr_type) (x : String.t) : expr = Symbol (t, x)
 let is_num (e : expr) : Bool.t = match e with Val (Num _) -> true | _ -> false
 let is_val (e : expr) : Bool.t = match e with Val _ -> true | _ -> false
 let is_unop (e : expr) : Bool.t = match e with Unop _ -> true | _ -> false
@@ -41,20 +41,6 @@ let is_triop (e : expr) : Bool.t = match e with Triop _ -> true | _ -> false
 let is_concrete (e : expr) : Bool.t =
   match e with Val _ | SymPtr (_, Val _) -> true | _ -> false
 
-let negate_relop (e : expr) : expr =
-  match e with
-  (* Relop *)
-  | Relop (Int op, e1, e2) -> Relop (Int (I.neg_relop op), e1, e2)
-  | Relop (Real op, e1, e2) -> Relop (Real (R.neg_relop op), e1, e2)
-  | Relop (Bool op, e1, e2) -> Relop (Bool (B.neg_relop op), e1, e2)
-  | Relop (Str op, e1, e2) -> Relop (Str (S.neg_relop op), e1, e2)
-  | Relop (I32 op, e1, e2) -> Relop (I32 (I32.neg_relop op), e1, e2)
-  | Relop (I64 op, e1, e2) -> Relop (I64 (I64.neg_relop op), e1, e2)
-  | Relop (F32 op, e1, e2) -> Relop (F32 (F32.neg_relop op), e1, e2)
-  | Relop (F64 op, e1, e2) -> Relop (F64 (F64.neg_relop op), e1, e2)
-  | _ -> raise InvalidRelop
-
-(** Measure complexity of formulas *)
 let rec length (e : expr) : Int.t =
   match e with
   | Val _ -> 1
@@ -64,12 +50,11 @@ let rec length (e : expr) : Int.t =
   | Triop (_, e1, e2, e3) -> 1 + length e1 + length e2 + length e3
   | Relop (_, e1, e2) -> 1 + length e1 + length e2
   | Cvtop (_, e) -> 1 + length e
-  | Symbolic (_, _) -> 1
+  | Symbol (_, _) -> 1
   | Extract (e, _, _) -> 1 + length e
   | Concat (e1, e2) -> 1 + length e1 + length e2
   | Quantifier (_, _, body, _) -> length body
 
-(** Retrieves the symbolic variables *)
 let get_symbols (e : expr) : (String.t * expr_type) List.t =
   let rec symbols e =
     match e with
@@ -80,7 +65,7 @@ let get_symbols (e : expr) : (String.t * expr_type) List.t =
     | Triop (_, e1, e2, e3) -> symbols e1 @ symbols e2 @ symbols e3
     | Relop (_, e1, e2) -> symbols e1 @ symbols e2
     | Cvtop (_, e) -> symbols e
-    | Symbolic (t, x) -> [ (x, t) ]
+    | Symbol (t, x) -> [ (x, t) ]
     | Extract (e, _, _) -> symbols e
     | Concat (e1, e2) -> symbols e1 @ symbols e2
     | Quantifier (_, vars, _, _) -> vars
@@ -88,6 +73,65 @@ let get_symbols (e : expr) : (String.t * expr_type) List.t =
   let equal (x1, _) (x2, _) = String.equal x1 x2 in
   List.fold (symbols e) ~init:[] ~f:(fun accum x ->
       if List.mem accum x ~equal then accum else x :: accum)
+
+let rec type_of (e : expr) : expr_type =
+  (* FIXME: this function can be "simplified" *)
+  let rec concat_length (e' : expr) : Int.t =
+    match e' with
+    | Quantifier _ | Val (Bool _) | Val (Real _) | Val (Int _) | Val (Str _) ->
+        assert false
+    | Val (Num n) -> size (Types.type_of_num n)
+    | SymPtr _ -> 4
+    | Binop (op, _, _) -> size (Types.type_of op)
+    | Triop (op, _, _, _) -> size (Types.type_of op)
+    | Unop (op, _) -> size (Types.type_of op)
+    | Relop (op, _, _) -> size (Types.type_of op)
+    | Cvtop (op, _) -> size (Types.type_of op)
+    | Symbol (t, _) -> size t
+    | Concat (e1, e2) -> concat_length e1 + concat_length e2
+    | Extract (_, h, l) -> h - l
+  in
+  match e with
+  | Val (Real _) -> `RealType
+  | Val (Bool _) -> `BoolType
+  | Val (Int _) -> `IntType
+  | Val (Num n) -> Types.type_of_num n
+  | Val (Str _) -> `StrType
+  | SymPtr _ -> `I32Type
+  | Binop (op, _, _) -> Types.type_of op
+  | Triop (op, _, _, _) -> Types.type_of op
+  | Unop (op, _) -> Types.type_of op
+  | Relop (op, _, _) -> Types.type_of op
+  | Cvtop (op, _) -> Types.type_of op
+  | Symbol (t, _) -> t
+  | Extract (_, h, l) ->
+      let d = h - l in
+      if d = 4 then `I32Type
+      else if d = 8 then `I64Type
+      else failwith "unsupported type length"
+  | Concat (e1, e2) ->
+      let len = concat_length (e1 ++ e2) in
+      let len =
+        if len < 4 then size (type_of e1) + size (type_of e2) else len
+      in
+      if len = 4 then `I32Type
+      else if len = 8 then `I64Type
+      else failwith "unsupported type length"
+  | Quantifier _ -> assert false
+
+let negate_relop (e : expr) : expr =
+  match e with
+  | Relop (op, e1, e2) -> (
+      match op with
+      | Int op' -> Relop (Int (I.neg_relop op'), e1, e2)
+      | Real op' -> Relop (Real (R.neg_relop op'), e1, e2)
+      | Bool op' -> Relop (Bool (B.neg_relop op'), e1, e2)
+      | Str op' -> Relop (Str (S.neg_relop op'), e1, e2)
+      | I32 op' -> Relop (I32 (I32.neg_relop op'), e1, e2)
+      | I64 op' -> Relop (I64 (I64.neg_relop op'), e1, e2)
+      | F32 op' -> Relop (F32 (F32.neg_relop op'), e1, e2)
+      | F64 op' -> Relop (F64 (F64.neg_relop op'), e1, e2))
+  | _ -> raise InvalidRelop
 
 (**  String representation of a expr  *)
 let rec to_string (e : expr) : String.t =
@@ -166,7 +210,7 @@ let rec to_string (e : expr) : String.t =
         | F64 op -> F64.string_of_cvtop op
       in
       "(" ^ str_op ^ " " ^ to_string e ^ ")"
-  | Symbolic (t, x) -> "(" ^ string_of_type t ^ " #" ^ x ^ ")"
+  | Symbol (t, x) -> "(" ^ string_of_type t ^ " #" ^ x ^ ")"
   | Extract (e, h, l) ->
       "(Extract " ^ to_string e ^ ", " ^ Int.to_string h ^ " " ^ Int.to_string l
       ^ ")"
@@ -253,7 +297,7 @@ let rec pp_to_string (e : expr) : String.t =
         | F64 op -> F64.pp_string_of_cvtop op
       in
       "(" ^ str_op ^ " " ^ pp_to_string e ^ ")"
-  | Symbolic (_, x) -> "#" ^ x
+  | Symbol (_, x) -> "#" ^ x
   | Extract (e, h, l) ->
       pp_to_string e ^ "[" ^ Int.to_string l ^ ":" ^ Int.to_string h ^ "]"
   | Concat (e1, e2) ->
@@ -264,7 +308,6 @@ let rec pp_to_string (e : expr) : String.t =
       let xs' = String.concat ~sep:", " (List.map ~f:(fun (x, _) -> x) vars) in
       qt' ^ "(" ^ xs' ^ ")" ^ pp_to_string body
 
-(**  String representation of a list of path conditions  *)
 let string_of_pc (pc : pc) : String.t =
   List.fold_left ~init:"" ~f:(fun acc c -> acc ^ pp_to_string c ^ ";\n  ") pc
 
@@ -275,51 +318,6 @@ let string_of_values (el : (Num.t * t) List.t) : String.t =
   List.fold_left ~init:""
     ~f:(fun a (n, e) -> a ^ Num.string_of_num n ^ ", " ^ pp_to_string e ^ "\n")
     el
-
-let rec type_of (e : expr) : expr_type =
-  let rec concat_length (e' : expr) : Int.t =
-    match e' with
-    | Quantifier _ | Val (Bool _) | Val (Real _) | Val (Int _) | Val (Str _) ->
-        assert false
-    | Val (Num n) -> size (Types.type_of_num n)
-    | SymPtr _ -> 4
-    | Binop (op, _, _) -> size (Types.type_of op)
-    | Triop (op, _, _, _) -> size (Types.type_of op)
-    | Unop (op, _) -> size (Types.type_of op)
-    | Relop (op, _, _) -> size (Types.type_of op)
-    | Cvtop (op, _) -> size (Types.type_of op)
-    | Symbolic (t, _) -> size t
-    | Concat (e1, e2) -> concat_length e1 + concat_length e2
-    | Extract (_, h, l) -> h - l
-  in
-  match e with
-  | Val (Real _) -> `RealType
-  | Val (Bool _) -> `BoolType
-  | Val (Int _) -> `IntType
-  | Val (Num n) -> Types.type_of_num n
-  | Val (Str _) -> `StrType
-  | SymPtr _ -> `I32Type
-  | Binop (op, _, _) -> Types.type_of op
-  | Triop (op, _, _, _) -> Types.type_of op
-  | Unop (op, _) -> Types.type_of op
-  | Relop (op, _, _) -> Types.type_of op
-  | Cvtop (op, _) -> Types.type_of op
-  | Symbolic (t, _) -> t
-  | Extract (_, h, l) -> (
-      match h - l with
-      | 4 -> `I32Type
-      | 8 -> `I64Type
-      | _ -> failwith "unsupported type length")
-  | Concat (e1, e2) -> (
-      let len = concat_length (e1 ++ e2) in
-      let len =
-        if len < 4 then size (type_of e1) + size (type_of e2) else len
-      in
-      match len with
-      | 4 -> `I32Type
-      | 8 -> `I64Type
-      | _ -> failwith "unsupported type length")
-  | Quantifier _ -> assert false
 
 let rec get_ptr (e : expr) : Num.t Option.t =
   (* FIXME: this function can be "simplified" *)
@@ -340,7 +338,7 @@ let rec get_ptr (e : expr) : Num.t Option.t =
       let p1 = get_ptr e1 in
       if Option.is_some p1 then p1 else get_ptr e2
   | Cvtop (_, e) -> get_ptr e
-  | Symbolic _ -> None
+  | Symbol _ -> None
   | Extract (e, _, _) -> get_ptr e
   | Concat (e1, e2) ->
       (* assume concatenation of only one ptr *)

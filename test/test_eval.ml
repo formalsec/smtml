@@ -1,8 +1,8 @@
 open Encoding
 
 let solver = Batch.create ()
-let int_symb = Expression.mk_symbolic `IntType "x"
-let bool_symb = Expression.mk_symbolic `BoolType "y"
+let int_symb = Expression.mk_symbol `IntType "x"
+let bool_symb = Expression.mk_symbol `BoolType "y"
 
 (* Satisfiability *)
 let%test "test_unsat" =

@@ -591,7 +591,7 @@ let rec encode_expr ?(bool_to_bv = false) (e : Expression.t) : Expr.expr =
   | Cvtop (op, e) ->
       let e' = encode_expr e in
       encode_cvtop op e'
-  | Symbolic (t, x) -> Expr.mk_const_s ctx x (get_sort t)
+  | Symbol (t, x) -> Expr.mk_const_s ctx x (get_sort t)
   | Extract (e, h, l) ->
       let e' = encode_expr ~bool_to_bv:true e in
       BitVector.mk_extract ctx ((h * 8) - 1) (l * 8) e'
@@ -683,7 +683,7 @@ let value_of_const (model : Model.model) (c : Expression.t) :
 let model_binds (model : Model.model) (vars : (string * expr_type) list) :
     (string * Expression.value) list =
   List.fold_left vars ~init:[] ~f:(fun a (x, t) ->
-      let v = value_of_const model (Expression.mk_symbolic t x) in
+      let v = value_of_const model (Expression.mk_symbol t x) in
       Option.fold ~init:a ~f:(fun a v' -> (x, v') :: a) v)
 
 let value_binds (model : Model.model) (vars : (string * expr_type) list) :
