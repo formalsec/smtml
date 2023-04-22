@@ -1,4 +1,4 @@
-open Base
+open Core
 open Types
 
 exception InvalidRelop

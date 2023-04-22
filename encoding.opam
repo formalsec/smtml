@@ -11,7 +11,7 @@ depends: [
   "ocaml" {>= "4.14.0"}
   "dune" {>= "3.0"}
   "z3" {= "4.11.2"}
-  "base"
+  "core"
   "ppx_inline_test"
   "odoc" {with-doc}
 ]

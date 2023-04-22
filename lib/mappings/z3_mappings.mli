@@ -1,5 +1,3 @@
-open Base
-
 val ctx : Z3.context
 val encode_expr : ?bool_to_bv:bool -> Expression.t -> Z3.Expr.expr
 val expr_to_smtstring : Expression.t list -> bool -> string

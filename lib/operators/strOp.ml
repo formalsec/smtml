@@ -1,5 +1,3 @@
-open Base
-
 type binop = Nth | Concat
 type unop = Len
 type relop = Eq | Ne

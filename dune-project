@@ -17,4 +17,4 @@
  (name encoding)
  (synopsis "Encoding library")
  (description "OCaml Z3 symbolic value encoding library")
- (depends (ocaml (>= "4.14.0")) dune (z3 (= "4.11.2")) base ppx_inline_test))
+ (depends (ocaml (>= "4.14.0")) dune (z3 (= "4.11.2")) core ppx_inline_test))

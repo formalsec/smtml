@@ -1,5 +1,3 @@
-open Base
-
 type binop = Add | Sub | Mul | Div | Min | Max | Rem (*  Falta: | CopySign *)
 
 type unop =

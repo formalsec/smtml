@@ -1,3 +1,4 @@
+open Core
 open Expression
 open Types
 
@@ -5,7 +6,7 @@ exception Error of string
 
 let mk_val (i : int) (t : num_type) : expr =
   match t with
-  | `I32Type -> Val (Num (I32 (Int32.of_int i)))
+  | `I32Type -> Val (Num (I32 (Int32.of_int_trunc i)))
   | `I64Type -> Val (Num (I64 (Int64.of_int i)))
   | _ -> raise (Error ("mk_val: invalid type '" ^ string_of_num_type t ^ "'"))
 
