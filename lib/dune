@@ -1,5 +1,11 @@
 (include_subdirs unqualified)
 
+(subdir
+ text
+ (ocamllex lexer)
+ (menhir
+  (modules parser)))
+
 (library
  (name encoding)
  (public_name encoding)
