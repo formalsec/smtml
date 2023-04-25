@@ -1,9 +1,10 @@
 (library
  (name unit_tests)
  (modules
-  test_integers
-  test_bools
-  test_strings
+  test_int
+  test_f32
+  test_bool
+  test_str
   test_eval
   test_optimizer
   test_axiom)
