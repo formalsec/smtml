@@ -15,9 +15,6 @@ let%test "deterministic_nan" =
 
 let%test "nondeterministic_nan" =
   let pc =
-    [
-      FloatingPoint.mk_ne x nan `F32Type;
-      FloatingPoint.mk_is_nan x `F32Type;
-    ]
+    [ FloatingPoint.mk_ne x nan `F32Type; FloatingPoint.mk_is_nan x `F32Type ]
   in
   true = Batch.check_sat solver pc
