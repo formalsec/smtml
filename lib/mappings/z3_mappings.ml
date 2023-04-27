@@ -618,10 +618,6 @@ let set (s : string) (i : int) (n : char) =
   Bytes.set bs i n;
   Bytes.to_string bs
 
-let int64_of_int (i : Expr.expr) : int64 =
-  assert (Expr.is_numeral i);
-  Int64.of_string (Arithmetic.Integer.numeral_to_string i)
-
 let int64_of_bv (bv : Expr.expr) : int64 =
   assert (Expr.is_numeral bv);
   Int64.of_string (BitVector.numeral_to_string bv)
@@ -662,7 +658,8 @@ let value_of_const (model : Model.model) (c : Expression.t) :
   and interp = Model.eval model (encode_expr c) true in
   let f (e : Expr.expr) : Expression.value =
     match (t, Sort.get_sort_kind (Expr.get_sort e)) with
-    | `IntType, Z3enums.INT_SORT -> Int (Int64.to_int_trunc (int64_of_int e))
+    | `IntType, Z3enums.INT_SORT ->
+        Int (Int.of_string (Z3.Arithmetic.Integer.numeral_to_string e))
     | `RealType, Z3enums.REAL_SORT ->
         Real (Float.of_string (Z3.Arithmetic.Real.to_decimal_string e 6))
     | `BoolType, Z3enums.BOOL_SORT -> Bool (Bool.of_string (Expr.to_string e))
