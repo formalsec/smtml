@@ -99,7 +99,14 @@ module RealZ3Op = struct
     let op' =
       match op with
       | Neg -> Arithmetic.mk_unary_minus ctx
-      | Abs | Sqrt | Nearest | IsNan -> assert false
+      | Abs ->
+          fun e ->
+            Boolean.mk_ite ctx
+              (Arithmetic.mk_gt ctx e (encode_num 0.))
+              e
+              (Arithmetic.mk_unary_minus ctx e)
+      | Sqrt -> fun e -> Arithmetic.mk_power ctx e (encode_num 0.5)
+      | Nearest | IsNan -> assert false
     in
     op' e
 
@@ -110,7 +117,11 @@ module RealZ3Op = struct
       | Sub -> fun v1 v2 -> Arithmetic.mk_sub ctx [ v1; v2 ]
       | Mul -> fun v1 v2 -> Arithmetic.mk_mul ctx [ v1; v2 ]
       | Div -> Arithmetic.mk_div ctx
-      | _ -> raise (Error "Unsupported integer operations")
+      | Min ->
+          fun v1 v2 -> Boolean.mk_ite ctx (Arithmetic.mk_le ctx v1 v2) v1 v2
+      | Max ->
+          fun v1 v2 -> Boolean.mk_ite ctx (Arithmetic.mk_ge ctx v1 v2) v1 v2
+      | _ -> assert false
     in
     op' e1 e2
 
@@ -170,9 +181,10 @@ module BoolZ3Op = struct
 
   let encode_cvtop (_ : cvtop) (_ : Expr.expr) : Expr.expr = assert false
 
-  let encode_triop (_ : triop) (_ : Expr.expr) (_ : Expr.expr) (_ : Expr.expr) :
-      Expr.expr =
-    assert false
+  let encode_triop (op : triop) (e1 : Expr.expr) (e2 : Expr.expr)
+      (e3 : Expr.expr) : Expr.expr =
+    let op' = match op with ITE -> Boolean.mk_ite ctx in
+    op' e1 e2 e3
 end
 
 module StrZ3Op = struct

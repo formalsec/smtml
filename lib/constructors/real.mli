@@ -6,6 +6,12 @@ val mk_val : float -> expr
 val mk_neg : expr -> expr
 (** [mk_neg f] create an expression representing [-f]. *)
 
+val mk_abs : expr -> expr
+(** [mk_abs f] create an expression representing [abs(f)]. *)
+
+val mk_sqrt : expr -> expr
+(** [mk_sqrt f] create an expression representing [sqrt(f)]. *)
+
 val mk_add : expr -> expr -> expr
 (** [mk_add f1 f2] create an expression representing [f1 + f2]. *)
 
@@ -17,6 +23,12 @@ val mk_mul : expr -> expr -> expr
 
 val mk_div : expr -> expr -> expr
 (** [mk_div f1 f2] create an expression representing [f1 / f2]. *)
+
+val mk_min : expr -> expr -> expr
+(** [mk_min f1 f2] create an expression representing [min f1 f2]. *)
+
+val mk_max : expr -> expr -> expr
+(** [mk_max f1 f2] create an expression representing [max f1 f2]. *)
 
 val mk_eq : expr -> expr -> expr
 (** [mk_eq f1 f2] create an expression representing [f1 = f2]. *)
