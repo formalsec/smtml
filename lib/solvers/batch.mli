@@ -31,14 +31,12 @@ val check_sat : t -> Expression.t list -> bool
 val check : t -> Expression.t option -> bool
 (** [check solver e] *)
 
-val eval : t -> Expression.t -> Expression.t list -> Expression.value option
+val eval : t -> Expression.t -> Expression.t list -> Value.t option
 (** [eval solver e es] evaluates a possible value of the const [e] in the 
     the context of the assertions [es] *)
 
 val fork : t -> Expression.t -> bool * bool
 (** [fork solver e] checks the satisfiability of the fork on the condition [e] *)
 
-val value_binds :
-  t -> (string * expr_type) list -> (string * Expression.value) list
-
+val value_binds : t -> (string * expr_type) list -> (string * Value.t) list
 val string_binds : t -> (string * string * string) list

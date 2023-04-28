@@ -5,15 +5,8 @@ exception InvalidRelop
 
 type qt = Forall | Exists
 
-type value =
-  | Int of Int.t
-  | Real of Float.t
-  | Bool of Bool.t
-  | Num of Num.t
-  | Str of String.t
-
 type expr =
-  | Val of value
+  | Val of Value.t
   | SymPtr of Int32.t * expr
   | Unop of unop * expr
   | Binop of binop * expr * expr
@@ -40,6 +33,28 @@ let is_triop (e : expr) : Bool.t = match e with Triop _ -> true | _ -> false
 
 let is_concrete (e : expr) : Bool.t =
   match e with Val _ | SymPtr (_, Val _) -> true | _ -> false
+
+let rec equal (e1 : expr) (e2 : expr) : Bool.t =
+  match (e1, e2) with
+  | Val v1, Val v2 -> Value.equal v1 v2
+  | SymPtr (b1, o1), SymPtr (b2, o2) -> Int32.(b1 = b2) && equal o1 o2
+  | Unop (op1, e1), Unop (op2, e2) -> Caml.( = ) op1 op2 && equal e1 e2
+  | Cvtop (op1, e1), Cvtop (op2, e2) -> Caml.( = ) op1 op2 && equal e1 e2
+  | Binop (op1, e1, e3), Binop (op2, e2, e4) ->
+      Caml.( = ) op1 op2 && equal e1 e2 && equal e3 e4
+  | Relop (op1, e1, e3), Relop (op2, e2, e4) ->
+      Caml.( = ) op1 op2 && equal e1 e2 && equal e3 e4
+  | Triop (op1, e1, e3, e5), Triop (op2, e2, e4, e6) ->
+      Caml.( = ) op1 op2 && equal e1 e2 && equal e3 e4 && equal e5 e6
+  | Symbol (t1, x1), Symbol (t2, x2) -> Caml.( = ) t1 t2 && String.equal x1 x2
+  | Extract (e1, h1, l1), Extract (e2, h2, l2) ->
+      equal e1 e2 && Int.(h1 = h2) && Int.(l1 = l2)
+  | Concat (e1, e3), Concat (e2, e4) -> equal e1 e2 && equal e3 e4
+  | Quantifier (q1, vars1, e1, p1), Quantifier (q2, vars2, e2, p2) ->
+      let eq (x1, t1) (x2, t2) = Caml.( = ) t1 t2 && String.equal x1 x2 in
+      Caml.( = ) q1 q2 && List.equal eq vars1 vars2 && equal e1 e2
+      && List.equal (List.equal equal) p1 p2
+  | _ -> false
 
 let rec length (e : expr) : Int.t =
   match e with
@@ -78,9 +93,8 @@ let rec type_of (e : expr) : expr_type =
   (* FIXME: this function can be "simplified" *)
   let rec concat_length (e' : expr) : Int.t =
     match e' with
-    | Quantifier _ | Val (Bool _) | Val (Real _) | Val (Int _) | Val (Str _) ->
-        assert false
-    | Val (Num n) -> size (Types.type_of_num n)
+    | Quantifier _ -> assert false
+    | Val v -> size (Value.type_of v)
     | SymPtr _ -> 4
     | Binop (op, _, _) -> size (Types.type_of op)
     | Triop (op, _, _, _) -> size (Types.type_of op)
@@ -92,11 +106,7 @@ let rec type_of (e : expr) : expr_type =
     | Extract (_, h, l) -> h - l
   in
   match e with
-  | Val (Real _) -> `RealType
-  | Val (Bool _) -> `BoolType
-  | Val (Int _) -> `IntType
-  | Val (Num n) -> Types.type_of_num n
-  | Val (Str _) -> `StrType
+  | Val v -> Value.type_of v
   | SymPtr _ -> `I32Type
   | Binop (op, _, _) -> Types.type_of op
   | Triop (op, _, _, _) -> Types.type_of op
@@ -136,11 +146,7 @@ let negate_relop (e : expr) : expr =
 (**  String representation of a expr  *)
 let rec to_string (e : expr) : String.t =
   match e with
-  | Val (Int i) -> Int.to_string i
-  | Val (Real i) -> Float.to_string i
-  | Val (Bool b) -> Bool.to_string b
-  | Val (Num n) -> Num.string_of_num n
-  | Val (Str s) -> "(Str \"" ^ s ^ "\")"
+  | Val v -> Value.to_string v
   | SymPtr (base, offset) ->
       let str_o = to_string offset in
       "(SymPtr " ^ Int32.to_string base ^ " + " ^ str_o ^ ")"
@@ -222,11 +228,7 @@ let rec to_string (e : expr) : String.t =
 
 let rec pp_to_string (e : expr) : String.t =
   match e with
-  | Val (Int i) -> Int.to_string i
-  | Val (Real f) -> Float.to_string f
-  | Val (Bool b) -> Bool.to_string b
-  | Val (Num n) -> Num.string_of_num n
-  | Val (Str s) -> "\"" ^ s ^ "\")"
+  | Val v -> Value.to_string v
   | SymPtr (base, offset) ->
       let str_o = pp_to_string offset in
       "(SymPtr " ^ Int32.to_string base ^ " + " ^ str_o ^ ")"
@@ -316,7 +318,7 @@ let pp_string_of_pc (pc : pc) : String.t =
 
 let string_of_values (el : (Num.t * t) List.t) : String.t =
   List.fold_left ~init:""
-    ~f:(fun a (n, e) -> a ^ Num.string_of_num n ^ ", " ^ pp_to_string e ^ "\n")
+    ~f:(fun a (n, e) -> a ^ Num.to_string n ^ ", " ^ pp_to_string e ^ "\n")
     el
 
 let rec get_ptr (e : expr) : Num.t Option.t =
@@ -553,7 +555,7 @@ let mk_relop ?(reduce : bool = true) (e : expr) (t : num_type) : expr =
   let e = if reduce then simplify e else e in
   if is_relop e then e
   else
-    let zero = Num (Num.default_value t) in
+    let zero = Value.Num (Num.default_value t) in
     let e' =
       match t with
       | `I32Type -> Relop (I32 Ne, e, Val zero)

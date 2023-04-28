@@ -75,12 +75,15 @@ type cvtop =
 type num_type = [ `I32Type | `I64Type | `F32Type | `F64Type ]
 type expr_type = [ num_type | `IntType | `RealType | `BoolType | `StrType ]
 
-let type_of_num (n : ('i32, 'i64, 'f32, 'f64) num) =
-  match n with
-  | I32 _ -> `I32Type
-  | I64 _ -> `I64Type
-  | F32 _ -> `F32Type
-  | F64 _ -> `F64Type
+let op i r b s i32 i64 f32 f64 = function
+  | Int x -> i x
+  | Real x -> r x
+  | Bool x -> b x
+  | Str x -> s x
+  | I32 x -> i32 x
+  | I64 x -> i64 x
+  | F32 x -> f32 x
+  | F64 x -> f64 x
 
 let type_of op =
   match op with

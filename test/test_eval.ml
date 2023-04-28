@@ -11,9 +11,9 @@ let%test "test_unsat" =
 let%test "test_unconstrained" = Option.is_some (Batch.eval solver x [])
 
 let%test "test_constrained_int" =
-  Some (Expression.Int 5)
+  Some (Value.Int 5)
   = Batch.eval solver x [ Integer.mk_eq x (Integer.mk_val 5) ]
 
 let%test "test_constrained_bool" =
   let pc = [ Boolean.mk_eq y (Boolean.mk_val true) ] in
-  Some (Expression.Bool true) = Batch.eval solver y pc
+  Some (Value.Bool true) = Batch.eval solver y pc

@@ -8,10 +8,10 @@ let%test "opt_min" =
   let pc =
     [ Integer.mk_ge x (Integer.mk_val 0); Integer.mk_lt x (Integer.mk_val 5) ]
   in
-  Some (Expression.Int 0) = Optimizer.minimize opt x pc
+  Some (Value.Int 0) = Optimizer.minimize opt x pc
 
 let%test "opt_max" =
   let pc =
     [ Integer.mk_ge x (Integer.mk_val 0); Integer.mk_lt x (Integer.mk_val 5) ]
   in
-  Some (Expression.Int 4) = Optimizer.maximize opt x pc
+  Some (Value.Int 4) = Optimizer.maximize opt x pc

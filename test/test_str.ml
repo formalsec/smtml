@@ -43,4 +43,4 @@ let%test "test_symb_substr" =
         (Integer.mk_val 2);
     ]
   in
-  Some (Expression.Str "abc") = Batch.eval solver x pc
+  Some (Value.Str "abc") = Batch.eval solver x pc

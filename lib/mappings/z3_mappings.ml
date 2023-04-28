@@ -506,16 +506,6 @@ let num i32 i64 f32 f64 : Num.t -> Expr.expr = function
   | F32 x -> f32 x
   | F64 x -> f64 x
 
-let op i r b s i32 i64 f32 f64 = function
-  | Int x -> i x
-  | Real x -> r x
-  | Bool x -> b x
-  | Str x -> s x
-  | I32 x -> i32 x
-  | I64 x -> i64 x
-  | F32 x -> f32 x
-  | F64 x -> f64 x
-
 let encode_num : Num.t -> Expr.expr =
   num I32Z3Op.encode_num I64Z3Op.encode_num F32Z3Op.encode_num
     F64Z3Op.encode_num
@@ -664,11 +654,10 @@ let int64_of_fp (fp : Expr.expr) ~(ebits : int) ~(sbits : int) : int64 =
     and fraction = List.nth_exn bit_list 2 in
     Int64.(fp_sign lor (exponent lor fraction))
 
-let value_of_const (model : Model.model) (c : Expression.t) :
-    Expression.value option =
+let value_of_const (model : Model.model) (c : Expression.t) : Value.t option =
   let t = Expression.type_of c
   and interp = Model.eval model (encode_expr c) true in
-  let f (e : Expr.expr) : Expression.value =
+  let f (e : Expr.expr) : Value.t =
     match (t, Sort.get_sort_kind (Expr.get_sort e)) with
     | `IntType, Z3enums.INT_SORT ->
         Int (Int.of_string (Z3.Arithmetic.Integer.numeral_to_string e))
@@ -692,13 +681,13 @@ let value_of_const (model : Model.model) (c : Expression.t) :
   Option.map ~f interp
 
 let model_binds (model : Model.model) (vars : (string * expr_type) list) :
-    (string * Expression.value) list =
+    (string * Value.t) list =
   List.fold_left vars ~init:[] ~f:(fun a (x, t) ->
       let v = value_of_const model (Expression.mk_symbol t x) in
       Option.fold ~init:a ~f:(fun a v' -> (x, v') :: a) v)
 
 let value_binds (model : Model.model) (vars : (string * expr_type) list) :
-    (string * Expression.value) list =
+    (string * Value.t) list =
   model_binds model vars
 
 let string_binds (m : Model.model) : (string * string * string) list =

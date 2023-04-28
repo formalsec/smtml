@@ -60,13 +60,12 @@ let fork (s : t) (e : Expression.t) : bool * bool =
 
 let model (s : t) : Z3.Model.model Option.t = Z3.Solver.get_model s.solver
 
-let eval (s : t) (e : Expression.t) (es : Expression.t list) :
-    Expression.value option =
+let eval (s : t) (e : Expression.t) (es : Expression.t list) : Value.t option =
   let es' = List.map ~f:encode_expr es in
   ignore (time_call (fun () -> Z3.Solver.check s.solver es') solver_time);
   Option.value_map (model s) ~default:None ~f:(fun m -> value_of_const m e)
 
-let value_binds (s : t) vars : (string * Expression.value) list =
+let value_binds (s : t) vars : (string * Value.t) list =
   Option.value_map (model s) ~default:[] ~f:(fun m -> value_binds m vars)
 
 let string_binds (s : t) : (string * string * string) list =
