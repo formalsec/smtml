@@ -54,6 +54,7 @@ module IntZ3Op = struct
       | Mul -> fun v1 v2 -> Arithmetic.mk_mul ctx [ v1; v2 ]
       | Div -> Arithmetic.mk_div ctx
       | Rem -> Arithmetic.Integer.mk_rem ctx
+      | Pow -> Arithmetic.mk_power ctx
       | _ -> raise (Error "Unsupported integer operations")
     in
     op' e1 e2

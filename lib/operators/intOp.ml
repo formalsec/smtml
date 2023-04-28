@@ -1,6 +1,6 @@
 open Base
 
-type binop = Add | Mul | Div | Rem | And | Sub | Shl | ShrA | ShrL | Or | Xor
+type binop = Add | Mul | Div | Rem | And | Sub | Shl | ShrA | ShrL | Or | Xor | Pow
 type unop = Neg
 type relop = Eq | Lt | Le | Ne | Gt | Ge
 type triop
@@ -29,6 +29,7 @@ let string_of_binop (op : binop) : string =
   | ShrA -> "ShrA"
   | ShrL -> "ShrU"
   | Rem -> "Rem"
+  | Pow -> "Pow"
 
 let pp_string_of_binop (op : binop) : string =
   match op with
@@ -43,6 +44,7 @@ let pp_string_of_binop (op : binop) : string =
   | ShrA -> ">>a"
   | ShrL -> ">>l"
   | Rem -> "%"
+  | Pow -> "**"
 
 (*  String representation of an i32 unary operation  *)
 let string_of_unop (op : unop) : string = match op with Neg -> "Neg"
