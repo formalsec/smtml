@@ -11,7 +11,7 @@ let ( = ) (n1 : t) (n2 : t) : bool =
   | F64 i1, F64 i2 -> Int64.(i1 = i2)
   | _ -> false
 
-let type_of (n : t) : expr_type =
+let type_of (n : t) =
   match n with
   | I32 _ -> `I32Type
   | I64 _ -> `I64Type
