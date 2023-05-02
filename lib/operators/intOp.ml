@@ -1,6 +1,19 @@
 open Base
 
-type binop = Add | Mul | Div | Rem | And | Sub | Shl | ShrA | ShrL | Or | Xor | Pow
+type binop =
+  | Add
+  | Mul
+  | Div
+  | Rem
+  | And
+  | Sub
+  | Shl
+  | ShrA
+  | ShrL
+  | Or
+  | Xor
+  | Pow
+
 type unop = Neg
 type relop = Eq | Lt | Le | Ne | Gt | Ge
 type triop
