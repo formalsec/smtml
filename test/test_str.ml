@@ -3,7 +3,7 @@ open Encoding
 let solver = Batch.create ()
 let encode e = try ignore (Z3_mappings.encode_expr e) with exn -> raise exn
 let abc = Strings.mk_val "abc"
-let x = Expression.mk_symbol `StrType "x"
+let x = Expression.mk_symbol_s `StrType "x"
 let zero = Integer.mk_val 0
 let two = Integer.mk_val 2
 

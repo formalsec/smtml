@@ -1,7 +1,7 @@
 open Encoding
 
 let solver = Batch.create ()
-let x = Expression.mk_symbol `F32Type "x"
+let x = Expression.mk_symbol_s `F32Type "x"
 let nan = FloatingPoint.mk_val Float.nan `F32Type
 
 let%test "deterministic_nan" =
