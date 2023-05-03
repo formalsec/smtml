@@ -28,4 +28,5 @@ let%test "value_binds" =
   let symbol_y = Symbol.mk_symbol `BoolType "y" in
   let pc = [ Boolean.mk_eq y (Boolean.mk_val false) ] in
   assert (Batch.check_sat solver pc);
-  [ (symbol_y, Value.Bool false) ] = Batch.value_binds solver [ symbol_y ]
+  [ (symbol_y, Value.Bool false) ]
+  = Batch.value_binds solver ~symbols:[ symbol_y ]

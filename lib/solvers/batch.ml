@@ -65,8 +65,9 @@ let eval (s : t) (e : Expression.t) (es : Expression.t list) : Value.t option =
   ignore (time_call (fun () -> Z3.Solver.check s.solver es') solver_time);
   Option.value_map (model s) ~default:None ~f:(fun m -> value_of_const m e)
 
-let value_binds (s : t) vars : (Symbol.t * Value.t) list =
-  Option.value_map (model s) ~default:[] ~f:(fun m -> value_binds m vars)
+let value_binds ?(symbols : Symbol.t list option) (s : t) :
+    (Symbol.t * Value.t) list =
+  Option.value_map (model s) ~default:[] ~f:(value_binds ?symbols)
 
 let string_binds (s : t) : (string * string * string) list =
   Option.value_map (model s) ~default:[] ~f:string_binds
