@@ -33,5 +33,5 @@ val eval : t -> Expression.t -> Expression.t list -> Value.t option
 val fork : t -> Expression.t -> bool * bool
 (** [fork solver e] checks the satisfiability of the fork on the condition [e] *)
 
-val value_binds : t -> Symbol.t list -> (Symbol.t * Value.t) list
+val value_binds : ?symbols:Symbol.t list -> t -> (Symbol.t * Value.t) list
 val string_binds : t -> (string * string * string) list

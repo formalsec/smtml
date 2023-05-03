@@ -694,15 +694,34 @@ let value_of_const (model : Z3.Model.model) (c : Expression.t) : Value.t option
   in
   Option.map ~f interp
 
-let model_binds (model : Z3.Model.model) (vars : Symbol.t list) :
+let type_of_sort (sort : Z3.Sort.sort) : expr_type =
+  match Z3.Sort.get_sort_kind sort with
+  | Z3enums.INT_SORT -> `IntType
+  | Z3enums.REAL_SORT -> `RealType
+  | Z3enums.BOOL_SORT -> `BoolType
+  | Z3enums.SEQ_SORT -> `StrType
+  | Z3enums.BV_SORT ->
+      if Z3.BitVector.get_size sort = 32 then `I32Type else `I64Type
+  | Z3enums.FLOATING_POINT_SORT ->
+      if Z3.FloatingPoint.get_sbits ctx sort = 23 then `F32Type else `F64Type
+  | _ -> assert false
+
+let symbols_of_model (model : Z3.Model.model) : Symbol.t list =
+  List.map (Z3.Model.get_const_decls model) ~f:(fun const ->
+      let x = Z3.Symbol.to_string (Z3.FuncDecl.get_name const) in
+      let t = type_of_sort (Z3.FuncDecl.get_range const) in
+      Symbol.mk_symbol t x)
+
+let model_binds (model : Z3.Model.model) (symbols : Symbol.t list) :
     (Symbol.t * Value.t) list =
-  List.fold_left vars ~init:[] ~f:(fun a s ->
+  List.fold_left symbols ~init:[] ~f:(fun a s ->
       let v = value_of_const model (Expression.mk_symbol s) in
       Option.fold ~init:a ~f:(fun a v' -> (s, v') :: a) v)
 
-let value_binds (model : Z3.Model.model) (vars : Symbol.t list) :
+let value_binds ?(symbols : Symbol.t list option) (model : Z3.Model.model) :
     (Symbol.t * Value.t) list =
-  model_binds model vars
+  let symbols' = Option.value symbols ~default:(symbols_of_model model) in
+  model_binds model symbols'
 
 let string_binds (m : Z3.Model.model) : (string * string * string) list =
   List.map (Z3.Model.get_const_decls m) ~f:(fun const ->
