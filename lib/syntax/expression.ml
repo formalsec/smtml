@@ -75,7 +75,7 @@ let rec length (e : expr) : Int.t =
   | Concat (e1, e2) -> 1 + length e1 + length e2
   | Quantifier (_, _, body, _) -> length body
 
-let get_symbols (e : expr) : Symbol.t List.t =
+let get_symbols (e : expr list) : Symbol.t List.t =
   let rec symbols e =
     match e with
     | Val _ -> []
@@ -90,7 +90,7 @@ let get_symbols (e : expr) : Symbol.t List.t =
     | Concat (e1, e2) -> symbols e1 @ symbols e2
     | Quantifier (_, vars, _, _) -> vars
   in
-  List.fold (symbols e) ~init:[] ~f:(fun accum x ->
+  List.fold (List.concat_map e ~f:symbols) ~init:[] ~f:(fun accum x ->
       if List.mem accum x ~equal:Symbol.equal then accum else x :: accum)
 
 let rec type_of (e : expr) : expr_type =
