@@ -39,9 +39,8 @@ let check_sat (s : t) (es : Expression.t list) : bool =
 let check (s : t) (expr : Expression.t option) : bool =
   let expression =
     encode_expr
-      (Option.fold ~init:!(s.pc)
-         ~f:(fun f e -> Expression.add_constraint e f)
-         expr)
+      (Option.fold expr ~init:!(s.pc) ~f:(fun f e ->
+           Expression.add_constraint e f))
   in
   solver_count := !solver_count + 1;
   let sat =
@@ -71,3 +70,7 @@ let value_binds ?(symbols : Symbol.t list option) (s : t) :
 
 let string_binds (s : t) : (string * string * string) list =
   Option.value_map (model s) ~default:[] ~f:string_binds
+
+let find_model (s : t) (es : Expression.t list) : (Symbol.t * Value.t) list =
+  if check_sat s es then value_binds ~symbols:(Expression.get_symbols es) s
+  else []
