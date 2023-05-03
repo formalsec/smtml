@@ -24,8 +24,8 @@ val check_sat : t -> Expression.t list -> bool
     as assertions to the solver *)
 
 val find_model : t -> Expression.t list -> (Symbol.t * Value.t) list
-(** [find_model solver [e1; ...; en]] check the satisfiability of the 
-    existing pc with [e1, ..., en] and returns a list bindings (x |-> v)
+(** [find_model solver [e1; ...; en]] check the satisfiability of the
+    expressions [e1, ..., en] and returns a list bindings (x |-> v)
     mapping the symbol [x] to its concrete value [v] *)
 
 val check : t -> Expression.t option -> bool
