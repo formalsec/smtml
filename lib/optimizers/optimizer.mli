@@ -1,6 +1,6 @@
 open Z3
 
-type t = Optimize.optimize
+type t
 
 exception Unknown
 
