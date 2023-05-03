@@ -1,11 +1,6 @@
-open Base
-open Z3
-open Types
-
 exception Unknown
 
-type t = { solver : s; pc : Expression.t ref }
-and s = Solver.solver
+type t
 
 val solver_time : float ref
 val solver_count : int ref
@@ -17,7 +12,7 @@ val clone : t -> t
 val interrupt : unit -> unit
 (** [interrupt ()] sends interrupt signal to SMT solver *)
 
-val set_default_axioms : Solver.solver -> unit
+val set_default_axioms : t -> unit
 (** add default axioms to solver *)
 
 val add : t -> Expression.t -> unit
@@ -38,5 +33,5 @@ val eval : t -> Expression.t -> Expression.t list -> Value.t option
 val fork : t -> Expression.t -> bool * bool
 (** [fork solver e] checks the satisfiability of the fork on the condition [e] *)
 
-val value_binds : t -> (string * expr_type) list -> (string * Value.t) list
+val value_binds : t -> Symbol.t list -> (Symbol.t * Value.t) list
 val string_binds : t -> (string * string * string) list
