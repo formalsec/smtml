@@ -1,7 +1,7 @@
 open Encoding
 
 let opt = Optimizer.create ()
-let x = Expression.mk_symbol `IntType "x"
+let x = Expression.mk_symbol_s `IntType "x"
 
 (* Satisfiability *)
 let%test "opt_min" =

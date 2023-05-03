@@ -5,7 +5,7 @@ let encode e = try ignore (Z3_mappings.encode_expr e) with exn -> raise exn
 let one = Integer.mk_val Int.one
 let minus_one = Integer.mk_val Int.minus_one
 let zero = Integer.mk_val Int.zero
-let x = Expression.mk_symbol `IntType "x"
+let x = Expression.mk_symbol_s `IntType "x"
 
 (* Encoding *)
 let%test_unit _ = encode one
