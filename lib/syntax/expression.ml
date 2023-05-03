@@ -1,4 +1,4 @@
-open Base
+open Core
 open Types
 
 exception InvalidRelop
@@ -24,7 +24,7 @@ type pc = expr List.t
 let ( ++ ) (e1 : expr) (e2 : expr) = Concat (e1, e2)
 let mk_symbol (s : Symbol.t) = Symbol s
 
-let mk_symbol_s (t : expr_type) (x : string) : expr = 
+let mk_symbol_s (t : expr_type) (x : string) : expr =
   Symbol (Symbol.mk_symbol t x)
 
 let is_num (e : expr) : Bool.t = match e with Val (Num _) -> true | _ -> false
@@ -55,7 +55,9 @@ let rec equal (e1 : expr) (e2 : expr) : Bool.t =
       equal e1 e2 && Int.(h1 = h2) && Int.(l1 = l2)
   | Concat (e1, e3), Concat (e2, e4) -> equal e1 e2 && equal e3 e4
   | Quantifier (q1, vars1, e1, p1), Quantifier (q2, vars2, e2, p2) ->
-      Caml.( = ) q1 q2 && List.equal Symbol.equal vars1 vars2 && equal e1 e2
+      Caml.( = ) q1 q2
+      && List.equal Symbol.equal vars1 vars2
+      && equal e1 e2
       && List.equal (List.equal equal) p1 p2
   | _ -> false
 
@@ -218,7 +220,7 @@ let rec to_string (e : expr) : String.t =
         | F64 op -> F64.string_of_cvtop op
       in
       "(" ^ str_op ^ " " ^ to_string e ^ ")"
-  | Symbol s -> 
+  | Symbol s ->
       "(" ^ string_of_type (Symbol.type_of s) ^ " #" ^ Symbol.to_string s ^ ")"
   | Extract (e, h, l) ->
       "(Extract " ^ to_string e ^ ", " ^ Int.to_string h ^ " " ^ Int.to_string l

@@ -1,5 +1,3 @@
-open Base
-
 type binop = And | Or | Xor
 type unop = Not
 type relop = Eq | Ne

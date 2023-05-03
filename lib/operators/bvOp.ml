@@ -1,5 +1,3 @@
-open Base
-
 type binop =
   | Add
   | Mul

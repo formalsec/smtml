@@ -1,5 +1,3 @@
-open Base
-
 type ('i32, 'i64, 'f32, 'f64) num =
   | I32 of 'i32
   | I64 of 'i64
