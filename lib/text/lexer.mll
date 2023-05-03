@@ -30,10 +30,12 @@ rule read =
   | decimal { DEC (Float.of_string (Lexing.lexeme lexbuf)) }
   | hexadec { failwith "TODO: Lexer(hexadec)" }
   | binary  { failwith "TODO: Lexer(binary)" }
+  | symbol  { SYMBOL (Lexing.lexeme lexbuf) }
   | ';'     { read_comment lexbuf }
   | '"'     { read_string (Buffer.create 17) lexbuf }
   | '('     { LPAREN }
   | ')'     { RPAREN }
+  | '_'     { HOLE }
   | _ { raise (SyntaxError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }
   | eof     { EOF }
 

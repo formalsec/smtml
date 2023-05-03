@@ -7,7 +7,6 @@ let get_contents = function
 
 let parse_file file =
   get_contents file |> Run.parse_string
-  |> Option.iter ~f:(fun e -> printf "%s\n" (Expression.to_string e))
 
 let command =
   Command.basic ~summary:"SMT-LIB v2.6 parser and interpreter"
