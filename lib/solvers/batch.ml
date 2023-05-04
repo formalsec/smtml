@@ -24,6 +24,8 @@ let clone (s : t) : t = { s with pc = ref !(s.pc) }
 let add (s : t) (e : Expression.t) : unit =
   s.pc := Expression.add_constraint e !(s.pc)
 
+let get_assertions (s : t) : Expression.t = !(s.pc)
+
 let set_default_axioms (s : t) : unit =
   Z3.Solver.add s.solver (List.map ~f:encode_expr Axioms.axioms)
 

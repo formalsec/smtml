@@ -15,6 +15,9 @@ val clone : t -> t
 val add : t -> Expression.t -> unit
 (** [add solver e] adds assertion [e] to [solver] *)
 
+val get_assertions : t -> Expression.t
+(** [get_assertions solver] returns the current path condition *)
+
 val check : t -> Expression.t option -> bool
 (** [check solver e] *)
 

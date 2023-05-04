@@ -28,6 +28,8 @@ let add (e : t) (c : Expression.t) : unit =
   let ec = encode_expr ~bool_to_bv:false c in
   Z3.Solver.add e.solver [ ec ]
 
+let get_assertions (e : t) : Expression.t = !(e.pc)
+
 let check (e : t) (expr : Expression.t option) : bool =
   let expr' =
     Option.to_list (Option.map ~f:(encode_expr ~bool_to_bv:false) expr)

@@ -18,6 +18,9 @@ val set_default_axioms : t -> unit
 val add : t -> Expression.t -> unit
 (** [add solver e] adds assertion [e] to [solver] *)
 
+val get_assertions : t -> Expression.t
+(** [get_assertions solver] returns the current path condition *)
+
 val check_sat : t -> Expression.t list -> bool
 (** [check_sat solver [e1; ...; en]] checks the satisfiability of the
     existing pc with [e1, ..., en] but without adding the expressions
