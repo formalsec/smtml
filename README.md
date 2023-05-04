@@ -2,7 +2,7 @@
 
 [![GPL-3.0](https://img.shields.io/github/license/wasp-platform/encoding)](LICENSE)
 ![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos-lightgrey)
-[![Commit](![GitHub last commit](https://img.shields.io/github/last-commit/wasp-platform/encoding))](https://github.com/wasp-platform/encoding/commit/main~0)
+[![GitHub last commit](https://img.shields.io/github/last-commit/wasp-platform/encoding)](https://github.com/wasp-platform/encoding/commit/main~0)
 
 Encoding serves as an abstracted constraint-solving wrapper, currently 
 utilising Z3 as its backend solver. However, future plans for Encoding 
