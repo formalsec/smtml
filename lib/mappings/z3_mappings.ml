@@ -76,6 +76,7 @@ module IntZ3Op = struct
       match op with
       | ToString -> fun v -> FuncDecl.apply int2str [ v ]
       | OfString -> fun v -> FuncDecl.apply str2int [ v ]
+      | ReinterpretReal -> Arithmetic.Real.mk_real2int ctx
     in
     op' e
 
@@ -144,8 +145,9 @@ module RealZ3Op = struct
       match op with
       | ToString -> fun v -> FuncDecl.apply real2str [ v ]
       | OfString -> fun v -> FuncDecl.apply str2real [ v ]
+      | ReinterpretInt -> Arithmetic.Integer.mk_int2real ctx
       | DemoteF64 | ConvertSI32 | ConvertUI32 | ConvertSI64 | ConvertUI64
-      | ReinterpretInt | PromoteF32 ->
+      | PromoteF32 ->
           assert false
     in
     op' e

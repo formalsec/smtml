@@ -65,3 +65,6 @@ val mk_to_string : expr -> expr
 
 val mk_of_string : expr -> expr
 (** [mk_of_string s] create an expression representing an integer *)
+
+val mk_of_real : expr -> expr
+(** [mk_of_real f] create an expression representing an integer *)
