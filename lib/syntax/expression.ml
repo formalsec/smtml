@@ -305,8 +305,7 @@ let rec pp_to_string (e : expr) : String.t =
       in
       sprintf "(%s %s)" str_op (pp_to_string e)
   | Symbol s -> "#" ^ Symbol.to_string s
-  | Extract (e, h, l) ->
-      sprintf "(extract %s %d %d)" (pp_to_string e) l h
+  | Extract (e, h, l) -> sprintf "(extract %s %d %d)" (pp_to_string e) l h
   | Concat (e1, e2) -> sprintf "(++ %s %s)" (pp_to_string e1) (pp_to_string e2)
   | Quantifier (qt, vars, body, _) ->
       let qt' = match qt with Forall -> "Forall" | Exists -> "Exists" in
