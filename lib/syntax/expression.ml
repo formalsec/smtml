@@ -236,7 +236,7 @@ let rec pp_to_string (e : expr) : String.t =
   | Val v -> Value.to_string v
   | SymPtr (base, offset) ->
       let str_o = pp_to_string offset in
-      "(SymPtr " ^ Int32.to_string base ^ " + " ^ str_o ^ ")"
+      sprintf "(SymPtr %ld %s)" base str_o
   (* I32 *)
   | Unop (op, e) ->
       let str_op =
@@ -250,7 +250,7 @@ let rec pp_to_string (e : expr) : String.t =
         | F32 op -> F32.pp_string_of_unop op
         | F64 op -> F64.pp_string_of_unop op
       in
-      "(" ^ str_op ^ " " ^ pp_to_string e ^ ")"
+      sprintf "(%s %s)" str_op (pp_to_string e)
   | Binop (op, e1, e2) ->
       let str_op =
         match op with
@@ -263,7 +263,7 @@ let rec pp_to_string (e : expr) : String.t =
         | F32 op -> F32.pp_string_of_binop op
         | F64 op -> F64.pp_string_of_binop op
       in
-      "(" ^ str_op ^ " " ^ pp_to_string e1 ^ ", " ^ pp_to_string e2 ^ ")"
+      sprintf "(%s %s %s)" str_op (pp_to_string e1) (pp_to_string e2)
   | Triop (op, e1, e2, e3) ->
       let str_op =
         match op with
@@ -276,8 +276,8 @@ let rec pp_to_string (e : expr) : String.t =
         | F32 op -> F32.pp_string_of_triop op
         | F64 op -> F64.pp_string_of_triop op
       in
-      "(" ^ str_op ^ " " ^ pp_to_string e1 ^ ", " ^ pp_to_string e2
-      ^ pp_to_string e3 ^ ")"
+      sprintf "(%s %s %s %s)" str_op (pp_to_string e1) (pp_to_string e2)
+        (pp_to_string e3)
   | Relop (op, e1, e2) ->
       let str_op =
         match op with
@@ -290,7 +290,7 @@ let rec pp_to_string (e : expr) : String.t =
         | F32 op -> F32.pp_string_of_relop op
         | F64 op -> F64.pp_string_of_relop op
       in
-      "(" ^ str_op ^ " " ^ pp_to_string e1 ^ ", " ^ pp_to_string e2 ^ ")"
+      sprintf "(%s %s %s)" str_op (pp_to_string e1) (pp_to_string e2)
   | Cvtop (op, e) ->
       let str_op =
         match op with
@@ -303,23 +303,22 @@ let rec pp_to_string (e : expr) : String.t =
         | F32 op -> F32.pp_string_of_cvtop op
         | F64 op -> F64.pp_string_of_cvtop op
       in
-      "(" ^ str_op ^ " " ^ pp_to_string e ^ ")"
+      sprintf "(%s %s)" str_op (pp_to_string e)
   | Symbol s -> "#" ^ Symbol.to_string s
   | Extract (e, h, l) ->
-      pp_to_string e ^ "[" ^ Int.to_string l ^ ":" ^ Int.to_string h ^ "]"
-  | Concat (e1, e2) ->
-      let str_e1 = pp_to_string e1 and str_e2 = pp_to_string e2 in
-      "(" ^ str_e1 ^ " ++ " ^ str_e2 ^ ")"
+      sprintf "(extract %s %d %d)" (pp_to_string e) l h
+  | Concat (e1, e2) -> sprintf "(++ %s %s)" (pp_to_string e1) (pp_to_string e2)
   | Quantifier (qt, vars, body, _) ->
       let qt' = match qt with Forall -> "Forall" | Exists -> "Exists" in
       let xs' = String.concat ~sep:", " (List.map ~f:Symbol.to_string vars) in
-      qt' ^ "(" ^ xs' ^ ")" ^ pp_to_string body
+      sprintf "%s (%s) %s" qt' xs' (pp_to_string body)
 
 let string_of_pc (pc : pc) : String.t =
-  List.fold_left ~init:"" ~f:(fun acc c -> acc ^ pp_to_string c ^ ";\n  ") pc
+  List.fold_left ~init:"" ~f:(fun acc e -> acc ^ pp_to_string e ^ ";  ") pc
 
 let pp_string_of_pc (pc : pc) : String.t =
-  List.fold_left ~init:"" ~f:(fun acc e -> acc ^ pp_to_string e ^ ";  ") pc
+  let pc' = String.concat ~sep:" " (List.map ~f:pp_to_string pc) in
+  if List.length pc > 1 then sprintf "(and %s)" pc' else pc'
 
 let string_of_values (el : (Num.t * t) List.t) : String.t =
   List.fold_left ~init:""
