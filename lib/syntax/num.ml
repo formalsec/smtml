@@ -11,6 +11,13 @@ let ( = ) (n1 : t) (n2 : t) : bool =
   | F64 i1, F64 i2 -> Int64.(i1 = i2)
   | _ -> false
 
+let type_of (n : t) =
+  match n with
+  | I32 _ -> `I32Type
+  | I64 _ -> `I64Type
+  | F32 _ -> `F32Type
+  | F64 _ -> `F64Type
+
 let default_value (t : num_type) : t =
   match t with
   | `I32Type -> I32 0l
@@ -18,7 +25,7 @@ let default_value (t : num_type) : t =
   | `F32Type -> F32 (Int32.bits_of_float 0.0)
   | `F64Type -> F64 (Int64.bits_of_float 0.0)
 
-let string_of_num (n : t) : string =
+let to_string (n : t) : string =
   match n with
   | I32 i -> Int32.to_string i
   | I64 i -> Int64.to_string i

@@ -20,3 +20,7 @@ val mk_eq : expr -> expr -> expr
 
 val mk_ne : expr -> expr -> expr
 (** [mk_ne e1 e2] create an expression representing [not (e1 = e2)]. *)
+
+val mk_ite : expr -> expr -> expr -> expr
+(** [mk_ite e1 e2 e3] create an expression representing 
+    [if e1 then e2 else e3]*)

@@ -97,7 +97,7 @@ let string_of_cvtop (op : cvtop) : string =
   | ReinterpretInt -> "ReinterpretInt"
   | PromoteF32 -> "PromoteF32"
   | ToString -> "ToString"
-  | OfString -> "ToString"
+  | OfString -> "OfString"
 
 let pp_string_of_cvtop (op : cvtop) : string = string_of_cvtop op
 let string_of_triop (_ : triop) : string = assert false

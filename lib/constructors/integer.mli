@@ -39,6 +39,9 @@ val mk_or : expr -> expr -> expr
 val mk_xor : expr -> expr -> expr
 (** [mk_xor i1 i2] create an expression representing [i1 xor i2]. *)
 
+val mk_pow : expr -> expr -> expr
+(** [mk_pow i1 i2] create an expression representing [i1 ** i2]. *)
+
 val mk_eq : expr -> expr -> expr
 (** [mk_eq i1 i2] create an expression representing [i1 = i2]. *)
 
@@ -62,3 +65,6 @@ val mk_to_string : expr -> expr
 
 val mk_of_string : expr -> expr
 (** [mk_of_string s] create an expression representing an integer *)
+
+val mk_of_real : expr -> expr
+(** [mk_of_real f] create an expression representing an integer *)

@@ -17,7 +17,7 @@
 (package
  (name encoding)
  (synopsis "Encoding library")
- (description "OCaml Z3 symbolic value encoding library")
+ (description "An OCaml abstraction layer for constraint solvers.")
  (depends
    dune
    (ocaml (>= "4.14.0"))

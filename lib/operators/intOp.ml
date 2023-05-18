@@ -1,8 +1,21 @@
-type binop = Add | Mul | Div | Rem | And | Sub | Shl | ShrA | ShrL | Or | Xor
+type binop =
+  | Add
+  | Mul
+  | Div
+  | Rem
+  | And
+  | Sub
+  | Shl
+  | ShrA
+  | ShrL
+  | Or
+  | Xor
+  | Pow
+
 type unop = Neg
 type relop = Eq | Lt | Le | Ne | Gt | Ge
 type triop
-type cvtop = ToString | OfString
+type cvtop = ToString | OfString | ReinterpretReal
 
 let neg_relop (op : relop) : relop =
   match op with
@@ -13,7 +26,6 @@ let neg_relop (op : relop) : relop =
   | Le -> Gt
   | Ge -> Lt
 
-(*  String representation of an i32 binary operation  *)
 let string_of_binop (op : binop) : string =
   match op with
   | Add -> "Add"
@@ -27,6 +39,7 @@ let string_of_binop (op : binop) : string =
   | ShrA -> "ShrA"
   | ShrL -> "ShrU"
   | Rem -> "Rem"
+  | Pow -> "Pow"
 
 let pp_string_of_binop (op : binop) : string =
   match op with
@@ -41,12 +54,11 @@ let pp_string_of_binop (op : binop) : string =
   | ShrA -> ">>a"
   | ShrL -> ">>l"
   | Rem -> "%"
+  | Pow -> "**"
 
-(*  String representation of an i32 unary operation  *)
 let string_of_unop (op : unop) : string = match op with Neg -> "Neg"
 let pp_string_of_unop (op : unop) : string = match op with Neg -> "-"
 
-(*  String representation of an i32 relative operation  *)
 let string_of_relop (op : relop) : string =
   match op with
   | Eq -> "Eq"
@@ -66,7 +78,10 @@ let pp_string_of_relop (op : relop) : string =
   | Ge -> ">="
 
 let string_of_cvtop (op : cvtop) : string =
-  match op with ToString -> "ToString" | OfString -> "OfString"
+  match op with
+  | ToString -> "ToString"
+  | OfString -> "OfString"
+  | ReinterpretReal -> "ReinterpretReal"
 
 let pp_string_of_cvtop (op : cvtop) : string = string_of_cvtop op
 let string_of_triop (_ : triop) : string = assert false

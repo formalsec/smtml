@@ -1,5 +1,4 @@
 open Core
-open Types
 open Z3_mappings
 
 exception Unknown
@@ -29,6 +28,8 @@ let add (e : t) (c : Expression.t) : unit =
   let ec = encode_expr ~bool_to_bv:false c in
   Z3.Solver.add e.solver [ ec ]
 
+let get_assertions (e : t) : Expression.t = !(e.pc)
+
 let check (e : t) (expr : Expression.t option) : bool =
   let expr' =
     Option.to_list (Option.map ~f:(encode_expr ~bool_to_bv:false) expr)
@@ -50,9 +51,9 @@ let fork (s : t) (e : Expression.t) : bool * bool =
 
 let model (e : t) : Z3.Model.model Option.t = Z3.Solver.get_model e.solver
 
-let value_binds (e : t) (vars : (string * expr_type) list) :
-    (string * Expression.value) list =
-  Option.value_map (model e) ~default:[] ~f:(fun m -> value_binds m vars)
+let value_binds ?(symbols : Symbol.t list option) (e : t) :
+    (Symbol.t * Value.t) list =
+  Option.value_map (model e) ~default:[] ~f:(value_binds ?symbols)
 
 let string_binds (e : t) : (string * string * string) list =
   Option.value_map (model e) ~default:[] ~f:string_binds

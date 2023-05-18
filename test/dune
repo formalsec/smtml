@@ -5,7 +5,7 @@
   test_f32
   test_bool
   test_str
-  test_eval
+  test_batch
   test_optimizer
   test_axiom)
  (inline_tests)

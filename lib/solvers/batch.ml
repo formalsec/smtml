@@ -24,8 +24,10 @@ let clone (s : t) : t = { s with pc = ref !(s.pc) }
 let add (s : t) (e : Expression.t) : unit =
   s.pc := Expression.add_constraint e !(s.pc)
 
-let set_default_axioms (s : Z3.Solver.solver) : unit =
-  Z3.Solver.add s (List.map ~f:encode_expr Axioms.axioms)
+let get_assertions (s : t) : Expression.t = !(s.pc)
+
+let set_default_axioms (s : t) : unit =
+  Z3.Solver.add s.solver (List.map ~f:encode_expr Axioms.axioms)
 
 let check_sat (s : t) (es : Expression.t list) : bool =
   let es' = List.map ~f:encode_expr es in
@@ -39,9 +41,8 @@ let check_sat (s : t) (es : Expression.t list) : bool =
 let check (s : t) (expr : Expression.t option) : bool =
   let expression =
     encode_expr
-      (Option.fold ~init:!(s.pc)
-         ~f:(fun f e -> Expression.add_constraint e f)
-         expr)
+      (Option.fold expr ~init:!(s.pc) ~f:(fun f e ->
+           Expression.add_constraint e f))
   in
   solver_count := !solver_count + 1;
   let sat =
@@ -60,14 +61,18 @@ let fork (s : t) (e : Expression.t) : bool * bool =
 
 let model (s : t) : Z3.Model.model Option.t = Z3.Solver.get_model s.solver
 
-let eval (s : t) (e : Expression.t) (es : Expression.t list) :
-    Expression.value option =
+let eval (s : t) (e : Expression.t) (es : Expression.t list) : Value.t option =
   let es' = List.map ~f:encode_expr es in
   ignore (time_call (fun () -> Z3.Solver.check s.solver es') solver_time);
   Option.value_map (model s) ~default:None ~f:(fun m -> value_of_const m e)
 
-let value_binds (s : t) vars : (string * Expression.value) list =
-  Option.value_map (model s) ~default:[] ~f:(fun m -> value_binds m vars)
+let value_binds ?(symbols : Symbol.t list option) (s : t) :
+    (Symbol.t * Value.t) list =
+  Option.value_map (model s) ~default:[] ~f:(value_binds ?symbols)
 
 let string_binds (s : t) : (string * string * string) list =
   Option.value_map (model s) ~default:[] ~f:string_binds
+
+let find_model (s : t) (es : Expression.t list) : (Symbol.t * Value.t) list =
+  if check_sat s es then value_binds ~symbols:(Expression.get_symbols es) s
+  else []

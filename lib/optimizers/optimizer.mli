@@ -1,6 +1,6 @@
 open Z3
 
-type t = Optimize.optimize
+type t
 
 exception Unknown
 
@@ -17,5 +17,5 @@ val check :
   (t -> Expr.expr -> Optimize.handle) ->
   Model.model option
 
-val maximize : t -> Expression.t -> Expression.t list -> Expression.value option
-val minimize : t -> Expression.t -> Expression.t list -> Expression.value option
+val maximize : t -> Expression.t -> Expression.t list -> Value.t option
+val minimize : t -> Expression.t -> Expression.t list -> Value.t option
