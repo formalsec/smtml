@@ -5,8 +5,7 @@ let get_contents = function
   | "-" -> In_channel.input_all In_channel.stdin
   | filename -> In_channel.read_all filename
 
-let parse_file file =
-  get_contents file |> Run.parse_string
+let parse_file file = get_contents file |> Run.parse_string
 
 let command =
   Command.basic ~summary:"SMT-LIB v2.6 parser and interpreter"
