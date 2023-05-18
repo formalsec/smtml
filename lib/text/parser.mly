@@ -17,23 +17,13 @@ script:
 
 s_expr:
   | c = spec_constant { c }
-  | s = SYMBOL { s }
-  | LPAREN; RPAREN { "()" }
-  | LPAREN; e = s_expr; RPAREN {"(" ^ e ^ ")" }
+  | LPAREN; s = SYMBOL; es = list(s_expr); RPAREN
+    { "("^ s ^ " " ^ (Core.String.concat ~sep:" " es) ^ ")" }
   ;
 
 spec_constant :
   | x = NUM { Int.to_string x }
   | x = DEC { Float.to_string x }
   | x = STR { x }
-  ;
-
-index :
-  | x = NUM { Int.to_string x }
-  | x = SYMBOL { s }
-  ;
-
-identifier :
-  | x = SYMBOL { s }
-  | LPAREN; HOLE; x = SYMBOL; i = index; RPAREN { "(_ " ^ x ^ " " ^ i ^ ")" }
+  | x = SYMBOL { x }
   ;

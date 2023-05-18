@@ -8,7 +8,7 @@ let print_position outx lexbuf =
     (pos.pos_cnum - pos.pos_bol + 1)
 
 let parse_with_error lexbuf =
-  try Parser.script Lexer.read lexbuf with
+  try Parser.script Lexer.token lexbuf with
   | SyntaxError msg ->
       fprintf stderr "%a: %s\n" print_position lexbuf msg
   | Parser.Error ->

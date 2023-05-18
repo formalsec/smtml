@@ -4,6 +4,8 @@ open Lexing
 open Parser
 
 exception SyntaxError of string
+
+let error msg = raise (SyntaxError msg)
 }
 
 let white   = [' ' '\t']+
@@ -14,42 +16,40 @@ let numeral = '0' | [ '1'-'9' ] digit*
 let decimal = numeral '.' '0'* numeral
 let hexadec = "#x" (['a'-'f' 'A'-'F'] | digit)+
 let binary  = "#b" ('0' | '1')+
-
-let s = 
-  '~' | '!' | '@' | '$' | '%' | '^' | '&' | '*' | '_' | '-' | '+' |
-  '=' | '<' | '>' | '.' | '?' | '/'
-
-let symbol  = (letter | s) (letter | digit | s)*
+let symbols = ['~''!''@''$''%''^''&''*''_''-''+''=''<''>''.''?''/']
+let symbol  = (letter | symbols) (letter | digit | symbols)*
 (* TODO: Quoted symbols: |symbol| *)
 
-rule read =
-  parse
-  | white   { read lexbuf }
-  | newline { new_line lexbuf; read lexbuf }
-  | numeral { NUM (Int.of_string (Lexing.lexeme lexbuf)) }
-  | decimal { DEC (Float.of_string (Lexing.lexeme lexbuf)) }
-  | hexadec { failwith "TODO: Lexer(hexadec)" }
-  | binary  { failwith "TODO: Lexer(binary)" }
-  | symbol  { SYMBOL (Lexing.lexeme lexbuf) }
-  | ';'     { read_comment lexbuf }
-  | '"'     { read_string (Buffer.create 17) lexbuf }
+rule token = parse
   | '('     { LPAREN }
   | ')'     { RPAREN }
+
+  | numeral as s { NUM (Int.of_string s) }
+  | decimal as s { DEC (Float.of_string s) }
+  | hexadec { failwith "TODO: Lexer(hexadec)" }
+  | binary  { failwith "TODO: Lexer(binary)" }
+  | '"'     { string (Buffer.create 17) lexbuf }
+
   | '_'     { HOLE }
-  | _ { raise (SyntaxError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }
+
+  | symbol as s  { SYMBOL s }
+
+  | ';'     { comment lexbuf }
+  | white   { token lexbuf }
+  | newline { new_line lexbuf; token lexbuf }
   | eof     { EOF }
 
-and read_comment =
-  parse
-  | newline { new_line lexbuf; read lexbuf }
-  | _ { read_comment lexbuf }
+  | _ { error ("Unexpected char: " ^ Lexing.lexeme lexbuf) }
 
-and read_string buf =
-  parse
+and comment = parse
+  | newline { new_line lexbuf; token lexbuf }
+  | _ { comment lexbuf }
+
+and string buf = parse
   | '"' { STR (Buffer.contents buf) }
-  | '"' '"' { Buffer.add_char buf '"'; read_string buf lexbuf }
+  | '"' '"' { Buffer.add_char buf '"'; string buf lexbuf }
   | [^ '"']+
-    { Buffer.add_string buf (Lexing.lexeme lexbuf); read_string buf lexbuf }
-  | _ { raise (SyntaxError ("Illegal string char: " ^ Lexing.lexeme lexbuf)) }
-  | eof { raise (SyntaxError "String is not terminated") }
+    { Buffer.add_string buf (Lexing.lexeme lexbuf); string buf lexbuf }
+  | eof { error "nonterminated string" }
+  | _ { error ("illegal string char: " ^ Lexing.lexeme lexbuf) }
 
