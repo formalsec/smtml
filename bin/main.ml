@@ -8,7 +8,7 @@ let get_contents = function
 let parse_file file = get_contents file |> Run.parse_string
 
 let command =
-  Command.basic ~summary:"SMT-LIB v2.6 parser and interpreter"
+  Command.basic ~summary:"SMTLIB-like parser and interpreter"
     ~readme:(fun () -> "More detailed information")
     (let%map_open.Command files =
        anon (sequence ("filename" %: Filename_unix.arg_type))
@@ -16,7 +16,11 @@ let command =
      in
      fun () ->
        match files with
-       | [] -> parse_file "-"
-       | _ -> List.iter files ~f:parse_file)
+       | [] ->
+           let ast = parse_file "-" in
+           Eval.start ast
+       | _ ->
+           let asts = List.map files ~f:parse_file in
+           List.iter asts ~f:(fun ast -> Eval.start ast))
 
 let () = Command_unix.run ~version:"0.1" command
