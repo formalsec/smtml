@@ -23,5 +23,6 @@
    (ocaml (>= "4.14.0"))
    (z3 (= "4.11.2"))
    core
+   core_unix
    menhir
    ppx_inline_test))
