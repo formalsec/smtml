@@ -2,7 +2,8 @@
 
 (subdir
  text
- (ocamllex lexer)
+ (ocamllex
+  (modules lexer))
  (menhir
   (modules parser)))
 

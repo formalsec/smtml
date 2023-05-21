@@ -30,7 +30,14 @@ let neg_relop (op : relop) : relop =
   | Le -> Gt
   | Ge -> Lt
 
-(*  String representation of an f32 binary operation  *)
+let string_of_unop (op : unop) : string =
+  match op with
+  | Neg -> "neg"
+  | Abs -> "abs"
+  | Sqrt -> "sqrt"
+  | Nearest -> "nearest"
+  | IsNan -> "is_nan"
+
 let string_of_binop (op : binop) : string =
   match op with
   | Add -> "add"
@@ -40,14 +47,6 @@ let string_of_binop (op : binop) : string =
   | Min -> "min"
   | Max -> "max"
   | Rem -> "rem"
-
-let string_of_unop (op : unop) : string =
-  match op with
-  | Neg -> "neg"
-  | Abs -> "abs"
-  | Sqrt -> "sqrt"
-  | Nearest -> "nearest"
-  | IsNan -> "is_nan"
 
 let string_of_relop (op : relop) : string =
   match op with
@@ -64,7 +63,7 @@ let string_of_cvtop (op : cvtop) : string =
   | ConvertSI32 -> "convert_i32_s"
   | ConvertUI32 -> "convert_i32_u"
   | ConvertSI64 -> "convert_i64_s"
-  | ConvertUI64 -> "convert_i63_u"
+  | ConvertUI64 -> "convert_i64_u"
   | ReinterpretInt -> "reinterpret_int"
   | PromoteF32 -> "promote_f32"
   | ToString -> "to_string"
