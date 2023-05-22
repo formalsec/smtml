@@ -54,6 +54,7 @@ let realop =
     ("le", RELOP (Real R.Le));
     ("gt", RELOP (Real R.Gt));
     ("ge", RELOP (Real R.Ge));
+    ("reinterpret_int", CVTOP (Real R.ReinterpretInt));
     ("to_string", CVTOP (Real R.ToString));
     ("of_string", CVTOP (Real R.OfString));
   ]
