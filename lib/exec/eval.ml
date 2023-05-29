@@ -13,7 +13,7 @@ let step (c : config) : config =
   let i = List.hd_exn code in
   let code', pc' =
     match i with
-    | Decl x -> 
+    | Declare x -> 
         Hashtbl.add_exn smap ~key:(Symbol.to_string x) ~data:(Symbol.type_of x);
         List.tl_exn code, pc
     | Assert e ->

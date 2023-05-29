@@ -253,6 +253,16 @@ let type_of = function
   | "f64" -> `F64Type
   | _ -> assert false
 
+let keywords =
+  let tbl = Hashtbl.create 3 in
+  List.to_seq [
+    ("assert", ASSERT);
+    ("check-sat", CHECK_SAT);
+    ("declare-fun", DECLARE_FUN);
+  ]
+  |> Hashtbl.add_seq tbl;
+  tbl
+
 let error msg = raise (SyntaxError msg)
 
 }
@@ -290,12 +300,7 @@ rule token = parse
   | (op_t as t)"."(symbol as op) { token_of_op t op }
   | (op_t as t) { TYPE (type_of t)  }
 
-  | "decl" { DECL }
-  | "assert" { ASSERT }
-  | "check-sat" { CHECKSAT }
-  (*| '_' { HOLE }*)
-
-  | symbol as s { SYMBOL s }
+  | symbol as x { try Hashtbl.find keywords x with Not_found -> SYMBOL x }
 
   | ';' { comment lexbuf }
   | white { token lexbuf }

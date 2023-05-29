@@ -11,7 +11,8 @@ let get_bind x = Hashtbl.find_exn varmap x
 %}
 %token LPAREN
 %token RPAREN
-%token DECL ASSERT CHECKSAT
+%token ASSERT 
+%token DECLARE_FUN CHECK_SAT
 (*%token HOLE*)
 %token EOF
 
@@ -33,13 +34,13 @@ let get_bind x = Hashtbl.find_exn varmap x
 script: list(stmt) EOF { $1 }
 
 stmt:
-  | LPAREN; DECL; x = SYMBOL; t = TYPE; RPAREN
+  | LPAREN; DECLARE_FUN; x = SYMBOL; t = TYPE; RPAREN
     {
       add_bind x t;
-      Ast.Decl (Symbol.mk_symbol t x) 
+      Ast.Declare (Symbol.mk_symbol t x) 
     }
   | LPAREN; ASSERT; e = s_expr; RPAREN { Ast.Assert e }
-  | LPAREN; CHECKSAT; RPAREN { Ast.CheckSat }
+  | LPAREN; CHECK_SAT; RPAREN { Ast.CheckSat }
   ;
 
 s_expr:
