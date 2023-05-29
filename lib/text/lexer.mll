@@ -221,8 +221,8 @@ let f64op =
     ("convert_i32_s", CVTOP (F64 F64.ConvertSI32));
     ("convert_i32_u", CVTOP (F64 F64.ConvertUI32));
     ("convert_i64_s", CVTOP (F64 F64.ConvertSI32));
-    ("f64.promote_f32", CVTOP (F64 F64.PromoteF32));
-    ("f64.reinterpret_i64", CVTOP (F64 F64.ReinterpretInt));
+    ("promote_f32", CVTOP (F64 F64.PromoteF32));
+    ("reinterpret_i64", CVTOP (F64 F64.ReinterpretInt));
   ]
   |> Hashtbl.add_seq tbl;
   tbl
