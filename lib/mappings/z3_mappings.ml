@@ -3,6 +3,12 @@ open Types
 
 exception Error of string
 
+type expr = Z3.Expr.expr
+type model = Z3.Model.model
+type solver = Z3.Solver.solver
+type status = Z3.Solver.status
+type optimize = Z3.Optimize.optimize
+
 let ctx =
   Z3.mk_context
     [ ("model", "true"); ("proof", "false"); ("unsat_core", "false") ]
@@ -568,7 +574,7 @@ let encode_quantifier (t : bool) (vars_list : Symbol.t list)
     quantified_assertion
   else body
 
-let rec encode_expr ?(bool_to_bv = false) (e : Expression.t) : Z3.Expr.expr =
+let rec encode_expr ?(bool_to_bv = false) (e : Expression.t) : expr =
   let open Expression in
   match e with
   | Val (Int i) -> IntZ3Op.encode_num i
@@ -628,6 +634,23 @@ let expr_to_smtstring (es : Expression.t list) (status : bool) =
   Z3.Params.set_print_mode ctx Z3enums.PRINT_SMTLIB2_COMPLIANT;
   Z3.SMT.benchmark_to_smtstring ctx "" "" (Bool.to_string status) ""
     (List.tl_exn es') (List.hd_exn es')
+
+let mk_solver () : solver = Z3.Solver.mk_solver ctx None
+let interrupt () = Z3.Tactic.interrupt ctx
+let translate (s : solver) : solver = Z3.Solver.translate s ctx
+let add_solver (s : solver) (es : expr list) : unit = Z3.Solver.add s es
+let check (s : solver) (es : expr list) : status = Z3.Solver.check s es
+let get_model (s : solver) : model option = Z3.Solver.get_model s
+let mk_opt () : optimize = Z3.Optimize.mk_opt ctx
+let add_opt (o : optimize) (es : expr list) : unit = Z3.Optimize.add o es
+
+let maximize (o : optimize) (e : expr) : Z3.Optimize.handle =
+  Z3.Optimize.maximize o e
+
+let minimize (o : optimize) (e : expr) : Z3.Optimize.handle =
+  Z3.Optimize.minimize o e
+
+let get_opt_model (o : optimize) : model Option.t = Z3.Optimize.get_model o
 
 let set (s : string) (i : int) (n : char) =
   let bs = Bytes.of_string s in

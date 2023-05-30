@@ -1,4 +1,4 @@
-open Z3
+open Z3_mappings
 
 type t
 
@@ -14,8 +14,8 @@ val check :
   t ->
   Expression.t ->
   Expression.t list ->
-  (t -> Expr.expr -> Optimize.handle) ->
-  Model.model option
+  (t -> expr -> Z3.Optimize.handle) ->
+  model Option.t
 
 val maximize : t -> Expression.t -> Expression.t list -> Value.t option
 val minimize : t -> Expression.t -> Expression.t list -> Value.t option
