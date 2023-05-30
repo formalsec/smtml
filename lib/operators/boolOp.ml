@@ -5,7 +5,6 @@ type triop = ITE
 type cvtop
 
 let neg_relop (op : relop) : relop = match op with Eq -> Ne | Ne -> Eq
-
 let string_of_unop (op : unop) : string = match op with Not -> "not"
 
 let string_of_binop (op : binop) : string =

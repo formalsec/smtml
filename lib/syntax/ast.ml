@@ -1,9 +1,6 @@
 open Core
 
-type t =
-  | Declare of Symbol.t
-  | Assert of Expression.t
-  | CheckSat
+type t = Declare of Symbol.t | Assert of Expression.t | CheckSat
 
 let to_string (instr : t) : String.t =
   match instr with
