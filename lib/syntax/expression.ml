@@ -147,13 +147,13 @@ let negate_relop (e : expr) : expr =
       | F64 op' -> Relop (F64 (F64.neg_relop op'), e1, e2))
   | _ -> raise InvalidRelop
 
-(**  String representation of a expr  *)
 let rec to_string (e : expr) : String.t =
   match e with
   | Val v -> Value.to_string v
   | SymPtr (base, offset) ->
       let str_o = to_string offset in
-      "(SymPtr " ^ Int32.to_string base ^ " + " ^ str_o ^ ")"
+      sprintf "(ptr %ld %s)" base str_o
+  (* I32 *)
   | Unop (op, e) ->
       let str_op =
         match op with
@@ -166,7 +166,7 @@ let rec to_string (e : expr) : String.t =
         | F32 op -> F32.string_of_unop op
         | F64 op -> F64.string_of_unop op
       in
-      "(" ^ str_op ^ " " ^ to_string e ^ ")"
+      sprintf "(%s %s)" str_op (to_string e)
   | Binop (op, e1, e2) ->
       let str_op =
         match op with
@@ -179,20 +179,7 @@ let rec to_string (e : expr) : String.t =
         | F32 op -> F32.string_of_binop op
         | F64 op -> F64.string_of_binop op
       in
-      "(" ^ str_op ^ " " ^ to_string e1 ^ ", " ^ to_string e2 ^ ")"
-  | Relop (op, e1, e2) ->
-      let str_op =
-        match op with
-        | Int op -> I.string_of_relop op
-        | Real op -> R.string_of_relop op
-        | Bool op -> B.string_of_relop op
-        | Str op -> S.string_of_relop op
-        | I32 op -> I32.string_of_relop op
-        | I64 op -> I64.string_of_relop op
-        | F32 op -> F32.string_of_relop op
-        | F64 op -> F64.string_of_relop op
-      in
-      "(" ^ str_op ^ " " ^ to_string e1 ^ ", " ^ to_string e2 ^ ")"
+      sprintf "(%s %s %s)" str_op (to_string e1) (to_string e2)
   | Triop (op, e1, e2, e3) ->
       let str_op =
         match op with
@@ -205,8 +192,21 @@ let rec to_string (e : expr) : String.t =
         | F32 op -> F32.string_of_triop op
         | F64 op -> F64.string_of_triop op
       in
-      "(" ^ str_op ^ " " ^ to_string e1 ^ ", " ^ to_string e2 ^ ", "
-      ^ to_string e3 ^ ")"
+      sprintf "(%s %s %s %s)" str_op (to_string e1) (to_string e2)
+        (to_string e3)
+  | Relop (op, e1, e2) ->
+      let str_op =
+        match op with
+        | Int op -> I.string_of_relop op
+        | Real op -> R.string_of_relop op
+        | Bool op -> B.string_of_relop op
+        | Str op -> S.string_of_relop op
+        | I32 op -> I32.string_of_relop op
+        | I64 op -> I64.string_of_relop op
+        | F32 op -> F32.string_of_relop op
+        | F64 op -> F64.string_of_relop op
+      in
+      sprintf "(%s %s %s)" str_op (to_string e1) (to_string e2)
   | Cvtop (op, e) ->
       let str_op =
         match op with
@@ -219,109 +219,22 @@ let rec to_string (e : expr) : String.t =
         | F32 op -> F32.string_of_cvtop op
         | F64 op -> F64.string_of_cvtop op
       in
-      "(" ^ str_op ^ " " ^ to_string e ^ ")"
-  | Symbol s ->
-      "(" ^ string_of_type (Symbol.type_of s) ^ " #" ^ Symbol.to_string s ^ ")"
-  | Extract (e, h, l) ->
-      "(Extract " ^ to_string e ^ ", " ^ Int.to_string h ^ " " ^ Int.to_string l
-      ^ ")"
-  | Concat (e1, e2) -> "(Concat " ^ to_string e1 ^ " " ^ to_string e2 ^ ")"
+      sprintf "(%s %s)" str_op (to_string e)
+  | Symbol s -> Symbol.to_string s
+  | Extract (e, h, l) -> sprintf "(extract %s %d %d)" (to_string e) l h
+  | Concat (e1, e2) -> sprintf "(++ %s %s)" (to_string e1) (to_string e2)
   | Quantifier (qt, vars, body, _) ->
-      let qt' = match qt with Forall -> "Forall" | Exists -> "Exists" in
+      let qt' = match qt with Forall -> "forall" | Exists -> "exists" in
       let xs' = String.concat ~sep:", " (List.map ~f:Symbol.to_string vars) in
-      qt' ^ "(" ^ xs' ^ ")" ^ to_string body
-
-let rec pp_to_string (e : expr) : String.t =
-  match e with
-  | Val v -> Value.to_string v
-  | SymPtr (base, offset) ->
-      let str_o = pp_to_string offset in
-      sprintf "(SymPtr %ld %s)" base str_o
-  (* I32 *)
-  | Unop (op, e) ->
-      let str_op =
-        match op with
-        | Int op -> I.pp_string_of_unop op
-        | Real op -> R.pp_string_of_unop op
-        | Bool op -> B.pp_string_of_unop op
-        | Str op -> S.pp_string_of_unop op
-        | I32 op -> I32.pp_string_of_unop op
-        | I64 op -> I64.pp_string_of_unop op
-        | F32 op -> F32.pp_string_of_unop op
-        | F64 op -> F64.pp_string_of_unop op
-      in
-      sprintf "(%s %s)" str_op (pp_to_string e)
-  | Binop (op, e1, e2) ->
-      let str_op =
-        match op with
-        | Int op -> I.pp_string_of_binop op
-        | Real op -> R.pp_string_of_binop op
-        | Bool op -> B.pp_string_of_binop op
-        | Str op -> S.pp_string_of_binop op
-        | I32 op -> I32.pp_string_of_binop op
-        | I64 op -> I64.pp_string_of_binop op
-        | F32 op -> F32.pp_string_of_binop op
-        | F64 op -> F64.pp_string_of_binop op
-      in
-      sprintf "(%s %s %s)" str_op (pp_to_string e1) (pp_to_string e2)
-  | Triop (op, e1, e2, e3) ->
-      let str_op =
-        match op with
-        | Int op -> I.pp_string_of_triop op
-        | Real op -> R.pp_string_of_triop op
-        | Bool op -> B.pp_string_of_triop op
-        | Str op -> S.pp_string_of_triop op
-        | I32 op -> I32.pp_string_of_triop op
-        | I64 op -> I64.pp_string_of_triop op
-        | F32 op -> F32.pp_string_of_triop op
-        | F64 op -> F64.pp_string_of_triop op
-      in
-      sprintf "(%s %s %s %s)" str_op (pp_to_string e1) (pp_to_string e2)
-        (pp_to_string e3)
-  | Relop (op, e1, e2) ->
-      let str_op =
-        match op with
-        | Int op -> I.pp_string_of_relop op
-        | Real op -> R.pp_string_of_relop op
-        | Bool op -> B.pp_string_of_relop op
-        | Str op -> S.pp_string_of_relop op
-        | I32 op -> I32.pp_string_of_relop op
-        | I64 op -> I64.pp_string_of_relop op
-        | F32 op -> F32.pp_string_of_relop op
-        | F64 op -> F64.pp_string_of_relop op
-      in
-      sprintf "(%s %s %s)" str_op (pp_to_string e1) (pp_to_string e2)
-  | Cvtop (op, e) ->
-      let str_op =
-        match op with
-        | Int op -> I.pp_string_of_cvtop op
-        | Real op -> R.pp_string_of_cvtop op
-        | Bool op -> B.pp_string_of_cvtop op
-        | Str op -> S.pp_string_of_cvtop op
-        | I32 op -> I32.pp_string_of_cvtop op
-        | I64 op -> I64.pp_string_of_cvtop op
-        | F32 op -> F32.pp_string_of_cvtop op
-        | F64 op -> F64.pp_string_of_cvtop op
-      in
-      sprintf "(%s %s)" str_op (pp_to_string e)
-  | Symbol s -> "#" ^ Symbol.to_string s
-  | Extract (e, h, l) -> sprintf "(extract %s %d %d)" (pp_to_string e) l h
-  | Concat (e1, e2) -> sprintf "(++ %s %s)" (pp_to_string e1) (pp_to_string e2)
-  | Quantifier (qt, vars, body, _) ->
-      let qt' = match qt with Forall -> "Forall" | Exists -> "Exists" in
-      let xs' = String.concat ~sep:", " (List.map ~f:Symbol.to_string vars) in
-      sprintf "%s (%s) %s" qt' xs' (pp_to_string body)
+      sprintf "%s (%s) %s" qt' xs' (to_string body)
 
 let string_of_pc (pc : pc) : String.t =
-  List.fold_left ~init:"" ~f:(fun acc e -> acc ^ pp_to_string e ^ ";  ") pc
-
-let pp_string_of_pc (pc : pc) : String.t =
-  let pc' = String.concat ~sep:" " (List.map ~f:pp_to_string pc) in
+  let pc' = String.concat ~sep:" " (List.map ~f:to_string pc) in
   if List.length pc > 1 then sprintf "(and %s)" pc' else pc'
 
 let string_of_values (el : (Num.t * t) List.t) : String.t =
   List.fold_left ~init:""
-    ~f:(fun a (n, e) -> a ^ Num.to_string n ^ ", " ^ pp_to_string e ^ "\n")
+    ~f:(fun a (n, e) -> a ^ Num.to_string n ^ ", " ^ to_string e ^ "\n")
     el
 
 let rec get_ptr (e : expr) : Num.t Option.t =

@@ -1,4 +1,5 @@
 (lang dune 3.0)
+(using menhir 2.1)
 
 (name encoding)
 
@@ -17,4 +18,12 @@
  (name encoding)
  (synopsis "Encoding library")
  (description "An OCaml abstraction layer for constraint solvers.")
- (depends (ocaml (>= "4.14.0")) dune (z3 (= "4.11.2")) core ppx_inline_test))
+ (depends
+   dune
+   (ocaml (>= "4.14.0"))
+   (z3 (= "4.11.2"))
+   core
+   core_unix
+   menhir
+   ppx_inline_test
+   ppx_expect))

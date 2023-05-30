@@ -28,61 +28,34 @@ let neg_relop (op : relop) : relop =
 
 let string_of_binop (op : binop) : string =
   match op with
-  | Add -> "Add"
-  | And -> "And"
-  | Or -> "Or"
-  | Sub -> "Sub"
-  | Div -> "Div"
-  | Xor -> "Xor"
-  | Mul -> "Mul"
-  | Shl -> "Shl"
-  | ShrA -> "ShrA"
-  | ShrL -> "ShrU"
-  | Rem -> "Rem"
-  | Pow -> "Pow"
+  | Add -> "add"
+  | And -> "and"
+  | Or -> "or"
+  | Sub -> "sub"
+  | Div -> "div"
+  | Xor -> "xor"
+  | Mul -> "mul"
+  | Shl -> "shl"
+  | ShrA -> "shr_a"
+  | ShrL -> "shr_u"
+  | Rem -> "rem"
+  | Pow -> "pow"
 
-let pp_string_of_binop (op : binop) : string =
-  match op with
-  | Add -> "+"
-  | And -> "&"
-  | Or -> "|"
-  | Sub -> "-"
-  | Div -> "/"
-  | Xor -> "^"
-  | Mul -> "*"
-  | Shl -> "<<"
-  | ShrA -> ">>a"
-  | ShrL -> ">>l"
-  | Rem -> "%"
-  | Pow -> "**"
-
-let string_of_unop (op : unop) : string = match op with Neg -> "Neg"
-let pp_string_of_unop (op : unop) : string = match op with Neg -> "-"
+let string_of_unop (op : unop) : string = match op with Neg -> "neg"
 
 let string_of_relop (op : relop) : string =
   match op with
-  | Eq -> "Eq"
-  | Ne -> "Ne"
-  | Lt -> "Lt"
-  | Gt -> "Gt"
-  | Le -> "Le"
-  | Ge -> "Ge"
-
-let pp_string_of_relop (op : relop) : string =
-  match op with
-  | Eq -> "=="
-  | Ne -> "!="
-  | Lt -> "<"
-  | Gt -> ">"
-  | Le -> "<="
-  | Ge -> ">="
+  | Eq -> "eq"
+  | Ne -> "ne"
+  | Lt -> "lt"
+  | Gt -> "gt"
+  | Le -> "le"
+  | Ge -> "ge"
 
 let string_of_cvtop (op : cvtop) : string =
   match op with
-  | ToString -> "ToString"
-  | OfString -> "OfString"
-  | ReinterpretReal -> "ReinterpretReal"
+  | ToString -> "to_string"
+  | OfString -> "of_string"
+  | ReinterpretReal -> "reinterpret_real"
 
-let pp_string_of_cvtop (op : cvtop) : string = string_of_cvtop op
 let string_of_triop (_ : triop) : string = assert false
-let pp_string_of_triop (_ : triop) : string = assert false

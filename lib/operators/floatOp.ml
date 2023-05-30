@@ -30,75 +30,43 @@ let neg_relop (op : relop) : relop =
   | Le -> Gt
   | Ge -> Lt
 
-(*  String representation of an f32 binary operation  *)
-let string_of_binop (op : binop) : string =
-  match op with
-  | Add -> "Add"
-  | Sub -> "Sub"
-  | Mul -> "Mul"
-  | Div -> "Div"
-  | Min -> "Min"
-  | Max -> "Max"
-  | Rem -> "Rem"
-
-let pp_string_of_binop (op : binop) : string =
-  match op with
-  | Add -> "+"
-  | Sub -> "-"
-  | Mul -> "*"
-  | Div -> "/"
-  | Min -> "Min"
-  | Max -> "Max"
-  | Rem -> "%"
-
-(*  String representation of an f32 unary operation  *)
 let string_of_unop (op : unop) : string =
   match op with
-  | Neg -> "Neg"
-  | Abs -> "Abs"
-  | Sqrt -> "Sqrt"
-  | Nearest -> "Nearest"
-  | IsNan -> "IsNan"
+  | Neg -> "neg"
+  | Abs -> "abs"
+  | Sqrt -> "sqrt"
+  | Nearest -> "nearest"
+  | IsNan -> "is_nan"
 
-let pp_string_of_unop (op : unop) : string =
+let string_of_binop (op : binop) : string =
   match op with
-  | Neg -> "-"
-  | Abs -> "Abs"
-  | Sqrt -> "Sqrt"
-  | Nearest -> "Nearest"
-  | IsNan -> "IsNan"
+  | Add -> "add"
+  | Sub -> "sub"
+  | Mul -> "mul"
+  | Div -> "div"
+  | Min -> "min"
+  | Max -> "max"
+  | Rem -> "rem"
 
-(*  String representation of an f32 relative operation  *)
 let string_of_relop (op : relop) : string =
   match op with
-  | Eq -> "Eq"
-  | Ne -> "Ne"
-  | Lt -> "Lt"
-  | Gt -> "Gt"
-  | Le -> "Le"
-  | Ge -> "Ge"
-
-let pp_string_of_relop (op : relop) : string =
-  match op with
-  | Eq -> "=="
-  | Ne -> "!="
-  | Lt -> "<"
-  | Gt -> ">"
-  | Le -> "<="
-  | Ge -> ">="
+  | Eq -> "eq"
+  | Ne -> "ne"
+  | Lt -> "lt"
+  | Gt -> "gt"
+  | Le -> "le"
+  | Ge -> "ge"
 
 let string_of_cvtop (op : cvtop) : string =
   match op with
-  | DemoteF64 -> "DemoteF64"
-  | ConvertSI32 -> "ConvertSI32"
-  | ConvertUI32 -> "ConvertUI32"
-  | ConvertSI64 -> "ConvertSI64"
-  | ConvertUI64 -> "ConvertUI64"
-  | ReinterpretInt -> "ReinterpretInt"
-  | PromoteF32 -> "PromoteF32"
-  | ToString -> "ToString"
-  | OfString -> "OfString"
+  | DemoteF64 -> "demote_f64"
+  | ConvertSI32 -> "convert_i32_s"
+  | ConvertUI32 -> "convert_i32_u"
+  | ConvertSI64 -> "convert_i64_s"
+  | ConvertUI64 -> "convert_i64_u"
+  | ReinterpretInt -> "reinterpret_int"
+  | PromoteF32 -> "promote_f32"
+  | ToString -> "to_string"
+  | OfString -> "of_string"
 
-let pp_string_of_cvtop (op : cvtop) : string = string_of_cvtop op
 let string_of_triop (_ : triop) : string = assert false
-let pp_string_of_triop (_ : triop) : string = assert false

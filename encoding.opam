@@ -8,11 +8,14 @@ license: "LICENSE"
 homepage: "https://github.com/wasp-platform/encoding"
 bug-reports: "https://github.com/wasp-platform/encoding/issues"
 depends: [
-  "ocaml" {>= "4.14.0"}
   "dune" {>= "3.0"}
+  "ocaml" {>= "4.14.0"}
   "z3" {= "4.11.2"}
   "core"
+  "core_unix"
+  "menhir"
   "ppx_inline_test"
+  "ppx_expect"
   "odoc" {with-doc}
 ]
 build: [
