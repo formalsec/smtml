@@ -12,6 +12,7 @@ let%test_unit _ = encode one
 let%test_unit _ = encode minus_one
 let%test_unit _ = encode zero
 let%test_unit _ = encode x
+
 (* Satisfiability *)
 let%test _ = Batch.check_sat solver [ Integer.mk_gt x zero ]
 let%test _ = Batch.check_sat solver [ Integer.mk_gt one minus_one ]
