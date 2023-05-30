@@ -1,10 +1,9 @@
 open Core
-open Z3_mappings
-
-exception Unknown
 
 type t = { solver : s; pc : Expression.t ref }
-and s = Z3.Solver.solver
+and s = Z3_mappings.solver
+
+exception Unknown
 
 let solver_time = ref 0.0
 let solver_count = ref 0
@@ -16,9 +15,9 @@ let time_call f acc =
   ret
 
 let create () =
-  { solver = Z3.Solver.mk_solver ctx None; pc = ref (Boolean.mk_val true) }
+  { solver = Z3_mappings.mk_solver (); pc = ref (Boolean.mk_val true) }
 
-let interrupt () = Z3.Tactic.interrupt ctx
+let interrupt () = Z3_mappings.interrupt ()
 let clone (s : t) : t = { s with pc = ref !(s.pc) }
 
 let add (s : t) (e : Expression.t) : unit =
@@ -27,12 +26,13 @@ let add (s : t) (e : Expression.t) : unit =
 let get_assertions (s : t) : Expression.t = !(s.pc)
 
 let set_default_axioms (s : t) : unit =
-  Z3.Solver.add s.solver (List.map ~f:encode_expr Axioms.axioms)
+  Z3_mappings.add_solver s.solver
+    (List.map ~f:Z3_mappings.encode_expr Axioms.axioms)
 
 let check_sat (s : t) (es : Expression.t list) : bool =
-  let es' = List.map ~f:encode_expr es in
+  let es' = List.map ~f:Z3_mappings.encode_expr es in
   solver_count := !solver_count + 1;
-  let sat = time_call (fun () -> Z3.Solver.check s.solver es') solver_time in
+  let sat = time_call (fun () -> Z3_mappings.check s.solver es') solver_time in
   match sat with
   | Z3.Solver.SATISFIABLE -> true
   | Z3.Solver.UNSATISFIABLE -> false
@@ -40,13 +40,13 @@ let check_sat (s : t) (es : Expression.t list) : bool =
 
 let check (s : t) (expr : Expression.t option) : bool =
   let expression =
-    encode_expr
+    Z3_mappings.encode_expr
       (Option.fold expr ~init:!(s.pc) ~f:(fun f e ->
            Expression.add_constraint e f))
   in
   solver_count := !solver_count + 1;
   let sat =
-    time_call (fun () -> Z3.Solver.check s.solver [ expression ]) solver_time
+    time_call (fun () -> Z3_mappings.check s.solver [ expression ]) solver_time
   in
   let b =
     match sat with
@@ -59,19 +59,20 @@ let check (s : t) (expr : Expression.t option) : bool =
 let fork (s : t) (e : Expression.t) : bool * bool =
   (check s (Some e), check s (Some (Expression.negate_relop e)))
 
-let model (s : t) : Z3.Model.model Option.t = Z3.Solver.get_model s.solver
+let model (s : t) : Z3_mappings.model Option.t = Z3_mappings.get_model s.solver
 
 let eval (s : t) (e : Expression.t) (es : Expression.t list) : Value.t option =
-  let es' = List.map ~f:encode_expr es in
-  ignore (time_call (fun () -> Z3.Solver.check s.solver es') solver_time);
-  Option.value_map (model s) ~default:None ~f:(fun m -> value_of_const m e)
+  let es' = List.map ~f:Z3_mappings.encode_expr es in
+  ignore (time_call (fun () -> Z3_mappings.check s.solver es') solver_time);
+  Option.value_map (model s) ~default:None ~f:(fun m ->
+      Z3_mappings.value_of_const m e)
 
 let value_binds ?(symbols : Symbol.t list option) (s : t) :
     (Symbol.t * Value.t) list =
-  Option.value_map (model s) ~default:[] ~f:(value_binds ?symbols)
+  Option.value_map (model s) ~default:[] ~f:(Z3_mappings.value_binds ?symbols)
 
 let string_binds (s : t) : (string * string * string) list =
-  Option.value_map (model s) ~default:[] ~f:string_binds
+  Option.value_map (model s) ~default:[] ~f:Z3_mappings.string_binds
 
 let find_model (s : t) (es : Expression.t list) : (Symbol.t * Value.t) list =
   if check_sat s es then value_binds ~symbols:(Expression.get_symbols es) s
