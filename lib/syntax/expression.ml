@@ -75,7 +75,20 @@ let rec length (e : expr) : Int.t =
   | Concat (e1, e2) -> 1 + length e1 + length e2
   | Quantifier (_, _, body, _) -> length body
 
-let get_symbols (e : expr list) : Symbol.t List.t =
+let rec map (e : expr) ~(f : expr -> expr) : expr =
+  match e with
+  | Val _ | Symbol _ -> f e
+  | SymPtr (i, e) -> f (SymPtr (i, map e ~f))
+  | Unop (op, e) -> f (Unop (op, map e ~f))
+  | Binop (op, e1, e2) -> f (Binop (op, map e1 ~f, map e2 ~f))
+  | Triop (op, e1, e2, e3) -> f (Triop (op, map e1 ~f, map e2 ~f, map e3 ~f))
+  | Relop (op, e1, e2) -> f (Relop (op, map e1 ~f, map e2 ~f))
+  | Cvtop (op, e) -> f (Cvtop (op, map e ~f))
+  | Extract (e, h, l) -> f (Extract (map e ~f, h, l))
+  | Concat (e1, e2) -> f (Concat (map e1 ~f, map e2 ~f))
+  | Quantifier _ -> assert false
+
+let get_symbols (e : expr List.t) : Symbol.t List.t =
   let rec symbols e =
     match e with
     | Val _ -> []
@@ -153,71 +166,70 @@ let rec to_string (e : expr) : String.t =
   | SymPtr (base, offset) ->
       let str_o = to_string offset in
       sprintf "(ptr %ld %s)" base str_o
-  (* I32 *)
   | Unop (op, e) ->
       let str_op =
         match op with
-        | Int op -> I.string_of_unop op
-        | Real op -> R.string_of_unop op
-        | Bool op -> B.string_of_unop op
-        | Str op -> S.string_of_unop op
-        | I32 op -> I32.string_of_unop op
-        | I64 op -> I64.string_of_unop op
-        | F32 op -> F32.string_of_unop op
-        | F64 op -> F64.string_of_unop op
+        | Int op -> "int." ^ I.string_of_unop op
+        | Real op -> "real." ^ R.string_of_unop op
+        | Bool op -> "bool." ^ B.string_of_unop op
+        | Str op -> "str." ^ S.string_of_unop op
+        | I32 op -> "i32." ^ I32.string_of_unop op
+        | I64 op -> "i64." ^ I64.string_of_unop op
+        | F32 op -> "f32." ^ F32.string_of_unop op
+        | F64 op -> "f64." ^ F64.string_of_unop op
       in
       sprintf "(%s %s)" str_op (to_string e)
   | Binop (op, e1, e2) ->
       let str_op =
         match op with
-        | Int op -> I.string_of_binop op
-        | Real op -> R.string_of_binop op
-        | Bool op -> B.string_of_binop op
-        | Str op -> S.string_of_binop op
-        | I32 op -> I32.string_of_binop op
-        | I64 op -> I64.string_of_binop op
-        | F32 op -> F32.string_of_binop op
-        | F64 op -> F64.string_of_binop op
+        | Int op -> "int." ^ I.string_of_binop op
+        | Real op -> "real." ^ R.string_of_binop op
+        | Bool op -> "bool." ^ B.string_of_binop op
+        | Str op -> "str." ^ S.string_of_binop op
+        | I32 op -> "i32." ^ I32.string_of_binop op
+        | I64 op -> "i64." ^ I64.string_of_binop op
+        | F32 op -> "f32." ^ F32.string_of_binop op
+        | F64 op -> "f64." ^ F64.string_of_binop op
       in
       sprintf "(%s %s %s)" str_op (to_string e1) (to_string e2)
   | Triop (op, e1, e2, e3) ->
       let str_op =
         match op with
-        | Int op -> I.string_of_triop op
-        | Real op -> R.string_of_triop op
-        | Bool op -> B.string_of_triop op
-        | Str op -> S.string_of_triop op
-        | I32 op -> I32.string_of_triop op
-        | I64 op -> I64.string_of_triop op
-        | F32 op -> F32.string_of_triop op
-        | F64 op -> F64.string_of_triop op
+        | Int op -> "int." ^ I.string_of_triop op
+        | Real op -> "real." ^ R.string_of_triop op
+        | Bool op -> "bool." ^ B.string_of_triop op
+        | Str op -> "str." ^ S.string_of_triop op
+        | I32 op -> "i32." ^ I32.string_of_triop op
+        | I64 op -> "i64." ^ I64.string_of_triop op
+        | F32 op -> "f32." ^ F32.string_of_triop op
+        | F64 op -> "f64." ^ F64.string_of_triop op
       in
       sprintf "(%s %s %s %s)" str_op (to_string e1) (to_string e2)
         (to_string e3)
   | Relop (op, e1, e2) ->
       let str_op =
         match op with
-        | Int op -> I.string_of_relop op
-        | Real op -> R.string_of_relop op
-        | Bool op -> B.string_of_relop op
-        | Str op -> S.string_of_relop op
-        | I32 op -> I32.string_of_relop op
-        | I64 op -> I64.string_of_relop op
-        | F32 op -> F32.string_of_relop op
-        | F64 op -> F64.string_of_relop op
+        | Int op -> "int." ^ I.string_of_relop op
+        | Real op -> "real." ^ R.string_of_relop op
+        | Bool op -> "bool." ^ B.string_of_relop op
+        | Str op -> "str." ^ S.string_of_relop op
+        | I32 op -> "i32." ^ I32.string_of_relop op
+        | I64 op -> "i64." ^ I64.string_of_relop op
+        | F32 op -> "f32." ^ F32.string_of_relop op
+        | F64 op -> "f64." ^ F64.string_of_relop op
       in
       sprintf "(%s %s %s)" str_op (to_string e1) (to_string e2)
   | Cvtop (op, e) ->
       let str_op =
         match op with
-        | Int op -> I.string_of_cvtop op
-        | Real op -> R.string_of_cvtop op
-        | Bool op -> B.string_of_cvtop op
-        | Str op -> S.string_of_cvtop op
-        | I32 op -> I32.string_of_cvtop op
-        | I64 op -> I64.string_of_cvtop op
-        | F32 op -> F32.string_of_cvtop op
-        | F64 op -> F64.string_of_cvtop op
+        | Int op -> "int." ^ I.string_of_cvtop op
+        | Real op -> "real." ^ R.string_of_cvtop op
+        | Bool op -> "bool." ^ B.string_of_cvtop op
+        | Str op -> "str." ^ S.string_of_cvtop op
+        | I32 op -> "i32." ^ I32.string_of_cvtop op
+        | I64 op -> "i64." ^ I64.string_of_cvtop op
+        | F32 op -> "f32." ^ F32.string_of_cvtop op
+        | F64 op -> "f64." ^ F64.string_of_cvtop op
       in
       sprintf "(%s %s)" str_op (to_string e)
   | Symbol s -> Symbol.to_string s
@@ -227,6 +239,15 @@ let rec to_string (e : expr) : String.t =
       let qt' = match qt with Forall -> "forall" | Exists -> "exists" in
       let xs' = String.concat ~sep:", " (List.map ~f:Symbol.to_string vars) in
       sprintf "%s (%s) %s" qt' xs' (to_string body)
+
+let to_smt (es : expr List.t) : String.t =
+  let symbols =
+    List.map (get_symbols es) ~f:(fun s ->
+        let x = Symbol.to_string s and t = Symbol.type_of s in
+        sprintf "(declare-fun %s %s)" x (Types.string_of_type t))
+  in
+  let es' = List.map es ~f:(fun e -> sprintf "(assert %s)" (to_string e)) in
+  String.concat ~sep:"\n" (symbols @ es' @ [ "(check-sat)" ])
 
 let string_of_pc (pc : pc) : String.t =
   let pc' = String.concat ~sep:" " (List.map ~f:to_string pc) in

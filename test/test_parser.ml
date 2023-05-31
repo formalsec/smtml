@@ -11,7 +11,7 @@ let%expect_test _ =
     (assert (real.eq y (real.mul x x))) 
     (assert (real.eq y 2.0))
     (check-sat)
-  |}
+    |}
   in
   parse_and_run script;
   [%expect {| sat |}]

@@ -104,15 +104,15 @@ let size (t : expr_type) : int =
 
 let string_of_num_type (t : num_type) : string =
   match t with
-  | `I32Type -> "I32Type"
-  | `I64Type -> "I64Type"
-  | `F32Type -> "F32Type"
-  | `F64Type -> "F64Type"
+  | `I32Type -> "i32"
+  | `I64Type -> "i64"
+  | `F32Type -> "f32"
+  | `F64Type -> "f64"
 
 let string_of_type (t : expr_type) : string =
   match t with
   | #num_type as t' -> string_of_num_type t'
-  | `IntType -> "IntType"
-  | `RealType -> "FltType"
-  | `BoolType -> "BoolType"
-  | `StrType -> "StrType"
+  | `IntType -> "int"
+  | `RealType -> "real"
+  | `BoolType -> "bool"
+  | `StrType -> "str"
