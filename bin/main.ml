@@ -20,7 +20,7 @@ let command =
            let ast = parse_file "-" in
            Eval.start ast
        | _ ->
-           let asts = List.map files ~f:parse_file in
+           let asts = List.map files ~f:Run.parse_file in
            List.iter asts ~f:(fun ast -> Eval.start ast))
 
 let () = Command_unix.run ~version:"0.1" command

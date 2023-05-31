@@ -6,7 +6,7 @@ open Types
 
 let varmap = Hashtbl.create (module String)
 
-let add_bind x t = Hashtbl.add_exn varmap ~key:x ~data:t
+let add_bind x t = Hashtbl.set varmap ~key:x ~data:t
 let get_bind x = Hashtbl.find_exn varmap x
 
 %}
