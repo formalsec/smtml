@@ -2,6 +2,7 @@
 open Core
 open Value
 open Expression
+open Types
 
 let varmap = Hashtbl.create (module String)
 
@@ -59,4 +60,18 @@ spec_constant :
   | DEC { Real $1 }
   | STR { Str $1 }
   | BOOL { Bool $1 }
+  | LPAREN; TYPE; NUM; RPAREN 
+    {
+      match $2 with
+      | `I32Type -> Num (I32 (Int32.of_int_trunc $3))
+      | `I64Type -> Num (I64 (Int64.of_int $3))
+      | _ -> failwith "invalid integer type"
+    }
+  | LPAREN; TYPE; DEC; RPAREN 
+    {
+      match $2 with
+      | `F32Type -> Num (F32 (Int32.bits_of_float $3))
+      | `F64Type -> Num (F64 (Int64.bits_of_float $3))
+      | _ -> failwith "invalid integer type"
+    }
   ;

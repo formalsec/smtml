@@ -272,7 +272,7 @@ let newline = '\r' | '\n' | "\r\n"
 
 let digit = ['0'-'9']
 let character = ['a'-'z' 'A'-'Z']
-let numeral = '0' | [ '1'-'9' ] digit*
+let numeral = '0' | '-'? [ '1'-'9' ] digit*
 let decimal = numeral '.' '0'* numeral
 let hexadec = "#x" (['a'-'f' 'A'-'F'] | digit)+
 let binary = "#b" ('0' | '1')+
