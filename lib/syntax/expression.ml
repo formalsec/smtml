@@ -165,7 +165,7 @@ let rec to_string (e : expr) : String.t =
   | Val v -> Value.to_string v
   | SymPtr (base, offset) ->
       let str_o = to_string offset in
-      sprintf "(ptr %ld %s)" base str_o
+      sprintf "(i32.add (i32 %ld) %s)" base str_o
   | Unop (op, e) ->
       let str_op =
         match op with
