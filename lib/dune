@@ -10,4 +10,6 @@
 (library
  (name encoding)
  (public_name encoding)
- (libraries core z3))
+ (libraries core z3)
+ (preprocess
+  (pps ppx_jane)))

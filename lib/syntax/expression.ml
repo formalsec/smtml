@@ -3,7 +3,7 @@ open Types
 
 exception InvalidRelop
 
-type qt = Forall | Exists
+type qt = Forall | Exists [@@deriving compare, sexp_of, hash]
 
 type expr =
   | Val of Value.t
@@ -17,8 +17,9 @@ type expr =
   | Extract of expr * Int.t * Int.t
   | Concat of expr * expr
   | Quantifier of qt * Symbol.t list * expr * expr list list
+[@@deriving compare, sexp_of, hash]
 
-type t = expr
+type t = expr [@@deriving compare, sexp_of, hash]
 type pc = expr List.t
 
 let ( ++ ) (e1 : expr) (e2 : expr) = Concat (e1, e2)

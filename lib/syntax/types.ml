@@ -3,6 +3,7 @@ type ('i32, 'i64, 'f32, 'f64) num =
   | I64 of 'i64
   | F32 of 'f32
   | F64 of 'f64
+[@@deriving compare, sexp_of, hash]
 
 type ('i, 'r, 'b, 'str, 'i32, 'i64, 'f32, 'f64) op =
   | Int of 'i
@@ -13,6 +14,7 @@ type ('i, 'r, 'b, 'str, 'i32, 'i64, 'f32, 'f64) op =
   | I64 of 'i64
   | F32 of 'f32
   | F64 of 'f64
+[@@deriving compare, sexp_of, hash]
 
 module I = IntOp
 module B = BoolOp
@@ -33,6 +35,7 @@ type triop =
     F32.triop,
     F64.triop )
   op
+[@@deriving compare, sexp_of, hash]
 
 type binop =
   ( I.binop,
@@ -44,9 +47,11 @@ type binop =
     F32.binop,
     F64.binop )
   op
+[@@deriving compare, sexp_of, hash]
 
 type unop =
   (I.unop, R.unop, B.unop, S.unop, I32.unop, I64.unop, F32.unop, F64.unop) op
+[@@deriving compare, sexp_of, hash]
 
 type relop =
   ( I.relop,
@@ -58,6 +63,7 @@ type relop =
     F32.relop,
     F64.relop )
   op
+[@@deriving compare, sexp_of, hash]
 
 type cvtop =
   ( I.cvtop,
@@ -69,9 +75,13 @@ type cvtop =
     F32.cvtop,
     F64.cvtop )
   op
+[@@deriving compare, sexp_of, hash]
 
 type num_type = [ `I32Type | `I64Type | `F32Type | `F64Type ]
+[@@deriving compare, sexp_of, hash]
+
 type expr_type = [ num_type | `IntType | `RealType | `BoolType | `StrType ]
+[@@deriving compare, sexp_of, hash]
 
 let op i r b s i32 i64 f32 f64 = function
   | Int x -> i x

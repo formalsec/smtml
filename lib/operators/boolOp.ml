@@ -1,8 +1,8 @@
-type binop = And | Or | Xor
-type unop = Not
-type relop = Eq | Ne
-type triop = ITE
-type cvtop
+type binop = And | Or | Xor [@@deriving compare, sexp_of, hash]
+type unop = Not [@@deriving compare, sexp_of, hash]
+type relop = Eq | Ne [@@deriving compare, sexp_of, hash]
+type triop = ITE [@@deriving compare, sexp_of, hash]
+type cvtop [@@deriving compare, sexp_of, hash]
 
 let neg_relop (op : relop) : relop = match op with Eq -> Ne | Ne -> Eq
 let string_of_unop (op : unop) : string = match op with Not -> "not"

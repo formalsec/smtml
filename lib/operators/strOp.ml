@@ -1,8 +1,8 @@
-type binop = Nth | Concat
-type unop = Len
-type relop = Eq | Ne
-type triop = SubStr
-type cvtop
+type binop = Nth | Concat [@@deriving compare, sexp_of, hash]
+type unop = Len [@@deriving compare, sexp_of, hash]
+type relop = Eq | Ne [@@deriving compare, sexp_of, hash]
+type triop = SubStr [@@deriving compare, sexp_of, hash]
+type cvtop [@@deriving compare, sexp_of, hash]
 
 let neg_relop (op : relop) : relop = match op with Eq -> Ne | Ne -> Eq
 
