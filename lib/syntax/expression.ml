@@ -43,20 +43,20 @@ let rec equal (e1 : expr) (e2 : expr) : Bool.t =
   match (e1, e2) with
   | Val v1, Val v2 -> Value.equal v1 v2
   | SymPtr (b1, o1), SymPtr (b2, o2) -> Int32.(b1 = b2) && equal o1 o2
-  | Unop (op1, e1), Unop (op2, e2) -> Caml.( = ) op1 op2 && equal e1 e2
-  | Cvtop (op1, e1), Cvtop (op2, e2) -> Caml.( = ) op1 op2 && equal e1 e2
+  | Unop (op1, e1), Unop (op2, e2) -> Poly.(op1 = op2) && equal e1 e2
+  | Cvtop (op1, e1), Cvtop (op2, e2) -> Poly.(op1 = op2) && equal e1 e2
   | Binop (op1, e1, e3), Binop (op2, e2, e4) ->
-      Caml.( = ) op1 op2 && equal e1 e2 && equal e3 e4
+      Poly.(op1 = op2) && equal e1 e2 && equal e3 e4
   | Relop (op1, e1, e3), Relop (op2, e2, e4) ->
-      Caml.( = ) op1 op2 && equal e1 e2 && equal e3 e4
+      Poly.(op1 = op2) && equal e1 e2 && equal e3 e4
   | Triop (op1, e1, e3, e5), Triop (op2, e2, e4, e6) ->
-      Caml.( = ) op1 op2 && equal e1 e2 && equal e3 e4 && equal e5 e6
+      Poly.(op1 = op2) && equal e1 e2 && equal e3 e4 && equal e5 e6
   | Symbol s1, Symbol s2 -> Symbol.equal s1 s2
   | Extract (e1, h1, l1), Extract (e2, h2, l2) ->
       equal e1 e2 && Int.(h1 = h2) && Int.(l1 = l2)
   | Concat (e1, e3), Concat (e2, e4) -> equal e1 e2 && equal e3 e4
   | Quantifier (q1, vars1, e1, p1), Quantifier (q2, vars2, e2, p2) ->
-      Caml.( = ) q1 q2
+      Poly.( q1 = q2)
       && List.equal Symbol.equal vars1 vars2
       && equal e1 e2
       && List.equal (List.equal equal) p1 p2
@@ -106,6 +106,35 @@ let get_symbols (e : expr List.t) : Symbol.t List.t =
   in
   List.fold (List.concat_map e ~f:symbols) ~init:[] ~f:(fun accum x ->
       if List.mem accum x ~equal:Symbol.equal then accum else x :: accum)
+
+let rename_symbols (es : expr List.t) : expr List.t =
+  let count = ref 0 and map = Hashtbl.create (module String) in
+  let rec rename (e : expr) : expr =
+    match e with
+    | Val _ -> e
+    | SymPtr (i, offset) -> SymPtr (i, rename offset)
+    | Unop (op, e) -> Unop (op, rename e)
+    | Binop (op, e1, e2) -> Binop (op, rename e1, rename e2)
+    | Triop (op, e1, e2, e3) -> Triop (op, rename e1, rename e2, rename e3)
+    | Relop (op, e1, e2) -> Relop (op, rename e1, rename e2)
+    | Cvtop (op, e) -> Cvtop (op, rename e)
+    | Symbol s ->
+        let old_name = Symbol.to_string s in
+        let new_name =
+          if Hashtbl.mem map old_name then Hashtbl.find_exn map old_name
+          else
+            let x = "x" ^ Int.to_string !count in
+            Hashtbl.set map ~key:old_name ~data:x;
+            count := !count + 1;
+            x
+        in
+        Symbol (Symbol.rename s new_name)
+    | Extract (e, h, l) -> Extract (rename e, h, l)
+    | Concat (e1, e2) -> Concat (rename e1, rename e2)
+    | Quantifier (qt, vars, e, es) ->
+        Quantifier (qt, vars, rename e, List.map ~f:(List.map ~f:rename) es)
+  in
+  List.map ~f:rename es
 
 let rec type_of (e : expr) : expr_type =
   (* FIXME: this function can be "simplified" *)
