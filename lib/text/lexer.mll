@@ -259,6 +259,7 @@ let keywords =
     ("assert", ASSERT);
     ("check-sat", CHECK_SAT);
     ("declare-fun", DECLARE_FUN);
+    ("get-model", GET_MODEL);
   ]
   |> Hashtbl.add_seq tbl;
   tbl

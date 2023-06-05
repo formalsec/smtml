@@ -13,7 +13,7 @@ let get_bind x = Hashtbl.find_exn varmap x
 %token LPAREN
 %token RPAREN
 %token ASSERT 
-%token DECLARE_FUN CHECK_SAT
+%token DECLARE_FUN CHECK_SAT GET_MODEL
 (*%token HOLE*)
 %token EOF
 
@@ -42,6 +42,7 @@ stmt:
     }
   | LPAREN; ASSERT; e = s_expr; RPAREN { Ast.Assert e }
   | LPAREN; CHECK_SAT; RPAREN { Ast.CheckSat }
+  | LPAREN; GET_MODEL; RPAREN { Ast.GetModel }
   ;
 
 s_expr:
