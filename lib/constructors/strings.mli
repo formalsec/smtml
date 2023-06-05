@@ -21,3 +21,5 @@ val mk_ne : expr -> expr -> expr
 val mk_substr : expr -> pos:expr -> len:expr -> expr
 (** [mk_substr s pos len] create an expression representing the substring of 
     [s] starting in [pos] and with length [len]. *)
+
+val mk_trim : expr -> expr

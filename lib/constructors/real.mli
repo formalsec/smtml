@@ -56,3 +56,5 @@ val mk_of_string : expr -> expr
 
 val mk_of_integer : expr -> expr
 (** [mk_of_integer i] create an expression representing a real *)
+
+val mk_to_uint32 : expr -> expr
