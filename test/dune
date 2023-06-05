@@ -2,6 +2,7 @@
  (name unit_tests)
  (modules
   test_int
+  test_real
   test_f32
   test_bool
   test_str
