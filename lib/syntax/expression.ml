@@ -56,7 +56,7 @@ let rec equal (e1 : expr) (e2 : expr) : Bool.t =
       equal e1 e2 && Int.(h1 = h2) && Int.(l1 = l2)
   | Concat (e1, e3), Concat (e2, e4) -> equal e1 e2 && equal e3 e4
   | Quantifier (q1, vars1, e1, p1), Quantifier (q2, vars2, e2, p2) ->
-      Poly.( q1 = q2)
+      Poly.(q1 = q2)
       && List.equal Symbol.equal vars1 vars2
       && equal e1 e2
       && List.equal (List.equal equal) p1 p2
@@ -396,7 +396,7 @@ let rec simplify ?(extract = true) (e : expr) : expr =
               Binop (I32 Sub, x, Val (Num v))
           | _, _ -> Binop (I32 op, e1', e2'))
       | (bop, Val (Num (I32 1l)) | Val (Num (I32 1l)), bop)
-        when is_relop bop && Caml.( = ) op And ->
+        when is_relop bop && Poly.(op = And) ->
           bop
       | _ -> Binop (I32 op, e1', e2'))
   | Binop (I64 op, e1, e2) -> (
@@ -446,7 +446,7 @@ let rec simplify ?(extract = true) (e : expr) : expr =
               Binop (I64 Sub, x, Val (Num v))
           | _, _ -> Binop (I64 op, e1', e2'))
       | (bop, Val (Num (I64 1L)) | Val (Num (I64 1L)), bop)
-        when is_relop bop && Caml.( = ) op And ->
+        when is_relop bop && Poly.(op = And) ->
           bop
       | _ -> Binop (I64 op, e1', e2'))
   | Relop (I32 op, e1, e2) -> (
@@ -504,8 +504,8 @@ let rec simplify ?(extract = true) (e : expr) : expr =
           and x2' = nland32 (Int32.shift_right x2 (l2 * 8)) d2 in
           let x = Int32.(shift_left x2' (Int.( * ) d1 8) lor x1') in
           Extract (Val (Num (I32 x)), d1 + d2, 0)
-      | Extract (s1, h, m1), Extract (s2, m2, l)
-        when Caml.( = ) s1 s2 && m1 = m2 ->
+      | Extract (s1, h, m1), Extract (s2, m2, l) when Poly.(s1 = s2) && m1 = m2
+        ->
           Extract (s1, h, l)
       | ( Extract (Val (Num (I64 x2)), h2, l2),
           Concat (Extract (Val (Num (I64 x1)), h1, l1), se) )

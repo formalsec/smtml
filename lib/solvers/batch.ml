@@ -5,10 +5,6 @@ and s = Z3_mappings.solver
 
 exception Unknown
 
-let cache = true
-let cache_table : (Expression.t, Bool.t) Hashtbl.t =
-  Hashtbl.create (module Expression)
-
 let solver_time = ref 0.0
 let solver_count = ref 0
 
@@ -17,11 +13,6 @@ let time_call f acc =
   let ret = f () in
   acc := !acc +. (Caml.Sys.time () -. start);
   ret
-
-let conjunct (es : Expression.t List.t) : Expression.t =
-  match es with
-  | [] -> Boolean.mk_val true
-  | h :: tl -> List.fold tl ~init:h ~f:(fun accum a -> Boolean.mk_and accum a)
 
 let create () =
   { solver = Z3_mappings.mk_solver (); pc = ref (Boolean.mk_val true) }
@@ -39,23 +30,13 @@ let set_default_axioms (s : t) : unit =
     (List.map ~f:Z3_mappings.encode_expr Axioms.axioms)
 
 let check_sat (s : t) (es : Expression.t list) : bool =
-  let e = Expression.rename_symbols es in
-  let e' = conjunct e in
-  if cache && Hashtbl.mem cache_table e' then Hashtbl.find_exn cache_table e'
-  else
-    let es' = List.map ~f:Z3_mappings.encode_expr es in
-    solver_count := !solver_count + 1;
-    let sat =
-      time_call (fun () -> Z3_mappings.check s.solver es') solver_time
-    in
-    let b =
-      match sat with
-      | Z3.Solver.SATISFIABLE -> true
-      | Z3.Solver.UNSATISFIABLE -> false
-      | Z3.Solver.UNKNOWN -> raise Unknown
-    in
-    if cache then Hashtbl.set cache_table ~key:e' ~data:b;
-    b
+  let es' = List.map ~f:Z3_mappings.encode_expr es in
+  solver_count := !solver_count + 1;
+  let sat = time_call (fun () -> Z3_mappings.check s.solver es') solver_time in
+  match sat with
+  | Z3.Solver.SATISFIABLE -> true
+  | Z3.Solver.UNSATISFIABLE -> false
+  | Z3.Solver.UNKNOWN -> raise Unknown
 
 let check (s : t) (expr : Expression.t option) : bool =
   let expression =
