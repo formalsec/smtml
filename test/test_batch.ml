@@ -1,3 +1,4 @@
+open Core
 open Encoding
 
 let solver = Batch.create ()
@@ -17,16 +18,17 @@ let%test "eval-unsat" =
 let%test "eval-unconstrained" = Option.is_some (Batch.eval solver x [])
 
 let%test "eval-constrained_int" =
-  Some (Value.Int 5)
-  = Batch.eval solver x [ Integer.mk_eq x (Integer.mk_val 5) ]
+  Poly.(
+    Some (Value.Int 5)
+    = Batch.eval solver x [ Integer.mk_eq x (Integer.mk_val 5) ])
 
 let%test "eval-constrained_bool" =
   let pc = [ Boolean.mk_eq y (Boolean.mk_val true) ] in
-  Some (Value.Bool true) = Batch.eval solver y pc
+  Poly.(Some (Value.Bool true) = Batch.eval solver y pc)
 
 let%test "value_binds" =
-  let symbol_y = Symbol.mk_symbol `BoolType "y" in
+  let symb_y = Symbol.mk_symbol `BoolType "y" in
   let pc = [ Boolean.mk_eq y (Boolean.mk_val false) ] in
   assert (Batch.check_sat solver pc);
-  [ (symbol_y, Value.Bool false) ]
-  = Batch.value_binds solver ~symbols:[ symbol_y ]
+  let model = Option.value_exn (Batch.find_model solver pc) in
+  Poly.(Some (Value.Bool false) = Model.evaluate model symb_y)

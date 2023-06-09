@@ -64,13 +64,12 @@ let eval (s : t) (e : Expression.t) (es : Expression.t list) : Value.t option =
   Option.value_map (model s) ~default:None ~f:(fun m ->
       Z3_mappings.value_of_const m e)
 
-let value_binds ?(symbols : Symbol.t list option) (s : t) :
-    (Symbol.t * Value.t) list =
-  Option.value_map (model s) ~default:[] ~f:(Z3_mappings.value_binds ?symbols)
+let value_binds ?(symbols : Symbol.t list option) (s : t) : Model.t Option.t =
+  Option.map (model s) ~f:(Z3_mappings.value_binds ?symbols)
 
 let string_binds (s : t) : (string * string * string) list =
   Option.value_map (model s) ~default:[] ~f:Z3_mappings.string_binds
 
-let find_model (s : t) (es : Expression.t list) : (Symbol.t * Value.t) list =
+let find_model (s : t) (es : Expression.t list) : Model.t Option.t =
   if check_sat s es then value_binds ~symbols:(Expression.get_symbols es) s
-  else []
+  else None
