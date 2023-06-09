@@ -1,7 +1,8 @@
 open Core
 open Types
 
-type t = (Int32.t, Int64.t, Int32.t, Int64.t) num
+type t = (Int32.t, Int64.t, Int32.t, Int64.t) Types.num
+[@@deriving compare, sexp_of, hash]
 
 let ( = ) (n1 : t) (n2 : t) : bool =
   match (n1, n2) with

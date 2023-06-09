@@ -1,3 +1,4 @@
+open Core
 open Types
 
 type t =
@@ -6,6 +7,7 @@ type t =
   | Bool of Bool.t
   | Num of Num.t
   | Str of String.t
+[@@deriving compare, sexp_of, hash]
 
 let equal (v1 : t) (v2 : t) : Bool.t =
   match (v1, v2) with

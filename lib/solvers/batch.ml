@@ -48,13 +48,10 @@ let check (s : t) (expr : Expression.t option) : bool =
   let sat =
     time_call (fun () -> Z3_mappings.check s.solver [ expression ]) solver_time
   in
-  let b =
-    match sat with
-    | Z3.Solver.SATISFIABLE -> true
-    | Z3.Solver.UNSATISFIABLE -> false
-    | Z3.Solver.UNKNOWN -> raise Unknown
-  in
-  b
+  match sat with
+  | Z3.Solver.SATISFIABLE -> true
+  | Z3.Solver.UNSATISFIABLE -> false
+  | Z3.Solver.UNKNOWN -> raise Unknown
 
 let fork (s : t) (e : Expression.t) : bool * bool =
   (check s (Some e), check s (Some (Expression.negate_relop e)))
