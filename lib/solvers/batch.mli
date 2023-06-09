@@ -26,9 +26,9 @@ val check_sat : t -> Expression.t list -> bool
     existing pc with [e1, ..., en] but without adding the expressions
     as assertions to the solver *)
 
-val find_model : t -> Expression.t list -> (Symbol.t * Value.t) list
+val find_model : t -> Expression.t list -> Model.t Option.t
 (** [find_model solver [e1; ...; en]] check the satisfiability of the
-    expressions [e1, ..., en] and returns a list bindings (x |-> v)
+    expressions [e1, ..., en] and returns a model of bindings (x |-> v)
     mapping the symbol [x] to its concrete value [v] *)
 
 val check : t -> Expression.t option -> bool
@@ -41,5 +41,5 @@ val eval : t -> Expression.t -> Expression.t list -> Value.t option
 val fork : t -> Expression.t -> bool * bool
 (** [fork solver e] checks the satisfiability of the fork on the condition [e] *)
 
-val value_binds : ?symbols:Symbol.t list -> t -> (Symbol.t * Value.t) list
+val value_binds : ?symbols:Symbol.t list -> t -> Model.t Option.t
 val string_binds : t -> (string * string * string) list

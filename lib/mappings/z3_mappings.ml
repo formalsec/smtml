@@ -744,14 +744,15 @@ let symbols_of_model (model : Z3.Model.model) : Symbol.t list =
       let t = type_of_sort (Z3.FuncDecl.get_range const) in
       Symbol.mk_symbol t x)
 
-let model_binds (model : Z3.Model.model) (symbols : Symbol.t list) :
-    (Symbol.t * Value.t) list =
-  List.fold_left symbols ~init:[] ~f:(fun a s ->
+let model_binds (model : Z3.Model.model) (symbols : Symbol.t list) : Model.t =
+  let m = Hashtbl.create (module Symbol) in
+  List.iter symbols ~f:(fun s ->
       let v = value_of_const model (Expression.mk_symbol s) in
-      Option.fold ~init:a ~f:(fun a v' -> (s, v') :: a) v)
+      Option.iter v ~f:(fun v -> Hashtbl.set m ~key:s ~data:v));
+  m
 
 let value_binds ?(symbols : Symbol.t list option) (model : Z3.Model.model) :
-    (Symbol.t * Value.t) list =
+    Model.t =
   let symbols' = Option.value symbols ~default:(symbols_of_model model) in
   model_binds model symbols'
 

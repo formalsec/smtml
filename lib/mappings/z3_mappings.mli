@@ -20,5 +20,5 @@ val maximize : optimize -> expr -> Z3.Optimize.handle
 val minimize : optimize -> expr -> Z3.Optimize.handle
 val get_opt_model : optimize -> model Option.t
 val value_of_const : model -> Expression.t -> Value.t Option.t
-val value_binds : ?symbols:Symbol.t list -> model -> (Symbol.t * Value.t) List.t
+val value_binds : ?symbols:Symbol.t list -> model -> Model.t
 val string_binds : model -> (string * string * string) List.t

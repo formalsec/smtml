@@ -22,14 +22,7 @@ let step (c : config) : config =
         (List.tl_exn code, pc)
     | GetModel ->
         let model = Batch.find_model solver pc in
-        let assignments =
-          List.map model ~f:(fun (s, v) ->
-              let x = Symbol.to_string s
-              and t = Types.string_of_type (Symbol.type_of s)
-              and v' = Value.to_string v in
-              sprintf "  (%s %s %s)" x t v')
-        in
-        printf "(model\n%s)" (String.concat ~sep:"\n" assignments);
+        printf "%s" (Model.to_string (Option.value_exn model));
         (List.tl_exn code, pc)
   in
   { c with code = code'; pc = pc' }

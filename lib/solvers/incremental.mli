@@ -24,5 +24,5 @@ val check : t -> Expression.t option -> bool
 val fork : t -> Expression.t -> bool * bool
 (** [fork solver e] checks the satisfiability of the fork on the condition [e] *)
 
-val value_binds : ?symbols:Symbol.t list -> t -> (Symbol.t * Value.t) list
+val value_binds : ?symbols:Symbol.t list -> t -> Model.t Option.t
 val string_binds : t -> (string * string * string) list
