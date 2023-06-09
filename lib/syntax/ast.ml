@@ -1,6 +1,6 @@
 open Core
 
-type t = Declare of Symbol.t | Assert of Expression.t | CheckSat
+type t = Declare of Symbol.t | Assert of Expression.t | CheckSat | GetModel
 
 let to_string (instr : t) : String.t =
   match instr with
@@ -10,3 +10,4 @@ let to_string (instr : t) : String.t =
       sprintf "(declare-fun %s %s)" symb t
   | Assert e -> sprintf "(assert %s)" (Expression.to_string e)
   | CheckSat -> "(check-sat)"
+  | GetModel -> "(get-model)"

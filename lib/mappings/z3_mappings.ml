@@ -101,6 +101,8 @@ module RealZ3Op = struct
   let str2real =
     FuncDecl.mk_func_decl_s ctx "StringToReal" [ str_sort ] real_sort
 
+  let to_uint32 = FuncDecl.mk_func_decl_s ctx "ToUInt32" [ real_sort ] real_sort
+
   let encode_num (f : Float.t) : Expr.expr =
     Arithmetic.Real.mk_numeral_s ctx (Float.to_string f)
 
@@ -151,9 +153,9 @@ module RealZ3Op = struct
       match op with
       | ToString -> fun v -> FuncDecl.apply real2str [ v ]
       | OfString -> fun v -> FuncDecl.apply str2real [ v ]
+      | ConvertUI32 -> fun v -> FuncDecl.apply to_uint32 [ v ]
       | ReinterpretInt -> Arithmetic.Integer.mk_int2real ctx
-      | DemoteF64 | ConvertSI32 | ConvertUI32 | ConvertSI64 | ConvertUI64
-      | PromoteF32 ->
+      | DemoteF64 | ConvertSI32 | ConvertSI64 | ConvertUI64 | PromoteF32 ->
           assert false
     in
     op' e
@@ -203,9 +205,14 @@ module StrZ3Op = struct
   open Z3
 
   let encode_str (s : String.t) : Expr.expr = Seq.mk_string ctx s
+  let trim = FuncDecl.mk_func_decl_s ctx "Trim" [ str_sort ] str_sort
 
   let encode_unop (op : unop) (e : Expr.expr) : Expr.expr =
-    let op' = match op with Len -> Seq.mk_seq_length ctx in
+    let op' =
+      match op with
+      | Len -> Seq.mk_seq_length ctx
+      | Trim -> fun v -> FuncDecl.apply trim [ v ]
+    in
     op' e
 
   let encode_binop (op : binop) (e1 : Expr.expr) (e2 : Expr.expr) : Expr.expr =
