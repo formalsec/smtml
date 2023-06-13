@@ -1,8 +1,7 @@
 open Core
 open Types
 
-type t = { sort : expr_type; name : String.t }
-[@@deriving compare, sexp_of, hash]
+type t = { sort : expr_type; name : String.t } [@@deriving compare, sexp, hash]
 
 let mk_symbol (sort : expr_type) (name : string) = { sort; name }
 

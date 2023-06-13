@@ -1,5 +1,5 @@
 type binop = Add | Sub | Mul | Div | Min | Max | Rem (*  Falta: | CopySign *)
-[@@deriving compare, sexp_of, hash]
+[@@deriving compare, sexp, hash]
 
 type unop =
   | Neg
@@ -7,10 +7,10 @@ type unop =
   | Sqrt
   | Nearest
   | IsNan (*  Falta: | Ceil | Floor | Trunc *)
-[@@deriving compare, sexp_of, hash]
+[@@deriving compare, sexp, hash]
 
-type relop = Eq | Ne | Lt | Le | Gt | Ge [@@deriving compare, sexp_of, hash]
-type triop [@@deriving compare, sexp_of, hash]
+type relop = Eq | Ne | Lt | Le | Gt | Ge [@@deriving compare, sexp, hash]
+type triop [@@deriving compare, sexp, hash]
 
 type cvtop =
   | DemoteF64
@@ -22,7 +22,7 @@ type cvtop =
   | PromoteF32
   | ToString
   | OfString
-[@@deriving compare, sexp_of, hash]
+[@@deriving compare, sexp, hash]
 
 let neg_relop (op : relop) : relop =
   match op with

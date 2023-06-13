@@ -12,15 +12,15 @@ type binop =
   | ShrS
   | Or
   | Xor
-[@@deriving compare, sexp_of, hash]
+[@@deriving compare, sexp, hash]
 
 type unop = Not | Clz (*  Falta:  Ctz | Popcnt *)
-[@@deriving compare, sexp_of, hash]
+[@@deriving compare, sexp, hash]
 
 type relop = Eq | LtU | LtS | LeU | LeS | Ne | GtU | GtS | GeU | GeS
-[@@deriving compare, sexp_of, hash]
+[@@deriving compare, sexp, hash]
 
-type triop [@@deriving compare, sexp_of, hash]
+type triop [@@deriving compare, sexp, hash]
 
 type cvtop =
   | TruncSF32
@@ -31,7 +31,7 @@ type cvtop =
   | WrapI64
   | ExtendSI32
   | ExtendUI32
-[@@deriving compare, sexp_of, hash]
+[@@deriving compare, sexp, hash]
 
 let neg_relop (op : relop) : relop =
   match op with

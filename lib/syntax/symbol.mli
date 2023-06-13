@@ -1,7 +1,7 @@
 open Core
 open Types
 
-type t [@@deriving compare, sexp_of, hash]
+type t [@@deriving compare, sexp, hash]
 
 val mk_symbol : expr_type -> String.t -> t
 val equal : t -> t -> Bool.t
