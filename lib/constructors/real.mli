@@ -12,6 +12,12 @@ val mk_abs : expr -> expr
 val mk_sqrt : expr -> expr
 (** [mk_sqrt f] create an expression representing [sqrt(f)]. *)
 
+val mk_ceil : expr -> expr
+(** [mk_ceil f] create an expression representing [ceil(f)]. *)
+
+val mk_floor : expr -> expr
+(** [mk_floor f] create an expression representing [floor(f)]. *)
+
 val mk_add : expr -> expr -> expr
 (** [mk_add f1 f2] create an expression representing [f1 + f2]. *)
 

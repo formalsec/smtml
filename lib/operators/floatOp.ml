@@ -6,7 +6,9 @@ type unop =
   | Abs
   | Sqrt
   | Nearest
-  | IsNan (*  Falta: | Ceil | Floor | Trunc *)
+  | IsNan
+  | Ceil
+  | Floor (*  Falta: Trunc *)
 [@@deriving compare, sexp, hash]
 
 type relop = Eq | Ne | Lt | Le | Gt | Ge [@@deriving compare, sexp, hash]
@@ -40,6 +42,8 @@ let string_of_unop (op : unop) : string =
   | Sqrt -> "sqrt"
   | Nearest -> "nearest"
   | IsNan -> "is_nan"
+  | Ceil -> "ceil"
+  | Floor -> "floor"
 
 let string_of_binop (op : binop) : string =
   match op with
