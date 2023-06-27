@@ -14,7 +14,7 @@ type binop =
   | Xor
   | Rotl
   | Rotr
-[@@deriving compare, sexp_of, hash]
+[@@deriving compare, sexp, hash]
 
 type unop = Not | Clz (*  Falta:  Ctz | Popcnt *)
 [@@deriving compare, sexp, hash]
