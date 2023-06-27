@@ -1,16 +1,18 @@
 type binop = Add | Sub | Mul | Div | Min | Max | Rem (*  Falta: | CopySign *)
-[@@deriving compare, sexp_of, hash]
+[@@deriving compare, sexp, hash]
 
 type unop =
   | Neg
   | Abs
   | Sqrt
   | Nearest
-  | IsNan (*  Falta: | Ceil | Floor | Trunc *)
-[@@deriving compare, sexp_of, hash]
+  | IsNan
+  | Ceil
+  | Floor (*  Falta: Trunc *)
+[@@deriving compare, sexp, hash]
 
-type relop = Eq | Ne | Lt | Le | Gt | Ge [@@deriving compare, sexp_of, hash]
-type triop [@@deriving compare, sexp_of, hash]
+type relop = Eq | Ne | Lt | Le | Gt | Ge [@@deriving compare, sexp, hash]
+type triop [@@deriving compare, sexp, hash]
 
 type cvtop =
   | DemoteF64
@@ -22,7 +24,7 @@ type cvtop =
   | PromoteF32
   | ToString
   | OfString
-[@@deriving compare, sexp_of, hash]
+[@@deriving compare, sexp, hash]
 
 let neg_relop (op : relop) : relop =
   match op with
@@ -40,6 +42,8 @@ let string_of_unop (op : unop) : string =
   | Sqrt -> "sqrt"
   | Nearest -> "nearest"
   | IsNan -> "is_nan"
+  | Ceil -> "ceil"
+  | Floor -> "floor"
 
 let string_of_binop (op : binop) : string =
   match op with

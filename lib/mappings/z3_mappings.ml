@@ -111,12 +111,20 @@ module RealZ3Op = struct
       match op with
       | Neg -> Arithmetic.mk_unary_minus ctx
       | Abs ->
-          fun e ->
+          fun x ->
             Boolean.mk_ite ctx
-              (Arithmetic.mk_gt ctx e (encode_num 0.))
-              e
-              (Arithmetic.mk_unary_minus ctx e)
-      | Sqrt -> fun e -> Arithmetic.mk_power ctx e (encode_num 0.5)
+              (Arithmetic.mk_gt ctx x (encode_num 0.))
+              x
+              (Arithmetic.mk_unary_minus ctx x)
+      | Sqrt -> fun x -> Arithmetic.mk_power ctx x (encode_num 0.5)
+      | Ceil ->
+          fun x ->
+            let x_int = Arithmetic.Real.mk_real2int ctx x in
+            Boolean.mk_ite ctx
+              (Boolean.mk_eq ctx (Arithmetic.Integer.mk_int2real ctx x_int) x)
+              x_int
+              Arithmetic.(mk_add ctx [ x_int; Integer.mk_numeral_i ctx 1 ])
+      | Floor -> Arithmetic.Real.mk_real2int ctx
       | Nearest | IsNan -> assert false
     in
     op' e
@@ -401,6 +409,7 @@ module F32Z3Op = struct
       | Sqrt -> FloatingPoint.mk_sqrt ctx rne
       | Nearest -> FloatingPoint.mk_round_to_integral ctx rne
       | IsNan -> FloatingPoint.mk_is_nan ctx
+      | Ceil | Floor -> assert false
     in
     op' e
 
@@ -472,6 +481,7 @@ module F64Z3Op = struct
       | Sqrt -> FloatingPoint.mk_sqrt ctx rne
       | Nearest -> FloatingPoint.mk_round_to_integral ctx rne
       | IsNan -> FloatingPoint.mk_is_nan ctx
+      | Ceil | Floor -> assert false
     in
     op' e
 
@@ -747,14 +757,15 @@ let symbols_of_model (model : Z3.Model.model) : Symbol.t list =
       let t = type_of_sort (Z3.FuncDecl.get_range const) in
       Symbol.mk_symbol t x)
 
-let model_binds (model : Z3.Model.model) (symbols : Symbol.t list) :
-    (Symbol.t * Value.t) list =
-  List.fold_left symbols ~init:[] ~f:(fun a s ->
+let model_binds (model : Z3.Model.model) (symbols : Symbol.t list) : Model.t =
+  let m = Hashtbl.create (module Symbol) in
+  List.iter symbols ~f:(fun s ->
       let v = value_of_const model (Expression.mk_symbol s) in
-      Option.fold ~init:a ~f:(fun a v' -> (s, v') :: a) v)
+      Option.iter v ~f:(fun v -> Hashtbl.set m ~key:s ~data:v));
+  m
 
 let value_binds ?(symbols : Symbol.t list option) (model : Z3.Model.model) :
-    (Symbol.t * Value.t) list =
+    Model.t =
   let symbols' = Option.value symbols ~default:(symbols_of_model model) in
   model_binds model symbols'
 

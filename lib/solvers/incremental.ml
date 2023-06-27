@@ -51,9 +51,8 @@ let fork (s : t) (e : Expression.t) : bool * bool =
 
 let model (e : t) : Z3_mappings.model Option.t = Z3_mappings.get_model e.solver
 
-let value_binds ?(symbols : Symbol.t list option) (e : t) :
-    (Symbol.t * Value.t) list =
-  Option.value_map (model e) ~default:[] ~f:(Z3_mappings.value_binds ?symbols)
+let value_binds ?(symbols : Symbol.t list option) (e : t) : Model.t Option.t =
+  Option.map (model e) ~f:(Z3_mappings.value_binds ?symbols)
 
 let string_binds (e : t) : (string * string * string) list =
   Option.value_map (model e) ~default:[] ~f:Z3_mappings.string_binds

@@ -180,6 +180,8 @@ module F32Op = struct
       | Abs -> abs
       | Sqrt -> sqrt
       | Nearest -> round_nearest
+      | Ceil -> round_up
+      | Floor -> round_down
       | IsNan -> assert false
     in
     fun v -> to_value (of_float (f (to_float (of_value 1 v))))
@@ -231,6 +233,8 @@ module F64Op = struct
       | Abs -> abs
       | Sqrt -> sqrt
       | Nearest -> round_nearest
+      | Ceil -> round_up
+      | Floor -> round_down
       | IsNan -> assert false
     in
     fun v -> to_value (of_float (f (to_float (of_value 1 v))))
