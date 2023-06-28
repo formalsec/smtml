@@ -22,8 +22,8 @@
    dune
    (ocaml (>= "4.14.0"))
    (z3 (= "4.11.2"))
-   core
-   core_unix
+   (core (= "v0.15.1"))
+   (core_unix (= "v0.15.1"))
    menhir
    ppx_inline_test
    ppx_expect))
