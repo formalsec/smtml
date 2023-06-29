@@ -580,8 +580,12 @@ let num i32 i64 f32 f64 : Num.t -> Z3.Expr.expr = function
   | F32 x -> f32 x
   | F64 x -> f64 x
 
-let encode_val : Num.t -> Z3.Expr.expr =
-  num I32.encode_val I64.encode_val F32.encode_val F64.encode_val
+let encode_val : Value.t -> Z3.Expr.expr = function
+  | Int v -> I.encode_val v
+  | Real v -> Real.encode_val v
+  | Bool v -> Boolean.encode_val v
+  | Str v -> Str.encode_val v
+  | Num v -> num I32.encode_val I64.encode_val F32.encode_val F64.encode_val v
 
 let encode_unop : Types.unop -> Z3.Expr.expr -> Z3.Expr.expr =
   Types.op I.encode_unop Real.encode_unop Boolean.encode_unop Str.encode_unop
@@ -630,21 +634,16 @@ let encode_quantifier (t : bool) (vars_list : Symbol.t list)
 let rec encode_expr (e : Expression.t) : expr =
   let open Expression in
   match e with
-  | Val (Int i) -> I.encode_val i
-  | Val (Real r) -> Real.encode_val r
-  | Val (Bool b) -> Boolean.encode_val b
-  | Val (Num v) -> encode_val v
-  | Val (Str s) -> Str.encode_val s
+  | Val v -> encode_val v
   | SymPtr (base, offset) ->
-      let base' = encode_val (I32 base) in
+      let base' = encode_val (Num (I32 base)) in
       let offset' = encode_expr offset in
       I32.encode_binop Types.I32.Add base' offset'
   | Unop (op, e) ->
       let e' = encode_expr e in
       encode_unop op e'
   | Binop (op, e1, e2) ->
-      let e1' = encode_expr e1
-      and e2' = encode_expr e2 in
+      let e1' = encode_expr e1 and e2' = encode_expr e2 in
       encode_binop op e1' e2'
   | Triop (op, e1, e2, e3) ->
       let e1' = encode_expr e1
@@ -652,8 +651,7 @@ let rec encode_expr (e : Expression.t) : expr =
       and e3' = encode_expr e3 in
       encode_triop op e1' e2' e3'
   | Relop (op, e1, e2) ->
-      let e1' = encode_expr e1
-      and e2' = encode_expr e2 in
+      let e1' = encode_expr e1 and e2' = encode_expr e2 in
       encode_relop op e1' e2'
   | Cvtop (op, e) ->
       let e' = encode_expr e in
@@ -708,6 +706,7 @@ let int64_of_bv (bv : Z3.Expr.expr) : int64 =
   assert (Z3.Expr.is_numeral bv);
   Int64.of_string (Z3.BitVector.numeral_to_string bv)
 
+(* FIXME: this is a mess, urgently fix! *)
 let int64_of_fp (fp : Z3.Expr.expr) ~(ebits : int) ~(sbits : int) : int64 =
   assert (Z3.Expr.is_numeral fp);
   if Z3.FloatingPoint.is_numeral_nan ctx fp then
