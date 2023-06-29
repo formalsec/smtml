@@ -34,11 +34,6 @@ let get_sort (e : Types.expr_type) : Z3.Sort.sort =
   | `F32Type -> fp32_sort
   | `F64Type -> fp64_sort
 
-let encode_bool ~(to_bv : bool) (cond : Z3.Expr.expr) : Z3.Expr.expr =
-  let bv_true = Z3.BitVector.mk_numeral ctx "1" 32
-  and bv_false = Z3.BitVector.mk_numeral ctx "0" 32 in
-  if to_bv then Z3.Boolean.mk_ite ctx cond bv_true bv_false else cond
-
 module I :
   Op_intf.S
     with type v := int
@@ -314,7 +309,7 @@ module I32 = struct
     in
     op' e1 e2
 
-  let encode_relop ?(to_bv = false) (op : relop) (e1 : t) (e2 : t) : t =
+  let encode_relop (op : relop) (e1 : t) (e2 : t) : t =
     let op' =
       match op with
       | Eq -> Boolean.mk_eq ctx
@@ -328,7 +323,7 @@ module I32 = struct
       | GeU -> BitVector.mk_uge ctx
       | GeS -> BitVector.mk_sge ctx
     in
-    encode_bool ~to_bv (op' e1 e2)
+    op' e1 e2
 
   let encode_cvtop (op : cvtop) (e : t) : t =
     let op' =
@@ -389,7 +384,7 @@ module I64 = struct
     in
     op' e1 e2
 
-  let encode_relop ?(to_bv = false) (op : relop) (e1 : t) (e2 : t) : t =
+  let encode_relop (op : relop) (e1 : t) (e2 : t) : t =
     let op' =
       match op with
       | Eq -> Boolean.mk_eq ctx
@@ -403,7 +398,7 @@ module I64 = struct
       | GeU -> BitVector.mk_uge ctx
       | GeS -> BitVector.mk_sge ctx
     in
-    encode_bool ~to_bv (op' e1 e2)
+    op' e1 e2
 
   let encode_cvtop (op : cvtop) (e : t) : t =
     let op' =
@@ -466,7 +461,7 @@ module F32 = struct
     in
     op' e1 e2
 
-  let encode_relop ?(to_bv = false) (op : relop) (e1 : t) (e2 : t) : t =
+  let encode_relop (op : relop) (e1 : t) (e2 : t) : t =
     let op' =
       match op with
       | Eq -> FloatingPoint.mk_eq ctx
@@ -476,7 +471,7 @@ module F32 = struct
       | Gt -> FloatingPoint.mk_gt ctx
       | Ge -> FloatingPoint.mk_geq ctx
     in
-    encode_bool ~to_bv (op' e1 e2)
+    op' e1 e2
 
   let encode_cvtop (op : cvtop) (e : t) : t =
     let op' =
@@ -543,7 +538,7 @@ module F64 = struct
     in
     op' e1 e2
 
-  let encode_relop ?(to_bv = false) (op : relop) (e1 : t) (e2 : t) : t =
+  let encode_relop (op : relop) (e1 : t) (e2 : t) : t =
     let op' =
       match op with
       | Eq -> FloatingPoint.mk_eq ctx
@@ -553,7 +548,7 @@ module F64 = struct
       | Gt -> FloatingPoint.mk_gt ctx
       | Ge -> FloatingPoint.mk_geq ctx
     in
-    encode_bool ~to_bv (op' e1 e2)
+    op' e1 e2
 
   let encode_cvtop (op : cvtop) (e : t) : t =
     let op' =
@@ -604,11 +599,10 @@ let encode_triop :
     Str.encode_triop I32.encode_triop I64.encode_triop F32.encode_triop
     F64.encode_triop
 
-let encode_relop ~to_bv :
-    Types.relop -> Z3.Expr.expr -> Z3.Expr.expr -> Z3.Expr.expr =
+let encode_relop : Types.relop -> Z3.Expr.expr -> Z3.Expr.expr -> Z3.Expr.expr =
   Types.op I.encode_relop Real.encode_relop Boolean.encode_relop
-    Str.encode_relop (I32.encode_relop ~to_bv) (I64.encode_relop ~to_bv)
-    (F32.encode_relop ~to_bv) (F64.encode_relop ~to_bv)
+    Str.encode_relop I32.encode_relop I64.encode_relop F32.encode_relop
+    F64.encode_relop
 
 let encode_cvtop : Types.cvtop -> Z3.Expr.expr -> Z3.Expr.expr =
   Types.op I.encode_cvtop Real.encode_cvtop Boolean.encode_cvtop
@@ -633,7 +627,7 @@ let encode_quantifier (t : bool) (vars_list : Symbol.t list)
     quantified_assertion
   else body
 
-let rec encode_expr ?(bool_to_bv = false) (e : Expression.t) : expr =
+let rec encode_expr (e : Expression.t) : expr =
   let open Expression in
   match e with
   | Val (Int i) -> I.encode_val i
@@ -648,25 +642,19 @@ let rec encode_expr ?(bool_to_bv = false) (e : Expression.t) : expr =
   | Unop (op, e) ->
       let e' = encode_expr e in
       encode_unop op e'
-  | Binop ((Int _ as op), e1, e2) | Binop ((Bool _ as op), e1, e2) ->
-      let e1' = encode_expr e1 and e2' = encode_expr e2 in
-      encode_binop op e1' e2'
   | Binop (op, e1, e2) ->
-      let e1' = encode_expr ~bool_to_bv:true e1
-      and e2' = encode_expr ~bool_to_bv:true e2 in
+      let e1' = encode_expr e1
+      and e2' = encode_expr e2 in
       encode_binop op e1' e2'
   | Triop (op, e1, e2, e3) ->
-      let e1' = encode_expr ~bool_to_bv e1
-      and e2' = encode_expr ~bool_to_bv e2
-      and e3' = encode_expr ~bool_to_bv e3 in
+      let e1' = encode_expr e1
+      and e2' = encode_expr e2
+      and e3' = encode_expr e3 in
       encode_triop op e1' e2' e3'
-  | Relop ((Int _ as op), e1, e2) | Relop ((Bool _ as op), e1, e2) ->
-      let e1' = encode_expr e1 and e2' = encode_expr e2 in
-      encode_relop ~to_bv:false op e1' e2'
   | Relop (op, e1, e2) ->
-      let e1' = encode_expr ~bool_to_bv:true e1
-      and e2' = encode_expr ~bool_to_bv:true e2 in
-      encode_relop ~to_bv:bool_to_bv op e1' e2'
+      let e1' = encode_expr e1
+      and e2' = encode_expr e2 in
+      encode_relop op e1' e2'
   | Cvtop (op, e) ->
       let e' = encode_expr e in
       encode_cvtop op e'
@@ -674,7 +662,7 @@ let rec encode_expr ?(bool_to_bv = false) (e : Expression.t) : expr =
       let x = Symbol.to_string s and t = Symbol.type_of s in
       Z3.Expr.mk_const_s ctx x (get_sort t)
   | Extract (e, h, l) ->
-      let e' = encode_expr ~bool_to_bv:true e in
+      let e' = encode_expr e in
       Z3.BitVector.mk_extract ctx ((h * 8) - 1) (l * 8) e'
   | Concat (e1, e2) ->
       let e1' = encode_expr e1 and e2' = encode_expr e2 in

@@ -6,7 +6,7 @@ type optimize = Z3.Optimize.optimize
 
 exception Error of string
 
-val encode_expr : ?bool_to_bv:bool -> Expression.t -> expr
+val encode_expr : Expression.t -> expr
 val expr_to_smtstring : Expression.t list -> Bool.t -> string
 val mk_solver : unit -> solver
 val interrupt : unit -> unit

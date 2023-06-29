@@ -24,16 +24,13 @@ let clone (e : t) : t =
 
 let add (e : t) (c : Expression.t) : unit =
   e.pc := Expression.add_constraint c !(e.pc);
-  let ec = Z3_mappings.encode_expr ~bool_to_bv:false c in
+  let ec = Z3_mappings.encode_expr c in
   Z3_mappings.add_solver e.solver [ ec ]
 
 let get_assertions (e : t) : Expression.t = !(e.pc)
 
 let check (e : t) (expr : Expression.t option) : bool =
-  let expr' =
-    Option.to_list
-      (Option.map ~f:(Z3_mappings.encode_expr ~bool_to_bv:false) expr)
-  in
+  let expr' = Option.to_list (Option.map ~f:Z3_mappings.encode_expr expr) in
   let b =
     solver_count := !solver_count + 1;
     let sat =

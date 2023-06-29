@@ -17,13 +17,12 @@ let push (opt : t) : unit = Z3.Optimize.push opt
 let pop (opt : t) : unit = Z3.Optimize.pop opt
 
 let add (opt : t) (es : Expression.t list) : unit =
-  Z3_mappings.add_opt opt
-    (List.map ~f:(Z3_mappings.encode_expr ~bool_to_bv:false) es)
+  Z3_mappings.add_opt opt (List.map ~f:Z3_mappings.encode_expr es)
 
 let check (opt : t) (e : Expression.t) (pc : Expression.t list) target =
   push opt;
   add opt pc;
-  ignore (target opt (Z3_mappings.encode_expr ~bool_to_bv:false e));
+  ignore (target opt (Z3_mappings.encode_expr e));
   ignore (time_call ~f:(fun () -> Z3.Optimize.check opt) ~accum:solver_time);
   let model = Z3_mappings.get_opt_model opt in
   pop opt;
