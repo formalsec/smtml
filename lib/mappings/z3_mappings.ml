@@ -267,21 +267,21 @@ module Str :
   let encode_cvtop _op _e = assert false
 end
 
-module I32 = struct
+module I32 :
+  Op_intf.S
+    with type v := int32
+     and type t := Z3.Expr.expr
+     and type unop := Types.I32.unop
+     and type binop := Types.I32.binop
+     and type relop := Types.I32.relop
+     and type cvtop := Types.I32.cvtop
+     and type triop := Types.I32.triop = struct
+  open Types.I32
   open Z3
 
-  type v = int32
-  type t = Expr.expr
-  type unop = Types.I32.unop
-  type binop = Types.I32.binop
-  type relop = Types.I32.relop
-  type cvtop = Types.I32.cvtop
-  type triop = Types.I32.triop
+  let encode_val i = Expr.mk_numeral_int ctx (Int32.to_int_exn i) bv32_sort
 
-  let encode_val (i : v) : t =
-    Expr.mk_numeral_int ctx (Int32.to_int_exn i) bv32_sort
-
-  let encode_unop (op : unop) (e : t) : t =
+  let encode_unop op e =
     let op' =
       match op with
       | Not -> BitVector.mk_not ctx
@@ -289,7 +289,7 @@ module I32 = struct
     in
     op' e
 
-  let encode_binop (op : binop) (e1 : t) (e2 : t) : t =
+  let encode_binop op e1 e2 =
     let op' =
       match op with
       | Add -> BitVector.mk_add ctx
@@ -309,7 +309,7 @@ module I32 = struct
     in
     op' e1 e2
 
-  let encode_relop (op : relop) (e1 : t) (e2 : t) : t =
+  let encode_relop op e1 e2 =
     let op' =
       match op with
       | Eq -> Boolean.mk_eq ctx
@@ -325,7 +325,7 @@ module I32 = struct
     in
     op' e1 e2
 
-  let encode_cvtop (op : cvtop) (e : t) : t =
+  let encode_cvtop op e =
     let op' =
       match op with
       | WrapI64 -> BitVector.mk_extract ctx 31 0
@@ -338,25 +338,24 @@ module I32 = struct
     in
     op' e
 
-  let encode_triop (_op : triop) (_e1 : t) (_e2 : t) (_e3 : t) : t =
-    assert false
+  let encode_triop _op _e1 _e2 _e3 = assert false
 end
 
-module I64 = struct
+module I64 :
+  Op_intf.S
+    with type v := int64
+     and type t := Z3.Expr.expr
+     and type unop := Types.I64.unop
+     and type binop := Types.I64.binop
+     and type relop := Types.I64.relop
+     and type cvtop := Types.I64.cvtop
+     and type triop := Types.I64.triop = struct
+  open Types.I64
   open Z3
 
-  type v = int64
-  type t = Expr.expr
-  type unop = Types.I64.unop
-  type binop = Types.I64.binop
-  type relop = Types.I64.relop
-  type cvtop = Types.I64.cvtop
-  type triop = Types.I64.triop
+  let encode_val i = Expr.mk_numeral_int ctx (Int64.to_int_exn i) bv64_sort
 
-  let encode_val (i : v) : t =
-    Expr.mk_numeral_int ctx (Int64.to_int_exn i) bv64_sort
-
-  let encode_unop (op : unop) (e : t) : t =
+  let encode_unop op e =
     let op' =
       match op with
       | Not -> BitVector.mk_not ctx
@@ -364,7 +363,7 @@ module I64 = struct
     in
     op' e
 
-  let encode_binop (op : binop) (e1 : t) (e2 : t) : t =
+  let encode_binop op e1 e2 =
     let op' =
       match op with
       | Add -> BitVector.mk_add ctx
@@ -384,7 +383,7 @@ module I64 = struct
     in
     op' e1 e2
 
-  let encode_relop (op : relop) (e1 : t) (e2 : t) : t =
+  let encode_relop op e1 e2 =
     let op' =
       match op with
       | Eq -> Boolean.mk_eq ctx
@@ -400,7 +399,7 @@ module I64 = struct
     in
     op' e1 e2
 
-  let encode_cvtop (op : cvtop) (e : t) : t =
+  let encode_cvtop op e =
     let op' =
       match op with
       | ExtendSI32 -> BitVector.mk_sign_ext ctx 32
@@ -415,28 +414,28 @@ module I64 = struct
     in
     op' e
 
-  let encode_triop (_op : triop) (_e1 : t) (_e2 : t) (_e3 : t) : t =
-    assert false
+  let encode_triop _op _e1 _e2 _e3 = assert false
 end
 
-module F32 = struct
+module F32 :
+  Op_intf.S
+    with type v := int32
+     and type t := Z3.Expr.expr
+     and type unop := Types.F32.unop
+     and type binop := Types.F32.binop
+     and type relop := Types.F32.relop
+     and type cvtop := Types.F32.cvtop
+     and type triop := Types.F32.triop = struct
+  open Types.F32
   open Z3
-
-  type v = int32
-  type t = Expr.expr
-  type unop = Types.F32.unop
-  type binop = Types.F32.binop
-  type relop = Types.F32.relop
-  type cvtop = Types.F32.cvtop
-  type triop = Types.F32.triop
 
   let f322str = FuncDecl.mk_func_decl_s ctx "F32ToString" [ fp32_sort ] str_sort
   let str2f32 = FuncDecl.mk_func_decl_s ctx "StringToF32" [ str_sort ] fp32_sort
 
-  let encode_val (f : v) : t =
+  let encode_val f =
     FloatingPoint.mk_numeral_f ctx (Int32.float_of_bits f) fp32_sort
 
-  let encode_unop (op : unop) (e : t) : t =
+  let encode_unop op e =
     let op' =
       match op with
       | Neg -> FloatingPoint.mk_neg ctx
@@ -448,7 +447,7 @@ module F32 = struct
     in
     op' e
 
-  let encode_binop (op : binop) (e1 : t) (e2 : t) : t =
+  let encode_binop op e1 e2 =
     let op' =
       match op with
       | Add -> FloatingPoint.mk_add ctx rne
@@ -461,7 +460,7 @@ module F32 = struct
     in
     op' e1 e2
 
-  let encode_relop (op : relop) (e1 : t) (e2 : t) : t =
+  let encode_relop op e1 e2 =
     let op' =
       match op with
       | Eq -> FloatingPoint.mk_eq ctx
@@ -473,7 +472,7 @@ module F32 = struct
     in
     op' e1 e2
 
-  let encode_cvtop (op : cvtop) (e : t) : t =
+  let encode_cvtop op e =
     let op' =
       match op with
       | DemoteF64 -> fun bv -> FloatingPoint.mk_to_fp_float ctx rne bv fp32_sort
@@ -492,28 +491,28 @@ module F32 = struct
     in
     op' e
 
-  let encode_triop (_op : triop) (_e1 : t) (_e2 : t) (_e3 : t) : t =
-    assert false
+  let encode_triop _op _e1 _e2 _e3 = assert false
 end
 
-module F64 = struct
+module F64 :
+  Op_intf.S
+    with type v := int64
+     and type t := Z3.Expr.expr
+     and type unop := Types.F64.unop
+     and type binop := Types.F64.binop
+     and type relop := Types.F64.relop
+     and type cvtop := Types.F64.cvtop
+     and type triop := Types.F64.triop = struct
+  open Types.F64
   open Z3
-
-  type v = int64
-  type t = Expr.expr
-  type unop = Types.F64.unop
-  type binop = Types.F64.binop
-  type relop = Types.F64.relop
-  type cvtop = Types.F64.cvtop
-  type triop = Types.F64.triop
 
   let f642str = FuncDecl.mk_func_decl_s ctx "F64ToString" [ fp64_sort ] str_sort
   let str2f64 = FuncDecl.mk_func_decl_s ctx "StringToF64" [ str_sort ] fp64_sort
 
-  let encode_val (f : v) : t =
+  let encode_val f =
     FloatingPoint.mk_numeral_f ctx (Int64.float_of_bits f) fp64_sort
 
-  let encode_unop (op : unop) (e : t) : t =
+  let encode_unop op e =
     let op' =
       match op with
       | Neg -> FloatingPoint.mk_neg ctx
@@ -525,7 +524,7 @@ module F64 = struct
     in
     op' e
 
-  let encode_binop (op : binop) (e1 : t) (e2 : t) : t =
+  let encode_binop op e1 e2 =
     let op' =
       match op with
       | Add -> FloatingPoint.mk_add ctx rne
@@ -538,7 +537,7 @@ module F64 = struct
     in
     op' e1 e2
 
-  let encode_relop (op : relop) (e1 : t) (e2 : t) : t =
+  let encode_relop op e1 e2 =
     let op' =
       match op with
       | Eq -> FloatingPoint.mk_eq ctx
@@ -550,7 +549,7 @@ module F64 = struct
     in
     op' e1 e2
 
-  let encode_cvtop (op : cvtop) (e : t) : t =
+  let encode_cvtop op e =
     let op' =
       match op with
       | PromoteF32 ->
@@ -570,8 +569,7 @@ module F64 = struct
     in
     op' e
 
-  let encode_triop (_op : triop) (_e1 : t) (_e2 : t) (_e3 : t) : t =
-    assert false
+  let encode_triop _op _e1 _e2 _e3 = assert false
 end
 
 let num i32 i64 f32 f64 : Num.t -> Z3.Expr.expr = function
