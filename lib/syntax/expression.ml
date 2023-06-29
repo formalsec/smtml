@@ -537,14 +537,12 @@ let add_constraint ?(neg : bool = false) (e : expr) (pc : expr) : expr =
     let c = to_relop (simplify e) in
     if neg then Option.map ~f:negate_relop c else c
   in
-  match (cond, pc) with
-  | None, _ -> pc
-  | Some cond, Val (Bool true) -> cond
-  | Some cond, _ -> Binop (Bool B.And, cond, pc)
+  Option.fold cond ~init:pc ~f:(fun pc c ->
+      match pc with Val (Bool true) -> c | _ -> Binop (Bool B.And, c, pc))
 
 let insert_pc ?(neg : bool = false) (e : expr) (pc : pc) : pc =
   let cond =
     let c = to_relop (simplify e) in
-    if neg then Option.map ~f:negate_relop c else c
+    if neg then Option.(c >>| negate_relop) else c
   in
-  Option.fold ~init:pc ~f:(fun pc a -> a :: pc) cond
+  Option.fold cond ~init:pc ~f:(fun pc a -> a :: pc)
