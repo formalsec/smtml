@@ -33,6 +33,8 @@ type cvtop =
   | WrapI64
   | ExtendSI32
   | ExtendUI32
+  | ToBool
+  | OfBool
 [@@deriving compare, sexp, hash]
 
 let neg_relop (op : relop) : relop =
@@ -92,5 +94,7 @@ let string_of_cvtop (op : cvtop) : string =
   | ReinterpretFloat -> "reinterpret_float"
   | ExtendSI32 -> "extend_i32_s"
   | ExtendUI32 -> "extend_i32_u"
+  | ToBool -> "to_bool"
+  | OfBool -> "of_bool"
 
 let string_of_triop (_ : triop) : string = assert false

@@ -334,6 +334,8 @@ module I32 :
       | TruncSF64 -> fun f -> FloatingPoint.mk_to_sbv ctx rtz f 32
       | TruncUF64 -> fun f -> FloatingPoint.mk_to_ubv ctx rtz f 32
       | ReinterpretFloat -> FloatingPoint.mk_to_ieee_bv ctx
+      | ToBool -> encode_relop Ne (encode_val 0l)
+      | OfBool -> fun e -> Boolean.mk_ite ctx e (encode_val 1l) (encode_val 0l)
       | ExtendSI32 | ExtendUI32 -> assert false
     in
     op' e
@@ -410,6 +412,8 @@ module I64 :
       | TruncSF64 -> fun f -> FloatingPoint.mk_to_sbv ctx rtz f 64
       | TruncUF64 -> fun f -> FloatingPoint.mk_to_ubv ctx rtz f 64
       | ReinterpretFloat -> FloatingPoint.mk_to_ieee_bv ctx
+      | ToBool -> encode_relop Ne (encode_val 0L)
+      | OfBool -> fun e -> Boolean.mk_ite ctx e (encode_val 1L) (encode_val 0L)
       | WrapI64 -> assert false
     in
     op' e
