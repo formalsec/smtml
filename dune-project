@@ -12,7 +12,7 @@
 
 (maintainers "WASP Platform")
 
-(license LICENSE)
+(license "GPL-3.0-only")
 
 (package
  (name encoding)
