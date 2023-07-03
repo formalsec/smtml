@@ -305,6 +305,7 @@ module I32 :
       | ShrU -> BitVector.mk_lshr ctx
       | RemS -> BitVector.mk_srem ctx
       | RemU -> BitVector.mk_urem ctx
+      | ExtendS | ExtendU -> assert false
       | Rotl | Rotr -> failwith "z3_mappings: rotl|rotr not implemented!"
     in
     op' e1 e2
@@ -381,6 +382,7 @@ module I64 :
       | ShrU -> BitVector.mk_lshr ctx
       | RemS -> BitVector.mk_srem ctx
       | RemU -> BitVector.mk_urem ctx
+      | ExtendS | ExtendU -> assert false
       | Rotl | Rotr -> failwith "z3_mappings: rotl|rotr not implemented!"
     in
     op' e1 e2
@@ -644,6 +646,12 @@ let rec encode_expr (e : Expression.t) : expr =
   | Unop (op, e) ->
       let e' = encode_expr e in
       encode_unop op e'
+  | Binop (I32 ExtendS, Val (Num (I32 n)), e) ->
+      let e' = encode_expr e in
+      Z3.BitVector.mk_sign_ext ctx (Int32.to_int_exn n) e'
+  | Binop (I32 ExtendU, Val (Num (I32 n)), e) ->
+      let e' = encode_expr e in
+      Z3.BitVector.mk_zero_ext ctx (Int32.to_int_exn n) e'
   | Binop (op, e1, e2) ->
       let e1' = encode_expr e1 and e2' = encode_expr e2 in
       encode_binop op e1' e2'

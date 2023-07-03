@@ -28,7 +28,7 @@ module I32Op = struct
   let divrem_u n d =
     if d = zero then raise DivideByZero
     else
-      let t = shift_right d (Int.( - ) bitwidth 1) in
+      let t = shift_right d Int.(bitwidth - 1) in
       let n' = n land lnot t in
       let q = shift_left (shift_right_logical n' 1 / d) 1 in
       let r = n - (q * d) in
@@ -38,10 +38,14 @@ module I32Op = struct
     let q, _ = divrem_u x y in
     q
 
-  let shift f x y = f x (to_int_exn (y land of_int_exn (Int.( - ) bitwidth 1)))
+  let shift f x y = f x (to_int_exn (y land of_int_exn Int.(bitwidth - 1)))
   let shl x y = shift shift_left x y
   let shr_s x y = shift shift_right x y
   let shr_u x y = shift shift_right_logical x y
+
+  let extend_s n x =
+    let shift = to_int_exn @@ 32l - n in
+    shift_right (shift_left x shift) shift
 
   let unop (op : I32.unop) : Num.t -> Num.t =
     let f =
@@ -65,6 +69,8 @@ module I32Op = struct
       | Shl -> shl
       | ShrU -> shr_s
       | ShrS -> shr_u
+      | ExtendS -> extend_s
+      | ExtendU -> fun _n x -> x
       | Rotl | Rotr -> assert false
     in
     fun v1 v2 -> to_value (f (of_value 1 v1) (of_value 2 v2))
@@ -120,6 +126,10 @@ module I64Op = struct
   let shr_s x y = shift shift_right x y
   let shr_u x y = shift shift_right_logical x y
 
+  let extend_s n x =
+    let shift = to_int_exn @@ 64L - n in
+    shift_right (shift_left x shift) shift
+
   let unop op : Num.t -> Num.t =
     let f = match op with Clz -> fun i -> of_int (clz i) | Not -> bit_not in
     fun v -> to_value (f (of_value 1 v))
@@ -140,6 +150,8 @@ module I64Op = struct
       | Shl -> shl
       | ShrU -> shr_s
       | ShrS -> shr_u
+      | ExtendS -> extend_s
+      | ExtendU -> fun _n x -> x
       | Rotl | Rotr -> assert false
     in
     fun v1 v2 -> to_value (f (of_value 1 v1) (of_value 2 v2))

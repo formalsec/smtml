@@ -14,6 +14,8 @@ type binop =
   | Xor
   | Rotl
   | Rotr
+  | ExtendS
+  | ExtendU
 [@@deriving compare, sexp, hash]
 
 type unop = Not | Clz (*  Falta:  Ctz | Popcnt *)
@@ -70,6 +72,8 @@ let string_of_binop (op : binop) : string =
   | RemU -> "rem_u"
   | Rotl -> "rotl"
   | Rotr -> "rotr"
+  | ExtendS -> "ext_s"
+  | ExtendU -> "ext_u"
 
 let string_of_relop (op : relop) : string =
   match op with
