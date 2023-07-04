@@ -82,7 +82,7 @@ module I32Op = struct
       | Ne -> ( <> )
       | LtS -> ( < )
       | LtU -> lt_u
-      | LeS -> ( >= )
+      | LeS -> ( <= )
       | LeU -> le_u
       | GtS -> ( > )
       | GtU -> gt_u
@@ -163,7 +163,7 @@ module I64Op = struct
       | Ne -> ( <> )
       | LtS -> ( < )
       | LtU -> lt_u
-      | LeS -> ( >= )
+      | LeS -> ( <= )
       | LeU -> le_u
       | GtS -> ( > )
       | GtU -> gt_u
