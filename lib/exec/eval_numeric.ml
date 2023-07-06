@@ -329,7 +329,8 @@ module I32CvtOp = struct
     | ReinterpretFloat -> I32 (F32Op.of_value 1 v)
     | ExtendSI32 -> raise (TypeError (1, v, `I32Type))
     | ExtendUI32 -> raise (TypeError (1, v, `I32Type))
-    | ToBool | OfBool -> assert false (* FIXME: don't like these here *)
+    | OfBool -> v (* already a num here *)
+    | ToBool -> assert false
 end
 
 module I64CvtOp = struct
