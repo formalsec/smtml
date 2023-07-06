@@ -329,8 +329,8 @@ let concretize_base_ptr (e : expr) : Int32.t Option.t =
 let to_bool (e : expr) : expr Option.t =
   match e with
   | Val _ -> None
-  | Relop _ as e' | Cvtop (I32 ToBool, e') -> Some e'
-  | _ -> Some (Cvtop (I32 OfBool, e))
+  | Relop _ as e' | Cvtop (I32 OfBool, e') -> Some e'
+  | _ -> Some (Cvtop (I32 ToBool, e))
 
 let nland64 (x : Int64.t) (n : Int.t) =
   let rec loop x' n' acc =
@@ -518,6 +518,20 @@ let rec simplify ?(extract = true) (e : expr) : expr =
           Extract (Val (Num (I64 x)), d1 + d2, 0) ++ se
       | _ -> e1' ++ e2')
   | _ -> e
+
+let mk_relop ?(reduce : bool = true) (e : expr) (t : num_type) : expr =
+  let e = if reduce then simplify e else e in
+  if is_relop e then e
+  else
+    let zero = Value.Num (Num.default_value t) in
+    let e' =
+      match t with
+      | `I32Type -> Relop (I32 Ne, e, Val zero)
+      | `I64Type -> Relop (I64 Ne, e, Val zero)
+      | `F32Type -> Relop (F32 Ne, e, Val zero)
+      | `F64Type -> Relop (F64 Ne, e, Val zero)
+    in
+    simplify e'
 
 let add_constraint ?(neg : bool = false) (e : expr) (pc : expr) : expr =
   let cond =
