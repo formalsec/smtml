@@ -328,7 +328,7 @@ let concretize_base_ptr (e : expr) : Int32.t Option.t =
 
 let to_bool (e : expr) : expr Option.t =
   match e with
-  | Val _ -> None
+  | Val _ | SymPtr _ -> None
   | Relop _ as e' | Cvtop (I32 OfBool, e') -> Some e'
   | _ -> Some (Cvtop (I32 ToBool, e))
 
