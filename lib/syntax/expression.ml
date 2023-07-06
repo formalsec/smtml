@@ -326,10 +326,11 @@ let concretize_ptr (e : expr) : Num.t Option.t =
 let concretize_base_ptr (e : expr) : Int32.t Option.t =
   match e with SymPtr (base, _) -> Some base | _ -> None
 
-let to_relop (e : expr) : expr Option.t =
-  if is_concrete e then None
-  else if is_relop e then Some e
-  else Some (Relop (I32 Ne, e, Val (Num (I32 0l))))
+let to_bool (e : expr) : expr Option.t =
+  match e with
+  | Val _ -> None
+  | Relop _ as e' | Cvtop (I32 ToBool, e') -> Some e'
+  | _ -> Some (Cvtop (I32 OfBool, e))
 
 let nland64 (x : Int64.t) (n : Int.t) =
   let rec loop x' n' acc =
@@ -518,31 +519,17 @@ let rec simplify ?(extract = true) (e : expr) : expr =
       | _ -> e1' ++ e2')
   | _ -> e
 
-let mk_relop ?(reduce : bool = true) (e : expr) (t : num_type) : expr =
-  let e = if reduce then simplify e else e in
-  if is_relop e then e
-  else
-    let zero = Value.Num (Num.default_value t) in
-    let e' =
-      match t with
-      | `I32Type -> Relop (I32 Ne, e, Val zero)
-      | `I64Type -> Relop (I64 Ne, e, Val zero)
-      | `F32Type -> Relop (F32 Ne, e, Val zero)
-      | `F64Type -> Relop (F64 Ne, e, Val zero)
-    in
-    simplify e'
-
 let add_constraint ?(neg : bool = false) (e : expr) (pc : expr) : expr =
   let cond =
-    let c = to_relop (simplify e) in
-    if neg then Option.map ~f:negate_relop c else c
+    let c = to_bool (simplify e) in
+    if neg then Option.map ~f:(fun e -> Unop (Bool Not, e)) c else c
   in
   Option.fold cond ~init:pc ~f:(fun pc c ->
-      match pc with Val (Bool true) -> c | _ -> Binop (Bool B.And, c, pc))
+      match pc with Val (Bool true) -> c | _ -> Binop (Bool And, c, pc))
 
 let insert_pc ?(neg : bool = false) (e : expr) (pc : pc) : pc =
   let cond =
-    let c = to_relop (simplify e) in
-    if neg then Option.(c >>| negate_relop) else c
+    let c = to_bool (simplify e) in
+    if neg then Option.map ~f:(fun e -> Unop (Bool Not, e)) c else c
   in
   Option.fold cond ~init:pc ~f:(fun pc a -> a :: pc)
