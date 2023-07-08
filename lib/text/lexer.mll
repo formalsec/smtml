@@ -61,7 +61,7 @@ let realop =
   |> Hashtbl.add_seq tbl;
   tbl
 
-let boolop = 
+let boolop =
   let tbl = Hashtbl.create 6 in
   List.to_seq [
     ("not", UNARY (Bool B.Not));
@@ -117,6 +117,8 @@ let i32op =
     ("ge_u", RELOP (I32 I32.GeU));
     ("ge_s", RELOP (I32 I32.GeS));
     ("ge_s", RELOP (I32 I32.GeS));
+    ("to_bool", CVTOP (I32 I32.ToBool));
+    ("of_bool", CVTOP (I32 I32.OfBool));
     ("trunc_f32_s",  CVTOP (I32 I32.TruncSF32));
     ("trunc_f32_u", CVTOP (I32 I32.TruncUF32));
     ("trunc_f64_s", CVTOP (I32 I32.TruncSF64));
