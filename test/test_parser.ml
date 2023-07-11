@@ -8,7 +8,7 @@ let%expect_test _ =
     {|
     (declare-fun x real)
     (declare-fun y real)
-    (assert (real.eq y (real.mul x x))) 
+    (assert (real.eq y (real.mul x x)))
     (assert (real.eq y 2.0))
     (check-sat)
     |}

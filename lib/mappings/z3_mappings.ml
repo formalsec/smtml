@@ -7,6 +7,7 @@ type model = Z3.Model.model
 type solver = Z3.Solver.solver
 type status = Z3.Solver.status
 type optimize = Z3.Optimize.optimize
+type handle = Z3.Optimize.handle
 
 let ctx =
   Z3.mk_context
@@ -814,3 +815,10 @@ let string_binds (m : Z3.Model.model) : (string * string * string) list =
           (Z3.Model.get_const_interp m const)
       in
       (sort, name, interp))
+
+let satisfiability =
+  let open Mappings_intf in
+  function
+  | Z3.Solver.SATISFIABLE -> Satisfiable
+  | Z3.Solver.UNSATISFIABLE -> Unsatisfiable
+  | Z3.Solver.UNKNOWN -> Unknown

@@ -1,4 +1,5 @@
 open Encoding
+module Batch = Batch.Make (Z3_mappings)
 
 let solver = Batch.create ()
 let encode e = try ignore (Z3_mappings.encode_expr e) with exn -> raise exn
