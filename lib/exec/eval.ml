@@ -1,5 +1,6 @@
 open Core
 open Ast
+module Batch = Batch.Make (Z3_mappings)
 
 type config = {
   code : Ast.t list;

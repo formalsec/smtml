@@ -1,4 +1,5 @@
 open Encoding
+module Batch = Batch.Make (Z3_mappings)
 
 let solver = Batch.create ()
 let _ = Batch.set_default_axioms solver

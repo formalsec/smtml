@@ -1,4 +1,5 @@
 open Encoding
+module Batch = Batch.Make (Z3_mappings)
 
 let solver = Batch.create ()
 let x = Expression.mk_symbol_s `F32Type "x"
