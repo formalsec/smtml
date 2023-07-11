@@ -27,8 +27,8 @@ module Make (Mappings : Mappings_intf.S) = struct
 
   let get_assertions (_e : t) : Expression.t = assert false
 
-  let check (e : t) (expr : Expression.t option) : bool =
-    let expr' = Option.to_list (Option.map ~f:Mappings.encode_expr expr) in
+  let check (e : t) (expr : Expression.t list) : bool =
+    let expr' = List.map ~f:Mappings.encode_expr expr in
     let b =
       solver_count := !solver_count + 1;
       let sat =
@@ -42,7 +42,7 @@ module Make (Mappings : Mappings_intf.S) = struct
     b
 
   let fork (s : t) (e : Expression.t) : bool * bool =
-    (check s (Some e), check s (Some (Expression.negate_relop e)))
+    (check s [ e ], check s [ Expression.negate_relop e ])
 
   let model (e : t) : Mappings.model Option.t = Mappings.get_model e
 

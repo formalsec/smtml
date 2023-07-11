@@ -17,7 +17,7 @@ module type S = sig
   val get_assertions : t -> Expression.t
   (** [get_assertions solver] returns the current path condition *)
 
-  val check : t -> Expression.t option -> bool
+  val check : t -> Expression.t list -> bool
   (** [check solver e] *)
 
   val fork : t -> Expression.t -> bool * bool
