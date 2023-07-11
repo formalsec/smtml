@@ -13,29 +13,26 @@ module Make (Mappings : Mappings_intf.S) = struct
     ret
 
   type s = Mappings.solver
-  type t = { solver : s; pc : Expression.t ref }
+  type t = s
 
-  let create () : t =
-    { solver = Mappings.mk_solver (); pc = ref (Boolean.mk_val true) }
+  let create () : t = Mappings.mk_solver ()
 
   let interrupt () = Mappings.interrupt ()
 
-  let clone (e : t) : t =
-    { solver = Mappings.translate e.solver; pc = ref !(e.pc) }
+  let clone (s : t) : t = Mappings.translate s
 
-  let add (e : t) (c : Expression.t) : unit =
-    e.pc := Expression.add_constraint c !(e.pc);
+  let add (s : t) (c : Expression.t) : unit =
     let ec = Mappings.encode_expr c in
-    Mappings.add_solver e.solver [ ec ]
+    Mappings.add_solver s [ ec ]
 
-  let get_assertions (e : t) : Expression.t = !(e.pc)
+  let get_assertions (_e : t) : Expression.t = assert false
 
   let check (e : t) (expr : Expression.t option) : bool =
     let expr' = Option.to_list (Option.map ~f:Mappings.encode_expr expr) in
     let b =
       solver_count := !solver_count + 1;
       let sat =
-        time_call (fun () -> Mappings.check e.solver expr') solver_time
+        time_call (fun () -> Mappings.check e expr') solver_time
       in
       match Mappings.satisfiability sat with
       | Mappings_intf.Satisfiable -> true
@@ -47,7 +44,7 @@ module Make (Mappings : Mappings_intf.S) = struct
   let fork (s : t) (e : Expression.t) : bool * bool =
     (check s (Some e), check s (Some (Expression.negate_relop e)))
 
-  let model (e : t) : Mappings.model Option.t = Mappings.get_model e.solver
+  let model (e : t) : Mappings.model Option.t = Mappings.get_model e
 
   let value_binds ?(symbols : Symbol.t list option) (e : t) : Model.t Option.t =
     Option.map (model e) ~f:(Mappings.value_binds ?symbols)
