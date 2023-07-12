@@ -8,6 +8,12 @@ module type S = sig
 
   val clone : t -> t
 
+  val push : t -> unit
+
+  val pop : t -> int -> unit
+
+  val reset : t -> unit
+
   val add : t -> Expression.t list -> unit
 
   val get_assertions : t -> Expression.t list
