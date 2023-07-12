@@ -1,3 +1,3 @@
 exception Unknown
 
-module Make (M : Mappings_intf.S) : Incremental_intf.S
+module Make (M : Mappings_intf.S) : Solver_intf.S
