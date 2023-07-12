@@ -29,6 +29,12 @@ module Make (Mappings : Mappings_intf.S) = struct
 
   let clone (s : t) : t = { s with pc = s.pc }
 
+  let push (_s : t) : unit = assert false (* TODO *)
+
+  let pop (_s : t) (_lvl : int) : unit = assert false (* TODO *)
+
+  let reset (s : t) = s.pc <- []
+
   let add (s : t) (es : Expr.t list) : unit = s.pc <- es @ s.pc
 
   let get_assertions (_s : t) : Expr.t list = assert false

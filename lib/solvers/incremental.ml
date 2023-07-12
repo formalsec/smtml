@@ -26,6 +26,12 @@ module Make (Mappings : Mappings_intf.S) = struct
 
   let clone (solver : t) : t = Mappings.translate solver
 
+  let push (_solver : t) : unit = assert false (* TODO *)
+
+  let pop (_solver : t) (_lvl : int) : unit = assert false (* TODO *)
+
+  let reset (_solver : t) : unit = assert false (* TODO *)
+
   let add (solver : t) (es : Expr.t list) : unit =
     Mappings.add_solver solver es
 
