@@ -691,7 +691,7 @@ let expr_to_smtstring (es : Expression.t list) (status : bool) =
   Z3.SMT.benchmark_to_smtstring ctx "" "" (Bool.to_string status) ""
     (List.tl_exn es') (List.hd_exn es')
 
-let mk_solver () : solver = Z3.Solver.mk_solver ctx None
+let mk_solver () : solver = Z3.Solver.mk_simple_solver ctx
 let interrupt () = Z3.Tactic.interrupt ctx
 let translate (s : solver) : solver = Z3.Solver.translate s ctx
 let add_solver (s : solver) (es : expr list) : unit = Z3.Solver.add s es
