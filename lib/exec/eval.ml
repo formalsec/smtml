@@ -19,10 +19,11 @@ let step (c : config) : config =
         (List.tl_exn code, pc)
     | Assert e -> (List.tl_exn code, e :: pc)
     | CheckSat ->
-        if Batch.check_sat solver pc then printf "sat\n" else printf "unsat\n";
+        if Batch.check solver pc then printf "sat\n" else printf "unsat\n";
         (List.tl_exn code, pc)
     | GetModel ->
-        let model = Batch.find_model solver pc in
+        assert (Batch.check solver pc);
+        let model = Batch.model solver in
         printf "%s" (Model.to_string (Option.value_exn model));
         (List.tl_exn code, pc)
   in
