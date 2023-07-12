@@ -1,6 +1,10 @@
 open Core
 open Encoding
 
+module Z3_batch = Batch.Make (Z3_mappings)
+module Z3_incremental = Incremental.Make (Z3_mappings)
+module Interpret = Interpret.Make(Z3_batch)
+
 let get_contents = function
   | "-" -> In_channel.input_all In_channel.stdin
   | filename -> In_channel.read_all filename
@@ -18,9 +22,9 @@ let command =
        match files with
        | [] ->
            let ast = parse_file "-" in
-           Eval.start ast
+           Interpret.start ast
        | _ ->
            let asts = List.map files ~f:Run.parse_file in
-           List.iter asts ~f:(fun ast -> Eval.start ast))
+           List.iter asts ~f:(fun ast -> Interpret.start ast))
 
 let () = Command_unix.run ~version:"0.1" command

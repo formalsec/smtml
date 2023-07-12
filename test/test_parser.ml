@@ -1,7 +1,10 @@
 open Core
 open Encoding
 
-let parse_and_run script = Run.parse_string script |> Eval.start
+module Batch = Batch.Make (Z3_mappings)
+module Interpret = Interpret.Make (Batch)
+
+let parse_and_run script = Run.parse_string script |> Interpret.start
 
 let%expect_test _ =
   let script =
