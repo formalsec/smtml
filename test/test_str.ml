@@ -4,7 +4,8 @@ module Batch = Batch.Make (Z3_mappings)
 let solver = Batch.create ()
 let encode e = try ignore (Z3_mappings.encode_expr e) with exn -> raise exn
 let abc = Strings.mk_val "abc"
-let x = Expression.mk_symbol_s `StrType "x"
+let symb_x = Symbol.mk_symbol `StrType "x"
+let x = Expression.mk_symbol symb_x
 let zero = Integer.mk_val 0
 let two = Integer.mk_val 2
 
@@ -14,12 +15,12 @@ let%test_unit _ = encode x
 
 (* Satisfiability *)
 let%test "test_concrete_len" =
-  Batch.check_sat solver
+  Batch.check solver
     [ Integer.mk_ge (Strings.mk_len x) (Strings.mk_len abc) ]
 
 let%test "test_constrained_len" =
   not
-    (Batch.check_sat solver
+    (Batch.check solver
        [
          Integer.mk_eq (Strings.mk_len x) (Integer.mk_val 4);
          Integer.mk_eq (Strings.mk_len x) (Strings.mk_len abc);
@@ -33,7 +34,7 @@ let%test "test_concrete_substr" =
         (Strings.mk_val "ab");
     ]
   in
-  Batch.check_sat solver pc
+  Batch.check solver pc
 
 let%test "test_symb_substr" =
   let pc =
@@ -44,4 +45,6 @@ let%test "test_symb_substr" =
         (Integer.mk_val 2);
     ]
   in
-  Some (Value.Str "abc") = Batch.eval solver x pc
+  assert (Batch.check solver pc);
+  let m = Batch.model solver in
+  Some (Value.Str "abc") = Model.evaluate (Option.get m) symb_x
