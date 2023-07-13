@@ -2,7 +2,7 @@ open Core
 open Encoding
 module Z3_batch = Batch.Make (Z3_mappings)
 module Z3_incremental = Incremental.Make (Z3_mappings)
-module Interpret = Interpret.Make (Z3_batch)
+module Interpret = Interpret.Make (Z3_incremental)
 
 let get_contents = function
   | "-" -> In_channel.input_all In_channel.stdin

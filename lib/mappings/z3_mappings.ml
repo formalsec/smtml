@@ -118,19 +118,19 @@ module Real :
       match op with
       | Neg -> Arithmetic.mk_unary_minus ctx
       | Abs ->
-          fun x ->
-            Boolean.mk_ite ctx
-              (Arithmetic.mk_gt ctx x (encode_val 0.))
-              x
-              (Arithmetic.mk_unary_minus ctx x)
+        fun x ->
+          Boolean.mk_ite ctx
+            (Arithmetic.mk_gt ctx x (encode_val 0.))
+            x
+            (Arithmetic.mk_unary_minus ctx x)
       | Sqrt -> fun x -> Arithmetic.mk_power ctx x (encode_val 0.5)
       | Ceil ->
-          fun x ->
-            let x_int = Arithmetic.Real.mk_real2int ctx x in
-            Boolean.mk_ite ctx
-              (Boolean.mk_eq ctx (Arithmetic.Integer.mk_int2real ctx x_int) x)
-              x_int
-              Arithmetic.(mk_add ctx [ x_int; Integer.mk_numeral_i ctx 1 ])
+        fun x ->
+          let x_int = Arithmetic.Real.mk_real2int ctx x in
+          Boolean.mk_ite ctx
+            (Boolean.mk_eq ctx (Arithmetic.Integer.mk_int2real ctx x_int) x)
+            x_int
+            Arithmetic.(mk_add ctx [ x_int; Integer.mk_numeral_i ctx 1 ])
       | Floor -> Arithmetic.Real.mk_real2int ctx
       | Nearest | IsNan -> assert false
     in
@@ -144,9 +144,9 @@ module Real :
       | Mul -> fun v1 v2 -> Arithmetic.mk_mul ctx [ v1; v2 ]
       | Div -> Arithmetic.mk_div ctx
       | Min ->
-          fun v1 v2 -> Boolean.mk_ite ctx (Arithmetic.mk_le ctx v1 v2) v1 v2
+        fun v1 v2 -> Boolean.mk_ite ctx (Arithmetic.mk_le ctx v1 v2) v1 v2
       | Max ->
-          fun v1 v2 -> Boolean.mk_ite ctx (Arithmetic.mk_ge ctx v1 v2) v1 v2
+        fun v1 v2 -> Boolean.mk_ite ctx (Arithmetic.mk_ge ctx v1 v2) v1 v2
       | _ -> assert false
     in
     op' e1 e2
@@ -171,7 +171,7 @@ module Real :
       | ConvertUI32 -> fun v -> FuncDecl.apply to_uint32 [ v ]
       | ReinterpretInt -> Arithmetic.Integer.mk_int2real ctx
       | DemoteF64 | ConvertSI32 | ConvertSI64 | ConvertUI64 | PromoteF32 ->
-          assert false
+        assert false
     in
     op' e
 
@@ -247,8 +247,8 @@ module Str :
     let op' =
       match op with
       | Nth ->
-          fun v1 v2 ->
-            Seq.mk_seq_extract ctx v1 v2 (Expr.mk_numeral_int ctx 1 int_sort)
+        fun v1 v2 ->
+          Seq.mk_seq_extract ctx v1 v2 (Expr.mk_numeral_int ctx 1 int_sort)
       | Concat -> fun v1 v2 -> Seq.mk_seq_concat ctx [ v1; v2 ]
     in
     op' e1 e2
@@ -484,13 +484,13 @@ module F32 :
       match op with
       | DemoteF64 -> fun bv -> FloatingPoint.mk_to_fp_float ctx rne bv fp32_sort
       | ConvertSI32 ->
-          fun bv -> FloatingPoint.mk_to_fp_signed ctx rne bv fp32_sort
+        fun bv -> FloatingPoint.mk_to_fp_signed ctx rne bv fp32_sort
       | ConvertUI32 ->
-          fun bv -> FloatingPoint.mk_to_fp_unsigned ctx rne bv fp32_sort
+        fun bv -> FloatingPoint.mk_to_fp_unsigned ctx rne bv fp32_sort
       | ConvertSI64 ->
-          fun bv -> FloatingPoint.mk_to_fp_signed ctx rne bv fp32_sort
+        fun bv -> FloatingPoint.mk_to_fp_signed ctx rne bv fp32_sort
       | ConvertUI64 ->
-          fun bv -> FloatingPoint.mk_to_fp_unsigned ctx rne bv fp32_sort
+        fun bv -> FloatingPoint.mk_to_fp_unsigned ctx rne bv fp32_sort
       | ReinterpretInt -> fun bv -> FloatingPoint.mk_to_fp_bv ctx bv fp32_sort
       | ToString -> fun v -> FuncDecl.apply f322str [ v ]
       | OfString -> fun v -> FuncDecl.apply str2f32 [ v ]
@@ -560,15 +560,15 @@ module F64 :
     let op' =
       match op with
       | PromoteF32 ->
-          fun bv -> FloatingPoint.mk_to_fp_float ctx rne bv fp64_sort
+        fun bv -> FloatingPoint.mk_to_fp_float ctx rne bv fp64_sort
       | ConvertSI32 ->
-          fun bv -> FloatingPoint.mk_to_fp_signed ctx rne bv fp64_sort
+        fun bv -> FloatingPoint.mk_to_fp_signed ctx rne bv fp64_sort
       | ConvertUI32 ->
-          fun bv -> FloatingPoint.mk_to_fp_unsigned ctx rne bv fp64_sort
+        fun bv -> FloatingPoint.mk_to_fp_unsigned ctx rne bv fp64_sort
       | ConvertSI64 ->
-          fun bv -> FloatingPoint.mk_to_fp_signed ctx rne bv fp64_sort
+        fun bv -> FloatingPoint.mk_to_fp_signed ctx rne bv fp64_sort
       | ConvertUI64 ->
-          fun bv -> FloatingPoint.mk_to_fp_unsigned ctx rne bv fp64_sort
+        fun bv -> FloatingPoint.mk_to_fp_unsigned ctx rne bv fp64_sort
       | ReinterpretInt -> fun bv -> FloatingPoint.mk_to_fp_bv ctx bv fp64_sort
       | ToString -> fun v -> FuncDecl.apply f642str [ v ]
       | OfString -> fun v -> FuncDecl.apply str2f64 [ v ]
@@ -602,8 +602,7 @@ let encode_binop : Types.binop -> Z3.Expr.expr -> Z3.Expr.expr -> Z3.Expr.expr =
     F64.encode_binop
 
 let encode_triop :
-    Types.triop -> Z3.Expr.expr -> Z3.Expr.expr -> Z3.Expr.expr -> Z3.Expr.expr
-    =
+  Types.triop -> Z3.Expr.expr -> Z3.Expr.expr -> Z3.Expr.expr -> Z3.Expr.expr =
   Types.op I.encode_triop Real.encode_triop Boolean.encode_triop
     Str.encode_triop I32.encode_triop I64.encode_triop F32.encode_triop
     F64.encode_triop
@@ -619,14 +618,14 @@ let encode_cvtop : Types.cvtop -> Z3.Expr.expr -> Z3.Expr.expr =
     F64.encode_cvtop
 
 let encode_quantifier (t : bool) (vars_list : Symbol.t list)
-    (body : Z3.Expr.expr) (patterns : Z3.Quantifier.Pattern.pattern list) :
-    Z3.Expr.expr =
+  (body : Z3.Expr.expr) (patterns : Z3.Quantifier.Pattern.pattern list) :
+  Z3.Expr.expr =
   if List.length vars_list > 0 then
     let quantified_assertion =
       Z3.Quantifier.mk_quantifier_const ctx t
         (List.map vars_list ~f:(fun s ->
-             Z3.Expr.mk_const_s ctx (Symbol.to_string s)
-               (get_sort (Symbol.type_of s))))
+           Z3.Expr.mk_const_s ctx (Symbol.to_string s)
+             (get_sort (Symbol.type_of s)) ) )
         body None patterns [] None None
     in
     let quantified_assertion =
@@ -641,49 +640,53 @@ let rec encode_expr (e : Expression.t) : expr =
   match e with
   | Val v -> encode_val v
   | SymPtr (base, offset) ->
-      let base' = encode_val (Num (I32 base)) in
-      let offset' = encode_expr offset in
-      I32.encode_binop Types.I32.Add base' offset'
+    let base' = encode_val (Num (I32 base)) in
+    let offset' = encode_expr offset in
+    I32.encode_binop Types.I32.Add base' offset'
   | Unop (op, e) ->
-      let e' = encode_expr e in
-      encode_unop op e'
+    let e' = encode_expr e in
+    encode_unop op e'
   | Binop (I32 ExtendS, Val (Num (I32 n)), e) ->
-      let e' = encode_expr e in
-      Z3.BitVector.mk_sign_ext ctx (Int32.to_int_exn n) e'
+    let e' = encode_expr e in
+    Z3.BitVector.mk_sign_ext ctx (Int32.to_int_exn n) e'
   | Binop (I32 ExtendU, Val (Num (I32 n)), e) ->
-      let e' = encode_expr e in
-      Z3.BitVector.mk_zero_ext ctx (Int32.to_int_exn n) e'
+    let e' = encode_expr e in
+    Z3.BitVector.mk_zero_ext ctx (Int32.to_int_exn n) e'
   | Binop (op, e1, e2) ->
-      let e1' = encode_expr e1 and e2' = encode_expr e2 in
-      encode_binop op e1' e2'
+    let e1' = encode_expr e1
+    and e2' = encode_expr e2 in
+    encode_binop op e1' e2'
   | Triop (op, e1, e2, e3) ->
-      let e1' = encode_expr e1
-      and e2' = encode_expr e2
-      and e3' = encode_expr e3 in
-      encode_triop op e1' e2' e3'
+    let e1' = encode_expr e1
+    and e2' = encode_expr e2
+    and e3' = encode_expr e3 in
+    encode_triop op e1' e2' e3'
   | Relop (op, e1, e2) ->
-      let e1' = encode_expr e1 and e2' = encode_expr e2 in
-      encode_relop op e1' e2'
+    let e1' = encode_expr e1
+    and e2' = encode_expr e2 in
+    encode_relop op e1' e2'
   | Cvtop (op, e) ->
-      let e' = encode_expr e in
-      encode_cvtop op e'
+    let e' = encode_expr e in
+    encode_cvtop op e'
   | Symbol s ->
-      let x = Symbol.to_string s and t = Symbol.type_of s in
-      Z3.Expr.mk_const_s ctx x (get_sort t)
+    let x = Symbol.to_string s
+    and t = Symbol.type_of s in
+    Z3.Expr.mk_const_s ctx x (get_sort t)
   | Extract (e, h, l) ->
-      let e' = encode_expr e in
-      Z3.BitVector.mk_extract ctx ((h * 8) - 1) (l * 8) e'
+    let e' = encode_expr e in
+    Z3.BitVector.mk_extract ctx ((h * 8) - 1) (l * 8) e'
   | Concat (e1, e2) ->
-      let e1' = encode_expr e1 and e2' = encode_expr e2 in
-      Z3.BitVector.mk_concat ctx e1' e2'
+    let e1' = encode_expr e1
+    and e2' = encode_expr e2 in
+    Z3.BitVector.mk_concat ctx e1' e2'
   | Quantifier (t, vars, body, patterns) ->
-      let body' = encode_expr body in
-      let encode_pattern p =
-        Z3.Quantifier.mk_pattern ctx (List.map ~f:encode_expr p)
-      in
-      let patterns' = List.map ~f:encode_pattern patterns in
-      let t' = match t with Forall -> true | Exists -> false in
-      encode_quantifier t' vars body' patterns'
+    let body' = encode_expr body in
+    let encode_pattern p =
+      Z3.Quantifier.mk_pattern ctx (List.map ~f:encode_expr p)
+    in
+    let patterns' = List.map ~f:encode_pattern patterns in
+    let t' = match t with Forall -> true | Exists -> false in
+    encode_quantifier t' vars body' patterns'
 
 let expr_to_smtstring (es : Expression.t list) (status : bool) =
   let es' = List.map ~f:encode_expr es in
@@ -694,6 +697,9 @@ let expr_to_smtstring (es : Expression.t list) (status : bool) =
 let mk_solver () : solver = Z3.Solver.mk_simple_solver ctx
 let interrupt () = Z3.Tactic.interrupt ctx
 let translate (s : solver) : solver = Z3.Solver.translate s ctx
+let push (s : solver) : unit = Z3.Solver.push s
+let pop (s : solver) (lvl : int) : unit = Z3.Solver.pop s lvl
+let reset (s : solver) : unit = Z3.Solver.reset s [@@inline]
 
 let add_solver (s : solver) (es : Expression.t list) : unit =
   Z3.Solver.add s (List.map ~f:encode_expr es)
@@ -762,23 +768,23 @@ let value_of_const (model : Z3.Model.model) (c : Expression.t) : Value.t option
   let f (e : Z3.Expr.expr) : Value.t =
     match (t, Z3.Sort.get_sort_kind (Z3.Expr.get_sort e)) with
     | `IntType, Z3enums.INT_SORT ->
-        Int (Int.of_string (Z3.Arithmetic.Integer.numeral_to_string e))
+      Int (Int.of_string (Z3.Arithmetic.Integer.numeral_to_string e))
     | `RealType, Z3enums.REAL_SORT ->
-        Real (Float.of_string (Z3.Arithmetic.Real.to_decimal_string e 6))
+      Real (Float.of_string (Z3.Arithmetic.Real.to_decimal_string e 6))
     | `BoolType, Z3enums.BOOL_SORT ->
-        Bool (Bool.of_string (Z3.Expr.to_string e))
+      Bool (Bool.of_string (Z3.Expr.to_string e))
     | `StrType, Z3enums.SEQ_SORT -> Str (Z3.Seq.get_string ctx e)
     | `I32Type, Z3enums.BV_SORT ->
-        Num (I32 (Int64.to_int32_trunc (int64_of_bv e)))
+      Num (I32 (Int64.to_int32_trunc (int64_of_bv e)))
     | `I64Type, Z3enums.BV_SORT -> Num (I64 (int64_of_bv e))
     | `F32Type, Z3enums.FLOATING_POINT_SORT ->
-        let ebits = Z3.FloatingPoint.get_ebits ctx (Z3.Expr.get_sort e)
-        and sbits = Z3.FloatingPoint.get_sbits ctx (Z3.Expr.get_sort e) - 1 in
-        Num (F32 (Int64.to_int32_trunc (int64_of_fp e ~ebits ~sbits)))
+      let ebits = Z3.FloatingPoint.get_ebits ctx (Z3.Expr.get_sort e)
+      and sbits = Z3.FloatingPoint.get_sbits ctx (Z3.Expr.get_sort e) - 1 in
+      Num (F32 (Int64.to_int32_trunc (int64_of_fp e ~ebits ~sbits)))
     | `F64Type, Z3enums.FLOATING_POINT_SORT ->
-        let ebits = Z3.FloatingPoint.get_ebits ctx (Z3.Expr.get_sort e)
-        and sbits = Z3.FloatingPoint.get_sbits ctx (Z3.Expr.get_sort e) - 1 in
-        Num (F64 (int64_of_fp e ~ebits ~sbits))
+      let ebits = Z3.FloatingPoint.get_ebits ctx (Z3.Expr.get_sort e)
+      and sbits = Z3.FloatingPoint.get_sbits ctx (Z3.Expr.get_sort e) - 1 in
+      Num (F64 (int64_of_fp e ~ebits ~sbits))
     | _ -> assert false
   in
   Option.map ~f interp
@@ -790,38 +796,28 @@ let type_of_sort (sort : Z3.Sort.sort) : Types.expr_type =
   | Z3enums.BOOL_SORT -> `BoolType
   | Z3enums.SEQ_SORT -> `StrType
   | Z3enums.BV_SORT ->
-      if Z3.BitVector.get_size sort = 32 then `I32Type else `I64Type
+    if Z3.BitVector.get_size sort = 32 then `I32Type else `I64Type
   | Z3enums.FLOATING_POINT_SORT ->
-      if Z3.FloatingPoint.get_sbits ctx sort = 23 then `F32Type else `F64Type
+    if Z3.FloatingPoint.get_sbits ctx sort = 23 then `F32Type else `F64Type
   | _ -> assert false
 
 let symbols_of_model (model : Z3.Model.model) : Symbol.t list =
   List.map (Z3.Model.get_const_decls model) ~f:(fun const ->
-      let x = Z3.Symbol.to_string (Z3.FuncDecl.get_name const) in
-      let t = type_of_sort (Z3.FuncDecl.get_range const) in
-      Symbol.mk_symbol t x)
+    let x = Z3.Symbol.to_string (Z3.FuncDecl.get_name const) in
+    let t = type_of_sort (Z3.FuncDecl.get_range const) in
+    Symbol.mk_symbol t x )
 
 let model_binds (model : Z3.Model.model) (symbols : Symbol.t list) : Model.t =
   let m = Hashtbl.create (module Symbol) in
   List.iter symbols ~f:(fun s ->
-      let v = value_of_const model (Expression.mk_symbol s) in
-      Option.iter v ~f:(fun v -> Hashtbl.set m ~key:s ~data:v));
+    let v = value_of_const model (Expression.mk_symbol s) in
+    Option.iter v ~f:(fun v -> Hashtbl.set m ~key:s ~data:v) );
   m
 
 let value_binds ?(symbols : Symbol.t list option) (model : Z3.Model.model) :
-    Model.t =
+  Model.t =
   let symbols' = Option.value symbols ~default:(symbols_of_model model) in
   model_binds model symbols'
-
-let string_binds (m : Z3.Model.model) : (string * string * string) list =
-  List.map (Z3.Model.get_const_decls m) ~f:(fun const ->
-      let sort = Z3.Sort.to_string (Z3.FuncDecl.get_range const)
-      and name = Z3.Symbol.to_string (Z3.FuncDecl.get_name const)
-      and interp =
-        Option.value_map ~default:"" ~f:Z3.Expr.to_string
-          (Z3.Model.get_const_interp m const)
-      in
-      (sort, name, interp))
 
 let satisfiability =
   let open Mappings_intf in
