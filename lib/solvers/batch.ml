@@ -10,11 +10,11 @@ module Make (Mappings : Mappings_intf.S) = struct
 
   type t =
     { solver : solver
-    ; mutable pc : Expr.t list
+    ; mutable top : Expr.t list
+    ; stack : Expr.t list Stack.t
     }
 
   let solver_time = ref 0.0
-
   let solver_count = ref 0
 
   let time_call f acc =
@@ -23,24 +23,32 @@ module Make (Mappings : Mappings_intf.S) = struct
     acc := !acc +. (Stdlib.Sys.time () -. start);
     ret
 
-  let create () = { solver = Mappings.mk_solver (); pc = [] }
+  let create () =
+    { solver = Mappings.mk_solver (); top = []; stack = Stack.create () }
 
   let interrupt () = Mappings.interrupt ()
 
-  let clone (s : t) : t = { s with pc = s.pc }
+  let clone ({ solver; top; stack } : t) : t =
+    { solver; top; stack = Stack.copy stack }
 
-  let push (_s : t) : unit = assert false (* TODO *)
+  let push ({ top; stack; _ } : t) : unit = Stack.push stack top
 
-  let pop (_s : t) (_lvl : int) : unit = assert false (* TODO *)
+  let pop (s : t) (lvl : int) : unit =
+    for _ = 1 to lvl - 1 do
+      ignore (Stack.pop_exn s.stack)
+    done;
+    s.top <- Stack.pop_exn s.stack
 
-  let reset (s : t) = s.pc <- []
+  let reset (s : t) =
+    Stack.clear s.stack;
+    s.top <- []
 
-  let add (s : t) (es : Expr.t list) : unit = s.pc <- es @ s.pc
+  let add (s : t) (es : Expr.t list) : unit = s.top <- es @ s.top
 
   let get_assertions (_s : t) : Expr.t list = assert false
 
   let check (s : t) (es : Expr.t list) : bool =
-    let es' = es @ s.pc in
+    let es' = es @ s.top in
     solver_count := !solver_count + 1;
     let sat = time_call (fun () -> Mappings.check s.solver es') solver_time in
     match Mappings.satisfiability sat with

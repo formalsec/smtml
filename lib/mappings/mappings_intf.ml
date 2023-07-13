@@ -15,6 +15,9 @@ module type S = sig
   val mk_solver : unit -> solver
   val interrupt : unit -> unit
   val translate : solver -> solver
+  val push : solver -> unit
+  val pop : solver -> int -> unit
+  val reset : solver -> unit
   val add_solver : solver -> Expression.t List.t -> unit
   val check : solver -> Expression.t List.t -> status
   val get_model : solver -> model Option.t
@@ -25,6 +28,5 @@ module type S = sig
   val get_opt_model : optimize -> model Option.t
   val value_of_const : model -> Expression.t -> Value.t Option.t
   val value_binds : ?symbols:Symbol.t list -> model -> Model.t
-  val string_binds : model -> (string * string * string) List.t
   val satisfiability : status -> satisfiability
 end
