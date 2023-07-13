@@ -34,10 +34,10 @@ module Make (Mappings : Mappings_intf.S) = struct
   let push ({ top; stack; _ } : t) : unit = Stack.push stack top
 
   let pop (s : t) (lvl : int) : unit =
-    for _ = 1 to lvl - 1 do
-      ignore (Stack.pop_exn s.stack)
-    done;
-    s.top <- Stack.pop_exn s.stack
+    assert (lvl <= Stack.length s.stack);
+    for _ = 1 to lvl do
+      s.top <- Stack.pop_exn s.stack
+    done
 
   let reset (s : t) =
     Stack.clear s.stack;
