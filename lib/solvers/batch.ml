@@ -27,13 +27,11 @@ module Make (Mappings : Mappings_intf.S) = struct
   let get_assertions (s : t) : Expression.t = !(s.pc)
 
   let set_default_axioms (s : t) : unit =
-    Mappings.add_solver s.solver
-      (List.map ~f:Mappings.encode_expr Axioms.axioms)
+    Mappings.add_solver s.solver Axioms.axioms
 
   let check_sat (s : t) (es : Expression.t list) : bool =
-    let es' = List.map ~f:Mappings.encode_expr es in
     solver_count := !solver_count + 1;
-    let sat = time_call (fun () -> Mappings.check s.solver es') solver_time in
+    let sat = time_call (fun () -> Mappings.check s.solver es) solver_time in
     match Mappings.satisfiability sat with
     | Mappings_intf.Satisfiable -> true
     | Mappings_intf.Unsatisfiable -> false
@@ -41,9 +39,8 @@ module Make (Mappings : Mappings_intf.S) = struct
 
   let check (s : t) (expr : Expression.t option) : bool =
     let expression =
-      Mappings.encode_expr
-        (Option.fold expr ~init:!(s.pc) ~f:(fun f e ->
-             Expression.add_constraint e f))
+      Option.fold expr ~init:!(s.pc) ~f:(fun f e ->
+          Expression.add_constraint e f)
     in
     solver_count := !solver_count + 1;
     let sat =
@@ -61,8 +58,7 @@ module Make (Mappings : Mappings_intf.S) = struct
 
   let eval (s : t) (e : Expression.t) (es : Expression.t list) : Value.t option
       =
-    let es' = List.map ~f:Mappings.encode_expr es in
-    ignore (time_call (fun () -> Mappings.check s.solver es') solver_time);
+    ignore (time_call (fun () -> Mappings.check s.solver es) solver_time);
     Option.value_map (model s) ~default:None ~f:(fun m ->
         Mappings.value_of_const m e)
 

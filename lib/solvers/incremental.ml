@@ -20,20 +20,14 @@ module Make (Mappings : Mappings_intf.S) = struct
   let interrupt () = Mappings.interrupt ()
 
   let clone (s : t) : t = Mappings.translate s
-
-  let add (s : t) (c : Expression.t) : unit =
-    let ec = Mappings.encode_expr c in
-    Mappings.add_solver s [ ec ]
+  let add (s : t) (e : Expression.t) : unit = Mappings.add_solver s [ e ]
 
   let get_assertions (_e : t) : Expression.t = assert false
 
   let check (e : t) (expr : Expression.t list) : bool =
-    let expr' = List.map ~f:Mappings.encode_expr expr in
     let b =
       solver_count := !solver_count + 1;
-      let sat =
-        time_call (fun () -> Mappings.check e expr') solver_time
-      in
+      let sat = time_call (fun () -> Mappings.check e expr) solver_time in
       match Mappings.satisfiability sat with
       | Mappings_intf.Satisfiable -> true
       | Mappings_intf.Unknown -> raise Unknown

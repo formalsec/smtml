@@ -15,13 +15,13 @@ module type S = sig
   val mk_solver : unit -> solver
   val interrupt : unit -> unit
   val translate : solver -> solver
-  val add_solver : solver -> expr List.t -> unit
-  val check : solver -> expr List.t -> status
+  val add_solver : solver -> Expression.t List.t -> unit
+  val check : solver -> Expression.t List.t -> status
   val get_model : solver -> model Option.t
   val mk_opt : unit -> optimize
-  val add_opt : optimize -> expr List.t -> unit
-  val maximize : optimize -> expr -> handle
-  val minimize : optimize -> expr -> handle
+  val add_opt : optimize -> Expression.t List.t -> unit
+  val maximize : optimize -> Expression.t -> handle
+  val minimize : optimize -> Expression.t -> handle
   val get_opt_model : optimize -> model Option.t
   val value_of_const : model -> Expression.t -> Value.t Option.t
   val value_binds : ?symbols:Symbol.t list -> model -> Model.t

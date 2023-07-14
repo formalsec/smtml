@@ -694,17 +694,24 @@ let expr_to_smtstring (es : Expression.t list) (status : bool) =
 let mk_solver () : solver = Z3.Solver.mk_simple_solver ctx
 let interrupt () = Z3.Tactic.interrupt ctx
 let translate (s : solver) : solver = Z3.Solver.translate s ctx
-let add_solver (s : solver) (es : expr list) : unit = Z3.Solver.add s es
-let check (s : solver) (es : expr list) : status = Z3.Solver.check s es
+
+let add_solver (s : solver) (es : Expression.t list) : unit =
+  Z3.Solver.add s (List.map ~f:encode_expr es)
+
+let check (s : solver) (es : Expression.t list) : status =
+  Z3.Solver.check s (List.map ~f:encode_expr es)
+
 let get_model (s : solver) : model option = Z3.Solver.get_model s
 let mk_opt () : optimize = Z3.Optimize.mk_opt ctx
-let add_opt (o : optimize) (es : expr list) : unit = Z3.Optimize.add o es
 
-let maximize (o : optimize) (e : expr) : Z3.Optimize.handle =
-  Z3.Optimize.maximize o e
+let add_opt (o : optimize) (es : Expression.t list) : unit =
+  Z3.Optimize.add o (List.map ~f:encode_expr es)
 
-let minimize (o : optimize) (e : expr) : Z3.Optimize.handle =
-  Z3.Optimize.minimize o e
+let maximize (o : optimize) (e : Expression.t) : Z3.Optimize.handle =
+  Z3.Optimize.maximize o (encode_expr e)
+
+let minimize (o : optimize) (e : Expression.t) : Z3.Optimize.handle =
+  Z3.Optimize.minimize o (encode_expr e)
 
 let get_opt_model (o : optimize) : model Option.t = Z3.Optimize.get_model o
 

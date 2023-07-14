@@ -14,7 +14,7 @@ val check :
   t ->
   Expression.t ->
   Expression.t list ->
-  (t -> expr -> Z3.Optimize.handle) ->
+  (t -> Expression.t -> Z3.Optimize.handle) ->
   model Option.t
 
 val maximize : t -> Expression.t -> Expression.t list -> Value.t option
