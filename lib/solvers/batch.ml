@@ -40,6 +40,7 @@ module Make (Mappings : Mappings_intf.S) = struct
     done
 
   let reset (s : t) =
+    Mappings.reset s.solver;
     Stack.clear s.stack;
     s.top <- []
 
