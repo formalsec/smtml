@@ -2,6 +2,8 @@ module type S = sig
   type t
   type solver
 
+  val solver_time : float ref
+  val solver_count : int ref
   val create : unit -> t
   val interrupt : unit -> unit
   val clone : t -> t
