@@ -1,15 +1,45 @@
-(include_subdirs unqualified)
+(ocamllex
+ (modules lexer))
 
-(subdir
- text
- (ocamllex
-  (modules lexer))
- (menhir
-  (modules parser)))
+(menhir
+ (modules parser))
 
 (library
- (name encoding)
  (public_name encoding)
+ (name encoding)
+ (modules
+  ast
+  axioms
+  batch
+  bitVector
+  boolOp
+  boolean
+  bvOp
+  eval_numeric
+  expression
+  floatOp
+  floatingPoint
+  incremental
+  intOp
+  integer
+  interpret
+  interpret_intf
+  lexer
+  mappings_intf
+  model
+  num
+  op_intf
+  optimizer
+  parser
+  real
+  run
+  solver_intf
+  strOp
+  strings
+  symbol
+  types
+  value
+  z3_mappings)
  (libraries core z3)
  (preprocess
   (pps ppx_jane)))

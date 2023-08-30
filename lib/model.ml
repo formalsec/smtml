@@ -13,9 +13,9 @@ let evaluate (model : t) (symb : Symbol.t) : Value.t Option.t =
 let to_string (model : t) : String.t =
   let bindings =
     Hashtbl.fold model ~init:"" ~f:(fun ~key ~data accum ->
-        let x = Symbol.to_string key
-        and t = Types.string_of_type (Symbol.type_of key)
-        and v = Value.to_string data in
-        sprintf "%s  (%s %s %s)\n" accum x t v)
+      let x = Symbol.to_string key
+      and t = Types.string_of_type (Symbol.type_of key)
+      and v = Value.to_string data in
+      sprintf "%s  (%s %s %s)\n" accum x t v )
   in
   sprintf "(model\n%s)" bindings

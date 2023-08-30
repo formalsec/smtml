@@ -33,8 +33,7 @@ let mk_sqrt (e : expr) (t : num_type) : expr =
     match t with
     | `F32Type -> F32 F32.Sqrt
     | `F64Type -> F64 F64.Sqrt
-    | _ ->
-        raise (Error ("mk_sqrt: invalid type '" ^ string_of_num_type t ^ "'"))
+    | _ -> raise (Error ("mk_sqrt: invalid type '" ^ string_of_num_type t ^ "'"))
   in
   Unop (op, e)
 
@@ -44,8 +43,7 @@ let mk_nearest (e : expr) (t : num_type) : expr =
     | `F32Type -> F32 F32.Nearest
     | `F64Type -> F64 F64.Nearest
     | _ ->
-        raise
-          (Error ("mk_nearest: invalid type '" ^ string_of_num_type t ^ "'"))
+      raise (Error ("mk_nearest: invalid type '" ^ string_of_num_type t ^ "'"))
   in
   Unop (op, e)
 
@@ -55,7 +53,7 @@ let mk_is_nan (e : expr) (t : num_type) : expr =
     | `F32Type -> F32 F32.IsNan
     | `F64Type -> F64 F64.IsNan
     | _ ->
-        raise (Error ("mk_is_nan: invalid type '" ^ string_of_num_type t ^ "'"))
+      raise (Error ("mk_is_nan: invalid type '" ^ string_of_num_type t ^ "'"))
   in
   Unop (op, e)
 

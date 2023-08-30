@@ -10,11 +10,11 @@ let print_position outx lexbuf =
 let parse_with_error lexbuf =
   try Parser.script Lexer.token lexbuf with
   | SyntaxError msg ->
-      fprintf stderr "%a: %s\n" print_position lexbuf msg;
-      []
+    fprintf stderr "%a: %s\n" print_position lexbuf msg;
+    []
   | Parser.Error ->
-      fprintf stderr "%a: syntax error\n" print_position lexbuf;
-      exit 1
+    fprintf stderr "%a: syntax error\n" print_position lexbuf;
+    exit 1
 
 let parse_file filename =
   let inx = In_channel.create filename in

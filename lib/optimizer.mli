@@ -11,11 +11,11 @@ val pop : t -> unit
 val add : t -> Expression.t list -> unit
 
 val check :
-  t ->
-  Expression.t ->
-  Expression.t list ->
-  (t -> Expression.t -> Z3.Optimize.handle) ->
-  model Option.t
+     t
+  -> Expression.t
+  -> Expression.t list
+  -> (t -> Expression.t -> Z3.Optimize.handle)
+  -> model Option.t
 
 val maximize : t -> Expression.t -> Expression.t list -> Value.t option
 val minimize : t -> Expression.t -> Expression.t list -> Value.t option

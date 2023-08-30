@@ -26,26 +26,26 @@ module F32 = FloatOp
 module F64 = FloatOp
 
 type triop =
-  ( I.triop,
-    R.triop,
-    B.triop,
-    S.triop,
-    I32.triop,
-    I64.triop,
-    F32.triop,
-    F64.triop )
+  ( I.triop
+  , R.triop
+  , B.triop
+  , S.triop
+  , I32.triop
+  , I64.triop
+  , F32.triop
+  , F64.triop )
   op
 [@@deriving compare, sexp, hash]
 
 type binop =
-  ( I.binop,
-    R.binop,
-    B.binop,
-    S.binop,
-    I32.binop,
-    I64.binop,
-    F32.binop,
-    F64.binop )
+  ( I.binop
+  , R.binop
+  , B.binop
+  , S.binop
+  , I32.binop
+  , I64.binop
+  , F32.binop
+  , F64.binop )
   op
 [@@deriving compare, sexp, hash]
 
@@ -54,33 +54,44 @@ type unop =
 [@@deriving compare, sexp, hash]
 
 type relop =
-  ( I.relop,
-    R.relop,
-    B.relop,
-    S.relop,
-    I32.relop,
-    I64.relop,
-    F32.relop,
-    F64.relop )
+  ( I.relop
+  , R.relop
+  , B.relop
+  , S.relop
+  , I32.relop
+  , I64.relop
+  , F32.relop
+  , F64.relop )
   op
 [@@deriving compare, sexp, hash]
 
 type cvtop =
-  ( I.cvtop,
-    R.cvtop,
-    B.cvtop,
-    S.cvtop,
-    I32.cvtop,
-    I64.cvtop,
-    F32.cvtop,
-    F64.cvtop )
+  ( I.cvtop
+  , R.cvtop
+  , B.cvtop
+  , S.cvtop
+  , I32.cvtop
+  , I64.cvtop
+  , F32.cvtop
+  , F64.cvtop )
   op
 [@@deriving compare, sexp, hash]
 
-type num_type = [ `I32Type | `I64Type | `F32Type | `F64Type ]
+type num_type =
+  [ `I32Type
+  | `I64Type
+  | `F32Type
+  | `F64Type
+  ]
 [@@deriving compare, sexp, hash]
 
-type expr_type = [ num_type | `IntType | `RealType | `BoolType | `StrType ]
+type expr_type =
+  [ num_type
+  | `IntType
+  | `RealType
+  | `BoolType
+  | `StrType
+  ]
 [@@deriving compare, sexp, hash]
 
 let op i r b s i32 i64 f32 f64 = function

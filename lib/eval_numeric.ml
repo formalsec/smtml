@@ -44,7 +44,7 @@ module I32Op = struct
   let shr_u x y = shift shift_right_logical x y
 
   let extend_s n x =
-    let shift = to_int_exn @@ 32l - n in
+    let shift = to_int_exn @@ (32l - n) in
     shift_right (shift_left x shift) shift
 
   let unop (op : I32.unop) : Num.t -> Num.t =
@@ -127,7 +127,7 @@ module I64Op = struct
   let shr_u x y = shift shift_right_logical x y
 
   let extend_s n x =
-    let shift = to_int_exn @@ 64L - n in
+    let shift = to_int_exn @@ (64L - n) in
     shift_right (shift_left x shift) shift
 
   let unop op : Num.t -> Num.t =
@@ -289,7 +289,7 @@ module I32CvtOp = struct
       let xf = F32Op.to_float x in
       if
         Float.(
-          xf >= -Int32.(to_float min_value) || xf < Int32.(to_float min_value))
+          xf >= -Int32.(to_float min_value) || xf < Int32.(to_float min_value) )
       then raise IntegerOverflow
       else F32Op.of_float xf
 
@@ -307,7 +307,7 @@ module I32CvtOp = struct
       let xf = F64Op.to_float x in
       if
         Float.(
-          xf >= -Int64.(to_float min_value) || xf < Int32.(to_float min_value))
+          xf >= -Int64.(to_float min_value) || xf < Int32.(to_float min_value) )
       then raise IntegerOverflow
       else F32Op.of_float xf
 
@@ -345,7 +345,7 @@ module I64CvtOp = struct
       let xf = F32Op.to_float x in
       if
         Float.(
-          xf >= -Int64.(to_float min_value) || xf < Int64.(to_float min_value))
+          xf >= -Int64.(to_float min_value) || xf < Int64.(to_float min_value) )
       then raise IntegerOverflow
       else F64Op.of_float xf
 
@@ -366,7 +366,7 @@ module I64CvtOp = struct
       let xf = F64Op.to_float x in
       if
         Float.(
-          xf >= -Int64.(to_float min_value) || xf < Int64.(to_float min_value))
+          xf >= -Int64.(to_float min_value) || xf < Int64.(to_float min_value) )
       then raise IntegerOverflow
       else F64Op.of_float xf
 
@@ -417,7 +417,7 @@ module F32CvtOp = struct
     F32Op.of_float
       Int32.(
         if x >= zero then to_float x
-        else to_float (shift_right_logical x 1 lor (x land 1l)) *. 2.0)
+        else to_float (shift_right_logical x 1 lor (x land 1l)) *. 2.0 )
 
   let convert_i64_s x =
     F32Op.of_float
@@ -426,7 +426,7 @@ module F32CvtOp = struct
         else
           let r = if x land 0xfffL = 0L then 0L else 1L in
           to_float (shift_right x 12 lor r)
-          *. (* TODO(ocaml-4.03): 0x1p12 *) 4096.0)
+          *. (* TODO(ocaml-4.03): 0x1p12 *) 4096.0 )
 
   let convert_i64_u x =
     F32Op.of_float
@@ -435,7 +435,7 @@ module F32CvtOp = struct
         else
           let r = if x land 0xfffL = 0L then 0L else 1L in
           to_float (shift_right_logical x 12 lor r)
-          *. (* TODO(ocaml-4.03): 0x1p12 *) 4096.0)
+          *. (* TODO(ocaml-4.03): 0x1p12 *) 4096.0 )
 
   let cvtop op v : Num.t =
     match op with
@@ -488,7 +488,7 @@ module F64CvtOp = struct
     F64Op.of_float
       Int64.(
         if x >= zero then to_float x
-        else to_float (shift_right_logical x 1 lor (x land 1L)) *. 2.0)
+        else to_float (shift_right_logical x 1 lor (x land 1L)) *. 2.0 )
 
   let cvtop op v : Num.t =
     match op with

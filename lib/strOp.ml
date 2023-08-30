@@ -1,6 +1,18 @@
-type binop = Nth | Concat [@@deriving compare, sexp, hash]
-type unop = Len | Trim [@@deriving compare, sexp, hash]
-type relop = Eq | Ne [@@deriving compare, sexp, hash]
+type binop =
+  | Nth
+  | Concat
+[@@deriving compare, sexp, hash]
+
+type unop =
+  | Len
+  | Trim
+[@@deriving compare, sexp, hash]
+
+type relop =
+  | Eq
+  | Ne
+[@@deriving compare, sexp, hash]
+
 type triop = SubStr [@@deriving compare, sexp, hash]
 type cvtop [@@deriving compare, sexp, hash]
 

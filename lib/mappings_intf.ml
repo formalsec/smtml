@@ -1,4 +1,7 @@
-type satisfiability = Satisfiable | Unsatisfiable | Unknown
+type satisfiability =
+  | Satisfiable
+  | Unsatisfiable
+  | Unknown
 
 module type S = sig
   type expr

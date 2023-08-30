@@ -7,9 +7,8 @@ let nan = FloatingPoint.mk_val Float.nan `F32Type
 
 let%test "deterministic_nan" =
   let pc =
-    [
-      Boolean.mk_not (FloatingPoint.mk_is_nan x `F32Type);
-      FloatingPoint.mk_is_nan x `F32Type;
+    [ Boolean.mk_not (FloatingPoint.mk_is_nan x `F32Type)
+    ; FloatingPoint.mk_is_nan x `F32Type
     ]
   in
   false = Batch.check solver pc

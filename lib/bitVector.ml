@@ -61,7 +61,7 @@ let mk_div_u (e1 : expr) (e2 : expr) (t : num_type) : expr =
     | `I32Type -> I32 I32.DivU
     | `I64Type -> I64 I64.DivU
     | _ ->
-        raise (Error ("mk_div_u: invalid type '" ^ string_of_num_type t ^ "'"))
+      raise (Error ("mk_div_u: invalid type '" ^ string_of_num_type t ^ "'"))
   in
   Binop (op, e1, e2)
 
@@ -71,7 +71,7 @@ let mk_div_s (e1 : expr) (e2 : expr) (t : num_type) : expr =
     | `I32Type -> I32 I32.DivS
     | `I64Type -> I64 I64.DivS
     | _ ->
-        raise (Error ("mk_div_s: invalid type '" ^ string_of_num_type t ^ "'"))
+      raise (Error ("mk_div_s: invalid type '" ^ string_of_num_type t ^ "'"))
   in
   Binop (op, e1, e2)
 
@@ -81,7 +81,7 @@ let mk_rem_u (e1 : expr) (e2 : expr) (t : num_type) : expr =
     | `I32Type -> I32 I32.RemU
     | `I64Type -> I64 I64.RemU
     | _ ->
-        raise (Error ("mk_rem_u: invalid type '" ^ string_of_num_type t ^ "'"))
+      raise (Error ("mk_rem_u: invalid type '" ^ string_of_num_type t ^ "'"))
   in
   Binop (op, e1, e2)
 
@@ -91,7 +91,7 @@ let mk_rem_s (e1 : expr) (e2 : expr) (t : num_type) : expr =
     | `I32Type -> I32 I32.RemS
     | `I64Type -> I64 I64.RemS
     | _ ->
-        raise (Error ("mk_rem_s: invalid type '" ^ string_of_num_type t ^ "'"))
+      raise (Error ("mk_rem_s: invalid type '" ^ string_of_num_type t ^ "'"))
   in
   Binop (op, e1, e2)
 
@@ -110,7 +110,7 @@ let mk_shr_u (e1 : expr) (e2 : expr) (t : num_type) : expr =
     | `I32Type -> I32 I32.ShrU
     | `I64Type -> I64 I64.ShrU
     | _ ->
-        raise (Error ("mk_shr_u: invalid type '" ^ string_of_num_type t ^ "'"))
+      raise (Error ("mk_shr_u: invalid type '" ^ string_of_num_type t ^ "'"))
   in
   Binop (op, e1, e2)
 
@@ -120,7 +120,7 @@ let mk_shr_s (e1 : expr) (e2 : expr) (t : num_type) : expr =
     | `I32Type -> I32 I32.ShrS
     | `I64Type -> I64 I64.ShrS
     | _ ->
-        raise (Error ("mk_shr_s: invalid type '" ^ string_of_num_type t ^ "'"))
+      raise (Error ("mk_shr_s: invalid type '" ^ string_of_num_type t ^ "'"))
   in
   Binop (op, e1, e2)
 
@@ -129,8 +129,7 @@ let mk_rotl (e1 : expr) (e2 : expr) (t : num_type) : expr =
     match t with
     | `I32Type -> I32 I32.Rotl
     | `I64Type -> I64 I64.Rotl
-    | _ ->
-        raise (Error ("mk_rotl: invalid type '" ^ string_of_num_type t ^ "'"))
+    | _ -> raise (Error ("mk_rotl: invalid type '" ^ string_of_num_type t ^ "'"))
   in
   Binop (op, e1, e2)
 
@@ -139,8 +138,7 @@ let mk_rotr (e1 : expr) (e2 : expr) (t : num_type) : expr =
     match t with
     | `I32Type -> I32 I32.Rotr
     | `I64Type -> I64 I64.Rotr
-    | _ ->
-        raise (Error ("mk_rotr: invalid type '" ^ string_of_num_type t ^ "'"))
+    | _ -> raise (Error ("mk_rotr: invalid type '" ^ string_of_num_type t ^ "'"))
   in
   Binop (op, e1, e2)
 
@@ -194,8 +192,7 @@ let mk_lt_u (e1 : expr) (e2 : expr) (t : num_type) : expr =
     match t with
     | `I32Type -> I32 I32.LtU
     | `I64Type -> I64 I64.LtU
-    | _ ->
-        raise (Error ("mk_lt_u: invalid type '" ^ string_of_num_type t ^ "'"))
+    | _ -> raise (Error ("mk_lt_u: invalid type '" ^ string_of_num_type t ^ "'"))
   in
   Relop (op, e1, e2)
 
@@ -204,8 +201,7 @@ let mk_lt_s (e1 : expr) (e2 : expr) (t : num_type) : expr =
     match t with
     | `I32Type -> I32 I32.LtS
     | `I64Type -> I64 I64.LtS
-    | _ ->
-        raise (Error ("mk_lt_s: invalid type '" ^ string_of_num_type t ^ "'"))
+    | _ -> raise (Error ("mk_lt_s: invalid type '" ^ string_of_num_type t ^ "'"))
   in
   Relop (op, e1, e2)
 
@@ -214,8 +210,7 @@ let mk_le_u (e1 : expr) (e2 : expr) (t : num_type) : expr =
     match t with
     | `I32Type -> I32 I32.LeU
     | `I64Type -> I64 I64.LeU
-    | _ ->
-        raise (Error ("mk_le_u: invalid type '" ^ string_of_num_type t ^ "'"))
+    | _ -> raise (Error ("mk_le_u: invalid type '" ^ string_of_num_type t ^ "'"))
   in
   Relop (op, e1, e2)
 
@@ -224,8 +219,7 @@ let mk_le_s (e1 : expr) (e2 : expr) (t : num_type) : expr =
     match t with
     | `I32Type -> I32 I32.LeS
     | `I64Type -> I64 I64.LeS
-    | _ ->
-        raise (Error ("mk_le_s: invalid type '" ^ string_of_num_type t ^ "'"))
+    | _ -> raise (Error ("mk_le_s: invalid type '" ^ string_of_num_type t ^ "'"))
   in
   Relop (op, e1, e2)
 
@@ -234,8 +228,7 @@ let mk_gt_u (e1 : expr) (e2 : expr) (t : num_type) : expr =
     match t with
     | `I32Type -> I32 I32.GtU
     | `I64Type -> I64 I64.GtU
-    | _ ->
-        raise (Error ("mk_gt_u: invalid type '" ^ string_of_num_type t ^ "'"))
+    | _ -> raise (Error ("mk_gt_u: invalid type '" ^ string_of_num_type t ^ "'"))
   in
   Relop (op, e1, e2)
 
@@ -244,8 +237,7 @@ let mk_gt_s (e1 : expr) (e2 : expr) (t : num_type) : expr =
     match t with
     | `I32Type -> I32 I32.GtS
     | `I64Type -> I64 I64.GtS
-    | _ ->
-        raise (Error ("mk_gt_s: invalid type '" ^ string_of_num_type t ^ "'"))
+    | _ -> raise (Error ("mk_gt_s: invalid type '" ^ string_of_num_type t ^ "'"))
   in
   Relop (op, e1, e2)
 
@@ -254,8 +246,7 @@ let mk_ge_u (e1 : expr) (e2 : expr) (t : num_type) : expr =
     match t with
     | `I32Type -> I32 I32.GeU
     | `I64Type -> I64 I64.GeU
-    | _ ->
-        raise (Error ("mk_ge_u: invalid type '" ^ string_of_num_type t ^ "'"))
+    | _ -> raise (Error ("mk_ge_u: invalid type '" ^ string_of_num_type t ^ "'"))
   in
   Relop (op, e1, e2)
 
@@ -264,7 +255,6 @@ let mk_ge_s (e1 : expr) (e2 : expr) (t : num_type) : expr =
     match t with
     | `I32Type -> I32 I32.GeS
     | `I64Type -> I64 I64.GeS
-    | _ ->
-        raise (Error ("mk_ge_s: invalid type '" ^ string_of_num_type t ^ "'"))
+    | _ -> raise (Error ("mk_ge_s: invalid type '" ^ string_of_num_type t ^ "'"))
   in
   Relop (op, e1, e2)

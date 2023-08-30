@@ -14,10 +14,22 @@ type binop =
 [@@deriving compare, sexp, hash]
 
 type unop = Neg [@@deriving compare, sexp, hash]
-type relop = Eq | Lt | Le | Ne | Gt | Ge [@@deriving compare, sexp, hash]
+
+type relop =
+  | Eq
+  | Lt
+  | Le
+  | Ne
+  | Gt
+  | Ge
+[@@deriving compare, sexp, hash]
+
 type triop [@@deriving compare, sexp, hash]
 
-type cvtop = ToString | OfString | ReinterpretReal
+type cvtop =
+  | ToString
+  | OfString
+  | ReinterpretReal
 [@@deriving compare, sexp, hash]
 
 let neg_relop (op : relop) : relop =

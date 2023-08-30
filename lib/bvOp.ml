@@ -18,10 +18,22 @@ type binop =
   | ExtendU
 [@@deriving compare, sexp, hash]
 
-type unop = Not | Clz (*  Falta:  Ctz | Popcnt *)
+type unop =
+  | Not
+  | Clz (*  Falta:  Ctz | Popcnt *)
 [@@deriving compare, sexp, hash]
 
-type relop = Eq | LtU | LtS | LeU | LeS | Ne | GtU | GtS | GeU | GeS
+type relop =
+  | Eq
+  | LtU
+  | LtS
+  | LeU
+  | LeS
+  | Ne
+  | GtU
+  | GtS
+  | GeU
+  | GeS
 [@@deriving compare, sexp, hash]
 
 type triop [@@deriving compare, sexp, hash]

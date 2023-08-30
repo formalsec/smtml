@@ -27,13 +27,13 @@ let check (opt : t) (e : Expression.t) (pc : Expression.t list) target =
   model
 
 let maximize (opt : t) (e : Expression.t) (pc : Expression.t list) :
-    Value.t option =
+  Value.t option =
   let model = check opt e pc Z3_mappings.maximize in
   Option.value_map model ~default:None ~f:(fun m ->
-      Z3_mappings.value_of_const m e)
+    Z3_mappings.value_of_const m e )
 
 let minimize (opt : t) (e : Expression.t) (pc : Expression.t list) :
-    Value.t option =
+  Value.t option =
   let model = check opt e pc Z3_mappings.minimize in
   Option.value_map model ~default:None ~f:(fun m ->
-      Z3_mappings.value_of_const m e)
+    Z3_mappings.value_of_const m e )

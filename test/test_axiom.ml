@@ -11,8 +11,7 @@ let%test _ =
   and y = Expression.mk_symbol_s `StrType "y" in
   not
     (Batch.check solver
-       [
-         Strings.mk_ne x y;
-         Integer.mk_eq (Integer.mk_val 0) (Integer.mk_of_string x);
-         Integer.mk_eq (Integer.mk_val 0) (Integer.mk_of_string y);
-       ])
+       [ Strings.mk_ne x y
+       ; Integer.mk_eq (Integer.mk_val 0) (Integer.mk_of_string x)
+       ; Integer.mk_eq (Integer.mk_val 0) (Integer.mk_of_string y)
+       ] )

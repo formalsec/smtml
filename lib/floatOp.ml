@@ -1,4 +1,11 @@
-type binop = Add | Sub | Mul | Div | Min | Max | Rem (*  Falta: | CopySign *)
+type binop =
+  | Add
+  | Sub
+  | Mul
+  | Div
+  | Min
+  | Max
+  | Rem (*  Falta: | CopySign *)
 [@@deriving compare, sexp, hash]
 
 type unop =
@@ -11,7 +18,15 @@ type unop =
   | Floor (*  Falta: Trunc *)
 [@@deriving compare, sexp, hash]
 
-type relop = Eq | Ne | Lt | Le | Gt | Ge [@@deriving compare, sexp, hash]
+type relop =
+  | Eq
+  | Ne
+  | Lt
+  | Le
+  | Gt
+  | Ge
+[@@deriving compare, sexp, hash]
+
 type triop [@@deriving compare, sexp, hash]
 
 type cvtop =

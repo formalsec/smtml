@@ -3,13 +3,9 @@ open Encoding
 module Batch = Batch.Make (Z3_mappings)
 
 let solver = Batch.create ()
-
 let symb_x = Symbol.mk_symbol `IntType "x"
-
 let symb_y = Symbol.mk_symbol `BoolType "y"
-
 let x = Expression.mk_symbol symb_x
-
 let y = Expression.mk_symbol symb_y
 
 (* check *)

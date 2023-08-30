@@ -45,7 +45,6 @@ module Make (Mappings : Mappings_intf.S) = struct
     s.top <- []
 
   let add (s : t) (es : Expr.t list) : unit = s.top <- es @ s.top
-
   let get_assertions (s : t) : Expr.t list = s.top [@@inline]
 
   let check (s : t) (es : Expr.t list) : bool =
