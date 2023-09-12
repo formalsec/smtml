@@ -1,6 +1,11 @@
+module Fresh = struct
 open Core
 
 exception Error of string
+
+module Make() = struct
+
+exception Error = Error
 
 type expr = Z3.Expr.expr
 type model = Z3.Model.model
@@ -825,3 +830,7 @@ let satisfiability =
   | Z3.Solver.SATISFIABLE -> Satisfiable
   | Z3.Solver.UNSATISFIABLE -> Unsatisfiable
   | Z3.Solver.UNKNOWN -> Unknown
+end
+end
+
+include Fresh.Make()
