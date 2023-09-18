@@ -26,10 +26,12 @@ let type_of (v : t) : expr_type =
   | Num n -> Num.type_of n
   | Str _ -> `StrType
 
-let to_string (v : t) : String.t =
+let pp fmt (v : t) =
   match v with
-  | Int x -> Int.to_string x
-  | Real x -> Float.to_string x
-  | Bool x -> Bool.to_string x
-  | Num x -> Num.to_string x
-  | Str x -> "\"" ^ x ^ "\""
+  | Int x -> Format.pp_print_string fmt @@ Int.to_string x
+  | Real x -> Format.pp_print_string fmt @@ Float.to_string x
+  | Bool x -> Format.pp_print_string fmt @@ Bool.to_string x
+  | Num x -> Format.pp_print_string fmt @@ Num.to_string x
+  | Str x -> Format.fprintf fmt {|"%s"|} x
+
+let to_string v = Format.asprintf "%a" pp v
