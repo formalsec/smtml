@@ -8,3 +8,4 @@ val equal : t -> t -> Bool.t
 val rename : t -> String.t -> t
 val type_of : t -> expr_type
 val to_string : t -> String.t
+val pp : Format.formatter -> t -> unit
