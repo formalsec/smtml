@@ -14,6 +14,5 @@ let equal (s1 : t) (s2 : t) : bool =
 
 let rename (s : t) (name : String.t) = { s with name }
 let type_of (s : t) : expr_type = s.sort
-
 let pp fmt s = Format.pp_print_string fmt s.name
 let to_string (s : t) : string = s.name
