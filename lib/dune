@@ -39,7 +39,9 @@
   symbol
   types
   value
-  z3_mappings)
+  z3_mappings
+  slicing
+  normalize)
  (libraries core z3)
  (preprocess
   (pps ppx_jane)))

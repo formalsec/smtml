@@ -10,7 +10,15 @@ module Make (Solver : Solver_intf.S) = struct
 
   let eval (c : config) : config =
     let { code; smap; solver; pc } = c in
+<<<<<<< Updated upstream
     let i = List.hd code in
+=======
+    let i = List.hd_exn code in
+    printf "%s" (Ast.to_string i);
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
     let code', pc' =
       match i with
       | Declare x ->
