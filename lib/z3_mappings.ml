@@ -831,9 +831,17 @@ module Fresh = struct
       | Z3enums.BOOL_SORT -> `BoolType
       | Z3enums.SEQ_SORT -> `StrType
       | Z3enums.BV_SORT ->
-        if Z3.BitVector.get_size sort = 32 then `I32Type else `I64Type
+        let size = Z3.BitVector.get_size sort in
+        if size = 32 then `I32Type
+        else if size = 64 then `I64Type
+        else assert false
       | Z3enums.FLOATING_POINT_SORT ->
-        if Z3.FloatingPoint.get_sbits ctx sort = 23 then `F32Type else `F64Type
+        let ebits = Z3.FloatingPoint.get_ebits ctx sort in
+        let sbits = Z3.FloatingPoint.get_sbits ctx sort in
+        let size = ebits + sbits in
+        if size = 32 then `F32Type
+        else if size = 64 then `F64Type
+        else assert false
       | _ -> assert false
 
     let symbols_of_model (model : Z3.Model.model) : Symbol.t list =
