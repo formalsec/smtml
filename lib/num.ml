@@ -26,11 +26,13 @@ let default_value (t : num_type) : t =
   | `F32Type -> F32 (Int32.bits_of_float 0.0)
   | `F64Type -> F64 (Int64.bits_of_float 0.0)
 
-let to_string (n : t) : string =
+let pp fmt (n : t) =
   match n with
-  | I32 i -> sprintf "(i32 %ld)" i
-  | I64 i -> sprintf "(i64 %Ld)" i
-  | F32 f -> sprintf "(f32 %f)" (Int32.float_of_bits f)
-  | F64 f -> sprintf "(f64 %f)" (Int64.float_of_bits f)
+  | I32 i -> Format.fprintf fmt "(i32 %ld)" i
+  | I64 i -> Format.fprintf fmt "(i64 %Ld)" i
+  | F32 f -> Format.fprintf fmt "(f32 %f)" (Int32.float_of_bits f)
+  | F64 f -> Format.fprintf fmt "(f64 %f)" (Int64.float_of_bits f)
+
+let to_string (n : t) : string = Format.asprintf "%a" pp n
 
 let num_of_bool (b : bool) : t = I32 (if b then 1l else 0l)

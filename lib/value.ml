@@ -31,7 +31,7 @@ let pp fmt (v : t) =
   | Int x -> Format.pp_print_string fmt @@ Int.to_string x
   | Real x -> Format.pp_print_string fmt @@ Float.to_string x
   | Bool x -> Format.pp_print_string fmt @@ Bool.to_string x
-  | Num x -> Format.pp_print_string fmt @@ Num.to_string x
+  | Num x -> Format.fprintf fmt "%a" Num.pp x
   | Str x -> Format.fprintf fmt {|"%s"|} x
 
 let to_string v = Format.asprintf "%a" pp v
