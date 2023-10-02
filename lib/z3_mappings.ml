@@ -1,6 +1,4 @@
 module Fresh = struct
-  open Core
-
   exception Error of string
 
   module Make () = struct
@@ -290,7 +288,7 @@ module Fresh = struct
       open Types.I32
       open Z3
 
-      let encode_val i = Expr.mk_numeral_int ctx (Int32.to_int_exn i) bv32_sort
+      let encode_val i = BitVector.mk_numeral ctx (Int32.to_string i) 32
 
       let encode_unop op e =
         let op' =
@@ -368,7 +366,7 @@ module Fresh = struct
       open Types.I64
       open Z3
 
-      let encode_val i = Expr.mk_numeral_int ctx (Int64.to_int_exn i) bv64_sort
+      let encode_val i = BitVector.mk_numeral ctx (Int64.to_string i) 64
 
       let encode_unop op e =
         let op' =
@@ -654,9 +652,11 @@ module Fresh = struct
       if List.length vars_list > 0 then
         let quantified_assertion =
           Z3.Quantifier.mk_quantifier_const ctx t
-            (List.map vars_list ~f:(fun s ->
-               Z3.Expr.mk_const_s ctx (Symbol.to_string s)
-                 (get_sort (Symbol.type_of s)) ) )
+            (List.map
+               (fun s ->
+                 Z3.Expr.mk_const_s ctx (Symbol.to_string s)
+                   (get_sort (Symbol.type_of s)) )
+               vars_list )
             body None patterns [] None None
         in
         let quantified_assertion =
@@ -679,10 +679,10 @@ module Fresh = struct
         encode_unop op e'
       | Binop (I32 ExtendS, Val (Num (I32 n)), e) ->
         let e' = encode_expr e in
-        Z3.BitVector.mk_sign_ext ctx (Int32.to_int_exn n) e'
+        Z3.BitVector.mk_sign_ext ctx (Int32.to_int n) e'
       | Binop (I32 ExtendU, Val (Num (I32 n)), e) ->
         let e' = encode_expr e in
-        Z3.BitVector.mk_zero_ext ctx (Int32.to_int_exn n) e'
+        Z3.BitVector.mk_zero_ext ctx (Int32.to_int n) e'
       | Binop (op, e1, e2) ->
         let e1' = encode_expr e1
         and e2' = encode_expr e2 in
@@ -713,17 +713,17 @@ module Fresh = struct
       | Quantifier (t, vars, body, patterns) ->
         let body' = encode_expr body in
         let encode_pattern p =
-          Z3.Quantifier.mk_pattern ctx (List.map ~f:encode_expr p)
+          Z3.Quantifier.mk_pattern ctx (List.map encode_expr p)
         in
-        let patterns' = List.map ~f:encode_pattern patterns in
+        let patterns' = List.map encode_pattern patterns in
         let t' = match t with Forall -> true | Exists -> false in
         encode_quantifier t' vars body' patterns'
 
     let expr_to_smtstring (es : Expression.t list) (status : bool) =
-      let es' = List.map ~f:encode_expr es in
+      let es' = List.map encode_expr es in
       Z3.Params.set_print_mode ctx Z3enums.PRINT_SMTLIB2_COMPLIANT;
       Z3.SMT.benchmark_to_smtstring ctx "" "" (Bool.to_string status) ""
-        (List.tl_exn es') (List.hd_exn es')
+        (List.tl es') (List.hd es')
 
     let mk_solver () : solver = Z3.Solver.mk_simple_solver ctx
     let interrupt () = Z3.Tactic.interrupt ctx
@@ -733,16 +733,16 @@ module Fresh = struct
     let reset (s : solver) : unit = Z3.Solver.reset s [@@inline]
 
     let add_solver (s : solver) (es : Expression.t list) : unit =
-      Z3.Solver.add s (List.map ~f:encode_expr es)
+      Z3.Solver.add s (List.map encode_expr es)
 
     let check (s : solver) (es : Expression.t list) : status =
-      Z3.Solver.check s (List.map ~f:encode_expr es)
+      Z3.Solver.check s (List.map encode_expr es)
 
     let get_model (s : solver) : model option = Z3.Solver.get_model s
     let mk_opt () : optimize = Z3.Optimize.mk_opt ctx
 
     let add_opt (o : optimize) (es : Expression.t list) : unit =
-      Z3.Optimize.add o (List.map ~f:encode_expr es)
+      Z3.Optimize.add o (List.map encode_expr es)
 
     let maximize (o : optimize) (e : Expression.t) : Z3.Optimize.handle =
       Z3.Optimize.maximize o (encode_expr e)
@@ -759,7 +759,7 @@ module Fresh = struct
 
     let int64_of_bv (bv : Z3.Expr.expr) : int64 =
       assert (Z3.Expr.is_numeral bv);
-      Int64.of_string (Z3.BitVector.numeral_to_string bv)
+      Int64.of_string (set (Z3.Expr.to_string bv) 0 '0')
 
     (* FIXME: this is a mess, urgently fix! *)
     let int64_of_fp (fp : Z3.Expr.expr) ~(ebits : int) ~(sbits : int) : int64 =
@@ -788,13 +788,13 @@ module Fresh = struct
         let fp = Z3.Expr.to_string fp in
         let fp = Stdlib.String.sub fp 4 (String.length fp - 5) in
         let fp_list =
-          List.map ~f:(fun fp -> set fp 0 '0') (String.split ~on:' ' fp)
+          List.map (fun fp -> set fp 0 '0') (String.split_on_char ' ' fp)
         in
-        let bit_list = List.map ~f:(fun fp -> Int64.of_string fp) fp_list in
-        let fp_sign = Int64.shift_left (List.nth_exn bit_list 0) (ebits + sbits)
-        and exponent = Int64.shift_left (List.nth_exn bit_list 1) sbits
-        and fraction = List.nth_exn bit_list 2 in
-        Int64.(fp_sign lor (exponent lor fraction))
+        let bit_list = List.map (fun fp -> Int64.of_string fp) fp_list in
+        let fp_sign = Int64.shift_left (List.nth bit_list 0) (ebits + sbits)
+        and exponent = Int64.shift_left (List.nth bit_list 1) sbits
+        and fraction = List.nth bit_list 2 in
+        Int64.(logor fp_sign (logor exponent fraction))
 
     let value_of_const (model : Z3.Model.model) (c : Expression.t) :
       Value.t option =
@@ -803,26 +803,26 @@ module Fresh = struct
       let f (e : Z3.Expr.expr) : Value.t =
         match (t, Z3.Sort.get_sort_kind (Z3.Expr.get_sort e)) with
         | `IntType, Z3enums.INT_SORT ->
-          Int (Int.of_string (Z3.Arithmetic.Integer.numeral_to_string e))
+          Int (int_of_string (Z3.Arithmetic.Integer.numeral_to_string e))
         | `RealType, Z3enums.REAL_SORT ->
           Real (Float.of_string (Z3.Arithmetic.Real.to_decimal_string e 6))
         | `BoolType, Z3enums.BOOL_SORT ->
-          Bool (Bool.of_string (Z3.Expr.to_string e))
+          Bool (bool_of_string (Z3.Expr.to_string e))
         | `StrType, Z3enums.SEQ_SORT -> Str (Z3.Seq.get_string ctx e)
-        | `I32Type, Z3enums.BV_SORT ->
-          Num (I32 (Int64.to_int32_trunc (int64_of_bv e)))
+        | `I32Type, Z3enums.BV_SORT -> Num (I32 (Int64.to_int32 (int64_of_bv e)))
         | `I64Type, Z3enums.BV_SORT -> Num (I64 (int64_of_bv e))
         | `F32Type, Z3enums.FLOATING_POINT_SORT ->
-          let ebits = Z3.FloatingPoint.get_ebits ctx (Z3.Expr.get_sort e)
-          and sbits = Z3.FloatingPoint.get_sbits ctx (Z3.Expr.get_sort e) - 1 in
-          Num (F32 (Int64.to_int32_trunc (int64_of_fp e ~ebits ~sbits)))
+          let ebits = Z3.FloatingPoint.get_ebits ctx (Z3.Expr.get_sort e) in
+          let sbits = Z3.FloatingPoint.get_sbits ctx (Z3.Expr.get_sort e) - 1 in
+          let fp_bits = int64_of_fp e ~ebits ~sbits in
+          Num (F32 (Int32.bits_of_float @@ Int64.float_of_bits fp_bits))
         | `F64Type, Z3enums.FLOATING_POINT_SORT ->
-          let ebits = Z3.FloatingPoint.get_ebits ctx (Z3.Expr.get_sort e)
-          and sbits = Z3.FloatingPoint.get_sbits ctx (Z3.Expr.get_sort e) - 1 in
+          let ebits = Z3.FloatingPoint.get_ebits ctx (Z3.Expr.get_sort e) in
+          let sbits = Z3.FloatingPoint.get_sbits ctx (Z3.Expr.get_sort e) - 1 in
           Num (F64 (int64_of_fp e ~ebits ~sbits))
         | _ -> assert false
       in
-      Option.map ~f interp
+      Option.map f interp
 
     let type_of_sort (sort : Z3.Sort.sort) : Types.expr_type =
       match Z3.Sort.get_sort_kind sort with
@@ -845,17 +845,21 @@ module Fresh = struct
       | _ -> assert false
 
     let symbols_of_model (model : Z3.Model.model) : Symbol.t list =
-      List.map (Z3.Model.get_const_decls model) ~f:(fun const ->
-        let x = Z3.Symbol.to_string (Z3.FuncDecl.get_name const) in
-        let t = type_of_sort (Z3.FuncDecl.get_range const) in
-        Symbol.mk_symbol t x )
+      List.map
+        (fun const ->
+          let x = Z3.Symbol.to_string (Z3.FuncDecl.get_name const) in
+          let t = type_of_sort (Z3.FuncDecl.get_range const) in
+          Symbol.mk_symbol t x )
+        (Z3.Model.get_const_decls model)
 
     let model_binds (model : Z3.Model.model) (symbols : Symbol.t list) : Model.t
         =
-      let m = Hashtbl.create (module Symbol) in
-      List.iter symbols ~f:(fun s ->
-        let v = value_of_const model (Expression.mk_symbol s) in
-        Option.iter v ~f:(fun v -> Hashtbl.set m ~key:s ~data:v) );
+      let m = Core.Hashtbl.create (module Symbol) in
+      List.iter
+        (fun s ->
+          let v = value_of_const model (Expression.mk_symbol s) in
+          Option.iter (fun v -> Core.Hashtbl.set m ~key:s ~data:v) v )
+        symbols;
       m
 
     let value_binds ?(symbols : Symbol.t list option) (model : Z3.Model.model) :
