@@ -798,25 +798,25 @@ module Fresh = struct
 
     let value_of_const (model : Z3.Model.model) (c : Expression.t) :
       Value.t option =
-      let t = Expression.type_of c
-      and interp = Z3.Model.eval model (encode_expr c) true in
+      let t = Expression.type_of c in
+      let interp = Z3.Model.eval model (encode_expr c) true in
       let f (e : Z3.Expr.expr) : Value.t =
         match (t, Z3.Sort.get_sort_kind (Z3.Expr.get_sort e)) with
-        | `IntType, Z3enums.INT_SORT ->
+        | Some `IntType, Z3enums.INT_SORT ->
           Int (int_of_string (Z3.Arithmetic.Integer.numeral_to_string e))
-        | `RealType, Z3enums.REAL_SORT ->
+        | Some `RealType, Z3enums.REAL_SORT ->
           Real (Float.of_string (Z3.Arithmetic.Real.to_decimal_string e 6))
-        | `BoolType, Z3enums.BOOL_SORT ->
+        | Some `BoolType, Z3enums.BOOL_SORT ->
           Bool (bool_of_string (Z3.Expr.to_string e))
-        | `StrType, Z3enums.SEQ_SORT -> Str (Z3.Seq.get_string ctx e)
-        | `I32Type, Z3enums.BV_SORT -> Num (I32 (Int64.to_int32 (int64_of_bv e)))
-        | `I64Type, Z3enums.BV_SORT -> Num (I64 (int64_of_bv e))
-        | `F32Type, Z3enums.FLOATING_POINT_SORT ->
+        | Some `StrType, Z3enums.SEQ_SORT -> Str (Z3.Seq.get_string ctx e)
+        | Some `I32Type, Z3enums.BV_SORT -> Num (I32 (Int64.to_int32 (int64_of_bv e)))
+        | Some `I64Type, Z3enums.BV_SORT -> Num (I64 (int64_of_bv e))
+        | Some `F32Type, Z3enums.FLOATING_POINT_SORT ->
           let ebits = Z3.FloatingPoint.get_ebits ctx (Z3.Expr.get_sort e) in
           let sbits = Z3.FloatingPoint.get_sbits ctx (Z3.Expr.get_sort e) - 1 in
           let fp_bits = int64_of_fp e ~ebits ~sbits in
           Num (F32 (Int32.bits_of_float @@ Int64.float_of_bits fp_bits))
-        | `F64Type, Z3enums.FLOATING_POINT_SORT ->
+        | Some `F64Type, Z3enums.FLOATING_POINT_SORT ->
           let ebits = Z3.FloatingPoint.get_ebits ctx (Z3.Expr.get_sort e) in
           let sbits = Z3.FloatingPoint.get_sbits ctx (Z3.Expr.get_sort e) - 1 in
           Num (F64 (int64_of_fp e ~ebits ~sbits))

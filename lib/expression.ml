@@ -126,43 +126,19 @@ let rename_symbols (es : expr list) : expr list =
   in
   List.map rename es
 
-let rec type_of (e : expr) : expr_type =
-  (* FIXME: this function can be "simplified" *)
-  let rec concat_length (e' : expr) : int =
-    match e' with
-    | Quantifier _ -> assert false
-    | Val v -> size (Value.type_of v)
-    | SymPtr _ -> 4
-    | Binop (op, _, _) -> size (Types.type_of op)
-    | Triop (op, _, _, _) -> size (Types.type_of op)
-    | Unop (op, _) -> size (Types.type_of op)
-    | Relop (op, _, _) -> size (Types.type_of op)
-    | Cvtop (op, _) -> size (Types.type_of op)
-    | Symbol s -> size (Symbol.type_of s)
-    | Concat (e1, e2) -> concat_length e1 + concat_length e2
-    | Extract (_, h, l) -> h - l
-  in
+let type_of (e : expr) : expr_type option =
   match e with
-  | Val v -> Value.type_of v
-  | SymPtr _ -> `I32Type
-  | Binop (op, _, _) -> Types.type_of op
-  | Triop (op, _, _, _) -> Types.type_of op
-  | Unop (op, _) -> Types.type_of op
-  | Relop (op, _, _) -> Types.type_of op
-  | Cvtop (op, _) -> Types.type_of op
-  | Symbol s -> Symbol.type_of s
-  | Extract (_, h, l) ->
-    let d = h - l in
-    if d = 4 then `I32Type
-    else if d = 8 then `I64Type
-    else failwith "unsupported type length"
-  | Concat (e1, e2) ->
-    let len = concat_length (e1 ++ e2) in
-    let len = if len < 4 then size (type_of e1) + size (type_of e2) else len in
-    if len = 4 then `I32Type
-    else if len = 8 then `I64Type
-    else failwith "unsupported type length"
-  | Quantifier _ -> assert false
+  | Val v -> Some (Value.type_of v)
+  | SymPtr _ -> Some `I32Type
+  | Binop (op, _, _) -> Some (Types.type_of op)
+  | Triop (op, _, _, _) -> Some (Types.type_of op)
+  | Unop (op, _) -> Some (Types.type_of op)
+  | Relop (op, _, _) -> Some (Types.type_of op)
+  | Cvtop (op, _) -> Some (Types.type_of op)
+  | Symbol s -> Some (Symbol.type_of s)
+  | Extract (_, h, l) -> (
+    match h - l with 4 -> Some `I32Type | 8 -> Some `I64Type | _ -> None )
+  | Concat _ | Quantifier _ -> None
 
 let negate_relop (e : expr) : expr =
   match e with
@@ -484,8 +460,10 @@ let rec simplify ?(extract = true) (e : expr) : expr =
     | Val (Num (I64 x)) ->
       let x' = nland64 (Int64.shift_right x (l * 8)) (h - l) in
       Val (Num (I64 x'))
-    | _ when h - l = size (type_of s) -> s
-    | _ -> e )
+    | _ -> (
+      match type_of s with
+      | Some t -> if h - l = size t then s else e
+      | None -> e ) )
   | Concat (e1, e2) -> (
     let e1' = simplify ~extract:false e1
     and e2' = simplify ~extract:false e2 in
