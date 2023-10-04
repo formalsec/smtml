@@ -1,4 +1,3 @@
-open Core
 open Types
 
 exception InvalidRelop
@@ -6,24 +5,22 @@ exception InvalidRelop
 type qt =
   | Forall
   | Exists
-[@@deriving compare, sexp, hash]
 
 type expr =
   | Val of Value.t
-  | SymPtr of Int32.t * expr
+  | SymPtr of int32 * expr
   | Unop of unop * expr
   | Binop of binop * expr * expr
   | Relop of relop * expr * expr
   | Cvtop of cvtop * expr
   | Triop of triop * expr * expr * expr
   | Symbol of Symbol.t
-  | Extract of expr * Int.t * Int.t
+  | Extract of expr * int * int
   | Concat of expr * expr
   | Quantifier of qt * Symbol.t list * expr * expr list list
-[@@deriving compare, sexp, hash]
 
-type t = expr [@@deriving compare, sexp, hash]
-type pc = expr List.t
+type t = expr
+type pc = expr list
 
 let ( ++ ) (e1 : expr) (e2 : expr) = Concat (e1, e2)
 let mk_symbol (s : Symbol.t) = Symbol s
@@ -31,41 +28,41 @@ let mk_symbol (s : Symbol.t) = Symbol s
 let mk_symbol_s (t : expr_type) (x : string) : expr =
   Symbol (Symbol.mk_symbol t x)
 
-let is_num (e : expr) : Bool.t = match e with Val (Num _) -> true | _ -> false
-let is_val (e : expr) : Bool.t = match e with Val _ -> true | _ -> false
-let is_unop (e : expr) : Bool.t = match e with Unop _ -> true | _ -> false
-let is_relop (e : expr) : Bool.t = match e with Relop _ -> true | _ -> false
-let is_binop (e : expr) : Bool.t = match e with Binop _ -> true | _ -> false
-let is_cvtop (e : expr) : Bool.t = match e with Cvtop _ -> true | _ -> false
-let is_triop (e : expr) : Bool.t = match e with Triop _ -> true | _ -> false
+let is_num (e : expr) : bool = match e with Val (Num _) -> true | _ -> false
+let is_val (e : expr) : bool = match e with Val _ -> true | _ -> false
+let is_unop (e : expr) : bool = match e with Unop _ -> true | _ -> false
+let is_relop (e : expr) : bool = match e with Relop _ -> true | _ -> false
+let is_binop (e : expr) : bool = match e with Binop _ -> true | _ -> false
+let is_cvtop (e : expr) : bool = match e with Cvtop _ -> true | _ -> false
+let is_triop (e : expr) : bool = match e with Triop _ -> true | _ -> false
 
-let is_concrete (e : expr) : Bool.t =
+let is_concrete (e : expr) : bool =
   match e with Val _ | SymPtr (_, Val _) -> true | _ -> false
 
-let rec equal (e1 : expr) (e2 : expr) : Bool.t =
+let rec equal (e1 : expr) (e2 : expr) : bool =
   match (e1, e2) with
   | Val v1, Val v2 -> Value.equal v1 v2
-  | SymPtr (b1, o1), SymPtr (b2, o2) -> Int32.(b1 = b2) && equal o1 o2
-  | Unop (op1, e1), Unop (op2, e2) -> Poly.(op1 = op2) && equal e1 e2
-  | Cvtop (op1, e1), Cvtop (op2, e2) -> Poly.(op1 = op2) && equal e1 e2
+  | SymPtr (b1, o1), SymPtr (b2, o2) -> b1 = b2 && equal o1 o2
+  | Unop (op1, e1), Unop (op2, e2) -> op1 = op2 && equal e1 e2
+  | Cvtop (op1, e1), Cvtop (op2, e2) -> op1 = op2 && equal e1 e2
   | Binop (op1, e1, e3), Binop (op2, e2, e4) ->
-    Poly.(op1 = op2) && equal e1 e2 && equal e3 e4
+    op1 = op2 && equal e1 e2 && equal e3 e4
   | Relop (op1, e1, e3), Relop (op2, e2, e4) ->
-    Poly.(op1 = op2) && equal e1 e2 && equal e3 e4
+    op1 = op2 && equal e1 e2 && equal e3 e4
   | Triop (op1, e1, e3, e5), Triop (op2, e2, e4, e6) ->
-    Poly.(op1 = op2) && equal e1 e2 && equal e3 e4 && equal e5 e6
+    op1 = op2 && equal e1 e2 && equal e3 e4 && equal e5 e6
   | Symbol s1, Symbol s2 -> Symbol.equal s1 s2
   | Extract (e1, h1, l1), Extract (e2, h2, l2) ->
-    equal e1 e2 && Int.(h1 = h2) && Int.(l1 = l2)
+    equal e1 e2 && h1 = h2 && l1 = l2
   | Concat (e1, e3), Concat (e2, e4) -> equal e1 e2 && equal e3 e4
   | Quantifier (q1, vars1, e1, p1), Quantifier (q2, vars2, e2, p2) ->
-    Poly.(q1 = q2)
+    q1 = q2
     && List.equal Symbol.equal vars1 vars2
     && equal e1 e2
     && List.equal (List.equal equal) p1 p2
   | _ -> false
 
-let rec length (e : expr) : Int.t =
+let rec length (e : expr) : int =
   match e with
   | Val _ -> 1
   | SymPtr _ -> 1
@@ -79,20 +76,7 @@ let rec length (e : expr) : Int.t =
   | Concat (e1, e2) -> 1 + length e1 + length e2
   | Quantifier (_, _, body, _) -> length body
 
-let rec map (e : expr) ~(f : expr -> expr) : expr =
-  match e with
-  | Val _ | Symbol _ -> f e
-  | SymPtr (i, e) -> f (SymPtr (i, map e ~f))
-  | Unop (op, e) -> f (Unop (op, map e ~f))
-  | Binop (op, e1, e2) -> f (Binop (op, map e1 ~f, map e2 ~f))
-  | Triop (op, e1, e2, e3) -> f (Triop (op, map e1 ~f, map e2 ~f, map e3 ~f))
-  | Relop (op, e1, e2) -> f (Relop (op, map e1 ~f, map e2 ~f))
-  | Cvtop (op, e) -> f (Cvtop (op, map e ~f))
-  | Extract (e, h, l) -> f (Extract (map e ~f, h, l))
-  | Concat (e1, e2) -> f (Concat (map e1 ~f, map e2 ~f))
-  | Quantifier _ -> assert false
-
-let get_symbols (e : expr List.t) : Symbol.t List.t =
+let get_symbols (e : expr list) : Symbol.t list =
   let rec symbols e =
     match e with
     | Val _ -> []
@@ -107,12 +91,14 @@ let get_symbols (e : expr List.t) : Symbol.t List.t =
     | Concat (e1, e2) -> symbols e1 @ symbols e2
     | Quantifier (_, vars, _, _) -> vars
   in
-  List.fold (List.concat_map e ~f:symbols) ~init:[] ~f:(fun accum x ->
-    if List.mem accum x ~equal:Symbol.equal then accum else x :: accum )
+  List.fold_left
+    (fun accum x -> if List.mem x accum then accum else x :: accum)
+    []
+    (List.concat_map symbols e)
 
-let rename_symbols (es : expr List.t) : expr List.t =
+let rename_symbols (es : expr list) : expr list =
   let count = ref 0
-  and map = Hashtbl.create (module String) in
+  and map = Hashtbl.create 0 in
   let rec rename (e : expr) : expr =
     match e with
     | Val _ -> e
@@ -125,10 +111,10 @@ let rename_symbols (es : expr List.t) : expr List.t =
     | Symbol s ->
       let old_name = Symbol.to_string s in
       let new_name =
-        if Hashtbl.mem map old_name then Hashtbl.find_exn map old_name
+        if Hashtbl.mem map old_name then Hashtbl.find map old_name
         else
           let x = "x" ^ Int.to_string !count in
-          Hashtbl.set map ~key:old_name ~data:x;
+          Hashtbl.replace map old_name x;
           count := !count + 1;
           x
       in
@@ -136,13 +122,13 @@ let rename_symbols (es : expr List.t) : expr List.t =
     | Extract (e, h, l) -> Extract (rename e, h, l)
     | Concat (e1, e2) -> Concat (rename e1, rename e2)
     | Quantifier (qt, vars, e, es) ->
-      Quantifier (qt, vars, rename e, List.map ~f:(List.map ~f:rename) es)
+      Quantifier (qt, vars, rename e, List.map (List.map rename) es)
   in
-  List.map ~f:rename es
+  List.map rename es
 
 let rec type_of (e : expr) : expr_type =
   (* FIXME: this function can be "simplified" *)
-  let rec concat_length (e' : expr) : Int.t =
+  let rec concat_length (e' : expr) : int =
     match e' with
     | Quantifier _ -> assert false
     | Val v -> size (Value.type_of v)
@@ -280,26 +266,28 @@ let rec pp fmt (e : expr) =
 
 let to_string e = Format.asprintf "%a" pp e
 
-let to_smt (es : expr List.t) : String.t =
+let to_smt (es : expr list) : string =
   let symbols =
-    List.map (get_symbols es) ~f:(fun s ->
-      let x = Symbol.to_string s
-      and t = Symbol.type_of s in
-      sprintf "(declare-fun %s %s)" x (Types.string_of_type t) )
+    List.map
+      (fun s ->
+        let x = Symbol.to_string s
+        and t = Symbol.type_of s in
+        Format.sprintf "(declare-fun %s %s)" x (Types.string_of_type t) )
+      (get_symbols es)
   in
-  let es' = List.map es ~f:(fun e -> sprintf "(assert %s)" (to_string e)) in
-  String.concat ~sep:"\n" (symbols @ es' @ [ "(check-sat)" ])
+  let es' = List.map (fun e -> Format.sprintf "(assert %s)" (to_string e)) es in
+  String.concat "\n" (symbols @ es' @ [ "(check-sat)" ])
 
-let string_of_pc (pc : pc) : String.t =
-  let pc' = String.concat ~sep:" " (List.map ~f:to_string pc) in
-  if List.length pc > 1 then sprintf "(and %s)" pc' else pc'
+let string_of_pc (pc : pc) : string =
+  let pc' = String.concat " " (List.map to_string pc) in
+  if List.length pc > 1 then Format.sprintf "(and %s)" pc' else pc'
 
-let string_of_values (el : (Num.t * t) List.t) : String.t =
-  List.fold_left ~init:""
-    ~f:(fun a (n, e) -> a ^ Num.to_string n ^ ", " ^ to_string e ^ "\n")
-    el
+let string_of_values (el : (Num.t * t) list) : string =
+  List.fold_left
+    (fun a (n, e) -> a ^ Num.to_string n ^ ", " ^ to_string e ^ "\n")
+    "" el
 
-let rec get_ptr (e : expr) : Num.t Option.t =
+let rec get_ptr (e : expr) : Num.t option =
   (* FIXME: this function can be "simplified" *)
   match e with
   | Quantifier _ | Val _ -> None
@@ -325,35 +313,34 @@ let rec get_ptr (e : expr) : Num.t Option.t =
     let p1 = get_ptr e1 in
     if Option.is_some p1 then p1 else get_ptr e2
 
-let concretize_ptr (e : expr) : Num.t Option.t =
+let concretize_ptr (e : expr) : Num.t option =
   (* TODO: this should work with symbolic pointers *)
   (* would probably introduce Memory Objects here *)
-  let open Int32 in
   match e with
   | Val (Num n) -> Some n
-  | SymPtr (base, Val (Num (I32 offset))) -> Some (I32 (base + offset))
+  | SymPtr (base, Val (Num (I32 offset))) -> Some (I32 (Int32.add base offset))
   | _ -> None
 
-let concretize_base_ptr (e : expr) : Int32.t Option.t =
+let concretize_base_ptr (e : expr) : int32 option =
   match e with SymPtr (base, _) -> Some base | _ -> None
 
-let to_bool (e : expr) : expr Option.t =
+let to_bool (e : expr) : expr option =
   match e with
   | Val _ | SymPtr _ -> None
   | (Relop _ as e') | Cvtop (I32 OfBool, e') -> Some e'
   | _ -> Some (Cvtop (I32 ToBool, e))
 
-let nland64 (x : Int64.t) (n : Int.t) =
+let nland64 (x : int64) (n : int) =
   let rec loop x' n' acc =
-    if n' = 0 then Int64.(x' land acc)
-    else loop x' (n' - 1) Int64.(shift_left acc 8 lor 0xffL)
+    if n' = 0 then Int64.logand x' acc
+    else loop x' (n' - 1) Int64.(logor (shift_left acc 8) 0xffL)
   in
   loop x n 0L
 
-let nland32 (x : Int32.t) (n : Int.t) =
+let nland32 (x : int32) (n : int) =
   let rec loop x' n' acc =
-    if n' = 0 then Int32.(x' land acc)
-    else loop x' (n' - 1) Int32.(shift_left acc 8 lor 0xffl)
+    if n' = 0 then Int32.logand x' acc
+    else loop x' (n' - 1) Int32.(logor (shift_left acc 8) 0xffl)
   in
   loop x n 0l
 
@@ -367,7 +354,7 @@ let rec simplify ?(extract = true) (e : expr) : expr =
     match (e1', e2') with
     | SymPtr (b1, os1), SymPtr (b2, os2) -> (
       match op with
-      | Sub when Int32.(b1 = b2) -> simplify (Binop (I32 Sub, os1, os2))
+      | Sub when b1 = b2 -> simplify (Binop (I32 Sub, os1, os2))
       | _ -> Binop (I32 op, e1', e2') )
     | SymPtr (base, offset), _ -> (
       match op with
@@ -409,7 +396,7 @@ let rec simplify ?(extract = true) (e : expr) : expr =
         Binop (I32 Sub, x, Val (Num v))
       | _, _ -> Binop (I32 op, e1', e2') )
     | (bop, Val (Num (I32 1l)) | Val (Num (I32 1l)), bop)
-      when is_relop bop && Poly.(op = And) ->
+      when is_relop bop && op = And ->
       bop
     | _ -> Binop (I32 op, e1', e2') )
   | Binop (I64 op, e1, e2) -> (
@@ -418,7 +405,7 @@ let rec simplify ?(extract = true) (e : expr) : expr =
     match (e1', e2') with
     | SymPtr (b1, os1), SymPtr (b2, os2) -> (
       match op with
-      | Sub when Int32.(b1 = b2) -> simplify (Binop (I64 Sub, os1, os2))
+      | Sub when b1 = b2 -> simplify (Binop (I64 Sub, os1, os2))
       | _ -> Binop (I64 op, e1', e2') )
     | SymPtr (base, offset), _ -> (
       match op with
@@ -460,7 +447,7 @@ let rec simplify ?(extract = true) (e : expr) : expr =
         Binop (I64 Sub, x, Val (Num v))
       | _, _ -> Binop (I64 op, e1', e2') )
     | (bop, Val (Num (I64 1L)) | Val (Num (I64 1L)), bop)
-      when is_relop bop && Poly.(op = And) ->
+      when is_relop bop && op = And ->
       bop
     | _ -> Binop (I64 op, e1', e2') )
   | Relop (I32 op, e1, e2) -> (
@@ -476,7 +463,6 @@ let rec simplify ?(extract = true) (e : expr) : expr =
       | Ne -> Val (Num (I32 1l))
       | _ -> Relop (I32 op, e1', e2') )
     | SymPtr (b1, os1), SymPtr (b2, os2) -> (
-      let open Int32 in
       match op with
       | Eq when b1 = b2 -> Relop (I32 Eq, os1, os2)
       | Eq when b1 <> b2 -> Val (Num (I32 0l))
@@ -510,7 +496,7 @@ let rec simplify ?(extract = true) (e : expr) : expr =
       and d2 = h2 - l2 in
       let x1' = nland64 (Int64.shift_right x1 (l1 * 8)) d1
       and x2' = nland64 (Int64.shift_right x2 (l2 * 8)) d2 in
-      let x = Int64.(shift_left x2' (Int.( * ) d1 8) lor x1') in
+      let x = Int64.(logor (shift_left x2' (d1 * 8)) x1') in
       Extract (Val (Num (I64 x)), d1 + d2, 0)
     | Extract (Val (Num (I32 x2)), h2, l2), Extract (Val (Num (I32 x1)), h1, l1)
       ->
@@ -518,9 +504,9 @@ let rec simplify ?(extract = true) (e : expr) : expr =
       and d2 = h2 - l2 in
       let x1' = nland32 (Int32.shift_right x1 (l1 * 8)) d1
       and x2' = nland32 (Int32.shift_right x2 (l2 * 8)) d2 in
-      let x = Int32.(shift_left x2' (Int.( * ) d1 8) lor x1') in
+      let x = Int32.(logor (shift_left x2' (d1 * 8)) x1') in
       Extract (Val (Num (I32 x)), d1 + d2, 0)
-    | Extract (s1, h, m1), Extract (s2, m2, l) when Poly.(s1 = s2) && m1 = m2 ->
+    | Extract (s1, h, m1), Extract (s2, m2, l) when s1 = s2 && m1 = m2 ->
       Extract (s1, h, l)
     | ( Extract (Val (Num (I64 x2)), h2, l2)
       , Concat (Extract (Val (Num (I64 x1)), h1, l1), se) )
@@ -529,7 +515,7 @@ let rec simplify ?(extract = true) (e : expr) : expr =
       and d2 = h2 - l2 in
       let x1' = nland64 (Int64.shift_right x1 (l1 * 8)) d1
       and x2' = nland64 (Int64.shift_right x2 (l2 * 8)) d2 in
-      let x = Int64.(shift_left x2' (Int.( * ) d1 8) lor x1') in
+      let x = Int64.(logor (shift_left x2' (d1 * 8)) x1') in
       Extract (Val (Num (I64 x)), d1 + d2, 0) ++ se
     | _ -> e1' ++ e2' )
   | _ -> e
@@ -551,14 +537,14 @@ let mk_relop ?(reduce : bool = true) (e : expr) (t : num_type) : expr =
 let add_constraint ?(neg : bool = false) (e : expr) (pc : expr) : expr =
   let cond =
     let c = to_bool (simplify e) in
-    if neg then Option.map ~f:(fun e -> Unop (Bool Not, e)) c else c
+    if neg then Option.map (fun e -> Unop (Bool Not, e)) c else c
   in
-  Option.fold cond ~init:pc ~f:(fun pc c ->
+  Option.fold cond ~none:pc ~some:(fun c ->
     match pc with Val (Bool true) -> c | _ -> Binop (Bool And, c, pc) )
 
 let insert_pc ?(neg : bool = false) (e : expr) (pc : pc) : pc =
   let cond =
     let c = to_bool (simplify e) in
-    if neg then Option.map ~f:(fun e -> Unop (Bool Not, e)) c else c
+    if neg then Option.map (fun e -> Unop (Bool Not, e)) c else c
   in
-  Option.fold cond ~init:pc ~f:(fun pc a -> a :: pc)
+  Option.fold cond ~none:pc ~some:(fun c -> c :: pc)
