@@ -20,7 +20,6 @@ type expr =
   | Quantifier of qt * Symbol.t list * expr * expr list list
 
 type t = expr
-type pc = expr list
 
 let ( ++ ) (e1 : expr) (e2 : expr) = Concat (e1, e2)
 let mk_symbol (s : Symbol.t) = Symbol s
@@ -254,9 +253,10 @@ let to_smt (es : expr list) : string =
   let es' = List.map (fun e -> Format.sprintf "(assert %s)" (to_string e)) es in
   String.concat "\n" (symbols @ es' @ [ "(check-sat)" ])
 
-let string_of_pc (pc : pc) : string =
-  let pc' = String.concat " " (List.map to_string pc) in
-  if List.length pc > 1 then Format.sprintf "(and %s)" pc' else pc'
+
+let string_of_list (exprs: expr list) : string =
+  let pc' = String.concat " " (List.map to_string exprs) in
+  if List.length exprs > 1 then Format.sprintf "(and %s)" pc' else pc'
 
 let string_of_values (el : (Num.t * t) list) : string =
   List.fold_left
@@ -511,18 +511,3 @@ let mk_relop ?(reduce : bool = true) (e : expr) (t : num_type) : expr =
       | `F64Type -> Relop (F64 Ne, e, Val zero)
     in
     simplify e'
-
-let add_constraint ?(neg : bool = false) (e : expr) (pc : expr) : expr =
-  let cond =
-    let c = to_bool (simplify e) in
-    if neg then Option.map (fun e -> Unop (Bool Not, e)) c else c
-  in
-  Option.fold cond ~none:pc ~some:(fun c ->
-    match pc with Val (Bool true) -> c | _ -> Binop (Bool And, c, pc) )
-
-let insert_pc ?(neg : bool = false) (e : expr) (pc : pc) : pc =
-  let cond =
-    let c = to_bool (simplify e) in
-    if neg then Option.map (fun e -> Unop (Bool Not, e)) c else c
-  in
-  Option.fold cond ~none:pc ~some:(fun c -> c :: pc)
