@@ -809,7 +809,8 @@ module Fresh = struct
         | Some `BoolType, Z3enums.BOOL_SORT ->
           Bool (bool_of_string (Z3.Expr.to_string e))
         | Some `StrType, Z3enums.SEQ_SORT -> Str (Z3.Seq.get_string ctx e)
-        | Some `I32Type, Z3enums.BV_SORT -> Num (I32 (Int64.to_int32 (int64_of_bv e)))
+        | Some `I32Type, Z3enums.BV_SORT ->
+          Num (I32 (Int64.to_int32 (int64_of_bv e)))
         | Some `I64Type, Z3enums.BV_SORT -> Num (I64 (int64_of_bv e))
         | Some `F32Type, Z3enums.FLOATING_POINT_SORT ->
           let ebits = Z3.FloatingPoint.get_ebits ctx (Z3.Expr.get_sort e) in

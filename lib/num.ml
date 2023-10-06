@@ -34,5 +34,4 @@ let pp fmt (n : t) =
   | F64 f -> Format.fprintf fmt "(f64 %f)" (Int64.float_of_bits f)
 
 let to_string (n : t) : string = Format.asprintf "%a" pp n
-
 let num_of_bool (b : bool) : t = I32 (if b then 1l else 0l)

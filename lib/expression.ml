@@ -253,8 +253,7 @@ let to_smt (es : expr list) : string =
   let es' = List.map (fun e -> Format.sprintf "(assert %s)" (to_string e)) es in
   String.concat "\n" (symbols @ es' @ [ "(check-sat)" ])
 
-
-let string_of_list (exprs: expr list) : string =
+let string_of_list (exprs : expr list) : string =
   let pc' = String.concat " " (List.map to_string exprs) in
   if List.length exprs > 1 then Format.sprintf "(and %s)" pc' else pc'
 
