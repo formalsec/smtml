@@ -761,40 +761,37 @@ module Fresh = struct
       assert (Z3.Expr.is_numeral bv);
       Int64.of_string (set (Z3.Expr.to_string bv) 0 '0')
 
-    (* FIXME: this is a mess, urgently fix! *)
-    let int64_of_fp (fp : Z3.Expr.expr) ~(ebits : int) ~(sbits : int) : int64 =
+    let float_of_numeral (fp : Z3.Expr.expr) : float =
       assert (Z3.Expr.is_numeral fp);
-      if Z3.FloatingPoint.is_numeral_nan ctx fp then
-        if Z3.FloatingPoint.is_numeral_negative ctx fp then
-          if sbits = 23 then Int64.of_int32 0xffc0_0000l
-          else 0xfff8_0000_0000_0000L
-        else if sbits = 23 then Int64.of_int32 0x7fc0_0000l
-        else 0x7ff8_0000_0000_0000L
-      else if Z3.FloatingPoint.is_numeral_inf ctx fp then
-        if Z3.FloatingPoint.is_numeral_negative ctx fp then
-          if sbits = 23 then
-            Int64.of_int32 (Int32.bits_of_float (-.(1.0 /. 0.0)))
-          else Int64.bits_of_float (-.(1.0 /. 0.0))
-        else if sbits = 23 then
-          Int64.of_int32 (Int32.bits_of_float (1.0 /. 0.0))
-        else Int64.bits_of_float (1.0 /. 0.0)
-      else if Z3.FloatingPoint.is_numeral_zero ctx fp then
-        if Z3.FloatingPoint.is_numeral_negative ctx fp then
-          if sbits = 23 then Int64.of_int32 0x8000_0000l
-          else 0x8000_0000_0000_0000L
-        else if sbits = 23 then Int64.of_int32 (Int32.bits_of_float 0.0)
-        else Int64.bits_of_float 0.0
+      let module Fp = Z3.FloatingPoint in
+      (* FIXME: Can Z3 NaNs be signaling? Assume quiet as default *)
+      if Fp.is_numeral_nan ctx fp then Float.quiet_nan
+      else if Fp.is_numeral_inf ctx fp then
+        if Fp.is_numeral_negative ctx fp then Float.neg_infinity
+        else Float.infinity
+      else if Fp.is_numeral_zero ctx fp then
+        if Fp.is_numeral_negative ctx fp then Float.neg Float.zero
+        else Float.zero
       else
-        let fp = Z3.Expr.to_string fp in
-        let fp = Stdlib.String.sub fp 4 (String.length fp - 5) in
-        let fp_list =
-          List.map (fun fp -> set fp 0 '0') (String.split_on_char ' ' fp)
+        let sort = Z3.Expr.get_sort fp in
+        let ebits = Fp.get_ebits ctx sort in
+        let sbits = Fp.get_sbits ctx sort in
+        let _, sign = Fp.get_numeral_sign ctx fp in
+        (* true => biased exponent *)
+        let _, exponent = Fp.get_numeral_exponent_int ctx fp true in
+        let _, significand = Fp.get_numeral_significand_uint ctx fp in
+        let fp_bits =
+          Int64.(
+            logor
+              (logor
+                 (shift_left (of_int sign) (ebits + sbits - 1))
+                 (shift_left exponent (sbits - 1)) )
+              significand )
         in
-        let bit_list = List.map (fun fp -> Int64.of_string fp) fp_list in
-        let fp_sign = Int64.shift_left (List.nth bit_list 0) (ebits + sbits)
-        and exponent = Int64.shift_left (List.nth bit_list 1) sbits
-        and fraction = List.nth bit_list 2 in
-        Int64.(logor fp_sign (logor exponent fraction))
+        match ebits + sbits with
+        | 32 -> Int32.float_of_bits @@ Int64.to_int32 fp_bits
+        | 64 -> Int64.float_of_bits fp_bits
+        | _ -> assert false
 
     let value_of_const (model : Z3.Model.model) (c : Expression.t) :
       Value.t option =
@@ -810,20 +807,15 @@ module Fresh = struct
           match Z3.Boolean.get_bool_value e with
           | Z3enums.L_TRUE -> Some (Bool true)
           | Z3enums.L_FALSE -> Some (Bool false)
-          | Z3enums.L_UNDEF -> None)
+          | Z3enums.L_UNDEF -> None )
         | Some `StrType, Z3enums.SEQ_SORT -> Some (Str (Z3.Seq.get_string ctx e))
         | Some `I32Type, Z3enums.BV_SORT ->
           Some (Num (I32 (Int64.to_int32 (int64_of_bv e))))
         | Some `I64Type, Z3enums.BV_SORT -> Some (Num (I64 (int64_of_bv e)))
         | Some `F32Type, Z3enums.FLOATING_POINT_SORT ->
-          let ebits = Z3.FloatingPoint.get_ebits ctx (Z3.Expr.get_sort e) in
-          let sbits = Z3.FloatingPoint.get_sbits ctx (Z3.Expr.get_sort e) - 1 in
-          let fp_bits = int64_of_fp e ~ebits ~sbits in
-          Some (Num (F32 (Int32.bits_of_float @@ Int64.float_of_bits fp_bits)))
+          Some (Num (F32 (Int32.bits_of_float @@ float_of_numeral e)))
         | Some `F64Type, Z3enums.FLOATING_POINT_SORT ->
-          let ebits = Z3.FloatingPoint.get_ebits ctx (Z3.Expr.get_sort e) in
-          let sbits = Z3.FloatingPoint.get_sbits ctx (Z3.Expr.get_sort e) - 1 in
-          Some (Num (F64 (int64_of_fp e ~ebits ~sbits)))
+          Some (Num (F64 (Int64.bits_of_float @@ float_of_numeral e)))
         | _ -> assert false
       in
       Option.bind interp f
