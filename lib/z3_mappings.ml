@@ -800,30 +800,33 @@ module Fresh = struct
       Value.t option =
       let t = Expression.type_of c in
       let interp = Z3.Model.eval model (encode_expr c) true in
-      let f (e : Z3.Expr.expr) : Value.t =
+      let f (e : Z3.Expr.expr) : Value.t option =
         match (t, Z3.Sort.get_sort_kind (Z3.Expr.get_sort e)) with
         | Some `IntType, Z3enums.INT_SORT ->
-          Int (int_of_string (Z3.Arithmetic.Integer.numeral_to_string e))
+          Some (Int (Z.to_int @@ Z3.Arithmetic.Integer.get_big_int e))
         | Some `RealType, Z3enums.REAL_SORT ->
-          Real (Float.of_string (Z3.Arithmetic.Real.to_decimal_string e 6))
-        | Some `BoolType, Z3enums.BOOL_SORT ->
-          Bool (bool_of_string (Z3.Expr.to_string e))
-        | Some `StrType, Z3enums.SEQ_SORT -> Str (Z3.Seq.get_string ctx e)
+          Some (Real (Q.to_float @@ Z3.Arithmetic.Real.get_ratio e))
+        | Some `BoolType, Z3enums.BOOL_SORT -> (
+          match Z3.Boolean.get_bool_value e with
+          | Z3enums.L_TRUE -> Some (Bool true)
+          | Z3enums.L_FALSE -> Some (Bool false)
+          | Z3enums.L_UNDEF -> None)
+        | Some `StrType, Z3enums.SEQ_SORT -> Some (Str (Z3.Seq.get_string ctx e))
         | Some `I32Type, Z3enums.BV_SORT ->
-          Num (I32 (Int64.to_int32 (int64_of_bv e)))
-        | Some `I64Type, Z3enums.BV_SORT -> Num (I64 (int64_of_bv e))
+          Some (Num (I32 (Int64.to_int32 (int64_of_bv e))))
+        | Some `I64Type, Z3enums.BV_SORT -> Some (Num (I64 (int64_of_bv e)))
         | Some `F32Type, Z3enums.FLOATING_POINT_SORT ->
           let ebits = Z3.FloatingPoint.get_ebits ctx (Z3.Expr.get_sort e) in
           let sbits = Z3.FloatingPoint.get_sbits ctx (Z3.Expr.get_sort e) - 1 in
           let fp_bits = int64_of_fp e ~ebits ~sbits in
-          Num (F32 (Int32.bits_of_float @@ Int64.float_of_bits fp_bits))
+          Some (Num (F32 (Int32.bits_of_float @@ Int64.float_of_bits fp_bits)))
         | Some `F64Type, Z3enums.FLOATING_POINT_SORT ->
           let ebits = Z3.FloatingPoint.get_ebits ctx (Z3.Expr.get_sort e) in
           let sbits = Z3.FloatingPoint.get_sbits ctx (Z3.Expr.get_sort e) - 1 in
-          Num (F64 (int64_of_fp e ~ebits ~sbits))
+          Some (Num (F64 (int64_of_fp e ~ebits ~sbits)))
         | _ -> assert false
       in
-      Option.map f interp
+      Option.bind interp f
 
     let type_of_sort (sort : Z3.Sort.sort) : Types.expr_type =
       match Z3.Sort.get_sort_kind sort with
