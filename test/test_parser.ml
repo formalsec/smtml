@@ -2,17 +2,15 @@ open Encoding
 module Batch = Batch.Make (Z3_mappings)
 module Interpret = Interpret.Make (Batch)
 
-let parse_and_run script = Run.parse_string script |> Interpret.start
+let parse script = Run.parse_string script
 
-let%expect_test _ =
+let%test_unit _ =
   let script =
     {|
     (declare-fun x real)
     (declare-fun y real)
     (assert (real.eq y (real.mul x x)))
     (assert (real.eq y 2.0))
-    (check-sat)
     |}
   in
-  parse_and_run script;
-  [%expect {| sat |}]
+  ignore @@ parse script

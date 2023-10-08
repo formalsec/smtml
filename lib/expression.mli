@@ -51,6 +51,7 @@ val string_of_values : (Num.t * expr) list -> string
 val to_bool : expr -> expr option
 val simplify : ?extract:bool -> expr -> expr
 val mk_relop : ?reduce:bool -> expr -> num_type -> expr
+
 (* FIXME: specific to wasp, remove?  *)
 val get_ptr : expr -> Num.t option
 val concretize_ptr : expr -> Num.t option

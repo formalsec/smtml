@@ -23,5 +23,4 @@
    (ocaml (>= "4.14.0"))
    (z3 (and (>= "4.11.2") (< "4.13")))
    menhir
-   ppx_inline_test
-   ppx_expect))
+   (ppx_inline_test :with-test)))
