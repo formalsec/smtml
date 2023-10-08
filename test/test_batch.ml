@@ -1,4 +1,3 @@
-open Core
 open Encoding
 module Batch = Batch.Make (Z3_mappings)
 

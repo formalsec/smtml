@@ -3,7 +3,6 @@ exception Unknown
 let ( let+ ) o f = Option.map f o
 
 module Make (Mappings : Mappings_intf.S) = struct
-  open Core
   module Expr = Expression
 
   type solver = Mappings.solver
@@ -31,12 +30,12 @@ module Make (Mappings : Mappings_intf.S) = struct
   let clone ({ solver; top; stack } : t) : t =
     { solver; top; stack = Stack.copy stack }
 
-  let push ({ top; stack; _ } : t) : unit = Stack.push stack top
+  let push ({ top; stack; _ } : t) : unit = Stack.push top stack
 
   let pop (s : t) (lvl : int) : unit =
     assert (lvl <= Stack.length s.stack);
     for _ = 1 to lvl do
-      s.top <- Stack.pop_exn s.stack
+      s.top <- Stack.pop s.stack
     done
 
   let reset (s : t) =
