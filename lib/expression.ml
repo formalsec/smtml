@@ -95,35 +95,35 @@ let get_symbols (e : expr list) : Symbol.t list =
     []
     (List.concat_map symbols e)
 
-let rename_symbols (es : expr list) : expr list =
-  let count = ref 0
-  and map = Hashtbl.create 0 in
-  let rec rename (e : expr) : expr =
-    match e with
-    | Val _ -> e
-    | SymPtr (i, offset) -> SymPtr (i, rename offset)
-    | Unop (op, e) -> Unop (op, rename e)
-    | Binop (op, e1, e2) -> Binop (op, rename e1, rename e2)
-    | Triop (op, e1, e2, e3) -> Triop (op, rename e1, rename e2, rename e3)
-    | Relop (op, e1, e2) -> Relop (op, rename e1, rename e2)
-    | Cvtop (op, e) -> Cvtop (op, rename e)
-    | Symbol s ->
-      let old_name = Symbol.to_string s in
-      let new_name =
-        if Hashtbl.mem map old_name then Hashtbl.find map old_name
-        else
-          let x = "x" ^ Int.to_string !count in
-          Hashtbl.replace map old_name x;
-          count := !count + 1;
-          x
-      in
-      Symbol (Symbol.rename s new_name)
-    | Extract (e, h, l) -> Extract (rename e, h, l)
-    | Concat (e1, e2) -> Concat (rename e1, rename e2)
-    | Quantifier (qt, vars, e, es) ->
-      Quantifier (qt, vars, rename e, List.map (List.map rename) es)
-  in
-  List.map rename es
+(* let rename_symbols (es : expr list) : expr list = *)
+(*   let count = ref 0 *)
+(*   and map = Hashtbl.create 0 in *)
+(*   let rec rename (e : expr) : expr = *)
+(*     match e with *)
+(*     | Val _ -> e *)
+(*     | SymPtr (i, offset) -> SymPtr (i, rename offset) *)
+(*     | Unop (op, e) -> Unop (op, rename e) *)
+(*     | Binop (op, e1, e2) -> Binop (op, rename e1, rename e2) *)
+(*     | Triop (op, e1, e2, e3) -> Triop (op, rename e1, rename e2, rename e3) *)
+(*     | Relop (op, e1, e2) -> Relop (op, rename e1, rename e2) *)
+(*     | Cvtop (op, e) -> Cvtop (op, rename e) *)
+(*     | Symbol s -> *)
+(*       let old_name = Symbol.to_string s in *)
+(*       let new_name = *)
+(*         if Hashtbl.mem map old_name then Hashtbl.find map old_name *)
+(*         else *)
+(*           let x = "x" ^ Int.to_string !count in *)
+(*           Hashtbl.replace map old_name x; *)
+(*           count := !count + 1; *)
+(*           x *)
+(*       in *)
+(*       Symbol (Symbol.rename s new_name) *)
+(*     | Extract (e, h, l) -> Extract (rename e, h, l) *)
+(*     | Concat (e1, e2) -> Concat (rename e1, rename e2) *)
+(*     | Quantifier (qt, vars, e, es) -> *)
+(*       Quantifier (qt, vars, rename e, List.map (List.map rename) es) *)
+(*   in *)
+(*   List.map rename es *)
 
 let type_of (e : expr) : expr_type option =
   match e with
