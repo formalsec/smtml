@@ -6,7 +6,7 @@ open Parser
 exception SyntaxError of string
 
 let keywords =
-  let tbl = Hashtbl.create 180 in
+  let tbl = Hashtbl.create 256 in
   Array.iter
     (fun (k, v) -> Hashtbl.add tbl k v)
     [| ("int" , TYPE (`IntType))
@@ -214,9 +214,9 @@ rule token = parse
   | '(' { LPAREN }
   | ')' { RPAREN }
 
-  | numeral as s { NUM (Core.Int.of_string s) }
-  | decimal as s { DEC (Core.Float.of_string s) }
-  | bool as s { BOOL (Core.Bool.of_string s) }
+  | numeral as s { NUM (int_of_string s) }
+  | decimal as s { DEC (Float.of_string s) }
+  | bool as s { BOOL (s = "true") }
   | hexadec { failwith "TODO: Lexer(hexadec)" }
   | binary { failwith "TODO: Lexer(binary)" }
   | '"' { string (Buffer.create 17) lexbuf }

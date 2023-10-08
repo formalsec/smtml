@@ -3,7 +3,6 @@ exception Unknown
 let ( let+ ) o f = Option.map f o
 
 module Make (Mappings : Mappings_intf.S) = struct
-  open Core
   module Expr = Expression
 
   let solver_time = ref 0.0

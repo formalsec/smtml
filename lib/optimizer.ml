@@ -1,5 +1,3 @@
-open Base
-
 exception Unknown
 
 type t = Z3_mappings.optimize
@@ -29,11 +27,9 @@ let check (opt : t) (e : Expression.t) (pc : Expression.t list) target =
 let maximize (opt : t) (e : Expression.t) (pc : Expression.t list) :
   Value.t option =
   let model = check opt e pc Z3_mappings.maximize in
-  Option.value_map model ~default:None ~f:(fun m ->
-    Z3_mappings.value_of_const m e )
+  Option.bind model (fun m -> Z3_mappings.value_of_const m e)
 
 let minimize (opt : t) (e : Expression.t) (pc : Expression.t list) :
   Value.t option =
   let model = check opt e pc Z3_mappings.minimize in
-  Option.value_map model ~default:None ~f:(fun m ->
-    Z3_mappings.value_of_const m e )
+  Option.bind model (fun m -> Z3_mappings.value_of_const m e)

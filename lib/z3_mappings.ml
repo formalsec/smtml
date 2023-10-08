@@ -850,11 +850,11 @@ module Fresh = struct
 
     let model_binds (model : Z3.Model.model) (symbols : Symbol.t list) : Model.t
         =
-      let m = Core.Hashtbl.create (module Symbol) in
+      let m = Hashtbl.create 512 in
       List.iter
         (fun s ->
           let v = value_of_const model (Expression.mk_symbol s) in
-          Option.iter (fun v -> Core.Hashtbl.set m ~key:s ~data:v) v )
+          Option.iter (fun v -> Hashtbl.replace m s v) v )
         symbols;
       m
 

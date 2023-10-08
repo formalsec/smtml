@@ -40,6 +40,4 @@
   types
   value
   z3_mappings)
- (libraries core z3)
- (preprocess
-  (pps ppx_jane)))
+ (libraries z3))

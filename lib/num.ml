@@ -1,15 +1,13 @@
-open Core
 open Types
 
 type t = (Int32.t, Int64.t, Int32.t, Int64.t) Types.num
-[@@deriving compare, sexp, hash]
 
 let ( = ) (n1 : t) (n2 : t) : bool =
   match (n1, n2) with
-  | I32 i1, I32 i2 -> Int32.(i1 = i2)
-  | I64 i1, I64 i2 -> Int64.(i1 = i2)
-  | F32 i1, F32 i2 -> Int32.(i1 = i2)
-  | F64 i1, F64 i2 -> Int64.(i1 = i2)
+  | I32 i1, I32 i2 -> i1 = i2
+  | I64 i1, I64 i2 -> i1 = i2
+  | F32 i1, F32 i2 -> i1 = i2
+  | F64 i1, F64 i2 -> i1 = i2
   | _ -> false
 
 let type_of (n : t) =

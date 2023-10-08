@@ -11,9 +11,8 @@ type binop =
   | Or
   | Xor
   | Pow
-[@@deriving compare, sexp, hash]
 
-type unop = Neg [@@deriving compare, sexp, hash]
+type unop = Neg
 
 type relop =
   | Eq
@@ -22,15 +21,13 @@ type relop =
   | Ne
   | Gt
   | Ge
-[@@deriving compare, sexp, hash]
 
-type triop [@@deriving compare, sexp, hash]
+type triop
 
 type cvtop =
   | ToString
   | OfString
   | ReinterpretReal
-[@@deriving compare, sexp, hash]
 
 let neg_relop (op : relop) : relop =
   match op with

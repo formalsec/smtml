@@ -1,5 +1,3 @@
-open Core
-
 type t = (Symbol.t, Value.t) Hashtbl.t
 
 val get_symbols : t -> Symbol.t List.t
