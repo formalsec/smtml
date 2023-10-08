@@ -1,8 +1,8 @@
 # OCaml Constraint Abstraction Layer
 
+[![Build badge](https://github.com/wasp-platform/encoding/actions/workflows/build.yml/badge.svg)](https://github.com/wasp-platform/encoding/actions)
 [![GPL-3.0](https://img.shields.io/github/license/wasp-platform/encoding)](LICENSE)
 ![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos-lightgrey)
-[![GitHub last commit](https://img.shields.io/github/last-commit/wasp-platform/encoding)](https://github.com/wasp-platform/encoding/commit/main~0)
 
 The OCaml Constraint Abstraction Layer (OCAL) serves as an abstracted constraint-solving 
 wrapper, currently utilising Z3 as its backend solver. However, future plans for OCAL 
