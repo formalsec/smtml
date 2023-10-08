@@ -123,17 +123,20 @@ let size (t : expr_type) : int =
   | #num_type as t' -> size_of_num_type t'
   | `IntType | `RealType | `BoolType | `StrType -> assert false
 
-let string_of_num_type (t : num_type) : string =
-  match t with
-  | `I32Type -> "i32"
-  | `I64Type -> "i64"
-  | `F32Type -> "f32"
-  | `F64Type -> "f64"
+let pp_num_type fmt = function
+  | `I32Type -> Format.pp_print_string fmt "i32"
+  | `I64Type -> Format.pp_print_string fmt "i64"
+  | `F32Type -> Format.pp_print_string fmt "f32"
+  | `F64Type -> Format.pp_print_string fmt "f64"
 
-let string_of_type (t : expr_type) : string =
-  match t with
-  | #num_type as t' -> string_of_num_type t'
-  | `IntType -> "int"
-  | `RealType -> "real"
-  | `BoolType -> "bool"
-  | `StrType -> "str"
+let string_of_num_type (t : num_type) : string =
+  Format.asprintf "%a" pp_num_type t
+
+let pp_type fmt = function
+  | #num_type as t -> pp_num_type fmt t
+  | `IntType -> Format.pp_print_string fmt "int"
+  | `RealType -> Format.pp_print_string fmt "real"
+  | `BoolType -> Format.pp_print_string fmt "bool"
+  | `StrType -> Format.pp_print_string fmt "str"
+
+let string_of_type (t : expr_type) : string = Format.asprintf "%a" pp_type t
