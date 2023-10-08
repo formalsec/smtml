@@ -241,6 +241,15 @@ let rec pp fmt (e : expr) =
 
 let to_string e = Format.asprintf "%a" pp e
 
+let pp_list fmt (exprs : expr list) =
+  Format.pp_print_list ~pp_sep:Format.pp_print_space pp fmt exprs
+
+let string_of_list (exprs : expr list) : string =
+  match exprs with
+  | [] -> ""
+  | [ x ] -> Format.asprintf "%a" pp x
+  | _ -> Format.asprintf "(and %a)" pp_list exprs
+
 let to_smt (es : expr list) : string =
   let symbols =
     List.map
@@ -252,10 +261,6 @@ let to_smt (es : expr list) : string =
   in
   let es' = List.map (fun e -> Format.sprintf "(assert %s)" (to_string e)) es in
   String.concat "\n" (symbols @ es' @ [ "(check-sat)" ])
-
-let string_of_list (exprs : expr list) : string =
-  let pc' = String.concat " " (List.map to_string exprs) in
-  if List.length exprs > 1 then Format.sprintf "(and %s)" pc' else pc'
 
 let string_of_values (el : (Num.t * t) list) : string =
   List.fold_left
