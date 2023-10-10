@@ -50,7 +50,7 @@ module I32Op = struct
     Int32.(shift_right (shift_left x shift) shift)
 
   let unop (op : I32.unop) : Num.t -> Num.t =
-    let f = match op with Clz -> assert false | Not -> Int32.lognot in
+    let f = match op with Neg -> Int32.neg | Clz -> assert false | Not -> Int32.lognot in
     fun v -> to_value (f (of_value 1 v))
 
   let binop (op : I32.binop) : Num.t -> Num.t -> Num.t =
@@ -127,7 +127,7 @@ module I64Op = struct
     Int64.(shift_right (shift_left x shift) shift)
 
   let unop (op : I64.unop) : Num.t -> Num.t =
-    let f = match op with Clz -> assert false | Not -> Int64.lognot in
+    let f = match op with Neg -> Int64.neg | Clz -> assert false | Not -> Int64.lognot in
     fun v -> to_value (f (of_value 1 v))
 
   let binop (op : I64.binop) : Num.t -> Num.t -> Num.t =

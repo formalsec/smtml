@@ -72,6 +72,7 @@ let keywords =
      ; ("str.sub", TERNARY (Str S.SubStr))
      ; ("str.eq", RELOP (Str S.Eq))
      ; ("str.ne", RELOP (Str S.Ne))
+     ; ("i32.neg", UNARY (I32 I32.Neg))
      ; ("i32.clz", UNARY (I32 I32.Clz))
      ; ("i32.not", UNARY (I32 I32.Not))
      ; ("i32.add", BINARY (I32 I32.Add))

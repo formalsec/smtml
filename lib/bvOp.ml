@@ -18,6 +18,7 @@ type binop =
   | ExtendU
 
 type unop =
+  | Neg
   | Not
   | Clz (*  Falta:  Ctz | Popcnt *)
 
@@ -61,7 +62,7 @@ let neg_relop (op : relop) : relop =
   | GeS -> LtS
 
 let string_of_unop (op : unop) : string =
-  match op with Clz -> "clz" | Not -> "not"
+  match op with Clz -> "clz" | Not -> "not" | Neg -> "neg"
 
 let string_of_binop (op : binop) : string =
   match op with

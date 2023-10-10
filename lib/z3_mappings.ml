@@ -295,6 +295,7 @@ module Fresh = struct
           match op with
           | Not -> BitVector.mk_not ctx
           | Clz -> failwith "I32: Clz not supported yet"
+          | Neg -> BitVector.mk_neg ctx
         in
         op' e
 
@@ -373,6 +374,7 @@ module Fresh = struct
           match op with
           | Not -> BitVector.mk_not ctx
           | Clz -> failwith "I64: clz supported yet"
+          | Neg -> BitVector.mk_neg ctx
         in
         op' e
 
