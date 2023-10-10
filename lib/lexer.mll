@@ -107,6 +107,7 @@ let keywords =
      ; ("i32.trunc_f64_u", CVTOP (I32 I32.TruncUF64))
      ; ("i32.reinterpret_f32", CVTOP (I32 I32.ReinterpretFloat))
      ; ("i32.wrap_i64", CVTOP (I32 I32.WrapI64))
+     ; ("i64.neg", UNARY (I64 I64.Neg))
      ; ("i64.clz", UNARY (I64 I64.Clz))
      ; ("i64.not", UNARY (I64 I64.Not))
      ; ("i64.add", BINARY (I64 I64.Add))
