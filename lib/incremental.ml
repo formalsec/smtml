@@ -38,8 +38,8 @@ module Make (Mappings : Mappings_intf.S) = struct
     b
 
   let model ?(symbols : Symbol.t list option) (solver : t) : Model.t Option.t =
-    let+ m = Mappings.get_model solver in
-    Mappings.value_binds ?symbols m
+    let+ model = Mappings.solver_model solver in
+    Mappings.values_of_model ?symbols model
 end
 
 module Make' (M : Mappings_intf.S) : Solver_intf.S = Make (M)

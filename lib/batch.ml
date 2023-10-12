@@ -56,8 +56,8 @@ module Make (Mappings : Mappings_intf.S) = struct
     | Mappings_intf.Unknown -> raise Unknown
 
   let model ?(symbols : Symbol.t list option) (s : t) : Model.t option =
-    let+ m = Mappings.get_model s.solver in
-    Mappings.value_binds ?symbols m
+    let+ model = Mappings.solver_model s.solver in
+    Mappings.values_of_model ?symbols model
 end
 
 module Make' (M : Mappings_intf.S) : Solver_intf.S = Make (M)

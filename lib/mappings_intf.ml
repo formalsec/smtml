@@ -13,23 +13,39 @@ module type S = sig
 
   exception Error of string
 
-  val encode_expr : Expression.t -> expr
-  val expr_to_smtstring : Expression.t list -> Bool.t -> string
   val mk_solver : unit -> solver
+
   val interrupt : unit -> unit
+
   val translate : solver -> solver
+
   val push : solver -> unit
+
   val pop : solver -> int -> unit
+
   val reset : solver -> unit
-  val add_solver : solver -> Expression.t List.t -> unit
-  val check : solver -> Expression.t List.t -> status
-  val get_model : solver -> model Option.t
-  val mk_opt : unit -> optimize
-  val add_opt : optimize -> Expression.t List.t -> unit
-  val maximize : optimize -> Expression.t -> handle
-  val minimize : optimize -> Expression.t -> handle
-  val get_opt_model : optimize -> model Option.t
-  val value_of_const : model -> Expression.t -> Value.t Option.t
-  val value_binds : ?symbols:Symbol.t list -> model -> Model.t
+
+  val add_solver : solver -> Expression.t list -> unit
+
+  val check : solver -> Expression.t list -> status
+
   val satisfiability : status -> satisfiability
+
+  val solver_model : solver -> model option
+
+  val value : model -> Types.expr_type -> Expression.t -> Value.t
+
+  val values_of_model : ?symbols:Symbol.t list -> model -> Model.t
+
+  val expr_to_smtstring : Expression.t list -> bool -> string
+
+  val mk_optimize : unit -> optimize
+
+  val add_optimize : optimize -> Expression.t list -> unit
+
+  val maximize : optimize -> Expression.t -> handle
+
+  val minimize : optimize -> Expression.t -> handle
+
+  val optimize_model : optimize -> model option
 end

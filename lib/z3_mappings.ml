@@ -740,10 +740,10 @@ module Fresh = struct
     let check (s : solver) (es : Expression.t list) : status =
       Z3.Solver.check s (List.map encode_expr es)
 
-    let get_model (s : solver) : model option = Z3.Solver.get_model s
-    let mk_opt () : optimize = Z3.Optimize.mk_opt ctx
+    let solver_model (s : solver) : model option = Z3.Solver.get_model s
+    let mk_optimize () : optimize = Z3.Optimize.mk_opt ctx
 
-    let add_opt (o : optimize) (es : Expression.t list) : unit =
+    let add_optimize (o : optimize) (es : Expression.t list) : unit =
       Z3.Optimize.add o (List.map encode_expr es)
 
     let maximize (o : optimize) (e : Expression.t) : Z3.Optimize.handle =
@@ -752,7 +752,7 @@ module Fresh = struct
     let minimize (o : optimize) (e : Expression.t) : Z3.Optimize.handle =
       Z3.Optimize.minimize o (encode_expr e)
 
-    let get_opt_model (o : optimize) : model Option.t = Z3.Optimize.get_model o
+    let optimize_model (o : optimize) : model option = Z3.Optimize.get_model o
 
     let set (s : string) (i : int) (n : char) =
       let bs = Bytes.of_string s in
@@ -795,32 +795,30 @@ module Fresh = struct
         | 64 -> Int64.float_of_bits fp_bits
         | _ -> assert false
 
-    let value_of_const (model : Z3.Model.model) (c : Expression.t) :
-      Value.t option =
-      let t = Expression.type_of c in
-      let interp = Z3.Model.eval model (encode_expr c) true in
-      let f (e : Z3.Expr.expr) : Value.t option =
-        match (t, Z3.Sort.get_sort_kind (Z3.Expr.get_sort e)) with
-        | Some `IntType, Z3enums.INT_SORT ->
-          Some (Int (Z.to_int @@ Z3.Arithmetic.Integer.get_big_int e))
-        | Some `RealType, Z3enums.REAL_SORT ->
-          Some (Real (Q.to_float @@ Z3.Arithmetic.Real.get_ratio e))
-        | Some `BoolType, Z3enums.BOOL_SORT -> (
-          match Z3.Boolean.get_bool_value e with
-          | Z3enums.L_TRUE -> Some (Bool true)
-          | Z3enums.L_FALSE -> Some (Bool false)
-          | Z3enums.L_UNDEF -> None )
-        | Some `StrType, Z3enums.SEQ_SORT -> Some (Str (Z3.Seq.get_string ctx e))
-        | Some `I32Type, Z3enums.BV_SORT ->
-          Some (Num (I32 (Int64.to_int32 (int64_of_bv e))))
-        | Some `I64Type, Z3enums.BV_SORT -> Some (Num (I64 (int64_of_bv e)))
-        | Some `F32Type, Z3enums.FLOATING_POINT_SORT ->
-          Some (Num (F32 (Int32.bits_of_float @@ float_of_numeral e)))
-        | Some `F64Type, Z3enums.FLOATING_POINT_SORT ->
-          Some (Num (F64 (Int64.bits_of_float @@ float_of_numeral e)))
-        | _ -> assert false
-      in
-      Option.bind interp f
+    let value (model : Z3.Model.model) ty (c : Expression.t) : Value.t =
+      let open Value in
+      (* we have a model with completion => should never be None *)
+      let e = Z3.Model.eval model (encode_expr c) true |> Option.get in
+      match (ty, Z3.Sort.get_sort_kind @@ Z3.Expr.get_sort e) with
+      | `IntType, Z3enums.INT_SORT ->
+        Int (Z.to_int @@ Z3.Arithmetic.Integer.get_big_int e)
+      | `RealType, Z3enums.REAL_SORT ->
+        Real (Q.to_float @@ Z3.Arithmetic.Real.get_ratio e)
+      | `BoolType, Z3enums.BOOL_SORT -> (
+        match Z3.Boolean.get_bool_value e with
+        | Z3enums.L_TRUE -> Bool true
+        | Z3enums.L_FALSE -> Bool false
+        | Z3enums.L_UNDEF ->
+          (* It can never be something else *)
+          assert false )
+      | `StrType, Z3enums.SEQ_SORT -> Str (Z3.Seq.get_string ctx e)
+      | `I32Type, Z3enums.BV_SORT -> Num (I32 (Int64.to_int32 (int64_of_bv e)))
+      | `I64Type, Z3enums.BV_SORT -> Num (I64 (int64_of_bv e))
+      | `F32Type, Z3enums.FLOATING_POINT_SORT ->
+        Num (F32 (Int32.bits_of_float @@ float_of_numeral e))
+      | `F64Type, Z3enums.FLOATING_POINT_SORT ->
+        Num (F64 (Int64.bits_of_float @@ float_of_numeral e))
+      | _ -> assert false
 
     let type_of_sort (sort : Z3.Sort.sort) : Types.expr_type =
       match Z3.Sort.get_sort_kind sort with
@@ -850,20 +848,17 @@ module Fresh = struct
           Symbol.mk_symbol t x )
         (Z3.Model.get_const_decls model)
 
-    let model_binds (model : Z3.Model.model) (symbols : Symbol.t list) : Model.t
-        =
+    let values_of_model ?(symbols : Symbol.t list option)
+      (model : Z3.Model.model) : Model.t =
       let m = Hashtbl.create 512 in
-      List.iter
-        (fun s ->
-          let v = value_of_const model (Expression.mk_symbol s) in
-          Option.iter (fun v -> Hashtbl.replace m s v) v )
-        symbols;
-      m
-
-    let value_binds ?(symbols : Symbol.t list option) (model : Z3.Model.model) :
-      Model.t =
       let symbols' = Option.value symbols ~default:(symbols_of_model model) in
-      model_binds model symbols'
+      List.iter
+        (fun sym ->
+          let ty = Symbol.type_of sym in
+          let v = value model ty (Expression.mk_symbol sym) in
+          Hashtbl.replace m sym v )
+        symbols';
+      m
 
     let satisfiability =
       let open Mappings_intf in
