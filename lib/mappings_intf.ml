@@ -4,7 +4,6 @@ type satisfiability =
   | Unknown
 
 module type S = sig
-  type expr
   type model
   type solver
   type status
