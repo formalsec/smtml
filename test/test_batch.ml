@@ -16,8 +16,8 @@ let%test "check-constrained" =
 (* eval *)
 let%test "eval-unconstrained" =
   assert (Batch.check solver []);
-  let m = Batch.model solver in
-  Option.is_some @@ Model.evaluate (Option.get m) symb_x
+  let m = Batch.model ~symbols:[ symb_x ] solver |> Option.get in
+  Option.is_some @@ Model.evaluate m symb_x
 
 let%test "eval-constrained_int" =
   assert (Batch.check solver [ Integer.mk_eq x (Integer.mk_val 5) ]);
