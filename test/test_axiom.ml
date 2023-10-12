@@ -2,9 +2,8 @@ open Encoding
 module Batch = Batch.Make (Z3_mappings)
 
 let solver = Batch.create ()
-let _ = Batch.add solver Axioms.axioms
-let encode f = try ignore (Z3_mappings.encode_expr f) with exn -> raise exn
-let%test_unit _ = encode (List.hd Axioms.axioms)
+
+let () = Batch.add solver Axioms.axioms
 
 let%test _ =
   let x = Expression.mk_symbol_s `StrType "x"

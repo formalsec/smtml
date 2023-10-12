@@ -2,16 +2,11 @@ open Encoding
 module Batch = Batch.Make (Z3_mappings)
 
 let solver = Batch.create ()
-let encode e = try ignore (Z3_mappings.encode_expr e) with exn -> raise exn
 let abc = Strings.mk_val "abc"
 let symb_x = Symbol.mk_symbol `StrType "x"
 let x = Expression.mk_symbol symb_x
 let zero = Integer.mk_val 0
 let two = Integer.mk_val 2
-
-(* Encoding *)
-let%test_unit _ = encode abc
-let%test_unit _ = encode x
 
 (* Satisfiability *)
 let%test "test_concrete_len" =
