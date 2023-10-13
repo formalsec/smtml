@@ -10,7 +10,7 @@
   test_optimizer
   test_axiom
   test_parser
-  test_eval_numeric)
+  test_regression)
  (inline_tests)
  (preprocess
   (pps ppx_inline_test))
