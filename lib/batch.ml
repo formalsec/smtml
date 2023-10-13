@@ -55,6 +55,12 @@ module Make (Mappings : Mappings_intf.S) = struct
     | Mappings_intf.Unsatisfiable -> false
     | Mappings_intf.Unknown -> raise Unknown
 
+  let get_value (solver : t) (e : Expr.t) : Expr.t =
+    let ty = Expr.type_of e |> Option.get in
+    match Mappings.solver_model solver.solver with
+    | Some m -> Val (Mappings.value m ty e)
+    | None -> assert false
+
   let model ?(symbols : Symbol.t list option) (s : t) : Model.t option =
     let+ model = Mappings.solver_model s.solver in
     Mappings.values_of_model ?symbols model

@@ -34,8 +34,19 @@ module type S = sig
 
   (** Checks the satisfiability of the assertions.
 
-      Raises [Unknown] if SMT solver returns unknown.  *)
+      Raises [Unknown] if SMT solver returns unknown. *)
   val check : t -> Expression.t list -> bool
+
+  (** [get_value solver e] get an expression denoting the model value of a given
+      expression.
+
+      Requires that the last {!val:check} query returned [true].
+
+      @param t The solver.
+      @param e Expression to query a model for.
+
+      @return An expression denoting the model value of [e]. *)
+  val get_value : t -> Expression.t -> Expression.t
 
   (** The model of the last [check].
 

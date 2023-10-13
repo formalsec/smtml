@@ -37,6 +37,12 @@ module Make (Mappings : Mappings_intf.S) = struct
     in
     b
 
+  let get_value (solver : t) (e : Expr.t) : Expr.t =
+    let ty = Expr.type_of e |> Option.get in
+    match Mappings.solver_model solver with
+    | Some m -> Val (Mappings.value m ty e)
+    | None -> assert false
+
   let model ?(symbols : Symbol.t list option) (solver : t) : Model.t Option.t =
     let+ model = Mappings.solver_model solver in
     Mappings.values_of_model ?symbols model
