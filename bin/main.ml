@@ -21,9 +21,11 @@ let command =
        match files with
        | [] ->
          let ast = parse_file "-" in
-         Interpret.start ast
+         ignore @@ Interpret.start ast
        | _ ->
          let asts = List.map files ~f:Run.parse_file in
-         List.iter asts ~f:(fun ast -> Interpret.start ast) )
+         ignore
+         @@ List.fold asts ~init:None ~f:(fun state ast ->
+              Some (Interpret.start ?state ast) ) )
 
 let () = Command_unix.run ~version:"0.1" command

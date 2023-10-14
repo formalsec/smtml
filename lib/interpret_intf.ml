@@ -1,3 +1,5 @@
 module type S = sig
-  val start : Ast.t List.t -> unit
+  type exec_state
+
+  val start : ?state:exec_state -> Ast.t list -> exec_state
 end
