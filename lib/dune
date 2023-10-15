@@ -41,7 +41,8 @@
   value
   z3_mappings
   slicing
-  normalize)
+  normalize
+  infixes)
  (libraries core z3)
  (preprocess
   (pps ppx_jane)))

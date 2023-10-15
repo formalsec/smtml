@@ -15,5 +15,5 @@ let%expect_test _ =
     (check-sat)
     |}
   in
-  parse_and_run script;
+  parse_and_run script 2;
   [%expect {| sat |}]

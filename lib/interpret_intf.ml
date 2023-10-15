@@ -1,3 +1,3 @@
 module type S = sig
-  val start : Ast.t List.t -> unit
+  val start : Ast.t list -> int -> unit
 end
