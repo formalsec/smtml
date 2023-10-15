@@ -2,7 +2,7 @@ open Core
 open Encoding
 module Z3_batch = Batch.Make (Z3_mappings)
 module Z3_incremental = Incremental.Make (Z3_mappings)
-module Interpret = Interpret.Make (Z3_incremental)
+module Interpret = Interpret.Make (Z3_batch)
 
 let get_contents = function
   | "-" -> In_channel.input_all In_channel.stdin
@@ -23,9 +23,9 @@ let command =
          let ast = parse_file "-" in
          ignore @@ Interpret.start ast
        | _ ->
-         let asts = List.map files ~f:Run.parse_file in
          ignore
-         @@ List.fold asts ~init:None ~f:(fun state ast ->
-              Some (Interpret.start ?state ast) ) )
+         @@ List.fold files ~init:None ~f:(fun state file ->
+                let ast = Run.parse_file file in
+                Some (Interpret.start ?state ast) ) )
 
 let () = Command_unix.run ~version:"0.1" command

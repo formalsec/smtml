@@ -17,11 +17,10 @@ module Make (Solver : Solver_intf.S) = struct
     }
 
   let eval stmt (state : exec_state) : exec_state =
-    let { smap; solver; pc; _ } = state in
+    let { solver; pc; _ } = state in
     let st pc = { state with pc } in
     match stmt with
-    | Declare x ->
-      Hashtbl.add smap (Symbol.to_string x) (Symbol.type_of x);
+    | Declare _x ->
       st pc
     | Assert e ->
       Solver.add solver [ e ];
@@ -47,7 +46,7 @@ module Make (Solver : Solver_intf.S) = struct
       | None -> init_state stmts
       | Some st ->
         Solver.reset st.solver;
-        { st with stmts }
+        { st with stmts; pc = [] }
     in
     loop st
 end
