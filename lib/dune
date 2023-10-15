@@ -31,6 +31,7 @@
   op_intf
   optimizer
   parser
+  params
   real
   run
   solver_intf

@@ -11,9 +11,14 @@ module Fresh = struct
     type optimize = Z3.Optimize.optimize
     type handle = Z3.Optimize.handle
 
-    let ctx =
-      Z3.mk_context
-        [ ("model", "true"); ("proof", "false"); ("unsat_core", "false") ]
+    let ctx = Z3.mk_context []
+
+    let update_param_value (type a) (param : a Params.param) (value : a) =
+      let module P = Z3.Params in
+      match param with
+      | Params.Model -> P.update_param_value ctx "model" (string_of_bool value)
+      | Params.Unsat_core ->
+        P.update_param_value ctx "unsat_core" (string_of_bool value)
 
     let int_sort = Z3.Arithmetic.Integer.mk_sort ctx
     let real_sort = Z3.Arithmetic.Real.mk_sort ctx

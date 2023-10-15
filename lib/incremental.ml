@@ -17,13 +17,26 @@ module Make (Mappings : Mappings_intf.S) = struct
   type t = Mappings.solver
   type solver = t
 
-  let create () : t = Mappings.mk_solver ()
+  let update_param_values params =
+    Mappings.update_param_value Model (Params.get params Model);
+    Mappings.update_param_value Unsat_core (Params.get params Unsat_core)
+
+  let create ?params () : t =
+    Option.iter update_param_values params;
+    Mappings.mk_solver ()
+
   let interrupt () = Mappings.interrupt ()
+
   let clone (solver : t) : t = Mappings.translate solver
+
   let push (solver : t) : unit = Mappings.push solver
+
   let pop (solver : t) (lvl : int) : unit = Mappings.pop solver lvl
+
   let reset (solver : t) : unit = Mappings.reset solver
+
   let add (solver : t) (es : Expr.t list) : unit = Mappings.add_solver solver es
+
   let get_assertions (_solver : t) : Expr.t list = assert false
 
   let check (solver : t) (es : Expr.t list) : bool =

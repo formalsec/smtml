@@ -22,7 +22,12 @@ module Make (Mappings : Mappings_intf.S) = struct
     acc := !acc +. (Stdlib.Sys.time () -. start);
     ret
 
-  let create () =
+  let update_param_values params =
+    Mappings.update_param_value Model (Params.get params Model);
+    Mappings.update_param_value Unsat_core (Params.get params Unsat_core)
+
+  let create ?params () =
+    Option.iter update_param_values params;
     { solver = Mappings.mk_solver (); top = []; stack = Stack.create () }
 
   let interrupt () = Mappings.interrupt ()

@@ -9,7 +9,12 @@ module Make (Solver : Solver_intf.S) = struct
     }
 
   let init_state stmts =
-    { stmts; smap = Hashtbl.create 0; solver = Solver.create (); pc = [] }
+    let params = Params.(default () & (Model, false)) in
+    { stmts
+    ; smap = Hashtbl.create 0
+    ; solver = Solver.create ~params ()
+    ; pc = []
+    }
 
   let eval stmt (state : exec_state) : exec_state =
     let { smap; solver; pc; _ } = state in

@@ -12,6 +12,8 @@ module type S = sig
 
   exception Error of string
 
+  val update_param_value : 'a Params.param -> 'a -> unit
+
   val mk_solver : unit -> solver
 
   val interrupt : unit -> unit

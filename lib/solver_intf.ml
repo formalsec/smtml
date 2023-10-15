@@ -9,7 +9,7 @@ module type S = sig
   val solver_count : int ref
 
   (** Create a new solver. *)
-  val create : unit -> t
+  val create : ?params:Params.t -> unit -> t
 
   (** Interrupt solver. *)
   val interrupt : unit -> unit
