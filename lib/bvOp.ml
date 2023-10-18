@@ -16,6 +16,7 @@ type binop =
   | Rotr
   | ExtendS
   | ExtendU
+  | Concat
 
 type unop =
   | Neg
@@ -83,6 +84,7 @@ let string_of_binop (op : binop) : string =
   | Rotr -> "rotr"
   | ExtendS -> "ext_s"
   | ExtendU -> "ext_u"
+  | Concat -> "++"
 
 let string_of_relop (op : relop) : string =
   match op with

@@ -320,6 +320,7 @@ module Fresh = struct
           | ShrU -> BitVector.mk_lshr ctx
           | RemS -> BitVector.mk_srem ctx
           | RemU -> BitVector.mk_urem ctx
+          | Concat -> BitVector.mk_concat ctx
           | ExtendS | ExtendU -> assert false
           | Rotl | Rotr -> failwith "z3_mappings: rotl|rotr not implemented!"
         in
@@ -399,6 +400,7 @@ module Fresh = struct
           | ShrU -> BitVector.mk_lshr ctx
           | RemS -> BitVector.mk_srem ctx
           | RemU -> BitVector.mk_urem ctx
+          | Concat -> BitVector.mk_concat ctx
           | ExtendS | ExtendU -> assert false
           | Rotl | Rotr -> failwith "z3_mappings: rotl|rotr not implemented!"
         in
@@ -713,10 +715,6 @@ module Fresh = struct
       | Extract (e, h, l) ->
         let e' = encode_expr e in
         Z3.BitVector.mk_extract ctx ((h * 8) - 1) (l * 8) e'
-      | Concat (e1, e2) ->
-        let e1' = encode_expr e1
-        and e2' = encode_expr e2 in
-        Z3.BitVector.mk_concat ctx e1' e2'
       | Quantifier (t, vars, body, patterns) ->
         let body' = encode_expr body in
         let encode_pattern p =
