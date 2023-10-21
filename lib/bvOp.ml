@@ -35,7 +35,7 @@ type relop =
   | GeU
   | GeS
 
-type triop
+type triop = Extract
 
 type cvtop =
   | TruncSF32
@@ -112,4 +112,6 @@ let string_of_cvtop (op : cvtop) : string =
   | ToBool -> "to_bool"
   | OfBool -> "of_bool"
 
-let string_of_triop (_ : triop) : string = assert false
+let string_of_triop (op : triop) : string = 
+  match op with
+  | Extract -> "extract"

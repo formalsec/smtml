@@ -357,7 +357,7 @@ module Fresh = struct
           | ExtendSI32 | ExtendUI32 -> assert false
         in
         op' e
-
+      
       let encode_triop _op _e1 _e2 _e3 = assert false
     end
 
@@ -696,6 +696,10 @@ module Fresh = struct
         let e1' = encode_expr e1
         and e2' = encode_expr e2 in
         encode_binop op e1' e2'
+      | Triop (I32 Extract, e, Val (Int h), Val (Int l))
+      | Triop (I64 Extract, e, Val (Int h), Val (Int l)) ->
+        let e' = encode_expr e in
+        Z3.BitVector.mk_extract ctx ((h * 8) - 1) (l * 8) e'
       | Triop (op, e1, e2, e3) ->
         let e1' = encode_expr e1
         and e2' = encode_expr e2
@@ -712,9 +716,6 @@ module Fresh = struct
         let x = Symbol.to_string s
         and t = Symbol.type_of s in
         Z3.Expr.mk_const_s ctx x (get_sort t)
-      | Extract (e, h, l) ->
-        let e' = encode_expr e in
-        Z3.BitVector.mk_extract ctx ((h * 8) - 1) (l * 8) e'
       | Quantifier (t, vars, body, patterns) ->
         let body' = encode_expr body in
         let encode_pattern p =

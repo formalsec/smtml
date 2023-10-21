@@ -15,7 +15,6 @@ type expr =
   | Cvtop of cvtop * expr
   | Triop of triop * expr * expr * expr
   | Symbol of Symbol.t
-  | Extract of expr * int * int
   | Quantifier of qt * Symbol.t list * expr * expr list list
 
 type t = expr
@@ -49,8 +48,6 @@ let rec equal (e1 : expr) (e2 : expr) : bool =
   | Triop (op1, e1, e3, e5), Triop (op2, e2, e4, e6) ->
     op1 = op2 && equal e1 e2 && equal e3 e4 && equal e5 e6
   | Symbol s1, Symbol s2 -> Symbol.equal s1 s2
-  | Extract (e1, h1, l1), Extract (e2, h2, l2) ->
-    equal e1 e2 && h1 = h2 && l1 = l2
   | Quantifier (q1, vars1, e1, p1), Quantifier (q2, vars2, e2, p2) ->
     q1 = q2
     && List.equal Symbol.equal vars1 vars2
@@ -68,7 +65,6 @@ let rec length (e : expr) : int =
   | Relop (_, e1, e2) -> 1 + length e1 + length e2
   | Cvtop (_, e) -> 1 + length e
   | Symbol _ -> 1
-  | Extract (e, _, _) -> 1 + length e
   | Quantifier (_, _, body, _) -> length body
 
 let get_symbols (e : expr list) : Symbol.t list =
@@ -82,7 +78,6 @@ let get_symbols (e : expr list) : Symbol.t list =
     | Relop (_, e1, e2) -> symbols e1 @ symbols e2
     | Cvtop (_, e) -> symbols e
     | Symbol s -> [ s ]
-    | Extract (e, _, _) -> symbols e
     | Quantifier (_, vars, _, _) -> vars
   in
   List.fold_left
@@ -130,17 +125,15 @@ let type_of (e : expr) : expr_type option =
   | Relop (op, _, _) -> Some (Types.type_of op)
   | Cvtop (op, _) -> Some (Types.type_of op)
   | Symbol s -> Some (Symbol.type_of s)
-  | Extract (_, h, l) -> (
-    match h - l with 4 -> Some `I32Type | 8 -> Some `I64Type | _ -> None )
   | Quantifier _ -> None
 
   let ( ++ ) (e1 : expr) (e2 : expr) =
-  let ty1 = type_of e1 in
-  let ty2 = type_of e2 in
-  match (ty1, ty2) with
-  | Some `I32Type, Some `I32Type -> Binop (I32 Concat, e1, e2)
-  | Some `I64Type, Some `I64Type -> Binop (I64 Concat, e1, e2)
-  | _ -> Binop (I64 Concat, e1, e2)
+    let ty1 = type_of e1 in
+    let ty2 = type_of e2 in
+    match (ty1, ty2) with
+    | Some `I32Type, Some `I32Type -> Binop (I32 Concat, e1, e2)
+    | Some `I64Type, Some `I64Type -> Binop (I64 Concat, e1, e2)
+    | _ -> Binop (I64 Concat, e1, e2)
 
 let negate_relop (e : expr) : expr =
   match e with
@@ -237,7 +230,6 @@ let rec pp fmt (e : expr) =
   | Relop (op, e1, e2) -> fprintf fmt "(%a %a %a)" pp_relop op pp e1 pp e2
   | Cvtop (op, e) -> fprintf fmt "(%a %a)" pp_cvtop op pp e
   | Symbol s -> fprintf fmt "%a" Symbol.pp s
-  | Extract (e, h, l) -> fprintf fmt "(extract %a %d %d)" pp e l h
   | Quantifier (qt, vars, body, _) ->
     fprintf fmt "%a (%a) %a" pp_quantifier qt pp_vars vars pp body
 
@@ -289,7 +281,6 @@ let rec get_ptr (e : expr) : Num.t option =
     if Option.is_some p1 then p1 else get_ptr e2
   | Cvtop (_, e) -> get_ptr e
   | Symbol _ -> None
-  | Extract (e, _, _) -> get_ptr e
 
 let concretize_ptr (e : expr) : Num.t option =
   (* TODO: this should work with symbolic pointers *)
@@ -330,40 +321,47 @@ let rec simplify ?(extract = true) (e : expr) : expr =
     let e1' = simplify ~extract:false e1
     and e2' = simplify ~extract:false e2 in
     match (e1', e2') with
-    | Extract (Val (Num (I32 x2)), h2, l2), Extract (Val (Num (I32 x1)), h1, l1)
+    | (Triop ((I32 Extract as op), Val (Num (I32 x2)), Val (Int h2), Val (Int l2)),
+      Triop (I32 Extract, Val (Num (I32 x1)), Val (Int h1), Val (Int l1)) )
       ->
       let d1 = h1 - l1
       and d2 = h2 - l2 in
       let x1' = nland32 (Int32.shift_right x1 (l1 * 8)) d1
       and x2' = nland32 (Int32.shift_right x2 (l2 * 8)) d2 in
       let x = Int32.(logor (shift_left x2' (d1 * 8)) x1') in
-      Extract (Val (Num (I32 x)), d1 + d2, 0)
-    | Extract (s1, h, m1), Extract (s2, m2, l) when s1 = s2 && m1 = m2 ->
-      Extract (s1, h, l)
+      Triop (op, Val (Num (I32 x)), Val (Int (d1 + d2)), Val (Int 0))
+    | (Triop ((I32 Extract as op), s1, h, Val (Int m1)),
+      Triop (I32 Extract, s2, Val (Int m2), l)) 
+        when s1 = s2 && m1 = m2 ->
+        Triop (op, s1, h, l)
     | _ -> e1' ++ e2' )
   | Binop (I64 Concat, e1, e2) -> (
     let e1' = simplify ~extract:false e1
     and e2' = simplify ~extract:false e2 in
     match (e1', e2') with
-    | Extract (Val (Num (I64 x2)), h2, l2), Extract (Val (Num (I64 x1)), h1, l1)
+    | (Triop ((I64 Extract as op), Val (Num (I64 x2)), Val (Int h2), Val (Int l2)),
+       Triop (I64 Extract, Val (Num (I64 x1)), Val (Int h1), Val (Int l1)) )
       ->
       let d1 = h1 - l1
       and d2 = h2 - l2 in
       let x1' = nland64 (Int64.shift_right x1 (l1 * 8)) d1
       and x2' = nland64 (Int64.shift_right x2 (l2 * 8)) d2 in
       let x = Int64.(logor (shift_left x2' (d1 * 8)) x1') in
-      Extract (Val (Num (I64 x)), d1 + d2, 0)
-    | Extract (s1, h, m1), Extract (s2, m2, l) when s1 = s2 && m1 = m2 ->
-      Extract (s1, h, l)
-    | (Extract (Val (Num (I64 x2)), h2, l2), 
-      Binop (I64 Concat, (Extract (Val (Num (I64 x1)), h1, l1)), se))
-      when not (is_num se) ->
-      let d1 = h1 - l1
-      and d2 = h2 - l2 in
-      let x1' = nland64 (Int64.shift_right x1 (l1 * 8)) d1
-      and x2' = nland64 (Int64.shift_right x2 (l2 * 8)) d2 in
-      let x = Int64.(logor (shift_left x2' (d1 * 8)) x1') in
-      Binop (I64 Concat, Extract (Val (Num (I64 x)), d1 + d2, 0), se)
+        Triop (op, Val (Num (I64 x)), Val (Int (d1 + d2)), Val (Int 0))
+    | (Triop ((I64 Extract as op), s1, h, Val (Int m1)),
+      Triop (I64 Extract, s2, Val (Int m2), l) ) 
+        when s1 = s2 && m1 = m2 ->
+        Triop (op, s1, h, l)
+    | (Triop (I64 Extract, Val (Num (I64 x2)), Val (Int h2), Val (Int l2)),
+      Binop (I64 Concat,
+          Triop (I64 Extract, Val (Num (I64 x1)), Val (Int h1), Val (Int l1)), se))
+          when not (is_num se) ->
+            let d1 = h1 - l1 and d2 = h2 - l2 in
+            let x1' = nland64 (Int64.shift_right x1 (l1 * 8)) d1
+            and x2' = nland64 (Int64.shift_right x2 (l2 * 8)) d2 in
+            let x = Int64.(logor (shift_left x2' (d1 * 8)) x1') in
+            Binop (I64 Concat, 
+              Triop (I64 Extract, Val (Num (I64 x)), Val (Int (d1 + d2)), Val (Int 0)), se)
     | _ -> e1' ++ e2' )
   | Binop (I32 op, e1, e2) -> (
     let e1' = simplify e1
@@ -495,16 +493,19 @@ let rec simplify ?(extract = true) (e : expr) : expr =
       | GeU -> Relop (I32 GeU, Val (Num (I32 b1)), Val (Num (I32 b2)))
       | _ -> Relop (I32 op, e1', e2') )
     | _ -> Relop (I32 op, e1', e2') )
-  | Extract (_, _, _) when not extract -> e
-  | Extract (s, h, l) when extract -> (
-    match s with
-    | Val (Num (I64 x)) ->
-      let x' = nland64 (Int64.shift_right x (l * 8)) (h - l) in
-      Val (Num (I64 x'))
-    | _ -> (
-      match type_of s with
-      | Some t -> if h - l = size t then s else e
-      | None -> e ) )
+  | Triop (I32 Extract, _, _, _) when not extract -> e
+  | Triop (I64 Extract, _, _, _) when not extract -> e
+  | Triop (I32 Extract, s, Val (Int h), Val (Int l))
+  | Triop (I64 Extract, s, Val (Int h), Val (Int l))
+    when extract  -> (
+      match s with
+      | Val (Num (I64 x)) ->
+        let x' = nland64 (Int64.shift_right x (l * 8)) (h - l) in
+        Val (Num (I64 x'))
+      | _ -> (
+        match type_of s with
+        | Some t -> if h - l = size t then s else e
+        | None -> e ) )
   | _ -> e
 
 let mk_relop ?(reduce : bool = true) (e : expr) (t : num_type) : expr =

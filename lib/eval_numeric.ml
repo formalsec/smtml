@@ -90,6 +90,8 @@ module I32Op = struct
       | GeU -> ge_u
     in
     fun v1 v2 -> f (of_value 1 v1) (of_value 2 v2)
+  
+  let triop (_ : I32.triop) : Num.t -> Num.t -> Num.t -> Num.t = assert false
 end
 
 module I64Op = struct
@@ -167,6 +169,8 @@ module I64Op = struct
       | GeU -> ge_u
     in
     fun v1 v2 -> f (of_value 1 v1) (of_value 2 v2)
+  
+  let triop (_ : I64.triop) : Num.t -> Num.t -> Num.t -> Num.t = assert false
 end
 
 module F32Op = struct
@@ -483,7 +487,13 @@ let op i32 i64 f32 f64 = function
   | F64 x -> f64 x
   | Str _ | Bool _ -> assert false
 
+let triop i32 i64 = function
+  | I32 x -> i32 x
+  | I64 x -> i64 x
+  | _ -> assert false
+
 let eval_unop = op I32Op.unop I64Op.unop F32Op.unop F64Op.unop
 let eval_binop = op I32Op.binop I64Op.binop F32Op.binop F64Op.binop
 let eval_relop = op I32Op.relop I64Op.relop F32Op.relop F64Op.relop
 let eval_cvtop = op I32CvtOp.cvtop I64CvtOp.cvtop F32CvtOp.cvtop F64CvtOp.cvtop
+let eval_triop = triop I32Op.triop I64Op.triop

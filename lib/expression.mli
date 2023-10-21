@@ -15,7 +15,6 @@ type expr =
   | Cvtop of cvtop * expr
   | Triop of triop * expr * expr * expr
   | Symbol of Symbol.t
-  | Extract of expr * int * int
   | Quantifier of qt * Symbol.t list * expr * expr list list
 
 type t = expr
