@@ -4,8 +4,8 @@
 [![GPL-3.0](https://img.shields.io/github/license/wasp-platform/encoding)](LICENSE)
 ![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos-lightgrey)
 
-The OCaml Constraint Abstraction Layer (OCAL) serves as an abstracted constraint-solving 
-wrapper, currently utilising Z3 as its backend solver. However, future plans for OCAL 
+The OCaml Constraint Abstraction Layer (OCAL) serves as an abstracted constraint-solving
+wrapper, currently utilising Z3 as its backend solver. However, future plans for OCAL
 include support for other solvers in its backend, such as Yices and CVC5.
 
 ## Build from source
@@ -15,7 +15,7 @@ include support for other solvers in its backend, such as Yices and CVC5.
 
 ```sh
 opam init
-opam switch create 4.14.0 4.14.0
+opam switch create 5.1.0 5.1.0
 ```
 
 - Then, install the library dependencies:
@@ -29,21 +29,20 @@ opam install . --deps-only
 - Build and test:
 
 ```sh
-make
-make test
+dune build
+dune runtest
 ```
 
 - Install `encoding` on your path by running:
 
 ```sh
-make install
+dune install
 ```
 
 ## Use encoding in your project
 
-* To incorporate encoding into your project, you can either build and install 
-the project sources or add encoding as a submodule to your project:
+* To incorporate encoding into your project, you can pin to your project:
 
 ```sh
-git submodule add https://github.com/wasp-platform/encoding
+opam pin encoding git+https://github.com/wasp-platform/encoding
 ```
