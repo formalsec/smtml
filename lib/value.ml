@@ -32,4 +32,7 @@ let pp fmt (v : t) =
   | Num x -> Format.fprintf fmt "%a" Num.pp x
   | Str x -> Format.fprintf fmt {|"%s"|} x
 
+let pp_num fmt (v : t) =
+  match v with Num x -> Num.pp_hex fmt x | _ -> pp fmt v
+
 let to_string v = Format.asprintf "%a" pp v
