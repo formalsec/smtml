@@ -30,19 +30,20 @@ let command =
   Command.basic ~summary:"SMTLIB-like parser and interpreter"
     ~readme:(fun () -> "More detailed information")
     (let%map_open.Command targets =
-       anon (sequence ("filename/directory" %: Filename_unix.arg_type))
-     and mode = 
-       flag "-mode" (optional_with_default 2 (Arg_type.create mode_of_string)) 
-         ~doc:"MODE is 'n' for Normalize And Cache, 'd' for Dumb Cache, or leave unspecified for No Cache"
-     in
-     fun () ->
-       match targets with
-       | [] ->
-         let ast = parse_file "-" in
-         Interpret.start ast mode
-       | _ ->
-         let files = List.concat_map targets ~f:find_smt2_files in
-         let asts = List.map files ~f:parse_file in
-         List.iter asts ~f:(fun ast -> Interpret.start ast mode))
+        anon (sequence ("filename/directory" %: Filename_unix.arg_type))
+      and mode = 
+        flag "-mode" (optional_with_default 2 (Arg_type.create mode_of_string)) 
+          ~doc:"MODE is 'n' for Normalize And Cache, 'd' for Dumb Cache, or leave unspecified for No Cache"
+      in
+      fun () ->
+        match targets with
+        | [] ->
+          let ast = parse_file "-" in
+          Interpret.start ast mode
+        | _ ->
+          let files = List.concat_map targets ~f:find_smt2_files |> List.sort ~compare:String.compare in
+          let asts = List.map files ~f:parse_file in
+          List.iter asts ~f:(fun ast -> Interpret.start ast mode))
+    
 
 let () = Command_unix.run ~version:"0.1" command

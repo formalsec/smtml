@@ -1,0 +1,19 @@
+Entering directory '/home/afonso/Tese/encoding'
+Leaving directory '/home/afonso/Tese/encoding'
+unsat
+unsat
+Cache Hit: unsat
+Cache Hit: unsat
+Cache Hit: unsat
+unsat
+unsat
+unsat
+unsat
+sat
+sat
+sat
+sat
+
+real	0m0.529s
+user	0m0.245s
+sys	0m0.056s

@@ -60,6 +60,12 @@ data_for_table = []
 
 for folder, modes_data in comparison_data.items():
     for mode, parsed_data in modes_data.items():
+        if mode == '0':
+            mode = 'NoCache'
+        elif mode == 'd':
+            mode = 'DumbCache'
+        elif mode == 'n':
+            mode = 'NormCache'
         row = {
             'Folder': folder,
             'Mode': mode,
@@ -71,8 +77,33 @@ for folder, modes_data in comparison_data.items():
 
 df = pd.DataFrame(data_for_table)
 
-# Optionally: Save the table to an Excel file
-df.to_excel("comparison_results.xlsx", index=False)
+# Save the DataFrame as a LaTeX table
+latex_table = df.to_latex(index=False)
+
+# Optionally, write the LaTeX table to a .tex file
+with open("comparison_results.tex", "w") as tex_file:
+    tex_file.write(latex_table)
 
 # Print the table to console
 print(df)
+
+
+# Calculate % time decrease for DumbCache and NormCache in relation to NoCache
+baseline_time = df[df['Mode'] == 'NoCache']['Real Time'].str.extract(r'(\d+\.\d+)s').astype(float).mean()
+
+df['DumbCache % Time Decrease'] = round(((df[df['Mode'] == 'DumbCache']['Real Time'].str.extract(r'(\d+\.\d+)s').astype(float).mean() / baseline_time) - 1) * 100, 2)
+df['NormCache % Time Decrease'] = round(((df[df['Mode'] == 'NormCache']['Real Time'].str.extract(r'(\d+\.\d+)s').astype(float).mean() / baseline_time) - 1) * 100, 2)
+
+print("\nPercentual Decrease in Time for DumbCache and NormCache in relation to NoCache:")
+print("DumbCache % Time Decrease:", df['DumbCache % Time Decrease'].mean())
+print("NormCache % Time Decrease:", df['NormCache % Time Decrease'].mean())
+
+# Calculate % of cache hits for each caching mode
+for mode in ['DumbCache', 'NormCache']:
+    df[f'{mode} % Cache Hits'] = (df[df['Mode'] == mode]['Cache Hits'] / df[df['Mode'] == mode]['Result Count']) * 100
+
+# Calculate the average % of cache hits for the 2 caching modes
+average_cache_hits = round(df[['DumbCache % Cache Hits', 'NormCache % Cache Hits']].mean(), 2)
+
+print("\nAverage % Cache Hits (in relation to the result count) for the 2 caching modes:")
+print(average_cache_hits)
