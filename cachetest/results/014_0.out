@@ -1,7 +1,7 @@
-Entering directory '/home/afonso/Tese/encoding'
-Leaving directory '/home/afonso/Tese/encoding'
+Entering directory '/home/aribeiro/tese/encoding'
+Leaving directory '/home/aribeiro/tese/encoding'
 :2:48: syntax error
 
-real	0m0.565s
-user	0m0.191s
-sys	0m0.117s
+real	0m0.373s
+user	0m0.262s
+sys	0m0.072s

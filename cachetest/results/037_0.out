@@ -1,0 +1,7 @@
+Entering directory '/home/aribeiro/tese/encoding'
+Leaving directory '/home/aribeiro/tese/encoding'
+./run_folders.sh: line 30: 12049 Killed                  dune exec -- "${PROGRAM_DIR}/main.exe" "${QUERY_SUBDIR}" -mode "${MODE}"
+
+real	17m5.603s
+user	3m0.651s
+sys	0m31.815s

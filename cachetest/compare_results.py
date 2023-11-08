@@ -77,6 +77,9 @@ for folder, modes_data in comparison_data.items():
 
 df = pd.DataFrame(data_for_table)
 
+# Sort the DataFrame by the 'Folder' column
+df = df.sort_values(by='Folder').reset_index(drop=True)
+
 # Save the DataFrame as a LaTeX table
 latex_table = df.to_latex(index=False)
 
@@ -85,6 +88,7 @@ with open("comparison_results.tex", "w") as tex_file:
     tex_file.write(latex_table)
 
 # Print the table to console
+pd.set_option('display.max_rows', 900)
 print(df)
 
 

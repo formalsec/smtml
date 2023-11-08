@@ -7,7 +7,7 @@ PROGRAM_DIR="../_build/default/bin"
 MAIN_QUERY_DIR="../../queries/testcomp2023"
 
 # Mode parameter
-MODE="d"
+MODE="0"
 
 # Results directory
 RESULTS_DIR="results"

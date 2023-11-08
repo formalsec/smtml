@@ -1,5 +1,5 @@
-Entering directory '/home/afonso/Tese/encoding'
-Leaving directory '/home/afonso/Tese/encoding'
+Entering directory '/home/aribeiro/tese/encoding'
+Leaving directory '/home/aribeiro/tese/encoding'
 sat
 sat
 sat
@@ -189,6 +189,6 @@ sat
 sat
 sat
 
-real	0m0.788s
-user	0m0.365s
-sys	0m0.124s
+real	0m1.076s
+user	0m0.527s
+sys	0m0.116s

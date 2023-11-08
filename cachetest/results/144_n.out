@@ -1,0 +1,40 @@
+Entering directory '/home/aribeiro/tese/encoding'
+Leaving directory '/home/aribeiro/tese/encoding'
+sat
+sat
+sat
+sat
+sat
+sat
+sat
+unsat
+unsat
+Cache Hit: unsat
+sat
+sat
+sat
+Cache Hit: sat
+sat
+sat
+sat
+unsat
+sat
+unsat
+sat
+unsat
+sat
+sat
+sat
+unsat
+unsat
+sat
+sat
+sat
+unsat
+sat
+sat
+sat
+
+real	0m0.482s
+user	0m0.305s
+sys	0m0.080s

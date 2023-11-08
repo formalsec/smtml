@@ -1,0 +1,10 @@
+Entering directory '/home/aribeiro/tese/encoding'
+Leaving directory '/home/aribeiro/tese/encoding'
+unsat
+sat
+unsat
+sat
+
+real	0m0.367s
+user	0m0.260s
+sys	0m0.086s
