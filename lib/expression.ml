@@ -424,19 +424,18 @@ let simplify_relop (op : relop) e1 e2 =
   | I32 op -> (
     match (e1, e2) with
     | Val (Num v1), Val (Num v2) ->
-      let ret = Eval_numeric.eval_relop (I32 op) v1 v2 in
-      Val (Num (Num.num_of_bool ret))
+      Val (Bool (Eval_numeric.eval_relop (I32 op) v1 v2))
     | Ptr (_, _), Val (Num (I32 0l)) | Val (Num (I32 0l)), Ptr (_, _) -> (
       match op with
-      | Eq -> Val (Num (I32 0l))
-      | Ne -> Val (Num (I32 1l))
+      | Eq -> Val (Bool false)
+      | Ne -> Val (Bool true)
       | _ -> Relop (I32 op, e1, e2) )
     | Ptr (b1, os1), Ptr (b2, os2) -> (
       match op with
       | Eq when b1 = b2 -> Relop (I32 Eq, os1, os2)
-      | Eq when b1 <> b2 -> Val (Num (I32 0l))
+      | Eq when b1 <> b2 -> Val (Bool false)
       | Ne when b1 = b2 -> Relop (I32 Ne, os1, os2)
-      | Ne when b1 <> b2 -> Val (Num (I32 1l))
+      | Ne when b1 <> b2 -> Val (Bool true)
       | LtU when b1 = b2 -> Relop (I32 LtU, os1, os2)
       | LeU when b1 = b2 -> Relop (I32 LeU, os1, os2)
       | LtU -> Relop (I32 LtU, Val (Num (I32 b1)), Val (Num (I32 b2)))
