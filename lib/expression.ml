@@ -8,7 +8,7 @@ type qt =
 
 type expr =
   | Val of Value.t
-  | SymPtr of int32 * expr
+  | Ptr of int32 * expr
   | Unop of unop * expr
   | Binop of binop * expr * expr
   | Relop of relop * expr * expr
@@ -36,12 +36,12 @@ let is_cvtop (e : expr) : bool = match e with Cvtop _ -> true | _ -> false
 let is_triop (e : expr) : bool = match e with Triop _ -> true | _ -> false
 
 let is_concrete (e : expr) : bool =
-  match e with Val _ | SymPtr (_, Val _) -> true | _ -> false
+  match e with Val _ | Ptr (_, Val _) -> true | _ -> false
 
 let rec equal (e1 : expr) (e2 : expr) : bool =
   match (e1, e2) with
   | Val v1, Val v2 -> Value.equal v1 v2
-  | SymPtr (b1, o1), SymPtr (b2, o2) -> b1 = b2 && equal o1 o2
+  | Ptr (b1, o1), Ptr (b2, o2) -> b1 = b2 && equal o1 o2
   | Unop (op1, e1), Unop (op2, e2) -> op1 = op2 && equal e1 e2
   | Cvtop (op1, e1), Cvtop (op2, e2) -> op1 = op2 && equal e1 e2
   | Binop (op1, e1, e3), Binop (op2, e2, e4) ->
@@ -64,7 +64,7 @@ let rec equal (e1 : expr) (e2 : expr) : bool =
 let rec length (e : expr) : int =
   match e with
   | Val _ -> 1
-  | SymPtr _ -> 1
+  | Ptr _ -> 1
   | Unop (_, e) -> 1 + length e
   | Binop (_, e1, e2) -> 1 + length e1 + length e2
   | Triop (_, e1, e2, e3) -> 1 + length e1 + length e2 + length e3
@@ -79,7 +79,7 @@ let get_symbols (e : expr list) : Symbol.t list =
   let rec symbols e =
     match e with
     | Val _ -> []
-    | SymPtr (_, offset) -> symbols offset
+    | Ptr (_, offset) -> symbols offset
     | Unop (_, e1) -> symbols e1
     | Binop (_, e1, e2) -> symbols e1 @ symbols e2
     | Triop (_, e1, e2, e3) -> symbols e1 @ symbols e2 @ symbols e3
@@ -128,7 +128,7 @@ let get_symbols (e : expr list) : Symbol.t list =
 let type_of (e : expr) : expr_type option =
   match e with
   | Val v -> Some (Value.type_of v)
-  | SymPtr _ -> Some `I32Type
+  | Ptr _ -> Some `I32Type
   | Binop (op, _, _) -> Some (Types.type_of op)
   | Triop (op, _, _, _) -> Some (Types.type_of op)
   | Unop (op, _) -> Some (Types.type_of op)
@@ -226,7 +226,7 @@ let rec pp fmt (e : expr) =
   let fprintf = Format.fprintf in
   match e with
   | Val v -> fprintf fmt "%a" Value.pp v
-  | SymPtr (base, offset) -> fprintf fmt "(i32.add (i32 %ld) %a)" base pp offset
+  | Ptr (base, offset) -> fprintf fmt "(i32.add (i32 %ld) %a)" base pp offset
   | Unop (op, e) -> fprintf fmt "(%a %a)" pp_unop op pp e
   | Binop (op, e1, e2) -> fprintf fmt "(%a %a %a)" pp_binop op pp e1 pp e2
   | Triop (op, e1, e2, e3) ->
@@ -250,6 +250,7 @@ let string_of_list (exprs : expr list) : string =
   | [ x ] -> Format.asprintf "%a" pp x
   | _ -> Format.asprintf "(and %a)" pp_list exprs
 
+(* Use Format to pp *)
 let to_smt (es : expr list) : string =
   let symbols =
     List.map
@@ -262,29 +263,21 @@ let to_smt (es : expr list) : string =
   let es' = List.map (fun e -> Format.sprintf "(assert %s)" (to_string e)) es in
   String.concat "\n" (symbols @ es' @ [ "(check-sat)" ])
 
-let string_of_values (el : (Num.t * t) list) : string =
-  List.fold_left
-    (fun a (n, e) -> a ^ Num.to_string n ^ ", " ^ to_string e ^ "\n")
-    "" el
-
 let rec get_ptr (e : expr) : Num.t option =
   (* FIXME: this function can be "simplified" *)
   match e with
   | Quantifier _ | Val _ -> None
-  | SymPtr (base, _) -> Some (I32 base)
+  | Ptr (base, _) -> Some (I32 base)
   | Unop (_, e) -> get_ptr e
-  | Binop (_, e1, e2) ->
-    let p1 = get_ptr e1 in
-    if Option.is_some p1 then p1 else get_ptr e2
-  | Triop (_, e1, e2, e3) ->
-    let p1 = get_ptr e1 in
-    if Option.is_some p1 then p1
-    else
-      let p2 = get_ptr e2 in
-      if Option.is_some p2 then p2 else get_ptr e3
-  | Relop (_, e1, e2) ->
-    let p1 = get_ptr e1 in
-    if Option.is_some p1 then p1 else get_ptr e2
+  | Binop (_, e1, e2) -> (
+    match get_ptr e1 with None -> get_ptr e2 | Some _ as ptr -> ptr )
+  | Triop (_, e1, e2, e3) -> (
+    match get_ptr e1 with
+    | Some _ as ptr -> ptr
+    | None -> (
+      match get_ptr e2 with Some _ as ptr -> ptr | None -> get_ptr e3 ) )
+  | Relop (_, e1, e2) -> (
+    match get_ptr e1 with Some _ as ptr -> ptr | None -> get_ptr e2 )
   | Cvtop (_, e) -> get_ptr e
   | Symbol _ -> None
   | Extract (e, _, _) -> get_ptr e
@@ -298,15 +291,15 @@ let concretize_ptr (e : expr) : Num.t option =
   (* would probably introduce Memory Objects here *)
   match e with
   | Val (Num n) -> Some n
-  | SymPtr (base, Val (Num (I32 offset))) -> Some (I32 (Int32.add base offset))
+  | Ptr (base, Val (Num (I32 offset))) -> Some (I32 (Int32.add base offset))
   | _ -> None
 
 let concretize_base_ptr (e : expr) : int32 option =
-  match e with SymPtr (base, _) -> Some base | _ -> None
+  match e with Ptr (base, _) -> Some base | _ -> None
 
 let to_bool (e : expr) : expr option =
   match e with
-  | Val _ | SymPtr _ -> None
+  | Val _ | Ptr _ -> None
   | (Relop _ as e') | Cvtop (I32 OfBool, e') -> Some e'
   | _ -> Some (Cvtop (I32 ToBool, e))
 
@@ -327,29 +320,29 @@ let nland32 (x : int32) (n : int) =
 let rec simplify ?(extract = true) (e : expr) : expr =
   match e with
   | Val v -> Val v
-  | SymPtr (base, offset) -> SymPtr (base, simplify offset)
+  | Ptr (base, offset) -> Ptr (base, simplify offset)
   | Binop (I32 op, e1, e2) -> (
     let e1' = simplify e1
     and e2' = simplify e2 in
     match (e1', e2') with
-    | SymPtr (b1, os1), SymPtr (b2, os2) -> (
+    | Ptr (b1, os1), Ptr (b2, os2) -> (
       match op with
       | Sub when b1 = b2 -> simplify (Binop (I32 Sub, os1, os2))
       | _ -> Binop (I32 op, e1', e2') )
-    | SymPtr (base, offset), _ -> (
+    | Ptr (base, offset), _ -> (
       match op with
       | Add ->
         let new_offset = simplify (Binop (I32 Add, offset, e2')) in
-        simplify (SymPtr (base, new_offset))
+        simplify (Ptr (base, new_offset))
       | Sub ->
         let new_offset = simplify (Binop (I32 Sub, offset, e2')) in
-        simplify (SymPtr (base, new_offset))
+        simplify (Ptr (base, new_offset))
       | _ -> Binop (I32 op, e1', e2') )
-    | _, SymPtr (base, offset) -> (
+    | _, Ptr (base, offset) -> (
       match op with
       | Add ->
         let new_offset = simplify (Binop (I32 Add, offset, e1')) in
-        simplify (SymPtr (base, new_offset))
+        simplify (Ptr (base, new_offset))
       | _ -> Binop (I32 op, e1', e2') )
     | Val (Num (I32 0l)), _ -> (
       match op with
@@ -383,24 +376,24 @@ let rec simplify ?(extract = true) (e : expr) : expr =
     let e1' = simplify e1
     and e2' = simplify e2 in
     match (e1', e2') with
-    | SymPtr (b1, os1), SymPtr (b2, os2) -> (
+    | Ptr (b1, os1), Ptr (b2, os2) -> (
       match op with
       | Sub when b1 = b2 -> simplify (Binop (I64 Sub, os1, os2))
       | _ -> Binop (I64 op, e1', e2') )
-    | SymPtr (base, offset), _ -> (
+    | Ptr (base, offset), _ -> (
       match op with
       | Add ->
         let new_offset = simplify (Binop (I64 Add, offset, e2')) in
-        simplify (SymPtr (base, new_offset))
+        simplify (Ptr (base, new_offset))
       | Sub ->
         let new_offset = simplify (Binop (I64 Sub, offset, e2')) in
-        simplify (SymPtr (base, new_offset))
+        simplify (Ptr (base, new_offset))
       | _ -> Binop (I64 op, e1', e2') )
-    | _, SymPtr (base, offset) -> (
+    | _, Ptr (base, offset) -> (
       match op with
       | Add ->
         let new_offset = simplify (Binop (I64 Add, offset, e1')) in
-        simplify (SymPtr (base, new_offset))
+        simplify (Ptr (base, new_offset))
       | _ -> Binop (I64 op, e1', e2') )
     | Val (Num (I64 0L)), _ -> (
       match op with
@@ -437,12 +430,12 @@ let rec simplify ?(extract = true) (e : expr) : expr =
     | Val (Num v1), Val (Num v2) ->
       let ret = Eval_numeric.eval_relop (I32 op) v1 v2 in
       Val (Num (Num.num_of_bool ret))
-    | SymPtr (_, _), Val (Num (I32 0l)) | Val (Num (I32 0l)), SymPtr (_, _) -> (
+    | Ptr (_, _), Val (Num (I32 0l)) | Val (Num (I32 0l)), Ptr (_, _) -> (
       match op with
       | Eq -> Val (Num (I32 0l))
       | Ne -> Val (Num (I32 1l))
       | _ -> Relop (I32 op, e1', e2') )
-    | SymPtr (b1, os1), SymPtr (b2, os2) -> (
+    | Ptr (b1, os1), Ptr (b2, os2) -> (
       match op with
       | Eq when b1 = b2 -> Relop (I32 Eq, os1, os2)
       | Eq when b1 <> b2 -> Val (Num (I32 0l))
@@ -501,17 +494,3 @@ let rec simplify ?(extract = true) (e : expr) : expr =
       Extract (Val (Num (I64 x)), d1 + d2, 0) ++ se
     | _ -> e1' ++ e2' )
   | _ -> e
-
-let mk_relop ?(reduce : bool = true) (e : expr) (t : num_type) : expr =
-  let e = if reduce then simplify e else e in
-  if is_relop e then e
-  else
-    let zero = Value.Num (Num.default_value t) in
-    let e' =
-      match t with
-      | `I32Type -> Relop (I32 Ne, e, Val zero)
-      | `I64Type -> Relop (I64 Ne, e, Val zero)
-      | `F32Type -> Relop (F32 Ne, e, Val zero)
-      | `F64Type -> Relop (F64 Ne, e, Val zero)
-    in
-    simplify e'

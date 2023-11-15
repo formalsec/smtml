@@ -8,7 +8,7 @@ type qt =
 
 type expr =
   | Val of Value.t
-  | SymPtr of int32 * expr
+  | Ptr of int32 * expr
   | Unop of unop * expr
   | Binop of binop * expr * expr
   | Relop of relop * expr * expr
@@ -47,10 +47,8 @@ val to_string : expr -> string
 val pp_list : Format.formatter -> expr list -> unit
 val string_of_list : expr list -> string
 val to_smt : expr list -> string
-val string_of_values : (Num.t * expr) list -> string
 val to_bool : expr -> expr option
 val simplify : ?extract:bool -> expr -> expr
-val mk_relop : ?reduce:bool -> expr -> num_type -> expr
 
 (* FIXME: specific to wasp, remove?  *)
 val get_ptr : expr -> Num.t option

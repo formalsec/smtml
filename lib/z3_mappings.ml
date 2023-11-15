@@ -677,7 +677,7 @@ module Fresh = struct
       let open Expression in
       match e with
       | Val v -> encode_val v
-      | SymPtr (base, offset) ->
+      | Ptr (base, offset) ->
         let base' = encode_val (Num (I32 base)) in
         let offset' = encode_expr offset in
         I32.encode_binop Types.I32.Add base' offset'
