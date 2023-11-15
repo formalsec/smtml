@@ -226,7 +226,7 @@ let rec pp fmt (e : expr) =
   let fprintf = Format.fprintf in
   match e with
   | Val v -> fprintf fmt "%a" Value.pp v
-  | Ptr (base, offset) -> fprintf fmt "(i32.add (i32 %ld) %a)" base pp offset
+  | Ptr (base, offset) -> fprintf fmt "(Ptr (i32 %ld) %a)" base pp offset
   | Unop (op, e) -> fprintf fmt "(%a %a)" pp_unop op pp e
   | Binop (op, e1, e2) -> fprintf fmt "(%a %a %a)" pp_binop op pp e1 pp e2
   | Triop (op, e1, e2, e3) ->
@@ -250,18 +250,22 @@ let string_of_list (exprs : expr list) : string =
   | [ x ] -> Format.asprintf "%a" pp x
   | _ -> Format.asprintf "(and %a)" pp_list exprs
 
-(* Use Format to pp *)
-let to_smt (es : expr list) : string =
-  let symbols =
-    List.map
-      (fun s ->
-        let x = Symbol.to_string s
-        and t = Symbol.type_of s in
-        Format.sprintf "(declare-fun %s %s)" x (Types.string_of_type t) )
-      (get_symbols es)
+let pp_smt fmt (es : expr list) : unit =
+  let pp_symbols fmt syms =
+    Format.pp_print_list ~pp_sep:Format.pp_print_newline
+      (fun fmt sym ->
+        let x = Symbol.to_string sym in
+        let t = Types.string_of_type @@ Symbol.type_of sym in
+        Format.fprintf fmt "(declare-fun %s %s)" x t )
+      fmt syms
   in
-  let es' = List.map (fun e -> Format.sprintf "(assert %s)" (to_string e)) es in
-  String.concat "\n" (symbols @ es' @ [ "(check-sat)" ])
+  let pp_asserts fmt es =
+    Format.pp_print_list ~pp_sep:Format.pp_print_newline
+      (fun fmt e -> Format.fprintf fmt "(assert @[<h 2>%a@])" pp e)
+      fmt es
+  in
+  let syms = get_symbols es in
+  Format.fprintf fmt "%a@\n%a@\n(check-sat)" pp_symbols syms pp_asserts es
 
 let rec get_ptr (e : expr) : Num.t option =
   (* FIXME: this function can be "simplified" *)

@@ -46,7 +46,7 @@ val pp : Format.formatter -> expr -> unit
 val to_string : expr -> string
 val pp_list : Format.formatter -> expr list -> unit
 val string_of_list : expr list -> string
-val to_smt : expr list -> string
+val pp_smt : Format.formatter -> expr list -> unit
 val to_bool : expr -> expr option
 val simplify : ?extract:bool -> expr -> expr
 
