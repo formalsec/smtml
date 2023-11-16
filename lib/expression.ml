@@ -325,6 +325,8 @@ let rec simplify_binop (op : binop) (e1 : expr) (e2 : expr) : expr =
   match op with
   | I32 op -> (
     match (e1, e2) with
+    | Val (Num n1), Val (Num n2) ->
+      Val (Num (Eval_numeric.eval_binop (I32 op) n1 n2))
     | Ptr (b1, os1), Ptr (b2, os2) -> (
       match op with
       | Sub when b1 = b2 -> simplify_binop (I32 Sub) os1 os2
@@ -354,8 +356,6 @@ let rec simplify_binop (op : binop) (e1 : expr) (e2 : expr) : expr =
       | Add | Or | Sub -> e1
       | And | Mul -> Val (Num (I32 0l))
       | _ -> Binop (I32 op, e1, e2) )
-    | Val (Num n1), Val (Num n2) ->
-      Val (Num (Eval_numeric.eval_binop (I32 op) n1 n2))
     | Binop (I32 op2, x, Val (Num v1)), Val (Num v2) when not (is_num x) -> (
       match (op, op2) with
       | Add, Add ->

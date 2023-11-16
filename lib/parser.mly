@@ -1,7 +1,6 @@
 %{
 open Value
 open Expression
-open Types
 
 let varmap = Hashtbl.create 512
 

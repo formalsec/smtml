@@ -1,6 +1,11 @@
 open Types
 
-type t = (Int32.t, Int64.t, Int32.t, Int64.t) Types.num
+type t =
+  | I8 of int
+  | I32 of int32
+  | I64 of int64
+  | F32 of int32
+  | F64 of int64
 
 let ( = ) (n1 : t) (n2 : t) : bool =
   match (n1, n2) with
@@ -12,6 +17,7 @@ let ( = ) (n1 : t) (n2 : t) : bool =
 
 let type_of (n : t) =
   match n with
+  | I8 _ -> `I8Type
   | I32 _ -> `I32Type
   | I64 _ -> `I64Type
   | F32 _ -> `F32Type
@@ -19,6 +25,7 @@ let type_of (n : t) =
 
 let default_value (t : num_type) : t =
   match t with
+  | `I8Type -> I8 0
   | `I32Type -> I32 0l
   | `I64Type -> I64 0L
   | `F32Type -> F32 (Int32.bits_of_float 0.0)
@@ -26,6 +33,7 @@ let default_value (t : num_type) : t =
 
 let pp fmt (n : t) =
   match n with
+  | I8 i -> Format.fprintf fmt "(i8 %d)" i
   | I32 i -> Format.fprintf fmt "(i32 %ld)" i
   | I64 i -> Format.fprintf fmt "(i64 %Ld)" i
   | F32 f -> Format.fprintf fmt "(f32 %f)" (Int32.float_of_bits f)
@@ -33,6 +41,7 @@ let pp fmt (n : t) =
 
 let pp_hex fmt (n : t) =
   match n with
+  | I8 i -> Format.fprintf fmt "0x%x" i
   | I32 i | F32 i -> Format.fprintf fmt "0x%lx" i
   | I64 i | F64 i -> Format.fprintf fmt "0x%Lx" i
 

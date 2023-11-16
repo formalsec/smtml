@@ -1,9 +1,3 @@
-type ('i32, 'i64, 'f32, 'f64) num =
-  | I32 of 'i32
-  | I64 of 'i64
-  | F32 of 'f32
-  | F64 of 'f64
-
 type ('i, 'r, 'b, 'str, 'i32, 'i64, 'f32, 'f64) op =
   | Int of 'i
   | Real of 'r
@@ -71,7 +65,8 @@ type cvtop =
   op
 
 type num_type =
-  [ `I32Type
+  [ `I8Type
+  | `I32Type
   | `I64Type
   | `F32Type
   | `F64Type
@@ -107,7 +102,10 @@ let type_of op =
   | F64 _ -> `F64Type
 
 let size_of_num_type (t : num_type) : int =
-  match t with `I32Type | `F32Type -> 4 | `I64Type | `F64Type -> 8
+  match t with
+  | `I8Type -> 1
+  | `I32Type | `F32Type -> 4
+  | `I64Type | `F64Type -> 8
 
 let size (t : expr_type) : int =
   match t with
@@ -115,6 +113,7 @@ let size (t : expr_type) : int =
   | `IntType | `RealType | `BoolType | `StrType -> assert false
 
 let pp_num_type fmt = function
+  | `I8Type -> Format.pp_print_string fmt "i8"
   | `I32Type -> Format.pp_print_string fmt "i32"
   | `I64Type -> Format.pp_print_string fmt "i64"
   | `F32Type -> Format.pp_print_string fmt "f32"
