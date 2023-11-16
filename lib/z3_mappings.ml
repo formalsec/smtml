@@ -24,6 +24,7 @@ module Fresh = struct
     let real_sort = Z3.Arithmetic.Real.mk_sort ctx
     let bool_sort = Z3.Boolean.mk_sort ctx
     let str_sort = Z3.Seq.mk_string_sort ctx
+    let bv8_sort = Z3.BitVector.mk_sort ctx 8
     let bv32_sort = Z3.BitVector.mk_sort ctx 32
     let bv64_sort = Z3.BitVector.mk_sort ctx 64
     let fp32_sort = Z3.FloatingPoint.mk_sort_single ctx
@@ -37,6 +38,7 @@ module Fresh = struct
       | `RealType -> real_sort
       | `BoolType -> bool_sort
       | `StrType -> str_sort
+      | `I8Type -> bv8_sort
       | `I32Type -> bv32_sort
       | `I64Type -> bv64_sort
       | `F32Type -> fp32_sort
@@ -281,30 +283,19 @@ module Fresh = struct
       let encode_cvtop _op _e = assert false
     end
 
-    module I32 :
-      Op_intf.S
-        with type v := int32
-         and type t := Z3.Expr.expr
-         and type unop := Types.I32.unop
-         and type binop := Types.I32.binop
-         and type relop := Types.I32.relop
-         and type cvtop := Types.I32.cvtop
-         and type triop := Types.I32.triop = struct
-      open Types.I32
+    module Bv = struct
       open Z3
 
-      let encode_val i = BitVector.mk_numeral ctx (Int32.to_string i) 32
-
-      let encode_unop op e =
+      let encode_unop (op : BvOp.unop) e =
         let op' =
           match op with
           | Not -> BitVector.mk_not ctx
-          | Clz -> failwith "I32: Clz not supported yet"
+          | Clz -> failwith "Clz not supported yet"
           | Neg -> BitVector.mk_neg ctx
         in
         op' e
 
-      let encode_binop op e1 e2 =
+      let encode_binop (op : BvOp.binop) e1 e2 =
         let op' =
           match op with
           | Add -> BitVector.mk_add ctx
@@ -325,7 +316,7 @@ module Fresh = struct
         in
         op' e1 e2
 
-      let encode_relop op e1 e2 =
+      let encode_relop (op : BvOp.relop) e1 e2 =
         let op' =
           match op with
           | Eq -> Boolean.mk_eq ctx
@@ -340,6 +331,22 @@ module Fresh = struct
           | GeS -> BitVector.mk_sge ctx
         in
         op' e1 e2
+    end
+
+    module I32 :
+      Op_intf.S
+        with type v := int32
+         and type t := Z3.Expr.expr
+         and type unop := Types.I32.unop
+         and type binop := Types.I32.binop
+         and type relop := Types.I32.relop
+         and type cvtop := Types.I32.cvtop
+         and type triop := Types.I32.triop = struct
+      open Types.I32
+      open Z3
+      include Bv
+
+      let encode_val i = BitVector.mk_numeral ctx (Int32.to_string i) 32
 
       let encode_cvtop op e =
         let op' =
@@ -371,54 +378,9 @@ module Fresh = struct
          and type triop := Types.I64.triop = struct
       open Types.I64
       open Z3
+      include Bv
 
       let encode_val i = BitVector.mk_numeral ctx (Int64.to_string i) 64
-
-      let encode_unop op e =
-        let op' =
-          match op with
-          | Not -> BitVector.mk_not ctx
-          | Clz -> failwith "I64: clz supported yet"
-          | Neg -> BitVector.mk_neg ctx
-        in
-        op' e
-
-      let encode_binop op e1 e2 =
-        let op' =
-          match op with
-          | Add -> BitVector.mk_add ctx
-          | Sub -> BitVector.mk_sub ctx
-          | Mul -> BitVector.mk_mul ctx
-          | DivS -> BitVector.mk_sdiv ctx
-          | DivU -> BitVector.mk_udiv ctx
-          | And -> BitVector.mk_and ctx
-          | Xor -> BitVector.mk_xor ctx
-          | Or -> BitVector.mk_or ctx
-          | Shl -> BitVector.mk_shl ctx
-          | ShrS -> BitVector.mk_ashr ctx
-          | ShrU -> BitVector.mk_lshr ctx
-          | RemS -> BitVector.mk_srem ctx
-          | RemU -> BitVector.mk_urem ctx
-          | ExtendS | ExtendU -> assert false
-          | Rotl | Rotr -> failwith "z3_mappings: rotl|rotr not implemented!"
-        in
-        op' e1 e2
-
-      let encode_relop op e1 e2 =
-        let op' =
-          match op with
-          | Eq -> Boolean.mk_eq ctx
-          | Ne -> fun x1 x2 -> Boolean.mk_eq ctx x1 x2 |> Boolean.mk_not ctx
-          | LtU -> BitVector.mk_ult ctx
-          | LtS -> BitVector.mk_slt ctx
-          | LeU -> BitVector.mk_ule ctx
-          | LeS -> BitVector.mk_sle ctx
-          | GtU -> BitVector.mk_ugt ctx
-          | GtS -> BitVector.mk_sgt ctx
-          | GeU -> BitVector.mk_uge ctx
-          | GeS -> BitVector.mk_sge ctx
-        in
-        op' e1 e2
 
       let encode_cvtop op e =
         let op' =
@@ -441,28 +403,10 @@ module Fresh = struct
       let encode_triop _op _e1 _e2 _e3 = assert false
     end
 
-    module F32 :
-      Op_intf.S
-        with type v := int32
-         and type t := Z3.Expr.expr
-         and type unop := Types.F32.unop
-         and type binop := Types.F32.binop
-         and type relop := Types.F32.relop
-         and type cvtop := Types.F32.cvtop
-         and type triop := Types.F32.triop = struct
-      open Types.F32
+    module Fp = struct
       open Z3
 
-      let f322str =
-        FuncDecl.mk_func_decl_s ctx "F32ToString" [ fp32_sort ] str_sort
-
-      let str2f32 =
-        FuncDecl.mk_func_decl_s ctx "StringToF32" [ str_sort ] fp32_sort
-
-      let encode_val f =
-        FloatingPoint.mk_numeral_f ctx (Int32.float_of_bits f) fp32_sort
-
-      let encode_unop op e =
+      let encode_unop (op : FloatOp.unop) e =
         let op' =
           match op with
           | Neg -> FloatingPoint.mk_neg ctx
@@ -474,7 +418,7 @@ module Fresh = struct
         in
         op' e
 
-      let encode_binop op e1 e2 =
+      let encode_binop (op : FloatOp.binop) e1 e2 =
         let op' =
           match op with
           | Add -> FloatingPoint.mk_add ctx rne
@@ -487,7 +431,7 @@ module Fresh = struct
         in
         op' e1 e2
 
-      let encode_relop op e1 e2 =
+      let encode_relop (op : FloatOp.relop) e1 e2 =
         let op' =
           match op with
           | Eq -> FloatingPoint.mk_eq ctx
@@ -499,6 +443,29 @@ module Fresh = struct
           | Ge -> FloatingPoint.mk_geq ctx
         in
         op' e1 e2
+    end
+
+    module F32 :
+      Op_intf.S
+        with type v := int32
+         and type t := Z3.Expr.expr
+         and type unop := Types.F32.unop
+         and type binop := Types.F32.binop
+         and type relop := Types.F32.relop
+         and type cvtop := Types.F32.cvtop
+         and type triop := Types.F32.triop = struct
+      open Types.F32
+      open Z3
+      include Fp
+
+      let f322str =
+        FuncDecl.mk_func_decl_s ctx "F32ToString" [ fp32_sort ] str_sort
+
+      let str2f32 =
+        FuncDecl.mk_func_decl_s ctx "StringToF32" [ str_sort ] fp32_sort
+
+      let encode_val f =
+        FloatingPoint.mk_numeral_f ctx (Int32.float_of_bits f) fp32_sort
 
       let encode_cvtop op e =
         let op' =
@@ -535,6 +502,7 @@ module Fresh = struct
          and type triop := Types.F64.triop = struct
       open Types.F64
       open Z3
+      include Fp
 
       let f642str =
         FuncDecl.mk_func_decl_s ctx "F64ToString" [ fp64_sort ] str_sort
@@ -544,44 +512,6 @@ module Fresh = struct
 
       let encode_val f =
         FloatingPoint.mk_numeral_f ctx (Int64.float_of_bits f) fp64_sort
-
-      let encode_unop op e =
-        let op' =
-          match op with
-          | Neg -> FloatingPoint.mk_neg ctx
-          | Abs -> FloatingPoint.mk_abs ctx
-          | Sqrt -> FloatingPoint.mk_sqrt ctx rne
-          | Nearest -> FloatingPoint.mk_round_to_integral ctx rne
-          | IsNan -> FloatingPoint.mk_is_nan ctx
-          | Ceil | Floor -> assert false
-        in
-        op' e
-
-      let encode_binop op e1 e2 =
-        let op' =
-          match op with
-          | Add -> FloatingPoint.mk_add ctx rne
-          | Sub -> FloatingPoint.mk_sub ctx rne
-          | Mul -> FloatingPoint.mk_mul ctx rne
-          | Div -> FloatingPoint.mk_div ctx rne
-          | Min -> FloatingPoint.mk_min ctx
-          | Max -> FloatingPoint.mk_max ctx
-          | Rem -> FloatingPoint.mk_rem ctx
-        in
-        op' e1 e2
-
-      let encode_relop op e1 e2 =
-        let op' =
-          match op with
-          | Eq -> FloatingPoint.mk_eq ctx
-          | Ne ->
-            fun x1 x2 -> FloatingPoint.mk_eq ctx x1 x2 |> Boolean.mk_not ctx
-          | Lt -> FloatingPoint.mk_lt ctx
-          | Le -> FloatingPoint.mk_leq ctx
-          | Gt -> FloatingPoint.mk_gt ctx
-          | Ge -> FloatingPoint.mk_geq ctx
-        in
-        op' e1 e2
 
       let encode_cvtop op e =
         let op' =
@@ -608,6 +538,7 @@ module Fresh = struct
     end
 
     let num i32 i64 f32 f64 : Num.t -> Z3.Expr.expr = function
+      | I8 _ -> assert false
       | I32 x -> i32 x
       | I64 x -> i64 x
       | F32 x -> f32 x
