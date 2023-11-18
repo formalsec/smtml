@@ -1,17 +1,23 @@
 open Encoding
+open Ty
+open Expr
 
 let opt = Optimizer.create ()
-let x = Expression.mk_symbol_s `IntType "x"
+let x = mk_symbol Symbol.("x" @: Ty_int)
 
 (* Satisfiability *)
 let%test "opt_min" =
   let pc =
-    [ Integer.mk_ge x (Integer.mk_val 0); Integer.mk_lt x (Integer.mk_val 5) ]
+    [ Relop (Ge, x, Val (Int 0) @: Ty_int) @: Ty_int
+    ; Relop (Lt, x, Val (Int 5) @: Ty_int) @: Ty_int
+    ]
   in
   Some (Value.Int 0) = Optimizer.minimize opt x pc
 
 let%test "opt_max" =
   let pc =
-    [ Integer.mk_ge x (Integer.mk_val 0); Integer.mk_lt x (Integer.mk_val 5) ]
+    [ Relop (Ge, x, Val (Int 0) @: Ty_int) @: Ty_int
+    ; Relop (Lt, x, Val (Int 5) @: Ty_int) @: Ty_int
+    ]
   in
   Some (Value.Int 4) = Optimizer.maximize opt x pc

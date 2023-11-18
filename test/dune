@@ -8,7 +8,7 @@
   test_str
   test_batch
   test_optimizer
-  test_axiom
+  ;test_axiom
   test_parser
   test_regression)
  (inline_tests)

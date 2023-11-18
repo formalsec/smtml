@@ -1,10 +1,14 @@
 open Encoding
+open Ty
+open Expr
 module Batch = Batch.Make (Z3_mappings)
 
 let solver = Batch.create ()
 
 let%test "test-to_string-eq" =
-  let x = Expression.mk_symbol_s `RealType "x"
-  and y = Expression.mk_symbol_s `RealType "y" in
+  let x = mk_symbol Symbol.("x" @: Ty_real) in
+  let y = mk_symbol Symbol.("y" @: Ty_real) in
   Batch.check solver
-    [ Strings.mk_eq (Real.mk_to_string x) (Real.mk_to_string y) ]
+    [ Relop (Eq, Cvtop (ToString, x) @: Ty_real, Cvtop (ToString, y) @: Ty_real)
+      @: Ty_str
+    ]

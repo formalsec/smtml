@@ -1,20 +1,20 @@
 open Encoding
+open Ty
+open Expr
 module Batch = Batch.Make (Z3_mappings)
 
 let solver = Batch.create ()
-let x = Expression.mk_symbol_s `F32Type "x"
-let nan = FloatingPoint.mk_val Float.nan `F32Type
+let x = Expr.mk_symbol Symbol.("x" @: Ty_fp S32)
+let nan = Val (Num (F32 (Int32.bits_of_float Float.nan))) @: Ty_fp S32
 
 let%test "deterministic_nan" =
   let pc =
-    [ Boolean.mk_not (FloatingPoint.mk_is_nan x `F32Type)
-    ; FloatingPoint.mk_is_nan x `F32Type
+    [ Unop (Not, Unop (Is_nan, x) @: Ty_fp S32) @: Ty_bool
+    ; Unop (Is_nan, x) @: Ty_fp S32
     ]
   in
   false = Batch.check solver pc
 
 let%test "nondeterministic_nan" =
-  let pc =
-    [ FloatingPoint.mk_ne x nan `F32Type; FloatingPoint.mk_is_nan x `F32Type ]
-  in
+  let pc = [ Relop (Ne, x, nan) @: Ty_fp S32; Unop (Is_nan, x) @: Ty_fp S32 ] in
   true = Batch.check solver pc
