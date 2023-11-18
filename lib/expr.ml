@@ -48,16 +48,25 @@ let get_symbols e =
     | Val _ -> ()
     | Ptr (_, offset) -> symbols offset
     | Unop (_, e1) -> symbols e1
-    | Binop (_, e1, e2) -> symbols e1; symbols e2
-    | Triop (_, e1, e2, e3) -> symbols e1; symbols e2; symbols e3
-    | Relop (_, e1, e2) -> symbols e1; symbols e2
+    | Binop (_, e1, e2) ->
+      symbols e1;
+      symbols e2
+    | Triop (_, e1, e2, e3) ->
+      symbols e1;
+      symbols e2;
+      symbols e3
+    | Relop (_, e1, e2) ->
+      symbols e1;
+      symbols e2
     | Cvtop (_, e) -> symbols e
     | Symbol s -> Hashtbl.replace tbl s ()
     | Extract (e, _, _) -> symbols e
-    | Concat (e1, e2) -> symbols e1; symbols e2
+    | Concat (e1, e2) ->
+      symbols e1;
+      symbols e2
   in
   List.iter symbols e;
-  Hashtbl.fold (fun k () acc -> k::acc) tbl []
+  Hashtbl.fold (fun k () acc -> k :: acc) tbl []
 
 let negate_relop ({ e; ty } : t) : (t, string) Result.t =
   let e =
@@ -181,11 +190,9 @@ let simplify_relop ty (op : relop) e1 e2 =
     let v i = { ty = Ty_bitv S32; e = Val (Num (I32 i)) } in
     match op with
     | Eq -> if b1 = b2 then Relop (Eq, os1, os2) else Val (Bool false)
-    | Ne -> if b1 = b2 then Relop (Ne, os1, os2) else Val (Bool false)
-    | LtU -> if b1 = b2 then Relop (LtU, os1, os2) else Relop (LtU, v b1, v b2)
-    | LeU -> if b1 = b2 then Relop (LeU, os1, os2) else Relop (LeU, v b1, v b2)
-    | GtU -> if b1 = b2 then Relop (GtU, os1, os2) else Relop (GtU, v b1, v b2)
-    | GeU -> if b1 = b2 then Relop (GeU, os1, os2) else Relop (GeU, v b1, v b2)
+    | Ne -> if b1 = b2 then Relop (Ne, os1, os2) else Val (Bool true)
+    | (LtU | LeU | GtU | GeU) as op ->
+      if b1 = b2 then Relop (op, os1, os2) else Relop (op, v b1, v b2)
     | _ -> Relop (op, e1, e2) )
   | _ -> Relop (op, e1, e2)
 
