@@ -305,7 +305,7 @@ module Fresh = struct
       open Ty
       open Z3
 
-      let encode_val (type a) (cast : a Ty.cast) (i : a) =
+      let v (type a) (cast : a Ty.cast) (i : a) =
         match cast with
         | C32 -> BitVector.mk_numeral ctx (Int32.to_string i) 32
         | C64 -> BitVector.mk_numeral ctx (Int64.to_string i) 64
@@ -372,10 +372,8 @@ module Fresh = struct
             | TruncUF32 | TruncUF64 ->
               fun f -> FloatingPoint.mk_to_ubv ctx rtz f 32
             | Reinterpret_float -> FloatingPoint.mk_to_ieee_bv ctx
-            | ToBool -> encode_relop Ne (encode_val C32 0l)
-            | OfBool ->
-              fun e ->
-                Boolean.mk_ite ctx e (encode_val C32 1l) (encode_val C32 0l)
+            | ToBool -> encode_relop Ne (v C32 0l)
+            | OfBool -> fun e -> Boolean.mk_ite ctx e (v C32 1l) (v C32 0l)
             | ExtendSI32 | ExtendUI32 | _ -> assert false )
           | Ty.S64 -> (
             match op with
@@ -387,10 +385,8 @@ module Fresh = struct
             | TruncUF32 | TruncUF64 ->
               fun f -> FloatingPoint.mk_to_ubv ctx rtz f 64
             | Reinterpret_float -> FloatingPoint.mk_to_ieee_bv ctx
-            | ToBool -> encode_relop Ne (encode_val C64 0L)
-            | OfBool ->
-              fun e ->
-                Boolean.mk_ite ctx e (encode_val C64 1L) (encode_val C64 0L)
+            | ToBool -> encode_relop Ne (v C64 0L)
+            | OfBool -> fun e -> Boolean.mk_ite ctx e (v C64 1L) (v C64 0L)
             | WrapI64 | _ -> assert false )
         in
         op' e
@@ -400,7 +396,7 @@ module Fresh = struct
       open Z3
       open Ty
 
-      let encode_val (type a) (sz : a Ty.cast) (f : a) =
+      let v (type a) (sz : a Ty.cast) (f : a) =
         match sz with
         | C32 ->
           FloatingPoint.mk_numeral_f ctx (Int32.float_of_bits f) fp32_sort
@@ -500,13 +496,11 @@ module Fresh = struct
       | Real v -> Real.encode_val v
       | Bool v -> Boolean.encode_val v
       | Str v -> Str.encode_val v
-      | Num v -> (
-        match v with
-        | I8 _ -> assert false
-        | I32 x -> Bv.encode_val C32 x
-        | I64 x -> Bv.encode_val C64 x
-        | F32 x -> Fp.encode_val C32 x
-        | F64 x -> Fp.encode_val C64 x )
+      | Num (I8 _) -> assert false
+      | Num (I32 x) -> Bv.v C32 x
+      | Num (I64 x) -> Bv.v C64 x
+      | Num (F32 x) -> Fp.v C32 x
+      | Num (F64 x) -> Fp.v C64 x
 
     let encode_unop = function
       | Ty.Ty_int -> I.encode_unop
