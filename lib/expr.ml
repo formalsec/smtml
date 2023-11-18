@@ -83,7 +83,7 @@ let negate_relop ({ e; ty } : t) : (t, string) Result.t =
     | Relop (GeU, e1, e2) -> Ok (Relop (LtU, e1, e2))
     | _ -> Error "negate_relop: not a relop."
   in
-  Result.map (fun relop -> { ty; e = relop }) e
+  Result.map (fun relop -> relop @: ty) e
 
 module Pp = struct
   let fprintf = Format.fprintf
