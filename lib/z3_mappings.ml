@@ -367,10 +367,10 @@ module Fresh = struct
           | Ty.S32 -> (
             match op with
             | WrapI64 -> BitVector.mk_extract ctx 31 0
-            | TruncSF32 -> fun f -> FloatingPoint.mk_to_sbv ctx rtz f 32
-            | TruncUF32 -> fun f -> FloatingPoint.mk_to_ubv ctx rtz f 32
-            | TruncSF64 -> fun f -> FloatingPoint.mk_to_sbv ctx rtz f 32
-            | TruncUF64 -> fun f -> FloatingPoint.mk_to_ubv ctx rtz f 32
+            | TruncSF32 | TruncSF64 ->
+              fun f -> FloatingPoint.mk_to_sbv ctx rtz f 32
+            | TruncUF32 | TruncUF64 ->
+              fun f -> FloatingPoint.mk_to_ubv ctx rtz f 32
             | Reinterpret_float -> FloatingPoint.mk_to_ieee_bv ctx
             | ToBool -> encode_relop Ne (encode_val C32 0l)
             | OfBool ->
@@ -382,10 +382,10 @@ module Fresh = struct
             | ExtendSI32 -> BitVector.mk_sign_ext ctx 32
             | ExtendUI32 -> BitVector.mk_zero_ext ctx 32
             (* rounding towards zero (aka truncation) *)
-            | TruncSF32 -> fun f -> FloatingPoint.mk_to_sbv ctx rtz f 64
-            | TruncUF32 -> fun f -> FloatingPoint.mk_to_ubv ctx rtz f 64
-            | TruncSF64 -> fun f -> FloatingPoint.mk_to_sbv ctx rtz f 64
-            | TruncUF64 -> fun f -> FloatingPoint.mk_to_ubv ctx rtz f 64
+            | TruncSF32 | TruncSF64 ->
+              fun f -> FloatingPoint.mk_to_sbv ctx rtz f 64
+            | TruncUF32 | TruncUF64 ->
+              fun f -> FloatingPoint.mk_to_ubv ctx rtz f 64
             | Reinterpret_float -> FloatingPoint.mk_to_ieee_bv ctx
             | ToBool -> encode_relop Ne (encode_val C64 0L)
             | OfBool ->
@@ -469,13 +469,9 @@ module Fresh = struct
             match op with
             | DemoteF64 ->
               fun bv -> FloatingPoint.mk_to_fp_float ctx rne bv fp32_sort
-            | ConvertSI32 ->
+            | ConvertSI32 | ConvertSI64 ->
               fun bv -> FloatingPoint.mk_to_fp_signed ctx rne bv fp32_sort
-            | ConvertUI32 ->
-              fun bv -> FloatingPoint.mk_to_fp_unsigned ctx rne bv fp32_sort
-            | ConvertSI64 ->
-              fun bv -> FloatingPoint.mk_to_fp_signed ctx rne bv fp32_sort
-            | ConvertUI64 ->
+            | ConvertUI32 | ConvertUI64 ->
               fun bv -> FloatingPoint.mk_to_fp_unsigned ctx rne bv fp32_sort
             | Reinterpret_int ->
               fun bv -> FloatingPoint.mk_to_fp_bv ctx bv fp32_sort
@@ -486,13 +482,9 @@ module Fresh = struct
             match op with
             | PromoteF32 ->
               fun bv -> FloatingPoint.mk_to_fp_float ctx rne bv fp64_sort
-            | ConvertSI32 ->
+            | ConvertSI32 | ConvertSI64 ->
               fun bv -> FloatingPoint.mk_to_fp_signed ctx rne bv fp64_sort
-            | ConvertUI32 ->
-              fun bv -> FloatingPoint.mk_to_fp_unsigned ctx rne bv fp64_sort
-            | ConvertSI64 ->
-              fun bv -> FloatingPoint.mk_to_fp_signed ctx rne bv fp64_sort
-            | ConvertUI64 ->
+            | ConvertUI32 | ConvertUI64 ->
               fun bv -> FloatingPoint.mk_to_fp_unsigned ctx rne bv fp64_sort
             | Reinterpret_int ->
               fun bv -> FloatingPoint.mk_to_fp_bv ctx bv fp64_sort
