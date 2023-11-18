@@ -1,8 +1,9 @@
 type t
 
-val mk_symbol : Ty.t -> String.t -> t
+val ( @: ) : string -> Ty.t -> t
+val mk_symbol : Ty.t -> string -> t
 val equal : t -> t -> Bool.t
-val rename : t -> String.t -> t
+val rename : t -> string -> t
 val type_of : t -> Ty.t
-val to_string : t -> String.t
+val to_string : t -> string
 val pp : Format.formatter -> t -> unit
