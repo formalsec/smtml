@@ -499,7 +499,7 @@ let op i32 i64 f32 f64 ty op =
   | Ty_bitv S64 -> i64 op
   | Ty_fp S32 -> f32 op
   | Ty_fp S64 -> f64 op
-  | Ty_bool | Ty_str -> assert false
+  | Ty_bool | Ty_str | _ -> assert false
 
 let eval_unop = op I32Op.unop I64Op.unop F32Op.unop F64Op.unop
 let eval_binop = op I32Op.binop I64Op.binop F32Op.binop F64Op.binop
