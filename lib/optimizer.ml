@@ -13,11 +13,9 @@ let time_call ~f ~accum =
 let create () : t = Z3_mappings.mk_optimize ()
 let push (opt : t) : unit = Z3.Optimize.push opt
 let pop (opt : t) : unit = Z3.Optimize.pop opt
+let add (opt : t) (es : Expr.t list) : unit = Z3_mappings.add_optimize opt es
 
-let add (opt : t) (es : Expression.t list) : unit =
-  Z3_mappings.add_optimize opt es
-
-let check (opt : t) (e : Expression.t) (pc : Expression.t list) target =
+let check (opt : t) (e : Expr.t) (pc : Expr.t list) target =
   push opt;
   add opt pc;
   ignore (target opt e);
@@ -26,14 +24,10 @@ let check (opt : t) (e : Expression.t) (pc : Expression.t list) target =
   pop opt;
   model
 
-let maximize (opt : t) (e : Expression.t) (pc : Expression.t list) :
-  Value.t option =
-  let ty = Expression.type_of e |> Option.get in
+let maximize (opt : t) (e : Expr.t) (pc : Expr.t list) : Value.t option =
   let model = check opt e pc Z3_mappings.maximize in
-  Option.map (fun m -> Z3_mappings.value m ty e) model
+  Option.map (fun m -> Z3_mappings.value m e) model
 
-let minimize (opt : t) (e : Expression.t) (pc : Expression.t list) :
-  Value.t option =
-  let ty = Expression.type_of e |> Option.get in
+let minimize (opt : t) (e : Expr.t) (pc : Expr.t list) : Value.t option =
   let model = check opt e pc Z3_mappings.minimize in
-  Option.map (fun m -> Z3_mappings.value m ty e) model
+  Option.map (fun m -> Z3_mappings.value m e) model

@@ -1,4 +1,4 @@
-open Types
+open Ty
 
 type t =
   | Int of int
@@ -16,13 +16,13 @@ let equal (v1 : t) (v2 : t) : Bool.t =
   | Num x1, Num x2 -> Num.(x1 = x2)
   | _ -> false
 
-let type_of (v : t) : expr_type =
+let type_of (v : t) : Ty.t =
   match v with
-  | Int _ -> `IntType
-  | Real _ -> `RealType
-  | Bool _ -> `BoolType
+  | Int _ -> Ty_int
+  | Real _ -> Ty_real
+  | Bool _ -> Ty_bool
+  | Str _ -> Ty_str
   | Num n -> Num.type_of n
-  | Str _ -> `StrType
 
 let pp fmt (v : t) =
   match v with

@@ -27,15 +27,15 @@ module type S = sig
   val reset : t -> unit
 
   (** Assert one or multiple constraints into the solver. *)
-  val add : t -> Expression.t list -> unit
+  val add : t -> Expr.t list -> unit
 
   (** The set of assertions in the solver. *)
-  val get_assertions : t -> Expression.t list
+  val get_assertions : t -> Expr.t list
 
   (** Checks the satisfiability of the assertions.
 
       Raises [Unknown] if SMT solver returns unknown. *)
-  val check : t -> Expression.t list -> bool
+  val check : t -> Expr.t list -> bool
 
   (** [get_value solver e] get an expression denoting the model value of a given
       expression.
@@ -43,10 +43,10 @@ module type S = sig
       Requires that the last {!val:check} query returned [true].
 
       @param t The solver.
-      @param e Expression to query a model for.
+      @param e Expr to query a model for.
 
       @return An expression denoting the model value of [e]. *)
-  val get_value : t -> Expression.t -> Expression.t
+  val get_value : t -> Expr.t -> Expr.t
 
   (** The model of the last [check].
 

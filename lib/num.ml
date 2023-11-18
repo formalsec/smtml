@@ -1,5 +1,3 @@
-open Types
-
 type t =
   | I8 of int
   | I32 of int32
@@ -17,19 +15,11 @@ let ( = ) (n1 : t) (n2 : t) : bool =
 
 let type_of (n : t) =
   match n with
-  | I8 _ -> `I8Type
-  | I32 _ -> `I32Type
-  | I64 _ -> `I64Type
-  | F32 _ -> `F32Type
-  | F64 _ -> `F64Type
-
-let default_value (t : num_type) : t =
-  match t with
-  | `I8Type -> I8 0
-  | `I32Type -> I32 0l
-  | `I64Type -> I64 0L
-  | `F32Type -> F32 (Int32.bits_of_float 0.0)
-  | `F64Type -> F64 (Int64.bits_of_float 0.0)
+  | I8 _ -> assert false
+  | I32 _ -> Ty.(Ty_bitv S32)
+  | I64 _ -> Ty.(Ty_bitv S64)
+  | F32 _ -> Ty.(Ty_fp S32)
+  | F64 _ -> Ty.(Ty_fp S64)
 
 let pp fmt (n : t) =
   match n with

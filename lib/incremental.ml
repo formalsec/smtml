@@ -3,8 +3,6 @@ exception Unknown
 let ( let+ ) o f = Option.map f o
 
 module Make (Mappings : Mappings_intf.S) = struct
-  module Expr = Expression
-
   let solver_time = ref 0.0
   let solver_count = ref 0
 
@@ -26,17 +24,11 @@ module Make (Mappings : Mappings_intf.S) = struct
     Mappings.mk_solver ()
 
   let interrupt () = Mappings.interrupt ()
-
   let clone (solver : t) : t = Mappings.translate solver
-
   let push (solver : t) : unit = Mappings.push solver
-
   let pop (solver : t) (lvl : int) : unit = Mappings.pop solver lvl
-
   let reset (solver : t) : unit = Mappings.reset solver
-
   let add (solver : t) (es : Expr.t list) : unit = Mappings.add_solver solver es
-
   let get_assertions (_solver : t) : Expr.t list = assert false
 
   let check (solver : t) (es : Expr.t list) : bool =
@@ -51,9 +43,8 @@ module Make (Mappings : Mappings_intf.S) = struct
     b
 
   let get_value (solver : t) (e : Expr.t) : Expr.t =
-    let ty = Expr.type_of e |> Option.get in
     match Mappings.solver_model solver with
-    | Some m -> Val (Mappings.value m ty e)
+    | Some m -> { ty = e.ty; e = Val (Mappings.value m e) }
     | None -> assert false
 
   let model ?(symbols : Symbol.t list option) (solver : t) : Model.t Option.t =

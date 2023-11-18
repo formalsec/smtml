@@ -1,15 +1,18 @@
 type t =
   | Declare of Symbol.t
-  | Assert of Expression.t
+  | Assert of Expr.t
   | CheckSat
   | GetModel
 
-let to_string (instr : t) : String.t =
+let pp fmt (instr : t) =
   match instr with
   | Declare s ->
-    let symb = Symbol.to_string s
-    and t = Types.string_of_type (Symbol.type_of s) in
-    Printf.sprintf "(declare-fun %s %s)" symb t
-  | Assert e -> Printf.sprintf "(assert %s)" (Expression.to_string e)
-  | CheckSat -> "(check-sat)"
-  | GetModel -> "(get-model)"
+    let ty = Symbol.type_of s in
+    Format.fprintf fmt "(declare-fun %a %a)" Symbol.pp s Ty.pp ty
+  | Assert e ->
+      Format.fprintf fmt "(assert @[<h 2>%a@])" Expr.pp e
+  | CheckSat -> Format.pp_print_string fmt "(check-sat)"
+  | GetModel -> Format.pp_print_string fmt "(get-model)"
+
+let to_string (instr : t) : string =
+  Format.asprintf "%a" pp instr

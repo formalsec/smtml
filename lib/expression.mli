@@ -1,4 +1,4 @@
-open Types
+open Ty
 
 exception InvalidRelop
 
@@ -23,7 +23,7 @@ type t = expr
 
 val ( ++ ) : expr -> expr -> expr
 val mk_symbol : Symbol.t -> expr
-val mk_symbol_s : expr_type -> string -> expr
+val mk_symbol_s : Ty.t -> string -> expr
 val is_num : expr -> bool
 val is_val : expr -> bool
 val is_unop : expr -> bool
@@ -35,7 +35,7 @@ val is_concrete : expr -> bool
 val equal : expr -> expr -> bool
 val length : expr -> int
 val get_symbols : expr list -> Symbol.t list
-val type_of : expr -> expr_type option
+val type_of : expr -> Ty.t option
 val negate_relop : expr -> expr
 val pp_unop : Format.formatter -> unop -> unit
 val pp_binop : Format.formatter -> binop -> unit

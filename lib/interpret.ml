@@ -3,8 +3,8 @@ module Make (Solver : Solver_intf.S) = struct
 
   type exec_state =
     { stmts : Ast.t list
-    ; smap : (string, Types.expr_type) Hashtbl.t
-    ; pc : Expression.t list
+    ; smap : (string, Ty.t) Hashtbl.t
+    ; pc : Expr.t list
     ; solver : Solver.t
     }
 

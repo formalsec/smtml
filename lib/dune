@@ -9,19 +9,16 @@
  (name encoding)
  (modules
   ast
-  axioms
+  ;axioms
   batch
-  bitVector
-  boolOp
-  boolean
-  bvOp
+  bitv
+  ;boolean
   eval_numeric
-  expression
-  floatOp
-  floatingPoint
+  expr
+  ;expression
+  ;floatingPoint
   incremental
-  intOp
-  integer
+  ;integer
   interpret
   interpret_intf
   lexer
@@ -32,13 +29,12 @@
   optimizer
   parser
   params
-  real
+  ;real
   run
   solver_intf
-  strOp
-  strings
+  ;strings
   symbol
-  types
+  ty
   value
   z3_mappings)
  (libraries z3))
