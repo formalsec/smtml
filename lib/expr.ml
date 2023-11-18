@@ -86,8 +86,9 @@ let negate_relop ({ e; ty } : t) : (t, string) Result.t =
   Result.map (fun relop -> { ty; e = relop }) e
 
 module Pp = struct
+  let fprintf = Format.fprintf
+
   let rec pp fmt (e : t) =
-    let fprintf = Format.fprintf in
     match e.e with
     | Val v -> fprintf fmt "%a" Value.pp v
     | Ptr (base, offset) -> fprintf fmt "(Ptr (i32 %ld) %a)" base pp offset
@@ -111,16 +112,16 @@ module Pp = struct
       Format.pp_print_list ~pp_sep:Format.pp_print_newline
         (fun fmt sym ->
           let t = Symbol.type_of sym in
-          Format.fprintf fmt "(declare-fun %a %a)" Symbol.pp sym Ty.pp t )
+          fprintf fmt "(declare-fun %a %a)" Symbol.pp sym Ty.pp t )
         fmt syms
     in
     let pp_asserts fmt es =
       Format.pp_print_list ~pp_sep:Format.pp_print_newline
-        (fun fmt e -> Format.fprintf fmt "(assert @[<h 2>%a@])" pp e)
+        (fun fmt e -> fprintf fmt "(assert @[<h 2>%a@])" pp e)
         fmt es
     in
     let syms = get_symbols es in
-    Format.fprintf fmt "%a@\n%a@\n(check-sat)" pp_symbols syms pp_asserts es
+    fprintf fmt "%a@\n%a@\n(check-sat)" pp_symbols syms pp_asserts es
 end
 
 let pp = Pp.pp
