@@ -101,9 +101,8 @@ module Pp = struct
     let pp_symbols fmt syms =
       Format.pp_print_list ~pp_sep:Format.pp_print_newline
         (fun fmt sym ->
-          let x = Symbol.to_string sym in
           let t = Symbol.type_of sym in
-          Format.fprintf fmt "(declare-fun %s %a)" x Ty.pp t )
+          Format.fprintf fmt "(declare-fun %a %a)" Symbol.pp sym Ty.pp t )
         fmt syms
     in
     let pp_asserts fmt es =
