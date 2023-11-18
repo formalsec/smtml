@@ -24,8 +24,7 @@ module Fresh = struct
     let real_sort = Z3.Arithmetic.Real.mk_sort ctx
     let bool_sort = Z3.Boolean.mk_sort ctx
     let str_sort = Z3.Seq.mk_string_sort ctx
-
-    (* let bv8_sort = Z3.BitVector.mk_sort ctx 8 *)
+    let bv8_sort = Z3.BitVector.mk_sort ctx 8
     let bv32_sort = Z3.BitVector.mk_sort ctx 32
     let bv64_sort = Z3.BitVector.mk_sort ctx 64
     let fp32_sort = Z3.FloatingPoint.mk_sort_single ctx
@@ -39,11 +38,12 @@ module Fresh = struct
       | Ty_real -> real_sort
       | Ty_bool -> bool_sort
       | Ty_str -> str_sort
-      (* | Ty_bitv -> bv8_sort *)
+      | Ty_bitv S8 -> bv8_sort
       | Ty_bitv S32 -> bv32_sort
       | Ty_bitv S64 -> bv64_sort
       | Ty_fp S32 -> fp32_sort
       | Ty_fp S64 -> fp64_sort
+      | Ty_fp S8 -> assert false
 
     module I :
       Op_intf.S
@@ -363,6 +363,7 @@ module Fresh = struct
       let encode_cvtop sz op e =
         let op' =
           match sz with
+          | Ty.S8 -> assert false
           | Ty.S32 -> (
             match op with
             | WrapI64 -> BitVector.mk_extract ctx 31 0
@@ -463,6 +464,7 @@ module Fresh = struct
       let encode_cvtop sz op e =
         let op' =
           match sz with
+          | Ty.S8 -> assert false
           | Ty.S32 -> (
             match op with
             | DemoteF64 ->
@@ -618,14 +620,14 @@ module Fresh = struct
         let e1' = encode_expr e1
         and e2' = encode_expr e2 in
         Z3.BitVector.mk_concat ctx e1' e2'
-      (* | Quantifier (t, vars, body, patterns) -> *)
-      (*   let body' = encode_expr body in *)
-      (*   let encode_pattern p = *)
-      (*     Z3.Quantifier.mk_pattern ctx (List.map encode_expr p) *)
-      (*   in *)
-      (*   let patterns' = List.map encode_pattern patterns in *)
-      (*   let t' = match t with Forall -> true | Exists -> false in *)
-      (*   encode_quantifier t' vars body' patterns' *)
+    (* | Quantifier (t, vars, body, patterns) -> *)
+    (*   let body' = encode_expr body in *)
+    (*   let encode_pattern p = *)
+    (*     Z3.Quantifier.mk_pattern ctx (List.map encode_expr p) *)
+    (*   in *)
+    (*   let patterns' = List.map encode_pattern patterns in *)
+    (*   let t' = match t with Forall -> true | Exists -> false in *)
+    (*   encode_quantifier t' vars body' patterns' *)
 
     let expr_to_smtstring (es : Expr.t list) (status : bool) =
       let es' = List.map encode_expr es in

@@ -3,6 +3,7 @@ type _ cast =
   | C64 : int64 cast
 
 type sz =
+  | S8
   | S32
   | S64
 
@@ -174,8 +175,10 @@ let pp fmt = function
   | Ty_real -> Format.pp_print_string fmt "real"
   | Ty_bool -> Format.pp_print_string fmt "bool"
   | Ty_str -> Format.pp_print_string fmt "str"
+  | Ty_bitv S8 -> Format.pp_print_string fmt "i8"
   | Ty_bitv S32 -> Format.pp_print_string fmt "i32"
   | Ty_bitv S64 -> Format.pp_print_string fmt "i64"
+  | Ty_fp S8 -> Format.pp_print_string fmt "f8"
   | Ty_fp S32 -> Format.pp_print_string fmt "f32"
   | Ty_fp S64 -> Format.pp_print_string fmt "f64"
 
