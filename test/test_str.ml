@@ -1,39 +1,43 @@
 open Encoding
+open Ty
+open Expr
 module Batch = Batch.Make (Z3_mappings)
 
 let solver = Batch.create ()
-let abc = Strings.mk_val "abc"
-let symb_x = Symbol.mk_symbol `StrType "x"
-let x = Expression.mk_symbol symb_x
-let zero = Integer.mk_val 0
-let two = Integer.mk_val 2
+let abc = Val (Str "abc") @: Ty_str
+let symb_x = Symbol.("x" @: Ty_str)
+let x = Expr.mk_symbol symb_x
+let zero = Val (Int 0) @: Ty_int
+let two = Val (Int 2) @: Ty_int
 
 (* Satisfiability *)
 let%test "test_concrete_len" =
-  Batch.check solver [ Integer.mk_ge (Strings.mk_len x) (Strings.mk_len abc) ]
+  Batch.check solver
+    [ Relop (Ge, Unop (Len, x) @: Ty_str, Unop (Len, abc) @: Ty_str) @: Ty_int ]
 
 let%test "test_constrained_len" =
   not
     (Batch.check solver
-       [ Integer.mk_eq (Strings.mk_len x) (Integer.mk_val 4)
-       ; Integer.mk_eq (Strings.mk_len x) (Strings.mk_len abc)
+       [ Relop (Eq, Unop (Len, x) @: Ty_str, Val (Int 4) @: Ty_int) @: Ty_int
+       ; Relop (Eq, Unop (Len, x) @: Ty_str, Unop (Len, abc) @: Ty_str)
+         @: Ty_int
        ] )
 
 let%test "test_concrete_substr" =
   let pc =
-    [ Strings.mk_eq
-        (Strings.mk_substr abc ~pos:zero ~len:two)
-        (Strings.mk_val "ab")
+    [ Relop
+        (Eq, Triop (Substr, abc, zero, two) @: Ty_str, Val (Str "ab") @: Ty_str)
+      @: Ty_str
     ]
   in
   Batch.check solver pc
 
 let%test "test_symb_substr" =
   let pc =
-    [ Strings.mk_eq x abc
-    ; Integer.mk_eq
-        (Strings.mk_len (Strings.mk_substr x ~pos:zero ~len:two))
-        (Integer.mk_val 2)
+    [ Relop (Eq, x, abc) @: Ty_str
+    ; Relop
+        (Eq, Unop (Len, Triop (Substr, x, zero, two) @: Ty_str) @: Ty_str, two)
+      @: Ty_int
     ]
   in
   assert (Batch.check solver pc);
