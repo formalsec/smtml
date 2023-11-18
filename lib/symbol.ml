@@ -3,7 +3,8 @@ type t =
   ; name : String.t
   }
 
-let mk_symbol (sort : Ty.t) (name : string) = { sort; name }
+let ( @: ) (name : string) (sort : Ty.t) = { name; sort }
+let mk_symbol (sort : Ty.t) (name : string) = name @: sort
 
 let equal (s1 : t) (s2 : t) : bool =
   s1.sort = s2.sort && String.equal s1.name s2.name
