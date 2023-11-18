@@ -44,7 +44,7 @@ module Make (Mappings : Mappings_intf.S) = struct
 
   let get_value (solver : t) (e : Expr.t) : Expr.t =
     match Mappings.solver_model solver with
-    | Some m -> { ty = e.ty; e = Val (Mappings.value m e) }
+    | Some m -> Expr.(Val (Mappings.value m e) @: e.ty)
     | None -> assert false
 
   let model ?(symbols : Symbol.t list option) (solver : t) : Model.t Option.t =
