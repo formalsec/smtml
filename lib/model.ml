@@ -11,15 +11,16 @@ let evaluate (model : t) (symb : Symbol.t) : Value.t Option.t =
 
 let hashtbl_iter f tbl = Hashtbl.iter (fun k v -> f (k, v)) tbl
 
-let pp_print_hashtbl ~pp_sep pp_v fmt v = Format.pp_print_iter ~pp_sep hashtbl_iter pp_v fmt v
+let pp_print_hashtbl ~pp_sep pp_v fmt v =
+  Format.pp_print_iter ~pp_sep hashtbl_iter pp_v fmt v
 
 let pp_bindings fmt model =
-  pp_print_hashtbl ~pp_sep:(fun fmt () -> Format.fprintf fmt "@\n")
+  pp_print_hashtbl
+    ~pp_sep:(fun fmt () -> Format.fprintf fmt "@\n")
     (fun fmt (key, data) ->
       let t = Symbol.type_of key in
-      Format.fprintf fmt "(%a %a %a)" Symbol.pp key Types.pp_type t Value.pp
-        data ) fmt
-    model
+      Format.fprintf fmt "(%a %a %a)" Symbol.pp key Ty.pp t Value.pp data )
+    fmt model
 
 let pp fmt model = Format.fprintf fmt "(model@\n  @[<v>%a@])" pp_bindings model
 let to_string (model : t) : String.t = Format.asprintf "%a" pp model

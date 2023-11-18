@@ -3,8 +3,6 @@ exception Unknown
 let ( let+ ) o f = Option.map f o
 
 module Make (Mappings : Mappings_intf.S) = struct
-  module Expr = Expression
-
   type solver = Mappings.solver
 
   type t =
@@ -61,9 +59,8 @@ module Make (Mappings : Mappings_intf.S) = struct
     | Mappings_intf.Unknown -> raise Unknown
 
   let get_value (solver : t) (e : Expr.t) : Expr.t =
-    let ty = Expr.type_of e |> Option.get in
     match Mappings.solver_model solver.solver with
-    | Some m -> Val (Mappings.value m ty e)
+    | Some m -> { ty = e.ty; e = Val (Mappings.value m e) }
     | None -> assert false
 
   let model ?(symbols : Symbol.t list option) (s : t) : Model.t option =

@@ -1,5 +1,5 @@
 let axioms =
-  let x = Symbol.mk_symbol `StrType "x" in
+  let x = Symbol.mk_symbol Ty.Ty_str "x" in
   [ Expression.Quantifier
       ( Expression.Forall
       , [ x ]

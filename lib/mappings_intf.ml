@@ -26,27 +26,27 @@ module type S = sig
 
   val reset : solver -> unit
 
-  val add_solver : solver -> Expression.t list -> unit
+  val add_solver : solver -> Expr.t list -> unit
 
-  val check : solver -> Expression.t list -> status
+  val check : solver -> Expr.t list -> status
 
   val satisfiability : status -> satisfiability
 
   val solver_model : solver -> model option
 
-  val value : model -> Types.expr_type -> Expression.t -> Value.t
+  val value : model -> Expr.t -> Value.t
 
   val values_of_model : ?symbols:Symbol.t list -> model -> Model.t
 
-  val expr_to_smtstring : Expression.t list -> bool -> string
+  val expr_to_smtstring : Expr.t list -> bool -> string
 
   val mk_optimize : unit -> optimize
 
-  val add_optimize : optimize -> Expression.t list -> unit
+  val add_optimize : optimize -> Expr.t list -> unit
 
-  val maximize : optimize -> Expression.t -> handle
+  val maximize : optimize -> Expr.t -> handle
 
-  val minimize : optimize -> Expression.t -> handle
+  val minimize : optimize -> Expr.t -> handle
 
   val optimize_model : optimize -> model option
 end

@@ -3,10 +3,10 @@
 (* - https://github.com/WebAssembly/spec/blob/main/interpreter/exec/fxx.ml, and *)
 (* - https://github.com/WebAssembly/spec/blob/main/interpreter/exec *)
 
-open Types
+open Ty
 
-exception Num of num_type
-exception TypeError of int * Num.t * num_type
+exception Num of Ty.t
+exception TypeError of int * Num.t * Ty.t
 exception DivideByZero
 exception ConversionToInteger
 exception IntegerOverflow
@@ -19,7 +19,9 @@ module I32Op = struct
   let to_value i : Num.t = I32 i
 
   let of_value n v : t =
-    of_arg (fun v -> match v with I32 i -> i | _ -> raise (Num `I32Type)) n v
+    of_arg
+      (fun v -> match v with I32 i -> i | _ -> raise (Num (Ty_bitv S32)))
+      n v
 
   let cmp_u x op y = op Int32.(add x min_int) Int32.(add y min_int)
   let lt_u x y = cmp_u x ( < ) y
@@ -49,44 +51,49 @@ module I32Op = struct
     let shift = Int32.(to_int @@ sub 32l n) in
     Int32.(shift_right (shift_left x shift) shift)
 
-  let unop (op : I32.unop) : Num.t -> Num.t =
-    let f = match op with Neg -> Int32.neg | Clz -> assert false | Not -> Int32.lognot in
+  let unop (op : unop) : Num.t -> Num.t =
+    let f =
+      match op with
+      | Neg -> Int32.neg
+      | Not -> Int32.lognot
+      | Clz | _ -> assert false
+    in
     fun v -> to_value (f (of_value 1 v))
 
-  let binop (op : I32.binop) : Num.t -> Num.t -> Num.t =
+  let binop (op : binop) : Num.t -> Num.t -> Num.t =
     let f =
       match op with
       | Add -> Int32.add
       | Sub -> Int32.sub
       | Mul -> Int32.mul
-      | DivS -> Int32.div
+      | Div -> Int32.div
       | DivU -> Int32.unsigned_div
-      | RemS -> Int32.rem
+      | Rem -> Int32.rem
       | RemU -> Int32.unsigned_rem
       | And -> Int32.logand
       | Or -> Int32.logor
       | Xor -> Int32.logxor
       | Shl -> shl
-      | ShrU -> shr_s
-      | ShrS -> shr_u
-      | ExtendS -> extend_s
-      | ExtendU -> fun _n x -> x
-      | Rotl | Rotr -> assert false
+      | ShrL -> shr_u
+      | ShrA -> shr_s
+      | Ext -> extend_s
+      | ExtU -> fun _n x -> x
+      | Rotl | Rotr | _ -> assert false
     in
     fun v1 v2 -> to_value (f (of_value 1 v1) (of_value 2 v2))
 
-  let relop (op : I32.relop) : Num.t -> Num.t -> bool =
+  let relop (op : relop) : Num.t -> Num.t -> bool =
     let f =
       match op with
       | Eq -> ( = )
       | Ne -> ( <> )
-      | LtS -> ( < )
+      | Lt -> ( < )
       | LtU -> lt_u
-      | LeS -> ( <= )
+      | Le -> ( <= )
       | LeU -> le_u
-      | GtS -> ( > )
+      | Gt -> ( > )
       | GtU -> gt_u
-      | GeS -> ( >= )
+      | Ge -> ( >= )
       | GeU -> ge_u
     in
     fun v1 v2 -> f (of_value 1 v1) (of_value 2 v2)
@@ -96,7 +103,9 @@ module I64Op = struct
   let to_value i : Num.t = I64 i
 
   let of_value n v : int64 =
-    of_arg (fun v -> match v with I64 i -> i | _ -> raise (Num `I64Type)) n v
+    of_arg
+      (fun v -> match v with I64 i -> i | _ -> raise (Num (Ty_bitv S64)))
+      n v
 
   let cmp_u x op y = op Int64.(add x min_int) Int64.(add y min_int)
   let lt_u x y = cmp_u x ( < ) y
@@ -126,44 +135,49 @@ module I64Op = struct
     let shift = Int64.(to_int @@ sub 64L n) in
     Int64.(shift_right (shift_left x shift) shift)
 
-  let unop (op : I64.unop) : Num.t -> Num.t =
-    let f = match op with Neg -> Int64.neg | Clz -> assert false | Not -> Int64.lognot in
+  let unop (op : unop) : Num.t -> Num.t =
+    let f =
+      match op with
+      | Neg -> Int64.neg
+      | Not -> Int64.lognot
+      | Clz | _ -> assert false
+    in
     fun v -> to_value (f (of_value 1 v))
 
-  let binop (op : I64.binop) : Num.t -> Num.t -> Num.t =
+  let binop (op : binop) : Num.t -> Num.t -> Num.t =
     let f =
       match op with
       | Add -> Int64.add
       | Sub -> Int64.sub
       | Mul -> Int64.mul
-      | DivS -> Int64.div
+      | Div -> Int64.div
       | DivU -> Int64.unsigned_div
-      | RemS -> Int64.rem
+      | Rem -> Int64.rem
       | RemU -> Int64.unsigned_rem
       | And -> Int64.logand
       | Or -> Int64.logor
       | Xor -> Int64.logxor
       | Shl -> shl
-      | ShrU -> shr_s
-      | ShrS -> shr_u
-      | ExtendS -> extend_s
-      | ExtendU -> fun _n x -> x
-      | Rotl | Rotr -> assert false
+      | ShrL -> shr_u
+      | ShrA -> shr_s
+      | Ext -> extend_s
+      | ExtU -> fun _n x -> x
+      | Rotl | Rotr | _ -> assert false
     in
     fun v1 v2 -> to_value (f (of_value 1 v1) (of_value 2 v2))
 
-  let relop (op : I64.relop) : Num.t -> Num.t -> bool =
+  let relop (op : relop) : Num.t -> Num.t -> bool =
     let f =
       match op with
       | Eq -> ( = )
       | Ne -> ( <> )
-      | LtS -> ( < )
+      | Lt -> ( < )
       | LtU -> lt_u
-      | LeS -> ( <= )
+      | Le -> ( <= )
       | LeU -> le_u
-      | GtS -> ( > )
+      | Gt -> ( > )
       | GtU -> gt_u
-      | GeS -> ( >= )
+      | Ge -> ( >= )
       | GeU -> ge_u
     in
     fun v1 v2 -> f (of_value 1 v1) (of_value 2 v2)
@@ -173,12 +187,12 @@ module F32Op = struct
   let to_value f : Num.t = F32 f
 
   let of_value =
-    of_arg (fun v -> match v with F32 f -> f | _ -> raise (Num `F32Type))
+    of_arg (fun v -> match v with F32 f -> f | _ -> raise (Num (Ty_fp S32)))
 
   let of_float = Int32.bits_of_float
   let to_float = Int32.float_of_bits
 
-  let unop (op : F32.unop) =
+  let unop (op : unop) =
     let f =
       match op with
       | Neg -> Float.neg
@@ -187,11 +201,11 @@ module F32Op = struct
       | Nearest -> Float.round
       | Ceil -> Float.ceil
       | Floor -> Float.floor
-      | IsNan -> assert false
+      | Is_nan | _ -> assert false
     in
     fun v -> to_value (of_float (f (to_float (of_value 1 v))))
 
-  let binop (op : F32.binop) =
+  let binop (op : binop) =
     let f =
       match op with
       | Add -> Float.add
@@ -201,12 +215,13 @@ module F32Op = struct
       | Rem -> Float.rem
       | Min -> Float.min
       | Max -> Float.max
+      | _ -> assert false
     in
     fun v1 v2 ->
       to_value
         (of_float (f (to_float (of_value 1 v1)) (to_float (of_value 2 v2))))
 
-  let relop (op : F32.relop) =
+  let relop (op : relop) =
     let f =
       match op with
       | Eq -> ( = )
@@ -215,6 +230,7 @@ module F32Op = struct
       | Le -> ( <= )
       | Gt -> ( > )
       | Ge -> ( >= )
+      | _ -> assert false
     in
     fun v1 v2 -> f (to_float (of_value 1 v1)) (to_float (of_value 2 v2))
 end
@@ -223,12 +239,12 @@ module F64Op = struct
   let to_value f : Num.t = F64 f
 
   let of_value =
-    of_arg (fun v -> match v with F64 f -> f | _ -> raise (Num `F64Type))
+    of_arg (fun v -> match v with F64 f -> f | _ -> raise (Num (Ty_fp S64)))
 
   let of_float = Int64.bits_of_float
   let to_float = Int64.float_of_bits
 
-  let unop (op : F64.unop) =
+  let unop (op : unop) =
     let f =
       match op with
       | Neg -> Float.neg
@@ -237,11 +253,11 @@ module F64Op = struct
       | Nearest -> Float.round
       | Ceil -> Float.ceil
       | Floor -> Float.floor
-      | IsNan -> assert false
+      | Is_nan | _ -> assert false
     in
     fun v -> to_value (of_float (f (to_float (of_value 1 v))))
 
-  let binop (op : F64.binop) =
+  let binop (op : binop) =
     let f =
       match op with
       | Add -> Float.add
@@ -251,12 +267,13 @@ module F64Op = struct
       | Rem -> Float.rem
       | Min -> Float.min
       | Max -> Float.max
+      | _ -> assert false
     in
     fun v1 v2 ->
       to_value
         (of_float (f (to_float (of_value 1 v1)) (to_float (of_value 2 v2))))
 
-  let relop (op : F64.relop) =
+  let relop (op : relop) =
     let f =
       match op with
       | Eq -> ( = )
@@ -265,6 +282,7 @@ module F64Op = struct
       | Le -> ( <= )
       | Gt -> ( > )
       | Ge -> ( >= )
+      | _ -> assert false
     in
     fun v1 v2 -> f (to_float (of_value 1 v1)) (to_float (of_value 2 v2))
 end
@@ -303,18 +321,17 @@ module I32CvtOp = struct
       else Int32.of_float xf
 
   let cvtop op v : Num.t =
-    let open I32 in
     match op with
     | WrapI64 -> I32 (Int64.to_int32 (I64Op.of_value 1 v))
     | TruncSF32 -> I32 (trunc_f32_s (F32Op.of_value 1 v))
     | TruncUF32 -> I32 (trunc_f32_u (F32Op.of_value 1 v))
     | TruncSF64 -> I32 (trunc_f64_s (F64Op.of_value 1 v))
     | TruncUF64 -> I32 (trunc_f64_u (F64Op.of_value 1 v))
-    | ReinterpretFloat -> I32 (F32Op.of_value 1 v)
-    | ExtendSI32 -> raise (TypeError (1, v, `I32Type))
-    | ExtendUI32 -> raise (TypeError (1, v, `I32Type))
+    | Reinterpret_float -> I32 (F32Op.of_value 1 v)
+    | ExtendSI32 -> raise (TypeError (1, v, Ty_bitv S32))
+    | ExtendUI32 -> raise (TypeError (1, v, Ty_bitv S32))
     | OfBool -> v (* already a num here *)
-    | ToBool -> assert false
+    | ToBool | _ -> assert false
 end
 
 module I64CvtOp = struct
@@ -357,7 +374,7 @@ module I64CvtOp = struct
         Int64.(logxor (of_float (xf -. 0x1p63)) min_int)
       else Int64.of_float xf
 
-  let cvtop (op : I64.cvtop) v : Num.t =
+  let cvtop (op : cvtop) v : Num.t =
     match op with
     | ExtendSI32 -> I64 (Int64.of_int32 (I32Op.of_value 1 v))
     | ExtendUI32 -> I64 (extend_i32_u (I32Op.of_value 1 v))
@@ -365,9 +382,9 @@ module I64CvtOp = struct
     | TruncUF32 -> I64 (trunc_f32_u (F32Op.of_value 1 v))
     | TruncSF64 -> I64 (trunc_f64_s (F64Op.of_value 1 v))
     | TruncUF64 -> I64 (trunc_f64_u (F64Op.of_value 1 v))
-    | ReinterpretFloat -> I64 (F64Op.of_value 1 v)
-    | WrapI64 -> raise (TypeError (1, v, `I64Type))
-    | ToBool | OfBool -> assert false (* FIXME: don't like these here *)
+    | Reinterpret_float -> I64 (F64Op.of_value 1 v)
+    | WrapI64 -> raise (TypeError (1, v, Ty_bitv S64))
+    | ToBool | OfBool | _ -> assert false (* FIXME: don't like these here *)
 end
 
 module F32CvtOp = struct
@@ -409,16 +426,16 @@ module F32CvtOp = struct
           let r = if logand x 0xfffL = 0L then 0L else 1L in
           to_float (logor (shift_right_logical x 12) r) *. 0x1p12 )
 
-  let cvtop (op : F32.cvtop) v : Num.t =
+  let cvtop (op : cvtop) v : Num.t =
     match op with
     | DemoteF64 -> F32 (demote_f64 (F64Op.of_value 1 v))
     | ConvertSI32 -> F32 (convert_i32_s (I32Op.of_value 1 v))
     | ConvertUI32 -> F32 (convert_i32_u (I32Op.of_value 1 v))
     | ConvertSI64 -> F32 (convert_i64_s (I64Op.of_value 1 v))
     | ConvertUI64 -> F32 (convert_i64_u (I64Op.of_value 1 v))
-    | ReinterpretInt -> F32 (I32Op.of_value 1 v)
-    | PromoteF32 -> raise (TypeError (1, v, `F32Type))
-    | ToString | OfString -> assert false
+    | Reinterpret_int -> F32 (I32Op.of_value 1 v)
+    | PromoteF32 -> raise (TypeError (1, v, Ty_fp S32))
+    | ToString | OfString | _ -> assert false
 end
 
 module F64CvtOp = struct
@@ -460,28 +477,29 @@ module F64CvtOp = struct
         if x >= 0L then to_float x
         else to_float (logor (shift_right_logical x 1) (logand x 1L)) *. 2.0 )
 
-  let cvtop (op : F64.cvtop) v : Num.t =
+  let cvtop (op : cvtop) v : Num.t =
     match op with
     | PromoteF32 -> F64 (promote_f32 (F32Op.of_value 1 v))
     | ConvertSI32 -> F64 (convert_i32_s (I32Op.of_value 1 v))
     | ConvertUI32 -> F64 (convert_i32_u (I32Op.of_value 1 v))
     | ConvertSI64 -> F64 (convert_i64_s (I64Op.of_value 1 v))
     | ConvertUI64 -> F64 (convert_i64_u (I64Op.of_value 1 v))
-    | ReinterpretInt -> F64 (I64Op.of_value 1 v)
-    | DemoteF64 -> raise (TypeError (1, v, `F64Type))
-    | ToString | OfString -> assert false
+    | Reinterpret_int -> F64 (I64Op.of_value 1 v)
+    | DemoteF64 -> raise (TypeError (1, v, Ty_bitv S64))
+    | ToString | OfString | _ -> assert false
 end
 
 (* Dispatch *)
 
-let op i32 i64 f32 f64 = function
-  | Int _ -> failwith "eval_numeric: Integer evaluations not supported"
-  | Real _ -> failwith "eval_numeric: Float evaluations not supported"
-  | I32 x -> i32 x
-  | I64 x -> i64 x
-  | F32 x -> f32 x
-  | F64 x -> f64 x
-  | Str _ | Bool _ -> assert false
+let op i32 i64 f32 f64 ty op =
+  match ty with
+  | Ty_int -> failwith "eval_numeric: Integer evaluations not supported"
+  | Ty_real -> failwith "eval_numeric: Float evaluations not supported"
+  | Ty_bitv S32 -> i32 op
+  | Ty_bitv S64 -> i64 op
+  | Ty_fp S32 -> f32 op
+  | Ty_fp S64 -> f64 op
+  | Ty_bool | Ty_str -> assert false
 
 let eval_unop = op I32Op.unop I64Op.unop F32Op.unop F64Op.unop
 let eval_binop = op I32Op.binop I64Op.binop F32Op.binop F64Op.binop
