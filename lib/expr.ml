@@ -41,24 +41,23 @@ let rec equal (e1 : t) (e2 : t) : bool =
     | Concat (e1, e3), Concat (e2, e4) -> equal e1 e2 && equal e3 e4
     | _ -> false
 
-let get_symbols (e : t list) : Symbol.t list =
+let get_symbols e =
+  let tbl = Hashtbl.create 64 in
   let rec symbols e =
     match e.e with
-    | Val _ -> []
+    | Val _ -> ()
     | Ptr (_, offset) -> symbols offset
     | Unop (_, e1) -> symbols e1
-    | Binop (_, e1, e2) -> symbols e1 @ symbols e2
-    | Triop (_, e1, e2, e3) -> symbols e1 @ symbols e2 @ symbols e3
-    | Relop (_, e1, e2) -> symbols e1 @ symbols e2
+    | Binop (_, e1, e2) -> symbols e1; symbols e2
+    | Triop (_, e1, e2, e3) -> symbols e1; symbols e2; symbols e3
+    | Relop (_, e1, e2) -> symbols e1; symbols e2
     | Cvtop (_, e) -> symbols e
-    | Symbol s -> [ s ]
+    | Symbol s -> Hashtbl.replace tbl s ()
     | Extract (e, _, _) -> symbols e
-    | Concat (e1, e2) -> symbols e1 @ symbols e2
+    | Concat (e1, e2) -> symbols e1; symbols e2
   in
-  List.fold_left
-    (fun accum x -> if List.mem x accum then accum else x :: accum)
-    []
-    (List.concat_map symbols e)
+  List.iter symbols e;
+  Hashtbl.fold (fun k () acc -> k::acc) tbl []
 
 let negate_relop ({ e; ty } : t) : (t, string) Result.t =
   let e =
