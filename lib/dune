@@ -11,14 +11,9 @@
   ast
   ;axioms
   batch
-  bitv
-  ;boolean
   eval_numeric
   expr
-  ;expression
-  ;floatingPoint
   incremental
-  ;integer
   interpret
   interpret_intf
   lexer
@@ -29,10 +24,8 @@
   optimizer
   parser
   params
-  ;real
   run
   solver_intf
-  ;strings
   symbol
   ty
   value
