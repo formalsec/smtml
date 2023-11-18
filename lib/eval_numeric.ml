@@ -19,9 +19,7 @@ module I32Op = struct
   let to_value i : Num.t = I32 i
 
   let of_value n v : t =
-    of_arg
-      (fun v -> match v with I32 i -> i | _ -> raise (Num (Ty_bitv S32)))
-      n v
+    of_arg (function I32 i -> i | _ -> raise (Num (Ty_bitv S32))) n v
 
   let cmp_u x op y = op Int32.(add x min_int) Int32.(add y min_int)
   let lt_u x y = cmp_u x ( < ) y
@@ -103,9 +101,7 @@ module I64Op = struct
   let to_value i : Num.t = I64 i
 
   let of_value n v : int64 =
-    of_arg
-      (fun v -> match v with I64 i -> i | _ -> raise (Num (Ty_bitv S64)))
-      n v
+    of_arg (function I64 i -> i | _ -> raise (Num (Ty_bitv S64))) n v
 
   let cmp_u x op y = op Int64.(add x min_int) Int64.(add y min_int)
   let lt_u x y = cmp_u x ( < ) y
@@ -185,10 +181,7 @@ end
 
 module F32Op = struct
   let to_value f : Num.t = F32 f
-
-  let of_value =
-    of_arg (fun v -> match v with F32 f -> f | _ -> raise (Num (Ty_fp S32)))
-
+  let of_value = of_arg (function F32 f -> f | _ -> raise (Num (Ty_fp S32)))
   let of_float = Int32.bits_of_float
   let to_float = Int32.float_of_bits
 
@@ -237,10 +230,7 @@ end
 
 module F64Op = struct
   let to_value f : Num.t = F64 f
-
-  let of_value =
-    of_arg (fun v -> match v with F64 f -> f | _ -> raise (Num (Ty_fp S64)))
-
+  let of_value = of_arg (function F64 f -> f | _ -> raise (Num (Ty_fp S64)))
   let of_float = Int64.bits_of_float
   let to_float = Int64.float_of_bits
 
