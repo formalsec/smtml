@@ -45,10 +45,6 @@ module I32Op = struct
   let shr_s x y = shift Int32.shift_right x y
   let shr_u x y = shift Int32.shift_right_logical x y
 
-  let extend_s n x =
-    let shift = Int32.(to_int @@ sub 32l n) in
-    Int32.(shift_right (shift_left x shift) shift)
-
   let unop (op : unop) : Num.t -> Num.t =
     let f =
       match op with
@@ -74,8 +70,6 @@ module I32Op = struct
       | Shl -> shl
       | ShrL -> shr_u
       | ShrA -> shr_s
-      | Ext -> extend_s
-      | ExtU -> fun _n x -> x
       | Rotl | Rotr | _ -> assert false
     in
     fun v1 v2 -> to_value (f (of_value 1 v1) (of_value 2 v2))
@@ -127,10 +121,6 @@ module I64Op = struct
   let shr_s x y = shift Int64.shift_right x y
   let shr_u x y = shift Int64.shift_right_logical x y
 
-  let extend_s n x =
-    let shift = Int64.(to_int @@ sub 64L n) in
-    Int64.(shift_right (shift_left x shift) shift)
-
   let unop (op : unop) : Num.t -> Num.t =
     let f =
       match op with
@@ -156,8 +146,6 @@ module I64Op = struct
       | Shl -> shl
       | ShrL -> shr_u
       | ShrA -> shr_s
-      | Ext -> extend_s
-      | ExtU -> fun _n x -> x
       | Rotl | Rotr | _ -> assert false
     in
     fun v1 v2 -> to_value (f (of_value 1 v1) (of_value 2 v2))
@@ -278,6 +266,10 @@ module F64Op = struct
 end
 
 module I32CvtOp = struct
+  let extend_s n x =
+    let shift = 32 - n in
+    Int32.(shift_right (shift_left x shift) shift)
+
   let trunc_f32_s (x : int32) =
     if x <> x then raise ConversionToInteger
     else
@@ -318,13 +310,17 @@ module I32CvtOp = struct
     | TruncSF64 -> I32 (trunc_f64_s (F64Op.of_value 1 v))
     | TruncUF64 -> I32 (trunc_f64_u (F64Op.of_value 1 v))
     | Reinterpret_float -> I32 (F32Op.of_value 1 v)
-    | ExtendSI32 -> raise (TypeError (1, v, Ty_bitv S32))
-    | ExtendUI32 -> raise (TypeError (1, v, Ty_bitv S32))
+    | ExtS n -> I32 (extend_s n (I32Op.of_value 1 v))
+    | ExtU _n -> I32 (I32Op.of_value 1 v)
     | OfBool -> v (* already a num here *)
     | ToBool | _ -> assert false
 end
 
 module I64CvtOp = struct
+  (* let extend_s n x = *)
+  (*   let shift = 64 - n in *)
+  (*   Int64.(shift_right (shift_left x shift) shift) *)
+
   let extend_i32_u (x : int32) =
     Int64.(logand (of_int32 x) 0x0000_0000_ffff_ffffL)
 
@@ -366,8 +362,8 @@ module I64CvtOp = struct
 
   let cvtop (op : cvtop) v : Num.t =
     match op with
-    | ExtendSI32 -> I64 (Int64.of_int32 (I32Op.of_value 1 v))
-    | ExtendUI32 -> I64 (extend_i32_u (I32Op.of_value 1 v))
+    | ExtS 32 -> I64 (Int64.of_int32 (I32Op.of_value 1 v))
+    | ExtU 32 -> I64 (extend_i32_u (I32Op.of_value 1 v))
     | TruncSF32 -> I64 (trunc_f32_s (F32Op.of_value 1 v))
     | TruncUF32 -> I64 (trunc_f32_u (F32Op.of_value 1 v))
     | TruncSF64 -> I64 (trunc_f64_s (F64Op.of_value 1 v))
