@@ -6,17 +6,17 @@
 (generate_opam_files true)
 
 (source
- (github wasp-platform/encoding))
+ (github formalsec/encoding))
 
-(authors "WASP Platform")
+(authors "Filipe Marques <filipe.s.marques@tecnico.ulisboa.pt>")
 
-(maintainers "WASP Platform")
+(maintainers "Filipe Marques <filipe.s.marques@tecnico.ulisboa.pt>")
 
 (license "GPL-3.0-only")
 
 (package
  (name encoding)
- (synopsis "Encoding library")
+ (synopsis "Smt encoding library")
  (description "An OCaml abstraction layer for constraint solvers.")
  (depends
    dune
