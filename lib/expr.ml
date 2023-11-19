@@ -181,17 +181,14 @@ let rec simplify_binop ty (op : binop) e1 e2 =
 let simplify_relop ty (op : relop) e1 e2 =
   match (e1.e, e2.e) with
   | Val (Num v1), Val (Num v2) ->
-    Val (Bool (Eval_numeric.eval_relop ty op v1 v2))
+    Val (if Eval_numeric.eval_relop ty op v1 v2 then True else False)
   | Ptr (_, _), Val (Num (I32 0l)) | Val (Num (I32 0l)), Ptr (_, _) -> (
-    match op with
-    | Eq -> Val (Bool false)
-    | Ne -> Val (Bool true)
-    | _ -> Relop (op, e1, e2) )
+    match op with Eq -> Val False | Ne -> Val True | _ -> Relop (op, e1, e2) )
   | Ptr (b1, os1), Ptr (b2, os2) -> (
     let v i = { ty = Ty_bitv S32; e = Val (Num (I32 i)) } in
     match op with
-    | Eq -> if b1 = b2 then Relop (Eq, os1, os2) else Val (Bool false)
-    | Ne -> if b1 = b2 then Relop (Ne, os1, os2) else Val (Bool true)
+    | Eq -> if b1 = b2 then Relop (Eq, os1, os2) else Val False
+    | Ne -> if b1 = b2 then Relop (Ne, os1, os2) else Val True
     | (LtU | LeU | GtU | GeU) as op ->
       if b1 = b2 then Relop (op, os1, os2) else Relop (op, v b1, v b2)
     | _ -> Relop (op, e1, e2) )

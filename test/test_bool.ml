@@ -9,10 +9,8 @@ let x = Expr.mk_symbol symb_x
 
 let%test "test_not" =
   let pc =
-    [ Unop (Not, Relop (Eq, x, Val (Bool true) @: Ty_bool) @: Ty_bool)
-      @: Ty_bool
-    ]
+    [ Unop (Not, Relop (Eq, x, Val True @: Ty_bool) @: Ty_bool) @: Ty_bool ]
   in
   assert (Batch.check solver pc);
   let m = Batch.model solver in
-  Some (Value.Bool false) = Model.evaluate (Option.get m) symb_x
+  Some Value.False = Model.evaluate (Option.get m) symb_x
