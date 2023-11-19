@@ -329,7 +329,6 @@ module Fresh = struct
           | ShrL -> BitVector.mk_lshr ctx
           | Rem -> BitVector.mk_srem ctx
           | RemU -> BitVector.mk_urem ctx
-          | Ext | ExtU -> assert false
           | Rotl | Rotr -> failwith "z3_mappings: rotl|rotr not implemented!"
           | _ -> assert false
         in
@@ -359,6 +358,8 @@ module Fresh = struct
           | Ty.S8 -> assert false
           | Ty.S32 -> (
             match op with
+            | ExtS n -> BitVector.mk_sign_ext ctx n
+            | ExtU n -> BitVector.mk_zero_ext ctx n
             | WrapI64 -> BitVector.mk_extract ctx 31 0
             | TruncSF32 | TruncSF64 ->
               fun f -> FloatingPoint.mk_to_sbv ctx rtz f 32
@@ -367,11 +368,11 @@ module Fresh = struct
             | Reinterpret_float -> FloatingPoint.mk_to_ieee_bv ctx
             | ToBool -> encode_relop Ne (v C32 0l)
             | OfBool -> fun e -> Boolean.mk_ite ctx e (v C32 1l) (v C32 0l)
-            | ExtendSI32 | ExtendUI32 | _ -> assert false )
+            | _ -> assert false )
           | Ty.S64 -> (
             match op with
-            | ExtendSI32 -> BitVector.mk_sign_ext ctx 32
-            | ExtendUI32 -> BitVector.mk_zero_ext ctx 32
+            | ExtS n -> BitVector.mk_sign_ext ctx n
+            | ExtU n -> BitVector.mk_zero_ext ctx n
             (* rounding towards zero (aka truncation) *)
             | TruncSF32 | TruncSF64 ->
               fun f -> FloatingPoint.mk_to_sbv ctx rtz f 64
@@ -567,13 +568,7 @@ module Fresh = struct
       | Unop (op, e) ->
         let e' = encode_expr e in
         encode_unop expr.ty op e'
-      | Binop (Ext, { e = Val (Num (I32 n)); _ }, e) ->
-        let e' = encode_expr e in
-        Z3.BitVector.mk_sign_ext ctx (Int32.to_int n) e'
-      | Binop (ExtU, { e = Val (Num (I32 n)); _ }, e) ->
-        let e' = encode_expr e in
-        Z3.BitVector.mk_zero_ext ctx (Int32.to_int n) e'
-      | Binop (op, e1, e2) ->
+     | Binop (op, e1, e2) ->
         let e1' = encode_expr e1 in
         let e2' = encode_expr e2 in
         encode_binop expr.ty op e1' e2'

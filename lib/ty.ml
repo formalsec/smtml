@@ -1,4 +1,5 @@
 let pp_string = Format.pp_print_string
+let fprintf = Format.fprintf
 
 type _ cast =
   | C32 : int32 cast
@@ -50,8 +51,6 @@ type binop =
   | Max
   | Rotl
   | Rotr
-  | Ext
-  | ExtU
   (* To remove *)
   | Nth
   | Concat
@@ -90,8 +89,8 @@ type cvtop =
   | TruncSF64
   | TruncUF64
   | WrapI64
-  | ExtendSI32
-  | ExtendUI32
+  | ExtS of int
+  | ExtU of int
 
 let pp_unop fmt (op : unop) =
   match op with
@@ -127,15 +126,11 @@ let pp_binop fmt (op : binop) =
   | Max -> pp_string fmt "max"
   | Rotl -> pp_string fmt "rotl"
   | Rotr -> pp_string fmt "rotr"
-  | Ext -> pp_string fmt "ext"
-  | ExtU -> pp_string fmt "ext_u"
   | Nth -> pp_string fmt "nth"
   | Concat -> pp_string fmt "++"
 
 let pp_triop fmt (op : triop) =
-  match op with
-  | Ite -> pp_string fmt "ite"
-  | Substr -> pp_string fmt "sub"
+  match op with Ite -> pp_string fmt "ite" | Substr -> pp_string fmt "sub"
 
 let pp_relop fmt (op : relop) =
   match op with
@@ -169,8 +164,8 @@ let pp_cvtop fmt (op : cvtop) =
   | TruncSF64 -> pp_string fmt "trunc_f64_s"
   | TruncUF64 -> pp_string fmt "trunc_f64_u"
   | WrapI64 -> pp_string fmt "wrap_i64"
-  | ExtendSI32 -> pp_string fmt "extend_i32_s"
-  | ExtendUI32 -> pp_string fmt "extend_i32_u"
+  | ExtS sz -> fprintf fmt "extend_i%d_s" sz
+  | ExtU sz -> fprintf fmt "extend_i%d_u" sz
 
 let pp fmt = function
   | Ty_int -> pp_string fmt "int"
