@@ -7,7 +7,7 @@ on:
   pull_request:
     branches:
       - main
-    
+
 jobs:
   build:
     strategy:
@@ -18,19 +18,23 @@ jobs:
           - ubuntu-latest
         ocaml-compiler:
           - "5.1"
-  
+
     runs-on: ${{ matrix.os }}
-    
+
     steps:
       - name: checkout
         uses: actions/checkout@v4
-      
-      - name: Setup OCaml ${{ matrix.ocaml-compiler }}
+
+      - name: setup OCaml ${{ matrix.ocaml-compiler }}
         uses: ocaml/setup-ocaml@v2
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
 
-      - run: opam install -y . --deps-only
+      - name: install deps
+        run: opam install -y . --deps-only
 
-      - run: opam exec -- dune build @install
-        
+      - name: build
+        run: opam exec -- dune build @install
+
+      - name: test
+        run: opam exec -- dune runtest
