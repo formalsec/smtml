@@ -1,18 +1,19 @@
 open Lexer
 open Lexing
+open Format
 
-let print_position outx lexbuf =
+let pp_pos fmt lexbuf =
   let pos = lexbuf.lex_curr_p in
-  Printf.fprintf outx "%s:%d:%d" pos.pos_fname pos.pos_lnum
+  fprintf fmt "%s:%d:%d" pos.pos_fname pos.pos_lnum
     (pos.pos_cnum - pos.pos_bol + 1)
 
 let parse_with_error lexbuf =
   try Parser.script Lexer.token lexbuf with
   | SyntaxError msg ->
-    Printf.fprintf stderr "%a: %s\n" print_position lexbuf msg;
+    fprintf err_formatter "%a: %s\n" pp_pos lexbuf msg;
     []
   | Parser.Error ->
-    Printf.fprintf stderr "%a: syntax error\n" print_position lexbuf;
+    fprintf err_formatter "%a: syntax error\n" pp_pos lexbuf;
     exit 1
 
 let parse_file filename =

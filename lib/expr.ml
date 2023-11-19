@@ -90,7 +90,7 @@ module Pp = struct
 
   let rec pp fmt (e : t) =
     match e.e with
-    | Val v -> fprintf fmt "%a" Value.pp v
+    | Val v -> Value.pp fmt v
     | Ptr (base, offset) -> fprintf fmt "(Ptr (i32 %ld) %a)" base pp offset
     | Unop (op, e) -> fprintf fmt "(%a.%a %a)" Ty.pp e.ty pp_unop op pp e
     | Binop (op, e1, e2) ->
@@ -100,7 +100,7 @@ module Pp = struct
     | Relop (op, e1, e2) ->
       fprintf fmt "(%a.%a %a %a)" Ty.pp e.ty pp_relop op pp e1 pp e2
     | Cvtop (op, e) -> fprintf fmt "(%a.%a %a)" Ty.pp e.ty pp_cvtop op pp e
-    | Symbol s -> fprintf fmt "%a" Symbol.pp s
+    | Symbol s -> Symbol.pp fmt s
     | Extract (e, h, l) -> fprintf fmt "(extract %a %d %d)" pp e l h
     | Concat (e1, e2) -> fprintf fmt "(++ %a %a)" pp e1 pp e2
 

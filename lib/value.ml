@@ -33,7 +33,7 @@ let pp fmt (v : t) =
   | False -> pp_string fmt "false"
   | Int x -> pp_string fmt @@ Int.to_string x
   | Real x -> pp_string fmt @@ Float.to_string x
-  | Num x -> Format.fprintf fmt "%a" Num.pp x
+  | Num x -> Num.pp fmt x
   | Str x -> Format.fprintf fmt {|"%s"|} x
 
 let pp_num fmt (v : t) =
