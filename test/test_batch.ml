@@ -36,7 +36,7 @@ let%test "eval [ x = 5 ]" =
   Some (Value.Int 5) = Model.evaluate (Option.get m) symb_x
 
 let%test "eval [ y = false ]" =
-  let pc = [ Relop (Eq, y, Val (Bool false) @: Ty_bool) @: Ty_bool ] in
+  let pc = [ Relop (Eq, y, Val False @: Ty_bool) @: Ty_bool ] in
   assert (Batch.check solver pc);
   let model = Option.get (Batch.model solver) in
-  Some (Value.Bool false) = Model.evaluate model symb_y
+  Some Value.False = Model.evaluate model symb_y

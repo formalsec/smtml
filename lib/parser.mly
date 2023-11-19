@@ -64,7 +64,7 @@ let spec_constant :=
   | x = NUM; { Int x }
   | x = DEC; { Real x }
   | x = STR; { Str x }
-  | x = BOOL; { Bool x }
+  | x = BOOL; { if x then True else False }
   | LPAREN; ty = TYPE; x = NUM; RPAREN;
     {
       match ty with

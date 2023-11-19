@@ -200,19 +200,12 @@ module Fresh = struct
         op' e
     end
 
-    module Boolean :
-      Op_intf.S
-        with type v := bool
-         and type t := Z3.Expr.expr
-         and type unop := Ty.unop
-         and type binop := Ty.binop
-         and type relop := Ty.relop
-         and type cvtop := Ty.cvtop
-         and type triop := Ty.triop = struct
+    module Boolean = struct
       open Z3
       open Ty
 
-      let encode_val b = Boolean.mk_val ctx b
+      let encode_true () = Boolean.mk_true ctx
+      let encode_false () = Boolean.mk_false ctx
 
       let encode_unop op e =
         let op' =
@@ -492,9 +485,10 @@ module Fresh = struct
     end
 
     let encode_val : Value.t -> Z3.Expr.expr = function
+      | True -> Boolean.encode_true ()
+      | False -> Boolean.encode_false ()
       | Int v -> I.encode_val v
       | Real v -> Real.encode_val v
-      | Bool v -> Boolean.encode_val v
       | Str v -> Str.encode_val v
       | Num (I8 _) -> assert false
       | Num (I32 x) -> Bv.v C32 x
@@ -700,8 +694,8 @@ module Fresh = struct
         Real (Q.to_float @@ Z3.Arithmetic.Real.get_ratio e)
       | Ty_bool, Z3enums.BOOL_SORT -> (
         match Z3.Boolean.get_bool_value e with
-        | Z3enums.L_TRUE -> Bool true
-        | Z3enums.L_FALSE -> Bool false
+        | Z3enums.L_TRUE -> True
+        | Z3enums.L_FALSE -> False
         | Z3enums.L_UNDEF ->
           (* It can never be something else *)
           assert false )
