@@ -18,23 +18,17 @@ jobs:
           - ubuntu-latest
         ocaml-compiler:
           - "5.1"
-
     runs-on: ${{ matrix.os }}
-
     steps:
-      - name: checkout
+      - name: Checkout
         uses: actions/checkout@v4
-
-      - name: setup OCaml ${{ matrix.ocaml-compiler }}
+      - name: Setup OCaml ${{ matrix.ocaml-compiler }}
         uses: ocaml/setup-ocaml@v2
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
-
-      - name: install deps
+      - name: Install dependencies
         run: opam install -y . --deps-only --with-test
-
-      - name: build
+      - name: Build
         run: opam exec -- dune build @install
-
-      - name: test
+      - name: Test
         run: opam exec -- dune runtest
