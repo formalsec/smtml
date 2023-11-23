@@ -8,7 +8,9 @@ The OCaml Constraint Abstraction Layer (OCAL) serves as an abstracted constraint
 wrapper, currently utilising Z3 as its backend solver. However, future plans for OCAL
 include support for other solvers in its backend, such as Yices and CVC5.
 
-## Build from source
+## Installation
+
+### OPAM
 
 - Install [opam](https://opam.ocaml.org/doc/Install.html).
 - Bootstrap the OCaml compiler:
@@ -18,7 +20,15 @@ opam init
 opam switch create 5.1.0 5.1.0
 ```
 
-- Then, install the library dependencies:
+- And, then install encoding:
+
+```sh
+opam install encoding
+```
+
+### Build from source
+
+- Install the library dependencies:
 
 ```sh
 git clone https://github.com/wasp-platform/encoding.git
@@ -37,12 +47,4 @@ dune runtest
 
 ```sh
 dune install
-```
-
-## Use encoding in your project
-
-* To incorporate encoding into your project, you can pin to your project:
-
-```sh
-opam pin encoding git+https://github.com/wasp-platform/encoding
 ```
