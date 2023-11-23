@@ -20,7 +20,7 @@
  (description "An OCaml abstraction layer for constraint solvers.")
  (depends
    dune
-   (ocaml (>= "5.1.0"))
+   (ocaml (>= "4.14.0"))
    (z3 (and (>= "4.11.2") (< "4.13")))
    menhir
    (zarith (>= "1.5"))
