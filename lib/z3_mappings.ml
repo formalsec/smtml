@@ -649,8 +649,7 @@ module Fresh = struct
     let float_of_numeral (fp : Z3.Expr.expr) : float =
       assert (Z3.Expr.is_numeral fp);
       let module Fp = Z3.FloatingPoint in
-      (* FIXME: Can Z3 NaNs be signaling? Assume quiet as default *)
-      if Fp.is_numeral_nan ctx fp then Float.quiet_nan
+      if Fp.is_numeral_nan ctx fp then Float.nan
       else if Fp.is_numeral_inf ctx fp then
         if Fp.is_numeral_negative ctx fp then Float.neg_infinity
         else Float.infinity

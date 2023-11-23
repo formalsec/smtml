@@ -9,10 +9,8 @@ let get_bindings (model : t) : (Symbol.t * Value.t) List.t =
 let evaluate (model : t) (symb : Symbol.t) : Value.t Option.t =
   Hashtbl.find_opt model symb
 
-let hashtbl_iter f tbl = Hashtbl.iter (fun k v -> f (k, v)) tbl
-
 let pp_print_hashtbl ~pp_sep pp_v fmt v =
-  Format.pp_print_iter ~pp_sep hashtbl_iter pp_v fmt v
+  Format.pp_print_seq ~pp_sep pp_v fmt (Hashtbl.to_seq v)
 
 let pp_bindings fmt model =
   pp_print_hashtbl
