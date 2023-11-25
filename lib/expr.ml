@@ -6,6 +6,7 @@ and expr =
   | Val of Value.t
   | Ptr of int32 * t
   | Symbol of Symbol.t
+  | List of t list
   | Unop of Ty.t * unop * t
   | Binop of Ty.t * binop * t * t
   | Triop of Ty.t * triop * t * t * t
@@ -41,6 +42,7 @@ module Hc = Hc.Make (struct
     let h x = Hashtbl.hash x in
     match e with
     | Val v -> h v
+    | List v -> h v
     | Ptr (b, o) -> h (b, o.tag)
     | Symbol s -> h s
     | Unop (ty, op, e) -> h (ty, op, e.tag)
@@ -71,6 +73,7 @@ let rec ty (hte : t) : Ty.t =
   | Val x -> Value.type_of x
   | Ptr _ -> Ty_bitv 32
   | Symbol x -> Symbol.type_of x
+  | List _ -> assert false
   | Unop (ty, _, _) -> ty
   | Binop (ty, _, _, _) -> ty
   | Triop (ty, _, _, _, _) -> ty
@@ -89,6 +92,7 @@ let get_symbols (hte : t list) =
     | Val _ -> ()
     | Ptr (_, offset) -> symbols offset
     | Symbol s -> Hashtbl.replace tbl s ()
+    | List es -> List.iter symbols es
     | Unop (_, _, e1) -> symbols e1
     | Binop (_, _, e1, e2) ->
       symbols e1;
@@ -132,6 +136,7 @@ module Pp = struct
   let rec pp fmt (hte : t) =
     match view hte with
     | Val v -> Value.pp fmt v
+    | List v -> fprintf fmt "(%a)" (pp_print_list ~pp_sep:pp_print_space pp) v
     | Ptr (base, offset) -> fprintf fmt "(Ptr (i32 %ld) %a)" base pp offset
     | Unop (ty, op, e) -> fprintf fmt "(%a.%a %a)" Ty.pp ty pp_unop op pp e
     | Binop (ty, op, e1, e2) ->
@@ -350,6 +355,7 @@ let rec simplify_expr ?(extract = true) (hte : t) : t =
   match view hte with
   | Val _ | Symbol _ -> hte
   | Ptr (base, offset) -> make @@ Ptr (base, simplify_expr offset)
+  | List es -> make @@ List (List.map simplify_expr es)
   | Unop (ty, op, e) ->
     let e = simplify_expr e in
     unop ty op e

@@ -5,6 +5,7 @@ and expr =
   | Val of Value.t
   | Ptr of int32 * t
   | Symbol of Symbol.t
+  | List of t list
   | Unop of Ty.t * Ty.unop * t
   | Binop of Ty.t * Ty.binop * t * t
   | Triop of Ty.t * Ty.triop * t * t * t
