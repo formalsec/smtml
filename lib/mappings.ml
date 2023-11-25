@@ -542,6 +542,10 @@ module Make (M : Mappings_intf.M) = struct
       let* base' = v (Num (I32 base)) in
       let* offset' = encode_expr offset in
       I32.binop Add base' offset'
+    | Symbol s ->
+      let x = Symbol.to_string s in
+      let* ty = get_type @@ Symbol.type_of s in
+      const x ty
     | Unop (ty, op, e) ->
       let* e = encode_expr e in
       unop ty op e
@@ -561,10 +565,6 @@ module Make (M : Mappings_intf.M) = struct
     | Cvtop (ty, op, e) ->
       let* e = encode_expr e in
       cvtop ty op e
-    | Symbol s ->
-      let x = Symbol.to_string s in
-      let* ty = get_type @@ Symbol.type_of s in
-      const x ty
     | Extract (e, h, l) ->
       let* e = encode_expr e in
       M.Bitv.extract e ~high:((h * 8) - 1) ~low:(l * 8)
@@ -572,6 +572,7 @@ module Make (M : Mappings_intf.M) = struct
       let* e1 = encode_expr e1 in
       let* e2 = encode_expr e2 in
       M.Bitv.concat e1 e2
+    | List _es -> assert false
 
   (* TODO: pp_smt *)
   let pp_smt ?status:_ _ _ = assert false

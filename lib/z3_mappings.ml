@@ -546,6 +546,7 @@ module Fresh = struct
       let open Expr in
       match view hte with
       | Val v -> encode_val v
+      | List _es -> assert false
       | Ptr (base, offset) ->
         let base' = encode_val (Num (I32 base)) in
         let offset' = encode_expr offset in
