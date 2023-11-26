@@ -10,6 +10,7 @@ type t =
   | Ty_str
   | Ty_bitv of int
   | Ty_fp of int
+  | Ty_list
 
 type unop =
   | Neg
