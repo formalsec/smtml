@@ -23,6 +23,9 @@ module Hc = Hc.Make (struct
     | Val v1, Val v2 -> Value.equal v1 v2
     | Ptr (b1, o1), Ptr (b2, o2) -> b1 = b2 && o1 == o2
     | Symbol s1, Symbol s2 -> Symbol.equal s1 s2
+      | List l1, List l2 ->
+        if List.compare_lengths l1 l2 = 0 then List.for_all2 ( == ) l1 l2
+        else false
     | Unop (t1, op1, e1), Unop (t2, op2, e2) ->
       Ty.equal t1 t2 && op1 = op2 && e1 == e2
     | Binop (t1, op1, e1, e3), Binop (t2, op2, e2, e4) ->
@@ -42,9 +45,9 @@ module Hc = Hc.Make (struct
     let h x = Hashtbl.hash x in
     match e with
     | Val v -> h v
-    | List v -> h v
     | Ptr (b, o) -> h (b, o.tag)
     | Symbol s -> h s
+    | List v -> h v
     | Unop (ty, op, e) -> h (ty, op, e.tag)
     | Cvtop (ty, op, e) -> h (ty, op, e.tag)
     | Binop (ty, op, e1, e2) -> h (ty, op, e1.tag, e2.tag)
@@ -73,7 +76,7 @@ let rec ty (hte : t) : Ty.t =
   | Val x -> Value.type_of x
   | Ptr _ -> Ty_bitv 32
   | Symbol x -> Symbol.type_of x
-  | List _ -> assert false
+  | List _ -> Ty_list
   | Unop (ty, _, _) -> ty
   | Binop (ty, _, _, _) -> ty
   | Triop (ty, _, _, _, _) -> ty

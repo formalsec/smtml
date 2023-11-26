@@ -30,7 +30,7 @@ module Make (M : Mappings_intf.M) = struct
     | Ty_bitv 64 -> Types.bitv 64
     | Ty_fp 32 -> Types.float 8 24
     | Ty_fp 64 -> Types.float 11 53
-    | Ty_bitv _ | Ty_fp _ -> assert false
+    | Ty_bitv _ | Ty_fp _ | Ty_list -> assert false
 
   module Bool_impl = struct
     let true_ = true_
@@ -486,7 +486,7 @@ module Make (M : Mappings_intf.M) = struct
     | Ty.Ty_bitv 64 -> I64.unop
     | Ty.Ty_fp 32 -> Float32_impl.unop
     | Ty.Ty_fp 64 -> Float64_impl.unop
-    | Ty.Ty_bitv _ | Ty_fp _ -> assert false
+    | Ty.Ty_bitv _ | Ty_fp _ | Ty_list -> assert false
 
   let binop = function
     | Ty.Ty_int -> Int_impl.binop
@@ -498,7 +498,7 @@ module Make (M : Mappings_intf.M) = struct
     | Ty.Ty_bitv 64 -> I64.binop
     | Ty.Ty_fp 32 -> Float32_impl.binop
     | Ty.Ty_fp 64 -> Float64_impl.binop
-    | Ty.Ty_bitv _ | Ty_fp _ -> assert false
+    | Ty.Ty_bitv _ | Ty_fp _ | Ty_list -> assert false
 
   let triop = function
     | Ty.Ty_int | Ty.Ty_real -> assert false
@@ -509,7 +509,7 @@ module Make (M : Mappings_intf.M) = struct
     | Ty.Ty_bitv 64 -> I64.triop
     | Ty.Ty_fp 32 -> Float32_impl.triop
     | Ty.Ty_fp 64 -> Float64_impl.triop
-    | Ty.Ty_bitv _ | Ty_fp _ -> assert false
+    | Ty.Ty_bitv _ | Ty_fp _ | Ty_list -> assert false
 
   let relop = function
     | Ty.Ty_int -> Int_impl.relop
@@ -521,7 +521,7 @@ module Make (M : Mappings_intf.M) = struct
     | Ty.Ty_bitv 64 -> I64.relop
     | Ty.Ty_fp 32 -> Float32_impl.relop
     | Ty.Ty_fp 64 -> Float64_impl.relop
-    | Ty.Ty_bitv _ | Ty_fp _ -> assert false
+    | Ty.Ty_bitv _ | Ty_fp _ | Ty_list -> assert false
 
   let cvtop = function
     | Ty.Ty_int -> Int_impl.cvtop
@@ -533,7 +533,7 @@ module Make (M : Mappings_intf.M) = struct
     | Ty.Ty_bitv 64 -> I64.cvtop
     | Ty.Ty_fp 32 -> Float32_impl.cvtop
     | Ty.Ty_fp 64 -> Float64_impl.cvtop
-    | Ty.Ty_bitv _ | Ty_fp _ -> assert false
+    | Ty.Ty_bitv _ | Ty_fp _ | Ty_list -> assert false
 
   let rec encode_expr (hte : Expr.t) : term M.t =
     match Expr.view hte with
@@ -605,7 +605,7 @@ module Make (M : Mappings_intf.M) = struct
       | Ty_fp 64 ->
         let+ float = Interp.to_float v 11 53 in
         Value.Num (F64 (Int64.bits_of_float float))
-      | Ty_bitv _ | Ty_fp _ -> assert false
+      | Ty_bitv _ | Ty_fp _ | Ty_list -> assert false
     in
     Cont.run v cont
 
