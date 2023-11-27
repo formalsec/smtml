@@ -53,7 +53,7 @@ module Make (Solver : Solver_intf.S) = struct
       (* Check the cache first *)
       match Hashtbl.find_opt check_sat_cache expr_string with
       | Some result -> 
-        Format.printf "Cache Hit: %s\n" result;
+        (*Format.printf "Cache Hit: %s\n" result;*)
         result
       | None -> 
         (* If not in the cache, use the solver *)
@@ -64,7 +64,7 @@ module Make (Solver : Solver_intf.S) = struct
         (* Cache the result *)
         let result = if is_sat then "sat" else "unsat" in
         Hashtbl.add check_sat_cache expr_string result;
-        Format.printf "%s\n" result;
+        (*Format.printf "%s\n" result;*)
         result
     ) ess in
   
@@ -91,7 +91,7 @@ module Make (Solver : Solver_intf.S) = struct
         (List.tl code, pc)
       | CheckSat -> 
         c.last_result <- handle_checksat c;
-        (* Format.printf "%s\n" c.last_result; *)
+        Format.printf "%s\n" c.last_result;
         (List.tl code, pc)
     in
     { c with code = code'; pc = pc'; last_result = c.last_result }

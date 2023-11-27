@@ -13,13 +13,22 @@ MODE="0"
 RESULTS_DIR="results"
 mkdir -p "$RESULTS_DIR"
 
+# Define an array of subdirectory names to skip
+SKIP_DIRS=("002" "014" "025" "037" "077" "081" "093" "094" "123" "128" "174" "145" "192" "217" "225" "248" "278" "283" "285" "288" "298" "299" "302" "317" "333" "338" "350" "368" "382" "396" "400")
+
 # Loop over each subdirectory under the main queries directory
 for QUERY_SUBDIR in "${MAIN_QUERY_DIR}"/*; do
     if [ -d "$QUERY_SUBDIR" ]; then
         # Extract the name of the subdirectory
         QUERY_SUBDIR_NAME=$(basename "$QUERY_SUBDIR")
 
-        # Output file name in the format "NAMEOFTHEFOLDER_MODEOFEXECUTION.out"
+        # Check if the subdirectory name is in the skip list
+        if [[ " ${SKIP_DIRS[@]} " =~ " ${QUERY_SUBDIR_NAME%%_*} " ]]; then
+            echo "Skipping folder: $QUERY_SUBDIR_NAME"
+            continue
+        fi
+
+	# Output file name in the format "NAMEOFTHEFOLDER_MODEOFEXECUTION.out"
         OUTPUT_FILE="${RESULTS_DIR}/${QUERY_SUBDIR_NAME}_${MODE}.out"
 
         # Print the name of the folder being processed
