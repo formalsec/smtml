@@ -1,31 +1,38 @@
-open Core
 open Encoding
+open Cmdliner
 module Z3_batch = Batch.Make (Z3_mappings)
 module Z3_incremental = Incremental.Make (Z3_mappings)
 module Interpret = Interpret.Make (Z3_batch)
 
 let get_contents = function
   | "-" -> In_channel.input_all In_channel.stdin
-  | filename -> In_channel.read_all filename
+  | filename ->
+    let chan = open_in filename in
+    Fun.protect
+      ~finally:(fun () -> close_in chan)
+      (fun () -> In_channel.input_all chan)
 
 let parse_file file = get_contents file |> Run.parse_string
 
-let command =
-  Command.basic ~summary:"SMTLIB-like parser and interpreter"
-    ~readme:(fun () -> "More detailed information")
-    (let%map_open.Command files =
-       anon (sequence ("filename" %: Filename_unix.arg_type))
-       (*and trial = flag "-t" no_arg ~doc:" run a built-in time trial" in*)
-     in
-     fun () ->
-       match files with
-       | [] ->
-         let ast = parse_file "-" in
-         ignore @@ Interpret.start ast
-       | _ ->
-         ignore
-         @@ List.fold files ~init:None ~f:(fun state file ->
-                let ast = Run.parse_file file in
-                Some (Interpret.start ?state ast) ) )
+let main files =
+  match files with
+  | [] ->
+    let ast = parse_file "-" in
+    ignore @@ Interpret.start ast
+  | _ ->
+    ignore
+    @@ List.fold_left
+         (fun state file ->
+           let ast = Run.parse_file file in
+           Some (Interpret.start ?state ast) )
+         None files
 
-let () = Command_unix.run ~version:"0.1" command
+let files =
+  let doc = "source files" in
+  Arg.(value & pos_all non_dir_file [] & info [] ~doc)
+
+let cli =
+  let info = Cmd.info "smtml" ~version:"%%VERSION%%" in
+  Cmd.v info Term.(const main $ files)
+
+let () = exit @@ Cmd.eval cli
