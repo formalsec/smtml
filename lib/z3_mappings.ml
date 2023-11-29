@@ -19,6 +19,8 @@ module Fresh = struct
       | Params.Model -> P.update_param_value ctx "model" (string_of_bool value)
       | Params.Unsat_core ->
         P.update_param_value ctx "unsat_core" (string_of_bool value)
+      | Params.Ematching ->
+        Z3.set_global_param "smt.ematching" (string_of_bool value)
 
     let int_sort = Z3.Arithmetic.Integer.mk_sort ctx
     let real_sort = Z3.Arithmetic.Real.mk_sort ctx
@@ -568,7 +570,7 @@ module Fresh = struct
       | Unop (op, e) ->
         let e' = encode_expr e in
         encode_unop expr.ty op e'
-     | Binop (op, e1, e2) ->
+      | Binop (op, e1, e2) ->
         let e1' = encode_expr e1 in
         let e2' = encode_expr e2 in
         encode_binop expr.ty op e1' e2'

@@ -1,6 +1,7 @@
 type _ param =
   | Model : bool param
   | Unsat_core : bool param
+  | Ematching : bool param
 
 type t
 

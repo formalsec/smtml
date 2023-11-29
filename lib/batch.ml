@@ -22,7 +22,8 @@ module Make (Mappings : Mappings_intf.S) = struct
 
   let update_param_values params =
     Mappings.update_param_value Model (Params.get params Model);
-    Mappings.update_param_value Unsat_core (Params.get params Unsat_core)
+    Mappings.update_param_value Unsat_core (Params.get params Unsat_core);
+    Mappings.update_param_value Ematching (Params.get params Ematching)
 
   let create ?params () =
     Option.iter update_param_values params;

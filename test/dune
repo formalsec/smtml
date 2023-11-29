@@ -10,7 +10,8 @@
   test_optimizer
   ;test_axiom
   test_parser
-  test_regression)
+  test_regression
+  test_params)
  (inline_tests)
  (preprocess
   (pps ppx_inline_test))
