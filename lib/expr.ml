@@ -88,18 +88,18 @@ let negate_relop ({ e; ty } : t) : (t, string) Result.t =
 module Pp = struct
   let fprintf = Format.fprintf
 
-  let rec pp fmt (e : t) =
-    match e.e with
+  let rec pp fmt ({ e; ty} : t) =
+    match e with
     | Val v -> Value.pp fmt v
     | Ptr (base, offset) -> fprintf fmt "(Ptr (i32 %ld) %a)" base pp offset
-    | Unop (op, e) -> fprintf fmt "(%a.%a %a)" Ty.pp e.ty pp_unop op pp e
+    | Unop (op, e) -> fprintf fmt "(%a.%a %a)" Ty.pp ty pp_unop op pp e
     | Binop (op, e1, e2) ->
-      fprintf fmt "(%a.%a %a %a)" Ty.pp e.ty pp_binop op pp e1 pp e2
+      fprintf fmt "(%a.%a %a %a)" Ty.pp ty pp_binop op pp e1 pp e2
     | Triop (op, e1, e2, e3) ->
-      fprintf fmt "(%a.%a %a %a %a)" Ty.pp e.ty pp_triop op pp e1 pp e2 pp e3
+      fprintf fmt "(%a.%a %a %a %a)" Ty.pp ty pp_triop op pp e1 pp e2 pp e3
     | Relop (op, e1, e2) ->
-      fprintf fmt "(%a.%a %a %a)" Ty.pp e.ty pp_relop op pp e1 pp e2
-    | Cvtop (op, e) -> fprintf fmt "(%a.%a %a)" Ty.pp e.ty pp_cvtop op pp e
+      fprintf fmt "(%a.%a %a %a)" Ty.pp ty pp_relop op pp e1 pp e2
+    | Cvtop (op, e) -> fprintf fmt "(%a.%a %a)" Ty.pp ty pp_cvtop op pp e
     | Symbol s -> Symbol.pp fmt s
     | Extract (e, h, l) -> fprintf fmt "(extract %a %d %d)" pp e l h
     | Concat (e1, e2) -> fprintf fmt "(++ %a %a)" pp e1 pp e2
