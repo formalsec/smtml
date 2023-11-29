@@ -9,6 +9,7 @@ let add_bind x t = Hashtbl.replace varmap x t
 let get_bind x = Hashtbl.find varmap x
 
 %}
+%token PTR
 %token LPAREN
 %token RPAREN
 %token ASSERT
@@ -49,6 +50,8 @@ let s_expr :=
   | LPAREN; op = paren_op; RPAREN; { op }
 
 let paren_op :=
+  | PTR; LPAREN; ty = TYPE; x = NUM; RPAREN; e = s_expr;
+    { Ptr (Int32.of_int x, e) @: ty }
   | (ty, op) = UNARY; e = s_expr;
     { Unop (op, e) @: ty }
   | (ty, op) = BINARY; e1 = s_expr; e2 = s_expr;

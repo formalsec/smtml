@@ -185,6 +185,7 @@ let keywords =
      ; ("f64.convert_i64_s", CVTOP (Ty_fp S64, ConvertSI32))
      ; ("f64.promote_f32", CVTOP (Ty_fp S64, PromoteF32))
      ; ("f64.reinterpret_i64", CVTOP (Ty_fp S64, Reinterpret_int))
+     ; ("Ptr", PTR)
      ; ("assert", ASSERT)
      ; ("check-sat", CHECK_SAT)
      ; ("declare-fun", DECLARE_FUN)
