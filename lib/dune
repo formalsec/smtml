@@ -1,8 +1,8 @@
 (ocamllex
- (modules lexer))
+ (modules lexer smtlib_lexer))
 
 (menhir
- (modules parser))
+ (modules parser smtlib_parser))
 
 (library
  (public_name encoding)
@@ -25,6 +25,9 @@
   parser
   params
   run
+  smtlib
+  smtlib_lexer
+  smtlib_parser
   solver_intf
   symbol
   ty
