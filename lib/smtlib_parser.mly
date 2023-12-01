@@ -94,19 +94,19 @@ let spec_constant :=
 
 (* Identifiers *)
 let index :=
-  | x = NUM;    { Num_idx (int_of_string x) }
-  | x = symbol; { Sym_idx x }
+  | x = NUM;    { I (int_of_string x) }
+  | x = symbol; { S x }
 
 let identifier :=
   | ~ = symbol;
-    { Sym_id symbol }
+    { Sym symbol }
   | LPAR; HOLE; ~ = symbol; indices = index+; RPAR;
-    { Hole_id (symbol, indices) }
+    { Hole (symbol, indices) }
 
 (* Sorts *)
 let sort :=
-  | ~ = identifier; { Id_sort identifier }
-  | LPAR; ~ = identifier; sorts = sort+; RPAR; { Comp_sort (identifier, sorts) }
+  | ~ = identifier; { Sort identifier }
+  | LPAR; ~ = identifier; sorts = sort+; RPAR; { Sort_comp (identifier, sorts) }
 
 (* Attributes *)
 let attribute_value :=
@@ -120,8 +120,8 @@ let attribute :=
 
 (* Terms *)
 let qual_identifier :=
-  | ~ = identifier; { Id_qual identifier }
-  | LPAR; AS; ~ = identifier; ~ = sort; RPAR; { As_qual (identifier, sort) }
+  | ~ = identifier; { Plain identifier }
+  | LPAR; AS; ~ = identifier; ~ = sort; RPAR; { As (identifier, sort) }
 
 let var_binding :=
   | LPAR; ~ = symbol; ~ = term; RPAR; { (symbol, term) }
