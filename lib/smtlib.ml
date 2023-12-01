@@ -42,20 +42,20 @@ and spec_constant =
   | Str of string
 
 and index =
-  | Num_idx of int
-  | Sym_idx of symbol
+  | I of int
+  | S of symbol
 
 and identifier =
-  | Sym_id of symbol
-  | Hole_id of symbol * index list
+  | Sym of symbol
+  | Hole of symbol * index list
 
 and sort =
-  | Id_sort of identifier
-  | Comp_sort of identifier * sort list
+  | Sort of identifier
+  | Sort_comp of identifier * sort list
 
 and qual_identifier =
-  | Id_qual of identifier
-  | As_qual of identifier * sort
+  | Plain of identifier
+  | As of identifier * sort
 
 and term =
   | Const of spec_constant
@@ -64,6 +64,25 @@ and term =
   | Let of (symbol * term) list * term
   | Forall of (symbol * sort) list * term
   | Exists of (symbol * sort) list * term
+
+let const_of_val v =
+  let open Value in
+  match v with
+  | True -> Id (Plain (Sym "true"))
+  | False -> Id (Plain (Sym "false"))
+  | Int x -> Const (Num x)
+  | Real x -> Const (Dec x)
+  | Str x -> Const (Str x)
+  | Num (I8 x) -> Id (Plain (Hole ("bv8", [ I x ])))
+  | Num (I32 x) -> Id (Plain (Hole ("bv32", [ I (Int32.to_int x) ])))
+  | Num (I64 x) -> Id (Plain (Hole ("bv64", [ I (Int64.to_int x) ])))
+  | Num (F32 _) | Num (F64 _) -> assert false
+
+let term_of_expr ({ e; _ } : Expr.t) : term =
+  let open Expr in
+  match e with Val v -> const_of_val v | _ -> assert false
+
+let script_ es = List.map (fun e -> Assert (term_of_expr e)) es @ [ Check_sat ]
 
 module Format = struct
   open Format
@@ -77,26 +96,26 @@ module Format = struct
     | Hex x | Bin x | Str x -> pp_string fmt x
 
   let pp_index fmt = function
-    | Num_idx i -> Format.pp_print_int fmt i
-    | Sym_idx i -> pp_string fmt i
+    | I i -> Format.pp_print_int fmt i
+    | S i -> pp_string fmt i
 
   let pp_identifier fmt = function
-    | Sym_id id -> pp_string fmt id
-    | Hole_id (id, indices) ->
+    | Sym id -> pp_string fmt id
+    | Hole (id, indices) ->
       pp fmt "(_ %s %a)" id
         (pp_print_list ~pp_sep:pp_print_space pp_index)
         indices
 
   let rec pp_sort fmt = function
-    | Id_sort id -> pp_identifier fmt id
-    | Comp_sort (id, sorts) ->
+    | Sort id -> pp_identifier fmt id
+    | Sort_comp (id, sorts) ->
       pp fmt "(%a %a)" pp_identifier id
         (pp_print_list ~pp_sep:pp_print_space pp_sort)
         sorts
 
   let pp_qual_identifier fmt = function
-    | Id_qual id -> pp_identifier fmt id
-    | As_qual _ -> assert false
+    | Plain id -> pp_identifier fmt id
+    | As _ -> assert false
 
   let rec pp_term fmt = function
     | Const x -> pp_const fmt x
@@ -141,4 +160,6 @@ module Format = struct
     | Set_info -> pp_string fmt "(set-info)"
     | Set_logic x -> pp fmt "(set-logic %s)" x
     | Set_option -> pp_string fmt "(set-option)"
+
+  let pp_script fmt v = pp_print_list ~pp_sep:pp_print_newline pp_cmd fmt v
 end

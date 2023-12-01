@@ -86,9 +86,9 @@ let negate_relop ({ e; ty } : t) : (t, string) Result.t =
   Result.map (fun relop -> relop @: ty) e
 
 module Pp = struct
-  let fprintf = Format.fprintf
+  open Format
 
-  let rec pp fmt ({ e; ty} : t) =
+  let rec pp fmt ({ e; ty } : t) =
     match e with
     | Val v -> Value.pp fmt v
     | Ptr (base, offset) -> fprintf fmt "(Ptr (i32 %ld) %a)" base pp offset
@@ -104,19 +104,18 @@ module Pp = struct
     | Extract (e, h, l) -> fprintf fmt "(extract %a %d %d)" pp e l h
     | Concat (e1, e2) -> fprintf fmt "(++ %a %a)" pp e1 pp e2
 
-  let pp_list fmt (es : t list) =
-    Format.pp_print_list ~pp_sep:Format.pp_print_space pp fmt es
+  let pp_list fmt (es : t list) = pp_print_list ~pp_sep:pp_print_space pp fmt es
 
-  let pp_smt fmt (es : t list) : unit =
+  let pp_query fmt (es : t list) : unit =
     let pp_symbols fmt syms =
-      Format.pp_print_list ~pp_sep:Format.pp_print_newline
+      pp_print_list ~pp_sep:pp_print_newline
         (fun fmt sym ->
           let t = Symbol.type_of sym in
           fprintf fmt "(declare-fun %a %a)" Symbol.pp sym Ty.pp t )
         fmt syms
     in
     let pp_asserts fmt es =
-      Format.pp_print_list ~pp_sep:Format.pp_print_newline
+      pp_print_list ~pp_sep:pp_print_newline
         (fun fmt e -> fprintf fmt "(assert @[<h 2>%a@])" pp e)
         fmt es
     in
@@ -126,7 +125,7 @@ end
 
 let pp = Pp.pp
 let pp_list = Pp.pp_list
-let pp_smt = Pp.pp_smt
+let pp_query = Pp.pp_query
 let to_string e = Format.asprintf "%a" pp e
 
 let rec simplify_binop ty (op : binop) e1 e2 =
