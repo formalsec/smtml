@@ -154,8 +154,7 @@ let id_of_binop ty op : qual_identifier =
   | Ty_bitv _ -> bitv_binop op
   | Ty_fp _ -> failwith "TODO: id_of_binop"
 
-let id_of_triop _ op : qual_identifier =
-  Plain (Sym (Format.asprintf "%a" Ty.pp_triop op))
+let id_of_triop _ _op : qual_identifier = assert false
 
 let id_of_relop ty op : qual_identifier =
   let open Ty in
@@ -188,7 +187,11 @@ let id_of_relop ty op : qual_identifier =
   | Ty_fp _ -> failwith "TODO: id_of_binop"
 
 let id_of_cvtop _ op : qual_identifier =
-  Plain (Sym (Format.asprintf "%a" Ty.pp_cvtop op))
+  let open Ty in
+  match op with
+  | ExtS n -> Plain (Hole ("sign_extend", [ I n ]))
+  | ExtU n -> Plain (Hole ("zero_extend", [ I n ]))
+  | _ -> assert false
 
 let rec term_of_expr ({ e; ty } : Expr.t) : term =
   let open Expr in
