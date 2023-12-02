@@ -229,8 +229,8 @@ let command :=
     { Check_sat }
   | LPAR; CHECK_SAT_ASSUMING; LPAR; prop_literal*; RPAR; RPAR;
     { Check_sat_assuming }
-  | LPAR; DECLARE_CONST; symbol; sort; RPAR;
-    { Declare_const }
+  | LPAR; DECLARE_CONST; ~ = symbol; ~ = sort; RPAR;
+    { Declare_const (symbol, sort) }
   | LPAR; DECLARE_DATATYPE; symbol; datatype_dec; RPAR;
     { Declare_datatype }
   | LPAR; DECLARE_DATATYPES; LPAR; sort_dec+; RPAR;

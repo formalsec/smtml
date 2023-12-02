@@ -1,5 +1,4 @@
-let pp_string = Format.pp_print_string
-let fprintf = Format.fprintf
+open Format
 
 type _ cast =
   | C32 : int32 cast
@@ -91,6 +90,8 @@ type cvtop =
   | WrapI64
   | ExtS of int
   | ExtU of int
+
+let pp_string = pp_print_string
 
 let pp_unop fmt (op : unop) =
   match op with
