@@ -14,7 +14,16 @@ let get_contents = function
 
 let parse_file file = get_contents file |> Run.parse_string
 
-let main files =
+let fmt file =
+  let es =
+    parse_file file
+    |> List.map (function Ast.Assert e -> [ e ] | _ -> [])
+    |> List.flatten
+  in
+  let script = Smtlib.script_ es in
+  Format.printf "%a" Smtlib.Format.pp_script script
+
+let run files =
   match files with
   | [] ->
     let ast = parse_file "-" in
@@ -27,12 +36,31 @@ let main files =
            Some (Interpret.start ?state ast) )
          None files
 
-let files =
-  let doc = "source files" in
-  Arg.(value & pos_all non_dir_file [] & info [] ~doc)
+let help = [ `S Manpage.s_common_options ]
+let sdocs = Manpage.s_common_options
+
+let fmt_cmd =
+  let file =
+    let doc = "source file" in
+    Arg.(required & pos 0 (some non_dir_file) None & info [] ~doc)
+  in
+  let doc = "format smt-lib scripts" in
+  let info = Cmd.info "fmt" ~doc ~sdocs in
+  Cmd.v info Term.(const fmt $ file)
+
+let run_cmd =
+  let files =
+    let doc = "source files" in
+    Arg.(value & pos_all non_dir_file [] & info [] ~doc)
+  in
+  let doc = "interpret smt-lib files" in
+  let info = Cmd.info "run" ~doc ~sdocs in
+  Cmd.v info Term.(const run $ files)
 
 let cli =
-  let info = Cmd.info "smtml" ~version:"%%VERSION%%" in
-  Cmd.v info Term.(const main $ files)
+  let doc = "a toy smt-lib interpreter" in
+  let man = help in
+  let info = Cmd.info "smtml" ~version:"%%VERSION%%" ~doc ~sdocs ~man in
+  Cmd.group info [ run_cmd; fmt_cmd ]
 
 let () = exit @@ Cmd.eval cli
