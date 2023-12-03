@@ -265,6 +265,19 @@ let rec simplify ?(extract = true) ({ ty; e } as expr : t) : t =
     { ty; e = simplify_concat msb lsb }
   | _ -> expr
 
+(** rewrites in a more SMT like compatible term *)
+let rec rewrite { e; ty } : t =
+  match e with
+  | Relop (Ne, e1, e2) ->
+    let e1 = rewrite e1 in
+    let e2 = rewrite e2 in
+    Unop (Not, Relop (Eq, e1, e2) @: ty) @: Ty_bool
+  | Cvtop (ToBool, e) ->
+    let e' = rewrite e in
+    let zero = Val (Value.default e'.ty) @: e'.ty in
+    Unop (Not, Relop (Eq, e', zero) @: e'.ty) @: Ty_bool
+  | _ -> e @: ty
+
 module Infix = struct
   let ( ++ ) e1 e2 = Concat (e1, e2)
 end

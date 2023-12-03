@@ -27,6 +27,17 @@ let type_of (v : t) : Ty.t =
   | Str _ -> Ty_str
   | Num n -> Num.type_of n
 
+let default = function
+  | Ty_int -> Int 0
+  | Ty_real -> Real 0.0
+  | Ty_bool -> False
+  | Ty_bitv S8 -> Num (I8 0)
+  | Ty_bitv S32 -> Num (I32 0l)
+  | Ty_bitv S64 -> Num (I64 0L)
+  | Ty_fp S32 -> Num (F32 (Int32.bits_of_float 0.0))
+  | Ty_fp S64 -> Num (F64 (Int64.bits_of_float 0.0))
+  | _ -> assert false
+
 let pp fmt (v : t) =
   match v with
   | True -> pp_string fmt "true"
