@@ -216,8 +216,6 @@ let rec term_of_expr ({ e; ty } : Expr.t) : term =
     let t2 = term_of_expr e2 in
     let t3 = term_of_expr e3 in
     App (id, [ t1; t2; t3 ])
-  | Relop (Ne, e1, e2) ->
-    Unop (Not, Relop (Eq, e1, e2) @: ty) @: Ty_bool |> term_of_expr
   | Relop (op, e1, e2) ->
     let id = id_of_relop ty op in
     let t1 = term_of_expr e1 in
@@ -243,7 +241,9 @@ let script_ es =
     |> List.map (fun s ->
            Declare_const (Symbol.to_string s, Symbol.type_of s |> sort_of_ty) )
   in
-  consts @ List.map (fun e -> Assert (term_of_expr e)) es @ [ Check_sat ]
+  consts
+  @ List.map (fun e -> Assert (term_of_expr @@ Expr.rewrite e)) es
+  @ [ Check_sat ]
 
 module Format = struct
   open Format
