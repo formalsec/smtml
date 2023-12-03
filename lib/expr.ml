@@ -268,15 +268,23 @@ let rec simplify ?(extract = true) ({ ty; e } as expr : t) : t =
 (** rewrites in a more SMT like compatible term *)
 let rec rewrite { e; ty } : t =
   match e with
+  | (Val _ | Ptr _ | Symbol _) as v -> v @: ty
+  | Unop (op, e) -> Unop (op, rewrite e) @: ty
+  | Binop (op, e1, e2) -> Binop (op, rewrite e1, rewrite e2) @: ty
+  | Triop (op, e1, e2, e3) ->
+    Triop (op, rewrite e1, rewrite e2, rewrite e3) @: ty
   | Relop (Ne, e1, e2) ->
     let e1 = rewrite e1 in
     let e2 = rewrite e2 in
     Unop (Not, Relop (Eq, e1, e2) @: ty) @: Ty_bool
+  | Relop (op, e1, e2) -> Relop (op, rewrite e1, rewrite e2) @: ty
   | Cvtop (ToBool, e) ->
     let e' = rewrite e in
     let zero = Val (Value.default e'.ty) @: e'.ty in
     Unop (Not, Relop (Eq, e', zero) @: e'.ty) @: Ty_bool
-  | _ -> e @: ty
+  | Cvtop (op, e) -> Cvtop (op, rewrite e) @: ty
+  | Extract (e, h, l) -> Extract (rewrite e, h, l) @: ty
+  | Concat (e1, e2) -> Concat (rewrite e1, rewrite e2) @: ty
 
 module Infix = struct
   let ( ++ ) e1 e2 = Concat (e1, e2)
