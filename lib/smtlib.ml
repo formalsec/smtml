@@ -161,7 +161,8 @@ let id_of_binop ty op : qual_identifier =
   | Ty_bitv _ -> bitv_binop op
   | Ty_fp _ -> failwith "TODO: id_of_binop"
 
-let id_of_triop _ _op : qual_identifier = assert false
+let id_of_triop _ty op : qual_identifier =
+  match op with Ty.Ite -> Plain (Sym "ite") | _ -> assert false
 
 let id_of_relop ty op : qual_identifier =
   let open Ty in

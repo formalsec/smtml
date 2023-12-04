@@ -282,6 +282,12 @@ let rec rewrite { e; ty } : t =
     let e' = rewrite e in
     let zero = Val (Value.default e'.ty) @: e'.ty in
     Unop (Not, Relop (Eq, e', zero) @: e'.ty) @: Ty_bool
+  | Cvtop (OfBool, e) ->
+    (* This rewrite only happens for i32.of_bool so @return i32 *)
+    let e' = rewrite e in
+    let one = Val (Num (I32 1l)) @: Ty_bitv S32 in
+    let zero = Val (Num (I32 0l)) @: Ty_bitv S32 in
+    Triop (Ite, e', one, zero) @: Ty_bool
   | Cvtop (op, e) -> Cvtop (op, rewrite e) @: ty
   | Extract (e, h, l) -> Extract (rewrite e, h, l) @: ty
   | Concat (e1, e2) -> Concat (rewrite e1, rewrite e2) @: ty
