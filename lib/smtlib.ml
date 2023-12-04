@@ -85,9 +85,16 @@ let const_of_val v =
   | Int x -> Const (Num x)
   | Real x -> Const (Dec x)
   | Str x -> Const (Str x)
-  | Num (I8 x) -> Id (Plain (Hole ("bv" ^ string_of_int x, [ I 8 ])))
-  | Num (I32 x) -> Id (Plain (Hole ("bv" ^ Int32.to_string x, [ I 32 ])))
-  | Num (I64 x) -> Id (Plain (Hole ("bv" ^ Int64.to_string x, [ I 64 ])))
+  | Num (I8 x) ->
+    (* Prefer more readable format with identifiers *)
+    if x >= 0 then Id (Plain (Hole ("bv" ^ string_of_int x, [ I 8 ])))
+    else Const (Hex (Format.asprintf "#x%x" x))
+  | Num (I32 x) ->
+    if x >= 0l then Id (Plain (Hole ("bv" ^ Int32.to_string x, [ I 32 ])))
+    else Const (Hex (Format.asprintf "#x%08lx" x))
+  | Num (I64 x) ->
+    if x >= 0L then Id (Plain (Hole ("bv" ^ Int64.to_string x, [ I 64 ])))
+    else Const (Hex (Format.asprintf "#x%016Lx" x))
   | Num (F32 _) | Num (F64 _) -> assert false
 
 let id_of_unop ty op : qual_identifier =
@@ -228,7 +235,7 @@ let rec term_of_expr ({ e; ty } : Expr.t) : term =
   | Symbol x -> Id (Plain (Sym (Symbol.to_string x)))
   | Extract (e, h, l) ->
     let t = term_of_expr e in
-    App (Plain (Hole ("extract", [ I (h * 8); I (l * 8) ])), [ t ])
+    App (Plain (Hole ("extract", [ I ((h * 8) - 1); I (l * 8) ])), [ t ])
   | Concat (e1, e2) ->
     let t1 = term_of_expr e1 in
     let t2 = term_of_expr e2 in
