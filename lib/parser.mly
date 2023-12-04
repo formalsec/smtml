@@ -10,6 +10,7 @@ let get_bind x = Hashtbl.find varmap x
 
 %}
 %token PTR
+%token EXTRACT
 %token LPAREN
 %token RPAREN
 %token ASSERT
@@ -62,6 +63,8 @@ let paren_op :=
     { Cvtop (op, e) @: ty }
   | (ty, op) = RELOP; e1 = s_expr; e2 = s_expr;
     { Relop (op, e1, e2) @: ty }
+  | EXTRACT; e = s_expr; l = NUM; h = NUM;
+    { Extract (e, h, l) @: Ty_bitv S32 }
 
 let spec_constant :=
   | x = NUM; { Int x }
