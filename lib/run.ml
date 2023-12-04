@@ -10,10 +10,10 @@ let pp_pos fmt lexbuf =
 let parse_with_error lexbuf =
   try Parser.script Lexer.token lexbuf with
   | SyntaxError msg ->
-    fprintf err_formatter "%a: %s\n" pp_pos lexbuf msg;
+    eprintf "%a: %s\n" pp_pos lexbuf msg;
     []
   | Parser.Error ->
-    fprintf err_formatter "%a: syntax error\n" pp_pos lexbuf;
+    eprintf "%a: syntax error\n" pp_pos lexbuf;
     exit 1
 
 let parse_file filename =
