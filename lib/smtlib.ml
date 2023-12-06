@@ -1,3 +1,8 @@
+type status =
+  | Sat
+  | Unsat
+  | Unknown
+
 type script = command list
 
 and command =
@@ -28,7 +33,7 @@ and command =
   | Push of int
   | Reset
   | Reset_assertions
-  | Set_info (* of attribute *)
+  | Set_info of attribute
   | Set_logic of string
   | Set_option
 
@@ -52,6 +57,14 @@ and identifier =
 and sort =
   | Sort of identifier
   | Sort_comp of identifier * sort list
+
+and attribute_value =
+  | Attr_const of spec_constant
+  | Attr_sym of symbol
+
+and attribute =
+  | Kw of string
+  | Kw_val of string * attribute_value
 
 and qual_identifier =
   | Plain of identifier
@@ -284,6 +297,14 @@ module Format = struct
         (pp_print_list ~pp_sep:pp_print_space pp_sort)
         sorts
 
+  let pp_attribute_value fmt = function
+    | Attr_const const -> pp_const fmt const
+    | Attr_sym sym -> pp_print_string fmt sym
+
+  let pp_attribute fmt = function
+    | Kw kw -> pp_print_string fmt kw
+    | Kw_val (kw, v) -> pp fmt "%s %a" kw pp_attribute_value v
+
   let pp_qual_identifier fmt = function
     | Plain id -> pp_identifier fmt id
     | As _ -> assert false
@@ -343,7 +364,7 @@ module Format = struct
     | Push n -> pp fmt "(push %d)" n
     | Reset -> pp_print_string fmt "(reset)"
     | Reset_assertions -> pp_print_string fmt "(reset-assertions)"
-    | Set_info -> pp_print_string fmt "(set-info)"
+    | Set_info x -> pp fmt "(set-info %a)" pp_attribute x
     | Set_logic x -> pp fmt "(set-logic %s)" x
     | Set_option -> pp_print_string fmt "(set-option)"
 
