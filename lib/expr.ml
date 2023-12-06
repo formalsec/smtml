@@ -296,7 +296,7 @@ module Infix = struct
   let ( ++ ) e1 e2 = Concat (e1, e2)
 end
 
-module Bitv = struct
+module Bitv_ = struct
   let ty_of_cast (type a) (c : a Ty.cast) : Ty.t =
     match c with C32 -> Ty_bitv S32 | C64 -> Ty_bitv S64
 
@@ -325,6 +325,8 @@ module Smtlib = struct
 
   let to_const v =
     let open Value in
+    let pp = Bitv.M.print in
+    let asprintf = Format.asprintf in
     match v with
     | True -> Id (Plain (Sym "true"))
     | False -> Id (Plain (Sym "false"))
@@ -334,14 +336,25 @@ module Smtlib = struct
     | Num (I8 x) ->
       (* Prefer more readable format with identifiers *)
       if x >= 0 then Id (Plain (Hole ("bv" ^ string_of_int x, [ I 8 ])))
-      else Const (Hex (Format.asprintf "#x%x" x))
+      else Const (Hex (asprintf "#x%x" x))
     | Num (I32 x) ->
       if x >= 0l then Id (Plain (Hole ("bv" ^ Int32.to_string x, [ I 32 ])))
-      else Const (Hex (Format.asprintf "#x%08lx" x))
+      else Const (Hex (asprintf "#x%08lx" x))
     | Num (I64 x) ->
       if x >= 0L then Id (Plain (Hole ("bv" ^ Int64.to_string x, [ I 64 ])))
-      else Const (Hex (Format.asprintf "#x%016Lx" x))
-    | Num (F32 _) | Num (F64 _) -> assert false
+      else Const (Hex (asprintf "#x%016Lx" x))
+    | Num (F32 x) ->
+      let bitv = Bitv.of_int32_s x in
+      let sign = Bin (asprintf "#b%d" (Bool.to_int @@ Bitv.get bitv 31)) in
+      let exponent = Bin (asprintf "#b%a" pp (Bitv.sub bitv 23 8)) in
+      let significand = Bin (asprintf "#b%a" pp (Bitv.sub bitv 0 23)) in
+      App (Plain (Sym "fp"), [ Const sign; Const exponent; Const significand ])
+    | Num (F64 x) ->
+      let bitv = Bitv.of_int64_s x in
+      let sign = Bin (asprintf "#b%d" (Bool.to_int @@ Bitv.get bitv 63)) in
+      let exponent = Bin (asprintf "#b%a" pp (Bitv.sub bitv 52 8)) in
+      let significand = Bin (asprintf "#b%a" pp (Bitv.sub bitv 0 52)) in
+      App (Plain (Sym "fp"), [ Const sign; Const exponent; Const significand ])
 
   let id_of_unop ty op : qual_identifier =
     let open Ty in

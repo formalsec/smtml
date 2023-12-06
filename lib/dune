@@ -33,4 +33,4 @@
   ty
   value
   z3_mappings)
- (libraries z3))
+ (libraries z3 bitv))

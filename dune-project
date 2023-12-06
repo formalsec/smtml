@@ -24,6 +24,7 @@
    (z3 (and (>= "4.11.2") (< "4.13")))
    menhir
    cmdliner
+   bitv
    (zarith (>= "1.5"))
    (ppx_inline_test :with-test)
    (odoc :with-doc)))
