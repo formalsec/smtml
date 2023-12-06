@@ -110,13 +110,13 @@ let sort :=
 
 (* Attributes *)
 let attribute_value :=
-  | _ = spec_constant; { }
-  | _ = symbol; { }
-  | LPAR; _ = s_expr*; RPAR; { }
+  | ~ = spec_constant; { Attr_const spec_constant }
+  | ~ = symbol; { Attr_sym symbol }
+  | LPAR; _ = s_expr*; RPAR; { assert false }
 
 let attribute :=
-  | _ = KEYWORD; { }
-  | _ = KEYWORD; _ = attribute_value; { }
+  | kw = KEYWORD; { Kw kw }
+  | kw = KEYWORD; ~ = attribute_value; { Kw_val (kw, attribute_value) }
 
 (* Terms *)
 let qual_identifier :=
@@ -278,8 +278,8 @@ let command :=
     { Reset }
   | LPAR; RESET_ASSERTIONS; RPAR;
     { Reset_assertions }
-  | LPAR; SET_INFO; attribute; RPAR;
-    { Set_info }
+  | LPAR; SET_INFO; ~ = attribute; RPAR;
+    { Set_info attribute }
   | LPAR; SET_LOGIC; ~ = symbol; RPAR;
     { Set_logic symbol }
   | LPAR; SET_OPTION; option_; RPAR;
