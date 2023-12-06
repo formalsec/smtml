@@ -57,13 +57,16 @@ and qual_identifier =
   | Plain of identifier
   | As of identifier * sort
 
+and binding = symbol * term
+and sorted_var = symbol * sort
+
 and term =
   | Const of spec_constant
   | Id of qual_identifier
   | App of qual_identifier * term list
-  | Let of (symbol * term) list * term
-  | Forall of (symbol * sort) list * term
-  | Exists of (symbol * sort) list * term
+  | Let of binding list * term
+  | Forall of sorted_var list * term
+  | Exists of sorted_var list * term
 
 let sort_of_ty : Ty.t -> sort = function
   | Ty.Ty_int -> Sort (Sym "Int")
@@ -292,7 +295,22 @@ module Format = struct
       pp fmt "(%a@ %a)" pp_qual_identifier id
         (pp_print_list ~pp_sep:pp_print_space pp_term)
         terms
-    | Let _ | Forall _ | Exists _ -> assert false
+    | Let (binds, term) ->
+      pp fmt "(let (%a)@ %a)" pp_bindings binds pp_term term
+    | Forall (vars, term) ->
+      pp fmt "(forall (%a)@ %a)" pp_vars vars pp_term term
+    | Exists (vars, term) ->
+      pp fmt "(exists (%a)@ %a)" pp_vars vars pp_term term
+
+  and pp_bindings fmt binds =
+    pp_print_list ~pp_sep:pp_print_space
+      (fun fmt (symb, term) -> pp fmt "(%s %a)" symb pp_term term)
+      fmt binds
+
+  and pp_vars fmt vars =
+    pp_print_list ~pp_sep:pp_print_space
+      (fun fmt (var, sort) -> pp fmt "(%s %a)" var pp_sort sort)
+      fmt vars
 
   let pp_cmd fmt = function
     | Assert term -> pp fmt "(assert @[<hov 2>%a@])" pp_term term
