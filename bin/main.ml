@@ -20,8 +20,8 @@ let fmt file =
     |> List.map (function Ast.Assert e -> [ e ] | _ -> [])
     |> List.flatten
   in
-  let script = Smtlib.script_ es in
-  Format.printf "%a" Smtlib.Format.pp_script script
+  let script = Expr.Smtlib.to_script es in
+  Format.printf "%a" Smtlib.Fmt.pp_script script
 
 let run files =
   match files with
