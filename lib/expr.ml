@@ -85,7 +85,7 @@ let negate_relop ({ e; ty } : t) : (t, string) Result.t =
   in
   Result.map (fun relop -> relop @: ty) e
 
-module Pp = struct
+module Fmt = struct
   open Format
 
   let rec pp fmt ({ e; ty } : t) =
@@ -123,9 +123,9 @@ module Pp = struct
     fprintf fmt "%a@\n%a@\n(check-sat)" pp_symbols syms pp_asserts es
 end
 
-let pp = Pp.pp
-let pp_list = Pp.pp_list
-let pp_query = Pp.pp_query
+let pp = Fmt.pp
+let pp_list = Fmt.pp_list
+let pp_query = Fmt.pp_query
 let to_string e = Format.asprintf "%a" pp e
 
 let rec simplify_binop ty (op : binop) e1 e2 =
@@ -306,4 +306,198 @@ module Bitv = struct
     | C64 -> Val (Num (I64 i)) @: Ty_bitv S64
 
   let not (c : _ cast) (e : t) = Unop (Not, e) @: ty_of_cast c
+end
+
+module Smtlib = struct
+  open Smtlib
+
+  let to_sort : Ty.t -> sort = function
+    | Ty.Ty_int -> Sort (Sym "Int")
+    | Ty.Ty_real -> Sort (Sym "Real")
+    | Ty.Ty_bool -> Sort (Sym "Bool")
+    | Ty.Ty_str -> Sort (Sym "String")
+    | Ty.Ty_bitv S8 -> Sort (Hole ("BitVec", [ I 8 ]))
+    | Ty.Ty_bitv S32 -> Sort (Hole ("BitVec", [ I 32 ]))
+    | Ty.Ty_bitv S64 -> Sort (Hole ("BitVec", [ I 64 ]))
+    | Ty.Ty_fp S32 -> Sort (Sym "Float32")
+    | Ty.Ty_fp S64 -> Sort (Sym "Float64")
+    | Ty.Ty_fp S8 -> assert false
+
+  let to_const v =
+    let open Value in
+    match v with
+    | True -> Id (Plain (Sym "true"))
+    | False -> Id (Plain (Sym "false"))
+    | Int x -> Const (Num x)
+    | Real x -> Const (Dec x)
+    | Str x -> Const (Str x)
+    | Num (I8 x) ->
+      (* Prefer more readable format with identifiers *)
+      if x >= 0 then Id (Plain (Hole ("bv" ^ string_of_int x, [ I 8 ])))
+      else Const (Hex (Format.asprintf "#x%x" x))
+    | Num (I32 x) ->
+      if x >= 0l then Id (Plain (Hole ("bv" ^ Int32.to_string x, [ I 32 ])))
+      else Const (Hex (Format.asprintf "#x%08lx" x))
+    | Num (I64 x) ->
+      if x >= 0L then Id (Plain (Hole ("bv" ^ Int64.to_string x, [ I 64 ])))
+      else Const (Hex (Format.asprintf "#x%016Lx" x))
+    | Num (F32 _) | Num (F64 _) -> assert false
+
+  let id_of_unop ty op : qual_identifier =
+    let open Ty in
+    let arith_unop = function Neg -> Plain (Sym "-") | _ -> assert false in
+    let core_unop = function Not -> Plain (Sym "not") | _ -> assert false in
+    let str_unop = function
+      | Len -> Plain (Sym "str.len")
+      | _ -> assert false
+    in
+    let bitv_unop = function
+      | Not -> Plain (Sym "bvnot")
+      | Neg -> Plain (Sym "bvneg")
+      | _ -> assert false
+    in
+    match ty with
+    | Ty_int | Ty_real -> arith_unop op
+    | Ty_bool -> core_unop op
+    | Ty_str -> str_unop op
+    | Ty_bitv _ -> bitv_unop op
+    | Ty_fp _ -> failwith "TODO: id_of_unop"
+
+  let id_of_binop ty op : qual_identifier =
+    let open Ty in
+    let int_binop = function
+      | Add -> Plain (Sym "+")
+      | Sub -> Plain (Sym "-")
+      | Mul -> Plain (Sym "*")
+      | Div -> Plain (Sym "div")
+      | Rem -> Plain (Sym "mod")
+      | _ -> assert false
+    in
+    let real_binop = function
+      | Add -> Plain (Sym "+")
+      | Sub -> Plain (Sym "-")
+      | Mul -> Plain (Sym "*")
+      | Div -> Plain (Sym "/")
+      | _ -> assert false
+    in
+    let core_binop = function
+      | And -> Plain (Sym "and")
+      | Or -> Plain (Sym "or")
+      | Xor -> Plain (Sym "xor")
+      | _ -> assert false
+    in
+    let bitv_binop = function
+      | Add -> Plain (Sym "bvadd")
+      | Sub -> Plain (Sym "bvsub")
+      | Mul -> Plain (Sym "bvmul")
+      | Div -> Plain (Sym "bvsdiv")
+      | DivU -> Plain (Sym "bvudiv")
+      | And -> Plain (Sym "bvand")
+      | Xor -> Plain (Sym "bvxor")
+      | Or -> Plain (Sym "bvor")
+      | Shl -> Plain (Sym "bvshl")
+      | ShrA -> Plain (Sym "bvashr")
+      | ShrL -> Plain (Sym "bvlshr")
+      | Rem -> Plain (Sym "bvsrem")
+      | RemU -> Plain (Sym "bvurem")
+      | _ -> assert false
+    in
+    match ty with
+    | Ty_int -> int_binop op
+    | Ty_real -> real_binop op
+    | Ty_bool -> core_binop op
+    | Ty_str -> assert false
+    | Ty_bitv _ -> bitv_binop op
+    | Ty_fp _ -> failwith "TODO: id_of_binop"
+
+  let id_of_triop _ty op : qual_identifier =
+    match op with Ty.Ite -> Plain (Sym "ite") | _ -> assert false
+
+  let id_of_relop ty op : qual_identifier =
+    let open Ty in
+    let arith_relop = function
+      | Eq -> Plain (Sym "=")
+      | Le -> Plain (Sym "<=")
+      | Lt -> Plain (Sym "<")
+      | Ge -> Plain (Sym ">=")
+      | Gt -> Plain (Sym ">")
+      | _ -> assert false
+    in
+    let core_relop = function Eq -> Plain (Sym "=") | _ -> assert false in
+    let bitv_relop = function
+      | Eq -> Plain (Sym "=")
+      | Lt -> Plain (Sym "bvslt")
+      | LtU -> Plain (Sym "bvult")
+      | Le -> Plain (Sym "bvsle")
+      | LeU -> Plain (Sym "bvule")
+      | Gt -> Plain (Sym "bvsgt")
+      | GtU -> Plain (Sym "bvugt")
+      | Ge -> Plain (Sym "bvsge")
+      | GeU -> Plain (Sym "bvuge")
+      | Ne -> assert false
+    in
+    match ty with
+    | Ty_int | Ty_real -> arith_relop op
+    | Ty_bool -> core_relop op
+    | Ty_bitv _ -> bitv_relop op
+    | Ty_str -> assert false
+    | Ty_fp _ -> failwith "TODO: id_of_binop"
+
+  let id_of_cvtop _ op : qual_identifier =
+    let open Ty in
+    match op with
+    | ExtS n -> Plain (Hole ("sign_extend", [ I n ]))
+    | ExtU n -> Plain (Hole ("zero_extend", [ I n ]))
+    | _ -> assert false
+
+  let rec to_term ({ e; ty } : t) : term =
+    match e with
+    | Val v -> to_const v
+    | Ptr (base, offset) ->
+      let tb = to_const (Num (I32 base)) in
+      let t = to_term offset in
+      App (Plain (Sym "bvadd"), [ tb; t ])
+    | Unop (op, e) ->
+      let id = id_of_unop ty op in
+      let t = to_term e in
+      App (id, [ t ])
+    | Binop (op, e1, e2) ->
+      let id = id_of_binop ty op in
+      let t1 = to_term e1 in
+      let t2 = to_term e2 in
+      App (id, [ t1; t2 ])
+    | Triop (op, e1, e2, e3) ->
+      let id = id_of_triop ty op in
+      let t1 = to_term e1 in
+      let t2 = to_term e2 in
+      let t3 = to_term e3 in
+      App (id, [ t1; t2; t3 ])
+    | Relop (op, e1, e2) ->
+      let id = id_of_relop ty op in
+      let t1 = to_term e1 in
+      let t2 = to_term e2 in
+      App (id, [ t1; t2 ])
+    | Cvtop (op, e) ->
+      let id = id_of_cvtop ty op in
+      let t = to_term e in
+      App (id, [ t ])
+    | Symbol x -> Id (Plain (Sym (Symbol.to_string x)))
+    | Extract (e, h, l) ->
+      let t = to_term e in
+      App (Plain (Hole ("extract", [ I ((h * 8) - 1); I (l * 8) ])), [ t ])
+    | Concat (e1, e2) ->
+      let t1 = to_term e1 in
+      let t2 = to_term e2 in
+      App (Plain (Sym "concat"), [ t1; t2 ])
+
+  (* TODO: This can be improved *)
+  let to_script es =
+    let consts =
+      get_symbols es
+      |> List.map (fun s ->
+             Declare_const (Symbol.to_string s, Symbol.type_of s |> to_sort) )
+    in
+    consts
+    @ List.map (fun e -> Assert (to_term @@ rewrite e)) es
+    @ [ Check_sat ]
 end
