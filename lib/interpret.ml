@@ -26,8 +26,19 @@ module Make (Solver : Solver_intf.S) = struct
 
 
   let handle_checksat (c : config) : string =
+
+    (* Step 0: Normalize and check the cache first *)
+    let es = Normalize.normalize c.pc in
+
+    (* Convert the list of expressions to a string for caching *)
+    let expr_string = String.concat ";" (List.map Expression.to_string es) in
+    match Hashtbl.find_opt check_sat_cache expr_string with
+      | Some result -> result
+      | None -> 
+
+
     (* Step 1: Slice the program constraints into independent groups of expressions *)
-    let ess = Slicing.slice c.pc in
+    let ess = Slicing.slice es in
 
     (*
     (* Print out the sliced groups of expressions *)
@@ -42,13 +53,11 @@ module Make (Solver : Solver_intf.S) = struct
     ) ess;*)
     
     
-    (* Step 2: Normalize, check sat/unsat for each group, and cache the results *)
+    (* Step 2: Check sat/unsat for each group, and cache the results *)
     let results = List.map (fun es ->
-      (* Normalize the expressions *)
-      let normalized_es = Normalize.normalize es in
       
       (* Convert the list of expressions to a string for caching *)
-      let expr_string = String.concat ";" (List.map Expression.to_string normalized_es) in
+      let expr_string = String.concat ";" (List.map Expression.to_string es) in
       
       (* Check the cache first *)
       match Hashtbl.find_opt check_sat_cache expr_string with
@@ -58,8 +67,8 @@ module Make (Solver : Solver_intf.S) = struct
       | None -> 
         (* If not in the cache, use the solver *)
         Solver.reset c.solver;
-        Solver.add c.solver normalized_es;
-        let is_sat = Solver.check c.solver normalized_es in
+        Solver.add c.solver es;
+        let is_sat = Solver.check c.solver es in
         
         (* Cache the result *)
         let result = if is_sat then "sat" else "unsat" in
@@ -90,8 +99,11 @@ module Make (Solver : Solver_intf.S) = struct
         Format.printf "%s" (Model.to_string (Option.get model));
         (List.tl code, pc)
       | CheckSat -> 
+        (*let start_time = Unix.gettimeofday () in*)
         c.last_result <- handle_checksat c;
+        (*let end_time = Unix.gettimeofday () in*)
         Format.printf "%s\n" c.last_result;
+        (*Format.printf "Time taken: %f seconds\n" (end_time -. start_time);*)
         (List.tl code, pc)
     in
     { c with code = code'; pc = pc'; last_result = c.last_result }
