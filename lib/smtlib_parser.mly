@@ -61,8 +61,8 @@ open Smtlib
 %token SET_OPTION
 %token EOF
 
-%token <string> NUM
-%token <string> DEC
+%token <int> NUM
+%token <float> DEC
 %token <string> HEX
 %token <string> BIN
 %token <string> STR
@@ -74,9 +74,9 @@ open Smtlib
 %start <unit> logic
 %%
 
-let script := commands = command*; EOF; { commands }
+let script := ~ = command*; EOF; <>
 
-let symbol := x = SYMBOL; { x }
+let symbol := ~ = SYMBOL; <>
 
 (* S-expressions *)
 let s_expr :=
@@ -86,48 +86,46 @@ let s_expr :=
   | LPAR; _ = s_expr*; RPAR; { }
 
 let spec_constant :=
-  | x = NUM; { Num (int_of_string x) }
-  | x = DEC; { Dec (float_of_string x) }
-  | x = HEX; { Hex x }
-  | x = BIN; { Bin x }
-  | x = STR; { Str x }
+  | ~ = NUM; <Num>
+  | ~ = DEC; <Dec>
+  | ~ = HEX; <Hex>
+  | ~ = BIN; <Bin>
+  | ~ = STR; <Str>
 
 (* Identifiers *)
 let index :=
-  | x = NUM;    { I (int_of_string x) }
-  | x = symbol; { S x }
+  | ~ = NUM;    <I>
+  | ~ = symbol; <S>
 
 let identifier :=
-  | ~ = symbol;
-    { Sym symbol }
-  | LPAR; HOLE; ~ = symbol; indices = index+; RPAR;
-    { Hole (symbol, indices) }
+  | ~ = symbol; <Sym>
+  | LPAR; HOLE; ~ = symbol; ~ = index+; RPAR; <Hole>
 
 (* Sorts *)
 let sort :=
-  | ~ = identifier; { Sort identifier }
-  | LPAR; ~ = identifier; sorts = sort+; RPAR; { Sort_comp (identifier, sorts) }
+  | ~ = identifier; <Sort>
+  | LPAR; ~ = identifier; ~ = sort+; RPAR; <Sort_comp>
 
 (* Attributes *)
 let attribute_value :=
-  | ~ = spec_constant; { Attr_const spec_constant }
-  | ~ = symbol; { Attr_sym symbol }
+  | ~ = spec_constant; <Attr_const>
+  | ~ = symbol; <Attr_sym>
   | LPAR; _ = s_expr*; RPAR; { assert false }
 
 let attribute :=
-  | kw = KEYWORD; { Kw kw }
-  | kw = KEYWORD; ~ = attribute_value; { Kw_val (kw, attribute_value) }
+  | ~ = KEYWORD; <Kw>
+  | ~ = KEYWORD; ~ = attribute_value; <Kw_val>
 
 (* Terms *)
 let qual_identifier :=
-  | ~ = identifier; { Plain identifier }
-  | LPAR; AS; ~ = identifier; ~ = sort; RPAR; { As (identifier, sort) }
+  | ~ = identifier; <Plain>
+  | LPAR; AS; ~ = identifier; ~ = sort; RPAR; <As>
 
 let var_binding :=
-  | LPAR; ~ = symbol; ~ = term; RPAR; { (symbol, term) }
+  | LPAR; ~ = symbol; ~ = term; RPAR; <>
 
 let sorted_var :=
-  | LPAR; ~ = symbol; ~ = sort; RPAR; { (symbol, sort) }
+  | LPAR; ~ = symbol; ~ = sort; RPAR; <>
 
 let pattern :=
   | _ = symbol; { }
@@ -137,18 +135,12 @@ let match_case :=
   | LPAR; _ = pattern; _ = term; RPAR; { }
 
 let term :=
-  | ~ = spec_constant;
-    { Const spec_constant }
-  | ~ = qual_identifier;
-    { Id qual_identifier }
-  | LPAR; ~ = qual_identifier; term_list = term+; RPAR;
-    { App (qual_identifier, term_list) }
-  | LPAR; LET; LPAR; binds = var_binding+; RPAR; ~ = term; RPAR;
-    { Let (binds, term) }
-  | LPAR; FORALL; LPAR; vars = sorted_var+; RPAR; ~ = term; RPAR;
-    { Forall (vars, term) }
-  | LPAR; EXISTS; LPAR; vars = sorted_var+; RPAR; ~ = term; RPAR;
-    { Exists (vars, term) }
+  | ~ = spec_constant; <Const>
+  | ~ = qual_identifier; <Id>
+  | LPAR; ~ = qual_identifier; ~ = term+; RPAR; <App>
+  | LPAR; LET; LPAR; ~ = var_binding+; RPAR; ~ = term; RPAR; <Let>
+  | LPAR; FORALL; LPAR; ~ = sorted_var+; RPAR; ~ = term; RPAR; <Forall>
+  | LPAR; EXISTS; LPAR; ~ = sorted_var+; RPAR; ~ = term; RPAR; <Exists>
   | LPAR; MATCH; term; LPAR; match_case+; RPAR; RPAR;
     { assert false }
   | LPAR; ANNOT; term; attribute+; RPAR;
@@ -223,23 +215,20 @@ let prop_literal :=
   | LPAR; NOT; symbol; RPAR; { }
 
 let command :=
-  | LPAR; ASSERT; ~ = term; RPAR;
-    { Assert term }
+  | LPAR; ASSERT; ~ = term; RPAR; <Assert>
   | LPAR; CHECK_SAT; RPAR;
     { Check_sat }
   | LPAR; CHECK_SAT_ASSUMING; LPAR; prop_literal*; RPAR; RPAR;
     { Check_sat_assuming }
-  | LPAR; DECLARE_CONST; ~ = symbol; ~ = sort; RPAR;
-    { Declare_const (symbol, sort) }
+  | LPAR; DECLARE_CONST; ~ = symbol; ~ = sort; RPAR; <Declare_const>
   | LPAR; DECLARE_DATATYPE; symbol; datatype_dec; RPAR;
     { Declare_datatype }
   | LPAR; DECLARE_DATATYPES; LPAR; sort_dec+; RPAR;
     LPAR; datatype_dec+; RPAR; RPAR;
     { Declare_datatypes }
-  | LPAR; DECLARE_FUN; ~ = symbol; LPAR; args = sort*; RPAR; ~ = sort; RPAR;
-    { Declare_fun (symbol, args, sort) }
-  | LPAR; DECLARE_SORT; ~ = symbol; n = NUM; RPAR;
-    { Declare_sort (symbol, int_of_string n) }
+  | LPAR; DECLARE_FUN; ~ = symbol; LPAR; ~ = sort*; RPAR; ~ = sort; RPAR;
+    <Declare_fun>
+  | LPAR; DECLARE_SORT; ~ = symbol; ~ = NUM; RPAR; <Declare_sort>
   | LPAR; DEFINE_FUN; function_def; RPAR;
     { Define_fun }
   | LPAR; DEFINE_FUN_REC; function_def; RPAR;
@@ -248,8 +237,7 @@ let command :=
     { Define_funs_rec }
   | LPAR; DEFINE_SORT; symbol; LPAR; symbol*; RPAR; sort; RPAR;
     { Define_sort }
-  | LPAR; ECHO; str = STR; RPAR;
-    { Echo str }
+  | LPAR; ECHO; ~ = STR; RPAR; <Echo>
   | LPAR; EXIT; RPAR;
     { Exit }
   | LPAR; GET_ASSERTIONS; RPAR;
@@ -260,28 +248,22 @@ let command :=
     { Get_info }
   | LPAR; GET_MODEL; RPAR;
     { Get_model }
-  | LPAR; GET_OPTION; opt = KEYWORD; RPAR;
-    { Get_option opt }
+  | LPAR; GET_OPTION; ~ = KEYWORD; RPAR; <Get_option>
   | LPAR; GET_PROOF; RPAR;
     { Get_proof }
   | LPAR; GET_UNSAT_ASSUMPTIONS; RPAR;
     { Get_unsat_assumptions }
   | LPAR; GET_UNSAT_CORE; RPAR;
     { Get_unsat_core }
-  | LPAR; GET_VALUE; LPAR; terms = term+; RPAR; RPAR;
-    { Get_value terms }
-  | LPAR; POP; n = NUM; RPAR;
-    { Pop (int_of_string n) }
-  | LPAR; PUSH; n = NUM; RPAR;
-    { Push (int_of_string n) }
+  | LPAR; GET_VALUE; LPAR; ~ = term+; RPAR; RPAR; <Get_value>
+  | LPAR; POP; ~ = NUM; RPAR; <Pop>
+  | LPAR; PUSH; ~ = NUM; RPAR; <Push>
   | LPAR; RESET; RPAR;
     { Reset }
   | LPAR; RESET_ASSERTIONS; RPAR;
     { Reset_assertions }
-  | LPAR; SET_INFO; ~ = attribute; RPAR;
-    { Set_info attribute }
-  | LPAR; SET_LOGIC; ~ = symbol; RPAR;
-    { Set_logic symbol }
+  | LPAR; SET_INFO; ~ = attribute; RPAR; <Set_info>
+  | LPAR; SET_LOGIC; ~ = symbol; RPAR; <Set_logic>
   | LPAR; SET_OPTION; option_; RPAR;
     { Set_option }
 

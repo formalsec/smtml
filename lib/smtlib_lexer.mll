@@ -5,7 +5,7 @@ open Smtlib_parser
 exception SyntaxError of string
 
 let keywords =
-  let tbl = Hashtbl.create 10 in
+  let tbl = Hashtbl.create 16 in
   Array.iter
     (fun (k, v) -> Hashtbl.add tbl k v)
     [| (":sorts", SORTS)
@@ -22,7 +22,7 @@ let keywords =
   tbl
 
 let reserved =
-  let tbl = Hashtbl.create 45 in
+  let tbl = Hashtbl.create 64 in
   Array.iter
     (fun (k, v) -> Hashtbl.add tbl k v)
     [|
@@ -98,8 +98,8 @@ rule token = parse
   | '(' { LPAR }
   | ')' { RPAR }
 
-  | numeral as x { NUM x }
-  | decimal as x { DEC x }
+  | numeral as x { NUM (int_of_string x) }
+  | decimal as x { DEC (float_of_string x) }
   | hexadecimal as x { HEX x }
   | binary as x { BIN x }
   | '"' { string (Buffer.create 17) lexbuf }
