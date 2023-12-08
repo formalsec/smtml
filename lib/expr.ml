@@ -193,6 +193,11 @@ let simplify_relop ty (op : relop) e1 e2 =
     | _ -> Relop (op, e1, e2) )
   | _ -> Relop (op, e1, e2)
 
+let simplify_cvtop ty (op : cvtop) e =
+  match (op, e.e) with
+  | Reinterpret_int, Cvtop (Reinterpret_float, e') -> e'
+  | _ -> Cvtop (op, e) @: ty
+
 let nland64 (x : int64) (n : int) =
   let rec loop x' n' acc =
     if n' = 0 then Int64.logand x' acc
@@ -257,6 +262,9 @@ let rec simplify ?(extract = true) ({ ty; e } as expr : t) : t =
     let e1 = simplify e1 in
     let e2 = simplify e2 in
     simplify_relop ty op e1 e2 @: ty
+  | Cvtop (op, e) ->
+    let e = simplify e in
+    simplify_cvtop ty op e
   | Extract (_, _, _) when not extract -> expr
   | Extract (s, h, l) when extract -> simplify_extract s h l @: ty
   | Concat (e1, e2) ->
