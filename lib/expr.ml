@@ -248,21 +248,21 @@ let simplify_concat (msb : t) (lsb : t) =
 let rec simplify ?(extract = true) ({ ty; e } as expr : t) : t =
   match e with
   | Val _ -> expr
-  | Ptr (base, offset) -> { ty; e = Ptr (base, simplify offset) }
+  | Ptr (base, offset) -> Ptr (base, simplify offset) @: ty
   | Binop (op, e1, e2) ->
     let e1 = simplify e1 in
     let e2 = simplify e2 in
-    { ty; e = simplify_binop ty op e1 e2 }
+    simplify_binop ty op e1 e2 @: ty
   | Relop (op, e1, e2) ->
     let e1 = simplify e1 in
     let e2 = simplify e2 in
-    { ty; e = simplify_relop ty op e1 e2 }
+    simplify_relop ty op e1 e2 @: ty
   | Extract (_, _, _) when not extract -> expr
-  | Extract (s, h, l) when extract -> { ty; e = simplify_extract s h l }
+  | Extract (s, h, l) when extract -> simplify_extract s h l @: ty
   | Concat (e1, e2) ->
     let msb = simplify ~extract:false e1 in
     let lsb = simplify ~extract:false e2 in
-    { ty; e = simplify_concat msb lsb }
+    simplify_concat msb lsb @: ty
   | _ -> expr
 
 (** rewrites in a more SMT like compatible term *)
