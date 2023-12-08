@@ -360,7 +360,7 @@ module Smtlib = struct
     | Num (F64 x) ->
       let bitv = Bitv.of_int64_s x in
       let sign = Bin (asprintf "#b%d" (Bool.to_int @@ Bitv.get bitv 63)) in
-      let exponent = Bin (asprintf "#b%a" pp (Bitv.sub bitv 52 8)) in
+      let exponent = Bin (asprintf "#b%a" pp (Bitv.sub bitv 52 11)) in
       let significand = Bin (asprintf "#b%a" pp (Bitv.sub bitv 0 52)) in
       App (Plain (Sym "fp"), [ Const sign; Const exponent; Const significand ])
 
@@ -377,14 +377,19 @@ module Smtlib = struct
       | Neg -> Plain (Sym "bvneg")
       | _ -> assert false
     in
+    let fp_unop = function
+      | Neg -> Plain (Sym "fp.neg")
+      | Abs -> Plain (Sym "fp.abs")
+      | _ -> assert false
+    in
     match ty with
     | Ty_int | Ty_real -> arith_unop op
     | Ty_bool -> core_unop op
     | Ty_str -> str_unop op
     | Ty_bitv _ -> bitv_unop op
-    | Ty_fp _ -> failwith "TODO: id_of_unop"
+    | Ty_fp _ -> fp_unop op
 
-  let id_of_binop ty op : qual_identifier =
+  let id_of_binop ty op : qual_identifier * qual_identifier list =
     let open Ty in
     let int_binop = function
       | Add -> Plain (Sym "+")
@@ -423,13 +428,23 @@ module Smtlib = struct
       | RemU -> Plain (Sym "bvurem")
       | _ -> assert false
     in
+    let fp_binop = function
+      | Add -> (Plain (Sym "fp.add"), [ Plain (Sym "RNE") ])
+      | Sub -> (Plain (Sym "fp.sub"), [ Plain (Sym "RNE") ])
+      | Mul -> (Plain (Sym "fp.mul"), [ Plain (Sym "RNE") ])
+      | Div -> (Plain (Sym "fp.div"), [ Plain (Sym "RNE") ])
+      | Min -> (Plain (Sym "fp.min"), [])
+      | Max -> (Plain (Sym "fp.max"), [])
+      | Rem -> (Plain (Sym "fp.rem"), [])
+      | _ -> assert false
+    in
     match ty with
-    | Ty_int -> int_binop op
-    | Ty_real -> real_binop op
-    | Ty_bool -> core_binop op
+    | Ty_int -> (int_binop op, [])
+    | Ty_real -> (real_binop op, [])
+    | Ty_bool -> (core_binop op, [])
     | Ty_str -> assert false
-    | Ty_bitv _ -> bitv_binop op
-    | Ty_fp _ -> failwith "TODO: id_of_binop"
+    | Ty_bitv _ -> (bitv_binop op, [])
+    | Ty_fp _ -> fp_binop op
 
   let id_of_triop _ty op : qual_identifier =
     match op with Ty.Ite -> Plain (Sym "ite") | _ -> assert false
@@ -457,18 +472,55 @@ module Smtlib = struct
       | GeU -> Plain (Sym "bvuge")
       | Ne -> assert false
     in
+    let fp_relop = function
+      | Eq -> Plain (Sym "fp.eq")
+      | Lt -> Plain (Sym "fp.lt")
+      | Le -> Plain (Sym "fp.leq")
+      | Gt -> Plain (Sym "fp.gt")
+      | Ge -> Plain (Sym "fp.geq")
+      | _ -> assert false
+    in
     match ty with
     | Ty_int | Ty_real -> arith_relop op
     | Ty_bool -> core_relop op
     | Ty_bitv _ -> bitv_relop op
     | Ty_str -> assert false
-    | Ty_fp _ -> failwith "TODO: id_of_binop"
+    | Ty_fp _ -> fp_relop op
 
-  let id_of_cvtop _ op : qual_identifier =
+  let id_of_cvtop ty op : qual_identifier * qual_identifier list =
     let open Ty in
     match op with
-    | ExtS n -> Plain (Hole ("sign_extend", [ I n ]))
-    | ExtU n -> Plain (Hole ("zero_extend", [ I n ]))
+    | ExtS n -> (Plain (Hole ("sign_extend", [ I n ])), [])
+    | ExtU n -> (Plain (Hole ("zero_extend", [ I n ])), [])
+    | WrapI64 -> (Plain (Hole ("extract", [ I 31; I 0 ])), [])
+    | DemoteF64 -> (Plain (Hole ("to_fp", [ I 8; I 24 ])), [ Plain (Sym "RNE") ])
+    | PromoteF32 ->
+      (Plain (Hole ("to_fp", [ I 11; I 53 ])), [ Plain (Sym "RNE") ])
+    | Reinterpret_float -> (Plain (Sym "fp.to_ieee_bv"), [])
+    | Reinterpret_int | ConvertSI32 | ConvertSI64 ->
+      let eb, sb =
+        match ty with
+        | Ty_fp S32 -> (8, 24)
+        | Ty_fp S64 -> (11, 53)
+        | _ -> assert false
+      in
+      (Plain (Hole ("to_fp", [ I eb; I sb ])), [])
+    | TruncSF32 | TruncSF64 ->
+      let m =
+        match ty with
+        | Ty_bitv S32 -> 32
+        | Ty_bitv S64 -> 64
+        | _ -> assert false
+      in
+      (Plain (Hole ("fp.to_sbv", [ I m ])), [ Plain (Sym "RTZ") ])
+    | TruncUF32 | TruncUF64 ->
+      let m =
+        match ty with
+        | Ty_bitv S32 -> 32
+        | Ty_bitv S64 -> 64
+        | _ -> assert false
+      in
+      (Plain (Hole ("fp.to_ubv", [ I m ])), [ Plain (Sym "RTZ") ])
     | _ -> assert false
 
   let rec to_term ({ e; ty } : t) : term =
@@ -483,10 +535,10 @@ module Smtlib = struct
       let t = to_term e in
       App (id, [ t ])
     | Binop (op, e1, e2) ->
-      let id = id_of_binop ty op in
+      let id, args = id_of_binop ty op in
       let t1 = to_term e1 in
       let t2 = to_term e2 in
-      App (id, [ t1; t2 ])
+      App (id, List.map (fun arg -> Id arg) args @ [ t1; t2 ])
     | Triop (op, e1, e2, e3) ->
       let id = id_of_triop ty op in
       let t1 = to_term e1 in
@@ -499,9 +551,9 @@ module Smtlib = struct
       let t2 = to_term e2 in
       App (id, [ t1; t2 ])
     | Cvtop (op, e) ->
-      let id = id_of_cvtop ty op in
+      let id, args = id_of_cvtop ty op in
       let t = to_term e in
-      App (id, [ t ])
+      App (id, List.map (fun arg -> Id arg) args @ [ t ])
     | Symbol x -> Id (Plain (Sym (Symbol.to_string x)))
     | Extract (e, h, l) ->
       let t = to_term e in
