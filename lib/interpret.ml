@@ -27,18 +27,28 @@ module Make (Solver : Solver_intf.S) = struct
 
   let handle_checksat (c : config) : string =
 
-    (* Step 0: Normalize and check the cache first *)
+    (* Step 0: Normalize *)
     let es = Normalize.normalize c.pc in
 
-    (* Convert the list of expressions to a string for caching *)
-    let expr_string = String.concat ";" (List.map Expression.to_string es) in
-    match Hashtbl.find_opt check_sat_cache expr_string with
-      | Some result -> result
-      | None -> 
 
-
-    (* Step 1: Slice the program constraints into independent groups of expressions *)
-    let ess = Slicing.slice es in
+    (* Step 0.5 - S3 Optimization *)
+    (* If there's only one symbolic variable, there's no need to slice *)
+    (* If there are two+ symbolic variables, we check if there's any formula with all those variables *)
+    (* If there is -> There's no need to slice, as all formulas will be co-dependent *)
+    let ess =
+      match Hashtbl.length c.smap with
+      | 1 -> es
+      | _ ->
+        let all_vars = Hashtbl.fold (fun _ v acc -> v :: acc) c.smap [] in
+        let has_all_vars expr =
+          let symbols = Expression.get_symbols expr in
+          let symbol_strings = List.map Symbol.to_string symbols in
+          let var_strings = List.map Symbol.to_string all_vars in
+          List.for_all (fun v -> List.mem v symbol_strings) var_strings
+        in
+        if List.exists has_all_vars es then es
+        else Slice.slice es
+    in
 
     (*
     (* Print out the sliced groups of expressions *)
