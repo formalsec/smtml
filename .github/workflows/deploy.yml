@@ -16,14 +16,14 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup OCaml 5.1
+      - name: Setup OCaml 4.14
         uses: ocaml/setup-ocaml@v2
         with:
-          ocaml-compiler: "5.1"
+          ocaml-compiler: "4.14"
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v3
@@ -42,7 +42,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     name: Deploy
     steps:
       - name: Deploy to GitHub Pages
