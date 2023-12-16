@@ -6,6 +6,9 @@ and expr =
   | Ptr of int32 * t
   | Symbol of Symbol.t
   | List of t list
+  | Array of t array
+  | Tuple of t list
+  | App of string * t list
   | Unop of Ty.t * Ty.unop * t
   | Binop of Ty.t * Ty.binop * t * t
   | Triop of Ty.t * Ty.triop * t * t * t

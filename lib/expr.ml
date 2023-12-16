@@ -7,6 +7,9 @@ and expr =
   | Ptr of int32 * t
   | Symbol of Symbol.t
   | List of t list
+  | Array of t array
+  | Tuple of t list
+  | App of string * t list
   | Unop of Ty.t * unop * t
   | Binop of Ty.t * binop * t * t
   | Triop of Ty.t * triop * t * t * t
@@ -18,14 +21,19 @@ and expr =
 module Hc = Hc.Make (struct
   type t = expr
 
+  let list_eq (l1 : 'a list) (l2 : 'a list) : bool =
+    if List.compare_lengths l1 l2 = 0 then List.for_all2 ( == ) l1 l2 else false
+
   let equal (e1 : expr) (e2 : expr) : bool =
     match (e1, e2) with
     | Val v1, Val v2 -> Value.equal v1 v2
     | Ptr (b1, o1), Ptr (b2, o2) -> b1 = b2 && o1 == o2
     | Symbol s1, Symbol s2 -> Symbol.equal s1 s2
-      | List l1, List l2 ->
-        if List.compare_lengths l1 l2 = 0 then List.for_all2 ( == ) l1 l2
-        else false
+    | List l1, List l2 -> list_eq l1 l2
+    | Array a1, Array a2 ->
+      Array.(length a1 = length a2) && Array.for_all2 ( == ) a1 a2
+    | Tuple l1, Tuple l2 -> list_eq l1 l2
+    | App (x1, l1), App (x2, l2) -> String.equal x1 x2 && list_eq l1 l2
     | Unop (t1, op1, e1), Unop (t2, op2, e2) ->
       Ty.equal t1 t2 && op1 = op2 && e1 == e2
     | Binop (t1, op1, e1, e3), Binop (t2, op2, e2, e4) ->
@@ -48,6 +56,9 @@ module Hc = Hc.Make (struct
     | Ptr (b, o) -> h (b, o.tag)
     | Symbol s -> h s
     | List v -> h v
+    | Array es -> h es
+    | Tuple es -> h es
+    | App (x, es) -> h (x, es)
     | Unop (ty, op, e) -> h (ty, op, e.tag)
     | Cvtop (ty, op, e) -> h (ty, op, e.tag)
     | Binop (ty, op, e1, e2) -> h (ty, op, e1.tag, e2.tag)
@@ -77,6 +88,9 @@ let rec ty (hte : t) : Ty.t =
   | Ptr _ -> Ty_bitv 32
   | Symbol x -> Symbol.type_of x
   | List _ -> Ty_list
+  | Array _ -> Ty_array
+  | Tuple _ -> Ty_tuple
+  | App _ -> assert false
   | Unop (ty, _, _) -> ty
   | Binop (ty, _, _, _) -> ty
   | Triop (ty, _, _, _, _) -> ty
@@ -95,7 +109,9 @@ let get_symbols (hte : t list) =
     | Val _ -> ()
     | Ptr (_, offset) -> symbols offset
     | Symbol s -> Hashtbl.replace tbl s ()
-    | List es -> List.iter symbols es
+    | List es | Tuple es -> List.iter symbols es
+    | Array es -> Array.iter symbols es
+    | App (_, es) -> List.iter symbols es
     | Unop (_, _, e1) -> symbols e1
     | Binop (_, _, e1, e2) ->
       symbols e1;
@@ -136,11 +152,22 @@ let negate_relop (hte : t) : (t, string) Result.t =
 module Pp = struct
   open Format
 
+  let pp_print_array pp_v fmt v =
+    let is_first = ref true in
+    Array.iter
+      (fun v ->
+        if !is_first then is_first := false else pp_print_string fmt " ";
+        pp_v fmt v )
+      v
+
   let rec pp fmt (hte : t) =
     match view hte with
     | Val v -> Value.pp fmt v
-    | List v -> fprintf fmt "(%a)" (pp_print_list ~pp_sep:pp_print_space pp) v
     | Ptr (base, offset) -> fprintf fmt "(Ptr (i32 %ld) %a)" base pp offset
+    | Symbol s -> Symbol.pp fmt s
+    | List v | Tuple v -> fprintf fmt "(%a)" (pp_print_list pp) v
+    | Array v -> fprintf fmt "(%a)" (pp_print_array pp) v
+    | App (x, v) -> fprintf fmt "(%s %a)" x (pp_print_list pp) v
     | Unop (ty, op, e) -> fprintf fmt "(%a.%a %a)" Ty.pp ty pp_unop op pp e
     | Binop (ty, op, e1, e2) ->
       fprintf fmt "(%a.%a %a %a)" Ty.pp ty pp_binop op pp e1 pp e2
@@ -149,7 +176,6 @@ module Pp = struct
     | Relop (ty, op, e1, e2) ->
       fprintf fmt "(%a.%a %a %a)" Ty.pp ty pp_relop op pp e1 pp e2
     | Cvtop (ty, op, e) -> fprintf fmt "(%a.%a %a)" Ty.pp ty pp_cvtop op pp e
-    | Symbol s -> Symbol.pp fmt s
     | Extract (e, h, l) -> fprintf fmt "(extract %a %d %d)" pp e l h
     | Concat (e1, e2) -> fprintf fmt "(++ %a %a)" pp e1 pp e2
 
@@ -359,6 +385,9 @@ let rec simplify_expr ?(extract = true) (hte : t) : t =
   | Val _ | Symbol _ -> hte
   | Ptr (base, offset) -> make @@ Ptr (base, simplify_expr offset)
   | List es -> make @@ List (List.map simplify_expr es)
+  | Array es -> make @@ Array (Array.map simplify_expr es)
+  | Tuple es -> make @@ Tuple (List.map simplify_expr es)
+  | App (x, es) -> make @@ App (x, List.map simplify_expr es)
   | Unop (ty, op, e) ->
     let e = simplify_expr e in
     unop ty op e
