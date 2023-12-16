@@ -11,6 +11,8 @@ type t =
   | Ty_bitv of int
   | Ty_fp of int
   | Ty_list
+  | Ty_tuple
+  | Ty_array
 
 type unop =
   | Neg

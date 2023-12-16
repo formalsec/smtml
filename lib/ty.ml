@@ -15,6 +15,8 @@ type t =
   | Ty_bitv of int
   | Ty_fp of int
   | Ty_list
+  | Ty_tuple
+  | Ty_array
 
 type unop =
   | Neg
@@ -227,6 +229,8 @@ let pp fmt = function
   | Ty_bitv n -> fprintf fmt "i%d" n
   | Ty_fp n -> fprintf fmt "f%d" n
   | Ty_list -> pp_string fmt "list"
+  | Ty_tuple -> pp_string fmt "tuple"
+  | Ty_array -> pp_string fmt "array"
 
 let pp_logic fmt : logic -> unit = function
   | AUFLIA -> pp_string fmt "AUFLIA"
@@ -268,4 +272,4 @@ let size (ty : t) : int =
   match ty with
   | Ty_bitv n | Ty_fp n -> n / 8
   | Ty_int | Ty_bool -> 4
-  | Ty_real | Ty_str | Ty_list -> assert false
+  | Ty_real | Ty_str | Ty_list | Ty_array | Ty_tuple -> assert false
