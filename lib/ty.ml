@@ -91,6 +91,8 @@ type cvtop =
   | WrapI64
   | ExtS of int
   | ExtU of int
+  | String_to_code
+  | String_from_code
 
 let pp_unop fmt (op : unop) =
   match op with
@@ -166,6 +168,8 @@ let pp_cvtop fmt (op : cvtop) =
   | WrapI64 -> pp_string fmt "wrap_i64"
   | ExtS sz -> fprintf fmt "extend_i%d_s" sz
   | ExtU sz -> fprintf fmt "extend_i%d_u" sz
+  | String_to_code -> pp_string fmt "string_to_code"
+  | String_from_code -> pp_string fmt "string_from_code"
 
 let pp fmt = function
   | Ty_int -> pp_string fmt "int"

@@ -293,7 +293,11 @@ module Fresh = struct
         in
         op' e1 e2
 
-      let encode_cvtop _op _e = assert false
+      let encode_cvtop op e =
+        match op with
+        | String_to_code -> Seq.mk_string_to_code ctx e
+        | String_from_code -> Seq.mk_string_from_code ctx e
+        | _ -> assert false
     end
 
     module Bv = struct

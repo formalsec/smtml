@@ -43,3 +43,26 @@ let%test "test_symb_substr" =
   assert (Batch.check solver pc);
   let m = Batch.model solver in
   Some (Value.Str "abc") = Model.evaluate (Option.get m) symb_x
+
+let%test "test_to_code" =
+  let assertion =
+    [ Relop
+        ( Eq
+        , Cvtop (String_to_code, Binop (Nth, abc, zero) @: Ty_str) @: Ty_str
+        , Val (Int 97) @: Ty_int )
+      @: Ty_str
+    ]
+  in
+  Batch.check solver assertion
+
+let%test "roundtrip_code" =
+  let ord =
+    Cvtop (String_to_code, Binop (Nth, abc, zero) @: Ty_str) @: Ty_str
+  in
+  let assertion =
+    [ Relop
+        (Eq, Cvtop (String_from_code, ord) @: Ty_str, Val (Str "a") @: Ty_str)
+      @: Ty_str
+    ]
+  in
+  Batch.check solver assertion
