@@ -14,7 +14,8 @@ jobs:
       fail-fast: true
       matrix:
         os:
-          - self-hosted
+          - ubuntu-latest
+          - macos-latest
         ocaml-compiler:
           - "4.14"
           - "5.1"
@@ -26,6 +27,8 @@ jobs:
         uses: ocaml/setup-ocaml@v2
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
+          dune-cache: true
+          allow-prerelease-opam: true
       - name: Install dependencies
         run: opam install -y . --deps-only --with-test
       - name: Build
