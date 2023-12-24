@@ -13,6 +13,7 @@
   eval_numeric
   expr
   interpret
+  interpret_smt
   interpret_intf
   lexer
   mappings_intf
