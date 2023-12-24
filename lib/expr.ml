@@ -331,6 +331,19 @@ module Smtlib = struct
     | Ty.Ty_fp S64 -> Sort (Sym "Float64")
     | Ty.Ty_fp S8 -> assert false
 
+  let to_type : sort -> Ty.t = function
+    | Sort (Sym "Int") -> Ty.Ty_int
+    | Sort (Sym "Real") -> Ty.Ty_real
+    | Sort (Sym "Bool") -> Ty.Ty_bool
+    | Sort (Sym "String") -> Ty.Ty_str
+    | Sort (Sym "Float32") -> Ty.Ty_fp S32
+    | Sort (Sym "Float64") -> Ty.Ty_fp S64
+    | Sort (Hole ("BitVec", [ I 8 ])) -> Ty.Ty_bitv S8
+    | Sort (Hole ("BitVec", [ I 32 ])) -> Ty.Ty_bitv S32
+    | Sort (Hole ("BitVec", [ I 64 ])) -> Ty.Ty_bitv S64
+    | s ->
+      Format.kasprintf failwith {|Unsupported sort "%a"|} Smtlib.Fmt.pp_sort s
+
   let to_const v =
     let open Value in
     let pp = Bitv.M.print in
@@ -562,6 +575,8 @@ module Smtlib = struct
       let t1 = to_term e1 in
       let t2 = to_term e2 in
       App (Plain (Sym "concat"), [ t1; t2 ])
+
+  let to_expr (_t : term) : t = assert false
 
   (* TODO: This can be improved *)
   let to_script es =
