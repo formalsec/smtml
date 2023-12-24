@@ -16,6 +16,8 @@ module Fresh = struct
     let update_param_value (type a) (param : a Params.param) (value : a) =
       let module P = Z3.Params in
       match param with
+      | Params.Timeout ->
+        P.update_param_value ctx "timeout" (string_of_int value)
       | Params.Model -> P.update_param_value ctx "model" (string_of_bool value)
       | Params.Unsat_core ->
         P.update_param_value ctx "unsat_core" (string_of_bool value)
