@@ -1,5 +1,5 @@
 open Encoding
-module Batch = Batch.Make (Z3_mappings)
+module Batch = Solver.Batch (Z3_mappings)
 
 let solver = Batch.create ()
 

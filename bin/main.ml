@@ -1,7 +1,7 @@
 open Encoding
 open Cmdliner
-module Z3_batch = Batch.Make (Z3_mappings)
-module Z3_incremental = Incremental.Make (Z3_mappings)
+module Z3_batch = Solver.Batch (Z3_mappings)
+module Z3_incremental = Solver.Incremental (Z3_mappings)
 module Interpret = Interpret.Make (Z3_batch)
 
 let get_contents = function

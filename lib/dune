@@ -10,10 +10,8 @@
  (modules
   ast
   ;axioms
-  batch
   eval_numeric
   expr
-  incremental
   interpret
   interpret_intf
   lexer
@@ -25,6 +23,7 @@
   parser
   params
   run
+  solver
   solver_intf
   symbol
   ty

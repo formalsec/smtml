@@ -1,7 +1,7 @@
 open Encoding
 open Ty
 open Expr
-module Batch = Batch.Make (Z3_mappings)
+module Batch = Solver.Batch (Z3_mappings)
 
 let solver = Batch.create ()
 let symb_x = Symbol.("x" @: Ty_int)
