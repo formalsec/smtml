@@ -10,7 +10,7 @@ type t =
   | Str of string
   | Num of Num.t
 
-let equal (v1 : t) (v2 : t) : Bool.t =
+let equal (v1 : t) (v2 : t) : bool =
   match (v1, v2) with
   | True, True | False, False -> true
   | Int x1, Int x2 -> Int.equal x1 x2
