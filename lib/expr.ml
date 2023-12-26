@@ -331,20 +331,6 @@ module Smtlib = struct
     | Ty.Ty_fp S64 -> Sort (Sym "Float64")
     | Ty.Ty_fp S8 -> assert false
 
-  let to_type : sort -> (Ty.t, string) Result.t = function
-    | Sort (Sym "Int") -> Ok Ty.Ty_int
-    | Sort (Sym "Real") -> Ok Ty.Ty_real
-    | Sort (Sym "Bool") -> Ok Ty.Ty_bool
-    | Sort (Sym "String") -> Ok Ty.Ty_str
-    | Sort (Sym "Float32") -> Ok (Ty.Ty_fp S32)
-    | Sort (Sym "Float64") -> Ok (Ty.Ty_fp S64)
-    | Sort (Hole ("BitVec", [ I 8 ])) -> Ok (Ty.Ty_bitv S8)
-    | Sort (Hole ("BitVec", [ I 32 ])) -> Ok (Ty.Ty_bitv S32)
-    | Sort (Hole ("BitVec", [ I 64 ])) -> Ok (Ty.Ty_bitv S64)
-    | s ->
-      Format.kasprintf Result.error {|Unsupported sort "%a"|} Smtlib.Fmt.pp_sort
-        s
-
   let to_const v =
     let open Value in
     let pp = Bitv.M.print in
@@ -577,8 +563,6 @@ module Smtlib = struct
       let t2 = to_term e2 in
       App (Plain (Sym "concat"), [ t1; t2 ])
 
-  let to_expr (_t : term) : t = assert false
-
   (* TODO: This can be improved *)
   let to_script es =
     let consts =
@@ -589,4 +573,87 @@ module Smtlib = struct
     consts
     @ List.map (fun e -> Assert (to_term @@ rewrite e)) es
     @ [ Check_sat ]
+
+  let type_of_sort : sort -> (Ty.t, string) Result.t = function
+    | Sort (Sym "Int") -> Ok Ty.Ty_int
+    | Sort (Sym "Real") -> Ok Ty.Ty_real
+    | Sort (Sym "Bool") -> Ok Ty.Ty_bool
+    | Sort (Sym "String") -> Ok Ty.Ty_str
+    | Sort (Sym "Float32") -> Ok (Ty.Ty_fp S32)
+    | Sort (Sym "Float64") -> Ok (Ty.Ty_fp S64)
+    | Sort (Hole ("BitVec", [ I 8 ])) -> Ok (Ty.Ty_bitv S8)
+    | Sort (Hole ("BitVec", [ I 32 ])) -> Ok (Ty.Ty_bitv S32)
+    | Sort (Hole ("BitVec", [ I 64 ])) -> Ok (Ty.Ty_bitv S64)
+    | s ->
+      Error (Format.asprintf {|Unsupported sort "%a"|} Smtlib.Fmt.pp_sort s)
+
+  let prepend0 x len = "0" ^ String.sub x 1 (len - 1)
+  let z_of_string x len = Z.of_string @@ prepend0 x len
+
+  let value_of_const : spec_constant -> (t, string) Result.t = function
+    | Num x -> Ok (Val (Int x) @: Ty_int)
+    | Dec x -> Ok (Val (Real x) @: Ty_real)
+    | Str x -> Ok (Val (Str x) @: Ty_str)
+    | Hex x -> (
+      let len = String.length x in
+      let numeral = z_of_string x len in
+      match (len - 2) * 4 with
+      | 8 -> Ok (Val (Num (I8 (Z.to_int numeral))) @: Ty_bitv S8)
+      | 32 -> Ok (Val (Num (I32 (Z.to_int32 numeral))) @: Ty_bitv S32)
+      | 64 -> Ok (Val (Num (I64 (Z.to_int64 numeral))) @: Ty_bitv S64)
+      | n -> Error (Format.sprintf "Unsupported bitv const with size %d" n) )
+    | Bin x ->
+      Error
+        (Format.asprintf {|Unsupported const "%a"|} Smtlib.Fmt.pp_const (Bin x))
+
+  let expr_of_id ty_env : qual_identifier -> (t, string) Result.t = function
+    | Plain (Sym "true") -> Ok (Val True @: Ty_bool)
+    | Plain (Sym "false") -> Ok (Val False @: Ty_bool)
+    | Plain (Sym x) -> (
+      match Hashtbl.find ty_env x with
+      | exception Not_found ->
+        Error (Format.sprintf {|Reference error: Id "%s" not defined.|} x)
+      | ty -> Ok (mk_symbol Symbol.(x @: ty)) )
+    | Plain (Hole (x, [ I 8 ])) ->
+      let n = int_of_string String.(sub x 2 (length x - 2)) in
+      Ok (Val (Num (I8 n)) @: Ty_bitv S8)
+    | Plain (Hole (x, [ I 32 ])) ->
+      let n = Int32.of_string String.(sub x 2 (length x - 2)) in
+      Ok (Val (Num (I32 n)) @: Ty_bitv S32)
+    | Plain (Hole (x, [ I 64 ])) ->
+      let n = Int64.of_string String.(sub x 2 (length x - 2)) in
+      Ok (Val (Num (I64 n)) @: Ty_bitv S64)
+    | (Plain (Hole (_, _)) | As _) as id ->
+      Error
+        (Format.asprintf {|Unsupported identifier "%a".|}
+           Smtlib.Fmt.pp_qual_identifier id )
+
+  let expr_of_term ty_env : term -> (t, string) Result.t = function
+    | Const c -> value_of_const c
+    | Id id -> expr_of_id ty_env id
+    | App
+        ( Plain (Sym "fp")
+        , Const (Bin sign)
+          :: Const (Bin exponent)
+          :: Const (Bin significand)
+          :: _ ) -> (
+      let ebits = String.length exponent - 2 in
+      let sbits = String.length significand - 2 in
+      let sign = z_of_string sign (String.length sign) in
+      let exponent = z_of_string exponent (ebits + 2) in
+      let significand = z_of_string significand (sbits + 2) in
+      let fp_bits =
+        Int64.(
+          logor
+            (logor
+               (shift_left (Z.to_int64 sign) (ebits + sbits))
+               (shift_left (Z.to_int64 exponent) sbits) )
+            (Z.to_int64 significand) )
+      in
+      match 1 + ebits + sbits with
+      | 32 -> Ok (Val (Num (F32 (Int64.to_int32 fp_bits))) @: Ty_fp S32)
+      | 64 -> Ok (Val (Num (F64 fp_bits)) @: Ty_fp S64)
+      | n -> Error (Format.sprintf "Unsupported fp const with size %d." n) )
+    | App _ -> assert false
+    | Let _ | Forall _ | Exists _ -> assert false
 end
