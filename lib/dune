@@ -21,9 +21,9 @@
   num
   op_intf
   optimizer
+  parse
   parser
   params
-  run
   smtlib
   smtlib_lexer
   smtlib_parser
@@ -35,4 +35,4 @@
   value
   z3_mappings)
  (private_modules syntax)
- (libraries z3 bitv))
+ (libraries z3 bitv menhirLib))

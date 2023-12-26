@@ -4,6 +4,8 @@ module Z3_batch = Solver.Batch (Z3_mappings)
 module Z3_incremental = Solver.Incremental (Z3_mappings)
 module Interpret = Interpret.Make (Z3_batch)
 
+let ( let*! ) o f = match o with Error msg -> failwith msg | Ok v -> f v
+
 let get_contents = function
   | "-" -> In_channel.input_all In_channel.stdin
   | filename ->
@@ -12,7 +14,9 @@ let get_contents = function
       ~finally:(fun () -> close_in chan)
       (fun () -> In_channel.input_all chan)
 
-let parse_file file = get_contents file |> Run.parse_string
+let parse_file file =
+  let*! ast = get_contents file |> Parse.Script.from_string in
+  ast
 
 let fmt file =
   let es =
@@ -32,7 +36,7 @@ let run files =
     ignore
     @@ List.fold_left
          (fun state file ->
-           let ast = Run.parse_file file in
+           let*! ast = Parse.Script.from_file file in
            Some (Interpret.start ?state ast) )
          None files
 
