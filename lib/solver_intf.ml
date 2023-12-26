@@ -8,6 +8,9 @@ module type S = sig
   (** Number of queries to the SMT solver. *)
   val solver_count : int ref
 
+  (** Print solver statistics. *)
+  val pp_statistics : Format.formatter -> t -> unit
+
   (** Create a new solver. *)
   val create : ?params:Params.t -> unit -> t
 

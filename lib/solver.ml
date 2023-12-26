@@ -19,6 +19,7 @@ module Base (M : Mappings_intf.S) = struct
     M.update_param_value Ematching (Params.get params Ematching)
 
   let interrupt () = M.interrupt ()
+  let pp_statistics fmt solver = M.pp_statistics fmt solver
 end
 
 module Batch (Mappings : Mappings_intf.S) = struct
@@ -31,6 +32,8 @@ module Batch (Mappings : Mappings_intf.S) = struct
     ; mutable top : Expr.t list
     ; stack : Expr.t list Stack.t
     }
+
+  let pp_statistics fmt s = pp_statistics fmt s.solver
 
   let create ?params () =
     Option.iter update_param_values params;
