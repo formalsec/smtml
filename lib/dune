@@ -30,7 +30,9 @@
   solver
   solver_intf
   symbol
+  syntax
   ty
   value
   z3_mappings)
+ (private_modules syntax)
  (libraries z3 bitv))

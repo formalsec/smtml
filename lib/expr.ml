@@ -331,18 +331,19 @@ module Smtlib = struct
     | Ty.Ty_fp S64 -> Sort (Sym "Float64")
     | Ty.Ty_fp S8 -> assert false
 
-  let to_type : sort -> Ty.t = function
-    | Sort (Sym "Int") -> Ty.Ty_int
-    | Sort (Sym "Real") -> Ty.Ty_real
-    | Sort (Sym "Bool") -> Ty.Ty_bool
-    | Sort (Sym "String") -> Ty.Ty_str
-    | Sort (Sym "Float32") -> Ty.Ty_fp S32
-    | Sort (Sym "Float64") -> Ty.Ty_fp S64
-    | Sort (Hole ("BitVec", [ I 8 ])) -> Ty.Ty_bitv S8
-    | Sort (Hole ("BitVec", [ I 32 ])) -> Ty.Ty_bitv S32
-    | Sort (Hole ("BitVec", [ I 64 ])) -> Ty.Ty_bitv S64
+  let to_type : sort -> (Ty.t, string) Result.t = function
+    | Sort (Sym "Int") -> Ok Ty.Ty_int
+    | Sort (Sym "Real") -> Ok Ty.Ty_real
+    | Sort (Sym "Bool") -> Ok Ty.Ty_bool
+    | Sort (Sym "String") -> Ok Ty.Ty_str
+    | Sort (Sym "Float32") -> Ok (Ty.Ty_fp S32)
+    | Sort (Sym "Float64") -> Ok (Ty.Ty_fp S64)
+    | Sort (Hole ("BitVec", [ I 8 ])) -> Ok (Ty.Ty_bitv S8)
+    | Sort (Hole ("BitVec", [ I 32 ])) -> Ok (Ty.Ty_bitv S32)
+    | Sort (Hole ("BitVec", [ I 64 ])) -> Ok (Ty.Ty_bitv S64)
     | s ->
-      Format.kasprintf failwith {|Unsupported sort "%a"|} Smtlib.Fmt.pp_sort s
+      Format.kasprintf Result.error {|Unsupported sort "%a"|} Smtlib.Fmt.pp_sort
+        s
 
   let to_const v =
     let open Value in

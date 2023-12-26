@@ -1,9 +1,11 @@
+open Syntax
+
 module Make (Solver : Solver_intf.S) = struct
   open Smtlib
 
   type exec_state =
     { cmds : Smtlib.script
-    ; smap : (string, Ty.t) Hashtbl.t
+    ; ty_env : (string, Ty.t) Hashtbl.t
     ; pc : Expr.t list
     ; solver : Solver.t
     }
@@ -11,14 +13,14 @@ module Make (Solver : Solver_intf.S) = struct
   let init_state cmds =
     let params = Params.(default () & (Model, false)) in
     { cmds
-    ; smap = Hashtbl.create 0
+    ; ty_env = Hashtbl.create 0
     ; solver = Solver.create ~params ()
     ; pc = []
     }
 
-  let eval cmd (state : exec_state) : exec_state =
-    let { solver; pc; _ } = state in
-    let st pc = { state with pc } in
+  let exec_cmd cmd (state : exec_state) : (exec_state, string) Result.t =
+    let { solver; pc; ty_env; _ } = state in
+    let st pc = Ok { state with pc } in
     match cmd with
     | Assert _t ->
       st pc
@@ -29,11 +31,14 @@ module Make (Solver : Solver_intf.S) = struct
       else Format.printf "unsat\n";
       st pc
     | Check_sat_assuming -> assert false
-    | Declare_const (_sym, _sort) -> st pc
+    | Declare_const (sym, sort) ->
+      let* ty = Expr.Smtlib.to_type sort in
+      Hashtbl.add ty_env sym ty;
+      st pc
     | Echo msg ->
       Format.printf "%s@\n" msg;
       st pc
-    | Exit -> { state with cmds = [] }
+    | Exit -> Ok { state with cmds = [] }
     | Get_model ->
       assert (Solver.check solver []);
       let model = Solver.model solver in
@@ -41,12 +46,14 @@ module Make (Solver : Solver_intf.S) = struct
       st pc
     | _ -> assert false
 
-  let rec loop (state : exec_state) : exec_state =
+  let rec loop (state : exec_state) : (exec_state, string) Result.t =
     match state.cmds with
-    | [] -> state
-    | cmd :: cmds -> loop (eval cmd { state with cmds })
+    | [] -> Ok state
+    | cmd :: cmds ->
+      let* state = exec_cmd cmd { state with cmds } in
+      loop state
 
-  let start ?state (cmds : Smtlib.script) : exec_state =
+  let main ?state (cmds : Smtlib.script) : (exec_state, string) Result.t =
     let st =
       match state with
       | None -> init_state cmds
