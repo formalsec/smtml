@@ -1,4 +1,4 @@
-open Syntax
+open Syntax.Result
 
 module Make (Solver : Solver_intf.S) = struct
   open Smtlib

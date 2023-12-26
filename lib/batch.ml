@@ -1,4 +1,4 @@
-open Syntax.Result
+open Syntax.Option
 
 exception Unknown
 
