@@ -24,6 +24,7 @@
   parse
   parser
   params
+  rewrite
   smtlib
   smtlib_lexer
   smtlib_parser

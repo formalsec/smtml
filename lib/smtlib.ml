@@ -3,16 +3,16 @@ type status =
   | Unsat
   | Unknown
 
-type script = command list
+type script = (term, sort) command list
 
-and command =
-  | Assert of term
+and ('term, 'sort) command =
+  | Assert of 'term
   | Check_sat
   | Check_sat_assuming
-  | Declare_const of symbol * sort
+  | Declare_const of symbol * 'sort
   | Declare_datatype
   | Declare_datatypes
-  | Declare_fun of symbol * sort list * sort
+  | Declare_fun of symbol * 'sort list * 'sort
   | Declare_sort of symbol * int
   | Define_fun
   | Define_fun_rec
@@ -28,7 +28,7 @@ and command =
   | Get_proof
   | Get_unsat_assumptions
   | Get_unsat_core
-  | Get_value of term list
+  | Get_value of 'term list
   | Pop of int
   | Push of int
   | Reset
