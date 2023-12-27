@@ -1,44 +1,36 @@
 open Encoding
 open Cmdliner
+open Syntax.Result
 module Z3_batch = Solver.Batch (Z3_mappings)
-module Z3_incremental = Solver.Incremental (Z3_mappings)
-module Interpret = Interpret.Make (Z3_batch)
+module Interpret = Interpret_smt.Make (Z3_batch)
+module Smtlib_parser = Parse.Smtlib
 
-let ( let*! ) o f = match o with Error msg -> failwith msg | Ok v -> f v
-
-let get_contents = function
-  | "-" -> In_channel.input_all In_channel.stdin
-  | filename ->
-    let chan = open_in filename in
-    Fun.protect
-      ~finally:(fun () -> close_in chan)
-      (fun () -> In_channel.input_all chan)
-
-let parse_file file =
-  let*! ast = get_contents file |> Parse.Script.from_string in
-  ast
+let parse_file = function
+  | "-" -> In_channel.input_all stdin |> Smtlib_parser.from_string
+  | filename -> Smtlib_parser.from_file filename
 
 let fmt file =
-  let es =
-    parse_file file
-    |> List.map (function Ast.Assert e -> [ e ] | _ -> [])
-    |> List.flatten
-  in
-  let script = Expr.Smtlib.to_script es in
-  Format.printf "%a" Smtlib.Fmt.pp_script script
+  match Smtlib_parser.from_file file with
+  | Ok script ->
+    Format.printf "%a@." Smtlib.Fmt.pp_script script;
+    0
+  | Error msg ->
+    Format.eprintf "error: %s@." msg;
+    1
+
+let parse_then_simplify_then_run file =
+  let* script = parse_file file in
+  let* script = Rewrite.simplify script in
+  let+ _ = Interpret.main script in
+  ()
 
 let run files =
-  match files with
-  | [] ->
-    let ast = parse_file "-" in
-    ignore @@ Interpret.start ast
-  | _ ->
-    ignore
-    @@ List.fold_left
-         (fun state file ->
-           let*! ast = Parse.Script.from_file file in
-           Some (Interpret.start ?state ast) )
-         None files
+  let result = list_iter ~f:parse_then_simplify_then_run files in
+  match result with
+  | Ok () -> 0
+  | Error msg ->
+    Format.eprintf "error: %s@." msg;
+    1
 
 let help = [ `S Manpage.s_common_options ]
 let sdocs = Manpage.s_common_options
@@ -67,4 +59,4 @@ let cli =
   let info = Cmd.info "smtml" ~version:"%%VERSION%%" ~doc ~sdocs ~man in
   Cmd.group info [ run_cmd; fmt_cmd ]
 
-let () = exit @@ Cmd.eval cli
+let () = exit @@ Cmd.eval' cli

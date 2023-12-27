@@ -15,7 +15,7 @@ struct
       (pos.pos_cnum - pos.pos_bol + 1)
 
   let from_lexbuf lexbuf =
-    Format.printf "Parsing ...@\n";
+    Format.printf "Parsing ...@.";
     try Ok (M.rule M.token lexbuf) with
     | M.SyntaxError msg ->
       Format.kasprintf Result.error "%a: %s@\n" pp_pos lexbuf msg

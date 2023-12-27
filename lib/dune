@@ -35,5 +35,5 @@
   ty
   value
   z3_mappings)
- (private_modules syntax)
+ (private_modules smtlib_lexer smtlib_parser)
  (libraries z3 bitv menhirLib))
