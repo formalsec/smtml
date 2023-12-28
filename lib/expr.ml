@@ -318,6 +318,7 @@ end
 
 module Smtlib = struct
   open Smtlib
+  open Syntax.Result
 
   let to_sort : Ty.t -> sort = function
     | Ty.Ty_int -> Sort (Sym "Int")
@@ -614,21 +615,129 @@ module Smtlib = struct
       | exception Not_found ->
         Error (Format.sprintf {|Reference error: Id "%s" not defined.|} x)
       | ty -> Ok (mk_symbol Symbol.(x @: ty)) )
-    | Plain (Hole (x, [ I 8 ])) ->
-      let n = int_of_string String.(sub x 2 (length x - 2)) in
-      Ok (Val (Num (I8 n)) @: Ty_bitv S8)
-    | Plain (Hole (x, [ I 32 ])) ->
-      let n = Int32.of_string String.(sub x 2 (length x - 2)) in
-      Ok (Val (Num (I32 n)) @: Ty_bitv S32)
-    | Plain (Hole (x, [ I 64 ])) ->
-      let n = Int64.of_string String.(sub x 2 (length x - 2)) in
-      Ok (Val (Num (I64 n)) @: Ty_bitv S64)
+    | Plain (Hole (x, [ I n ])) when String.starts_with ~prefix:"bv" x -> (
+      let x = Z.of_string String.(sub x 2 (length x - 2)) in
+      match n with
+      | 8 -> Ok (Val (Num (I8 (Z.to_int x))) @: Ty_bitv S8)
+      | 32 -> Ok (Val (Num (I32 (Z.to_int32 x))) @: Ty_bitv S32)
+      | 64 -> Ok (Val (Num (I64 (Z.to_int64 x))) @: Ty_bitv S64)
+      | _ -> Error (Format.sprintf "Unsupported bitv const with %d bits" n) )
     | (Plain (Hole (_, _)) | As _) as id ->
       Error
         (Format.asprintf {|Unsupported identifier "%a".|}
            Smtlib.Fmt.pp_qual_identifier id )
 
-  let expr_of_term ty_env : term -> (t, string) Result.t = function
+  let expr_of_single_app id e =
+    match id with
+    | Plain (Sym x) -> (
+      match x with
+      | "not" -> Ok (Unop (Not, e) @: Ty_bool)
+      | "bvnot" -> Ok (Unop (Not, e) @: e.ty)
+      | "-" | "bvneg" | "fp.neg" -> Ok (Unop (Neg, e) @: e.ty)
+      | "fp.abs" -> Ok (Unop (Abs, e) @: e.ty)
+      | _ -> Error (Format.sprintf {|Unsupported single app "%s"|} x) )
+    | Plain (Hole ("sign_extend", [ I n ])) ->
+      let ty = if n = 32 then Ty_bitv S64 else Ty_bitv S32 in
+      Ok (Cvtop (ExtS n, e) @: ty)
+    | Plain (Hole ("zero_extend", [ I n ])) ->
+      let ty = if n = 32 then Ty_bitv S64 else Ty_bitv S32 in
+      Ok (Cvtop (ExtU n, e) @: ty)
+    | _ ->
+      Error
+        (Format.asprintf {|Unsupported qual identifier "%a"|}
+           Fmt.pp_qual_identifier id )
+
+  let unify tys =
+    match tys with
+    | [ t ] -> Ok t
+    | t1 :: t2 :: _ ->
+      if t1 = t2 then Ok t1
+      else Error (Format.asprintf "Unable to unify %a to %a" Ty.pp t1 Ty.pp t2)
+    | _ -> assert false
+
+  let expr_of_binary_app id e1 e2 =
+    match id with
+    | Plain (Sym x) -> (
+      match x with
+      | "=" -> Ok (Relop (Eq, e1, e2) @: Ty_bool)
+      | "fp.eq" ->
+        let* ty = unify [ e1.ty; e2.ty ] in
+        Ok (Relop (Eq, e1, e2) @: ty)
+      | "<=" | "bvsle" | "fp.leq" ->
+        let* ty = unify [ e1.ty; e2.ty ] in
+        Ok (Relop (Le, e1, e2) @: ty)
+      | "bvule" ->
+        let* ty = unify [ e1.ty; e2.ty ] in
+        Ok (Relop (LeU, e1, e2) @: ty)
+      | "<" | "bvslt" | "fp.lt" ->
+        let* ty = unify [ e1.ty; e2.ty ] in
+        Ok (Relop (Lt, e1, e2) @: ty)
+      | "bvult" ->
+        let* ty = unify [ e1.ty; e2.ty ] in
+        Ok (Relop (LtU, e1, e2) @: ty)
+      | ">=" | "bvsge" | "fp.geq" ->
+        let* ty = unify [ e1.ty; e2.ty ] in
+        Ok (Relop (Ge, e1, e2) @: ty)
+      | "bvuge" ->
+        let* ty = unify [ e1.ty; e2.ty ] in
+        Ok (Relop (GeU, e1, e2) @: ty)
+      | ">" | "bvsgt" | "fp.gt" ->
+        let* ty = unify [ e1.ty; e2.ty ] in
+        Ok (Relop (Gt, e1, e2) @: ty)
+      | "bvugt" ->
+        let* ty = unify [ e1.ty; e2.ty ] in
+        Ok (Relop (GtU, e1, e2) @: ty)
+      | "and" -> Ok (Binop (And, e1, e2) @: Ty_bool)
+      | "or" -> Ok (Binop (Or, e1, e2) @: Ty_bool)
+      | "xor" -> Ok (Binop (Xor, e1, e2) @: Ty_bool)
+      | "+" | "bvadd" ->
+        let* ty = unify [ e1.ty; e2.ty ] in
+        Ok (Binop (Add, e1, e2) @: ty)
+      | "-" | "bvsub" ->
+        let* ty = unify [ e1.ty; e2.ty ] in
+        Ok (Binop (Sub, e1, e2) @: ty)
+      | "*" | "bvmul" ->
+        let* ty = unify [ e1.ty; e2.ty ] in
+        Ok (Binop (Mul, e1, e2) @: ty)
+      | "/" | "bvsdiv" ->
+        let* ty = unify [ e1.ty; e2.ty ] in
+        Ok (Binop (Div, e1, e2) @: ty)
+      | "bvudiv" ->
+        let* ty = unify [ e1.ty; e2.ty ] in
+        Ok (Binop (DivU, e1, e2) @: ty)
+      | "bvand" ->
+        let* ty = unify [ e1.ty; e2.ty ] in
+        Ok (Binop (And, e1, e2) @: ty)
+      | "bvor" ->
+        let* ty = unify [ e1.ty; e2.ty ] in
+        Ok (Binop (Or, e1, e2) @: ty)
+      | "bvxor" ->
+        let* ty = unify [ e1.ty; e2.ty ] in
+        Ok (Binop (Xor, e1, e2) @: ty)
+      | "bvshl" ->
+        let* ty = unify [ e1.ty; e2.ty ] in
+        Ok (Binop (Shl, e1, e2) @: ty)
+      | "bvashr" ->
+        let* ty = unify [ e1.ty; e2.ty ] in
+        Ok (Binop (ShrA, e1, e2) @: ty)
+      | "bvlshr" ->
+        let* ty = unify [ e1.ty; e2.ty ] in
+        Ok (Binop (ShrL, e1, e2) @: ty)
+      | "fp.rem" | "bvsrem" ->
+        let* ty = unify [ e1.ty; e2.ty ] in
+        Ok (Binop (Rem, e1, e2) @: ty)
+      | "bvurem" ->
+        let* ty = unify [ e1.ty; e2.ty ] in
+        Ok (Binop (RemU, e1, e2) @: ty)
+      | _ -> Error (Format.sprintf {|Unsupported single app "%s"|} x) )
+    | _ ->
+      Error
+        (Format.asprintf {|Unsupported qual identifier "%a"|}
+           Fmt.pp_qual_identifier id )
+
+  let expr_of_trenary_app _id _e1 _e2 _e3 = assert false
+
+  let rec expr_of_term ty_env : term -> (t, string) Result.t = function
     | Const c -> value_of_const c
     | Id id -> expr_of_id ty_env id
     | App
@@ -654,6 +763,18 @@ module Smtlib = struct
       | 32 -> Ok (Val (Num (F32 (Int64.to_int32 fp_bits))) @: Ty_fp S32)
       | 64 -> Ok (Val (Num (F64 fp_bits)) @: Ty_fp S64)
       | n -> Error (Format.sprintf "Unsupported fp const with size %d." n) )
-    | App _ -> assert false
+    | App (id, [ t ]) ->
+      let* e = expr_of_term ty_env t in
+      expr_of_single_app id e
+    | App (id, t1 :: [ t2 ]) ->
+      let* e1 = expr_of_term ty_env t1 in
+      let* e2 = expr_of_term ty_env t2 in
+      expr_of_binary_app id e1 e2
+    | App (id, t1 :: t2 :: [ t3 ]) ->
+      let* e1 = expr_of_term ty_env t1 in
+      let* e2 = expr_of_term ty_env t2 in
+      let* e3 = expr_of_term ty_env t3 in
+      expr_of_trenary_app id e1 e2 e3
+    | App (_, _) -> assert false
     | Let _ | Forall _ | Exists _ -> assert false
 end

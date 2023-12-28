@@ -17,7 +17,7 @@ let rewrite : (term, sort) command -> ((Expr.t, Ty.t) command, string) Result.t
   | Declare_datatype -> Ok Declare_datatype
   | Declare_datatypes -> Ok Declare_datatypes
   | Declare_fun (sym, args, ret) ->
-    let* args = list_map Expr.Smtlib.type_of_sort args in
+    let* args = list_map ~f:Expr.Smtlib.type_of_sort args in
     let* ret = Expr.Smtlib.type_of_sort ret in
     Ok (Declare_fun (sym, args, ret))
   | Declare_sort (sym, n) -> Ok (Declare_sort (sym, n))
@@ -36,7 +36,7 @@ let rewrite : (term, sort) command -> ((Expr.t, Ty.t) command, string) Result.t
   | Get_unsat_assumptions -> Ok Get_unsat_assumptions
   | Get_unsat_core -> Ok Get_unsat_core
   | Get_value terms ->
-    let* terms = list_map (Expr.Smtlib.expr_of_term ty_env) terms in
+    let* terms = list_map ~f:(Expr.Smtlib.expr_of_term ty_env) terms in
     Ok (Get_value terms)
   | Pop n -> Ok (Pop n)
   | Push n -> Ok (Push n)
@@ -46,7 +46,7 @@ let rewrite : (term, sort) command -> ((Expr.t, Ty.t) command, string) Result.t
   | Set_logic log -> Ok (Set_logic log)
   | Set_option -> Ok Set_option
 
-let simplify script =
+let script script =
   Hashtbl.reset ty_env;
-  Format.printf "Rewriting ...@\n";
-  list_map rewrite script
+  Format.printf "Rewriting ...@.";
+  list_map ~f:rewrite script

@@ -40,7 +40,8 @@ module Make (Solver : Solver_intf.S) = struct
       let model = Solver.model solver in
       Format.printf "%a" Model.pp (Option.get model);
       st pc
-    | _ -> assert false
+    | Set_info _ -> st pc
+    | _ -> Error (Format.asprintf {|interpreter: Unsupported command "TODO".|})
 
   let rec loop (state : exec_state) : (exec_state, string) Result.t =
     match state.cmds with

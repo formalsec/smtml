@@ -20,7 +20,7 @@ let fmt file =
 
 let parse_then_simplify_then_run file =
   let* script = parse_file file in
-  let* script = Rewrite.simplify script in
+  let* script = Rewrite.script script in
   let+ _ = Interpret.main script in
   ()
 
