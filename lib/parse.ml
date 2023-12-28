@@ -14,8 +14,10 @@ struct
     Format.fprintf fmt "%s:%d:%d" pos.pos_fname pos.pos_lnum
       (pos.pos_cnum - pos.pos_bol + 1)
 
-  let from_lexbuf lexbuf =
-    Format.printf "Parsing ...@.";
+  let from_lexbuf ?file lexbuf =
+    Format.printf "Parsing%a ...@."
+      (Format.pp_print_option (fun fmt s -> Format.fprintf fmt " %s" s))
+      file;
     try Ok (M.rule M.token lexbuf) with
     | M.SyntaxError msg ->
       Format.kasprintf Result.error "%a: %s@\n" pp_pos lexbuf msg
@@ -25,9 +27,10 @@ struct
   let from_file filename =
     In_channel.with_open_text filename (fun chan ->
         let lexbuf = Lexing.from_channel chan in
-        from_lexbuf lexbuf )
+        from_lexbuf ~file:filename lexbuf )
 
-  let from_string contents = from_lexbuf (Lexing.from_string contents)
+  let from_string ?file contents =
+    from_lexbuf ?file (Lexing.from_string contents)
 end
 
 module Script = Make (struct
