@@ -1,7 +1,7 @@
 open Encoding
 open Cmdliner
 open Syntax.Result
-module Z3_batch = Solver.Batch (Z3_mappings)
+module Z3_batch = Solver.Incremental (Z3_mappings)
 module Interpret = Interpret_smt.Make (Z3_batch)
 module Smtlib_parser = Parse.Smtlib
 
