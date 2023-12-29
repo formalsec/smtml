@@ -561,9 +561,9 @@ module Fresh = struct
     (*     quantified_assertion *)
     (*   else body *)
 
-    let rec encode_expr (expr : Expr.t) : expr =
+    let rec encode_expr ({ e = expr; ty } : Expr.t) : expr =
       let open Expr in
-      match expr.e with
+      match expr with
       | Val v -> encode_val v
       | Ptr (base, offset) ->
         let base' = encode_val (Num (I32 base)) in
@@ -571,23 +571,23 @@ module Fresh = struct
         Bv.encode_binop Add base' offset'
       | Unop (op, e) ->
         let e' = encode_expr e in
-        encode_unop expr.ty op e'
+        encode_unop ty op e'
       | Binop (op, e1, e2) ->
         let e1' = encode_expr e1 in
         let e2' = encode_expr e2 in
-        encode_binop expr.ty op e1' e2'
+        encode_binop ty op e1' e2'
       | Triop (op, e1, e2, e3) ->
         let e1' = encode_expr e1
         and e2' = encode_expr e2
         and e3' = encode_expr e3 in
-        encode_triop expr.ty op e1' e2' e3'
+        encode_triop ty op e1' e2' e3'
       | Relop (op, e1, e2) ->
         let e1' = encode_expr e1
         and e2' = encode_expr e2 in
-        encode_relop expr.ty op e1' e2'
+        encode_relop ty op e1' e2'
       | Cvtop (op, e) ->
         let e' = encode_expr e in
-        encode_cvtop expr.ty op e'
+        encode_cvtop ty op e'
       | Symbol s ->
         let x = Symbol.to_string s
         and t = Symbol.type_of s in
