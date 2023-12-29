@@ -656,11 +656,22 @@ module Fresh = struct
       | UFNIA -> "UFNIA"
 
     let mk_solver ?logic () : solver =
-      match logic with
-      | Some logic ->
-        let logic = Z3.Symbol.mk_string ctx @@ logic_to_string logic in
-        Z3.Solver.mk_solver ctx (Some logic)
-      | None -> Z3.Solver.mk_simple_solver ctx
+      let solver =
+        match logic with
+        | Some logic ->
+          let logic = Z3.Symbol.mk_string ctx @@ logic_to_string logic in
+          Z3.Solver.mk_solver ctx (Some logic)
+        | None -> Z3.Solver.mk_simple_solver ctx
+      in
+      let simplify = Z3.Simplifier.mk_simplifier ctx "simplify" in
+      let solve_eqs = Z3.Simplifier.mk_simplifier ctx "solve-eqs" in
+      let then_ =
+        List.map
+          (Z3.Simplifier.mk_simplifier ctx)
+          [ "elim-unconstrained"; "propagate-values"; "simplify" ]
+      in
+      let simplifier = Z3.Simplifier.and_then ctx simplify solve_eqs then_ in
+      Z3.Solver.add_simplifier ctx solver simplifier
 
     let interrupt () = Z3.Tactic.interrupt ctx
     let translate (s : solver) : solver = Z3.Solver.translate s ctx
