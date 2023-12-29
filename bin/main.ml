@@ -18,14 +18,18 @@ let fmt file =
     Format.eprintf "error: %s@." msg;
     1
 
-let parse_then_simplify_then_run file =
+let display_stats print_stats (state : Interpret.exec_state) =
+  if print_stats then
+    Format.printf "%a@." Z3_batch.pp_statistics state.solver
+
+let parse_then_simplify_then_run stats file =
   let* script = parse_file file in
   let* script = Rewrite.script script in
-  let+ _ = Interpret.main script in
-  ()
+  let+ state = Interpret.main script in
+  display_stats stats state
 
-let run files =
-  let result = list_iter ~f:parse_then_simplify_then_run files in
+let run files stats =
+  let result = list_iter ~f:(parse_then_simplify_then_run stats) files in
   match result with
   | Ok () -> 0
   | Error msg ->
@@ -49,9 +53,13 @@ let run_cmd =
     let doc = "source files" in
     Arg.(value & pos_all non_dir_file [] & info [] ~doc)
   in
+  let stats =
+    let doc = "print solver statistics" in
+    Arg.(value & flag & info [ "stats" ] ~doc)
+  in
   let doc = "interpret smt-lib files" in
   let info = Cmd.info "run" ~doc ~sdocs in
-  Cmd.v info Term.(const run $ files)
+  Cmd.v info Term.(const run $ files $ stats)
 
 let cli =
   let doc = "a toy smt-lib interpreter" in
