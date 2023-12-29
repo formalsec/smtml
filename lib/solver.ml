@@ -42,10 +42,13 @@ module Batch (Mappings : Mappings_intf.S) = struct
   let clone ({ solver; top; stack } : t) : t =
     { solver; top; stack = Stack.copy stack }
 
-  let push ({ top; stack; _ } : t) : unit = Stack.push top stack
+  let push ({ top; stack; solver } : t) : unit =
+    Mappings.push solver;
+    Stack.push top stack
 
   let pop (s : t) (lvl : int) : unit =
     assert (lvl <= Stack.length s.stack);
+    Mappings.pop s.solver lvl;
     for _ = 1 to lvl do
       s.top <- Stack.pop s.stack
     done
@@ -59,9 +62,10 @@ module Batch (Mappings : Mappings_intf.S) = struct
   let get_assertions (s : t) : Expr.t list = s.top [@@inline]
 
   let check (s : t) (es : Expr.t list) : bool =
-    let es' = es @ s.top in
+    Mappings.add_solver s.solver s.top;
+    s.top <- [];
     solver_count := !solver_count + 1;
-    let sat = time_call (fun () -> Mappings.check s.solver es') solver_time in
+    let sat = time_call (fun () -> Mappings.check s.solver es) solver_time in
     match Mappings.satisfiability sat with
     | Mappings_intf.Satisfiable -> true
     | Mappings_intf.Unsatisfiable -> false
