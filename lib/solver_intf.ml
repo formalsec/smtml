@@ -1,3 +1,29 @@
+type logic =
+  | AUFLIA
+  | AUFLIRA
+  | AUFNIRA
+  | LIA
+  | LRA
+  | QF_ABV
+  | QF_AUFBV
+  | QF_AUFLIA
+  | QF_AX
+  | QF_BV
+  | QF_IDL
+  | QF_LIA
+  | QF_LRA
+  | QF_NIA
+  | QF_NRA
+  | QF_RDL
+  | QF_UF
+  | QF_UFBV
+  | QF_UFIDL
+  | QF_UFLIA
+  | QF_UFLRA
+  | QF_UFNRA
+  | UFLRA
+  | UFNIA
+
 module type S = sig
   type t
   type solver
@@ -12,7 +38,7 @@ module type S = sig
   val pp_statistics : Format.formatter -> t -> unit
 
   (** Create a new solver. *)
-  val create : ?params:Params.t -> unit -> t
+  val create : ?params:Params.t -> ?logic:logic -> unit -> t
 
   (** Interrupt solver. *)
   val interrupt : unit -> unit

@@ -629,7 +629,39 @@ module Fresh = struct
       Z3.SMT.benchmark_to_smtstring ctx "" "" (Bool.to_string status) ""
         (List.tl es') (List.hd es')
 
-    let mk_solver () : solver = Z3.Solver.mk_simple_solver ctx
+    let logic_to_string : Solver_intf.logic -> string = function
+      | AUFLIA -> "AUFLIA"
+      | AUFLIRA -> "AUFLIRA"
+      | AUFNIRA -> "AUFNIRA"
+      | LIA -> "LIA"
+      | LRA -> "LRA"
+      | QF_ABV -> "QF_ABV"
+      | QF_AUFBV -> "QF_AUFBV"
+      | QF_AUFLIA -> "QF_AUFLIA"
+      | QF_AX -> "QF_AX"
+      | QF_BV -> "QF_BV"
+      | QF_IDL -> "QF_IDL"
+      | QF_LIA -> "QF_LIA"
+      | QF_LRA -> "QF_LRA"
+      | QF_NIA -> "QF_NIA"
+      | QF_NRA -> "QF_NRA"
+      | QF_RDL -> "QF_RDL"
+      | QF_UF -> "QF_UF"
+      | QF_UFBV -> "QF_UFBV"
+      | QF_UFIDL -> "QF_UFIDL"
+      | QF_UFLIA -> "QF_UFLIA"
+      | QF_UFLRA -> "QF_UFLRA"
+      | QF_UFNRA -> "QF_UFNRA"
+      | UFLRA -> "UFLRA"
+      | UFNIA -> "UFNIA"
+
+    let mk_solver ?logic () : solver =
+      match logic with
+      | Some logic ->
+        let logic = Z3.Symbol.mk_string ctx @@ logic_to_string logic in
+        Z3.Solver.mk_solver ctx (Some logic)
+      | None -> Z3.Solver.mk_simple_solver ctx
+
     let interrupt () = Z3.Tactic.interrupt ctx
     let translate (s : solver) : solver = Z3.Solver.translate s ctx
     let push (s : solver) : unit = Z3.Solver.push s

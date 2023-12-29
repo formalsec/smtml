@@ -16,7 +16,7 @@ module type S = sig
 
   val update_param_value : 'a Params.param -> 'a -> unit
 
-  val mk_solver : unit -> solver
+  val mk_solver : ?logic:Solver_intf.logic -> unit -> solver
 
   val interrupt : unit -> unit
 

@@ -35,9 +35,9 @@ module Batch (Mappings : Mappings_intf.S) = struct
 
   let pp_statistics fmt s = pp_statistics fmt s.solver
 
-  let create ?params () =
+  let create ?params ?logic () =
     Option.iter update_param_values params;
-    { solver = Mappings.mk_solver (); top = []; stack = Stack.create () }
+    { solver = Mappings.mk_solver ?logic (); top = []; stack = Stack.create () }
 
   let clone ({ solver; top; stack } : t) : t =
     { solver; top; stack = Stack.copy stack }
@@ -83,9 +83,9 @@ module Incremental (Mappings : Mappings_intf.S) = struct
   type t = Mappings.solver
   type solver = t
 
-  let create ?params () : t =
+  let create ?params ?logic () : t =
     Option.iter update_param_values params;
-    Mappings.mk_solver ()
+    Mappings.mk_solver ?logic ()
 
   let clone (solver : t) : t = Mappings.translate solver
   let push (solver : t) : unit = Mappings.push solver
