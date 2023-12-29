@@ -22,7 +22,7 @@ module Base (M : Mappings_intf.S) = struct
   let pp_statistics fmt solver = M.pp_statistics fmt solver
 end
 
-module Batch (Mappings : Mappings_intf.S) = struct
+module Make_batch (Mappings : Mappings_intf.S) = struct
   include Base (Mappings)
 
   type solver = Mappings.solver
@@ -81,7 +81,7 @@ module Batch (Mappings : Mappings_intf.S) = struct
     Mappings.values_of_model ?symbols model
 end
 
-module Incremental (Mappings : Mappings_intf.S) = struct
+module Make_incremental (Mappings : Mappings_intf.S) = struct
   include Base (Mappings)
 
   type t = Mappings.solver
@@ -116,5 +116,7 @@ module Incremental (Mappings : Mappings_intf.S) = struct
     Mappings.values_of_model ?symbols model
 end
 
-module Batch' (M : Mappings_intf.S) : Solver_intf.S = Batch (M)
-module Incremental' (M : Mappings_intf.S) : Solver_intf.S = Incremental (M)
+module Batch (M : Mappings_intf.S) : Solver_intf.S = Make_batch (M)
+module Z3_batch : Solver_intf.S = Batch (Z3_mappings)
+module Incremental (M : Mappings_intf.S) : Solver_intf.S = Make_incremental (M)
+module Z3_incremental : Solver_intf.S = Incremental (Z3_mappings)

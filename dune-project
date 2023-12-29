@@ -12,6 +12,8 @@
 
 (maintainers "Filipe Marques <filipe.s.marques@tecnico.ulisboa.pt>")
 
+(documentation "https://formalsec.github.io/encoding/encoding/index.html")
+
 (license "GPL-3.0-only")
 
 (package

@@ -37,7 +37,15 @@ module type S = sig
   (** Print solver statistics. *)
   val pp_statistics : Format.formatter -> t -> unit
 
-  (** Create a new solver. *)
+  (** [create ?params ?logic ()] creates a new solver.
+
+      [?params] is of type {!type:Params.t} and is used to modify/set parameters
+      inside the solver.
+
+      [?logic] is of type {!type:Solver_intf.logic} and is used to set the
+      theory of the assertions used. When knowing what the underlying theory is
+      going to be, setting this parameter can help the SMT solver be more
+      performant. The default logic is {e unknown_theory}. *)
   val create : ?params:Params.t -> ?logic:logic -> unit -> t
 
   (** Interrupt solver. *)
@@ -61,20 +69,16 @@ module type S = sig
   (** The set of assertions in the solver. *)
   val get_assertions : t -> Expr.t list
 
-  (** Checks the satisfiability of the assertions.
+  (** [check solver es] checks the satisfiability of the assertions in the
+      solver using the assumptions in [es].
 
-      Raises [Unknown] if SMT solver returns unknown. *)
+      Raises [Unknown] if the SMT solver returns unknown. *)
   val check : t -> Expr.t list -> bool
 
   (** [get_value solver e] get an expression denoting the model value of a given
       expression.
 
-      Requires that the last {!val:check} query returned [true].
-
-      @param t The solver.
-      @param e Expr to query a model for.
-
-      @return An expression denoting the model value of [e]. *)
+      Requires that the last {!val:check} query returned [true]. *)
   val get_value : t -> Expr.t -> Expr.t
 
   (** The model of the last [check].
