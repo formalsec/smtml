@@ -25,7 +25,7 @@
    (ocaml (>= "4.14.0"))
    (z3 (and (>= "4.12.2") (< "4.13")))
    menhir
-   cmdliner
+   (cmdliner (>= "1.2.0"))
    (zarith (>= "1.5"))
    (ppx_inline_test :with-test)
    (odoc :with-doc)))
