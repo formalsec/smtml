@@ -12,29 +12,6 @@ module Fresh = struct
     type handle = Z3.Optimize.handle
 
     let ctx = Z3.mk_context []
-
-    let pp_entry fmt entry =
-      let key = Z3.Statistics.Entry.get_key entry in
-      let value = Z3.Statistics.Entry.to_string_value entry in
-      Format.fprintf fmt "%s: %s" key value
-
-    let pp_statistics fmt solver =
-      let module Entry = Z3.Statistics.Entry in
-      let stats = Z3.Solver.get_statistics solver in
-      let entries = Z3.Statistics.get_entries stats in
-      Format.pp_print_list ~pp_sep:Format.pp_print_newline pp_entry fmt entries
-
-    let update_param_value (type a) (param : a Params.param) (value : a) =
-      let module P = Z3.Params in
-      match param with
-      | Params.Timeout ->
-        P.update_param_value ctx "timeout" (string_of_int value)
-      | Params.Model -> P.update_param_value ctx "model" (string_of_bool value)
-      | Params.Unsat_core ->
-        P.update_param_value ctx "unsat_core" (string_of_bool value)
-      | Params.Ematching ->
-        Z3.set_global_param "smt.ematching" (string_of_bool value)
-
     let int_sort = Z3.Arithmetic.Integer.mk_sort ctx
     let real_sort = Z3.Arithmetic.Real.mk_sort ctx
     let bool_sort = Z3.Boolean.mk_sort ctx
@@ -623,81 +600,117 @@ module Fresh = struct
     (*   let t' = match t with Forall -> true | Exists -> false in *)
     (*   encode_quantifier t' vars body' patterns' *)
 
-    let expr_to_smtstring (es : Expr.t list) (status : bool) =
-      let es' = List.map encode_expr es in
-      Z3.Params.set_print_mode ctx Z3enums.PRINT_SMTLIB2_COMPLIANT;
-      Z3.SMT.benchmark_to_smtstring ctx "" "" (Bool.to_string status) ""
-        (List.tl es') (List.hd es')
-
-    let logic_to_string : Solver_intf.logic -> string = function
-      | AUFLIA -> "AUFLIA"
-      | AUFLIRA -> "AUFLIRA"
-      | AUFNIRA -> "AUFNIRA"
-      | LIA -> "LIA"
-      | LRA -> "LRA"
-      | QF_ABV -> "QF_ABV"
-      | QF_AUFBV -> "QF_AUFBV"
-      | QF_AUFLIA -> "QF_AUFLIA"
-      | QF_AX -> "QF_AX"
-      | QF_BV -> "QF_BV"
-      | QF_IDL -> "QF_IDL"
-      | QF_LIA -> "QF_LIA"
-      | QF_LRA -> "QF_LRA"
-      | QF_NIA -> "QF_NIA"
-      | QF_NRA -> "QF_NRA"
-      | QF_RDL -> "QF_RDL"
-      | QF_UF -> "QF_UF"
-      | QF_UFBV -> "QF_UFBV"
-      | QF_UFIDL -> "QF_UFIDL"
-      | QF_UFLIA -> "QF_UFLIA"
-      | QF_UFLRA -> "QF_UFLRA"
-      | QF_UFNRA -> "QF_UFNRA"
-      | UFLRA -> "UFLRA"
-      | UFNIA -> "UFNIA"
-
-    let mk_solver ?logic () : solver =
-      let solver =
-        match logic with
-        | Some logic ->
-          let logic = Z3.Symbol.mk_string ctx @@ logic_to_string logic in
-          Z3.Solver.mk_solver ctx (Some logic)
-        | None -> Z3.Solver.mk_simple_solver ctx
-      in
-      let simplify = Z3.Simplifier.mk_simplifier ctx "simplify" in
-      let solve_eqs = Z3.Simplifier.mk_simplifier ctx "solve-eqs" in
-      let then_ =
-        List.map
-          (Z3.Simplifier.mk_simplifier ctx)
-          [ "elim-unconstrained"; "propagate-values"; "simplify" ]
-      in
-      let simplifier = Z3.Simplifier.and_then ctx simplify solve_eqs then_ in
-      Z3.Solver.add_simplifier ctx solver simplifier
+    let update_param_value (type a) (param : a Params.param) (value : a) =
+      let module P = Z3.Params in
+      match param with
+      | Params.Timeout ->
+        P.update_param_value ctx "timeout" (string_of_int value)
+      | Params.Model -> P.update_param_value ctx "model" (string_of_bool value)
+      | Params.Unsat_core ->
+        P.update_param_value ctx "unsat_core" (string_of_bool value)
+      | Params.Ematching ->
+        Z3.set_global_param "smt.ematching" (string_of_bool value)
 
     let interrupt () = Z3.Tactic.interrupt ctx
-    let translate (s : solver) : solver = Z3.Solver.translate s ctx
-    let push (s : solver) : unit = Z3.Solver.push s
-    let pop (s : solver) (lvl : int) : unit = Z3.Solver.pop s lvl
-    let reset (s : solver) : unit = Z3.Solver.reset s [@@inline]
 
-    let add_solver (s : solver) (es : Expr.t list) : unit =
-      Z3.Solver.add s (List.map encode_expr es)
+    let satisfiability =
+      let open Mappings_intf in
+      function
+      | Z3.Solver.SATISFIABLE -> Satisfiable
+      | Z3.Solver.UNSATISFIABLE -> Unsatisfiable
+      | Z3.Solver.UNKNOWN -> Unknown
 
-    let check (s : solver) (es : Expr.t list) : status =
-      Z3.Solver.check s (List.map encode_expr es)
+    let pp_smt ?status fmt (es : Expr.t list) =
+      let st = match status with Some b -> string_of_bool b | None -> "" in
+      let es' = List.map encode_expr es in
+      Z3.Params.set_print_mode ctx Z3enums.PRINT_SMTLIB2_COMPLIANT;
+      Format.fprintf fmt "%s"
+        (Z3.SMT.benchmark_to_smtstring ctx "" "" st "" (List.tl es')
+           (List.hd es') )
 
-    let solver_model (s : solver) : model option = Z3.Solver.get_model s
-    let mk_optimize () : optimize = Z3.Optimize.mk_opt ctx
+    let pp_entry fmt entry =
+      let key = Z3.Statistics.Entry.get_key entry in
+      let value = Z3.Statistics.Entry.to_string_value entry in
+      Format.fprintf fmt "%s: %s" key value
 
-    let add_optimize (o : optimize) (es : Expr.t list) : unit =
-      Z3.Optimize.add o (List.map encode_expr es)
+    module Solver = struct
+      let logic_to_string : Solver_intf.logic -> string = function
+        | AUFLIA -> "AUFLIA"
+        | AUFLIRA -> "AUFLIRA"
+        | AUFNIRA -> "AUFNIRA"
+        | LIA -> "LIA"
+        | LRA -> "LRA"
+        | QF_ABV -> "QF_ABV"
+        | QF_AUFBV -> "QF_AUFBV"
+        | QF_AUFLIA -> "QF_AUFLIA"
+        | QF_AX -> "QF_AX"
+        | QF_BV -> "QF_BV"
+        | QF_IDL -> "QF_IDL"
+        | QF_LIA -> "QF_LIA"
+        | QF_LRA -> "QF_LRA"
+        | QF_NIA -> "QF_NIA"
+        | QF_NRA -> "QF_NRA"
+        | QF_RDL -> "QF_RDL"
+        | QF_UF -> "QF_UF"
+        | QF_UFBV -> "QF_UFBV"
+        | QF_UFIDL -> "QF_UFIDL"
+        | QF_UFLIA -> "QF_UFLIA"
+        | QF_UFLRA -> "QF_UFLRA"
+        | QF_UFNRA -> "QF_UFNRA"
+        | UFLRA -> "UFLRA"
+        | UFNIA -> "UFNIA"
 
-    let maximize (o : optimize) (e : Expr.t) : Z3.Optimize.handle =
-      Z3.Optimize.maximize o (encode_expr e)
+      let make ?logic () : solver =
+        let solver =
+          match logic with
+          | Some logic ->
+            let logic = Z3.Symbol.mk_string ctx @@ logic_to_string logic in
+            Z3.Solver.mk_solver ctx (Some logic)
+          | None -> Z3.Solver.mk_simple_solver ctx
+        in
+        let simplify = Z3.Simplifier.mk_simplifier ctx "simplify" in
+        let solve_eqs = Z3.Simplifier.mk_simplifier ctx "solve-eqs" in
+        let then_ =
+          List.map
+            (Z3.Simplifier.mk_simplifier ctx)
+            [ "elim-unconstrained"; "propagate-values"; "simplify" ]
+        in
+        let simplifier = Z3.Simplifier.and_then ctx simplify solve_eqs then_ in
+        Z3.Solver.add_simplifier ctx solver simplifier
 
-    let minimize (o : optimize) (e : Expr.t) : Z3.Optimize.handle =
-      Z3.Optimize.minimize o (encode_expr e)
+      let clone s = Z3.Solver.translate s ctx
+      let push s = Z3.Solver.push s
+      let pop s lvl = Z3.Solver.pop s lvl
+      let reset s = Z3.Solver.reset s [@@inline]
+      let add s es = Z3.Solver.add s (List.map encode_expr es)
+      let check s es = Z3.Solver.check s (List.map encode_expr es)
+      let model s = Z3.Solver.get_model s
 
-    let optimize_model (o : optimize) : model option = Z3.Optimize.get_model o
+      let pp_statistics fmt solver =
+        let module Entry = Z3.Statistics.Entry in
+        let stats = Z3.Solver.get_statistics solver in
+        let entries = Z3.Statistics.get_entries stats in
+        Format.pp_print_list ~pp_sep:Format.pp_print_newline pp_entry fmt
+          entries
+    end
+
+    module Optimizer = struct
+      let make () = Z3.Optimize.mk_opt ctx
+      let push o = Z3.Optimize.push o
+      let pop o = Z3.Optimize.pop o
+      let add o es = Z3.Optimize.add o (List.map encode_expr es)
+      let check o = Z3.Optimize.check o
+      let model o = Z3.Optimize.get_model o
+      let maximize o e = Z3.Optimize.maximize o (encode_expr e)
+      let minimize o e = Z3.Optimize.minimize o (encode_expr e)
+
+      let pp_statistics fmt o =
+        let module Entry = Z3.Statistics.Entry in
+        let stats = Z3.Optimize.get_statistics o in
+        let entries = Z3.Statistics.get_entries stats in
+        Format.pp_print_list ~pp_sep:Format.pp_print_newline pp_entry fmt
+          entries
+    end
 
     let set (s : string) (i : int) (n : char) =
       let bs = Bytes.of_string s in
@@ -803,13 +816,6 @@ module Fresh = struct
           Hashtbl.replace m sym v )
         symbols';
       m
-
-    let satisfiability =
-      let open Mappings_intf in
-      function
-      | Z3.Solver.SATISFIABLE -> Satisfiable
-      | Z3.Solver.UNSATISFIABLE -> Unsatisfiable
-      | Z3.Solver.UNKNOWN -> Unknown
   end
 end
 

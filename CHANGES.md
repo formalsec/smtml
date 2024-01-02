@@ -1,6 +1,7 @@
 v0.0.2
 ======
 
+- Refactor optimizer interface
 - Fixes batch solver in `e061344`
 - Adds default simplifier in z3 leading to great performance gains
 - Adds logic configuration option to `mk_solver`

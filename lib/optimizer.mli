@@ -1,21 +1,12 @@
-open Z3_mappings
+module Z3 : sig
+  type t
 
-type t
-
-exception Unknown
-
-val solver_time : float ref
-val create : unit -> t
-val push : t -> unit
-val pop : t -> unit
-val add : t -> Expr.t list -> unit
-
-val check :
-     t
-  -> Expr.t
-  -> Expr.t list
-  -> (t -> Expr.t -> Z3.Optimize.handle)
-  -> model option
-
-val maximize : t -> Expr.t -> Expr.t list -> Value.t option
-val minimize : t -> Expr.t -> Expr.t list -> Value.t option
+  val create : unit -> t
+  val push : t -> unit
+  val pop : t -> unit
+  val add : t -> Expr.t list -> unit
+  val check : t -> Mappings_intf.satisfiability
+  val model : t -> Model.t option
+  val maximize : t -> Expr.t -> Value.t option
+  val minimize : t -> Expr.t -> Value.t option
+end

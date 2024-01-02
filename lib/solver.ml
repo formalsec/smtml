@@ -19,11 +19,12 @@ module Base (M : Mappings_intf.S) = struct
     M.update_param_value Ematching (Params.get params Ematching)
 
   let interrupt () = M.interrupt ()
-  let pp_statistics fmt solver = M.pp_statistics fmt solver
+  let pp_statistics fmt solver = M.Solver.pp_statistics fmt solver
 end
 
 module Make_batch (Mappings : Mappings_intf.S) = struct
   include Base (Mappings)
+  module S = Mappings.Solver
 
   type solver = Mappings.solver
 
@@ -37,24 +38,24 @@ module Make_batch (Mappings : Mappings_intf.S) = struct
 
   let create ?params ?logic () =
     Option.iter update_param_values params;
-    { solver = Mappings.mk_solver ?logic (); top = []; stack = Stack.create () }
+    { solver = S.make ?logic (); top = []; stack = Stack.create () }
 
   let clone ({ solver; top; stack } : t) : t =
     { solver; top; stack = Stack.copy stack }
 
   let push ({ top; stack; solver } : t) : unit =
-    Mappings.push solver;
+    S.push solver;
     Stack.push top stack
 
   let pop (s : t) (lvl : int) : unit =
     assert (lvl <= Stack.length s.stack);
-    Mappings.pop s.solver lvl;
+    S.pop s.solver lvl;
     for _ = 1 to lvl do
       s.top <- Stack.pop s.stack
     done
 
   let reset (s : t) =
-    Mappings.reset s.solver;
+    S.reset s.solver;
     Stack.clear s.stack;
     s.top <- []
 
@@ -62,57 +63,58 @@ module Make_batch (Mappings : Mappings_intf.S) = struct
   let get_assertions (s : t) : Expr.t list = s.top [@@inline]
 
   let check (s : t) (es : Expr.t list) : bool =
-    Mappings.add_solver s.solver s.top;
+    S.add s.solver s.top;
     s.top <- [];
     solver_count := !solver_count + 1;
-    let sat = time_call (fun () -> Mappings.check s.solver es) solver_time in
+    let sat = time_call (fun () -> S.check s.solver es) solver_time in
     match Mappings.satisfiability sat with
     | Mappings_intf.Satisfiable -> true
     | Mappings_intf.Unsatisfiable -> false
     | Mappings_intf.Unknown -> raise Unknown
 
   let get_value (solver : t) (e : Expr.t) : Expr.t =
-    match Mappings.solver_model solver.solver with
+    match S.model solver.solver with
     | Some m -> Expr.(Val (Mappings.value m e) @: e.ty)
     | None -> assert false
 
   let model ?(symbols : Symbol.t list option) (s : t) : Model.t option =
-    let+ model = Mappings.solver_model s.solver in
+    let+ model = S.model s.solver in
     Mappings.values_of_model ?symbols model
 end
 
 module Make_incremental (Mappings : Mappings_intf.S) = struct
   include Base (Mappings)
+  module S = Mappings.Solver
 
   type t = Mappings.solver
   type solver = t
 
   let create ?params ?logic () : t =
     Option.iter update_param_values params;
-    Mappings.mk_solver ?logic ()
+    S.make ?logic ()
 
-  let clone (solver : t) : t = Mappings.translate solver
-  let push (solver : t) : unit = Mappings.push solver
-  let pop (solver : t) (lvl : int) : unit = Mappings.pop solver lvl
-  let reset (solver : t) : unit = Mappings.reset solver
-  let add (solver : t) (es : Expr.t list) : unit = Mappings.add_solver solver es
+  let clone (solver : t) : t = S.clone solver
+  let push (solver : t) : unit = S.push solver
+  let pop (solver : t) (lvl : int) : unit = S.pop solver lvl
+  let reset (solver : t) : unit = S.reset solver
+  let add (solver : t) (es : Expr.t list) : unit = S.add solver es
   let get_assertions (_solver : t) : Expr.t list = assert false
 
   let check (solver : t) (es : Expr.t list) : bool =
     solver_count := !solver_count + 1;
-    let sat = time_call (fun () -> Mappings.check solver es) solver_time in
+    let sat = time_call (fun () -> S.check solver es) solver_time in
     match Mappings.satisfiability sat with
     | Mappings_intf.Satisfiable -> true
     | Mappings_intf.Unknown -> raise Unknown
     | Mappings_intf.Unsatisfiable -> false
 
   let get_value (solver : t) (e : Expr.t) : Expr.t =
-    match Mappings.solver_model solver with
+    match S.model solver with
     | Some m -> Expr.(Val (Mappings.value m e) @: e.ty)
     | None -> assert false
 
   let model ?(symbols : Symbol.t list option) (solver : t) : Model.t Option.t =
-    let+ model = Mappings.solver_model solver in
+    let+ model = S.model solver in
     Mappings.values_of_model ?symbols model
 end
 

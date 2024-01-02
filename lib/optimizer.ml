@@ -1,7 +1,3 @@
-exception Unknown
-
-type t = Z3_mappings.optimize
-
 let solver_time = ref 0.0
 
 let time_call ~f ~accum =
@@ -10,24 +6,40 @@ let time_call ~f ~accum =
   accum := !accum +. (Stdlib.Sys.time () -. start);
   ret
 
-let create () : t = Z3_mappings.mk_optimize ()
-let push (opt : t) : unit = Z3.Optimize.push opt
-let pop (opt : t) : unit = Z3.Optimize.pop opt
-let add (opt : t) (es : Expr.t list) : unit = Z3_mappings.add_optimize opt es
+let ( let+ ) o f = Option.map f o
 
-let check (opt : t) (e : Expr.t) (pc : Expr.t list) target =
-  push opt;
-  add opt pc;
-  ignore (target opt e);
-  ignore (time_call ~f:(fun () -> Z3.Optimize.check opt) ~accum:solver_time);
-  let model = Z3_mappings.optimize_model opt in
-  pop opt;
-  model
+module Make (M : Mappings_intf.S) = struct
+  module O = M.Optimizer
 
-let maximize (opt : t) (e : Expr.t) (pc : Expr.t list) : Value.t option =
-  let model = check opt e pc Z3_mappings.maximize in
-  Option.map (fun m -> Z3_mappings.value m e) model
+  type t = M.optimize
 
-let minimize (opt : t) (e : Expr.t) (pc : Expr.t list) : Value.t option =
-  let model = check opt e pc Z3_mappings.minimize in
-  Option.map (fun m -> Z3_mappings.value m e) model
+  let create () : t = O.make ()
+  let push (opt : t) : unit = O.push opt
+  let pop (opt : t) : unit = O.pop opt
+  let add (opt : t) (es : Expr.t list) : unit = O.add opt es
+
+  let check (opt : t) =
+    M.satisfiability (time_call ~f:(fun () -> O.check opt) ~accum:solver_time)
+
+  let model opt =
+    let+ model = O.model opt in
+    M.values_of_model model
+
+  let maximize (opt : t) (e : Expr.t) : Value.t option =
+    ignore @@ O.maximize opt e;
+    match check opt with
+    | Mappings_intf.Satisfiable ->
+      let+ model = O.model opt in
+      M.value model e
+    | _ -> None
+
+  let minimize (opt : t) (e : Expr.t) : Value.t option =
+    ignore @@ O.minimize opt e;
+    match check opt with
+    | Mappings_intf.Satisfiable ->
+      let+ model = O.model opt in
+      M.value model e
+    | _ -> None
+end
+
+module Z3 = Make (Z3_mappings)
