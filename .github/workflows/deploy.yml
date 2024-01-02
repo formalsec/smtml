@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,8 +24,6 @@ jobs:
         uses: ocaml/setup-ocaml@v2
         with:
           ocaml-compiler: "4.14"
-          dune-cache: true
-          allow-prerelease-opam: true
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v3
