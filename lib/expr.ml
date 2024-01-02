@@ -88,7 +88,7 @@ let negate_relop ({ e; ty } : t) : (t, string) Result.t =
 module Pp = struct
   let fprintf = Format.fprintf
 
-  let rec pp fmt ({ e; ty} : t) =
+  let rec pp fmt ({ e; ty } : t) =
     match e with
     | Val v -> Value.pp fmt v
     | Ptr (base, offset) -> fprintf fmt "(Ptr (i32 %ld) %a)" base pp offset

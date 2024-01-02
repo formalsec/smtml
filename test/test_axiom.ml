@@ -2,7 +2,6 @@ open Encoding
 module Batch = Solver.Batch (Z3_mappings)
 
 let solver = Batch.create ()
-
 let () = Batch.add solver Axioms.axioms
 
 let%test _ =
