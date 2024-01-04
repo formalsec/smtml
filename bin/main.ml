@@ -12,7 +12,7 @@ let get_contents = function
       ~finally:(fun () -> close_in chan)
       (fun () -> In_channel.input_all chan)
 
-let parse_file file = get_contents file |> Run.parse_string
+let parse_file file = get_contents file |> Parse.from_string
 
 let main files =
   match files with
@@ -23,7 +23,7 @@ let main files =
     ignore
     @@ List.fold_left
          (fun state file ->
-           let ast = Run.parse_file file in
+           let ast = Parse.from_file ~filename:file in
            Some (Interpret.start ?state ast) )
          None files
 

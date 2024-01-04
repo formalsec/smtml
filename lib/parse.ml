@@ -16,7 +16,7 @@ let parse_with_error lexbuf =
     fprintf err_formatter "%a: syntax error\n" pp_pos lexbuf;
     exit 1
 
-let parse_file filename =
+let from_file ~filename =
   let chan = open_in filename in
   Fun.protect
     ~finally:(fun () -> close_in chan)
@@ -25,4 +25,4 @@ let parse_file filename =
       lexbuf.lex_curr_p <- { lexbuf.lex_curr_p with pos_fname = filename };
       parse_with_error lexbuf )
 
-let parse_string contents = parse_with_error (Lexing.from_string contents)
+let from_string contents = parse_with_error (Lexing.from_string contents)

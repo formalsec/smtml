@@ -22,11 +22,12 @@
   optimizer
   parser
   params
-  run
+  parse
   solver
   solver_intf
   symbol
   ty
   value
   z3_mappings)
+ (private_modules lexer parser)
  (libraries z3))
