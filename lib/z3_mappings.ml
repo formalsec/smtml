@@ -4,6 +4,8 @@ module Fresh = struct
   module Make () = struct
     exception Error = Error
 
+    let err = Log.err
+
     type expr = Z3.Expr.expr
     type model = Z3.Model.model
     type solver = Z3.Solver.solver
@@ -296,6 +298,7 @@ module Fresh = struct
 
       let v (type a) (cast : a Ty.cast) (i : a) =
         match cast with
+        | C8 -> BitVector.mk_numeral ctx (string_of_int i) 8
         | C32 -> BitVector.mk_numeral ctx (Int32.to_string i) 32
         | C64 -> BitVector.mk_numeral ctx (Int64.to_string i) 64
 
@@ -388,6 +391,7 @@ module Fresh = struct
 
       let v (type a) (sz : a Ty.cast) (f : a) =
         match sz with
+        | C8 -> err "Unable to create FP numeral using 8 bits"
         | C32 ->
           FloatingPoint.mk_numeral_f ctx (Int32.float_of_bits f) fp32_sort
         | C64 ->
@@ -487,7 +491,7 @@ module Fresh = struct
       | Int v -> I.encode_val v
       | Real v -> Real.encode_val v
       | Str v -> Str.encode_val v
-      | Num (I8 _) -> assert false
+      | Num (I8 x) -> Bv.v C8 x
       | Num (I32 x) -> Bv.v C32 x
       | Num (I64 x) -> Bv.v C64 x
       | Num (F32 x) -> Fp.v C32 x
@@ -770,6 +774,8 @@ module Fresh = struct
           (* It can never be something else *)
           assert false )
       | Ty_str, Z3enums.SEQ_SORT -> Str (Z3.Seq.get_string ctx e)
+      | Ty_bitv S8, Z3enums.BV_SORT ->
+        Num (I8 (Int64.to_int (int64_of_bv e)))
       | Ty_bitv S32, Z3enums.BV_SORT ->
         Num (I32 (Int64.to_int32 (int64_of_bv e)))
       | Ty_bitv S64, Z3enums.BV_SORT -> Num (I64 (int64_of_bv e))
@@ -785,18 +791,19 @@ module Fresh = struct
       | Z3enums.REAL_SORT -> Ty.Ty_real
       | Z3enums.BOOL_SORT -> Ty.Ty_bool
       | Z3enums.SEQ_SORT -> Ty.Ty_str
-      | Z3enums.BV_SORT ->
-        let size = Z3.BitVector.get_size sort in
-        if size = 32 then Ty.Ty_bitv S32
-        else if size = 64 then Ty.Ty_bitv S64
-        else assert false
+      | Z3enums.BV_SORT -> (
+        match Z3.BitVector.get_size sort with
+        | 8 -> Ty.Ty_bitv S8
+        | 32 -> Ty.Ty_bitv S32
+        | 64 -> Ty.Ty_bitv S64
+        | bits -> err "Unable to recover type of BitVector with %d bits" bits )
       | Z3enums.FLOATING_POINT_SORT ->
         let ebits = Z3.FloatingPoint.get_ebits ctx sort in
         let sbits = Z3.FloatingPoint.get_sbits ctx sort in
         let size = ebits + sbits in
         if size = 32 then Ty.Ty_fp S32
         else if size = 64 then Ty.Ty_fp S64
-        else assert false
+        else err "Unable to recover type of FP with %d bits" size
       | _ -> assert false
 
     let symbols_of_model (model : Z3.Model.model) : Symbol.t list =

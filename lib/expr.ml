@@ -272,10 +272,11 @@ end
 
 module Bitv = struct
   let ty_of_cast (type a) (c : a Ty.cast) : Ty.t =
-    match c with C32 -> Ty_bitv S32 | C64 -> Ty_bitv S64
+    match c with C8 -> Ty_bitv S8 | C32 -> Ty_bitv S32 | C64 -> Ty_bitv S64
 
   let v (type a) (c : a Ty.cast) (i : a) =
     match c with
+    | C8 -> Val (Num (I8 i)) @: Ty_bitv S8
     | C32 -> Val (Num (I32 i)) @: Ty_bitv S32
     | C64 -> Val (Num (I64 i)) @: Ty_bitv S64
 

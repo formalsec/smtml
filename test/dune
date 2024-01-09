@@ -16,3 +16,8 @@
  (preprocess
   (pps ppx_inline_test))
  (libraries encoding))
+
+(tests
+  (names test_bitv)
+  (modules test_bitv)
+  (libraries encoding))

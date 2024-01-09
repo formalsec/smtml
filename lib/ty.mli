@@ -1,4 +1,5 @@
 type _ cast =
+  | C8 : int cast
   | C32 : int32 cast
   | C64 : int64 cast
 

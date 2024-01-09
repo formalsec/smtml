@@ -15,6 +15,7 @@
   interpret
   interpret_intf
   lexer
+  log
   mappings_intf
   model
   num
