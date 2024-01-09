@@ -9,6 +9,7 @@ type logic =
   | QF_AUFLIA
   | QF_AX
   | QF_BV
+  | QF_BVFP
   | QF_IDL
   | QF_LIA
   | QF_LRA

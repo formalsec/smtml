@@ -645,6 +645,7 @@ module Fresh = struct
         | QF_AUFLIA -> "QF_AUFLIA"
         | QF_AX -> "QF_AX"
         | QF_BV -> "QF_BV"
+        | QF_BVFP -> "QF_BVFP"
         | QF_IDL -> "QF_IDL"
         | QF_LIA -> "QF_LIA"
         | QF_LRA -> "QF_LRA"

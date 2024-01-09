@@ -4,15 +4,14 @@ open Expr
 module Batch = Solver.Batch (Z3_mappings)
 
 let%test _ =
-  let solver = Batch.create () in
+  let solver = Batch.create ~logic:QF_BVFP () in
   let x = mk_symbol Symbol.("x" @: Ty_fp S32) in
   let const = Val (Num (F32 (Int32.bits_of_float 50.0))) @: Ty_fp S32 in
-  Batch.add solver [ Relop (Eq, x, const) @: Ty_fp S32 ];
-  assert (Batch.check solver []);
+  assert (Batch.check solver [ Relop (Eq, x, const) @: Ty_fp S32 ]);
   Batch.get_value solver x = const
 
 let%test _ =
-  let solver = Batch.create () in
+  let solver = Batch.create ~logic:QF_BVFP () in
   let x = mk_symbol Symbol.("x" @: Ty_fp S64) in
   let const = Val (Num (F64 (Int64.bits_of_float 50.0))) @: Ty_fp S64 in
   Batch.add solver [ Relop (Eq, x, const) @: Ty_fp S64 ];
