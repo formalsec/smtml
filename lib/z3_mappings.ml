@@ -25,6 +25,8 @@ module Fresh = struct
     let fp64_sort = Z3.FloatingPoint.mk_sort_double ctx
     let rne = Z3.FloatingPoint.RoundingMode.mk_rne ctx
     let rtz = Z3.FloatingPoint.RoundingMode.mk_rtz ctx
+    let rtp = Z3.FloatingPoint.RoundingMode.mk_rtp ctx
+    let rtn = Z3.FloatingPoint.RoundingMode.mk_rtn ctx
 
     let get_sort (e : Ty.t) : Z3.Sort.sort =
       match e with
@@ -405,7 +407,9 @@ module Fresh = struct
           | Sqrt -> FloatingPoint.mk_sqrt ctx rne
           | Nearest -> FloatingPoint.mk_round_to_integral ctx rne
           | Is_nan -> FloatingPoint.mk_is_nan ctx
-          | Ceil | Floor | _ -> assert false
+          | Ceil -> FloatingPoint.mk_round_to_integral ctx rtp
+          | Floor -> FloatingPoint.mk_round_to_integral ctx rtn
+          | _ -> assert false
         in
         op' e
 

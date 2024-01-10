@@ -25,11 +25,23 @@ let () =
   let x = mk_symbol Symbol.("x" @: Ty_fp S32) in
   let const = Val (Num (F32 (Int32.bits_of_float 50.0))) @: Ty_fp S32 in
   assert (Z3.check solver [ Relop (Eq, x, const) @: Ty_fp S32 ]);
-  assert (Z3.get_value solver x = const)
-
-let () =
+  assert (Z3.get_value solver x = const);
   let solver = Z3.create ~logic:QF_BVFP () in
   let x = mk_symbol Symbol.("x" @: Ty_fp S64) in
   let const = Val (Num (F64 (Int64.bits_of_float 50.0))) @: Ty_fp S64 in
   assert (Z3.check solver [ Relop (Eq, x, const) @: Ty_fp S64 ]);
   assert (Z3.get_value solver x = const)
+
+let () =
+  let solver = Z3.create ~logic:QF_BVFP () in
+  let x = mk_symbol Symbol.("x" @: Ty_fp S32) in
+  let zero = Val (Num (F32 (Int32.bits_of_float 0.0))) @: Ty_fp S32 in
+  let one = Val (Num (F32 (Int32.bits_of_float 1.0))) @: Ty_fp S32 in
+  let half = Val (Num (F32 (Int32.bits_of_float 0.504))) @: Ty_fp S32 in
+  Z3.add solver [ Relop (Eq, x, half) @: Ty_fp S32 ];
+  assert (
+    Z3.check solver
+      [ Relop (Eq, Unop (Ty.Ceil, x) @: Ty_fp S32, one) @: Ty_fp S32 ] );
+  assert (
+    Z3.check solver
+      [ Relop (Eq, Unop (Ty.Floor, x) @: Ty_fp S32, zero) @: Ty_fp S32 ] )
