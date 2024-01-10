@@ -1,6 +1,8 @@
 v0.0.3
 ======
 
+- Improve bitv creation interface
+- Add naive hash-consing of expressions
 - Add `Ceil` and `Floor` FPA operators
 - Start migrating inline tests to standard tests
 - No simplifier on batch solver
