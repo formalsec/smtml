@@ -88,7 +88,7 @@ module Make_incremental (Mappings : Mappings_intf.S) = struct
 
   let create ?params ?logic () : t =
     Option.iter update_param_values params;
-    S.make ?logic ()
+    S.make ?logic () |> S.add_simplifier
 
   let clone (solver : t) : t = S.clone solver
   let push (solver : t) : unit = S.push solver

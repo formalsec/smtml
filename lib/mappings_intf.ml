@@ -21,6 +21,7 @@ module type S = sig
 
   module Solver : sig
     val make : ?logic:Solver_intf.logic -> unit -> solver
+    val add_simplifier : solver -> solver
     val clone : solver -> solver
     val push : solver -> unit
     val pop : solver -> int -> unit

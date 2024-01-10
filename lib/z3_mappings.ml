@@ -666,13 +666,13 @@ module Fresh = struct
         | UFNIA -> "UFNIA"
 
       let make ?logic () : solver =
-        let solver =
-          match logic with
-          | Some logic ->
-            let logic = Z3.Symbol.mk_string ctx @@ logic_to_string logic in
-            Z3.Solver.mk_solver ctx (Some logic)
-          | None -> Z3.Solver.mk_simple_solver ctx
-        in
+        match logic with
+        | Some logic ->
+          let logic = Z3.Symbol.mk_string ctx @@ logic_to_string logic in
+          Z3.Solver.mk_solver ctx (Some logic)
+        | None -> Z3.Solver.mk_simple_solver ctx
+
+      let add_simplifier solver =
         let simplify = Z3.Simplifier.mk_simplifier ctx "simplify" in
         let solve_eqs = Z3.Simplifier.mk_simplifier ctx "solve-eqs" in
         let then_ =
@@ -774,8 +774,7 @@ module Fresh = struct
           (* It can never be something else *)
           assert false )
       | Ty_str, Z3enums.SEQ_SORT -> Str (Z3.Seq.get_string ctx e)
-      | Ty_bitv S8, Z3enums.BV_SORT ->
-        Num (I8 (Int64.to_int (int64_of_bv e)))
+      | Ty_bitv S8, Z3enums.BV_SORT -> Num (I8 (Int64.to_int (int64_of_bv e)))
       | Ty_bitv S32, Z3enums.BV_SORT ->
         Num (I32 (Int64.to_int32 (int64_of_bv e)))
       | Ty_bitv S64, Z3enums.BV_SORT -> Num (I64 (int64_of_bv e))
