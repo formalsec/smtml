@@ -1,7 +1,5 @@
 (** Term definitions of the abstract syntax *)
 
-open Ty
-
 type t =
   { e : expr
   ; ty : Ty.t
@@ -10,11 +8,11 @@ type t =
 and expr =
   | Val of Value.t
   | Ptr of int32 * t
-  | Unop of unop * t
-  | Binop of binop * t * t
-  | Triop of triop * t * t * t
-  | Relop of relop * t * t
-  | Cvtop of cvtop * t
+  | Unop of Ty.unop * t
+  | Binop of Ty.binop * t * t
+  | Triop of Ty.triop * t * t * t
+  | Relop of Ty.relop * t * t
+  | Cvtop of Ty.cvtop * t
   | Symbol of Symbol.t
   | Extract of t * int * int
   | Concat of t * t
@@ -33,6 +31,7 @@ val to_string : t -> string
 val simplify : ?extract:bool -> t -> t
 
 module Bitv : sig
-  val v : 'a Ty.cast -> 'a -> t
-  val not : _ cast -> t -> t
+  module I8 : Constructors_intf.Bitv with type elt := int and type t := t
+  module I32 : Constructors_intf.Bitv with type elt := int32 and type t := t
+  module I64 : Constructors_intf.Bitv with type elt := int64 and type t := t
 end
