@@ -3,7 +3,6 @@
  (modules
   test_int
   test_real
-  test_f32
   test_bool
   test_str
   test_batch
@@ -18,6 +17,6 @@
  (libraries encoding))
 
 (tests
-  (names test_bitv)
-  (modules test_bitv)
+  (names test_qf_bvfp)
+  (modules test_qf_bvfp)
   (libraries encoding))
