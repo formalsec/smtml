@@ -17,6 +17,6 @@
  (libraries encoding))
 
 (tests
-  (names test_qf_bvfp)
-  (modules test_qf_bvfp)
+  (names test_qf_bvfp test_hc)
+  (modules test_qf_bvfp test_hc)
   (libraries encoding))
