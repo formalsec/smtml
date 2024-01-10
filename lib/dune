@@ -10,6 +10,7 @@
  (modules
   ast
   ;axioms
+  constructors_intf
   eval_numeric
   expr
   interpret

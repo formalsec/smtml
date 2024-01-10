@@ -283,14 +283,41 @@ let rec simplify ?(extract = true) ({ ty; e } as expr : t) : t =
   | _ -> expr
 
 module Bitv = struct
-  let ty_of_cast (type a) (c : a Ty.cast) : Ty.t =
-    match c with C8 -> Ty_bitv S8 | C32 -> Ty_bitv S32 | C64 -> Ty_bitv S64
+  module Make (T : sig
+    type elt
 
-  let v (type a) (c : a Ty.cast) (i : a) =
-    match c with
-    | C8 -> Val (Num (I8 i)) @: Ty_bitv S8
-    | C32 -> Val (Num (I32 i)) @: Ty_bitv S32
-    | C64 -> Val (Num (I64 i)) @: Ty_bitv S64
+    val ty : Ty.t
+    val num : elt -> Num.t
+  end) =
+  struct
+    let v i = Val (Num (T.num i)) @: T.ty
+    let sym x = mk_symbol Symbol.(x @: T.ty)
+    let not e = Unop (Not, e) @: T.ty
+    let ( = ) e1 e2 = Relop (Eq, e1, e2) @: T.ty
+    let ( > ) e1 e2 = Relop (Gt, e1, e2) @: T.ty
+    let ( >= ) e1 e2 = Relop (Ge, e1, e2) @: T.ty
+    let ( < ) e1 e2 = Relop (Lt, e1, e2) @: T.ty
+    let ( <= ) e1 e2 = Relop (Le, e1, e2) @: T.ty
+  end
 
-  let not (c : _ cast) (e : t) = Unop (Not, e) @: ty_of_cast c
+  module I8 = Make (struct
+    type elt = int
+
+    let ty = Ty_bitv S8
+    let num i = Num.I8 i
+  end)
+
+  module I32 = Make (struct
+    type elt = int32
+
+    let ty = Ty_bitv S32
+    let num i = Num.I32 i
+  end)
+
+  module I64 = Make (struct
+    type elt = int64
+
+    let ty = Ty_bitv S64
+    let num i = Num.I64 i
+  end)
 end
