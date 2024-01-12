@@ -25,7 +25,6 @@ let type_of (v : t) : Ty.t =
   | Str _ -> Ty_str
   | Num n -> Num.type_of n
 
-
 let pp fmt (v : t) =
   let pp_string = Format.pp_print_string in
   match v with

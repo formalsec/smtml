@@ -11,28 +11,41 @@ let zero = Val (Int 0) @: Ty_int
 let two = Val (Int 2) @: Ty_int
 
 (* Satisfiability *)
-let%test "test_concrete_len" =
-  Batch.check solver
-    [ Relop (Ge, Unop (Len, x) @: Ty_str, Unop (Len, abc) @: Ty_str) @: Ty_int ]
+let () =
+  assert (
+    Batch.check solver
+      [ Relop (Ge, Unop (Len, x) @: Ty_str, Unop (Len, abc) @: Ty_str) @: Ty_int
+      ] )
 
-let%test "test_constrained_len" =
-  not
-    (Batch.check solver
-       [ Relop (Eq, Unop (Len, x) @: Ty_str, Val (Int 4) @: Ty_int) @: Ty_int
-       ; Relop (Eq, Unop (Len, x) @: Ty_str, Unop (Len, abc) @: Ty_str)
-         @: Ty_int
-       ] )
+let () =
+  let x = mk_symbol Symbol.("x" @: Ty_real) in
+  let y = mk_symbol Symbol.("y" @: Ty_real) in
+  assert (
+    Batch.check solver
+      [ Relop
+          (Eq, Cvtop (ToString, x) @: Ty_real, Cvtop (ToString, y) @: Ty_real)
+        @: Ty_str
+      ] )
 
-let%test "test_concrete_substr" =
+let () =
+  assert (
+    not
+      (Batch.check solver
+         [ Relop (Eq, Unop (Len, x) @: Ty_str, Val (Int 4) @: Ty_int) @: Ty_int
+         ; Relop (Eq, Unop (Len, x) @: Ty_str, Unop (Len, abc) @: Ty_str)
+           @: Ty_int
+         ] ) )
+
+let () =
   let pc =
     [ Relop
         (Eq, Triop (Substr, abc, zero, two) @: Ty_str, Val (Str "ab") @: Ty_str)
       @: Ty_str
     ]
   in
-  Batch.check solver pc
+  assert (Batch.check solver pc)
 
-let%test "test_symb_substr" =
+let () =
   let pc =
     [ Relop (Eq, x, abc) @: Ty_str
     ; Relop
@@ -42,9 +55,9 @@ let%test "test_symb_substr" =
   in
   assert (Batch.check solver pc);
   let m = Batch.model solver in
-  Some (Value.Str "abc") = Model.evaluate (Option.get m) symb_x
+  assert (Some (Value.Str "abc") = Model.evaluate (Option.get m) symb_x)
 
-let%test "test_to_code" =
+let () =
   let assertion =
     [ Relop
         ( Eq
@@ -53,9 +66,9 @@ let%test "test_to_code" =
       @: Ty_str
     ]
   in
-  Batch.check solver assertion
+  assert (Batch.check solver assertion)
 
-let%test "roundtrip_code" =
+let () =
   let ord =
     Cvtop (String_to_code, Binop (Nth, abc, zero) @: Ty_str) @: Ty_str
   in
@@ -65,4 +78,4 @@ let%test "roundtrip_code" =
       @: Ty_str
     ]
   in
-  Batch.check solver assertion
+  assert (Batch.check solver assertion)

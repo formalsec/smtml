@@ -30,5 +30,4 @@
     (>= 20220210)))
    (cmdliner (>= "1.2.0"))
    (zarith (>= "1.5"))
-   (ppx_inline_test :with-test)
    (odoc :with-doc)))

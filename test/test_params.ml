@@ -1,7 +1,6 @@
 open Encoding
-module Batch = Solver.Batch (Z3_mappings)
+module Batch = Solver.Z3_batch
 
-let%test_unit _ =
+let () =
   let params = Params.(default () & (Ematching, false)) in
-  let _ = Batch.create ~params () in
-  ()
+  ignore @@ Batch.create ~params ()
