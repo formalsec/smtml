@@ -30,6 +30,14 @@ val pp_list : Format.formatter -> t list -> unit
 val to_string : t -> string
 val simplify : ?extract:bool -> t -> t
 
+module Bool : sig
+  val v : bool -> t
+  val not : t -> t
+  val ( = ) : t -> t -> t
+  val ( && ) : t -> t -> t
+  val ( || ) : t -> t -> t
+end
+
 module Bitv : sig
   module I8 : Constructors_intf.Bitv with type elt := int and type t := t
   module I32 : Constructors_intf.Bitv with type elt := int32 and type t := t

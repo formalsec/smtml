@@ -282,6 +282,38 @@ let rec simplify ?(extract = true) ({ ty; e } as expr : t) : t =
     simplify_concat msb lsb @: ty
   | _ -> expr
 
+module Bool = struct
+  let v b = (match b with true -> Val True | false -> Val False) @: Ty_bool
+
+  let not v =
+    ( match v.e with
+    | Val True -> Val False
+    | Val False -> Val True
+    | _ -> Unop (Not, v) )
+    @: Ty_bool
+
+  let ( = ) b1 b2 =
+    ( match (b1.e, b2.e) with
+    | Val True, Val True | Val False, Val False -> Val True
+    | _ -> Relop (Eq, b1, b2) )
+    @: Ty_bool
+
+  let ( && ) b1 b2 =
+    ( match (b1.e, b2.e) with
+    | Val True, Val True -> Val True
+    | Val False, Val True | Val True, Val False | Val False, Val False ->
+      Val False
+    | _ -> Binop (And, b1, b2) )
+    @: Ty_bool
+
+  let ( || ) b1 b2 =
+    ( match (b1.e, b2.e) with
+    | Val False, Val False -> Val False
+    | Val True, Val True | Val False, Val True | Val True, Val False -> Val True
+    | _ -> Binop (Or, b1, b2) )
+    @: Ty_bool
+end
+
 module Bitv = struct
   module Make (T : sig
     type elt
