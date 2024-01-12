@@ -20,6 +20,23 @@ module Base (M : Mappings_intf.S) = struct
 
   let interrupt () = M.interrupt ()
   let pp_statistics fmt solver = M.Solver.pp_statistics fmt solver
+
+  let check (solver : M.solver) (es : Expr.t list) : bool =
+    solver_count := !solver_count + 1;
+    let sat = time_call (fun () -> M.Solver.check solver es) solver_time in
+    match M.satisfiability sat with
+    | Mappings_intf.Satisfiable -> true
+    | Mappings_intf.Unknown -> raise Unknown
+    | Mappings_intf.Unsatisfiable -> false
+
+  let get_value (solver : M.solver) (e : Expr.t) : Expr.t =
+    match M.Solver.model solver with
+    | Some m -> Expr.(Val (M.value m e) @: e.ty)
+    | None -> Log.err "get_value: Trying to get a value from an unsat solver"
+
+  let model ?(symbols : Symbol.t list option) (s : M.solver) : Model.t option =
+    let+ model = M.Solver.model s in
+    M.values_of_model ?symbols model
 end
 
 module Make_batch (Mappings : Mappings_intf.S) = struct
@@ -43,8 +60,7 @@ module Make_batch (Mappings : Mappings_intf.S) = struct
   let clone ({ solver; top; stack } : t) : t =
     { solver; top; stack = Stack.copy stack }
 
-  let push ({ top; stack; _ } : t) : unit =
-    Stack.push top stack
+  let push ({ top; stack; _ } : t) : unit = Stack.push top stack
 
   let pop (s : t) (lvl : int) : unit =
     assert (lvl <= Stack.length s.stack);
@@ -59,26 +75,14 @@ module Make_batch (Mappings : Mappings_intf.S) = struct
 
   let add (s : t) (es : Expr.t list) : unit = s.top <- es @ s.top
   let get_assertions (s : t) : Expr.t list = s.top [@@inline]
-
-  let check (s : t) (es : Expr.t list) : bool =
-    let es = es @ s.top in
-    solver_count := !solver_count + 1;
-    let sat = time_call (fun () -> S.check s.solver es) solver_time in
-    match Mappings.satisfiability sat with
-    | Mappings_intf.Satisfiable -> true
-    | Mappings_intf.Unsatisfiable -> false
-    | Mappings_intf.Unknown -> raise Unknown
-
-  let get_value (solver : t) (e : Expr.t) : Expr.t =
-    match S.model solver.solver with
-    | Some m -> Expr.(Val (Mappings.value m e) @: e.ty)
-    | None -> assert false
+  let check (s : t) (es : Expr.t list) : bool = check s.solver (es @ s.top)
+  let get_value (solver : t) (e : Expr.t) : Expr.t = get_value solver.solver e
 
   let model ?(symbols : Symbol.t list option) (s : t) : Model.t option =
-    let+ model = S.model s.solver in
-    Mappings.values_of_model ?symbols model
+    model ?symbols s.solver
 end
 
+(* TODO: Our base solver can be incrmental itself? *)
 module Make_incremental (Mappings : Mappings_intf.S) = struct
   include Base (Mappings)
   module S = Mappings.Solver
@@ -96,23 +100,6 @@ module Make_incremental (Mappings : Mappings_intf.S) = struct
   let reset (solver : t) : unit = S.reset solver
   let add (solver : t) (es : Expr.t list) : unit = S.add solver es
   let get_assertions (_solver : t) : Expr.t list = assert false
-
-  let check (solver : t) (es : Expr.t list) : bool =
-    solver_count := !solver_count + 1;
-    let sat = time_call (fun () -> S.check solver es) solver_time in
-    match Mappings.satisfiability sat with
-    | Mappings_intf.Satisfiable -> true
-    | Mappings_intf.Unknown -> raise Unknown
-    | Mappings_intf.Unsatisfiable -> false
-
-  let get_value (solver : t) (e : Expr.t) : Expr.t =
-    match S.model solver with
-    | Some m -> Expr.(Val (Mappings.value m e) @: e.ty)
-    | None -> assert false
-
-  let model ?(symbols : Symbol.t list option) (solver : t) : Model.t Option.t =
-    let+ model = S.model solver in
-    Mappings.values_of_model ?symbols model
 end
 
 module Batch (M : Mappings_intf.S) : Solver_intf.S = Make_batch (M)
