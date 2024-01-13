@@ -26,14 +26,14 @@ let type_of (v : t) : Ty.t =
   | Num n -> Num.type_of n
 
 let pp fmt (v : t) =
-  let pp_string = Format.pp_print_string in
+  let open Format in
   match v with
-  | True -> pp_string fmt "true"
-  | False -> pp_string fmt "false"
-  | Int x -> pp_string fmt @@ Int.to_string x
-  | Real x -> pp_string fmt @@ Float.to_string x
+  | True -> pp_print_string fmt "true"
+  | False -> pp_print_string fmt "false"
+  | Int x -> pp_print_int fmt x
+  | Real x -> fprintf fmt "%F" x
   | Num x -> Num.pp fmt x
-  | Str x -> Format.fprintf fmt {|"%s"|} x
+  | Str x -> Format.fprintf fmt "%S" x
 
 let pp_num fmt (v : t) =
   match v with Num x -> Num.pp_hex fmt x | _ -> pp fmt v

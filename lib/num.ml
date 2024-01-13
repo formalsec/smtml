@@ -26,8 +26,8 @@ let pp fmt (n : t) =
   | I8 i -> Format.fprintf fmt "(i8 %d)" i
   | I32 i -> Format.fprintf fmt "(i32 %ld)" i
   | I64 i -> Format.fprintf fmt "(i64 %Ld)" i
-  | F32 f -> Format.fprintf fmt "(f32 %f)" (Int32.float_of_bits f)
-  | F64 f -> Format.fprintf fmt "(f64 %f)" (Int64.float_of_bits f)
+  | F32 f -> Format.fprintf fmt "(f32 %F)" (Int32.float_of_bits f)
+  | F64 f -> Format.fprintf fmt "(f64 %F)" (Int64.float_of_bits f)
 
 let pp_hex fmt (n : t) =
   match n with
