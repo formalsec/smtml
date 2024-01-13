@@ -39,7 +39,12 @@ module Bool : sig
 end
 
 module Bitv : sig
-  module I8 : Constructors_intf.Bitv with type elt := int and type t := t
-  module I32 : Constructors_intf.Bitv with type elt := int32 and type t := t
-  module I64 : Constructors_intf.Bitv with type elt := int64 and type t := t
+  module I8 : Constructors_intf.Infix with type elt := int and type t := t
+  module I32 : Constructors_intf.Infix with type elt := int32 and type t := t
+  module I64 : Constructors_intf.Infix with type elt := int64 and type t := t
+end
+
+module Fpa : sig
+  module F32 : Constructors_intf.Infix with type elt := float and type t := t
+  module F64 : Constructors_intf.Infix with type elt := float and type t := t
 end

@@ -314,24 +314,24 @@ module Bool = struct
     @: Ty_bool
 end
 
+module Make (T : sig
+  type elt
+
+  val ty : Ty.t
+  val num : elt -> Num.t
+end) =
+struct
+  let v i = Val (Num (T.num i)) @: T.ty
+  let sym x = mk_symbol Symbol.(x @: T.ty)
+  let ( ~- ) e = Unop (Neg, e) @: T.ty
+  let ( = ) e1 e2 = Relop (Eq, e1, e2) @: T.ty
+  let ( > ) e1 e2 = Relop (Gt, e1, e2) @: T.ty
+  let ( >= ) e1 e2 = Relop (Ge, e1, e2) @: T.ty
+  let ( < ) e1 e2 = Relop (Lt, e1, e2) @: T.ty
+  let ( <= ) e1 e2 = Relop (Le, e1, e2) @: T.ty
+end
+
 module Bitv = struct
-  module Make (T : sig
-    type elt
-
-    val ty : Ty.t
-    val num : elt -> Num.t
-  end) =
-  struct
-    let v i = Val (Num (T.num i)) @: T.ty
-    let sym x = mk_symbol Symbol.(x @: T.ty)
-    let not e = Unop (Not, e) @: T.ty
-    let ( = ) e1 e2 = Relop (Eq, e1, e2) @: T.ty
-    let ( > ) e1 e2 = Relop (Gt, e1, e2) @: T.ty
-    let ( >= ) e1 e2 = Relop (Ge, e1, e2) @: T.ty
-    let ( < ) e1 e2 = Relop (Lt, e1, e2) @: T.ty
-    let ( <= ) e1 e2 = Relop (Le, e1, e2) @: T.ty
-  end
-
   module I8 = Make (struct
     type elt = int
 
@@ -351,5 +351,21 @@ module Bitv = struct
 
     let ty = Ty_bitv S64
     let num i = Num.I64 i
+  end)
+end
+
+module Fpa = struct
+  module F32 = Make (struct
+    type elt = float
+
+    let ty = Ty_fp S32
+    let num f = Num.F32 (Int32.bits_of_float f)
+  end)
+
+  module F64 = Make (struct
+    type elt = float
+
+    let ty = Ty_fp S64
+    let num f = Num.F64 (Int64.bits_of_float f)
   end)
 end
