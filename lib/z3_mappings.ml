@@ -405,10 +405,11 @@ module Fresh = struct
           | Neg -> FloatingPoint.mk_neg ctx
           | Abs -> FloatingPoint.mk_abs ctx
           | Sqrt -> FloatingPoint.mk_sqrt ctx rne
-          | Nearest -> FloatingPoint.mk_round_to_integral ctx rne
           | Is_nan -> FloatingPoint.mk_is_nan ctx
           | Ceil -> FloatingPoint.mk_round_to_integral ctx rtp
           | Floor -> FloatingPoint.mk_round_to_integral ctx rtn
+          | Trunc -> FloatingPoint.mk_round_to_integral ctx rtz
+          | Nearest -> FloatingPoint.mk_round_to_integral ctx rne
           | _ -> assert false
         in
         op' e

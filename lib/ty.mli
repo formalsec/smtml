@@ -22,10 +22,11 @@ type unop =
   | Clz
   | Abs
   | Sqrt
-  | Nearest
   | Is_nan
   | Ceil
   | Floor
+  | Trunc
+  | Nearest
   (* To remove *)
   | Len
   | Trim

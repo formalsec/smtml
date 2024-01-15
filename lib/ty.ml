@@ -25,10 +25,11 @@ type unop =
   | Clz
   | Abs
   | Sqrt
-  | Nearest
   | Is_nan
   | Ceil
   | Floor
+  | Trunc
+  | Nearest
   (* To remove *)
   | Len
   | Trim
@@ -102,10 +103,11 @@ let pp_unop fmt (op : unop) =
   | Clz -> pp_string fmt "clz"
   | Abs -> pp_string fmt "abs"
   | Sqrt -> pp_string fmt "sqrt"
-  | Nearest -> pp_string fmt "nearest"
   | Is_nan -> pp_string fmt "is_nan"
   | Ceil -> pp_string fmt "ceil"
   | Floor -> pp_string fmt "floor"
+  | Trunc -> pp_string fmt "trunc"
+  | Nearest -> pp_string fmt "nearest"
   | Len -> pp_string fmt "len"
   | Trim -> pp_string fmt "trim"
 
