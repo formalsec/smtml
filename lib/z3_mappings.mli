@@ -1,5 +1,5 @@
 module Fresh : sig
-  module Make () : Mappings_intf.S with type optimize = Z3.Optimize.optimize
+  module Make () : Mappings_intf.S
 end
 
-include Mappings_intf.S with type optimize = Z3.Optimize.optimize
+include Mappings_intf.S

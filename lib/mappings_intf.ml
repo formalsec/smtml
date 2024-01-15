@@ -10,8 +10,6 @@ module type S = sig
   type optimize
   type handle
 
-  exception Error of string
-
   val update_param_value : 'a Params.param -> 'a -> unit
   val interrupt : unit -> unit
   val satisfiability : status -> satisfiability
