@@ -102,6 +102,22 @@ let rec ty (hte : t) : Ty.t =
     | Ty_bitv n1, Ty_bitv n2 -> Ty_bitv (n1 + n2)
     | t1, t2 -> Log.err "Invalid concat of (%a) with (%a)" Ty.pp t1 Ty.pp t2 )
 
+let rec is_symbolic (v : t) : bool =
+  match view v with
+  | Val _ -> false
+  | Symbol _ -> true
+  | Ptr (_, offset) -> is_symbolic offset
+  | List vs | Tuple vs -> List.exists is_symbolic vs
+  | Array vs -> Array.exists is_symbolic vs
+  | App (_, vs) -> List.exists is_symbolic vs
+  | Unop (_, _, v) -> is_symbolic v
+  | Binop (_, _, v1, v2) -> is_symbolic v1 || is_symbolic v2
+  | Triop (_, _, v1, v2, v3) -> List.exists is_symbolic [ v1; v2; v3 ]
+  | Cvtop (_, _, v) -> is_symbolic v
+  | Relop (_, _, v1, v2) -> is_symbolic v1 || is_symbolic v2
+  | Extract (e, _, _) -> is_symbolic e
+  | Concat (e1, e2) -> is_symbolic e1 || is_symbolic e2
+
 let get_symbols (hte : t list) =
   let tbl = Hashtbl.create 64 in
   let rec symbols (hte : t) =
