@@ -190,4 +190,8 @@ let size (ty : t) : int =
   match ty with
   | Ty_bitv S32 | Ty_fp S32 -> 4
   | Ty_bitv S64 | Ty_fp S64 -> 8
-  | _ -> assert false
+  | Ty_bitv S8 | Ty_fp S8 -> 1
+  | Ty_int -> 4
+  | Ty_real -> assert false
+  | Ty_bool -> 4
+  | Ty_str -> assert false
