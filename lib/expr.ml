@@ -112,7 +112,8 @@ let rec is_symbolic (v : t) : bool =
   | App (_, vs) -> List.exists is_symbolic vs
   | Unop (_, _, v) -> is_symbolic v
   | Binop (_, _, v1, v2) -> is_symbolic v1 || is_symbolic v2
-  | Triop (_, _, v1, v2, v3) -> List.exists is_symbolic [ v1; v2; v3 ]
+  | Triop (_, _, v1, v2, v3) ->
+    is_symbolic v1 || is_symbolic v2 || is_symbolic v3
   | Cvtop (_, _, v) -> is_symbolic v
   | Relop (_, _, v1, v2) -> is_symbolic v1 || is_symbolic v2
   | Extract (e, _, _) -> is_symbolic e
