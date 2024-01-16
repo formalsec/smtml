@@ -31,7 +31,7 @@ module Make (Solver : Solver_intf.S) = struct
     | GetModel ->
       assert (Solver.check solver []);
       let model = Solver.model solver in
-      Format.printf "%a" Model.pp (Option.get model);
+      Option.iter (Model.pp Format.std_formatter) model;
       st pc
 
   let rec loop (state : exec_state) : exec_state =
