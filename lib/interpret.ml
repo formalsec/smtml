@@ -9,7 +9,7 @@ module Make (Solver : Solver_intf.S) = struct
     }
 
   let init_state stmts =
-    let params = Params.(default () & (Model, false)) in
+    let params = Params.(default () $ (Model, false)) in
     { stmts
     ; smap = Hashtbl.create 0
     ; solver = Solver.create ~params ()

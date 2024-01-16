@@ -37,7 +37,7 @@ let set (type a) (params : t) (param : a param) (value : a) : t =
   | Unsat_core -> { params with unsat_core = value }
   | Ematching -> { params with ematching = value }
 
-let ( & ) (type a) (params : t) ((param, value) : a param * a) : t =
+let ( $ ) (type a) (params : t) ((param, value) : a param * a) : t =
   set params param value
 
 let get (type a) (params : t) (param : a param) : a =
