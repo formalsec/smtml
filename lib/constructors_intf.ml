@@ -6,6 +6,7 @@ module type Infix = sig
   val sym : string -> t
   val ( ~- ) : t -> t
   val ( = ) : t -> t -> t
+  val ( != ) : t -> t -> t
   val ( > ) : t -> t -> t
   val ( >= ) : t -> t -> t
   val ( < ) : t -> t -> t

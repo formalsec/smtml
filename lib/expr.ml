@@ -298,6 +298,12 @@ module Bool = struct
     | _ -> Relop (Eq, b1, b2) )
     @: Ty_bool
 
+  let ( != ) b1 b2 =
+    ( match (b1.e, b2.e) with
+    | Val True, Val False | Val False, Val True -> Val True
+    | _ -> Relop (Ne, b1, b2) )
+    @: Ty_bool
+
   let ( && ) b1 b2 =
     ( match (b1.e, b2.e) with
     | Val True, Val True -> Val True
@@ -325,6 +331,7 @@ struct
   let sym x = mk_symbol Symbol.(x @: T.ty)
   let ( ~- ) e = Unop (Neg, e) @: T.ty
   let ( = ) e1 e2 = Relop (Eq, e1, e2) @: T.ty
+  let ( != ) e1 e2 = Relop (Ne, e1, e2) @: T.ty
   let ( > ) e1 e2 = Relop (Gt, e1, e2) @: T.ty
   let ( >= ) e1 e2 = Relop (Ge, e1, e2) @: T.ty
   let ( < ) e1 e2 = Relop (Lt, e1, e2) @: T.ty
