@@ -30,4 +30,5 @@
     (>= 20220210)))
    (cmdliner (>= "1.2.0"))
    (zarith (>= "1.5"))
-   (odoc :with-doc)))
+   (odoc :with-doc)
+   (bisect_ppx (and :dev (>= "2.5.0")))))
