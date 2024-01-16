@@ -1,7 +1,7 @@
 (tests
  (names
   test_hc
-  test_regression
+  test_eval_numeric
   test_params
   test_lia
   test_lra
@@ -11,7 +11,7 @@
  (modules
   ;test_axiom
   test_hc
-  test_regression
+  test_eval_numeric
   test_params
   test_lia
   test_lra
