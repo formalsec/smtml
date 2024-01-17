@@ -33,4 +33,5 @@
   z3_mappings)
  (private_modules lexer parser)
  (libraries z3)
- (instrumentation (backend bisect_ppx)))
+ (instrumentation
+  (backend bisect_ppx)))

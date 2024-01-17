@@ -1,6 +1,7 @@
 {0 Encoding}
 
-The full API can be {{:Encoding/index.html} found here}
+The full API can be {{:Encoding/index.html} found here}.
+Coverage {{:https://formalsec.github.io/encoding/coverage/index.html} here}
 
 {e Encoding} is a free and open-source OCaml SMT constraint abstraction layer
 that serves as an abstracted constraint-solving wrapper, currently utilising

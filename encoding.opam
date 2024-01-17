@@ -16,7 +16,7 @@ depends: [
   "cmdliner" {>= "1.2.0"}
   "zarith" {>= "1.5"}
   "odoc" {with-doc}
-  "bisect_ppx" {dev & >= "2.5.0"}
+  "bisect_ppx" {with-test & >= "2.5.0" & dev}
 ]
 build: [
   ["dune" "subst"] {dev}
