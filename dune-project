@@ -23,6 +23,7 @@
  (depends
    dune
    (ocaml (>= "4.14.0"))
+   ocaml_intrinsics
    (z3 (and (>= "4.12.2") (< "4.13")))
    (menhir
     (and
