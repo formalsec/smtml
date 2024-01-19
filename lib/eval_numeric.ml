@@ -3,6 +3,8 @@
 (* - https://github.com/WebAssembly/spec/blob/main/interpreter/exec/fxx.ml, and *)
 (* - https://github.com/WebAssembly/spec/blob/main/interpreter/exec *)
 
+(* TODO: This module should be eval_concrete or a part of the reducer *)
+
 open Ty
 
 exception Num of Ty.t
@@ -26,20 +28,6 @@ module I32Op = struct
   let le_u x y = cmp_u x ( <= ) y
   let gt_u x y = cmp_u x ( > ) y
   let ge_u x y = cmp_u x ( >= ) y
-
-  (* let divrem_u n d = *)
-  (*   if d = 0l then raise DivideByZero *)
-  (*   else *)
-  (*     let t = Int32.shift_right d (bitwidth - 1) in *)
-  (*     let n' = Int32.(logand n (lognot t)) in *)
-  (*     let q = Int32.(shift_left (div (shift_right_logical n' 1) d) 1) in *)
-  (*     let r = Int32.(sub n (mul q d)) in *)
-  (*     if cmp_u r ( < ) d then (q, r) else (Int32.add q 1l, Int32.sub r d) *)
-
-  (* let div_u x y = *)
-  (*   let q, _ = divrem_u x y in *)
-  (*   q *)
-
   let shift f x y = f x Int32.(to_int (logand y 31l))
   let shl x y = shift Int32.shift_left x y
   let shr_s x y = shift Int32.shift_right x y
@@ -51,9 +39,8 @@ module I32Op = struct
       | Neg -> Int32.neg
       | Not -> Int32.lognot
       | Clz ->
-        fun n ->
-          Stdlib.Int32.of_int (Ocaml_intrinsics.Int32.count_leading_zeros n)
-      | _ -> assert false
+        fun n -> Int32.of_int (Ocaml_intrinsics.Int32.count_leading_zeros n)
+      | _ -> Log.err {|eval_unop: Unsupported i32 operator "%a"|} Ty.pp_unop op
     in
     fun v -> to_value (f (of_value 1 v))
 
@@ -73,7 +60,8 @@ module I32Op = struct
       | Shl -> shl
       | ShrL -> shr_u
       | ShrA -> shr_s
-      | Rotl | Rotr | _ -> assert false
+      | Rotl | Rotr | _ ->
+        Log.err {|eval_binop: Unsupported i32 operator "%a"|} Ty.pp_binop op
     in
     fun v1 v2 -> to_value (f (of_value 1 v1) (of_value 2 v2))
 
@@ -105,20 +93,6 @@ module I64Op = struct
   let le_u x y = cmp_u x ( <= ) y
   let gt_u x y = cmp_u x ( > ) y
   let ge_u x y = cmp_u x ( >= ) y
-
-  (* let divrem_u n d = *)
-  (*   if d = 0L then raise DivideByZero *)
-  (*   else *)
-  (*     let t = Int64.shift_right d 63 in *)
-  (*     let n' = Int64.(logand n @@ lognot t) in *)
-  (*     let q = Int64.(shift_left (div (shift_right_logical n' 1) d) 1) in *)
-  (*     let r = Int64.(sub n (mul q d)) in *)
-  (*     if cmp_u r ( < ) d then (q, r) else Int64.(add q 1L, sub r d) *)
-
-  (* let div_u x y = *)
-  (*   let q, _ = divrem_u x y in *)
-  (*   q *)
-
   let shift f x y = f x Int64.(to_int (logand y 63L))
   let shl x y = shift Int64.shift_left x y
   let shr_s x y = shift Int64.shift_right x y
@@ -129,7 +103,9 @@ module I64Op = struct
       match op with
       | Neg -> Int64.neg
       | Not -> Int64.lognot
-      | Clz | _ -> assert false
+      | Clz ->
+        fun n -> Int64.of_int (Ocaml_intrinsics.Int64.count_leading_zeros n)
+      | _ -> Log.err {|eval_unop: Unsupported i64 operator "%a"|} Ty.pp_unop op
     in
     fun v -> to_value (f (of_value 1 v))
 
@@ -149,7 +125,8 @@ module I64Op = struct
       | Shl -> shl
       | ShrL -> shr_u
       | ShrA -> shr_s
-      | Rotl | Rotr | _ -> assert false
+      | Rotl | Rotr | _ ->
+        Log.err {|eval_binop: Unsupported i64 operator "%a"|} Ty.pp_binop op
     in
     fun v1 v2 -> to_value (f (of_value 1 v1) (of_value 2 v2))
 
@@ -185,7 +162,8 @@ module F32Op = struct
       | Nearest -> Float.round
       | Ceil -> Float.ceil
       | Floor -> Float.floor
-      | Is_nan | _ -> assert false
+      | Is_nan | _ ->
+        Log.err {|eval_unop: Unsupported f32 operator "%a"|} Ty.pp_unop op
     in
     fun v -> to_value (of_float (f (to_float (of_value 1 v))))
 
@@ -199,7 +177,8 @@ module F32Op = struct
       | Rem -> Float.rem
       | Min -> Float.min
       | Max -> Float.max
-      | _ -> assert false
+      | _ ->
+        Log.err {|eval_binop: Unsupported f32 operator "%a"|} Ty.pp_binop op
     in
     fun v1 v2 ->
       to_value
@@ -214,7 +193,8 @@ module F32Op = struct
       | Le -> ( <= )
       | Gt -> ( > )
       | Ge -> ( >= )
-      | _ -> assert false
+      | _ ->
+        Log.err {|eval_relop: Unsupported f32 operator "%a"|} Ty.pp_relop op
     in
     fun v1 v2 -> f (to_float (of_value 1 v1)) (to_float (of_value 2 v2))
 end
@@ -234,7 +214,8 @@ module F64Op = struct
       | Nearest -> Float.round
       | Ceil -> Float.ceil
       | Floor -> Float.floor
-      | Is_nan | _ -> assert false
+      | Is_nan | _ ->
+        Log.err {|eval_unop: Unsupported f32 operator "%a"|} Ty.pp_unop op
     in
     fun v -> to_value (of_float (f (to_float (of_value 1 v))))
 
@@ -248,7 +229,8 @@ module F64Op = struct
       | Rem -> Float.rem
       | Min -> Float.min
       | Max -> Float.max
-      | _ -> assert false
+      | _ ->
+        Log.err {|eval_binop: Unsupported f32 operator "%a"|} Ty.pp_binop op
     in
     fun v1 v2 ->
       to_value
@@ -263,7 +245,8 @@ module F64Op = struct
       | Le -> ( <= )
       | Gt -> ( > )
       | Ge -> ( >= )
-      | _ -> assert false
+      | _ ->
+        Log.err {|eval_relop: Unsupported f32 operator "%a"|} Ty.pp_relop op
     in
     fun v1 v2 -> f (to_float (of_value 1 v1)) (to_float (of_value 2 v2))
 end
@@ -316,7 +299,8 @@ module I32CvtOp = struct
     | ExtS n -> I32 (extend_s n (I32Op.of_value 1 v))
     | ExtU _n -> I32 (I32Op.of_value 1 v)
     | OfBool -> v (* already a num here *)
-    | ToBool | _ -> assert false
+    | ToBool | _ ->
+      Log.err {|eval_cvtop: Unsupported i32 operator "%a"|} Ty.pp_cvtop op
 end
 
 module I64CvtOp = struct
@@ -373,7 +357,8 @@ module I64CvtOp = struct
     | TruncUF64 -> I64 (trunc_f64_u (F64Op.of_value 1 v))
     | Reinterpret_float -> I64 (F64Op.of_value 1 v)
     | WrapI64 -> raise (TypeError (1, v, Ty_bitv S64))
-    | ToBool | OfBool | _ -> assert false (* FIXME: don't like these here *)
+    | ToBool | OfBool | _ ->
+      Log.err {|eval_cvtop: Unsupported i64 operator "%a"|} Ty.pp_cvtop op
 end
 
 module F32CvtOp = struct
@@ -424,7 +409,8 @@ module F32CvtOp = struct
     | ConvertUI64 -> F32 (convert_i64_u (I64Op.of_value 1 v))
     | Reinterpret_int -> F32 (I32Op.of_value 1 v)
     | PromoteF32 -> raise (TypeError (1, v, Ty_fp S32))
-    | ToString | OfString | _ -> assert false
+    | ToString | OfString | _ ->
+      Log.err {|eval_cvtop: Unsupported f32 operator "%a"|} Ty.pp_cvtop op
 end
 
 module F64CvtOp = struct
@@ -475,15 +461,16 @@ module F64CvtOp = struct
     | ConvertUI64 -> F64 (convert_i64_u (I64Op.of_value 1 v))
     | Reinterpret_int -> F64 (I64Op.of_value 1 v)
     | DemoteF64 -> raise (TypeError (1, v, Ty_bitv S64))
-    | ToString | OfString | _ -> assert false
+    | ToString | OfString | _ ->
+      Log.err {|eval_cvtop: Unsupported f64 operator "%a"|} Ty.pp_cvtop op
 end
 
 (* Dispatch *)
 
 let op i32 i64 f32 f64 ty op =
   match ty with
-  | Ty_int -> failwith "eval_numeric: Integer evaluations not supported"
-  | Ty_real -> failwith "eval_numeric: Float evaluations not supported"
+  | Ty_int -> Log.err "eval_numeric: Integer evaluations not supported"
+  | Ty_real -> Log.err "eval_numeric: Float evaluations not supported"
   | Ty_bitv S32 -> i32 op
   | Ty_bitv S64 -> i64 op
   | Ty_fp S32 -> f32 op
