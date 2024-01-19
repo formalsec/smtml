@@ -11,6 +11,7 @@ bug-reports: "https://github.com/formalsec/encoding/issues"
 depends: [
   "dune" {>= "3.0"}
   "ocaml" {>= "4.14.0"}
+  "ocaml_intrinsics"
   "z3" {>= "4.12.2" & < "4.13"}
   "menhir" {build & >= "20220210"}
   "cmdliner" {>= "1.2.0"}

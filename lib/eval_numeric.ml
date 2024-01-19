@@ -50,7 +50,10 @@ module I32Op = struct
       match op with
       | Neg -> Int32.neg
       | Not -> Int32.lognot
-      | Clz | _ -> assert false
+      | Clz ->
+        fun n ->
+          Stdlib.Int32.of_int (Ocaml_intrinsics.Int32.count_leading_zeros n)
+      | _ -> assert false
     in
     fun v -> to_value (f (of_value 1 v))
 

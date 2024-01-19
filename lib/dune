@@ -32,6 +32,6 @@
   value
   z3_mappings)
  (private_modules lexer parser)
- (libraries z3)
+ (libraries z3 ocaml_intrinsics)
  (instrumentation
   (backend bisect_ppx)))
