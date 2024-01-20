@@ -6,10 +6,10 @@ let () =
   (* FIXME: when y = 2.0 this fails in Z3! *)
   let script =
     {|
-    (declare-fun x real)
-    (declare-fun y real)
-    (assert (real.eq y (real.mul x x)))
-    (assert (real.eq y 4.0))
+    (let-const x real)
+    (let-const y real)
+    (assert (= y (real.mul x x)))
+    (assert (= y 4.0))
     (check-sat)
     (get-model)
     |}

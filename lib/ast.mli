@@ -1,5 +1,5 @@
 type t =
-  | Declare of Symbol.t
+  | Let_const of Symbol.t
   | Assert of Expr.t
   | CheckSat
   | GetModel

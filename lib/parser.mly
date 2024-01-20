@@ -13,7 +13,7 @@ let get_bind x = Hashtbl.find varmap x
 %token LPAREN
 %token RPAREN
 %token ASSERT
-%token DECLARE_FUN CHECK_SAT GET_MODEL
+%token LET_CONST CHECK_SAT GET_MODEL
 (*%token HOLE*)
 %token EOF
 
@@ -35,12 +35,12 @@ let get_bind x = Hashtbl.find varmap x
 let script := stmts = list(stmt); EOF; { stmts }
 
 let stmt :=
-  | LPAREN; DECLARE_FUN; x = SYMBOL; t = TYPE; RPAREN;
+  | LPAREN; LET_CONST; x = SYMBOL; t = TYPE; RPAREN;
     {
       add_bind x t;
-      Ast.Declare (Symbol.mk_symbol t x)
+      Ast.Let_const (Symbol.mk_symbol t x)
     }
-  | LPAREN; ASSERT; e = s_expr; RPAREN; { Ast.Assert e }
+  | LPAREN; ASSERT; ~ = s_expr; RPAREN; <Ast.Assert>
   | LPAREN; CHECK_SAT; RPAREN; { Ast.CheckSat }
   | LPAREN; GET_MODEL; RPAREN; { Ast.GetModel }
 

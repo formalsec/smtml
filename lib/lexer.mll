@@ -63,7 +63,8 @@ let keywords =
      ; ("bool.and", BINARY (Ty_bool, And))
      ; ("bool.or", BINARY (Ty_bool, Or))
      ; ("bool.xor", BINARY (Ty_bool, Xor))
-     ; ("bool.eq", RELOP (Ty_bool, Eq))
+     ; ("=", RELOP (Ty_bool, Eq))
+     ; ("bool.eq", RELOP (Ty_bool, Ne))
      ; ("bool.ne", RELOP (Ty_bool, Ne))
      ; ("bool.ite", TERNARY (Ty_bool, Ite))
      ; ("str.len", UNARY (Ty_str, Len))
@@ -187,8 +188,8 @@ let keywords =
      ; ("f64.reinterpret_i64", CVTOP (Ty_fp S64, Reinterpret_int))
      ; ("Ptr", PTR)
      ; ("assert", ASSERT)
+     ; ("let-const", LET_CONST)
      ; ("check-sat", CHECK_SAT)
-     ; ("declare-fun", DECLARE_FUN)
      ; ("get-model", GET_MODEL)
     |];
   tbl

@@ -20,7 +20,7 @@ module Make (Solver : Solver_intf.S) = struct
     let { solver; pc; _ } = state in
     let st pc = { state with pc } in
     match stmt with
-    | Declare _x -> st pc
+    | Let_const _x -> st pc
     | Assert e ->
       Solver.add solver [ e ];
       st (e :: pc)
