@@ -31,7 +31,7 @@ jobs:
         run: |
           opam install -y . --deps-only --with-doc --with-test
           opam exec -- dune build @install @doc
-          opam exec -- dune runtest --force --instrument-with bisect_ppx
+          BISECT_FILE=`pwd`/bisect opam exec -- dune runtest --force --instrument-with bisect_ppx
           opam exec -- bisect-ppx-report html -o _build/default/_doc/_html/coverage
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
