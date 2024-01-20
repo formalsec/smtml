@@ -10,41 +10,6 @@ let x = Expr.mk_symbol symb_x
 let zero = Val (Int 0) @: Ty_int
 let two = Val (Int 2) @: Ty_int
 
-(* Satisfiability *)
-let () =
-  assert (
-    Batch.check solver
-      [ Relop (Ge, Unop (Len, x) @: Ty_str, Unop (Len, abc) @: Ty_str) @: Ty_int
-      ] )
-
-let () =
-  let x = mk_symbol Symbol.("x" @: Ty_real) in
-  let y = mk_symbol Symbol.("y" @: Ty_real) in
-  assert (
-    Batch.check solver
-      [ Relop
-          (Eq, Cvtop (ToString, x) @: Ty_real, Cvtop (ToString, y) @: Ty_real)
-        @: Ty_str
-      ] )
-
-let () =
-  assert (
-    not
-      (Batch.check solver
-         [ Relop (Eq, Unop (Len, x) @: Ty_str, Val (Int 4) @: Ty_int) @: Ty_int
-         ; Relop (Eq, Unop (Len, x) @: Ty_str, Unop (Len, abc) @: Ty_str)
-           @: Ty_int
-         ] ) )
-
-let () =
-  let pc =
-    [ Relop
-        (Eq, Triop (Substr, abc, zero, two) @: Ty_str, Val (Str "ab") @: Ty_str)
-      @: Ty_str
-    ]
-  in
-  assert (Batch.check solver pc)
-
 let () =
   let pc =
     [ Relop (Eq, x, abc) @: Ty_str

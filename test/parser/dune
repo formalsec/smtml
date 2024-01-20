@@ -1,0 +1,7 @@
+(cram
+ (deps
+  %{bin:smtml}
+  test_core.smtml
+  test_lia.smtml
+  test_lra.smtml
+  test_qf_s.smtml))

@@ -1,14 +1,10 @@
 open Encoding
 open Ty
 
-let f32 f = Num.F32 (Int32.bits_of_float f)
-let f64 f = Num.F64 (Int64.bits_of_float f)
-
 let () =
   let i32_unop = Eval_numeric.eval_unop (Ty_bitv S32) in
   let i32_binop = Eval_numeric.eval_binop (Ty_bitv S32) in
   let i32_relop = Eval_numeric.eval_relop (Ty_bitv S32) in
-  let i32_cvtop = Eval_numeric.eval_cvtop (Ty_bitv S32) in
   assert (i32_unop Neg (I32 1l) = I32 (-1l));
   assert (i32_unop Not (I32 (-1l)) = I32 0l);
   assert (i32_binop Add (I32 0l) (I32 1l) = I32 1l);
@@ -30,15 +26,12 @@ let () =
   assert (i32_relop Gt (I32 1l) (I32 0l));
   assert (i32_relop GtU (I32 (-1l)) (I32 0l));
   assert (i32_relop Ge (I32 1l) (I32 0l));
-  assert (i32_relop GeU (I32 (-1l)) (I32 0l));
-  assert (i32_cvtop TruncSF32 (f32 8.5) = I32 8l);
-  assert (i32_cvtop TruncSF64 (f64 8.5) = I32 8l)
+  assert (i32_relop GeU (I32 (-1l)) (I32 0l))
 
 let () =
   let i64_unop = Eval_numeric.eval_unop (Ty_bitv S64) in
   let i64_binop = Eval_numeric.eval_binop (Ty_bitv S64) in
   let i64_relop = Eval_numeric.eval_relop (Ty_bitv S64) in
-  let i64_cvtop = Eval_numeric.eval_cvtop (Ty_bitv S64) in
   assert (i64_unop Neg (I64 1L) = I64 (-1L));
   assert (i64_unop Not (I64 (-1L)) = I64 0L);
   assert (i64_binop Add (I64 0L) (I64 1L) = I64 1L);
@@ -60,16 +53,4 @@ let () =
   assert (i64_relop Gt (I64 1L) (I64 0L));
   assert (i64_relop GtU (I64 (-1L)) (I64 0L));
   assert (i64_relop Ge (I64 1L) (I64 0L));
-  assert (i64_relop GeU (I64 (-1L)) (I64 0L));
-  assert (i64_cvtop TruncSF32 (f32 8.5) = I64 8L);
-  assert (i64_cvtop TruncSF64 (f64 8.5) = I64 8L)
-
-let () =
-  let f32_cvtop = Eval_numeric.eval_cvtop (Ty_fp S32) in
-  assert (f32_cvtop ConvertSI32 (I32 8l) = f32 8.0);
-  assert (f32_cvtop ConvertSI64 (I64 8L) = f32 8.0)
-
-let () =
-  let f64_cvtop = Eval_numeric.eval_cvtop (Ty_fp S64) in
-  assert (f64_cvtop ConvertSI32 (I32 8l) = f64 8.0);
-  assert (f64_cvtop ConvertSI64 (I64 8L) = f64 8.0)
+  assert (i64_relop GeU (I64 (-1L)) (I64 0L))

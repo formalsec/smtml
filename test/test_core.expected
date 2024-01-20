@@ -1,5 +1,0 @@
-(model
-  (w bool false)
-  (z bool true)
-  (x bool true)
-  (y bool true))

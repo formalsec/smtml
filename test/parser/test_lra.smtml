@@ -1,0 +1,6 @@
+(let-const x real)
+(let-const y real)
+(assert (= y (real.mul x x)))
+(assert (real.eq y 4.0))
+(check-sat)
+(get-model)

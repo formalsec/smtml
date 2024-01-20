@@ -1,0 +1,16 @@
+;(set-logic LIA)
+(let-const x int)
+(let-const y int)
+(let-const z int)
+(assert (int.gt x 0))
+(assert (int.le x 10))
+(assert (= (int.sub (int.add x y) y) x))
+(assert (= (int.div (int.mul x y) y) x))
+(assert (int.lt (int.rem y x) 10))
+(assert
+  (=
+    (int.div (int.pow x 2) x)
+    (int.div (int.mul x x) x)))
+(check-sat)
+(assert (int.lt (int.neg z) 0))
+(check-sat)

@@ -1,0 +1,15 @@
+(let-const y real)
+(let-const z real)
+(assert
+  (bool.and
+    (= y z)
+    (= (real.to_string y) (real.to_string z))))
+(check-sat)
+(let-const x str)
+(assert (= x "abc"))
+(assert (= (str.len x) (str.len "abc")))
+(assert (= "ab" (str.sub "abc" 0 2)))
+(assert (= (str.len (str.sub x 0 2)) 2))
+(check-sat)
+(get-model)
+; Add remaning tests with String_to_code

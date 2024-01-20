@@ -1,4 +1,0 @@
-sat
-(model
-  (y real 4.)
-  (x real -2.))
