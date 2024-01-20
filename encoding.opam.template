@@ -1,1 +1,4 @@
 available: (arch = "x86_64" | arch = "arm64") & os != "win32" & arch != "x86_32"
+pin-depends: [
+  [ "colibri2" "git+ssh://git@git.frama-c.com/pub/colibrics.git#master"]
+]

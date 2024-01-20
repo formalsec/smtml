@@ -16,6 +16,7 @@ module type S = sig
   val value : model -> Expr.t -> Value.t
   val values_of_model : ?symbols:Symbol.t list -> model -> Model.t
   val pp_smt : ?status:bool -> Format.formatter -> Expr.t list -> unit
+  val set_debug : bool -> unit
 
   module Solver : sig
     val make : ?logic:Solver_intf.logic -> unit -> solver
