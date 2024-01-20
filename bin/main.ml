@@ -35,4 +35,6 @@ let cli =
   let info = Cmd.info "smtml" ~version:"%%VERSION%%" in
   Cmd.v info Term.(const main $ files)
 
-let () = exit @@ Cmd.eval cli
+let () =
+  Printexc.record_backtrace true;
+  exit @@ Cmd.eval cli
