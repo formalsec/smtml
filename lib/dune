@@ -30,8 +30,19 @@
   symbol
   ty
   value
-  z3_mappings)
+  z3_mappings
+  colibri2_mappings)
  (private_modules lexer parser)
- (libraries hc z3 ocaml_intrinsics)
+ (libraries
+  hc
+  z3
+  ocaml_intrinsics
+  colibri2.core
+  colibri2.solver
+  colibri2.theories.bool
+  colibri2.theories.quantifiers
+  colibri2.theories.LRA
+  colibri2.theories.LRA.stages.stage2
+  colibri2.theories.fp)
  (instrumentation
   (backend bisect_ppx)))

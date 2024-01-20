@@ -828,6 +828,8 @@ module Fresh = struct
           Hashtbl.replace m sym v )
         symbols';
       m
+
+    let set_debug _ = ()
   end
 end
 

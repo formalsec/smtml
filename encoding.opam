@@ -13,6 +13,7 @@ depends: [
   "ocaml" {>= "4.14.0"}
   "ocaml_intrinsics"
   "z3" {>= "4.12.2" & < "4.13"}
+  "colibri2"
   "menhir" {build & >= "20220210"}
   "cmdliner" {>= "1.2.0"}
   "zarith" {>= "1.5"}
@@ -36,3 +37,6 @@ build: [
 ]
 dev-repo: "git+https://github.com/formalsec/encoding.git"
 available: (arch = "x86_64" | arch = "arm64") & os != "win32" & arch != "x86_32"
+pin-depends: [
+  [ "colibri2" "git+ssh://git@git.frama-c.com/pub/colibrics.git#master"]
+]
