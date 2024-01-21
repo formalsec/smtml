@@ -12,6 +12,8 @@
 (assert (= (str.len x) (str.len "abc")))
 (assert (= "ab" (str.sub x 0 2)))
 (assert (= (str.len (str.sub x 0 2)) 2))
+(assert (= (str.to_code (str.nth x 0)) 97))
+(assert (= (str.from_code (str.to_code (str.nth x 0))) "a"))
 (check-sat)
 (get-model)
 ; Add remaning tests with String_to_code
