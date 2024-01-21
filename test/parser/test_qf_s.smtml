@@ -1,14 +1,16 @@
+(let-const x str)
 (let-const y real)
 (let-const z real)
+(push)
 (assert
   (bool.and
     (= y z)
     (= (real.to_string y) (real.to_string z))))
 (check-sat)
-(let-const x str)
+(pop 1)
 (assert (= x "abc"))
 (assert (= (str.len x) (str.len "abc")))
-(assert (= "ab" (str.sub "abc" 0 2)))
+(assert (= "ab" (str.sub x 0 2)))
 (assert (= (str.len (str.sub x 0 2)) 2))
 (check-sat)
 (get-model)

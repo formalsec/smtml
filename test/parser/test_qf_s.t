@@ -3,6 +3,4 @@ Test parsing string:
   sat
   sat
   (model
-    (x "abc")
-    (y 2.)
-    (z 2.))
+    (x str "abc"))

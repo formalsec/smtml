@@ -20,15 +20,21 @@ module Make (Solver : Solver_intf.S) = struct
     let { solver; pc; _ } = state in
     let st pc = { state with pc } in
     match stmt with
-    | Let_const _x -> st pc
     | Assert e ->
       Solver.add solver [ e ];
       st (e :: pc)
-    | CheckSat ->
+    | Check_sat ->
       if Solver.check solver [] then Format.printf "sat\n"
       else Format.printf "unsat\n";
       st pc
-    | GetModel ->
+    | Push ->
+      Solver.push solver;
+      st pc
+    | Pop n ->
+      Solver.pop solver n;
+      st pc
+    | Let_const _x -> st pc
+    | Get_model ->
       assert (Solver.check solver []);
       let model = Solver.model solver in
       Option.iter (Model.pp Format.std_formatter) model;

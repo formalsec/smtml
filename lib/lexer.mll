@@ -183,8 +183,10 @@ let keywords =
      ; ("f64.reinterpret_i64", CVTOP (Ty_fp S64, Reinterpret_int))
      ; ("Ptr", PTR)
      ; ("assert", ASSERT)
-     ; ("let-const", LET_CONST)
      ; ("check-sat", CHECK_SAT)
+     ; ("push", PUSH)
+     ; ("pop", POP)
+     ; ("let-const", LET_CONST)
      ; ("get-model", GET_MODEL)
     |];
   tbl
