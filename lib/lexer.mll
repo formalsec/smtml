@@ -68,6 +68,8 @@ let keywords =
      ; ("str.sub", TERNARY (Ty_str, Substr))
      ; ("str.eq", RELOP (Ty_str, Eq))
      ; ("str.ne", RELOP (Ty_str, Ne))
+     ; ("str.to_code", CVTOP (Ty_str, String_to_code))
+     ; ("str.from_code", CVTOP (Ty_str, String_from_code))
      ; ("i32.neg", UNARY (Ty_bitv S32, Neg))
      ; ("i32.clz", UNARY (Ty_bitv S32, Clz))
      ; ("i32.not", UNARY (Ty_bitv S32, Not))
@@ -140,6 +142,9 @@ let keywords =
      ; ("f32.sqrt", UNARY (Ty_fp S32, Sqrt))
      ; ("f32.nearest",UNARY (Ty_fp S32, Nearest) )
      ; ("f32.is_nan", UNARY (Ty_fp S32, Is_nan))
+     ; ("f32.ceil", UNARY (Ty_fp S32, Ceil))
+     ; ("f32.floor", UNARY (Ty_fp S32, Floor))
+     ; ("f32.trunc", UNARY (Ty_fp S32, Trunc))
      ; ("f32.add", BINARY (Ty_fp S32, Add))
      ; ("f32.sub", BINARY (Ty_fp S32, Sub))
      ; ("f32.mul", BINARY (Ty_fp S32, Mul))
@@ -163,6 +168,9 @@ let keywords =
      ; ("f64.sqrt", UNARY (Ty_fp S64, Sqrt))
      ; ("f64.nearest",UNARY (Ty_fp S64, Nearest) )
      ; ("f64.is_nan", UNARY (Ty_fp S64, Is_nan))
+     ; ("f64.ceil", UNARY (Ty_fp S32, Ceil))
+     ; ("f64.floor", UNARY (Ty_fp S32, Floor))
+     ; ("f64.trunc", UNARY (Ty_fp S32, Trunc))
      ; ("f64.add", BINARY (Ty_fp S64, Add))
      ; ("f64.sub", BINARY (Ty_fp S64, Sub))
      ; ("f64.mul", BINARY (Ty_fp S64, Mul))
@@ -213,6 +221,7 @@ rule token = parse
   | '(' { LPAREN }
   | ')' { RPAREN }
 
+  | "nan" { DEC Float.nan }
   | numeral as s { NUM (int_of_string s) }
   | decimal as s { DEC (Float.of_string s) }
   | bool as s { BOOL (s = "true") }

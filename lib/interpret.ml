@@ -11,7 +11,7 @@ module Make (Solver : Solver_intf.S) = struct
   let init_state stmts =
     let params = Params.(default () $ (Model, false)) in
     { stmts
-    ; smap = Hashtbl.create 0
+    ; smap = Hashtbl.create 16
     ; solver = Solver.create ~params ()
     ; pc = []
     }
@@ -24,8 +24,9 @@ module Make (Solver : Solver_intf.S) = struct
       Solver.add solver [ e ];
       st (e :: pc)
     | Check_sat ->
-      if Solver.check solver [] then Format.printf "sat\n"
-      else Format.printf "unsat\n";
+      ( match Solver.check solver [] with
+      | true -> Format.printf "sat@\n"
+      | false -> Format.printf "unsat@\n" );
       st pc
     | Push ->
       Solver.push solver;
@@ -37,7 +38,7 @@ module Make (Solver : Solver_intf.S) = struct
     | Get_model ->
       assert (Solver.check solver []);
       let model = Solver.model solver in
-      Option.iter (Model.pp Format.std_formatter) model;
+      Format.printf "%a@." (Format.pp_print_option Model.pp) model;
       st pc
 
   let rec loop (state : exec_state) : exec_state =
