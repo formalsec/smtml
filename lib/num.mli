@@ -6,6 +6,7 @@ type t =
   | F64 of int64
 
 val ( = ) : t -> t -> bool
+val compare : t -> t -> int
 val type_of : t -> Ty.t
 val pp : Format.formatter -> t -> unit
 val pp_hex : Format.formatter -> t -> unit
