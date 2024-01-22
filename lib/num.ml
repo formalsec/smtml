@@ -13,6 +13,14 @@ let ( = ) (n1 : t) (n2 : t) : bool =
   | F64 i1, F64 i2 -> i1 = i2
   | _ -> false
 
+let compare n1 n2 =
+  match (n1, n2) with
+  | I32 i1, I32 i2 -> compare i1 i2
+  | I64 i1, I64 i2 -> compare i1 i2
+  | F32 i1, F32 i2 -> compare i1 i2
+  | F64 i1, F64 i2 -> compare i1 i2
+  | _ -> compare n1 n2
+
 let type_of (n : t) =
   match n with
   | I8 _ -> assert false

@@ -17,6 +17,15 @@ let equal (v1 : t) (v2 : t) : Bool.t =
   | Num x1, Num x2 -> Num.(x1 = x2)
   | _ -> false
 
+let compare v1 v2 =
+  match v1, v2 with
+  | True, True | False, False -> 0
+  | Int x1, Int x2 -> Int.compare x1 x2
+  | Real x1, Real x2 -> Float.compare x1 x2
+  | Str x1, Str x2 -> String.compare x1 x2
+  | Num x1, Num x2 -> Num.compare x1 x2
+  | _ -> compare v1 v2
+
 let type_of (v : t) : Ty.t =
   match v with
   | True | False -> Ty_bool
