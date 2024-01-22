@@ -3,7 +3,7 @@ Test boolean parsing:
   sat
   sat
   (model
-    (w bool false)
-    (z bool true)
-    (x bool true)
-    (y bool true))
+    (w false)
+    (x true)
+    (y true)
+    (z true))
