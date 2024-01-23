@@ -3,4 +3,4 @@ Test parsing string:
   sat
   sat
   (model
-    (x str "abc"))
+    (x "abc"))
