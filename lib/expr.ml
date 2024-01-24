@@ -159,6 +159,10 @@ let rec simplify_binop ty (op : binop) e1 e2 =
     | Sub ->
       let new_offset = simplify_binop offset.ty Sub offset e2 in
       Ptr (base, new_offset @: offset.ty)
+    | Rem ->
+      let rhs = Val (Value.Num (Num.I32 base)) @: ty in
+      let addr = (simplify_binop ty Add rhs offset) @: ty in
+      simplify_binop ty Rem addr e2
     | _ -> Binop (op, e1, e2) )
   | _, Ptr (base, offset) -> (
     match op with
