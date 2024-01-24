@@ -1,6 +1,6 @@
 (** Term definitions of the abstract syntax *)
 
-type t =
+type t = private
   { e : expr
   ; ty : Ty.t
   }
@@ -17,7 +17,6 @@ and expr =
   | Extract of t * int * int
   | Concat of t * t
 
-val v : expr -> Ty.t -> t
 val ( @: ) : expr -> Ty.t -> t
 val equal : t -> t -> bool
 val hash : t -> int

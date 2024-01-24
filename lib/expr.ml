@@ -53,8 +53,7 @@ let hashcons x =
     x
   | v -> v
 
-let v e ty = hashcons { e; ty }
-let ( @: ) e ty = v e ty
+let ( @: ) e ty = hashcons { e; ty }
 let mk_symbol s = Symbol s @: Symbol.type_of s
 let is_num e = match e.e with Val (Num _) -> true | _ -> false
 
