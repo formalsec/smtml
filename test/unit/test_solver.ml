@@ -14,9 +14,13 @@ let () =
   let x = mk_symbol symbol_x in
   assert (Solver.check solver []);
   assert (Solver.check solver [ x >= v 0 ]);
-  assert (Val (Int 0) @: Ty_int = Solver.get_value solver x);
+  assert (
+    let v = Solver.get_value solver x in
+    v.node.e = Val (Int 0) && v.node.ty = Ty_int );
   assert (Solver.check solver [ eq x (v 3) ]);
-  assert (Val (Int 9) @: Ty_int = Solver.get_value solver (x * x));
+  assert (
+    let v = Solver.get_value solver (x * x) in
+    v.node.e = Val (Int 9) && v.node.ty = Ty_int );
   assert (Solver.check solver []);
   let model = Solver.model ~symbols:[ symbol_x ] solver in
   let val_x = Option.bind model (fun m -> Model.evaluate m symbol_x) in

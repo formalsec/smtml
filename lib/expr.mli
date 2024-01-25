@@ -1,9 +1,10 @@
 (** Term definitions of the abstract syntax *)
-
-type t = private
+type inner = private
   { e : expr
   ; ty : Ty.t
   }
+
+and t = inner Hc.hash_consed
 
 and expr =
   | Val of Value.t
@@ -28,6 +29,12 @@ val pp_smt : Format.formatter -> t list -> unit
 val pp_list : Format.formatter -> t list -> unit
 val to_string : t -> string
 val simplify : ?extract:bool -> t -> t
+
+module H : sig
+  val clear : unit -> unit
+  val stats : unit -> Hashtbl.statistics
+  val length : unit -> int
+end
 
 module Bool : sig
   val v : bool -> t

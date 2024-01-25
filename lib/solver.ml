@@ -31,7 +31,7 @@ module Base (M : Mappings_intf.S) = struct
 
   let get_value (solver : M.solver) (e : Expr.t) : Expr.t =
     match M.Solver.model solver with
-    | Some m -> Expr.(Val (M.value m e) @: e.ty)
+    | Some m -> Expr.(Val (M.value m e) @: e.node.ty)
     | None -> Log.err "get_value: Trying to get a value from an unsat solver"
 
   let model ?(symbols : Symbol.t list option) (s : M.solver) : Model.t option =
