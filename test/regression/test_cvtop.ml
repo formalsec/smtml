@@ -9,7 +9,7 @@ let () =
   let ptr = Ptr (8390670l, Expr.Bitv.I32.v 2l) @: Ty_bitv S32 in
   let rem = Binop (Rem, ptr, Expr.Bitv.I32.v 1l) @: Ty_bitv S32 in
   let result = Expr.simplify rem in
-  assert(result.e = Val (Num (I32 0l)))
+  assert (result.node.e = Val (Num (I32 0l)))
 
 let () =
   let cvtop = Eval_numeric.eval_cvtop in

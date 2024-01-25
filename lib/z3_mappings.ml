@@ -561,9 +561,10 @@ module Fresh = struct
     (*     quantified_assertion *)
     (*   else body *)
 
-    let rec encode_expr ({ e = expr; ty } : Expr.t) : expr =
+    let rec encode_expr (hte : Expr.t) : expr =
+      let ty = hte.node.ty in
       let open Expr in
-      match expr with
+      match hte.node.e with
       | Val v -> encode_val v
       | Ptr (base, offset) ->
         let base' = encode_val (Num (I32 base)) in
@@ -765,7 +766,7 @@ module Fresh = struct
       let open Value in
       (* we have a model with completion => should never be None *)
       let e = Z3.Model.eval model (encode_expr c) true |> Option.get in
-      match (c.ty, Z3.Sort.get_sort_kind @@ Z3.Expr.get_sort e) with
+      match (c.node.ty, Z3.Sort.get_sort_kind @@ Z3.Expr.get_sort e) with
       | Ty_int, Z3enums.INT_SORT ->
         Int (Z.to_int @@ Z3.Arithmetic.Integer.get_big_int e)
       | Ty_real, Z3enums.REAL_SORT ->
