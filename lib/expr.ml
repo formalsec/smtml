@@ -5,21 +5,21 @@ type inner =
   ; ty : Ty.t
   }
 
-and ht_expr = inner Hc.hash_consed
+and t = inner Hc.hash_consed
 
 and expr =
   | Val of Value.t
-  | Ptr of int32 * ht_expr
-  | Unop of unop * ht_expr
-  | Binop of binop * ht_expr * ht_expr
-  | Triop of triop * ht_expr * ht_expr * ht_expr
-  | Relop of relop * ht_expr * ht_expr
-  | Cvtop of cvtop * ht_expr
+  | Ptr of int32 * t
+  | Unop of unop * t
+  | Binop of binop * t * t
+  | Triop of triop * t * t * t
+  | Relop of relop * t * t
+  | Cvtop of cvtop * t
   | Symbol of Symbol.t
-  | Extract of ht_expr * int * int
-  | Concat of ht_expr * ht_expr
+  | Extract of t * int * int
+  | Concat of t * t
 
-module M = struct
+module HashedType : Hashtbl.HashedType with type t = inner = struct
   type t = inner
 
   let equal (e1 : inner) (e2 : inner) : bool =
@@ -57,19 +57,17 @@ module M = struct
     | Concat (e1, e2) -> h (e1.tag, e2.tag)
 end
 
-let equal (e1 : ht_expr) (e2 : ht_expr) = e1.tag == e2.tag
+module Hc = Hc.Make (HashedType)
 
-module H = Hc.Make (M)
+let hash (e : t) = e.tag
 
-let ( @: ) e ty = H.hashcons { e; ty }
-let mk_symbol s = Symbol s @: Symbol.ty s
+let equal (e1 : t) (e2 : t) = e1.tag == e2.tag
 
-let is_num (e : ht_expr) =
-  match e.node.e with Val (Num _) -> true | _ -> false
+let is_num (e : t) = match e.node.e with Val (Num _) -> true | _ -> false
 
-let get_symbols (hte : ht_expr list) =
+let get_symbols (hte : t list) =
   let tbl = Hashtbl.create 64 in
-  let rec symbols (hte : ht_expr) =
+  let rec symbols (hte : t) =
     match hte.node.e with
     | Val _ -> ()
     | Ptr (_, offset) -> symbols offset
@@ -94,7 +92,7 @@ let get_symbols (hte : ht_expr list) =
   List.iter symbols hte;
   Hashtbl.fold (fun k () acc -> k :: acc) tbl []
 
-let negate_relop (hte : ht_expr) : (ht_expr, string) Result.t =
+let negate_relop (hte : t) : (t, string) Result.t =
   let e =
     match hte.node.e with
     | Relop (Eq, e1, e2) -> Ok (Relop (Ne, e1, e2))
@@ -114,7 +112,7 @@ let negate_relop (hte : ht_expr) : (ht_expr, string) Result.t =
 module Pp = struct
   open Format
 
-  let rec pp fmt (hte : ht_expr) =
+  let rec pp fmt (hte : t) =
     let ty = hte.node.ty in
     match hte.node.e with
     | Val v -> Value.pp fmt v
@@ -131,10 +129,9 @@ module Pp = struct
     | Extract (e, h, l) -> fprintf fmt "(extract %a %d %d)" pp e l h
     | Concat (e1, e2) -> fprintf fmt "(++ %a %a)" pp e1 pp e2
 
-  let pp_list fmt (es : ht_expr list) =
-    pp_print_list ~pp_sep:pp_print_space pp fmt es
+  let pp_list fmt (es : t list) = pp_print_list ~pp_sep:pp_print_space pp fmt es
 
-  let pp_smt fmt (es : ht_expr list) : unit =
+  let pp_smt fmt (es : t list) : unit =
     let pp_symbols fmt syms =
       pp_print_list ~pp_sep:pp_print_newline
         (fun fmt sym ->
@@ -154,11 +151,14 @@ module Pp = struct
 end
 
 let pp = Pp.pp
+
 let pp_list = Pp.pp_list
+
 let pp_smt = Pp.pp_smt
+
 let to_string e = Format.asprintf "%a" pp e
 
-let rec simplify_binop ty (op : binop) (e1 : ht_expr) (e2 : ht_expr) =
+let rec simplify_binop ty (op : binop) (e1 : t) (e2 : t) =
   match (e1.node.e, e2.node.e) with
   | Val (Num n1), Val (Num n2) -> Val (Num (Eval_numeric.eval_binop ty op n1 n2))
   | Ptr (b1, os1), Ptr (b2, os2) -> (
@@ -174,7 +174,7 @@ let rec simplify_binop ty (op : binop) (e1 : ht_expr) (e2 : ht_expr) =
       let new_offset = simplify_binop offset.node.ty Sub offset e2 in
       Ptr (base, new_offset @: offset.node.ty)
     | Rem ->
-      let rhs = Val (Value.Num (Num.I32 base)) @: ty in
+      let rhs = Val (Num (I32 base)) @: ty in
       let addr = simplify_binop ty Add rhs offset @: ty in
       simplify_binop ty Rem addr e2
     | _ -> Binop (op, e1, e2) )
@@ -211,7 +211,7 @@ let rec simplify_binop ty (op : binop) (e1 : ht_expr) (e2 : ht_expr) =
   | Val (Num (I32 1l)), Binop (And, _, _) -> e2.node.e
   | _ -> Binop (op, e1, e2)
 
-let simplify_relop ty (op : relop) (e1 : ht_expr) (e2 : ht_expr) =
+let simplify_relop ty (op : relop) (e1 : t) (e2 : t) =
   match (e1.node.e, e2.node.e) with
   | Val (Num v1), Val (Num v2) ->
     Val (if Eval_numeric.eval_relop ty op v1 v2 then True else False)
@@ -241,14 +241,14 @@ let nland32 (x : int32) (n : int) =
   in
   loop x n 0l
 
-let simplify_extract (s : ht_expr) h l =
+let simplify_extract (s : t) h l =
   match s.node.e with
   | Val (Num (I64 x)) ->
     let x' = nland64 (Int64.shift_right x (l * 8)) (h - l) in
     Val (Num (I64 x'))
   | _ -> if h - l = size s.node.ty then s.node.e else Extract (s, h, l)
 
-let simplify_concat (msb : ht_expr) (lsb : ht_expr) =
+let simplify_concat (msb : t) (lsb : t) =
   match (msb.node.e, lsb.node.e) with
   | ( Extract ({ node = { e = Val (Num (I64 x2)); _ }; _ }, h2, l2)
     , Extract ({ node = { e = Val (Num (I64 x1)); _ }; _ }, h1, l1) ) ->
@@ -286,7 +286,7 @@ let simplify_concat (msb : ht_expr) (lsb : ht_expr) =
     Concat (Extract (Val (Num (I64 x)) @: ty, d1 + d2, 0) @: ty, se)
   | _ -> Concat (msb, lsb)
 
-let rec simplify ?(extract = true) (hte : ht_expr) : ht_expr =
+let rec simplify ?(extract = true) (hte : t) : t =
   let ty = hte.node.ty in
   match hte.node.e with
   | Val _ -> hte
@@ -310,26 +310,26 @@ let rec simplify ?(extract = true) (hte : ht_expr) : ht_expr =
 module Bool = struct
   let v b = (match b with true -> Val True | false -> Val False) @: Ty_bool
 
-  let not (v : ht_expr) =
+  let not (v : t) =
     ( match v.node.e with
     | Val True -> Val False
     | Val False -> Val True
     | _ -> Unop (Not, v) )
     @: Ty_bool
 
-  let ( = ) (b1 : ht_expr) (b2 : ht_expr) =
+  let ( = ) (b1 : t) (b2 : t) =
     ( match (b1.node.e, b2.node.e) with
     | Val True, Val True | Val False, Val False -> Val True
     | _ -> Relop (Eq, b1, b2) )
     @: Ty_bool
 
-  let ( != ) (b1 : ht_expr) (b2 : ht_expr) =
+  let ( != ) (b1 : t) (b2 : t) =
     ( match (b1.node.e, b2.node.e) with
     | Val True, Val False | Val False, Val True -> Val True
     | _ -> Relop (Ne, b1, b2) )
     @: Ty_bool
 
-  let ( && ) (b1 : ht_expr) (b2 : ht_expr) =
+  let ( && ) (b1 : t) (b2 : t) =
     ( match (b1.node.e, b2.node.e) with
     | Val True, Val True -> Val True
     | Val False, Val True | Val True, Val False | Val False, Val False ->
@@ -337,7 +337,7 @@ module Bool = struct
     | _ -> Binop (And, b1, b2) )
     @: Ty_bool
 
-  let ( || ) (b1 : ht_expr) (b2 : ht_expr) =
+  let ( || ) (b1 : t) (b2 : t) =
     ( match (b1.node.e, b2.node.e) with
     | Val False, Val False -> Val False
     | Val True, Val True | Val False, Val True | Val True, Val False -> Val True
@@ -349,17 +349,26 @@ module Make (T : sig
   type elt
 
   val ty : Ty.t
+
   val num : elt -> Num.t
 end) =
 struct
   let v i = Val (Num (T.num i)) @: T.ty
+
   let sym x = mk_symbol Symbol.(x @: T.ty)
+
   let ( ~- ) e = Unop (Neg, e) @: T.ty
+
   let ( = ) e1 e2 = Relop (Eq, e1, e2) @: T.ty
+
   let ( != ) e1 e2 = Relop (Ne, e1, e2) @: T.ty
+
   let ( > ) e1 e2 = Relop (Gt, e1, e2) @: T.ty
+
   let ( >= ) e1 e2 = Relop (Ge, e1, e2) @: T.ty
+
   let ( < ) e1 e2 = Relop (Lt, e1, e2) @: T.ty
+
   let ( <= ) e1 e2 = Relop (Le, e1, e2) @: T.ty
 end
 
@@ -368,6 +377,7 @@ module Bitv = struct
     type elt = int
 
     let ty = Ty_bitv S8
+
     let num i = Num.I8 i
   end)
 
@@ -375,6 +385,7 @@ module Bitv = struct
     type elt = int32
 
     let ty = Ty_bitv S32
+
     let num i = Num.I32 i
   end)
 
@@ -382,6 +393,7 @@ module Bitv = struct
     type elt = int64
 
     let ty = Ty_bitv S64
+
     let num i = Num.I64 i
   end)
 end
@@ -391,6 +403,7 @@ module Fpa = struct
     type elt = float
 
     let ty = Ty_fp S32
+
     let num f = Num.F32 (Int32.bits_of_float f)
   end)
 
@@ -398,10 +411,7 @@ module Fpa = struct
     type elt = float
 
     let ty = Ty_fp S64
+
     let num f = Num.F64 (Int64.bits_of_float f)
   end)
 end
-
-type t = ht_expr
-
-let hash (e : ht_expr) = e.tag
