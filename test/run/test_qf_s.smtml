@@ -3,9 +3,8 @@
 (let-const z real)
 (push)
 (assert
-  (bool.and
-    (= y z)
-    (= (real.to_string y) (real.to_string z))))
+  (let ((str_y (real.to_string y)) (str_z (real.to_string z)))
+  (bool.and (= y z) (= str_y str_z))))
 (check-sat)
 (pop 1)
 (assert (= x "abc"))
