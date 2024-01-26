@@ -1,5 +1,5 @@
 Test boolean parsing:
-  $ dune exec -- smtml test_core.smtml
+  $ dune exec smtml -- run test_core.smtml
   sat
   sat
   (model

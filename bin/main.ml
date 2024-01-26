@@ -14,7 +14,7 @@ let get_contents = function
 
 let parse_file file = get_contents file |> Parse.from_string
 
-let main files =
+let run files =
   match files with
   | [] ->
     let ast = parse_file "-" in
@@ -27,13 +27,30 @@ let main files =
            Some (Interpret.start ?state ast) )
          None files
 
+let fmt files =
+  let pp_ast fmt ast =
+    Format.pp_print_list ~pp_sep:Format.pp_print_newline Ast.pp fmt ast
+  in
+  match files with
+  | [] -> Format.printf "%a@." pp_ast (parse_file "-")
+  | _ ->
+    List.iter (fun file -> Format.printf "%a@." pp_ast (parse_file file)) files
+
 let files =
   let doc = "source files" in
   Arg.(value & pos_all non_dir_file [] & info [] ~doc)
 
+let run_cmd =
+  let info = Cmd.info "run" in
+  Cmd.v info Term.(const run $ files)
+
+let fmt_cmd =
+  let info = Cmd.info "fmt" in
+  Cmd.v info Term.(const fmt $ files)
+
 let cli =
   let info = Cmd.info "smtml" ~version:"%%VERSION%%" in
-  Cmd.v info Term.(const main $ files)
+  Cmd.group info [ run_cmd; fmt_cmd ]
 
 let () =
   Printexc.record_backtrace true;
