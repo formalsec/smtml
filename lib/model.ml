@@ -24,7 +24,7 @@ let pp_bindings fmt ?(no_values = false) model =
       if not no_values then
         Format.fprintf fmt "(%a %a)" Symbol.pp key Value.pp data
       else
-        let t = Symbol.type_of key in
+        let t = Symbol.ty key in
         Format.fprintf fmt "(%a %a)" Symbol.pp key Ty.pp t )
     fmt model
 
