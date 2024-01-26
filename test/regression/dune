@@ -1,3 +1,6 @@
 (tests
- (names test_cvtop test_fp_get_value)
+ (names
+  test_cvtop
+  test_fp_get_value
+  test_pr_62)
  (libraries encoding))
