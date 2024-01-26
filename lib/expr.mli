@@ -30,7 +30,7 @@ val pp_list : Format.formatter -> t list -> unit
 val to_string : t -> string
 val simplify : ?extract:bool -> t -> t
 
-module H : sig
+module Hc : sig
   val clear : unit -> unit
   val stats : unit -> Hashtbl.statistics
   val length : unit -> int
