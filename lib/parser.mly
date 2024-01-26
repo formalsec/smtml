@@ -5,7 +5,7 @@ open Expr
 
 let varmap = Hashtbl.create 512
 
-let add_bind x t = Hashtbl.replace varmap x t
+let add_bind (x, t) = Hashtbl.replace varmap x t
 let get_bind x = Hashtbl.find varmap x
 
 %}
@@ -41,7 +41,7 @@ let script := stmts = list(stmt); EOF; { stmts }
 let stmt :=
   | LPAREN; LET_CONST; x = SYMBOL; t = TYPE; RPAREN;
     {
-      add_bind x t;
+      add_bind (x, t);
       Ast.Let_const (Symbol.make t x)
     }
   | LPAREN; ASSERT; ~ = term; RPAREN; <Ast.Assert>
@@ -51,7 +51,11 @@ let stmt :=
   | LPAREN; GET_MODEL; RPAREN; { Ast.Get_model }
 
 let var_binding :=
-  | LPAREN; x = SYMBOL; ~ = term; RPAREN; { (x,  term) }
+  | LPAREN; x = SYMBOL; ~ = term; RPAREN;
+    {
+      add_bind (x, Ty_str);
+      (x,  term)
+    }
 
 let term :=
   | ~ = s_expr; { E s_expr }
