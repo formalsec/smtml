@@ -38,7 +38,7 @@ let fmt files inplace =
         let ast = parse_file file in
         if inplace then
           Out_channel.with_open_text file (fun out ->
-              pp_ast (formatter_of_out_channel out) ast )
+              Format.fprintf (formatter_of_out_channel out) "%a@." pp_ast ast )
         else Format.printf "%a@." pp_ast ast )
       files
 
