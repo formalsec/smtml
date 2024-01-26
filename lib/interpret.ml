@@ -16,11 +16,14 @@ module Make (Solver : Solver_intf.S) = struct
     ; pc = []
     }
 
+  let eval_term = function E e -> e | Let _ -> assert false
+
   let eval stmt (state : exec_state) : exec_state =
     let { solver; pc; _ } = state in
     let st pc = { state with pc } in
     match stmt with
-    | Assert e ->
+    | Assert t ->
+      let e = eval_term t in
       Solver.add solver [ e ];
       st (e :: pc)
     | Check_sat ->

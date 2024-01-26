@@ -23,8 +23,21 @@ let prover_conv =
     ; ("Colibri2", Colibri2_prover)
     ]
 
-let parse_cmdline =
-  let aux files prover incremental debug =
+let fmt files =
+  let pp_ast fmt ast =
+    Format.pp_print_list ~pp_sep:Format.pp_print_newline Ast.pp fmt ast
+  in
+  match files with
+  | [] -> Format.printf "%a@." pp_ast (parse_file "-")
+  | _ ->
+    List.iter (fun file -> Format.printf "%a@." pp_ast (parse_file file)) files
+
+let files =
+  let doc = "Source file(s)." in
+  Cmdliner.Arg.(value & pos_all non_dir_file [] & info [] ~doc)
+
+let run_cmd =
+  let run files prover incremental debug =
     let module Mappings =
       ( val match prover with
             | Z3_prover -> (module Z3_mappings)
@@ -52,24 +65,30 @@ let parse_cmdline =
            None files
   in
   let open Cmdliner in
-  let files =
-    Arg.(value & pos_all string [] & info [] ~docv:"files" ~doc:"files to read")
-  and prover =
-    Arg.(
-      value & opt prover_conv Z3_prover
-      & info [ "p"; "prover" ] ~doc:"SMT solver to use" )
+  let prover =
+    let doc = "SMT solver to use" in
+    Arg.(value & opt prover_conv Z3_prover & info [ "p"; "prover" ] ~doc)
   and incremental =
-    Arg.(
-      value & flag
-      & info [ "incremental" ] ~doc:"Use the SMT solver in the incremental mode" )
+    let doc = "Use the SMT solver in the incremental mode" in
+    Arg.(value & flag & info [ "incremental" ] ~doc)
   and debug =
-    Arg.(value & flag & info [ "debug" ] ~doc:"Print debugging messages")
+    let doc = "Print debugging messages" in
+    Arg.(value & flag & info [ "debug" ] ~doc)
   in
-  Cmd.v
-    (Cmd.info "smtml" ~version:"%%VERSION%%")
-    Term.(const aux $ files $ prover $ incremental $ debug)
+  let info = Cmd.info "run" in
+  Cmd.v info Term.(const run $ files $ prover $ incremental $ debug)
+
+let fmt_cmd =
+  let open Cmdliner in
+  let info = Cmd.info "fmt" in
+  Cmd.v info Term.(const fmt $ files)
+
+let cli =
+  let open Cmdliner in
+  let info = Cmd.info "smtml" ~version:"%%VERSION%%" in
+  Cmd.group info [ run_cmd; fmt_cmd ]
 
 let () =
-  match Cmdliner.Cmd.eval_value parse_cmdline with
+  match Cmdliner.Cmd.eval_value cli with
   | Error (`Parse | `Term | `Exn) -> exit 2
   | Ok (`Ok () | `Version | `Help) -> ()

@@ -200,6 +200,7 @@ let keywords =
      ; ("check-sat", CHECK_SAT)
      ; ("push", PUSH)
      ; ("pop", POP)
+     ; ("let", LET)
      ; ("let-const", LET_CONST)
      ; ("get-model", GET_MODEL)
     |];
