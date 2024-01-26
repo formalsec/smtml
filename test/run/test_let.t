@@ -1,4 +1,4 @@
-Test smtml formatting:
+Test smtml let formatting:
   $ dune exec smtml -- fmt test_let.smtml
   (let-const a int)
   (assert
@@ -7,6 +7,7 @@ Test smtml formatting:
     (bool.and (int.gt y 10) (int.lt y 20)))))
   (check-sat)
   (get-model)
+Test let execution:
   $ dune exec smtml -- run test_let.smtml
   sat
   (model
