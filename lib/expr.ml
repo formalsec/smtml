@@ -54,7 +54,7 @@ let hashcons x =
   | v -> v
 
 let ( @: ) e ty = hashcons { e; ty }
-let mk_symbol s = Symbol s @: Symbol.type_of s
+let mk_symbol s = Symbol s @: Symbol.ty s
 let is_num e = match e.e with Val (Num _) -> true | _ -> false
 
 let get_symbols e =
@@ -126,8 +126,8 @@ module Pp = struct
     let pp_symbols fmt syms =
       pp_print_list ~pp_sep:pp_print_newline
         (fun fmt sym ->
-          let t = Symbol.type_of sym in
-          fprintf fmt "(declare-fun %a %a)" Symbol.pp sym Ty.pp t )
+          let ty = Symbol.ty sym in
+          fprintf fmt "(declare-fun %a %a)" Symbol.pp sym Ty.pp ty )
         fmt syms
     in
     let pp_asserts fmt es =

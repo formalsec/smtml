@@ -589,9 +589,9 @@ module Fresh = struct
         let e' = encode_expr e in
         encode_cvtop ty op e'
       | Symbol s ->
-        let x = Symbol.to_string s
-        and t = Symbol.type_of s in
-        Z3.Expr.mk_const_s ctx x (get_sort t)
+        let x = Symbol.name s in
+        let ty = Symbol.ty s in
+        Z3.Expr.mk_const_s ctx x (get_sort ty)
       | Extract (e, h, l) ->
         let e' = encode_expr e in
         Z3.BitVector.mk_extract ctx ((h * 8) - 1) (l * 8) e'
@@ -814,7 +814,7 @@ module Fresh = struct
         (fun const ->
           let x = Z3.Symbol.to_string (Z3.FuncDecl.get_name const) in
           let t = type_of_sort (Z3.FuncDecl.get_range const) in
-          Symbol.mk_symbol t x )
+          Symbol.make t x )
         (Z3.Model.get_const_decls model)
 
     let values_of_model ?(symbols : Symbol.t list option)
