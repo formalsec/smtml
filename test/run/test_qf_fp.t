@@ -1,5 +1,5 @@
 Test fp parsing:
-  $ dune exec -- smtml test_qf_fp.smtml
+  $ dune exec smtml -- run test_qf_fp.smtml
   unsat
   sat
   sat

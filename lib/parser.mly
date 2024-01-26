@@ -10,6 +10,7 @@ let get_bind x = Hashtbl.find varmap x
 
 %}
 %token PTR
+%token LET
 %token EXTRACT
 %token CONCAT
 %token LPAREN
@@ -43,11 +44,19 @@ let stmt :=
       add_bind x t;
       Ast.Let_const (Symbol.mk_symbol t x)
     }
-  | LPAREN; ASSERT; ~ = s_expr; RPAREN; <Ast.Assert>
-  | LPAREN; CHECK_SAT; RPAREN; { Ast.Check_sat}
+  | LPAREN; ASSERT; ~ = term; RPAREN; <Ast.Assert>
+  | LPAREN; CHECK_SAT; RPAREN; { Ast.Check_sat }
   | LPAREN; PUSH; RPAREN; { Ast.Push }
   | LPAREN; POP; n = NUM; RPAREN; { Ast.Pop n }
   | LPAREN; GET_MODEL; RPAREN; { Ast.Get_model }
+
+let var_binding :=
+  | LPAREN; x = SYMBOL; ~ = term; RPAREN; { (x,  term) }
+
+let term :=
+  | ~ = s_expr; { E s_expr }
+  | LPAREN; LET; LPAREN; binds = var_binding+; RPAREN; ~ = term; RPAREN;
+    { Let (binds, term) }
 
 let s_expr :=
   | x = SYMBOL; { mk_symbol @@ Symbol.mk_symbol (get_bind x) x }
