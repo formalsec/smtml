@@ -4,15 +4,13 @@
 (let-const w bool)
 (assert (bool.ne x false))
 (assert
-  (bool.and
-    (bool.or (bool.not x) y)
-    (bool.or (bool.not y) z)))
+  (let ((not_x (bool.not x)))
+  (let ((not_y (bool.not y)))
+  (bool.and (bool.or not_x y) (bool.or not_y z)))))
 (assert (bool.or (bool.not x) z))
 (check-sat)
-(assert (= w (bool.ite (bool.xor x z) true false)))
-(assert
-  (bool.or
-    (bool.not (bool.and x z))
-    (bool.not w)))
+(assert (let ((v (bool.ite (bool.xor x z) true false)))
+        (= w v)))
+(assert (bool.or (bool.not (bool.and x z)) (bool.not w)))
 (check-sat)
 (get-model)
