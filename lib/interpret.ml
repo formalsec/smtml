@@ -14,19 +14,19 @@ module Make (Solver : Solver_intf.S) = struct
     { stmts; ty_env = SMap.empty; solver = Solver.create ~params (); pc = [] }
 
   let rewrite ty_env map (e : Expr.t) =
-    let rec traverse e =
+    let rec traverse (e : Expr.t) =
       let open Expr in
-      match e.e with
+      match e.node.e with
       | Val _ | Ptr _ -> e
-      | Unop (op, e') -> Unop (op, traverse e') @: e.ty
-      | Binop (op, e1, e2) -> Binop (op, traverse e1, traverse e2) @: e.ty
+      | Unop (op, e') -> Unop (op, traverse e') @: e.node.ty
+      | Binop (op, e1, e2) -> Binop (op, traverse e1, traverse e2) @: e.node.ty
       | Triop (op, e1, e2, e3) ->
         let e1 = traverse e1 in
         let e2 = traverse e2 in
         let e3 = traverse e3 in
-        Triop (op, e1, e2, e3) @: e.ty
-      | Relop (op, e1, e2) -> Relop (op, traverse e1, traverse e2) @: e.ty
-      | Cvtop (op, e') -> Cvtop (op, traverse e') @: e.ty
+        Triop (op, e1, e2, e3) @: e.node.ty
+      | Relop (op, e1, e2) -> Relop (op, traverse e1, traverse e2) @: e.node.ty
+      | Cvtop (op, e') -> Cvtop (op, traverse e') @: e.node.ty
       | Symbol s -> (
         let name = Symbol.name s in
         match SMap.find name map with
@@ -35,8 +35,8 @@ module Make (Solver : Solver_intf.S) = struct
             Log.err "Undefined variable '%s'" name;
           e
         | expr -> expr )
-      | Extract (e', h, l) -> Extract (traverse e', h, l) @: e.ty
-      | Concat (e1, e2) -> Concat (traverse e1, traverse e2) @: e.ty
+      | Extract (e', h, l) -> Extract (traverse e', h, l) @: e.node.ty
+      | Concat (e1, e2) -> Concat (traverse e1, traverse e2) @: e.node.ty
     in
     traverse e
 
