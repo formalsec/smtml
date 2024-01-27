@@ -675,8 +675,8 @@ module Fresh = struct
     *)
     let encore_expr_aux ?(record_sym = fun _ -> ()) (e : Expr.t) : expr =
       let open Expr in
-      let rec aux ({ e; ty } : t) =
-        match e with
+      let rec aux (hte : t) =
+        match e.node.e with
         | Val v -> encode_val v
         | Ptr (base, offset) ->
           let base' = encode_val (Num (I32 base)) in
@@ -684,23 +684,23 @@ module Fresh = struct
           DTerm.Bitv.add base' offset'
         | Unop (op, e) ->
           let e' = aux e in
-          encode_unop ty op e'
+          encode_unop hte.node.ty op e'
         | Binop (op, e1, e2) ->
           let e1' = aux e1 in
           let e2' = aux e2 in
-          encode_binop ty op e1' e2'
+          encode_binop hte.node.ty op e1' e2'
         | Triop (op, e1, e2, e3) ->
           let e1' = aux e1
           and e2' = aux e2
           and e3' = aux e3 in
-          encode_triop ty op e1' e2' e3'
+          encode_triop hte.node.ty op e1' e2' e3'
         | Relop (op, e1, e2) ->
           let e1' = aux e1
           and e2' = aux e2 in
-          encode_relop ty op e1' e2'
+          encode_relop hte.node.ty op e1' e2'
         | Cvtop (op, e) ->
           let e' = aux e in
-          encode_cvtop ty op e'
+          encode_cvtop hte.node.ty op e'
         | Symbol s ->
           let cst = tcst_of_symbol s in
           record_sym cst;
@@ -946,7 +946,9 @@ module Fresh = struct
 
     let value (e, _) (c : Expr.t) : Value.t =
       let c2v = Interp.interp e (encode_expr c) in
-      match c2value_to_value c.ty c2v with None -> assert false | Some v -> v
+      match c2value_to_value c.node.ty c2v with
+      | None -> assert false
+      | Some v -> v
 
     let values_of_model ?(symbols : Symbol.t list option) ((_, model) : model) :
       Model.t =
