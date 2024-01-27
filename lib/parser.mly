@@ -64,26 +64,26 @@ let term :=
 
 let s_expr :=
   | x = SYMBOL; { mk_symbol @@ Symbol.make (get_bind x) x }
-  | c = spec_constant; { Val c @: Value.type_of c }
-  | LPAREN; op = paren_op; RPAREN; { op }
+  | c = spec_constant; { mk (Val c) }
+  | LPAREN; op = paren_op; RPAREN; { mk op }
 
 let paren_op :=
-  | PTR; LPAREN; ty = TYPE; x = NUM; RPAREN; e = s_expr;
-    { Ptr (Int32.of_int x, e) @: ty }
+  | PTR; LPAREN; _ = TYPE; x = NUM; RPAREN; e = s_expr;
+    { Ptr (Int32.of_int x, e) }
   | (ty, op) = UNARY; e = s_expr;
-    { Unop (op, e) @: ty }
+    { Unop (ty, op, e) }
   | (ty, op) = BINARY; e1 = s_expr; e2 = s_expr;
-    { Binop (op, e1, e2) @: ty }
+    { Binop (ty, op, e1, e2) }
   | (ty, op) = TERNARY; e1 = s_expr; e2 = s_expr; e3 = s_expr;
-    { Triop (op, e1, e2, e3) @: ty }
+    { Triop (ty, op, e1, e2, e3) }
   | (ty, op) = CVTOP; e = s_expr;
-    { Cvtop (op, e) @: ty }
+    { Cvtop (ty, op, e) }
   | (ty, op) = RELOP; e1 = s_expr; e2 = s_expr;
-    { Relop (op, e1, e2) @: ty }
+    { Relop (ty, op, e1, e2) }
   | EXTRACT; ~ = s_expr; l = NUM; h = NUM;
-    { Extract (s_expr, h, l) @: Ty_bitv S32 }
+    { Extract (s_expr, h, l) }
   | CONCAT; e1 = s_expr; e2 = s_expr;
-    { Concat (e1, e2) @: Ty_bitv S32 }
+    { Concat (e1, e2) }
 
 let spec_constant :=
   | x = NUM; { Int x }

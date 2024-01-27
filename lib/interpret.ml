@@ -16,17 +16,17 @@ module Make (Solver : Solver_intf.S) = struct
   let rewrite ty_env map (e : Expr.t) =
     let rec traverse (e : Expr.t) =
       let open Expr in
-      match e.node.e with
+      match e.node with
       | Val _ | Ptr _ -> e
-      | Unop (op, e') -> Unop (op, traverse e') @: e.node.ty
-      | Binop (op, e1, e2) -> Binop (op, traverse e1, traverse e2) @: e.node.ty
-      | Triop (op, e1, e2, e3) ->
+      | Unop (ty, op, e') -> mk @@ Unop (ty, op, traverse e')
+      | Binop (ty, op, e1, e2) -> mk @@ Binop (ty, op, traverse e1, traverse e2)
+      | Triop (ty, op, e1, e2, e3) ->
         let e1 = traverse e1 in
         let e2 = traverse e2 in
         let e3 = traverse e3 in
-        Triop (op, e1, e2, e3) @: e.node.ty
-      | Relop (op, e1, e2) -> Relop (op, traverse e1, traverse e2) @: e.node.ty
-      | Cvtop (op, e') -> Cvtop (op, traverse e') @: e.node.ty
+        mk @@ Triop (ty, op, e1, e2, e3)
+      | Relop (ty, op, e1, e2) -> mk @@ Relop (ty, op, traverse e1, traverse e2)
+      | Cvtop (ty, op, e') -> mk @@ Cvtop (ty, op, traverse e')
       | Symbol s -> (
         let name = Symbol.name s in
         match SMap.find name map with
@@ -35,8 +35,8 @@ module Make (Solver : Solver_intf.S) = struct
             Log.err "Undefined variable '%s'" name;
           e
         | expr -> expr )
-      | Extract (e', h, l) -> Extract (traverse e', h, l) @: e.node.ty
-      | Concat (e1, e2) -> Concat (traverse e1, traverse e2) @: e.node.ty
+      | Extract (e', h, l) -> mk @@ Extract (traverse e', h, l)
+      | Concat (e1, e2) -> mk @@ Concat (traverse e1, traverse e2)
     in
     traverse e
 

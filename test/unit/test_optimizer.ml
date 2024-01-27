@@ -3,9 +3,9 @@ open Ty
 open Expr
 module Optimizer = Optimizer.Z3
 
-let v i = Val (Int i) @: Ty_int
-let ( >= ) i1 i2 = Relop (Ge, i1, i2) @: Ty_int
-let ( < ) i1 i2 = Relop (Lt, i1, i2) @: Ty_int
+let v i = mk @@ Val (Int i)
+let ( >= ) i1 i2 = mk @@ Relop (Ty_int, Ge, i1, i2)
+let ( < ) i1 i2 = mk @@ Relop (Ty_int, Lt, i1, i2)
 
 let () =
   let opt = Optimizer.create () in

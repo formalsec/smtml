@@ -8,7 +8,7 @@ type t =
   | Str of string
   | Num of Num.t
 
-let equal (v1 : t) (v2 : t) : Bool.t =
+let equal v1 v2 =
   match (v1, v2) with
   | True, True | False, False -> true
   | Int x1, Int x2 -> Int.equal x1 x2
@@ -26,15 +26,14 @@ let compare v1 v2 =
   | Num x1, Num x2 -> Num.compare x1 x2
   | _ -> compare v1 v2
 
-let type_of (v : t) : Ty.t =
-  match v with
+let ty = function
   | True | False -> Ty_bool
   | Int _ -> Ty_int
   | Real _ -> Ty_real
   | Str _ -> Ty_str
-  | Num n -> Num.type_of n
+  | Num n -> Num.ty n
 
-let pp fmt (v : t) =
+let pp fmt v =
   let open Format in
   match v with
   | True -> pp_print_string fmt "true"
