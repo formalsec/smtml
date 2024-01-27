@@ -10,8 +10,8 @@ let () =
   let right_a = I32.sym "y" in
   let left_b = I32.sym "x" in
   let right_b = I32.sym "y" in
-  let a = Binop (Add, left_a, right_a) @: Ty_bitv S32 in
-  let b = Binop (Add, left_b, right_b) @: Ty_bitv S32 in
+  let a = mk @@ Binop (Ty_bitv S32, Add, left_a, right_a) in
+  let b = mk @@ Binop (Ty_bitv S32, Add, left_b, right_b) in
   assert (a == b);
   (*
      There should be only 3 elements in the hashcons table:
