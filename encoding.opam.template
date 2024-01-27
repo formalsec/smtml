@@ -1,5 +1,1 @@
 available: (arch = "x86_64" | arch = "arm64") & os != "win32" & arch != "x86_32"
-pin-depends: [
-  [ "colibri2.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#5.1.0"]
-  [ "colibrilib.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#5.1.0"]
-]

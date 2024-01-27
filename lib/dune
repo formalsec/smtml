@@ -5,8 +5,8 @@
  (modules parser))
 
 (library
- (public_name encoding)
  (name encoding)
+ (public_name encoding)
  (modules
   ast
   ;axioms
@@ -30,19 +30,25 @@
   symbol
   ty
   value
-  z3_mappings
-  colibri2_mappings)
+  z3_mappings)
  (private_modules lexer parser)
  (libraries
   hc
   z3
-  ocaml_intrinsics
+  ocaml_intrinsics)
+ (instrumentation
+  (backend bisect_ppx)))
+
+(library
+ (name colibri2_mappings)
+ (public_name colibri2_mappings)
+ (optional)
+ (modules colibri2_mappings)
+ (libraries
   colibri2.core
   colibri2.solver
   colibri2.theories.bool
   colibri2.theories.quantifiers
   colibri2.theories.LRA
   colibri2.theories.LRA.stages.stage2
-  colibri2.theories.fp)
- (instrumentation
-  (backend bisect_ppx)))
+  colibri2.theories.fp))

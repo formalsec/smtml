@@ -15,27 +15,20 @@ type prover =
   | Colibri2_prover
 
 let prover_conv =
-  Cmdliner.Arg.conv
-    ( (fun str ->
-        try
-          Ok
-            ( match str with
-            | "Z3" | "z3" -> Z3_prover
-            | "Colibri2" | "colibri2" -> Colibri2_prover
-            | _ ->
-              failwith (Fmt.str "Unsupported prover %s, try Z3 or Colibri2" str)
-            )
-        with Failure s -> Error (`Msg s) )
-    , fun fmt -> function
-        | Z3_prover -> Fmt.pf fmt "Z3"
-        | Colibri2_prover -> Fmt.pf fmt "Colibri2" )
+  Cmdliner.Arg.enum
+    [ ("z3", Z3_prover)
+    ; ("Z3", Z3_prover)
+    ; ("c2", Colibri2_prover)
+    ; ("colibri2", Colibri2_prover)
+    ; ("Colibri2", Colibri2_prover)
+    ]
 
 let parse_cmdline =
   let aux files prover incremental debug =
     let module Mappings =
       ( val match prover with
             | Z3_prover -> (module Z3_mappings)
-            | Colibri2_prover -> (module Colibri2_mappings)
+            | Colibri2_prover -> assert false
           : Mappings_intf.S )
     in
     Mappings.set_debug debug;

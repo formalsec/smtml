@@ -25,7 +25,6 @@
    (ocaml (>= "4.14.0"))
    ocaml_intrinsics
    (z3 (and (>= "4.12.2") (< "4.13")))
-   colibri2
    (menhir
     (and
     :build
@@ -35,3 +34,9 @@
    (odoc :with-doc)
    (hc (>= "0.3"))
    (bisect_ppx (and :with-test (>= "2.5.0") :dev))))
+
+(package
+ (allow_empty)
+ (name colibri2_mappings)
+ (synopsis "Encoding mappings for the colibri2 Solver")
+ (depopts colibri2))
