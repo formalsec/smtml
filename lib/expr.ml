@@ -172,6 +172,11 @@ let pp_smt = Pp.pp_smt
 
 let to_string e = Format.asprintf "%a" pp e
 
+let simplify_unop ty (op : unop) (e : t) : expr =
+  match e.node with
+  | Val (Num n) -> Val (Num (Eval_numeric.eval_unop ty op n))
+  | _ -> Unop (ty, op, e)
+
 let rec simplify_binop ty (op : binop) (e1 : t) (e2 : t) =
   match (e1.node, e2.node) with
   | Val (Num n1), Val (Num n2) -> Val (Num (Eval_numeric.eval_binop ty op n1 n2))
@@ -235,6 +240,18 @@ let rec simplify_binop ty (op : binop) (e1 : t) (e2 : t) =
   (* | Val (Num (I32 1l)), Binop (_, And, _, _) -> e2.node *)
   | _ -> Binop (ty, op, e1, e2)
 
+let simplify_triop ty (op : triop) (e1 : t) (e2 : t) (e3 : t) : expr =
+  match op with
+  | Ite -> (
+    match e1.node with
+    | Val True -> e2.node
+    | Val False -> e3.node
+    | _ -> Triop (ty, op, e1, e2, e3) )
+  | Substr -> (
+    match (e1.node, e2.node, e3.node) with
+    | Val (Str s), Val (Int i), Val (Int len) -> Val (Str (String.sub s i len))
+    | _ -> Triop (ty, op, e1, e2, e3) )
+
 let simplify_relop ty (op : relop) (e1 : t) (e2 : t) =
   match (e1.node, e2.node) with
   | Val (Num v1), Val (Num v2) ->
@@ -253,6 +270,11 @@ let simplify_relop ty (op : relop) (e1 : t) (e2 : t) =
       if b1 = b2 then Relop (ty, op, os1, os2) else Relop (ty, op, v b1, v b2)
     | _ -> Relop (ty, op, e1, e2) )
   | _ -> Relop (ty, op, e1, e2)
+
+let simplify_cvtop ty (op : cvtop) (e : t) =
+  match e.node with
+  | Val (Num n) -> Val (Num (Eval_numeric.eval_cvtop ty op n))
+  | _ -> Cvtop (ty, op, e)
 
 let nland64 (x : int64) (n : int) =
   let rec loop x' n' acc =
@@ -313,23 +335,34 @@ let simplify_concat (msb : t) (lsb : t) =
 
 let rec simplify ?(extract = true) (hte : t) : t =
   match hte.node with
-  | Val _ -> hte
+  | Val _ | Symbol _ -> hte
   | Ptr (base, offset) -> mk @@ Ptr (base, simplify offset)
+  | Unop (ty, op, e) ->
+    let e = simplify e in
+    mk @@ simplify_unop ty op e
   | Binop (ty, op, e1, e2) ->
     let e1 = simplify e1 in
     let e2 = simplify e2 in
     mk @@ simplify_binop ty op e1 e2
+  | Triop (ty, op, e1, e2, e3) ->
+    let e1 = simplify e1 in
+    let e2 = simplify e2 in
+    let e3 = simplify e3 in
+    mk @@ simplify_triop ty op e1 e2 e3
   | Relop (ty, op, e1, e2) ->
     let e1 = simplify e1 in
     let e2 = simplify e2 in
     mk @@ simplify_relop ty op e1 e2
+  | Cvtop (ty, op, e) ->
+    let e = simplify e in
+    mk @@ simplify_cvtop ty op e
   | Extract (_, _, _) when not extract -> hte
   | Extract (s, h, l) when extract -> mk @@ simplify_extract s h l
   | Concat (e1, e2) ->
     let msb = simplify ~extract:false e1 in
     let lsb = simplify ~extract:false e2 in
     mk @@ simplify_concat msb lsb
-  | _ -> hte
+  | Extract _ -> hte
 
 module Bool = struct
   let v b = mk @@ match b with true -> Val True | false -> Val False
