@@ -6,9 +6,15 @@ type t =
   | F64 of int64
 
 val ( = ) : t -> t -> bool
+
 val compare : t -> t -> int
+
 val ty : t -> Ty.t
+
 val pp : Format.formatter -> t -> unit
+
 val pp_hex : Format.formatter -> t -> unit
+
 val to_string : t -> string
+
 val num_of_bool : bool -> t

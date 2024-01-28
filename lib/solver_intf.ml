@@ -27,6 +27,7 @@ type logic =
 
 module type S = sig
   type t
+
   type solver
 
   (** Time spent inside SMT solver. *)

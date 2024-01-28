@@ -12,8 +12,11 @@ type t =
   }
 
 let default_timeout = 2147483647
+
 let default_model = true
+
 let default_unsat_core = false
+
 let default_ematching = true
 
 let default_value (type a) (param : a param) : a =

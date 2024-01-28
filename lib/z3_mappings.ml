@@ -3,25 +3,43 @@ module Fresh = struct
     let err = Log.err
 
     type expr = Z3.Expr.expr
+
     type model = Z3.Model.model
+
     type solver = Z3.Solver.solver
+
     type status = Z3.Solver.status
+
     type optimize = Z3.Optimize.optimize
+
     type handle = Z3.Optimize.handle
 
     let ctx = Z3.mk_context []
+
     let int_sort = Z3.Arithmetic.Integer.mk_sort ctx
+
     let real_sort = Z3.Arithmetic.Real.mk_sort ctx
+
     let bool_sort = Z3.Boolean.mk_sort ctx
+
     let str_sort = Z3.Seq.mk_string_sort ctx
+
     let bv8_sort = Z3.BitVector.mk_sort ctx 8
+
     let bv32_sort = Z3.BitVector.mk_sort ctx 32
+
     let bv64_sort = Z3.BitVector.mk_sort ctx 64
+
     let fp32_sort = Z3.FloatingPoint.mk_sort_single ctx
+
     let fp64_sort = Z3.FloatingPoint.mk_sort_double ctx
+
     let rne = Z3.FloatingPoint.RoundingMode.mk_rne ctx
+
     let rtz = Z3.FloatingPoint.RoundingMode.mk_rtz ctx
+
     let rtp = Z3.FloatingPoint.RoundingMode.mk_rtp ctx
+
     let rtn = Z3.FloatingPoint.RoundingMode.mk_rtn ctx
 
     let get_sort (e : Ty.t) : Z3.Sort.sort =
@@ -192,6 +210,7 @@ module Fresh = struct
       open Ty
 
       let encode_true () = Boolean.mk_true ctx
+
       let encode_false () = Boolean.mk_false ctx
 
       let encode_unop op e =
@@ -245,6 +264,7 @@ module Fresh = struct
       open Ty
 
       let encode_val s = Seq.mk_string ctx s
+
       let trim = FuncDecl.mk_func_decl_s ctx "Trim" [ str_sort ] str_sort
 
       let encode_unop op e =
@@ -688,11 +708,17 @@ module Fresh = struct
         Z3.Solver.add_simplifier ctx solver simplifier
 
       let clone s = Z3.Solver.translate s ctx
+
       let push s = Z3.Solver.push s
+
       let pop s lvl = Z3.Solver.pop s lvl
+
       let reset s = Z3.Solver.reset s [@@inline]
+
       let add s es = Z3.Solver.add s (List.map encode_expr es)
+
       let check s es = Z3.Solver.check s (List.map encode_expr es)
+
       let model s = Z3.Solver.get_model s
 
       let pp_statistics fmt solver =
@@ -705,12 +731,19 @@ module Fresh = struct
 
     module Optimizer = struct
       let make () = Z3.Optimize.mk_opt ctx
+
       let push o = Z3.Optimize.push o
+
       let pop o = Z3.Optimize.pop o
+
       let add o es = Z3.Optimize.add o (List.map encode_expr es)
+
       let check o = Z3.Optimize.check o
+
       let model o = Z3.Optimize.get_model o
+
       let maximize o e = Z3.Optimize.maximize o (encode_expr e)
+
       let minimize o e = Z3.Optimize.minimize o (encode_expr e)
 
       let pp_statistics fmt o =

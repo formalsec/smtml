@@ -41,4 +41,5 @@ let pp_hex fmt = function
   | I64 i | F64 i -> Format.fprintf fmt "0x%Lx" i
 
 let to_string n = Format.asprintf "%a" pp n
+
 let num_of_bool b = I32 (if b then 1l else 0l)

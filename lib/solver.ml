@@ -4,6 +4,7 @@ let ( let+ ) o f = Option.map f o
 
 module Base (M : Mappings_intf.S) = struct
   let solver_time = ref 0.0
+
   let solver_count = ref 0
 
   let time_call f acc =
@@ -19,6 +20,7 @@ module Base (M : Mappings_intf.S) = struct
     M.update_param_value Ematching (Params.get params Ematching)
 
   let interrupt () = M.interrupt ()
+
   let pp_statistics fmt solver = M.Solver.pp_statistics fmt solver
 
   let check (solver : M.solver) (es : Expr.t list) : bool =
@@ -74,8 +76,11 @@ module Make_batch (Mappings : Mappings_intf.S) = struct
     s.top <- []
 
   let add (s : t) (es : Expr.t list) : unit = s.top <- es @ s.top
+
   let get_assertions (s : t) : Expr.t list = s.top [@@inline]
+
   let check (s : t) (es : Expr.t list) : bool = check s.solver (es @ s.top)
+
   let get_value (solver : t) (e : Expr.t) : Expr.t = get_value solver.solver e
 
   let model ?(symbols : Symbol.t list option) (s : t) : Model.t option =
@@ -88,6 +93,7 @@ module Make_incremental (Mappings : Mappings_intf.S) = struct
   module S = Mappings.Solver
 
   type t = Mappings.solver
+
   type solver = t
 
   let create ?params ?logic () : t =
@@ -95,14 +101,22 @@ module Make_incremental (Mappings : Mappings_intf.S) = struct
     S.make ?logic () |> S.add_simplifier
 
   let clone (solver : t) : t = S.clone solver
+
   let push (solver : t) : unit = S.push solver
+
   let pop (solver : t) (lvl : int) : unit = S.pop solver lvl
+
   let reset (solver : t) : unit = S.reset solver
+
   let add (solver : t) (es : Expr.t list) : unit = S.add solver es
+
   let get_assertions (_solver : t) : Expr.t list = assert false
 end
 
 module Batch (M : Mappings_intf.S) : Solver_intf.S = Make_batch (M)
+
 module Z3_batch : Solver_intf.S = Batch (Z3_mappings)
+
 module Incremental (M : Mappings_intf.S) : Solver_intf.S = Make_incremental (M)
+
 module Z3_incremental : Solver_intf.S = Incremental (Z3_mappings)

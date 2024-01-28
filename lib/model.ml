@@ -5,10 +5,7 @@ let get_symbols (model : t) : Symbol.t List.t =
 
 let compare_bindings (s1, v1) (s2, v2) =
   let compare_symbol = Symbol.compare s1 s2 in
-  if compare_symbol = 0 then
-    Value.compare v1 v2
-  else
-    compare_symbol
+  if compare_symbol = 0 then Value.compare v1 v2 else compare_symbol
 
 let get_bindings (model : t) : (Symbol.t * Value.t) List.t =
   Hashtbl.to_seq model |> List.of_seq |> List.sort compare_bindings
@@ -28,4 +25,5 @@ let pp_bindings fmt model =
     fmt model
 
 let pp fmt model = Format.fprintf fmt "(model@\n  @[<v>%a@])" pp_bindings model
+
 let to_string (model : t) : String.t = Format.asprintf "%a" pp model
