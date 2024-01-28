@@ -8,9 +8,13 @@
 open Ty
 
 exception Num of Ty.t
+
 exception TypeError of int * Num.t * Ty.t
+
 exception DivideByZero
+
 exception ConversionToInteger
+
 exception IntegerOverflow
 
 let of_arg f n v = try f v with Num t -> raise (TypeError (n, v, t))
@@ -24,13 +28,21 @@ module I32Op = struct
     of_arg (function I32 i -> i | _ -> raise (Num (Ty_bitv S32))) n v
 
   let cmp_u x op y = op Int32.(add x min_int) Int32.(add y min_int)
+
   let lt_u x y = cmp_u x ( < ) y
+
   let le_u x y = cmp_u x ( <= ) y
+
   let gt_u x y = cmp_u x ( > ) y
+
   let ge_u x y = cmp_u x ( >= ) y
+
   let shift f x y = f x Int32.(to_int (logand y 31l))
+
   let shl x y = shift Int32.shift_left x y
+
   let shr_s x y = shift Int32.shift_right x y
+
   let shr_u x y = shift Int32.shift_right_logical x y
 
   let unop (op : unop) : Num.t -> Num.t =
@@ -89,13 +101,21 @@ module I64Op = struct
     of_arg (function I64 i -> i | _ -> raise (Num (Ty_bitv S64))) n v
 
   let cmp_u x op y = op Int64.(add x min_int) Int64.(add y min_int)
+
   let lt_u x y = cmp_u x ( < ) y
+
   let le_u x y = cmp_u x ( <= ) y
+
   let gt_u x y = cmp_u x ( > ) y
+
   let ge_u x y = cmp_u x ( >= ) y
+
   let shift f x y = f x Int64.(to_int (logand y 63L))
+
   let shl x y = shift Int64.shift_left x y
+
   let shr_s x y = shift Int64.shift_right x y
+
   let shr_u x y = shift Int64.shift_right_logical x y
 
   let unop (op : unop) : Num.t -> Num.t =
@@ -149,8 +169,11 @@ end
 
 module F32Op = struct
   let to_value f : Num.t = F32 f
+
   let of_value = of_arg (function F32 f -> f | _ -> raise (Num (Ty_fp S32)))
+
   let of_float = Int32.bits_of_float
+
   let to_float = Int32.float_of_bits
 
   let unop (op : unop) =
@@ -201,8 +224,11 @@ end
 
 module F64Op = struct
   let to_value f : Num.t = F64 f
+
   let of_value = of_arg (function F64 f -> f | _ -> raise (Num (Ty_fp S64)))
+
   let of_float = Int64.bits_of_float
+
   let to_float = Int64.float_of_bits
 
   let unop (op : unop) =
@@ -478,6 +504,9 @@ let op i32 i64 f32 f64 ty op =
   | Ty_bool | Ty_str | _ -> assert false
 
 let eval_unop = op I32Op.unop I64Op.unop F32Op.unop F64Op.unop
+
 let eval_binop = op I32Op.binop I64Op.binop F32Op.binop F64Op.binop
+
 let eval_relop = op I32Op.relop I64Op.relop F32Op.relop F64Op.relop
+
 let eval_cvtop = op I32CvtOp.cvtop I64CvtOp.cvtop F32CvtOp.cvtop F64CvtOp.cvtop

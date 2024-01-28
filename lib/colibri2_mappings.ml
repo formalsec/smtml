@@ -18,6 +18,7 @@ module Fresh = struct
     include DTerm.Var
 
     let is_int _ = false
+
     let print = pp
   end
 
@@ -25,7 +26,9 @@ module Fresh = struct
     type t = unit
 
     let print fmt () = Fmt.pf fmt "()"
+
     let empty = ()
+
     let union () () = ()
   end
 
@@ -33,13 +36,21 @@ module Fresh = struct
     include A
 
     let m_one = A.minus_one
+
     let print = A.pp
+
     let is_int = A.is_integer
+
     let is_zero v = A.equal v A.zero
+
     let is_one v = A.equal v A.one
+
     let mult = A.mul
+
     let minus = A.neg
+
     let is_m_one v = A.equal v m_one
+
     let ceiling = ceil
   end
 
@@ -56,6 +67,7 @@ module Fresh = struct
     module Sim = OcplibSimplex.Basic.Make (Var) (Rat) (Ex)
 
     type optimize = Sim.Core.t
+
     type handle = optimize * (Sim.Core.P.t * bool) option
 
     type solver =
@@ -89,7 +101,9 @@ module Fresh = struct
         DExpr.{ arity = 0; alias = No_alias }
 
     let string_ty = DTy.apply string_ty_cst []
+
     let float32_ty = DTy.float 8 24
+
     let float64_ty = DTy.float 11 53
 
     let int_to_string : DExpr.term_cst =
@@ -805,7 +819,9 @@ module Fresh = struct
        add_string_axiom env f64_to_string string_to_f64 float64_ty *)
 
     let encode_expr e = encore_expr_aux e
+
     let pp_smt ?status:_ _ _ = ()
+
     let interrupt () = ()
 
     module Solver = struct
@@ -898,9 +914,13 @@ module Fresh = struct
 
     module Optimizer = struct
       let make () : optimize = Sim.Core.empty ~is_int:false ~check_invs:false
+
       let push _ = ()
+
       let pop _ = ()
+
       let add _ _ = assert false
+
       let check _ = assert false
 
       let model o =
@@ -915,7 +935,9 @@ module Fresh = struct
           None
 
       let maximize _ _ = assert false
+
       let minimize _ _ = assert false
+
       let pp_statistics _ _ = ()
     end
 

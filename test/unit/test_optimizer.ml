@@ -4,7 +4,9 @@ open Expr
 module Optimizer = Optimizer.Z3
 
 let v i = mk @@ Val (Int i)
+
 let ( >= ) i1 i2 = mk @@ Relop (Ty_int, Ge, i1, i2)
+
 let ( < ) i1 i2 = mk @@ Relop (Ty_int, Lt, i1, i2)
 
 let () =
