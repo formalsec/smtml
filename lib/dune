@@ -42,7 +42,6 @@
 (library
  (name colibri2_mappings)
  (public_name colibri2_mappings)
- (optional)
  (modules colibri2_mappings)
  (libraries
   encoding
@@ -52,4 +51,5 @@
   colibri2.theories.quantifiers
   colibri2.theories.LRA
   colibri2.theories.LRA.stages.stage2
-  colibri2.theories.fp))
+  colibri2.theories.fp)
+ (optional))
