@@ -37,7 +37,7 @@ val pp_list : Format.formatter -> t list -> unit
 
 val to_string : t -> string
 
-val simplify : ?extract:bool -> t -> t
+val simplify : t -> t
 
 module Hc : sig
   val clear : unit -> unit

@@ -335,36 +335,43 @@ let simplify_concat (msb : t) (lsb : t) =
     Concat (mk @@ Extract (mk @@ Val (Num (I64 x)), d1 + d2, 0), se)
   | _ -> Concat (msb, lsb)
 
-let rec simplify ?(extract = true) (hte : t) : t =
+let rec simplify_expr ?(extract = true) (hte : t) : t =
   match hte.node with
   | Val _ | Symbol _ -> hte
-  | Ptr (base, offset) -> mk @@ Ptr (base, simplify offset)
+  | Ptr (base, offset) -> mk @@ Ptr (base, simplify_expr offset)
   | Unop (ty, op, e) ->
-    let e = simplify e in
+    let e = simplify_expr e in
     mk @@ simplify_unop ty op e
   | Binop (ty, op, e1, e2) ->
-    let e1 = simplify e1 in
-    let e2 = simplify e2 in
+    let e1 = simplify_expr e1 in
+    let e2 = simplify_expr e2 in
     mk @@ simplify_binop ty op e1 e2
   | Triop (ty, op, e1, e2, e3) ->
-    let e1 = simplify e1 in
-    let e2 = simplify e2 in
-    let e3 = simplify e3 in
+    let e1 = simplify_expr e1 in
+    let e2 = simplify_expr e2 in
+    let e3 = simplify_expr e3 in
     mk @@ simplify_triop ty op e1 e2 e3
   | Relop (ty, op, e1, e2) ->
-    let e1 = simplify e1 in
-    let e2 = simplify e2 in
+    let e1 = simplify_expr e1 in
+    let e2 = simplify_expr e2 in
     mk @@ simplify_relop ty op e1 e2
   | Cvtop (ty, op, e) ->
-    let e = simplify e in
+    let e = simplify_expr e in
     mk @@ simplify_cvtop ty op e
   | Extract (_, _, _) when not extract -> hte
   | Extract (s, h, l) when extract -> mk @@ simplify_extract s h l
   | Concat (e1, e2) ->
-    let msb = simplify ~extract:false e1 in
-    let lsb = simplify ~extract:false e2 in
+    let msb = simplify_expr ~extract:false e1 in
+    let lsb = simplify_expr ~extract:false e2 in
     mk @@ simplify_concat msb lsb
   | Extract _ -> hte
+
+let simplify (hte : t) : t =
+  let rec loop x =
+    let simpl_x = simplify_expr x in
+    if equal x simpl_x then simpl_x else loop simpl_x
+  in
+  loop hte
 
 module Bool = struct
   let v b = mk @@ match b with true -> Val True | false -> Val False
