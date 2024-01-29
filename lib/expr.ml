@@ -66,10 +66,10 @@ let ( @: ) e _ = mk e
 
 let is_num (e : t) = match e.node with Val (Num _) -> true | _ -> false
 
-let ty (e : t) : Ty.t =
+let rec ty (e : t) : Ty.t =
   match e.node with
   | Val v -> Value.ty v
-  | Ptr _ -> Ty_bitv S32
+  | Ptr _ -> Ty_bitv 32
   | Unop (ty, _, _)
   | Cvtop (ty, _, _)
   | Binop (ty, _, _, _)
@@ -77,8 +77,13 @@ let ty (e : t) : Ty.t =
   | Relop (ty, _, _, _) ->
     ty
   | Symbol s -> Symbol.ty s
-  | Extract _ -> Log.err "Expr.ty: Extract: TODO"
-  | Concat _ -> Log.err "Expr.ty: Concat: TODO"
+  | Extract (_, h, l) -> Ty_bitv ((h - l) * 8)
+  | Concat (e1, e2) -> (
+    let t1 = ty e1 in
+    let t2 = ty e2 in
+    match (t1, t2) with
+    | Ty_bitv n1, Ty_bitv n2 -> Ty_bitv (n1 + n2)
+    | _ -> Log.err "Invalid concat between '%a' and '%a'." Ty.pp t1 Ty.pp t2 )
 
 let get_symbols (hte : t list) =
   let tbl = Hashtbl.create 64 in
@@ -189,20 +194,20 @@ let rec simplify_binop ty (op : binop) (e1 : t) (e2 : t) =
   | Ptr (base, offset), _ -> (
     match op with
     | Add ->
-      let new_offset = simplify_binop (Ty_bitv S32) Add offset e2 in
+      let new_offset = simplify_binop (Ty_bitv 32) Add offset e2 in
       Ptr (base, mk new_offset)
     | Sub ->
-      let new_offset = simplify_binop (Ty_bitv S32) Sub offset e2 in
+      let new_offset = simplify_binop (Ty_bitv 32) Sub offset e2 in
       Ptr (base, mk new_offset)
     | Rem ->
       let rhs = mk (Val (Num (I32 base))) in
       let addr = mk @@ simplify_binop ty Add rhs offset in
-      simplify_binop (Ty_bitv S32) Rem addr e2
+      simplify_binop (Ty_bitv 32) Rem addr e2
     | _ -> Binop (ty, op, e1, e2) )
   | _, Ptr (base, offset) -> (
     match op with
     | Add ->
-      let new_offset = simplify_binop (Ty_bitv S32) Add offset e1 in
+      let new_offset = simplify_binop (Ty_bitv 32) Add offset e1 in
       Ptr (base, mk new_offset)
     | _ ->
       (* TODO: simplify here *)
@@ -295,10 +300,7 @@ let simplify_extract (s : t) h l =
   | Val (Num (I64 x)) ->
     let x' = nland64 (Int64.shift_right x (l * 8)) (h - l) in
     Val (Num (I64 x'))
-  | _ ->
-    (* FIXME: *)
-    (* if h - l = size s.node then s.node else *)
-    Extract (s, h, l)
+  | _ -> if h - l = Ty.size (ty s) then s.node else Extract (s, h, l)
 
 let simplify_concat (msb : t) (lsb : t) =
   match (msb.node, lsb.node) with
@@ -438,7 +440,7 @@ module Bitv = struct
   module I8 = Make (struct
     type elt = int
 
-    let ty = Ty_bitv S8
+    let ty = Ty_bitv 8
 
     let num i = Num.I8 i
   end)
@@ -446,7 +448,7 @@ module Bitv = struct
   module I32 = Make (struct
     type elt = int32
 
-    let ty = Ty_bitv S32
+    let ty = Ty_bitv 32
 
     let num i = Num.I32 i
   end)
@@ -454,7 +456,7 @@ module Bitv = struct
   module I64 = Make (struct
     type elt = int64
 
-    let ty = Ty_bitv S64
+    let ty = Ty_bitv 64
 
     let num i = Num.I64 i
   end)
@@ -464,7 +466,7 @@ module Fpa = struct
   module F32 = Make (struct
     type elt = float
 
-    let ty = Ty_fp S32
+    let ty = Ty_fp 32
 
     let num f = Num.F32 (Int32.bits_of_float f)
   end)
@@ -472,7 +474,7 @@ module Fpa = struct
   module F64 = Make (struct
     type elt = float
 
-    let ty = Ty_fp S64
+    let ty = Ty_fp 64
 
     let num f = Num.F64 (Int64.bits_of_float f)
   end)

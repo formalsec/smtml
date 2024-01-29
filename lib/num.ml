@@ -22,11 +22,11 @@ let compare n1 n2 =
   | _ -> compare n1 n2
 
 let ty : t -> Ty.t = function
-  | I8 _ -> Ty_bitv S8
-  | I32 _ -> Ty_bitv S32
-  | I64 _ -> Ty_bitv S64
-  | F32 _ -> Ty_fp S32
-  | F64 _ -> Ty_fp S64
+  | I8 _ -> Ty_bitv 8
+  | I32 _ -> Ty_bitv 32
+  | I64 _ -> Ty_bitv 64
+  | F32 _ -> Ty_fp 32
+  | F64 _ -> Ty_fp 64
 
 let pp fmt = function
   | I8 i -> Format.fprintf fmt "(i8 %d)" i
