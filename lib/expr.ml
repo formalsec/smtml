@@ -373,6 +373,46 @@ let simplify (hte : t) : t =
   in
   loop hte
 
+let unop ty (op : unop) (e : t) : t =
+  mk
+  @@
+  match e.node with
+  | Val (Num n) -> Val (Num (Eval_numeric.eval_unop ty op n))
+  | _ -> Unop (ty, op, e)
+
+let binop ty (op : binop) (e1 : t) (e2 : t) =
+  match (e1.node, e2.node) with
+  | Val (Num n1), Val (Num n2) ->
+    mk @@ Val (Num (Eval_numeric.eval_binop ty op n1 n2))
+  | Ptr _, _ | _, Ptr _ ->
+    (* Does pointer arithmetic *)
+    simplify @@ mk (Binop (Ty_bitv 32, op, e1, e2))
+  | _ -> mk @@ Binop (ty, op, e1, e2)
+
+let relop ty (op : relop) (e1 : t) (e2 : t) =
+  mk
+  @@
+  match (e1.node, e2.node) with
+  | Val (Num n1), Val (Num n2) ->
+    let res = Eval_numeric.eval_relop ty op n1 n2 in
+    Val (if res then True else False)
+  | Val (Num n), Ptr (b, { node = Val (Num o); _ }) ->
+    let base = Eval_numeric.eval_binop (Ty_bitv 32) Add (I32 b) o in
+    let res = Eval_numeric.eval_relop ty op n base in
+    Val (if res then True else False)
+  | Ptr (b, { node = Val (Num o); _ }), Val (Num n) ->
+    let base = Eval_numeric.eval_binop (Ty_bitv 32) Add (I32 b) o in
+    let res = Eval_numeric.eval_relop ty op base n in
+    Val (if res then True else False)
+  | _ -> Relop (ty, op, e1, e2)
+
+let cvtop ty (op : cvtop) (e : t) =
+  mk
+  @@
+  match e.node with
+  | Val (Num n) -> Val (Num (Eval_numeric.eval_cvtop ty op n))
+  | _ -> Cvtop (ty, op, e)
+
 module Bool = struct
   let v b = mk @@ match b with true -> Val True | false -> Val False
 

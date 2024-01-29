@@ -39,6 +39,14 @@ val to_string : t -> string
 
 val simplify : t -> t
 
+val unop : Ty.t -> Ty.unop -> t -> t
+
+val binop : Ty.t -> Ty.binop -> t -> t -> t
+
+val relop : Ty.t -> Ty.relop -> t -> t -> t
+
+val cvtop : Ty.t -> Ty.cvtop -> t -> t
+
 module Hc : sig
   val clear : unit -> unit
 
