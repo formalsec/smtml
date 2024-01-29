@@ -48,12 +48,12 @@ module Fresh = struct
       | Ty_real -> real_sort
       | Ty_bool -> bool_sort
       | Ty_str -> str_sort
-      | Ty_bitv S8 -> bv8_sort
-      | Ty_bitv S32 -> bv32_sort
-      | Ty_bitv S64 -> bv64_sort
-      | Ty_fp S32 -> fp32_sort
-      | Ty_fp S64 -> fp64_sort
-      | Ty_fp S8 -> assert false
+      | Ty_bitv 8 -> bv8_sort
+      | Ty_bitv 32 -> bv32_sort
+      | Ty_bitv 64 -> bv64_sort
+      | Ty_fp 32 -> fp32_sort
+      | Ty_fp 64 -> fp64_sort
+      | Ty_bitv n | Ty_fp n -> Log.err "Unsupported bitv/fp of size %d" n
 
     module Arith = struct
       open Ty
@@ -374,8 +374,8 @@ module Fresh = struct
       let encode_cvtop sz op e =
         let op' =
           match sz with
-          | Ty.S8 -> assert false
-          | Ty.S32 -> (
+          | 8 -> assert false
+          | 32 -> (
             match op with
             | ExtS n -> BitVector.mk_sign_ext ctx n
             | ExtU n -> BitVector.mk_zero_ext ctx n
@@ -388,7 +388,7 @@ module Fresh = struct
             | ToBool -> encode_relop Ne (v C32 0l)
             | OfBool -> fun e -> Boolean.mk_ite ctx e (v C32 1l) (v C32 0l)
             | _ -> assert false )
-          | Ty.S64 -> (
+          | 64 -> (
             match op with
             | ExtS n -> BitVector.mk_sign_ext ctx n
             | ExtU n -> BitVector.mk_zero_ext ctx n
@@ -401,6 +401,7 @@ module Fresh = struct
             | ToBool -> encode_relop Ne (v C64 0L)
             | OfBool -> fun e -> Boolean.mk_ite ctx e (v C64 1L) (v C64 0L)
             | WrapI64 | _ -> assert false )
+          | _ -> err "Unsupported %a over (_ BitVec %d)" Ty.pp_cvtop op sz
         in
         op' e
     end
@@ -478,8 +479,8 @@ module Fresh = struct
       let encode_cvtop sz op e =
         let op' =
           match sz with
-          | Ty.S8 -> assert false
-          | Ty.S32 -> (
+          | 8 -> assert false
+          | 32 -> (
             match op with
             | DemoteF64 ->
               fun bv -> FloatingPoint.mk_to_fp_float ctx rne bv fp32_sort
@@ -492,7 +493,7 @@ module Fresh = struct
             | ToString -> fun v -> FuncDecl.apply f322str [ v ]
             | OfString -> fun v -> FuncDecl.apply str2f32 [ v ]
             | PromoteF32 | _ -> assert false )
-          | Ty.S64 -> (
+          | 64 -> (
             match op with
             | PromoteF32 ->
               fun bv -> FloatingPoint.mk_to_fp_float ctx rne bv fp64_sort
@@ -505,6 +506,7 @@ module Fresh = struct
             | ToString -> fun v -> FuncDecl.apply f642str [ v ]
             | OfString -> fun v -> FuncDecl.apply str2f64 [ v ]
             | DemoteF64 | _ -> assert false )
+          | _ -> err "Unsupported %a over Float%d" Ty.pp_cvtop op sz
         in
         op' e
     end
@@ -811,13 +813,12 @@ module Fresh = struct
           (* It can never be something else *)
           assert false )
       | Ty_str, Z3enums.SEQ_SORT -> Str (Z3.Seq.get_string ctx e)
-      | Ty_bitv S8, Z3enums.BV_SORT -> Num (I8 (Int64.to_int (int64_of_bv e)))
-      | Ty_bitv S32, Z3enums.BV_SORT ->
-        Num (I32 (Int64.to_int32 (int64_of_bv e)))
-      | Ty_bitv S64, Z3enums.BV_SORT -> Num (I64 (int64_of_bv e))
-      | Ty_fp S32, Z3enums.FLOATING_POINT_SORT ->
+      | Ty_bitv 8, Z3enums.BV_SORT -> Num (I8 (Int64.to_int (int64_of_bv e)))
+      | Ty_bitv 32, Z3enums.BV_SORT -> Num (I32 (Int64.to_int32 (int64_of_bv e)))
+      | Ty_bitv 64, Z3enums.BV_SORT -> Num (I64 (int64_of_bv e))
+      | Ty_fp 32, Z3enums.FLOATING_POINT_SORT ->
         Num (F32 (Int32.bits_of_float @@ float_of_numeral e))
-      | Ty_fp S64, Z3enums.FLOATING_POINT_SORT ->
+      | Ty_fp 64, Z3enums.FLOATING_POINT_SORT ->
         Num (F64 (Int64.bits_of_float @@ float_of_numeral e))
       | _ -> assert false
 
@@ -827,19 +828,11 @@ module Fresh = struct
       | Z3enums.REAL_SORT -> Ty.Ty_real
       | Z3enums.BOOL_SORT -> Ty.Ty_bool
       | Z3enums.SEQ_SORT -> Ty.Ty_str
-      | Z3enums.BV_SORT -> (
-        match Z3.BitVector.get_size sort with
-        | 8 -> Ty.Ty_bitv S8
-        | 32 -> Ty.Ty_bitv S32
-        | 64 -> Ty.Ty_bitv S64
-        | bits -> err "Unable to recover type of BitVector with %d bits" bits )
+      | Z3enums.BV_SORT -> Ty.Ty_bitv (Z3.BitVector.get_size sort)
       | Z3enums.FLOATING_POINT_SORT ->
         let ebits = Z3.FloatingPoint.get_ebits ctx sort in
         let sbits = Z3.FloatingPoint.get_sbits ctx sort in
-        let size = ebits + sbits in
-        if size = 32 then Ty.Ty_fp S32
-        else if size = 64 then Ty.Ty_fp S64
-        else err "Unable to recover type of FP with %d bits" size
+        Ty.Ty_fp (ebits + sbits)
       | _ -> assert false
 
     let symbols_of_model (model : Z3.Model.model) : Symbol.t list =

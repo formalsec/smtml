@@ -2,9 +2,9 @@ open Encoding
 open Ty
 
 let () =
-  let i32_unop = Eval_numeric.eval_unop (Ty_bitv S32) in
-  let i32_binop = Eval_numeric.eval_binop (Ty_bitv S32) in
-  let i32_relop = Eval_numeric.eval_relop (Ty_bitv S32) in
+  let i32_unop = Eval_numeric.eval_unop (Ty_bitv 32) in
+  let i32_binop = Eval_numeric.eval_binop (Ty_bitv 32) in
+  let i32_relop = Eval_numeric.eval_relop (Ty_bitv 32) in
   assert (i32_unop Neg (I32 1l) = I32 (-1l));
   assert (i32_unop Not (I32 (-1l)) = I32 0l);
   assert (i32_binop Add (I32 0l) (I32 1l) = I32 1l);
@@ -29,9 +29,9 @@ let () =
   assert (i32_relop GeU (I32 (-1l)) (I32 0l))
 
 let () =
-  let i64_unop = Eval_numeric.eval_unop (Ty_bitv S64) in
-  let i64_binop = Eval_numeric.eval_binop (Ty_bitv S64) in
-  let i64_relop = Eval_numeric.eval_relop (Ty_bitv S64) in
+  let i64_unop = Eval_numeric.eval_unop (Ty_bitv 64) in
+  let i64_binop = Eval_numeric.eval_binop (Ty_bitv 64) in
+  let i64_relop = Eval_numeric.eval_relop (Ty_bitv 64) in
   assert (i64_unop Neg (I64 1L) = I64 (-1L));
   assert (i64_unop Not (I64 (-1L)) = I64 0L);
   assert (i64_binop Add (I64 0L) (I64 1L) = I64 1L);
