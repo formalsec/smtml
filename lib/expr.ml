@@ -416,7 +416,7 @@ module Bool = struct
     | _ -> Binop (Ty_bool, Or, b1, b2)
 end
 
-module Make (T : sig
+module Make_bitv (T : sig
   type elt
 
   val ty : Ty.t
@@ -430,6 +430,125 @@ struct
 
   let ( ~- ) e = mk @@ Unop (T.ty, Neg, e)
 
+  let clz e = mk @@ Unop (T.ty, Clz, e)
+
+  let add e1 e2 = mk @@ Binop (T.ty, Add, e1, e2)
+
+  let sub e1 e2 = mk @@ Binop (T.ty, Sub, e1, e2)
+
+  let mul e1 e2 = mk @@ Binop (T.ty, Mul, e1, e2)
+
+  let div e1 e2 = mk @@ Binop (T.ty, Div, e1, e2)
+
+  let div_u e1 e2 = mk @@ Binop (T.ty, DivU, e1, e2)
+
+  let rem e1 e2 = mk @@ Binop (T.ty, Rem, e1, e2)
+
+  let rem_u e1 e2 = mk @@ Binop (T.ty, RemU, e1, e2)
+
+  let logand e1 e2 = mk @@ Binop (T.ty, And, e1, e2)
+
+  let logor e1 e2 = mk @@ Binop (T.ty, Or, e1, e2)
+
+  let logxor e1 e2 = mk @@ Binop (T.ty, Xor, e1, e2)
+
+  let shl e1 e2 = mk @@ Binop (T.ty, Shl, e1, e2)
+
+  let shr_s e1 e2 = mk @@ Binop (T.ty, ShrA, e1, e2)
+
+  let shr_u e1 e2 = mk @@ Binop (T.ty, ShrL, e1, e2)
+
+  let rotl e1 e2 = mk @@ Binop (T.ty, Rotl, e1, e2)
+
+  let rotr e1 e2 = mk @@ Binop (T.ty, Rotr, e1, e2)
+
+  let ( = ) e1 e2 = mk @@ Relop (T.ty, Eq, e1, e2)
+
+  let ( != ) e1 e2 = mk @@ Relop (T.ty, Ne, e1, e2)
+
+  let ( > ) e1 e2 = mk @@ Relop (T.ty, Gt, e1, e2)
+
+  let gt_u e1 e2 = mk @@ Relop (T.ty, GtU, e1, e2)
+
+  let ( >= ) e1 e2 = mk @@ Relop (T.ty, Ge, e1, e2)
+
+  let ge_u e1 e2 = mk @@ Relop (T.ty, GeU, e1, e2)
+
+  let ( < ) e1 e2 = mk @@ Relop (T.ty, Lt, e1, e2)
+
+  let lt_u e1 e2 = mk @@ Relop (T.ty, LtU, e1, e2)
+
+  let ( <= ) e1 e2 = mk @@ Relop (T.ty, Le, e1, e2)
+
+  let le_u e1 e2 = mk @@ Relop (T.ty, LeU, e1, e2)
+
+  let bits_of_float e = mk @@ Cvtop (T.ty, Reinterpret_float, e)
+end
+
+module Bitv = struct
+  module I8 = Make_bitv (struct
+    type elt = int
+
+    let ty = Ty_bitv 8
+
+    let num i = Num.I8 i
+  end)
+
+  module I32 = Make_bitv (struct
+    type elt = int32
+
+    let ty = Ty_bitv 32
+
+    let num i = Num.I32 i
+  end)
+
+  module I64 = Make_bitv (struct
+    type elt = int64
+
+    let ty = Ty_bitv 64
+
+    let num i = Num.I64 i
+  end)
+end
+
+module Make_fp (T : sig
+  type elt
+
+  val ty : Ty.t
+
+  val num : elt -> Num.t
+end) =
+struct
+  let v i = mk @@ Val (Num (T.num i))
+
+  let sym x = mk_symbol Symbol.(x @: T.ty)
+
+  let abs e = mk @@ Unop (T.ty, Abs, e)
+
+  let ( ~- ) e = mk @@ Unop (T.ty, Neg, e)
+
+  let sqrt e = mk @@ Unop (T.ty, Sqrt, e)
+
+  let ceil e = mk @@ Unop (T.ty, Ceil, e)
+
+  let floor e = mk @@ Unop (T.ty, Floor, e)
+
+  let trunc e = mk @@ Unop (T.ty, Trunc, e)
+
+  let nearest e = mk @@ Unop (T.ty, Nearest, e)
+
+  let add e1 e2 = mk @@ Binop (T.ty, Add, e1, e2)
+
+  let sub e1 e2 = mk @@ Binop (T.ty, Sub, e1, e2)
+
+  let mul e1 e2 = mk @@ Binop (T.ty, Mul, e1, e2)
+
+  let div e1 e2 = mk @@ Binop (T.ty, Div, e1, e2)
+
+  let min e1 e2 = mk @@ Binop (T.ty, Min, e1, e2)
+
+  let max e1 e2 = mk @@ Binop (T.ty, Max, e1, e2)
+
   let ( = ) e1 e2 = mk @@ Relop (T.ty, Eq, e1, e2)
 
   let ( != ) e1 e2 = mk @@ Relop (T.ty, Ne, e1, e2)
@@ -441,36 +560,12 @@ struct
   let ( < ) e1 e2 = mk @@ Relop (T.ty, Lt, e1, e2)
 
   let ( <= ) e1 e2 = mk @@ Relop (T.ty, Le, e1, e2)
-end
 
-module Bitv = struct
-  module I8 = Make (struct
-    type elt = int
-
-    let ty = Ty_bitv 8
-
-    let num i = Num.I8 i
-  end)
-
-  module I32 = Make (struct
-    type elt = int32
-
-    let ty = Ty_bitv 32
-
-    let num i = Num.I32 i
-  end)
-
-  module I64 = Make (struct
-    type elt = int64
-
-    let ty = Ty_bitv 64
-
-    let num i = Num.I64 i
-  end)
+  let float_of_bits e = mk @@ Cvtop (T.ty, Reinterpret_int, e)
 end
 
 module Fpa = struct
-  module F32 = Make (struct
+  module F32 = Make_fp (struct
     type elt = float
 
     let ty = Ty_fp 32
@@ -478,7 +573,7 @@ module Fpa = struct
     let num f = Num.F32 (Int32.bits_of_float f)
   end)
 
-  module F64 = Make (struct
+  module F64 = Make_fp (struct
     type elt = float
 
     let ty = Ty_fp 64
