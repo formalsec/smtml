@@ -1,3 +1,4 @@
+open Encoding
 module Fresh = struct
   module DExpr = Colibri2_core.Expr
   module DTy = DExpr.Ty

@@ -9,6 +9,7 @@ doc: "https://formalsec.github.io/encoding/encoding/index.html"
 bug-reports: "https://github.com/formalsec/encoding/issues"
 depends: [
   "dune" {>= "3.0"}
+  "encoding"
   "odoc" {with-doc}
 ]
 depopts: ["colibri2"]
