@@ -12,4 +12,5 @@
  (public_name smtml2)
  (package colibri2_mappings)
  (modules main2)
- (libraries encoding cmdliner colibri2_mappings))
+ (libraries encoding cmdliner colibri2_mappings)
+ (optional))
