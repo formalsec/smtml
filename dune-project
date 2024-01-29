@@ -39,4 +39,5 @@
  (allow_empty)
  (name colibri2_mappings)
  (synopsis "Encoding mappings for the colibri2 Solver")
- (depopts colibri2))
+ (depopts colibri2)
+ (depends encoding))

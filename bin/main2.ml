@@ -28,8 +28,7 @@ let parse_cmdline =
     let module Mappings =
       ( val match prover with
             | Z3_prover -> (module Z3_mappings)
-            | Colibri2_prover ->
-              Log.err "Please install Colibri2 and use 'smtml2'"
+            | Colibri2_prover -> (module Colibri2_mappings)
           : Mappings_intf.S )
     in
     Mappings.set_debug debug;

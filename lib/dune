@@ -45,6 +45,7 @@
  (optional)
  (modules colibri2_mappings)
  (libraries
+  encoding
   colibri2.core
   colibri2.solver
   colibri2.theories.bool

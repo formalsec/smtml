@@ -2,6 +2,14 @@
  (name main)
  (public_name smtml)
  (package encoding)
+ (modules main)
  (libraries encoding cmdliner)
  (instrumentation
   (backend bisect_ppx)))
+
+(executable
+ (name main2)
+ (public_name smtml2)
+ (package colibri2_mappings)
+ (modules main2)
+ (libraries encoding cmdliner colibri2_mappings))
