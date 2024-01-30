@@ -1,4 +1,4 @@
 pin-depends: [
-  [ "colibri2.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#5.1.0"]
-  [ "colibrilib.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#5.1.0"]
+  [ "colibri2.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#master"]
+  [ "colibrilib.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#master"]
 ]
