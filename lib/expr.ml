@@ -139,7 +139,7 @@ module Pp = struct
       pp_print_list ~pp_sep:pp_print_newline
         (fun fmt sym ->
           let t = Symbol.type_of sym in
-          fprintf fmt "(declare-fun %a %a)" Symbol.pp sym Ty.pp t )
+          fprintf fmt "(let-const %a %a)" Symbol.pp sym Ty.pp t )
         fmt syms
     in
     let pp_asserts fmt es =
