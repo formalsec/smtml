@@ -18,7 +18,7 @@ let equal (v1 : t) (v2 : t) : Bool.t =
   | _ -> false
 
 let compare v1 v2 =
-  match v1, v2 with
+  match (v1, v2) with
   | True, True | False, False -> 0
   | Int x1, Int x2 -> Int.compare x1 x2
   | Real x1, Real x2 -> Float.compare x1 x2

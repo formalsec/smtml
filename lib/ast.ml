@@ -9,7 +9,7 @@ type t =
 let pp fmt (instr : t) =
   match instr with
   | Assert e -> Format.fprintf fmt "(assert @[<h 2>%a@])" Expr.pp e
-  | Check_sat-> Format.pp_print_string fmt "(check-sat)"
+  | Check_sat -> Format.pp_print_string fmt "(check-sat)"
   | Push -> Format.pp_print_string fmt "(push)"
   | Pop n -> Format.fprintf fmt "(pop %d)" n
   | Let_const s ->
