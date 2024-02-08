@@ -148,7 +148,9 @@ module Pp = struct
         fmt es
     in
     let syms = get_symbols es in
-    fprintf fmt "%a@\n%a@\n(check-sat)" pp_symbols syms pp_asserts es
+    if List.length syms > 0 then fprintf fmt "%a@\n" pp_symbols syms;
+    if List.length es > 0 then fprintf fmt "%a@\n" pp_asserts es;
+    pp_print_string fmt "(check-sat)"
 end
 
 let pp = Pp.pp
