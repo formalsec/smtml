@@ -693,7 +693,10 @@ module Fresh = struct
       let pop s lvl = Z3.Solver.pop s lvl
       let reset s = Z3.Solver.reset s [@@inline]
       let add s es = Z3.Solver.add s (List.map encode_expr es)
-      let check s es = Z3.Solver.check s (List.map encode_expr es)
+
+      let check s ~assumptions =
+        Z3.Solver.check s (List.map encode_expr assumptions)
+
       let model s = Z3.Solver.get_model s
 
       let pp_statistics fmt solver =

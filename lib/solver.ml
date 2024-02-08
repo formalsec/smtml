@@ -23,7 +23,9 @@ module Base (M : Mappings_intf.S) = struct
 
   let check (solver : M.solver) (es : Expr.t list) : bool =
     solver_count := !solver_count + 1;
-    let sat = time_call (fun () -> M.Solver.check solver es) solver_time in
+    let sat =
+      time_call (fun () -> M.Solver.check solver ~assumptions:es) solver_time
+    in
     match M.satisfiability sat with
     | Mappings_intf.Satisfiable -> true
     | Mappings_intf.Unknown -> raise Unknown

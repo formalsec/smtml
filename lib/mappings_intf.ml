@@ -26,7 +26,7 @@ module type S = sig
     val pop : solver -> int -> unit
     val reset : solver -> unit
     val add : solver -> Expr.t list -> unit
-    val check : solver -> Expr.t list -> status
+    val check : solver -> assumptions:Expr.t list -> status
     val model : solver -> model option
     val pp_statistics : Format.formatter -> solver -> unit
   end

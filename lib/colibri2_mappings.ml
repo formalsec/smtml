@@ -873,8 +873,8 @@ module Fresh = struct
                 Colibri2_theories_bool.Boolean.set_true d n )
               es' )
 
-      let check s es =
-        add s es;
+      let check s ~assumptions =
+        add s assumptions;
         Scheduler.check_sat s.scheduler
 
       let model s : model option =
