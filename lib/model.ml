@@ -17,12 +17,19 @@ let pp_print_hashtbl ~pp_sep pp_v fmt v =
   let l = Hashtbl.to_seq v |> List.of_seq |> List.sort compare_bindings in
   Format.pp_print_list ~pp_sep pp_v fmt l
 
-let pp_bindings fmt model =
+let pp_bindings fmt ?(no_values = false) model =
   pp_print_hashtbl
     ~pp_sep:(fun fmt () -> Format.fprintf fmt "@\n")
     (fun fmt (key, data) ->
-      Format.fprintf fmt "(%a %a)" Symbol.pp key Value.pp data )
+      if not no_values then
+        Format.fprintf fmt "(%a %a)" Symbol.pp key Value.pp data
+      else
+        let t = Symbol.type_of key in
+        Format.fprintf fmt "(%a %a)" Symbol.pp key Ty.pp t )
     fmt model
 
-let pp fmt model = Format.fprintf fmt "(model@\n  @[<v>%a@])" pp_bindings model
-let to_string (model : t) : String.t = Format.asprintf "%a" pp model
+let pp fmt ?(no_values = false) model =
+  Format.fprintf fmt "(model@\n  @[<v>%a@])" (pp_bindings ~no_values) model
+
+let to_string (model : t) : String.t =
+  Format.asprintf "%a" (pp ~no_values:false) model
