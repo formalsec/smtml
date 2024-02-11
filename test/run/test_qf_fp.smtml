@@ -10,7 +10,7 @@
 (push)
 (push)
 (push)
-(assert (bool.not (f32.is_nan x)))
+(assert (not (f32.is_nan x)))
 (assert (f32.is_nan x))
 (check-sat)
 (pop 1)
@@ -36,8 +36,9 @@
 (assert (f64.is_nan u))
 (assert (f64.eq r (f64.div (f64 1.0) (f64 0.0))))
 (assert
-  (f64.eq
-    s
+  (let ((big_f64
     (f64 -338460706455329128135018695364373065576360054171204343201037173805357995568625611429596369334345869072216864991017687935090688.000000)))
+  (f64.eq s big_f64)))
 (check-sat)
 (get-model) ; FIXME: This model prints x which it should not
+; vim: set ft=scheme:

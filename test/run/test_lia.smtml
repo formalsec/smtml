@@ -14,3 +14,4 @@
 (check-sat)
 (assert (int.lt (int.neg z) 0))
 (check-sat)
+; vim: set ft=scheme:
