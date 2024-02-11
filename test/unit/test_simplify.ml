@@ -28,5 +28,5 @@ let () =
   let b1 = mk @@ Extract (x, 2, 1) in
   let b2 = mk @@ Extract (x, 3, 2) in
   let b3 = mk @@ Extract (x, 4, 3) in
-  let concat_x = mk @@ Concat (b3, mk @@ Concat (b2, mk @@ Concat (b1, b0))) in
+  let concat_x = mk @@ Concat [ b3; b2; b1; b0 ] in
   assert (simplify concat_x = x)

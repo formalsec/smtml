@@ -617,10 +617,12 @@ module Fresh = struct
       | Extract (e, h, l) ->
         let e' = encode_expr e in
         Z3.BitVector.mk_extract ctx ((h * 8) - 1) (l * 8) e'
-      | Concat (e1, e2) ->
-        let e1' = encode_expr e1
-        and e2' = encode_expr e2 in
-        Z3.BitVector.mk_concat ctx e1' e2'
+      | Concat es ->
+        assert (List.length es >= 2);
+        let st = Stack.create () in
+        List.iter (fun e -> Stack.push (encode_expr e) st) es;
+        let acc = Stack.pop st in
+        Stack.fold (fun acc expr -> Z3.BitVector.mk_concat ctx expr acc) acc st
     (* | Quantifier (t, vars, body, patterns) -> *)
     (*   let body' = encode_expr body in *)
     (*   let encode_pattern p = *)

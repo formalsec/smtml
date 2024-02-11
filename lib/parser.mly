@@ -1,7 +1,8 @@
 %{
-open Value
 open Ty
+open Ast
 open Expr
+open Value
 
 let varmap = Hashtbl.create 512
 
@@ -47,7 +48,7 @@ let stmt :=
   | LPAREN; ASSERT; ~ = term; RPAREN; <Ast.Assert>
   | LPAREN; CHECK_SAT; RPAREN; { Ast.Check_sat }
   | LPAREN; PUSH; RPAREN; { Ast.Push }
-  | LPAREN; POP; n = NUM; RPAREN; { Ast.Pop n }
+  | LPAREN; POP; ~ = NUM; RPAREN; <Ast.Pop>
   | LPAREN; GET_MODEL; RPAREN; { Ast.Get_model }
 
 let var_binding :=
@@ -58,9 +59,8 @@ let var_binding :=
     }
 
 let term :=
-  | ~ = s_expr; { E s_expr }
-  | LPAREN; LET; LPAREN; binds = var_binding+; RPAREN; ~ = term; RPAREN;
-    { Let (binds, term) }
+  | ~ = s_expr; <E>
+  | LPAREN; LET; LPAREN; ~ = var_binding+; RPAREN; ~ = term; RPAREN; <Let>
 
 let s_expr :=
   | x = SYMBOL; { mk_symbol @@ Symbol.make (get_bind x) x }
@@ -70,25 +70,18 @@ let s_expr :=
 let paren_op :=
   | PTR; LPAREN; _ = TYPE; x = NUM; RPAREN; e = s_expr;
     { Ptr (Int32.of_int x, e) }
-  | (ty, op) = UNARY; e = s_expr;
-    { Unop (ty, op, e) }
-  | (ty, op) = BINARY; e1 = s_expr; e2 = s_expr;
-    { Binop (ty, op, e1, e2) }
-  | (ty, op) = TERNARY; e1 = s_expr; e2 = s_expr; e3 = s_expr;
-    { Triop (ty, op, e1, e2, e3) }
-  | (ty, op) = CVTOP; e = s_expr;
-    { Cvtop (ty, op, e) }
-  | (ty, op) = RELOP; e1 = s_expr; e2 = s_expr;
-    { Relop (ty, op, e1, e2) }
-  | EXTRACT; ~ = s_expr; l = NUM; h = NUM;
-    { Extract (s_expr, h, l) }
-  | CONCAT; e1 = s_expr; e2 = s_expr;
-    { Concat (e1, e2) }
+  | (ty, op) = UNARY; ~ = s_expr; <Unop>
+  | (ty, op) = BINARY; e1 = s_expr; e2 = s_expr; <Binop>
+  | (ty, op) = TERNARY; e1 = s_expr; e2 = s_expr; e3 = s_expr; <Triop>
+  | (ty, op) = CVTOP; ~ = s_expr; <Cvtop>
+  | (ty, op) = RELOP; e1 = s_expr; e2 = s_expr; <Relop>
+  | EXTRACT; ~ = s_expr; ~ = NUM; ~ = NUM; <Extract>
+  | CONCAT; ~ = s_expr+; <Concat>
 
 let spec_constant :=
-  | x = NUM; { Int x }
-  | x = DEC; { Real x }
-  | x = STR; { Str x }
+  | x = NUM; <Int>
+  | x = DEC; <Real>
+  | x = STR; <Str>
   | x = BOOL; { if x then True else False }
   | LPAREN; ty = TYPE; x = NUM; RPAREN;
     {

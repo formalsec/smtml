@@ -11,7 +11,7 @@ and expr =
   | Cvtop of Ty.t * Ty.cvtop * t
   | Symbol of Symbol.t
   | Extract of t * int * int
-  | Concat of t * t
+  | Concat of t list
 
 val mk : expr -> t
 

@@ -36,7 +36,7 @@ module Make (Solver : Solver_intf.S) = struct
           e
         | expr -> expr )
       | Extract (e', h, l) -> mk @@ Extract (traverse e', h, l)
-      | Concat (e1, e2) -> mk @@ Concat (traverse e1, traverse e2)
+      | Concat es -> mk @@ Concat (List.map traverse es)
     in
     traverse e
 

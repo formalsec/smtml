@@ -1,6 +1,6 @@
 type t =
   { sort : Ty.t
-  ; name : String.t
+  ; name : string
   }
 
 let make (sort : Ty.t) (name : string) = { name; sort }
