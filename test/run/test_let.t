@@ -1,5 +1,5 @@
 Test smtml let formatting:
-  $ dune exec smtml -- fmt test_let.smtml
+  $ smtml fmt test_let.smtml
   (let-const a int)
   (assert
     (let ((x (int.add a 5)))
