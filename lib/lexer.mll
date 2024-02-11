@@ -13,6 +13,8 @@ let keywords =
      ; ("real", TYPE (Ty_real))
      ; ("bool", TYPE (Ty_bool))
      ; ("str" , TYPE (Ty_str))
+     ; ("i8" , TYPE (Ty_bitv 8))
+     ; ("i16" , TYPE (Ty_bitv 16))
      ; ("i32" , TYPE (Ty_bitv 32))
      ; ("i64" , TYPE (Ty_bitv 64))
      ; ("f32" , TYPE (Ty_fp 32))
@@ -217,7 +219,7 @@ let character = ['a'-'z' 'A'-'Z']
 let digits = '0' | [ '1'-'9' ] digit*
 let numeral = '-'? digits
 let decimal = '-'? digits '.' digit*
-let hexadec = "#x" (['a'-'f' 'A'-'F'] | digit)+
+let hexadec = "0x" (['a'-'f' 'A'-'F'] | digit)+
 let binary = "#b" ('0' | '1')+
 let bool = "true" | "false"
 
@@ -233,7 +235,7 @@ rule token = parse
   | numeral as s { NUM (int_of_string s) }
   | decimal as s { DEC (Float.of_string s) }
   | bool as s { BOOL (s = "true") }
-  | hexadec { failwith "TODO: Lexer(hexadec)" }
+  | hexadec as s { NUM (int_of_string s) }
   | binary { failwith "TODO: Lexer(binary)" }
   | '"' { string (Buffer.create 17) lexbuf }
 

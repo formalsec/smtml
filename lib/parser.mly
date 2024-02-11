@@ -86,6 +86,8 @@ let spec_constant :=
   | LPAREN; ty = TYPE; x = NUM; RPAREN;
     {
       match ty with
+      | Ty_bitv 8 -> Num (I8 x)
+      | Ty_bitv 16 -> Num (I16 x)
       | Ty_bitv 32 -> Num (I32 (Int32.of_int x))
       | Ty_bitv 64 -> Num (I64 (Int64.of_int x))
       | _ -> failwith "invalid bitv type"

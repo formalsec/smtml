@@ -26,9 +26,13 @@ module Fresh = struct
 
     let bv8_sort = Z3.BitVector.mk_sort ctx 8
 
+    let bv16_sort = Z3.BitVector.mk_sort ctx 16
+
     let bv32_sort = Z3.BitVector.mk_sort ctx 32
 
     let bv64_sort = Z3.BitVector.mk_sort ctx 64
+
+    let fp16_sort = Z3.FloatingPoint.mk_sort_half ctx
 
     let fp32_sort = Z3.FloatingPoint.mk_sort_single ctx
 
@@ -49,8 +53,10 @@ module Fresh = struct
       | Ty_bool -> bool_sort
       | Ty_str -> str_sort
       | Ty_bitv 8 -> bv8_sort
+      | Ty_bitv 16 -> bv16_sort
       | Ty_bitv 32 -> bv32_sort
       | Ty_bitv 64 -> bv64_sort
+      | Ty_fp 16 -> fp16_sort
       | Ty_fp 32 -> fp32_sort
       | Ty_fp 64 -> fp64_sort
       | Ty_bitv n | Ty_fp n -> Log.err "Unsupported bitv/fp of size %d" n
@@ -318,6 +324,7 @@ module Fresh = struct
       let v (type a) (cast : a Ty.cast) (i : a) =
         match cast with
         | C8 -> BitVector.mk_numeral ctx (string_of_int i) 8
+        | C16 -> BitVector.mk_numeral ctx (string_of_int i) 16
         | C32 -> BitVector.mk_numeral ctx (Int32.to_string i) 32
         | C64 -> BitVector.mk_numeral ctx (Int64.to_string i) 64
 
@@ -413,6 +420,9 @@ module Fresh = struct
       let v (type a) (sz : a Ty.cast) (f : a) =
         match sz with
         | C8 -> err "Unable to create FP numeral using 8 bits"
+        | C16 ->
+          let f = Int32.(float_of_bits (of_int f)) in
+          FloatingPoint.mk_numeral_f ctx f fp16_sort
         | C32 ->
           FloatingPoint.mk_numeral_f ctx (Int32.float_of_bits f) fp32_sort
         | C64 ->
@@ -518,8 +528,10 @@ module Fresh = struct
       | Real v -> Real.encode_val v
       | Str v -> Str.encode_val v
       | Num (I8 x) -> Bv.v C8 x
+      | Num (I16 x) -> Bv.v C16 x
       | Num (I32 x) -> Bv.v C32 x
       | Num (I64 x) -> Bv.v C64 x
+      | Num (F16 x) -> Fp.v C16 x
       | Num (F32 x) -> Fp.v C32 x
       | Num (F64 x) -> Fp.v C64 x
 

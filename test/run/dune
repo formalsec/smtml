@@ -1,6 +1,7 @@
 (cram
  (deps
   %{bin:smtml}
+  test_bv.smtml
   test_core.smtml
   test_let.smtml
   test_lia.smtml

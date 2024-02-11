@@ -1,0 +1,8 @@
+(let-const x i32)
+(assert
+  (let ((b0 (i8 0xef)) (b1 (i8 0xbe)) (b32 (i16 0xdead)))
+  (let ((bs (++ b32 b1 b0)))
+  (= x bs))))
+(check-sat)
+(get-model)
+; vim: set ft=scheme:
