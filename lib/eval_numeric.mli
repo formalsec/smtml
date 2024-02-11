@@ -1,10 +1,12 @@
 open Ty
 
-exception DivideByZero
-
 exception Num of Ty.t
 
-exception TypeError of int * Num.t * Ty.t
+exception Type_error of int * Num.t * Ty.t
+
+exception Integer_overflow
+
+exception Conversion_to_integer
 
 val eval_unop : Ty.t -> unop -> Num.t -> Num.t
 

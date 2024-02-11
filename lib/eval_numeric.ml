@@ -9,23 +9,23 @@ open Ty
 
 exception Num of Ty.t
 
-exception TypeError of int * Num.t * Ty.t
+exception Type_error of int * Num.t * Ty.t
 
-exception DivideByZero
+exception Integer_overflow
 
-exception ConversionToInteger
+exception Conversion_to_integer
 
-exception IntegerOverflow
-
-let of_arg f n v = try f v with Num t -> raise (TypeError (n, v, t))
+let of_arg f n v = try f v with Num t -> raise (Type_error (n, v, t))
+[@@inline]
 
 module I32Op = struct
   type t = int32
 
-  let to_value i : Num.t = I32 i
+  let to_value i : Num.t = I32 i [@@inline]
 
   let of_value n v : t =
     of_arg (function I32 i -> i | _ -> raise (Num (Ty_bitv 32))) n v
+  [@@inline]
 
   let cmp_u x op y = op Int32.(add x min_int) Int32.(add y min_int)
 
@@ -95,10 +95,11 @@ module I32Op = struct
 end
 
 module I64Op = struct
-  let to_value i : Num.t = I64 i
+  let to_value i : Num.t = I64 i [@@inline]
 
   let of_value n v : int64 =
     of_arg (function I64 i -> i | _ -> raise (Num (Ty_bitv 64))) n v
+  [@@inline]
 
   let cmp_u x op y = op Int64.(add x min_int) Int64.(add y min_int)
 
@@ -168,13 +169,15 @@ module I64Op = struct
 end
 
 module F32Op = struct
-  let to_value f : Num.t = F32 f
+  let to_value f : Num.t = F32 f [@@inline]
 
-  let of_value = of_arg (function F32 f -> f | _ -> raise (Num (Ty_fp 32)))
+  let of_value i v =
+    of_arg (function F32 f -> f | _ -> raise (Num (Ty_fp 32))) i v
+  [@@inline]
 
-  let of_float = Int32.bits_of_float
+  let of_float f = Int32.bits_of_float f [@@inline]
 
-  let to_float = Int32.float_of_bits
+  let to_float f = Int32.float_of_bits f [@@inline]
 
   let unop (op : unop) =
     let f =
@@ -223,13 +226,15 @@ module F32Op = struct
 end
 
 module F64Op = struct
-  let to_value f : Num.t = F64 f
+  let to_value f : Num.t = F64 f [@@inline]
 
-  let of_value = of_arg (function F64 f -> f | _ -> raise (Num (Ty_fp 64)))
+  let of_value i v =
+    of_arg (function F64 f -> f | _ -> raise (Num (Ty_fp 64))) i v
+  [@@inline]
 
-  let of_float = Int64.bits_of_float
+  let of_float f = Int64.bits_of_float f [@@inline]
 
-  let to_float = Int64.float_of_bits
+  let to_float f = Int64.float_of_bits f [@@inline]
 
   let unop (op : unop) =
     let f =
@@ -283,35 +288,35 @@ module I32CvtOp = struct
     Int32.(shift_right (shift_left x shift) shift)
 
   let trunc_f32_s (x : int32) =
-    if x <> x then raise ConversionToInteger
+    if x <> x then raise Conversion_to_integer
     else
       let xf = F32Op.to_float x in
       if xf >= -.Int32.(to_float min_int) || xf < Int32.(to_float min_int) then
-        raise IntegerOverflow
+        raise Integer_overflow
       else Int32.of_float xf
 
   let trunc_f32_u (x : int32) =
-    if x <> x then raise ConversionToInteger
+    if x <> x then raise Conversion_to_integer
     else
       let xf = F32Op.to_float x in
       if xf >= -.Int32.(to_float min_int) *. 2.0 || xf <= -1.0 then
-        raise IntegerOverflow
+        raise Integer_overflow
       else Int32.of_float xf
 
   let trunc_f64_s (x : int64) =
-    if x <> x then raise ConversionToInteger
+    if x <> x then raise Conversion_to_integer
     else
       let xf = F64Op.to_float x in
       if xf >= -.Int64.(to_float min_int) || xf < Int64.(to_float min_int) then
-        raise IntegerOverflow
+        raise Integer_overflow
       else Int32.of_float xf
 
   let trunc_f64_u (x : int64) =
-    if x <> x then raise ConversionToInteger
+    if x <> x then raise Conversion_to_integer
     else
       let xf = F64Op.to_float x in
       if xf >= -.Int64.(to_float min_int) *. 2.0 || xf <= -1.0 then
-        raise IntegerOverflow
+        raise Integer_overflow
       else Int32.of_float xf
 
   let cvtop op v : Num.t =
@@ -338,37 +343,37 @@ module I64CvtOp = struct
     Int64.(logand (of_int32 x) 0x0000_0000_ffff_ffffL)
 
   let trunc_f32_s (x : int32) =
-    if x <> x then raise ConversionToInteger
+    if x <> x then raise Conversion_to_integer
     else
       let xf = F32Op.to_float x in
       if xf >= -.Int64.(to_float min_int) || xf < Int64.(to_float min_int) then
-        raise IntegerOverflow
+        raise Integer_overflow
       else Int64.of_float xf
 
   let trunc_f32_u x =
-    if x <> x then raise ConversionToInteger
+    if x <> x then raise Conversion_to_integer
     else
       let xf = F32Op.to_float x in
       if xf >= -.Int64.(to_float min_int) *. 2.0 || xf <= -1.0 then
-        raise IntegerOverflow
+        raise Integer_overflow
       else if xf >= -.Int64.(to_float min_int) then
         Int64.(logxor (of_float (xf -. 0x1p63)) min_int)
       else Int64.of_float xf
 
   let trunc_f64_s (x : int64) =
-    if x <> x then raise ConversionToInteger
+    if x <> x then raise Conversion_to_integer
     else
       let xf = F64Op.to_float x in
       if xf >= -.Int64.(to_float min_int) || xf < Int64.(to_float min_int) then
-        raise IntegerOverflow
+        raise Integer_overflow
       else Int64.of_float xf
 
   let trunc_f64_u x =
-    if x <> x then raise ConversionToInteger
+    if x <> x then raise Conversion_to_integer
     else
       let xf = F64Op.to_float x in
       if xf >= -.Int64.(to_float min_int) *. 2.0 || xf <= -1.0 then
-        raise IntegerOverflow
+        raise Integer_overflow
       else if xf >= -.Int64.(to_float min_int) then
         Int64.(logxor (of_float (xf -. 0x1p63)) min_int)
       else Int64.of_float xf
@@ -382,7 +387,7 @@ module I64CvtOp = struct
     | TruncSF64 -> I64 (trunc_f64_s (F64Op.of_value 1 v))
     | TruncUF64 -> I64 (trunc_f64_u (F64Op.of_value 1 v))
     | Reinterpret_float -> I64 (F64Op.of_value 1 v)
-    | WrapI64 -> raise (TypeError (1, v, Ty_bitv 64))
+    | WrapI64 -> raise (Type_error (1, v, Ty_bitv 64))
     | ToBool | OfBool | _ ->
       Log.err {|eval_cvtop: Unsupported i64 operator "%a"|} Ty.pp_cvtop op
 end
@@ -434,7 +439,7 @@ module F32CvtOp = struct
     | ConvertSI64 -> F32 (convert_i64_s (I64Op.of_value 1 v))
     | ConvertUI64 -> F32 (convert_i64_u (I64Op.of_value 1 v))
     | Reinterpret_int -> F32 (I32Op.of_value 1 v)
-    | PromoteF32 -> raise (TypeError (1, v, Ty_fp 32))
+    | PromoteF32 -> raise (Type_error (1, v, Ty_fp 32))
     | ToString | OfString | _ ->
       Log.err {|eval_cvtop: Unsupported f32 operator "%a"|} Ty.pp_cvtop op
 end
@@ -486,7 +491,7 @@ module F64CvtOp = struct
     | ConvertSI64 -> F64 (convert_i64_s (I64Op.of_value 1 v))
     | ConvertUI64 -> F64 (convert_i64_u (I64Op.of_value 1 v))
     | Reinterpret_int -> F64 (I64Op.of_value 1 v)
-    | DemoteF64 -> raise (TypeError (1, v, Ty_bitv 64))
+    | DemoteF64 -> raise (Type_error (1, v, Ty_bitv 64))
     | ToString | OfString | _ ->
       Log.err {|eval_cvtop: Unsupported f64 operator "%a"|} Ty.pp_cvtop op
 end

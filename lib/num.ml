@@ -20,13 +20,13 @@ let ( = ) n1 n2 =
 
 let compare n1 n2 =
   match (n1, n2) with
-  | I8 i1, I8 i2 -> compare i1 i2
-  | I16 i1, I16 i2 -> compare i1 i2
-  | I32 i1, I32 i2 -> compare i1 i2
-  | I64 i1, I64 i2 -> compare i1 i2
-  | F16 i1, F16 i2 -> compare i1 i2
-  | F32 i1, F32 i2 -> compare i1 i2
-  | F64 i1, F64 i2 -> compare i1 i2
+  | I8 i1, I8 i2 -> Int.compare i1 i2
+  | I16 i1, I16 i2 -> Int.compare i1 i2
+  | I32 i1, I32 i2 -> Int32.compare i1 i2
+  | I64 i1, I64 i2 -> Int64.compare i1 i2
+  | F16 i1, F16 i2 -> Int.compare i1 i2
+  | F32 i1, F32 i2 -> Int32.compare i1 i2
+  | F64 i1, F64 i2 -> Int64.compare i1 i2
   | _ -> compare n1 n2
 
 let ty : t -> Ty.t = function
