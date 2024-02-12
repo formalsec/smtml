@@ -640,7 +640,7 @@ module Fresh = struct
     let pp_entry fmt entry =
       let key = Z3.Statistics.Entry.get_key entry in
       let value = Z3.Statistics.Entry.to_string_value entry in
-      Format.fprintf fmt "%s: %s" key value
+      Format.fprintf fmt "(%s %s)" key value
 
     module Solver = struct
       let logic_to_string : Solver_intf.logic -> string = function
@@ -703,8 +703,9 @@ module Fresh = struct
         let module Entry = Z3.Statistics.Entry in
         let stats = Z3.Solver.get_statistics solver in
         let entries = Z3.Statistics.get_entries stats in
-        Format.pp_print_list ~pp_sep:Format.pp_print_newline pp_entry fmt
-          entries
+        Format.pp_print_list
+          ~pp_sep:(fun fmt () -> Format.fprintf fmt "@\n")
+          pp_entry fmt entries
     end
 
     module Optimizer = struct
@@ -721,8 +722,9 @@ module Fresh = struct
         let module Entry = Z3.Statistics.Entry in
         let stats = Z3.Optimize.get_statistics o in
         let entries = Z3.Statistics.get_entries stats in
-        Format.pp_print_list ~pp_sep:Format.pp_print_newline pp_entry fmt
-          entries
+        Format.pp_print_list
+          ~pp_sep:(fun fmt () -> Format.fprintf fmt "@\n")
+          pp_entry fmt entries
     end
 
     let set (s : string) (i : int) (n : char) =

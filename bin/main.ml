@@ -24,7 +24,7 @@ let prover_conv =
     ]
 
 let parse_cmdline =
-  let aux files prover incremental debug =
+  let aux files prover incremental debug print_statistics =
     let module Mappings =
       ( val match prover with
             | Z3_prover -> (module Z3_mappings)
@@ -33,23 +33,37 @@ let parse_cmdline =
           : Mappings_intf.S )
     in
     Mappings.set_debug debug;
-    let module Interpret =
-      ( val if incremental then
-              (module Interpret.Make (Solver.Incremental (Mappings)))
-            else (module Interpret.Make (Solver.Batch (Mappings)))
-          : Interpret_intf.S )
+    let module Solver =
+      ( val if incremental then (module Solver.Incremental (Mappings))
+            else (module Solver.Batch (Mappings))
+          : Solver_intf.S )
     in
-    match files with
-    | [] ->
-      let ast = parse_file "-" in
-      ignore @@ Interpret.start ast
-    | _ ->
-      ignore
-      @@ List.fold_left
-           (fun state file ->
-             let ast = Parse.from_file ~filename:file in
-             Some (Interpret.start ?state ast) )
-           None files
+    let module Interpret = Interpret.Make (Solver) in
+    let state =
+      match files with
+      | [] ->
+        let ast = parse_file "-" in
+        Some (Interpret.start ast)
+      | _ ->
+        List.fold_left
+          (fun state file ->
+            let ast = Parse.from_file ~filename:file in
+            Some (Interpret.start ?state ast) )
+          None files
+    in
+    if print_statistics then begin
+      let state = Option.get state in
+      let stats : Gc.stat = Gc.stat () in
+      Format.eprintf
+        "@[<v 2>(statistics @\n\
+         (major-words %f)@\n\
+         (solver-time %f)@\n\
+         (solver-calls %d)@\n\
+         @[<v 2>(solver-misc @\n\
+         %a@])@])@\n"
+        stats.major_words !Solver.solver_time !Solver.solver_count
+        Solver.pp_statistics state.solver
+    end
   in
   let open Cmdliner in
   let files =
@@ -64,10 +78,12 @@ let parse_cmdline =
       & info [ "incremental" ] ~doc:"Use the SMT solver in the incremental mode" )
   and debug =
     Arg.(value & flag & info [ "debug" ] ~doc:"Print debugging messages")
+  and print_statistics =
+    Arg.(value & flag & info [ "st" ] ~doc:"Print statistics")
   in
   Cmd.v
     (Cmd.info "smtml" ~version:"%%VERSION%%")
-    Term.(const aux $ files $ prover $ incremental $ debug)
+    Term.(const aux $ files $ prover $ incremental $ debug $ print_statistics)
 
 let () =
   match Cmdliner.Cmd.eval_value parse_cmdline with
