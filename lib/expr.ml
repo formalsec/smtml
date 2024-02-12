@@ -342,8 +342,8 @@ module Make_bitv (T : sig
   type elt
 
   val ty : Ty.t
-  val zero : ht_expr
-  val one : ht_expr
+  val zero : elt
+  val one : elt
   val value : elt -> ht_expr
 end) =
 struct
@@ -357,26 +357,30 @@ struct
   (* I.e., (x > y) = (y < x) *)
 
   (* Normalize (x = y) = (x - y = 0) *)
-  let ( = ) e1 e2 = Relop (Eq, Binop (Sub, e1, e2) @: T.ty, T.zero) @: T.ty
+  let ( = ) e1 e2 =
+    Relop (Eq, Binop (Sub, e1, e2) @: T.ty, T.(value zero)) @: T.ty
 
   (* Canonize (x != y) = (x - y != 0) *)
-  let ( != ) e1 e2 = Relop (Ne, Binop (Sub, e1, e2) @: T.ty, T.zero) @: T.ty
+  let ( != ) e1 e2 =
+    Relop (Ne, Binop (Sub, e1, e2) @: T.ty, T.(value zero)) @: T.ty
 
   (* Canonize (x > y) = (-x < -y) = (y - x + 1 <= 0) *)
   let ( > ) e1 e2 =
-    let lhs = Binop (Add, Binop (Sub, e2, e1) @: T.ty, T.one) @: T.ty in
-    Relop (Le, lhs, T.zero) @: T.ty
+    let lhs = Binop (Add, Binop (Sub, e2, e1) @: T.ty, T.(value one)) @: T.ty in
+    Relop (Le, lhs, T.(value zero)) @: T.ty
 
   (* Canonize (x >= y) = (-x <= -y) = (y - x <= 0) *)
-  let ( >= ) e1 e2 = Relop (Le, Binop (Sub, e2, e1) @: T.ty, T.zero) @: T.ty
+  let ( >= ) e1 e2 =
+    Relop (Le, Binop (Sub, e2, e1) @: T.ty, T.(value zero)) @: T.ty
 
   (* Canonize (x < y) = (x - y + 1 <= 0) *)
   let ( < ) e1 e2 =
-    let lhs = Binop (Add, Binop (Sub, e1, e2) @: T.ty, T.one) @: T.ty in
-    Relop (Le, lhs, T.zero) @: T.ty
+    let lhs = Binop (Add, Binop (Sub, e1, e2) @: T.ty, T.(value one)) @: T.ty in
+    Relop (Le, lhs, T.(value zero)) @: T.ty
 
   (* Canonize (x <= y) = (x - y <= 0) *)
-  let ( <= ) e1 e2 = Relop (Le, Binop (Sub, e1, e2) @: T.ty, T.zero) @: T.ty
+  let ( <= ) e1 e2 =
+    Relop (Le, Binop (Sub, e1, e2) @: T.ty, T.(value zero)) @: T.ty
 end
 
 module Bitv = struct
@@ -384,27 +388,27 @@ module Bitv = struct
     type elt = int
 
     let ty = Ty_bitv S8
+    let zero = 0
+    let one = 1
     let value i = Val (Num (I8 i)) @: ty
-    let zero = value 0
-    let one = value 1
   end)
 
   module I32 = Make_bitv (struct
     type elt = int32
 
     let ty = Ty_bitv S32
+    let zero = 0l
+    let one = 1l
     let value i = Val (Num (I32 i)) @: ty
-    let zero = value 0l
-    let one = value 1l
   end)
 
   module I64 = Make_bitv (struct
     type elt = int64
 
     let ty = Ty_bitv S64
+    let zero = 0L
+    let one = 1L
     let value i = Val (Num (I64 i)) @: ty
-    let zero = value 0L
-    let one = value 1L
   end)
 end
 
