@@ -1,1 +1,1 @@
-module Make (Solver : Solver_intf.S) : Interpret_intf.S
+include Interpret_intf.Intf (** @inline *)
