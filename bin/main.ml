@@ -23,21 +23,6 @@ let prover_conv =
     ; ("Colibri2", Colibri2_prover)
     ]
 
-let fmt files inplace =
-  let open Format in
-  let pp_ast fmt ast = pp_print_list ~pp_sep:pp_print_newline Ast.pp fmt ast in
-  match files with
-  | [] -> pp_ast std_formatter (parse_file "-")
-  | _ ->
-    List.iter
-      (fun file ->
-        let ast = parse_file file in
-        if inplace then
-          Out_channel.with_open_text file (fun out ->
-              Format.fprintf (formatter_of_out_channel out) "%a@." pp_ast ast )
-        else Format.printf "%a@." pp_ast ast )
-      files
-
 let files =
   let doc = "Source file(s)." in
   Cmdliner.Arg.(value & pos_all non_dir_file [] & info [] ~doc)
@@ -86,6 +71,23 @@ let run_cmd =
 
 let fmt_cmd =
   let open Cmdliner in
+  let fmt files inplace =
+    let open Format in
+    let pp_ast fmt ast =
+      pp_print_list ~pp_sep:pp_print_newline Ast.pp fmt ast
+    in
+    match files with
+    | [] -> pp_ast std_formatter (parse_file "-")
+    | _ ->
+      List.iter
+        (fun file ->
+          let ast = parse_file file in
+          if inplace then
+            Out_channel.with_open_text file (fun out ->
+                Format.fprintf (formatter_of_out_channel out) "%a@." pp_ast ast )
+          else Format.printf "%a@." pp_ast ast )
+        files
+  in
   let inplace =
     let doc = "Format in-place, overwriting input file(s)." in
     Cmdliner.Arg.(value & flag & info [ "inplace"; "i" ] ~doc)
