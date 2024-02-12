@@ -1,20 +1,16 @@
+include Interpret_intf
+
 module Make (Solver : Solver_intf.S) = struct
   open Ast
 
-  type exec_state =
-    { stmts : Ast.t list
-    ; smap : (string, Ty.t) Hashtbl.t
-    ; pc : Expr.t list
-    ; solver : Solver.t
-    }
+  type solver = Solver.t
+  type exec_state = solver state
 
   let init_state stmts =
     let params = Params.(default () $ (Model, false)) in
-    { stmts
-    ; smap = Hashtbl.create 16
-    ; solver = Solver.create ~params ()
-    ; pc = []
-    }
+    let solver = Solver.create ~params () in
+    Solver.push solver;
+    { stmts; smap = Hashtbl.create 16; solver; pc = [] }
 
   let eval stmt (state : exec_state) : exec_state =
     let { solver; pc; _ } = state in
@@ -53,7 +49,8 @@ module Make (Solver : Solver_intf.S) = struct
       match state with
       | None -> init_state stmts
       | Some st ->
-        Solver.reset st.solver;
+        Solver.pop st.solver 1;
+        Solver.push st.solver;
         { st with stmts; pc = [] }
     in
     loop st
