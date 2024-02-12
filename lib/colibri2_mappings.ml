@@ -145,7 +145,7 @@ module Fresh = struct
     module SHT = Hashtbl.Make (struct
       include Symbol
 
-      let hash _ = assert false
+      let hash = Hashtbl.hash
     end)
 
     let tty_of_etype (e : Ty.t) : DTerm.ty =
@@ -678,7 +678,7 @@ module Fresh = struct
     let encore_expr_aux ?(record_sym = fun _ -> ()) (e : Expr.t) : expr =
       let open Expr in
       let rec aux (hte : t) =
-        match e.node.e with
+        match hte.node.e with
         | Val v -> encode_val v
         | Ptr (base, offset) ->
           let base' = encode_val (Num (I32 base)) in
