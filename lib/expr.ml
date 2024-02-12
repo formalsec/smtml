@@ -247,7 +247,7 @@ let rec simplify_binop ty (op : binop) (e1 : t) (e2 : t) : t =
       let v = Eval_numeric.eval_binop ty Sub v1 v2 in
       mk @@ Binop (ty, Add, x, mk (Val (Num v)))
     | _, _ -> mk @@ Binop (ty, op, e1, e2) )
-  (* FIXME: commenting because this seems wrong? *)
+  (* FIXME: this seems wrong? *)
   (* | Binop (_, And, _, _), Val (Num (I32 1l)) -> e1.node *)
   (* | Val (Num (I32 1l)), Binop (_, And, _, _) -> e2.node *)
   | _ -> mk @@ Binop (ty, op, e1, e2)
@@ -297,13 +297,6 @@ let nland64 (x : int64) (n : int) =
   in
   loop x n 0L
 
-let _nland32 (x : int32) (n : int) =
-  let rec loop x' n' acc =
-    if n' = 0 then Int32.logand x' acc
-    else loop x' (n' - 1) Int32.(logor (shift_left acc 8) 0xffl)
-  in
-  loop x n 0l
-
 let simplify_extract (s : t) h l =
   match s.node with
   | Val (Num (I64 x)) ->
@@ -314,41 +307,43 @@ let simplify_extract (s : t) h l =
 let simplify_concat (es : t list) : t =
   match es with
   | [ x ] -> x
+  (* TODO: Find a cleaner way to do this? *)
+  | [ { node = Val (Num (I8 i3)); _ }
+    ; { node = Val (Num (I8 i2)); _ }
+    ; { node = Val (Num (I8 i1)); _ }
+    ; { node = Val (Num (I8 i0)); _ }
+    ] ->
+    let v =
+      Int32.(
+        logor (shift_left (of_int i1) 8) (of_int i0)
+        |> logor (shift_left (of_int i2) 16)
+        |> logor (shift_left (of_int i3) 24) )
+    in
+    mk @@ Val (Num (I32 v))
+  | [ { node = Val (Num (I8 i7)); _ }
+    ; { node = Val (Num (I8 i6)); _ }
+    ; { node = Val (Num (I8 i5)); _ }
+    ; { node = Val (Num (I8 i4)); _ }
+    ; { node = Val (Num (I8 i3)); _ }
+    ; { node = Val (Num (I8 i2)); _ }
+    ; { node = Val (Num (I8 i1)); _ }
+    ; { node = Val (Num (I8 i0)); _ }
+    ] ->
+    let v =
+      Int64.(
+        logor (shift_left (of_int i1) 8) (of_int i0)
+        |> logor (shift_left (of_int i2) 16)
+        |> logor (shift_left (of_int i3) 24)
+        |> logor (shift_left (of_int i4) 32)
+        |> logor (shift_left (of_int i5) 40)
+        |> logor (shift_left (of_int i6) 48)
+        |> logor (shift_left (of_int i7) 56) )
+    in
+    mk @@ Val (Num (I64 v))
   | { node = Extract (x0, h, _); _ } :: { node = Extract (x1, _, l); _ } :: tl
     when equal x0 x1 ->
     mk @@ Concat ((mk @@ Extract (x0, h, l)) :: tl)
   | _ -> mk @@ Concat es
-(* match (msb.node, lsb.node) with *)
-(* (1* TODO: Add concat of I8s *1) *)
-(* | ( Extract ({ node = Val (Num (I64 x2)); _ }, h2, l2) *)
-(*   , Extract ({ node = Val (Num (I64 x1)); _ }, h1, l1) ) -> *)
-(*   let d1 = h1 - l1 in *)
-(*   let d2 = h2 - l2 in *)
-(*   let x1' = nland64 (Int64.shift_right x1 (l1 * 8)) d1 in *)
-(*   let x2' = nland64 (Int64.shift_right x2 (l2 * 8)) d2 in *)
-(*   let x = Int64.(logor (shift_left x2' (d1 * 8)) x1') in *)
-(*   Extract (mk (Val (Num (I64 x))), d1 + d2, 0) *)
-(* | ( Extract ({ node = Val (Num (I32 x2)); _ }, h2, l2) *)
-(*   , Extract ({ node = Val (Num (I32 x1)); _ }, h1, l1) ) -> *)
-(*   let d1 = h1 - l1 in *)
-(*   let d2 = h2 - l2 in *)
-(*   let x1' = nland32 (Int32.shift_right x1 (l1 * 8)) d1 in *)
-(*   let x2' = nland32 (Int32.shift_right x2 (l2 * 8)) d2 in *)
-(*   let x = Int32.(logor (shift_left x2' (d1 * 8)) x1') in *)
-(*   Extract (mk (Val (Num (I32 x))), d1 + d2, 0) *)
-(* | Extract (s1, h, m1), Extract (s2, m2, l) when equal s1 s2 && m1 = m2 -> *)
-(*   Extract (s1, h, l) *)
-(* | ( Extract ({ node = Val (Num (I64 x2)); _ }, h2, l2) *)
-(*   , Concat *)
-(*       ({ node = Extract ({ node = Val (Num (I64 x1)); _ }, h1, l1); _ }, se) ) *)
-(*   when not (is_num se) -> *)
-(*   let d1 = h1 - l1 in *)
-(*   let d2 = h2 - l2 in *)
-(*   let x1' = nland64 (Int64.shift_right x1 (l1 * 8)) d1 in *)
-(*   let x2' = nland64 (Int64.shift_right x2 (l2 * 8)) d2 in *)
-(*   let x = Int64.(logor (shift_left x2' (d1 * 8)) x1') in *)
-(*   Concat (mk @@ Extract (mk @@ Val (Num (I64 x)), d1 + d2, 0), se) *)
-(* | _ -> Concat (msb, lsb) *)
 
 let rec simplify_expr ?(extract = true) (hte : t) : t =
   match hte.node with

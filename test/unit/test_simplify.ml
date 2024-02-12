@@ -1,5 +1,6 @@
 open Encoding
 open Expr
+module I8 = Bitv.I8
 module I32 = Bitv.I32
 module I64 = Bitv.I64
 
@@ -21,12 +22,18 @@ let () =
     let cvtop = mk @@ Cvtop (Ty_bitv 32, WrapI64, I64.v 1L) in
     simplify cvtop = I32.v 1l )
 
-(* Test Concat of Extracts simplification *)
+(* Test Concat of Extracts simplifications *)
 let () =
-  let x = I32.sym "x" in
-  let b0 = mk @@ Extract (x, 1, 0) in
-  let b1 = mk @@ Extract (x, 2, 1) in
-  let b2 = mk @@ Extract (x, 3, 2) in
-  let b3 = mk @@ Extract (x, 4, 3) in
-  let concat_x = mk @@ Concat [ b3; b2; b1; b0 ] in
-  assert (simplify concat_x = x)
+  assert (
+    let x = I32.sym "x" in
+    let b0 = mk @@ Extract (x, 1, 0) in
+    let b1 = mk @@ Extract (x, 2, 1) in
+    let b2 = mk @@ Extract (x, 3, 2) in
+    let b3 = mk @@ Extract (x, 4, 3) in
+    x = simplify @@ mk @@ Concat [ b3; b2; b1; b0 ] );
+  assert (
+    let v0 = I8.v 0xbe in
+    let v1 = I8.v 0xba in
+    let v2 = I8.v 0xef in
+    let v3 = I8.v 0xbe in
+    I32.v 0xbeefbabel = simplify @@ mk @@ Concat [ v3; v2; v1; v0 ])
