@@ -1,0 +1,5 @@
+(set-logic QF_BVFP)
+(let-const x f32)
+(assert (f32.eq (f32.sqrt x) (f32 0.0)))
+(check-sat)
+(get-model)

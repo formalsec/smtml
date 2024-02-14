@@ -1,5 +1,5 @@
 (cram
- (deps %{bin:smtml} test_71.smtml))
+ (deps %{bin:smtml} test_71.smtml test_sqrt.smtml))
 
 (tests
  (names test_cvtop test_fp_get_value)
