@@ -15,7 +15,7 @@ let get_bind x = Hashtbl.find varmap x
 %token LPAREN
 %token RPAREN
 %token ASSERT
-%token LET_CONST CHECK_SAT GET_MODEL
+%token LET_CONST CHECK_SAT GET_MODEL SET_LOGIC
 %token PUSH POP
 (*%token HOLE*)
 %token EOF
@@ -31,6 +31,7 @@ let get_bind x = Hashtbl.find varmap x
 %token <Ty.t * Ty.relop> RELOP
 %token <Ty.t * Ty.cvtop> CVTOP
 %token <Ty.t> TYPE
+%token <Solver_intf.logic> LOGIC
 
 %start <Ast.t list> script
 %%
@@ -48,6 +49,7 @@ let stmt :=
   | LPAREN; PUSH; RPAREN; { Ast.Push }
   | LPAREN; POP; n = NUM; RPAREN; { Ast.Pop n }
   | LPAREN; GET_MODEL; RPAREN; { Ast.Get_model }
+  | LPAREN; SET_LOGIC; ~ = LOGIC; RPAREN; <Ast.Set_logic>
 
 let s_expr :=
   | x = SYMBOL; { mk_symbol @@ Symbol.mk_symbol (get_bind x) x }

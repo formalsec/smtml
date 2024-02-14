@@ -5,6 +5,7 @@ type t =
   | Pop of int
   | Let_const of Symbol.t
   | Get_model
+  | Set_logic of Solver_intf.logic
 
 val pp : Format.formatter -> t -> unit
 val to_string : t -> string

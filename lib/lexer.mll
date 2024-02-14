@@ -202,6 +202,8 @@ let keywords =
      ; ("pop", POP)
      ; ("let-const", LET_CONST)
      ; ("get-model", GET_MODEL)
+     ; ("set-logic", SET_LOGIC)
+     ; ("QF_BVFP", LOGIC QF_BVFP)
     |];
   tbl
 
