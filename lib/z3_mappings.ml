@@ -643,37 +643,11 @@ module Fresh = struct
       Format.fprintf fmt "(%s %s)" key value
 
     module Solver = struct
-      let logic_to_string : Solver_intf.logic -> string = function
-        | AUFLIA -> "AUFLIA"
-        | AUFLIRA -> "AUFLIRA"
-        | AUFNIRA -> "AUFNIRA"
-        | LIA -> "LIA"
-        | LRA -> "LRA"
-        | QF_ABV -> "QF_ABV"
-        | QF_AUFBV -> "QF_AUFBV"
-        | QF_AUFLIA -> "QF_AUFLIA"
-        | QF_AX -> "QF_AX"
-        | QF_BV -> "QF_BV"
-        | QF_BVFP -> "QF_BVFP"
-        | QF_IDL -> "QF_IDL"
-        | QF_LIA -> "QF_LIA"
-        | QF_LRA -> "QF_LRA"
-        | QF_NIA -> "QF_NIA"
-        | QF_NRA -> "QF_NRA"
-        | QF_RDL -> "QF_RDL"
-        | QF_UF -> "QF_UF"
-        | QF_UFBV -> "QF_UFBV"
-        | QF_UFIDL -> "QF_UFIDL"
-        | QF_UFLIA -> "QF_UFLIA"
-        | QF_UFLRA -> "QF_UFLRA"
-        | QF_UFNRA -> "QF_UFNRA"
-        | UFLRA -> "UFLRA"
-        | UFNIA -> "UFNIA"
-
       let make ?logic () : solver =
         match logic with
         | Some logic ->
-          let logic = Z3.Symbol.mk_string ctx @@ logic_to_string logic in
+          let logic = Format.asprintf "%a" Ty.pp_logic logic in
+          let logic = Z3.Symbol.mk_string ctx logic in
           Z3.Solver.mk_solver ctx (Some logic)
         | None -> Z3.Solver.mk_simple_solver ctx
 
