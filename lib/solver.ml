@@ -1,3 +1,5 @@
+include Solver_intf
+
 exception Unknown
 
 let ( let+ ) o f = Option.map f o
@@ -106,6 +108,6 @@ module Make_incremental (Mappings : Mappings_intf.S) = struct
 end
 
 module Batch (M : Mappings_intf.S) : Solver_intf.S = Make_batch (M)
-module Z3_batch : Solver_intf.S = Batch (Z3_mappings)
 module Incremental (M : Mappings_intf.S) : Solver_intf.S = Make_incremental (M)
+module Z3_batch : Solver_intf.S = Batch (Z3_mappings)
 module Z3_incremental : Solver_intf.S = Incremental (Z3_mappings)
