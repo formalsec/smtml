@@ -19,7 +19,7 @@ module type S = sig
   val set_debug : bool -> unit
 
   module Solver : sig
-    val make : ?logic:Solver_intf.logic -> unit -> solver
+    val make : ?logic:Ty.logic -> unit -> solver
     val add_simplifier : solver -> solver
     val clone : solver -> solver
     val push : solver -> unit
