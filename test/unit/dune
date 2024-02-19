@@ -1,10 +1,10 @@
 (tests
  (names
   test_bitv8
+  test_canonization
   test_eval_numeric
   test_hash_consing
   test_optimizer
   test_params
-  test_solver
-  test_normalization)
+  test_solver)
  (libraries encoding))
