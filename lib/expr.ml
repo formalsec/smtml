@@ -347,9 +347,11 @@ module Make_bitv (T : sig
   val value : elt -> ht_expr
 end) =
 struct
-  let v i = T.value i
-  let sym x = mk_symbol Symbol.(x @: T.ty)
-  let ( ~- ) e = Unop (Neg, e) @: T.ty
+  open Hc
+
+  let v i = T.value i [@@inline]
+  let sym x = mk_symbol Symbol.(x @: T.ty) [@@inline]
+  let ( ~- ) e = Unop (Neg, e) @: T.ty [@@inline]
 
   (* TODO: Do not normalize expressions such as x <= 0 or x = 0*)
   (* TODO: Do not create concrete abstract expressions *)
@@ -358,29 +360,54 @@ struct
 
   (* Normalize (x = y) = (x - y = 0) *)
   let ( = ) e1 e2 =
-    Relop (Eq, Binop (Sub, e1, e2) @: T.ty, T.(value zero)) @: T.ty
+    match (e1.node.e, e2.node.e) with
+    | _, Val (Num (I8 0 | I32 0l | I64 0L)) -> Relop (Eq, e1, e2) @: T.ty
+    | _ -> Relop (Eq, Binop (Sub, e1, e2) @: T.ty, T.(value zero)) @: T.ty
+  [@@inline]
 
   (* Canonize (x != y) = (x - y != 0) *)
   let ( != ) e1 e2 =
-    Relop (Ne, Binop (Sub, e1, e2) @: T.ty, T.(value zero)) @: T.ty
+    match (e1.node.e, e2.node.e) with
+    | _, Val (Num (I8 0 | I32 0l | I64 0L)) -> Relop (Ne, e1, e2) @: T.ty
+    | _ -> Relop (Ne, Binop (Sub, e1, e2) @: T.ty, T.(value zero)) @: T.ty
+  [@@inline]
 
   (* Canonize (x > y) = (-x < -y) = (y - x + 1 <= 0) *)
   let ( > ) e1 e2 =
-    let lhs = Binop (Add, Binop (Sub, e2, e1) @: T.ty, T.(value one)) @: T.ty in
+    let lhs =
+      match (e1.node.e, e2.node.e) with
+      | _, Val (Num (I8 0 | I32 0l | I64 0L)) ->
+        Binop (Sub, T.(value one), e1) @: T.ty
+      | _ -> Binop (Add, Binop (Sub, e2, e1) @: T.ty, T.(value one)) @: T.ty
+    in
     Relop (Le, lhs, T.(value zero)) @: T.ty
+  [@@inline]
 
   (* Canonize (x >= y) = (-x <= -y) = (y - x <= 0) *)
   let ( >= ) e1 e2 =
-    Relop (Le, Binop (Sub, e2, e1) @: T.ty, T.(value zero)) @: T.ty
+    match (e1.node.e, e2.node.e) with
+    | _, Val (Num (I8 0 | I32 0l | I64 0L)) ->
+      Relop (Le, Unop (Neg, e1) @: T.ty, e2) @: T.ty
+    | _ -> Relop (Le, Binop (Sub, e2, e1) @: T.ty, T.(value zero)) @: T.ty
+  [@@inline]
 
   (* Canonize (x < y) = (x - y + 1 <= 0) *)
   let ( < ) e1 e2 =
-    let lhs = Binop (Add, Binop (Sub, e1, e2) @: T.ty, T.(value one)) @: T.ty in
+    let lhs =
+      match (e1.node.e, e2.node.e) with
+      | _, Val (Num (I8 0 | I32 0l | I64 0L)) ->
+        Binop (Add, e1, T.(value one)) @: T.ty
+      | _ -> Binop (Add, Binop (Sub, e1, e2) @: T.ty, T.(value one)) @: T.ty
+    in
     Relop (Le, lhs, T.(value zero)) @: T.ty
+  [@@inline]
 
   (* Canonize (x <= y) = (x - y <= 0) *)
   let ( <= ) e1 e2 =
-    Relop (Le, Binop (Sub, e1, e2) @: T.ty, T.(value zero)) @: T.ty
+    match (e1.node.e, e2.node.e) with
+    | _, Val (Num (I8 0 | I32 0l | I64 0L)) -> Relop (Le, e1, e2) @: T.ty
+    | _ -> Relop (Le, Binop (Sub, e1, e2) @: T.ty, T.(value zero)) @: T.ty
+  [@@inline]
 end
 
 module Bitv = struct
@@ -419,15 +446,15 @@ module Make_fp (T : sig
   val value : elt -> ht_expr
 end) =
 struct
-  let v i = T.value i
-  let sym x = mk_symbol Symbol.(x @: T.ty)
-  let ( ~- ) e = Unop (Neg, e) @: T.ty
-  let ( = ) e1 e2 = Relop (Eq, e1, e2) @: T.ty
-  let ( != ) e1 e2 = Relop (Ne, e1, e2) @: T.ty
-  let ( > ) e1 e2 = Relop (Gt, e1, e2) @: T.ty
-  let ( >= ) e1 e2 = Relop (Ge, e1, e2) @: T.ty
-  let ( < ) e1 e2 = Relop (Lt, e1, e2) @: T.ty
-  let ( <= ) e1 e2 = Relop (Le, e1, e2) @: T.ty
+  let v i = T.value i [@@inline]
+  let sym x = mk_symbol Symbol.(x @: T.ty) [@@inline]
+  let ( ~- ) e = Unop (Neg, e) @: T.ty [@@inline]
+  let ( = ) e1 e2 = Relop (Eq, e1, e2) @: T.ty [@@inline]
+  let ( != ) e1 e2 = Relop (Ne, e1, e2) @: T.ty [@@inline]
+  let ( > ) e1 e2 = Relop (Gt, e1, e2) @: T.ty [@@inline]
+  let ( >= ) e1 e2 = Relop (Ge, e1, e2) @: T.ty [@@inline]
+  let ( < ) e1 e2 = Relop (Lt, e1, e2) @: T.ty [@@inline]
+  let ( <= ) e1 e2 = Relop (Le, e1, e2) @: T.ty [@@inline]
 end
 
 module Fpa = struct
