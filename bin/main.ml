@@ -35,7 +35,7 @@ let parse_cmdline =
     Mappings.set_debug debug;
     let module Solver =
       ( val if incremental then (module Solver.Incremental (Mappings))
-            else (module Solver.Batch (Mappings))
+            else (module Solver.Batch_cache (Mappings))
           : Solver_intf.S )
     in
     let module Interpret = Interpret.Make (Solver) in

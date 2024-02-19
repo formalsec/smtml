@@ -85,6 +85,11 @@ module type Intf = sig
       interactions with the underlying SMT solver until it becomes necessary. *)
   module Batch (M : Mappings_intf.S) : S
 
+  module Batch_cache (M : Mappings_intf.S) : sig
+    include S
+    module Cache : Hashtbl.S with type key = Expr.t list
+  end
+
   (** {1 Incremental Model}
 
       In the Incremental module, constraints are managed incrementally,
