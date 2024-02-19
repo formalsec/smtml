@@ -50,10 +50,7 @@ module Make (Solver : Solver_intf.S) = struct
     let st =
       match state with
       | None -> init_state stmts
-      | Some st ->
-        Solver.pop st.solver 1;
-        Solver.push st.solver;
-        { st with stmts; pc = [] }
+      | Some st -> { st with stmts; pc = [] }
     in
     loop st
 end
