@@ -9,6 +9,7 @@ module Make (Solver : Solver_intf.S) = struct
   let init_state stmts =
     let params = Params.(default () $ (Model, false)) in
     let solver = Solver.create ~params () in
+    Solver.push solver;
     { stmts; smap = Hashtbl.create 16; solver; pc = [] }
 
   let eval stmt (state : exec_state) : exec_state =
@@ -39,6 +40,7 @@ module Make (Solver : Solver_intf.S) = struct
       st pc
     | Set_logic logic ->
       let solver = Solver.create ~logic () in
+      Solver.push solver;
       { state with solver }
 
   let rec loop (state : exec_state) : exec_state =
@@ -50,7 +52,10 @@ module Make (Solver : Solver_intf.S) = struct
     let st =
       match state with
       | None -> init_state stmts
-      | Some st -> { st with stmts; pc = [] }
+      | Some st ->
+        Solver.pop st.solver 1;
+        Solver.push st.solver;
+        { st with stmts; pc = [] }
     in
     loop st
 end
