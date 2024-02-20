@@ -45,7 +45,7 @@ let parse_cmdline =
     let module Solver =
       ( val match solver with
             | Bat -> (module Solver.Batch (Mappings))
-            | Bat_cache -> (module Solver.Batch_cache (Mappings))
+            | Bat_cache -> (module Solver.Batch_cached (Mappings))
             | Incr -> (module Solver.Incremental (Mappings))
           : Solver_intf.S )
     in
