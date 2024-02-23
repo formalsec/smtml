@@ -33,6 +33,19 @@ module I32Op = struct
   let shr_s x y = shift Int32.shift_right x y
   let shr_u x y = shift Int32.shift_right_logical x y
 
+  (* Stolen rotl and rotr from: *)
+  (* https://github.com/OCamlPro/owi/blob/main/src/int32.ml *)
+  (* We must mask the count to implement rotates via shifts. *)
+  let clamp_rotate_count n = Int32.(to_int (logand n 31l))
+
+  let rotl x y =
+    let n = clamp_rotate_count y in
+    Int32.logor (shl x (Int32.of_int n)) (shr_u x (Int32.of_int (32 - n)))
+
+  let rotr x y =
+    let n = clamp_rotate_count y in
+    Int32.logor (shr_u x (Int32.of_int n)) (shl x (Int32.of_int (32 - n)))
+
   let unop (op : unop) : Num.t -> Num.t =
     let f =
       match op with
@@ -60,7 +73,9 @@ module I32Op = struct
       | Shl -> shl
       | ShrL -> shr_u
       | ShrA -> shr_s
-      | Rotl | Rotr | _ ->
+      | Rotl -> rotl
+      | Rotr -> rotr
+      | _ ->
         Log.err {|eval_binop: Unsupported i32 operator "%a"|} Ty.pp_binop op
     in
     fun v1 v2 -> to_value (f (of_value 1 v1) (of_value 2 v2))
@@ -98,6 +113,19 @@ module I64Op = struct
   let shr_s x y = shift Int64.shift_right x y
   let shr_u x y = shift Int64.shift_right_logical x y
 
+  (* Stolen rotl and rotr from: *)
+  (* https://github.com/OCamlPro/owi/blob/main/src/int64.ml *)
+  (* We must mask the count to implement rotates via shifts. *)
+  let clamp_rotate_count n = Int64.(to_int (logand n (of_int 63)))
+
+  let rotl x y =
+    let n = clamp_rotate_count y in
+    Int64.logor (shl x (Int64.of_int n)) (shr_u x (Int64.of_int (64 - n)))
+
+  let rotr x y =
+    let n = clamp_rotate_count y in
+    Int64.logor (shr_u x (Int64.of_int n)) (shl x (Int64.of_int (64 - n)))
+
   let unop (op : unop) : Num.t -> Num.t =
     let f =
       match op with
@@ -125,7 +153,9 @@ module I64Op = struct
       | Shl -> shl
       | ShrL -> shr_u
       | ShrA -> shr_s
-      | Rotl | Rotr | _ ->
+      | Rotl -> rotl
+      | Rotr -> rotr
+      | _ ->
         Log.err {|eval_binop: Unsupported i64 operator "%a"|} Ty.pp_binop op
     in
     fun v1 v2 -> to_value (f (of_value 1 v1) (of_value 2 v2))
@@ -162,7 +192,8 @@ module F32Op = struct
       | Nearest -> Float.round
       | Ceil -> Float.ceil
       | Floor -> Float.floor
-      | Is_nan | _ ->
+      | Trunc -> Float.trunc
+      | Is_nan | Not | Clz | Trim | Len ->
         Log.err {|eval_unop: Unsupported f32 operator "%a"|} Ty.pp_unop op
     in
     fun v -> to_value (of_float (f (to_float (of_value 1 v))))
@@ -214,7 +245,8 @@ module F64Op = struct
       | Nearest -> Float.round
       | Ceil -> Float.ceil
       | Floor -> Float.floor
-      | Is_nan | _ ->
+      | Trunc -> Float.trunc
+      | Is_nan | Not | Clz | Trim | Len ->
         Log.err {|eval_unop: Unsupported f32 operator "%a"|} Ty.pp_unop op
     in
     fun v -> to_value (of_float (f (to_float (of_value 1 v))))
