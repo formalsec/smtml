@@ -17,6 +17,8 @@ let () =
   assert (i32_binop Xor (I32 1l) (I32 1l) = I32 0l);
   assert (i32_binop Shl (I32 1l) (I32 2l) = I32 4l);
   assert (i32_binop ShrA (I32 4l) (I32 2l) = I32 1l);
+  assert (i32_binop Rotl (I32 Int32.min_int) (I32 2l) = I32 2l);
+  assert (i32_binop Rotr (I32 2l) (I32 2l) = I32 Int32.min_int);
   assert (i32_relop Eq (I32 0l) (I32 0l));
   assert (i32_relop Ne (I32 0l) (I32 1l));
   assert (i32_relop Lt (I32 0l) (I32 1l));
@@ -44,6 +46,8 @@ let () =
   assert (i64_binop Xor (I64 1L) (I64 1L) = I64 0L);
   assert (i64_binop Shl (I64 1L) (I64 2L) = I64 4L);
   assert (i64_binop ShrA (I64 4L) (I64 2L) = I64 1L);
+  assert (i64_binop Rotl (I64 Int64.min_int) (I64 2L) = I64 2L);
+  assert (i64_binop Rotr (I64 2L) (I64 2L) = I64 Int64.min_int);
   assert (i64_relop Eq (I64 0L) (I64 0L));
   assert (i64_relop Ne (I64 0L) (I64 1L));
   assert (i64_relop Lt (I64 0L) (I64 1L));
@@ -54,3 +58,9 @@ let () =
   assert (i64_relop GtU (I64 (-1L)) (I64 0L));
   assert (i64_relop Ge (I64 1L) (I64 0L));
   assert (i64_relop GeU (I64 (-1L)) (I64 0L))
+
+let () =
+  let f32_unop = Eval_numeric.eval_unop (Ty_fp S32) in
+  let f64_unop = Eval_numeric.eval_unop (Ty_fp S64) in
+  assert (f32_unop Trunc (F32 (Int32.bits_of_float 0.75)) = F32 0l);
+  assert (f64_unop Trunc (F64 (Int64.bits_of_float 0.75)) = F64 0L)
