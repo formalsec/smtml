@@ -7,23 +7,29 @@ type t =
 
 let ( = ) (n1 : t) (n2 : t) : bool =
   match (n1, n2) with
+  | I8 i1, I8 i2 -> i1 = i2
   | I32 i1, I32 i2 -> i1 = i2
   | I64 i1, I64 i2 -> i1 = i2
-  | F32 i1, F32 i2 -> i1 = i2
-  | F64 i1, F64 i2 -> i1 = i2
-  | _ -> false
+  | F32 i1, F32 i2 -> Int32.float_of_bits i1 = Int32.float_of_bits i2
+  | F64 i1, F64 i2 -> Int64.float_of_bits i1 = Int64.float_of_bits i2
+  | I8 _, _ | I32 _, _ | I64 _, _ | F32 _, _ | F64 _, _ -> false
 
 let compare n1 n2 =
   match (n1, n2) with
+  | I8 i1, I8 i2 -> compare i1 i2
   | I32 i1, I32 i2 -> compare i1 i2
   | I64 i1, I64 i2 -> compare i1 i2
-  | F32 i1, F32 i2 -> compare i1 i2
-  | F64 i1, F64 i2 -> compare i1 i2
-  | _ -> compare n1 n2
+  | F32 i1, F32 i2 -> compare (Int32.float_of_bits i1) (Int32.float_of_bits i2)
+  | F64 i1, F64 i2 -> compare (Int64.float_of_bits i1) (Int64.float_of_bits i2)
+  (*
+     Stdlib.compare guarantees that elements of a same variant will be "ordered
+     together"
+  *)
+  | I8 _, _ | I32 _, _ | I64 _, _ | F32 _, _ | F64 _, _ -> compare n1 n2
 
 let type_of (n : t) =
   match n with
-  | I8 _ -> assert false
+  | I8 _ -> Ty.(Ty_bitv S8)
   | I32 _ -> Ty.(Ty_bitv S32)
   | I64 _ -> Ty.(Ty_bitv S64)
   | F32 _ -> Ty.(Ty_fp S32)
