@@ -301,11 +301,44 @@ module Fresh = struct
         | C32 -> BitVector.mk_numeral ctx (Int32.to_string i) 32
         | C64 -> BitVector.mk_numeral ctx (Int64.to_string i) 64
 
+      let clz n =
+        let rec loop (lb : int) (ub : int) =
+          if ub = lb + 1 then v C64 @@ Int64.of_int (64 - ub)
+          else
+            let mid = (lb + ub) / 2 in
+            let pow_two_mid = Int64.shift_left 1L mid in
+            let pow_two_mid = v C64 pow_two_mid in
+            Boolean.mk_ite ctx
+              (BitVector.mk_ult ctx n pow_two_mid)
+              (loop lb mid) (loop mid ub)
+        in
+        Boolean.mk_ite ctx
+          (Boolean.mk_eq ctx n (v C64 0L))
+          (v C64 64L) (loop 0 64)
+
+      let ctz n =
+        let rec loop (lb : int) (ub : int) =
+          if ub = lb + 1 then v C64 @@ Int64.of_int lb
+          else
+            let mid = (lb + ub) / 2 in
+            let pow_two_mid = Int64.shift_left 1L mid in
+            let pow_two_mid = v C64 pow_two_mid in
+            let is_div_pow_two = BitVector.mk_srem ctx n pow_two_mid in
+            Boolean.mk_ite ctx
+              (Boolean.mk_eq ctx is_div_pow_two (v C64 0L))
+              (loop mid ub) (loop lb mid)
+        in
+        Boolean.mk_ite ctx
+          (Boolean.mk_eq ctx n (v C64 0L))
+          (v C64 64L) (loop 0 64)
+
       let encode_unop op e =
         let op' =
           match op with
           | Not -> BitVector.mk_not ctx
           | Neg -> BitVector.mk_neg ctx
+          | Clz -> clz
+          | Ctz -> ctz
           | _ -> err {|Bv: Unsupported Z3 unary operator "%a"|} Ty.pp_unop op
         in
         op' e

@@ -193,7 +193,7 @@ module F32Op = struct
       | Ceil -> Float.ceil
       | Floor -> Float.floor
       | Trunc -> Float.trunc
-      | Is_nan | Not | Clz | Trim | Len ->
+      | Is_nan | Not | Clz | Ctz | Trim | Len ->
         Log.err {|eval_unop: Unsupported f32 operator "%a"|} Ty.pp_unop op
     in
     fun v -> to_value (of_float (f (to_float (of_value 1 v))))
@@ -246,7 +246,7 @@ module F64Op = struct
       | Ceil -> Float.ceil
       | Floor -> Float.floor
       | Trunc -> Float.trunc
-      | Is_nan | Not | Clz | Trim | Len ->
+      | Is_nan | Not | Clz | Ctz | Trim | Len ->
         Log.err {|eval_unop: Unsupported f32 operator "%a"|} Ty.pp_unop op
     in
     fun v -> to_value (of_float (f (to_float (of_value 1 v))))

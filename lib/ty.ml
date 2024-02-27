@@ -23,6 +23,7 @@ type unop =
   | Neg
   | Not
   | Clz
+  | Ctz
   | Abs
   | Sqrt
   | Is_nan
@@ -128,6 +129,7 @@ let pp_unop fmt (op : unop) =
   | Neg -> pp_string fmt "neg"
   | Not -> pp_string fmt "not"
   | Clz -> pp_string fmt "clz"
+  | Ctz -> pp_string fmt "ctz"
   | Abs -> pp_string fmt "abs"
   | Sqrt -> pp_string fmt "sqrt"
   | Is_nan -> pp_string fmt "is_nan"
