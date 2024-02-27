@@ -20,6 +20,7 @@ type unop =
   | Neg
   | Not
   | Clz
+  | Ctz
   | Abs
   | Sqrt
   | Is_nan
