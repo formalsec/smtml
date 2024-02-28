@@ -310,6 +310,7 @@ module Fresh = struct
 
       let bitwidth = match size with S8 -> 8 | S32 -> 32 | S64 -> 64
 
+      (* Stolen from @krtab in OCamlPro/owi #195 *)
       let clz n =
         let rec loop (lb : int) (ub : int) =
           if ub = lb + 1 then v @@ Ixx.of_int (bitwidth - ub)
@@ -326,6 +327,7 @@ module Fresh = struct
           (v (Ixx.of_int bitwidth))
           (loop 0 bitwidth)
 
+      (* Stolen from @krtab in OCamlPro/owi #195 *)
       let ctz n =
         let rec loop (lb : int) (ub : int) =
           if ub = lb + 1 then v (Ixx.of_int lb)
