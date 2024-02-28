@@ -291,132 +291,141 @@ module Fresh = struct
         | _ -> err {|Str: Unsupported Z3 cvtop operator "%a"|} Ty.pp_cvtop op
     end
 
-    module Bv = struct
+    module type T_sig = sig
+      type t
+
+      val v : t -> Z3.Expr.expr
+      val size : Ty.sz
+
+      module Ixx : sig
+        val of_int : int -> t
+        val shift_left : t -> int -> t
+      end
+    end
+
+    module Make_bv (T : T_sig) = struct
       open Ty
       open Z3
+      include T
 
-      let v (type a) (cast : a Ty.cast) (i : a) =
-        match cast with
-        | C8 -> BitVector.mk_numeral ctx (string_of_int i) 8
-        | C32 -> BitVector.mk_numeral ctx (Int32.to_string i) 32
-        | C64 -> BitVector.mk_numeral ctx (Int64.to_string i) 64
+      let bitwidth = match size with S8 -> 8 | S32 -> 32 | S64 -> 64
 
       let clz n =
         let rec loop (lb : int) (ub : int) =
-          if ub = lb + 1 then v C64 @@ Int64.of_int (64 - ub)
+          if ub = lb + 1 then v @@ Ixx.of_int (bitwidth - ub)
           else
             let mid = (lb + ub) / 2 in
-            let pow_two_mid = Int64.shift_left 1L mid in
-            let pow_two_mid = v C64 pow_two_mid in
+            let pow_two_mid = Ixx.(shift_left (of_int 1) mid) in
+            let pow_two_mid = v pow_two_mid in
             Boolean.mk_ite ctx
               (BitVector.mk_ult ctx n pow_two_mid)
               (loop lb mid) (loop mid ub)
         in
         Boolean.mk_ite ctx
-          (Boolean.mk_eq ctx n (v C64 0L))
-          (v C64 64L) (loop 0 64)
+          (Boolean.mk_eq ctx n (v (Ixx.of_int 0)))
+          (v (Ixx.of_int bitwidth))
+          (loop 0 bitwidth)
 
       let ctz n =
         let rec loop (lb : int) (ub : int) =
-          if ub = lb + 1 then v C64 @@ Int64.of_int lb
+          if ub = lb + 1 then v (Ixx.of_int lb)
           else
             let mid = (lb + ub) / 2 in
-            let pow_two_mid = Int64.shift_left 1L mid in
-            let pow_two_mid = v C64 pow_two_mid in
+            let pow_two_mid = Ixx.(shift_left (of_int 1) mid) in
+            let pow_two_mid = v pow_two_mid in
             let is_div_pow_two = BitVector.mk_srem ctx n pow_two_mid in
             Boolean.mk_ite ctx
-              (Boolean.mk_eq ctx is_div_pow_two (v C64 0L))
+              (Boolean.mk_eq ctx is_div_pow_two (v (Ixx.of_int 0)))
               (loop mid ub) (loop lb mid)
         in
         Boolean.mk_ite ctx
-          (Boolean.mk_eq ctx n (v C64 0L))
-          (v C64 64L) (loop 0 64)
+          (Boolean.mk_eq ctx n (v (Ixx.of_int 0)))
+          (v (Ixx.of_int bitwidth))
+          (loop 0 bitwidth)
 
-      let encode_unop op e =
-        let op' =
-          match op with
-          | Not -> BitVector.mk_not ctx
-          | Neg -> BitVector.mk_neg ctx
-          | Clz -> clz
-          | Ctz -> ctz
-          | _ -> err {|Bv: Unsupported Z3 unary operator "%a"|} Ty.pp_unop op
-        in
-        op' e
+      let encode_unop = function
+        | Not -> BitVector.mk_not ctx
+        | Neg -> BitVector.mk_neg ctx
+        | Clz -> clz
+        | Ctz -> ctz
+        | op -> err {|Bv: Unsupported Z3 unary operator "%a"|} Ty.pp_unop op
 
-      let encode_binop op e1 e2 =
-        let op' =
-          match op with
-          | Add -> BitVector.mk_add ctx
-          | Sub -> BitVector.mk_sub ctx
-          | Mul -> BitVector.mk_mul ctx
-          | Div -> BitVector.mk_sdiv ctx
-          | DivU -> BitVector.mk_udiv ctx
-          | And -> BitVector.mk_and ctx
-          | Xor -> BitVector.mk_xor ctx
-          | Or -> BitVector.mk_or ctx
-          | Shl -> BitVector.mk_shl ctx
-          | ShrA -> BitVector.mk_ashr ctx
-          | ShrL -> BitVector.mk_lshr ctx
-          | Rem -> BitVector.mk_srem ctx
-          | RemU -> BitVector.mk_urem ctx
-          | Rotl -> BitVector.mk_ext_rotate_left ctx
-          | Rotr -> BitVector.mk_ext_rotate_right ctx
-          | _ -> err {|Bv: Unsupported Z3 binary operator "%a"|} Ty.pp_binop op
-        in
-        op' e1 e2
+      let encode_binop = function
+        | Add -> BitVector.mk_add ctx
+        | Sub -> BitVector.mk_sub ctx
+        | Mul -> BitVector.mk_mul ctx
+        | Div -> BitVector.mk_sdiv ctx
+        | DivU -> BitVector.mk_udiv ctx
+        | And -> BitVector.mk_and ctx
+        | Xor -> BitVector.mk_xor ctx
+        | Or -> BitVector.mk_or ctx
+        | Shl -> BitVector.mk_shl ctx
+        | ShrA -> BitVector.mk_ashr ctx
+        | ShrL -> BitVector.mk_lshr ctx
+        | Rem -> BitVector.mk_srem ctx
+        | RemU -> BitVector.mk_urem ctx
+        | Rotl -> BitVector.mk_ext_rotate_left ctx
+        | Rotr -> BitVector.mk_ext_rotate_right ctx
+        | op -> err {|Bv: Unsupported Z3 binary operator "%a"|} Ty.pp_binop op
 
       let encode_triop op _ =
         err {|Bv: Unsupported Z3 triop operator "%a"|} Ty.pp_triop op
 
       let encode_relop op e1 e2 =
-        let op' =
-          match op with
-          | Eq -> Boolean.mk_eq ctx
-          | Ne -> fun x1 x2 -> Boolean.mk_eq ctx x1 x2 |> Boolean.mk_not ctx
-          | Lt -> BitVector.mk_slt ctx
-          | LtU -> BitVector.mk_ult ctx
-          | Le -> BitVector.mk_sle ctx
-          | LeU -> BitVector.mk_ule ctx
-          | Gt -> BitVector.mk_sgt ctx
-          | GtU -> BitVector.mk_ugt ctx
-          | Ge -> BitVector.mk_sge ctx
-          | GeU -> BitVector.mk_uge ctx
-        in
-        op' e1 e2
+        match op with
+        | Eq -> Boolean.mk_eq ctx e1 e2
+        | Ne -> Boolean.mk_distinct ctx [ e1; e2 ]
+        | Lt -> BitVector.mk_slt ctx e1 e2
+        | LtU -> BitVector.mk_ult ctx e1 e2
+        | Le -> BitVector.mk_sle ctx e1 e2
+        | LeU -> BitVector.mk_ule ctx e1 e2
+        | Gt -> BitVector.mk_sgt ctx e1 e2
+        | GtU -> BitVector.mk_ugt ctx e1 e2
+        | Ge -> BitVector.mk_sge ctx e1 e2
+        | GeU -> BitVector.mk_uge ctx e1 e2
 
-      let encode_cvtop sz op e =
-        let op' =
-          match sz with
-          | Ty.S8 -> assert false
-          | Ty.S32 -> (
-            match op with
-            | ExtS n -> BitVector.mk_sign_ext ctx n
-            | ExtU n -> BitVector.mk_zero_ext ctx n
-            | WrapI64 -> BitVector.mk_extract ctx 31 0
-            | TruncSF32 | TruncSF64 ->
-              fun f -> FloatingPoint.mk_to_sbv ctx rtz f 32
-            | TruncUF32 | TruncUF64 ->
-              fun f -> FloatingPoint.mk_to_ubv ctx rtz f 32
-            | Reinterpret_float -> FloatingPoint.mk_to_ieee_bv ctx
-            | ToBool -> encode_relop Ne (v C32 0l)
-            | OfBool -> fun e -> Boolean.mk_ite ctx e (v C32 1l) (v C32 0l)
-            | _ -> assert false )
-          | Ty.S64 -> (
-            match op with
-            | ExtS n -> BitVector.mk_sign_ext ctx n
-            | ExtU n -> BitVector.mk_zero_ext ctx n
-            (* rounding towards zero (aka truncation) *)
-            | TruncSF32 | TruncSF64 ->
-              fun f -> FloatingPoint.mk_to_sbv ctx rtz f 64
-            | TruncUF32 | TruncUF64 ->
-              fun f -> FloatingPoint.mk_to_ubv ctx rtz f 64
-            | Reinterpret_float -> FloatingPoint.mk_to_ieee_bv ctx
-            | ToBool -> encode_relop Ne (v C64 0L)
-            | OfBool -> fun e -> Boolean.mk_ite ctx e (v C64 1L) (v C64 0L)
-            | WrapI64 | _ -> assert false )
-        in
-        op' e
+      let encode_cvtop op e =
+        match op with
+        | WrapI64 -> BitVector.mk_extract ctx (bitwidth - 1) 0 e
+        | ExtS n -> BitVector.mk_sign_ext ctx n e
+        | ExtU n -> BitVector.mk_zero_ext ctx n e
+        | TruncSF32 | TruncSF64 -> FloatingPoint.mk_to_sbv ctx rtz e bitwidth
+        | TruncUF32 | TruncUF64 -> FloatingPoint.mk_to_ubv ctx rtz e bitwidth
+        | Reinterpret_float -> FloatingPoint.mk_to_ieee_bv ctx e
+        | ToBool -> encode_relop Ne e (v (Ixx.of_int 0))
+        | OfBool -> Boolean.mk_ite ctx e (v (Ixx.of_int 1)) (v (Ixx.of_int 0))
+        | _ -> assert false
     end
+
+    module I8 = Make_bv (struct
+      type t = int
+
+      let v i = Z3.BitVector.mk_numeral ctx (string_of_int i) 8
+      let size = Ty.S8
+
+      module Ixx = struct
+        let of_int i = i [@@inline]
+        let shift_left v i = v lsl i [@@inline]
+      end
+    end)
+
+    module I32 = Make_bv (struct
+      type t = int32
+
+      let v i = Z3.BitVector.mk_numeral ctx (Int32.to_string i) 32
+      let size = Ty.S32
+
+      module Ixx = Int32
+    end)
+
+    module I64 = Make_bv (struct
+      type t = int64
+
+      let v i = Z3.BitVector.mk_numeral ctx (Int64.to_string i) 64
+      let size = Ty.S64
+
+      module Ixx = Int64
+    end)
 
     module Fp = struct
       open Z3
@@ -528,9 +537,9 @@ module Fresh = struct
       | Int v -> I.encode_val v
       | Real v -> Real.encode_val v
       | Str v -> Str.encode_val v
-      | Num (I8 x) -> Bv.v C8 x
-      | Num (I32 x) -> Bv.v C32 x
-      | Num (I64 x) -> Bv.v C64 x
+      | Num (I8 x) -> I8.v x
+      | Num (I32 x) -> I32.v x
+      | Num (I64 x) -> I64.v x
       | Num (F32 x) -> Fp.v C32 x
       | Num (F64 x) -> Fp.v C64 x
 
@@ -539,7 +548,9 @@ module Fresh = struct
       | Ty.Ty_real -> Real.encode_unop
       | Ty.Ty_bool -> Boolean.encode_unop
       | Ty.Ty_str -> Str.encode_unop
-      | Ty.Ty_bitv _ -> Bv.encode_unop
+      | Ty.Ty_bitv S8 -> I8.encode_unop
+      | Ty.Ty_bitv S32 -> I32.encode_unop
+      | Ty.Ty_bitv S64 -> I64.encode_unop
       | Ty.Ty_fp _ -> Fp.encode_unop
 
     let encode_binop = function
@@ -547,7 +558,9 @@ module Fresh = struct
       | Ty.Ty_real -> Real.encode_binop
       | Ty.Ty_bool -> Boolean.encode_binop
       | Ty.Ty_str -> Str.encode_binop
-      | Ty.Ty_bitv _ -> Bv.encode_binop
+      | Ty.Ty_bitv S8 -> I8.encode_binop
+      | Ty.Ty_bitv S32 -> I32.encode_binop
+      | Ty.Ty_bitv S64 -> I64.encode_binop
       | Ty.Ty_fp _ -> Fp.encode_binop
 
     let encode_triop = function
@@ -555,7 +568,9 @@ module Fresh = struct
       | Ty.Ty_real -> Real.encode_triop
       | Ty.Ty_bool -> Boolean.encode_triop
       | Ty.Ty_str -> Str.encode_triop
-      | Ty.Ty_bitv _ -> Bv.encode_triop
+      | Ty.Ty_bitv S8 -> I8.encode_triop
+      | Ty.Ty_bitv S32 -> I32.encode_triop
+      | Ty.Ty_bitv S64 -> I64.encode_triop
       | Ty.Ty_fp _ -> Fp.encode_triop
 
     let encode_relop = function
@@ -563,7 +578,9 @@ module Fresh = struct
       | Ty.Ty_real -> Real.encode_relop
       | Ty.Ty_bool -> Boolean.encode_relop
       | Ty.Ty_str -> Str.encode_relop
-      | Ty.Ty_bitv _ -> Bv.encode_relop
+      | Ty.Ty_bitv S8 -> I8.encode_relop
+      | Ty.Ty_bitv S32 -> I32.encode_relop
+      | Ty.Ty_bitv S64 -> I64.encode_relop
       | Ty.Ty_fp _ -> Fp.encode_relop
 
     let encode_cvtop = function
@@ -571,7 +588,9 @@ module Fresh = struct
       | Ty.Ty_real -> Real.encode_cvtop
       | Ty.Ty_bool -> Boolean.encode_cvtop
       | Ty.Ty_str -> Str.encode_cvtop
-      | Ty.Ty_bitv sz -> Bv.encode_cvtop sz
+      | Ty.Ty_bitv S8 -> I8.encode_cvtop
+      | Ty.Ty_bitv S32 -> I32.encode_cvtop
+      | Ty.Ty_bitv S64 -> I64.encode_cvtop
       | Ty.Ty_fp sz -> Fp.encode_cvtop sz
 
     (* let encode_quantifier (t : bool) (vars_list : Symbol.t list) *)
@@ -602,7 +621,7 @@ module Fresh = struct
       | Ptr (base, offset) ->
         let base' = encode_val (Num (I32 base)) in
         let offset' = encode_expr offset in
-        Bv.encode_binop Add base' offset'
+        I32.encode_binop Add base' offset'
       | Unop (op, e) ->
         let e' = encode_expr e in
         encode_unop ty op e'
