@@ -1,6 +1,6 @@
 (cram
- (deps %{bin:smtml} test_71.smtml test_sqrt.smtml))
+ (deps %{bin:smtml} test_pr_71.smtml test_sqrt.smtml))
 
 (tests
- (names test_cvtop test_fp_get_value float_num_ml)
+ (names test_cvtop test_fp_get_value test_pr_77)
  (libraries encoding))
