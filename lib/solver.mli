@@ -1,1 +1,2 @@
-include Solver_intf.Intf (** @inline *)
+(** @inline *)
+include Solver_intf.Intf
