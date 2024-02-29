@@ -1,1 +1,2 @@
-include Interpret_intf.Intf (** @inline *)
+(** @inline *)
+include Interpret_intf.Intf
