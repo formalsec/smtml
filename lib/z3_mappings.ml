@@ -198,7 +198,7 @@ module Fresh = struct
       type t
 
       val v : t -> Z3.Expr.expr
-      val size : Ty.sz
+      val bitwidth : Ty.bitwidth
 
       module Ixx : sig
         val of_int : int -> t
@@ -211,7 +211,7 @@ module Fresh = struct
       open Ty
       open Z3
 
-      let bitwidth = match Bv.size with S8 -> 8 | S32 -> 32 | S64 -> 64
+      let bitwidth = match bitwidth with S8 -> 8 | S32 -> 32 | S64 -> 64
 
       (* Stolen from @krtab in OCamlPro/owi #195 *)
       let clz n =
@@ -306,7 +306,7 @@ module Fresh = struct
       type t = int
 
       let v i = Z3.BitVector.mk_numeral ctx (string_of_int i) 8
-      let size = Ty.S8
+      let bitwidth = Ty.S8
 
       module Ixx = struct
         let of_int i = i [@@inline]
@@ -318,7 +318,7 @@ module Fresh = struct
       type t = int32
 
       let v i = Z3.BitVector.mk_numeral ctx (Int32.to_string i) 32
-      let size = Ty.S32
+      let bitwidth = Ty.S32
 
       module Ixx = Int32
     end)
@@ -327,7 +327,7 @@ module Fresh = struct
       type t = int64
 
       let v i = Z3.BitVector.mk_numeral ctx (Int64.to_string i) 64
-      let size = Ty.S64
+      let bitwidth = Ty.S64
 
       module Ixx = Int64
     end)
