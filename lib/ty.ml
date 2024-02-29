@@ -6,7 +6,7 @@ type _ cast =
   | C32 : int32 cast
   | C64 : int64 cast
 
-type sz =
+type bitwidth =
   | S8
   | S32
   | S64
@@ -16,8 +16,8 @@ type t =
   | Ty_real
   | Ty_bool
   | Ty_str
-  | Ty_bitv of sz
-  | Ty_fp of sz
+  | Ty_bitv of bitwidth
+  | Ty_fp of bitwidth
 
 type unop =
   | Neg
