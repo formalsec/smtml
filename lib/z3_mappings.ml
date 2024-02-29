@@ -594,12 +594,13 @@ module Fresh = struct
 
     module Solver = struct
       let make ?logic () : solver =
-        match logic with
-        | Some logic ->
-          let logic = Format.asprintf "%a" Ty.pp_logic logic in
-          let logic = Z3.Symbol.mk_string ctx logic in
-          Z3.Solver.mk_solver ctx (Some logic)
-        | None -> Z3.Solver.mk_simple_solver ctx
+        let logic =
+          Option.map
+            (fun l ->
+              Format.kasprintf (Z3.Symbol.mk_string ctx) "%a" Ty.pp_logic l )
+            logic
+        in
+        Z3.Solver.mk_solver ctx logic
 
       let add_simplifier solver =
         let simplify = Z3.Simplifier.mk_simplifier ctx "simplify" in
