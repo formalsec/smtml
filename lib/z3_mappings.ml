@@ -1,3 +1,5 @@
+include Mappings_intf
+
 module Fresh = struct
   module Make () = struct
     let err = Log.err
@@ -7,9 +9,6 @@ module Fresh = struct
     type model = Z3.Model.model
 
     type solver = Z3.Solver.solver
-
-    type status = Z3.Solver.status
-
     type optimize = Z3.Optimize.optimize
 
     type handle = Z3.Optimize.handle
@@ -586,25 +585,16 @@ module Fresh = struct
     (*   let t' = match t with Forall -> true | Exists -> false in *)
     (*   encode_quantifier t' vars body' patterns' *)
 
-    let update_param_value (type a) (param : a Params.param) (value : a) =
+    let set_params (params : Params.t) =
       let module P = Z3.Params in
-      match param with
-      | Params.Timeout ->
-        P.update_param_value ctx "timeout" (string_of_int value)
-      | Params.Model -> P.update_param_value ctx "model" (string_of_bool value)
-      | Params.Unsat_core ->
-        P.update_param_value ctx "unsat_core" (string_of_bool value)
-      | Params.Ematching ->
-        Z3.set_global_param "smt.ematching" (string_of_bool value)
-
-    let interrupt () = Z3.Tactic.interrupt ctx
-
-    let satisfiability =
-      let open Mappings_intf in
-      function
-      | Z3.Solver.SATISFIABLE -> Satisfiable
-      | Z3.Solver.UNSATISFIABLE -> Unsatisfiable
-      | Z3.Solver.UNKNOWN -> Unknown
+      Z3.set_global_param "smt.ematching"
+        (string_of_bool @@ Params.get params Ematching);
+      P.update_param_value ctx "timeout"
+        (string_of_int @@ Params.get params Timeout);
+      P.update_param_value ctx "model"
+        (string_of_bool @@ Params.get params Model);
+      P.update_param_value ctx "unsat_core"
+        (string_of_bool @@ Params.get params Unsat_core)
 
     let pp_smt ?status fmt (es : Expr.t list) =
       let st = match status with Some b -> string_of_bool b | None -> "" in
@@ -620,7 +610,8 @@ module Fresh = struct
       Format.fprintf fmt "(%s %s)" key value
 
     module Solver = struct
-      let make ?logic () : solver =
+      let make ?params ?logic () : solver =
+        Option.iter set_params params;
         let logic =
           Option.map
             (fun l ->
@@ -651,9 +642,14 @@ module Fresh = struct
       let add s es = Z3.Solver.add s (List.map encode_expr es)
 
       let check s ~assumptions =
-        Z3.Solver.check s (List.map encode_expr assumptions)
+        match Z3.Solver.check s (List.map encode_expr assumptions) with
+        | Z3.Solver.UNKNOWN -> Unknown
+        | Z3.Solver.SATISFIABLE -> Satisfiable
+        | Z3.Solver.UNSATISFIABLE -> Unsatisfiable
 
       let model s = Z3.Solver.get_model s
+
+      let interrupt _ = Z3.Tactic.interrupt ctx
 
       let pp_statistics fmt solver =
         let module Entry = Z3.Statistics.Entry in
@@ -673,13 +669,19 @@ module Fresh = struct
 
       let add o es = Z3.Optimize.add o (List.map encode_expr es)
 
-      let check o = Z3.Optimize.check o
+      let check o =
+        match Z3.Optimize.check o with
+        | Z3.Solver.UNKNOWN -> Unknown
+        | Z3.Solver.SATISFIABLE -> Satisfiable
+        | Z3.Solver.UNSATISFIABLE -> Unsatisfiable
 
       let model o = Z3.Optimize.get_model o
 
       let maximize o e = Z3.Optimize.maximize o (encode_expr e)
 
       let minimize o e = Z3.Optimize.minimize o (encode_expr e)
+
+      let interrupt _ = Z3.Tactic.interrupt ctx
 
       let pp_statistics fmt o =
         let module Entry = Z3.Statistics.Entry in

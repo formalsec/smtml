@@ -15,13 +15,7 @@ module Base (M : Mappings_intf.S) = struct
     acc := !acc +. (Stdlib.Sys.time () -. start);
     ret
 
-  let update_param_values params =
-    M.update_param_value Timeout (Params.get params Timeout);
-    M.update_param_value Model (Params.get params Model);
-    M.update_param_value Unsat_core (Params.get params Unsat_core);
-    M.update_param_value Ematching (Params.get params Ematching)
-
-  let interrupt () = M.interrupt ()
+  let interrupt solver = M.Solver.interrupt solver
 
   let pp_statistics fmt solver = M.Solver.pp_statistics fmt solver
 
@@ -30,7 +24,7 @@ module Base (M : Mappings_intf.S) = struct
     let sat =
       time_call (fun () -> M.Solver.check solver ~assumptions:es) solver_time
     in
-    match M.satisfiability sat with
+    match sat with
     | Mappings_intf.Satisfiable -> true
     | Mappings_intf.Unknown -> raise Unknown
     | Mappings_intf.Unsatisfiable -> false
@@ -59,8 +53,7 @@ module Make_batch (Mappings : Mappings_intf.S) = struct
   let pp_statistics fmt s = pp_statistics fmt s.solver
 
   let create ?params ?logic () =
-    Option.iter update_param_values params;
-    { solver = Mappings.Solver.make ?logic ()
+    { solver = Mappings.Solver.make ?params ?logic ()
     ; top = []
     ; stack = Stack.create ()
     }
@@ -91,6 +84,8 @@ module Make_batch (Mappings : Mappings_intf.S) = struct
 
   let model ?(symbols : Symbol.t list option) (s : t) : Model.t option =
     model ?symbols s.solver
+
+  let interrupt { solver; _ } = interrupt solver
 end
 
 (* TODO: Our base solver can be incrmental itself? *)
@@ -102,8 +97,7 @@ module Make_incremental (Mappings : Mappings_intf.S) = struct
   type solver = t
 
   let create ?params ?logic () : t =
-    Option.iter update_param_values params;
-    Mappings.Solver.make ?logic () |> Mappings.Solver.add_simplifier
+    Mappings.Solver.make ?params ?logic () |> Mappings.Solver.add_simplifier
 
   let clone (solver : t) : t = Mappings.Solver.clone solver
 

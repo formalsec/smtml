@@ -17,6 +17,7 @@
   interpret_intf
   lexer
   log
+  mappings
   mappings_intf
   model
   num
@@ -30,7 +31,8 @@
   symbol
   ty
   value
-  z3_mappings)
+  z3_mappings
+  z3_mappings2)
  (private_modules lexer parser)
  (libraries hc z3 ocaml_intrinsics)
  (instrumentation

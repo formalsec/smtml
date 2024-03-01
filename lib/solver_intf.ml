@@ -24,7 +24,7 @@ module type S = sig
   val create : ?params:Params.t -> ?logic:Ty.logic -> unit -> t
 
   (** Interrupt solver. *)
-  val interrupt : unit -> unit
+  val interrupt : t -> unit
 
   (** Clone a given solver. *)
   val clone : t -> t
