@@ -569,7 +569,7 @@ module Fresh = struct
         let op' =
           match op with
           | Eq -> DTerm.Float.eq
-          | Ne -> DTerm.neq
+          | Ne -> fun e1 e2 -> DTerm.Float.eq e1 e2 |> DTerm.neg
           | Lt -> DTerm.Float.lt
           | Le -> DTerm.Float.leq
           | Gt -> DTerm.Float.gt
@@ -597,12 +597,12 @@ module Fresh = struct
           | Ty.S64 -> (
             match op with
             | PromoteF32 ->
-              DTerm.Float.to_fp 11 51 DTerm.Float.roundNearestTiesToEven
+              DTerm.Float.to_fp 11 53 DTerm.Float.roundNearestTiesToEven
             | ConvertSI32 | ConvertSI64 ->
-              DTerm.Float.sbv_to_fp 11 51 DTerm.Float.roundNearestTiesToEven
+              DTerm.Float.sbv_to_fp 11 53 DTerm.Float.roundNearestTiesToEven
             | ConvertUI32 | ConvertUI64 ->
-              DTerm.Float.ubv_to_fp 11 51 DTerm.Float.roundNearestTiesToEven
-            | Reinterpret_int -> DTerm.Float.ieee_format_to_fp 11 51
+              DTerm.Float.ubv_to_fp 11 53 DTerm.Float.roundNearestTiesToEven
+            | Reinterpret_int -> DTerm.Float.ieee_format_to_fp 11 53
             | ToString -> fun v -> DTerm.apply_cst f64_to_string [] [ v ]
             | OfString -> fun v -> DTerm.apply_cst string_to_f64 [] [ v ]
             | _ -> assert false )
