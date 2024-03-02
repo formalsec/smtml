@@ -568,7 +568,7 @@ module Fresh = struct
       let encode_relop op e1 e2 =
         let op' =
           match op with
-          | Eq -> DTerm.eq
+          | Eq -> DTerm.Float.eq
           | Ne -> DTerm.neq
           | Lt -> DTerm.Float.lt
           | Le -> DTerm.Float.leq
@@ -584,23 +584,25 @@ module Fresh = struct
           | Ty.S8 -> assert false
           | Ty.S32 -> (
             match op with
-            | DemoteF64 -> DTerm.Float.ieee_format_to_fp 8 24
+            | DemoteF64 ->
+              DTerm.Float.to_fp 8 24 DTerm.Float.roundNearestTiesToEven
             | ConvertSI32 | ConvertSI64 ->
               DTerm.Float.sbv_to_fp 8 24 DTerm.Float.roundNearestTiesToEven
             | ConvertUI32 | ConvertUI64 ->
               DTerm.Float.ubv_to_fp 8 24 DTerm.Float.roundNearestTiesToEven
-            | Reinterpret_int -> assert false
+            | Reinterpret_int -> DTerm.Float.ieee_format_to_fp 8 24
             | ToString -> fun v -> DTerm.apply_cst f32_to_string [] [ v ]
             | OfString -> fun v -> DTerm.apply_cst string_to_f32 [] [ v ]
             | _ -> assert false )
           | Ty.S64 -> (
             match op with
-            | DemoteF64 -> DTerm.Float.ieee_format_to_fp 11 51
+            | PromoteF32 ->
+              DTerm.Float.to_fp 11 51 DTerm.Float.roundNearestTiesToEven
             | ConvertSI32 | ConvertSI64 ->
               DTerm.Float.sbv_to_fp 11 51 DTerm.Float.roundNearestTiesToEven
             | ConvertUI32 | ConvertUI64 ->
               DTerm.Float.ubv_to_fp 11 51 DTerm.Float.roundNearestTiesToEven
-            | Reinterpret_int -> assert false
+            | Reinterpret_int -> DTerm.Float.ieee_format_to_fp 11 51
             | ToString -> fun v -> DTerm.apply_cst f64_to_string [] [ v ]
             | OfString -> fun v -> DTerm.apply_cst string_to_f64 [] [ v ]
             | _ -> assert false )
