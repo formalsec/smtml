@@ -64,7 +64,7 @@ let paren_op :=
   | (ty, op) = TERNARY; e1 = s_expr; e2 = s_expr; e3 = s_expr; <Triop>
   | (ty, op) = CVTOP; e = s_expr; <Cvtop>
   | (ty, op) = RELOP; e1 = s_expr; e2 = s_expr; <Relop>
-  | EXTRACT; ~ = s_expr; l = NUM; h = NUM; <Extract>
+  | EXTRACT; ~ = s_expr; l = NUM; h = NUM; { Extract ( s_expr, h, l) }
   | CONCAT; e1 = s_expr; e2 = s_expr; <Concat>
 
 let spec_constant :=
