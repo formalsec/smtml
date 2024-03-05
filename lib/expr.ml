@@ -372,23 +372,23 @@ module Make (T : sig
   val num : elt -> Num.t
 end) =
 struct
-  let v i = Val (Num (T.num i)) @: T.ty
+  let v i = make (Val (Num (T.num i)))
 
   let sym x = mk_symbol Symbol.(x @: T.ty)
 
-  let ( ~- ) e = Unop (T.ty, Neg, e) @: T.ty
+  let ( ~- ) e = make @@ Unop (T.ty, Neg, e)
 
-  let ( = ) e1 e2 = Relop (T.ty, Eq, e1, e2) @: T.ty
+  let ( = ) e1 e2 = make @@ Relop (T.ty, Eq, e1, e2)
 
-  let ( != ) e1 e2 = Relop (T.ty, Ne, e1, e2) @: T.ty
+  let ( != ) e1 e2 = make @@ Relop (T.ty, Ne, e1, e2)
 
-  let ( > ) e1 e2 = Relop (T.ty, Gt, e1, e2) @: T.ty
+  let ( > ) e1 e2 = make @@ Relop (T.ty, Gt, e1, e2)
 
-  let ( >= ) e1 e2 = Relop (T.ty, Ge, e1, e2) @: T.ty
+  let ( >= ) e1 e2 = make @@ Relop (T.ty, Ge, e1, e2)
 
-  let ( < ) e1 e2 = Relop (T.ty, Lt, e1, e2) @: T.ty
+  let ( < ) e1 e2 = make @@ Relop (T.ty, Lt, e1, e2)
 
-  let ( <= ) e1 e2 = Relop (T.ty, Le, e1, e2) @: T.ty
+  let ( <= ) e1 e2 = make @@ Relop (T.ty, Le, e1, e2)
 end
 
 module Bitv = struct

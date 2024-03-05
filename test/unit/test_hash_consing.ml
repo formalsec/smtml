@@ -9,8 +9,8 @@ let () =
   let right_a = I32.sym "y" in
   let left_b = I32.sym "x" in
   let right_b = I32.sym "y" in
-  let a = Expr.Binop (Ty.Add, left_a, right_a) @: Ty.Ty_int in
-  let b = Expr.Binop (Ty.Add, left_b, right_b) @: Ty.Ty_int in
+  let a = make @@ Binop (Ty_bitv 32, Add, left_a, right_a) in
+  let b = make @@ Binop (Ty_bitv 32, Add, left_b, right_b) in
   assert (a == b);
   (*
      There should be only 3 elements in the hashcons table:
@@ -18,4 +18,4 @@ let () =
        2. y
        3. x + y
   *)
-  assert (Expr.H.length () == 3)
+  assert (Expr.Hc.length () == 3)
