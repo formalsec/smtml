@@ -8,4 +8,5 @@ type t =
   | Set_logic of Ty.logic
 
 val pp : Format.formatter -> t -> unit
+
 val to_string : t -> string
