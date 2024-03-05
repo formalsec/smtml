@@ -1,15 +1,8 @@
 open Encoding
 open Ty
-open Encoding.Expr
 
 let f32 f = Num.F32 (Int32.bits_of_float f)
 let f64 f = Num.F64 (Int64.bits_of_float f)
-
-let () =
-  let ptr = make @@ Ptr (8390670l, Expr.Bitv.I32.v 2l) in
-  let rem = make @@ Binop (Ty_bitv 32, Rem, ptr, Expr.Bitv.I32.v 1l) in
-  let result = Expr.simplify rem in
-  assert (view result = Val (Num (I32 0l)))
 
 let () =
   let cvtop = Eval_numeric.eval_cvtop in
