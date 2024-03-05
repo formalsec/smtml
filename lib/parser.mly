@@ -75,14 +75,14 @@ let spec_constant :=
   | LPAREN; ty = TYPE; x = NUM; RPAREN;
     {
       match ty with
-      | Ty_bitv S32 -> Num (I32 (Int32.of_int x))
-      | Ty_bitv S64 -> Num (I64 (Int64.of_int x))
+      | Ty_bitv 32 -> Num (I32 (Int32.of_int x))
+      | Ty_bitv 64 -> Num (I64 (Int64.of_int x))
       | _ -> failwith "invalid bitv type"
     }
   | LPAREN; ty = TYPE; x = DEC; RPAREN;
     {
       match ty with
-      | Ty_fp S32 -> Num (F32 (Int32.bits_of_float x))
-      | Ty_fp S64 -> Num (F64 (Int64.bits_of_float x))
+      | Ty_fp 32 -> Num (F32 (Int32.bits_of_float x))
+      | Ty_fp 64 -> Num (F64 (Int64.bits_of_float x))
       | _ -> failwith "invalid fp type"
     }

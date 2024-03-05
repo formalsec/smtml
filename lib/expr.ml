@@ -174,20 +174,20 @@ let rec simplify_binop ty (op : binop) (hte1 : t) (hte2 : t) =
   | Ptr (base, offset), _ -> (
     match op with
     | Add ->
-      let new_offset = simplify_binop (Ty_bitv S32) Add offset hte2 in
+      let new_offset = simplify_binop (Ty_bitv 32) Add offset hte2 in
       Ptr (base, make new_offset)
     | Sub ->
-      let new_offset = simplify_binop (Ty_bitv S32) Sub offset hte2 in
+      let new_offset = simplify_binop (Ty_bitv 32) Sub offset hte2 in
       Ptr (base, make new_offset)
     | Rem ->
       let rhs = make @@ Val (Value.Num (Num.I32 base)) in
-      let addr = make @@ simplify_binop (Ty_bitv S32) Add rhs offset in
+      let addr = make @@ simplify_binop (Ty_bitv 32) Add rhs offset in
       simplify_binop ty Rem addr hte2
     | _ -> Binop (ty, op, hte1, hte2) )
   | _, Ptr (base, offset) -> (
     match op with
     | Add ->
-      let new_offset = simplify_binop (Ty_bitv S32) Add offset hte1 in
+      let new_offset = simplify_binop (Ty_bitv 32) Add offset hte1 in
       Ptr (base, make new_offset)
     | _ -> Binop (ty, op, hte1, hte2) )
   | Val (Num (I32 0l)), _ -> (
@@ -381,7 +381,7 @@ module Bitv = struct
   module I8 = Make (struct
     type elt = int
 
-    let ty = Ty_bitv S8
+    let ty = Ty_bitv 8
 
     let num i = Num.I8 i
   end)
@@ -389,7 +389,7 @@ module Bitv = struct
   module I32 = Make (struct
     type elt = int32
 
-    let ty = Ty_bitv S32
+    let ty = Ty_bitv 32
 
     let num i = Num.I32 i
   end)
@@ -397,7 +397,7 @@ module Bitv = struct
   module I64 = Make (struct
     type elt = int64
 
-    let ty = Ty_bitv S64
+    let ty = Ty_bitv 64
 
     let num i = Num.I64 i
   end)
@@ -407,7 +407,7 @@ module Fpa = struct
   module F32 = Make (struct
     type elt = float
 
-    let ty = Ty_fp S32
+    let ty = Ty_fp 32
 
     let num f = Num.F32 (Int32.bits_of_float f)
   end)
@@ -415,7 +415,7 @@ module Fpa = struct
   module F64 = Make (struct
     type elt = float
 
-    let ty = Ty_fp S64
+    let ty = Ty_fp 64
 
     let num f = Num.F64 (Int64.bits_of_float f)
   end)

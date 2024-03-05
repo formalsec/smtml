@@ -3,25 +3,43 @@ module Fresh = struct
     let err = Log.err
 
     type expr = Z3.Expr.expr
+
     type model = Z3.Model.model
+
     type solver = Z3.Solver.solver
+
     type status = Z3.Solver.status
+
     type optimize = Z3.Optimize.optimize
+
     type handle = Z3.Optimize.handle
 
     let ctx = Z3.mk_context []
+
     let int_sort = Z3.Arithmetic.Integer.mk_sort ctx
+
     let real_sort = Z3.Arithmetic.Real.mk_sort ctx
+
     let bool_sort = Z3.Boolean.mk_sort ctx
+
     let str_sort = Z3.Seq.mk_string_sort ctx
+
     let bv8_sort = Z3.BitVector.mk_sort ctx 8
+
     let bv32_sort = Z3.BitVector.mk_sort ctx 32
+
     let bv64_sort = Z3.BitVector.mk_sort ctx 64
+
     let fp32_sort = Z3.FloatingPoint.mk_sort_single ctx
+
     let fp64_sort = Z3.FloatingPoint.mk_sort_double ctx
+
     let rne = Z3.FloatingPoint.RoundingMode.mk_rne ctx
+
     let rtz = Z3.FloatingPoint.RoundingMode.mk_rtz ctx
+
     let rtp = Z3.FloatingPoint.RoundingMode.mk_rtp ctx
+
     let rtn = Z3.FloatingPoint.RoundingMode.mk_rtn ctx
 
     let get_sort (e : Ty.t) : Z3.Sort.sort =
@@ -30,18 +48,19 @@ module Fresh = struct
       | Ty_real -> real_sort
       | Ty_bool -> bool_sort
       | Ty_str -> str_sort
-      | Ty_bitv S8 -> bv8_sort
-      | Ty_bitv S32 -> bv32_sort
-      | Ty_bitv S64 -> bv64_sort
-      | Ty_fp S32 -> fp32_sort
-      | Ty_fp S64 -> fp64_sort
-      | Ty_fp S8 | Ty_var _ -> assert false
+      | Ty_bitv 8 -> bv8_sort
+      | Ty_bitv 32 -> bv32_sort
+      | Ty_bitv 64 -> bv64_sort
+      | Ty_fp 32 -> fp32_sort
+      | Ty_fp 64 -> fp64_sort
+      | Ty_bitv _ | Ty_fp _ | Ty_var _ -> assert false
 
     module Arithmetic = struct
       open Ty
       open Z3
 
       let int i = Arithmetic.Integer.mk_numeral_i ctx i
+
       let float f = Arithmetic.Real.mk_numeral_s ctx (Float.to_string f)
 
       let encode_unop op e =
@@ -132,6 +151,7 @@ module Fresh = struct
       open Ty
 
       let true_ = Boolean.mk_true ctx
+
       let false_ = Boolean.mk_false ctx
 
       let encode_unop = function
@@ -163,6 +183,7 @@ module Fresh = struct
       open Ty
 
       let v s = Seq.mk_string ctx s
+
       let trim = FuncDecl.mk_func_decl_s ctx "Trim" [ str_sort ] str_sort
 
       let encode_unop op e =
@@ -198,10 +219,12 @@ module Fresh = struct
       type t
 
       val v : t -> Z3.Expr.expr
-      val bitwidth : Ty.bitwidth
+
+      val bitwidth : int
 
       module Ixx : sig
         val of_int : int -> t
+
         val shift_left : t -> int -> t
       end
     end
@@ -210,8 +233,6 @@ module Fresh = struct
       include Bv
       open Ty
       open Z3
-
-      let bitwidth = match bitwidth with S8 -> 8 | S32 -> 32 | S64 -> 64
 
       (* Stolen from @krtab in OCamlPro/owi #195 *)
       let clz n =
@@ -306,10 +327,12 @@ module Fresh = struct
       type t = int
 
       let v i = Z3.BitVector.mk_numeral ctx (string_of_int i) 8
-      let bitwidth = Ty.S8
+
+      let bitwidth = 8
 
       module Ixx = struct
         let of_int i = i [@@inline]
+
         let shift_left v i = v lsl i [@@inline]
       end
     end)
@@ -318,7 +341,8 @@ module Fresh = struct
       type t = int32
 
       let v i = Z3.BitVector.mk_numeral ctx (Int32.to_string i) 32
-      let bitwidth = Ty.S32
+
+      let bitwidth = 32
 
       module Ixx = Int32
     end)
@@ -327,7 +351,8 @@ module Fresh = struct
       type t = int64
 
       let v i = Z3.BitVector.mk_numeral ctx (Int64.to_string i) 64
-      let bitwidth = Ty.S64
+
+      let bitwidth = 64
 
       module Ixx = Int64
     end)
@@ -336,8 +361,11 @@ module Fresh = struct
       type t
 
       val v : t -> Z3.Expr.expr
+
       val sort : Z3.Sort.sort
+
       val to_string : Z3.FuncDecl.func_decl
+
       val of_string : Z3.FuncDecl.func_decl
     end
 
@@ -439,57 +467,57 @@ module Fresh = struct
       | Ty.Ty_int | Ty.Ty_real -> Arithmetic.encode_unop
       | Ty.Ty_bool -> Boolean.encode_unop
       | Ty.Ty_str -> Str.encode_unop
-      | Ty.Ty_bitv S8 -> I8.encode_unop
-      | Ty.Ty_bitv S32 -> I32.encode_unop
-      | Ty.Ty_bitv S64 -> I64.encode_unop
-      | Ty.Ty_fp S32 -> F32.encode_unop
-      | Ty.Ty_fp S64 -> F64.encode_unop
-      | Ty.Ty_fp S8 | Ty_var _ -> assert false
+      | Ty.Ty_bitv 8 -> I8.encode_unop
+      | Ty.Ty_bitv 32 -> I32.encode_unop
+      | Ty.Ty_bitv 64 -> I64.encode_unop
+      | Ty.Ty_fp 32 -> F32.encode_unop
+      | Ty.Ty_fp 64 -> F64.encode_unop
+      | Ty.Ty_bitv _ | Ty_fp _ | Ty_var _ -> assert false
 
     let encode_binop = function
       | Ty.Ty_int | Ty.Ty_real -> Arithmetic.encode_binop
       | Ty.Ty_bool -> Boolean.encode_binop
       | Ty.Ty_str -> Str.encode_binop
-      | Ty.Ty_bitv S8 -> I8.encode_binop
-      | Ty.Ty_bitv S32 -> I32.encode_binop
-      | Ty.Ty_bitv S64 -> I64.encode_binop
-      | Ty.Ty_fp S32 -> F32.encode_binop
-      | Ty.Ty_fp S64 -> F64.encode_binop
-      | Ty.Ty_fp S8 | Ty_var _ -> assert false
+      | Ty.Ty_bitv 8 -> I8.encode_binop
+      | Ty.Ty_bitv 32 -> I32.encode_binop
+      | Ty.Ty_bitv 64 -> I64.encode_binop
+      | Ty.Ty_fp 32 -> F32.encode_binop
+      | Ty.Ty_fp 64 -> F64.encode_binop
+      | Ty.Ty_bitv _ | Ty_fp _ | Ty_var _ -> assert false
 
     let encode_triop = function
       | Ty.Ty_int | Ty_real -> Arithmetic.encode_triop
       | Ty.Ty_bool -> Boolean.encode_triop
       | Ty.Ty_str -> Str.encode_triop
-      | Ty.Ty_bitv S8 -> I8.encode_triop
-      | Ty.Ty_bitv S32 -> I32.encode_triop
-      | Ty.Ty_bitv S64 -> I64.encode_triop
-      | Ty.Ty_fp S32 -> F32.encode_triop
-      | Ty.Ty_fp S64 -> F64.encode_triop
-      | Ty.Ty_fp S8 | Ty_var _ -> assert false
+      | Ty.Ty_bitv 8 -> I8.encode_triop
+      | Ty.Ty_bitv 32 -> I32.encode_triop
+      | Ty.Ty_bitv 64 -> I64.encode_triop
+      | Ty.Ty_fp 32 -> F32.encode_triop
+      | Ty.Ty_fp 64 -> F64.encode_triop
+      | Ty.Ty_bitv _ | Ty_fp _ | Ty_var _ -> assert false
 
     let encode_relop = function
       | Ty.Ty_int | Ty.Ty_real -> Arithmetic.encode_relop
       | Ty.Ty_bool -> Boolean.encode_relop
       | Ty.Ty_str -> Str.encode_relop
-      | Ty.Ty_bitv S8 -> I8.encode_relop
-      | Ty.Ty_bitv S32 -> I32.encode_relop
-      | Ty.Ty_bitv S64 -> I64.encode_relop
-      | Ty.Ty_fp S32 -> F32.encode_relop
-      | Ty.Ty_fp S64 -> F64.encode_relop
-      | Ty.Ty_fp S8 | Ty_var _ -> assert false
+      | Ty.Ty_bitv 8 -> I8.encode_relop
+      | Ty.Ty_bitv 32 -> I32.encode_relop
+      | Ty.Ty_bitv 64 -> I64.encode_relop
+      | Ty.Ty_fp 32 -> F32.encode_relop
+      | Ty.Ty_fp 64 -> F64.encode_relop
+      | Ty.Ty_bitv _ | Ty_fp _ | Ty_var _ -> assert false
 
     let encode_cvtop = function
       | Ty.Ty_int -> Arithmetic.Integer.encode_cvtop
       | Ty.Ty_real -> Arithmetic.Real.encode_cvtop
       | Ty.Ty_bool -> Boolean.encode_cvtop
       | Ty.Ty_str -> Str.encode_cvtop
-      | Ty.Ty_bitv S8 -> I8.encode_cvtop
-      | Ty.Ty_bitv S32 -> I32.encode_cvtop
-      | Ty.Ty_bitv S64 -> I64.encode_cvtop
-      | Ty.Ty_fp S32 -> F32.encode_cvtop
-      | Ty.Ty_fp S64 -> F64.encode_cvtop
-      | Ty.Ty_fp S8 | Ty_var _ -> assert false
+      | Ty.Ty_bitv 8 -> I8.encode_cvtop
+      | Ty.Ty_bitv 32 -> I32.encode_cvtop
+      | Ty.Ty_bitv 64 -> I64.encode_cvtop
+      | Ty.Ty_fp 32 -> F32.encode_cvtop
+      | Ty.Ty_fp 64 -> F64.encode_cvtop
+      | Ty.Ty_bitv _ | Ty_fp _ | Ty_var _ -> assert false
 
     (* let encode_quantifier (t : bool) (vars_list : Symbol.t list) *)
     (*   (body : Z3.Expr.expr) (patterns : Z3.Quantifier.Pattern.pattern list) : *)
@@ -613,9 +641,13 @@ module Fresh = struct
         Z3.Solver.add_simplifier ctx solver simplifier
 
       let clone s = Z3.Solver.translate s ctx
+
       let push s = Z3.Solver.push s
+
       let pop s lvl = Z3.Solver.pop s lvl
+
       let reset s = Z3.Solver.reset s [@@inline]
+
       let add s es = Z3.Solver.add s (List.map encode_expr es)
 
       let check s ~assumptions =
@@ -634,12 +666,19 @@ module Fresh = struct
 
     module Optimizer = struct
       let make () = Z3.Optimize.mk_opt ctx
+
       let push o = Z3.Optimize.push o
+
       let pop o = Z3.Optimize.pop o
+
       let add o es = Z3.Optimize.add o (List.map encode_expr es)
+
       let check o = Z3.Optimize.check o
+
       let model o = Z3.Optimize.get_model o
+
       let maximize o e = Z3.Optimize.maximize o (encode_expr e)
+
       let minimize o e = Z3.Optimize.minimize o (encode_expr e)
 
       let pp_statistics fmt o =
@@ -708,13 +747,12 @@ module Fresh = struct
           (* It can never be something else *)
           assert false )
       | Ty_str, Z3enums.SEQ_SORT -> Str (Z3.Seq.get_string ctx e)
-      | Ty_bitv S8, Z3enums.BV_SORT -> Num (I8 (Int64.to_int (int64_of_bv e)))
-      | Ty_bitv S32, Z3enums.BV_SORT ->
-        Num (I32 (Int64.to_int32 (int64_of_bv e)))
-      | Ty_bitv S64, Z3enums.BV_SORT -> Num (I64 (int64_of_bv e))
-      | Ty_fp S32, Z3enums.FLOATING_POINT_SORT ->
+      | Ty_bitv 8, Z3enums.BV_SORT -> Num (I8 (Int64.to_int (int64_of_bv e)))
+      | Ty_bitv 32, Z3enums.BV_SORT -> Num (I32 (Int64.to_int32 (int64_of_bv e)))
+      | Ty_bitv 64, Z3enums.BV_SORT -> Num (I64 (int64_of_bv e))
+      | Ty_fp 32, Z3enums.FLOATING_POINT_SORT ->
         Num (F32 (Int32.bits_of_float @@ float_of_numeral e))
-      | Ty_fp S64, Z3enums.FLOATING_POINT_SORT ->
+      | Ty_fp 64, Z3enums.FLOATING_POINT_SORT ->
         Num (F64 (Int64.bits_of_float @@ float_of_numeral e))
       | _ -> assert false
 
@@ -724,19 +762,11 @@ module Fresh = struct
       | Z3enums.REAL_SORT -> Ty.Ty_real
       | Z3enums.BOOL_SORT -> Ty.Ty_bool
       | Z3enums.SEQ_SORT -> Ty.Ty_str
-      | Z3enums.BV_SORT -> (
-        match Z3.BitVector.get_size sort with
-        | 8 -> Ty.Ty_bitv S8
-        | 32 -> Ty.Ty_bitv S32
-        | 64 -> Ty.Ty_bitv S64
-        | bits -> err "Unable to recover type of BitVector with %d bits" bits )
+      | Z3enums.BV_SORT -> Ty.Ty_bitv (Z3.BitVector.get_size sort)
       | Z3enums.FLOATING_POINT_SORT ->
         let ebits = Z3.FloatingPoint.get_ebits ctx sort in
         let sbits = Z3.FloatingPoint.get_sbits ctx sort in
-        let size = ebits + sbits in
-        if size = 32 then Ty.Ty_fp S32
-        else if size = 64 then Ty.Ty_fp S64
-        else err "Unable to recover type of FP with %d bits" size
+        Ty_fp (ebits + sbits)
       | _ -> assert false
 
     let symbols_of_model (model : Z3.Model.model) : Symbol.t list =
