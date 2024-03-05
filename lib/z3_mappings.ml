@@ -35,7 +35,7 @@ module Fresh = struct
       | Ty_bitv S64 -> bv64_sort
       | Ty_fp S32 -> fp32_sort
       | Ty_fp S64 -> fp64_sort
-      | Ty_fp S8 -> assert false
+      | Ty_fp S8 | Ty_var _ -> assert false
 
     module Arithmetic = struct
       open Ty
@@ -444,7 +444,7 @@ module Fresh = struct
       | Ty.Ty_bitv S64 -> I64.encode_unop
       | Ty.Ty_fp S32 -> F32.encode_unop
       | Ty.Ty_fp S64 -> F64.encode_unop
-      | Ty.Ty_fp S8 -> assert false
+      | Ty.Ty_fp S8 | Ty_var _ -> assert false
 
     let encode_binop = function
       | Ty.Ty_int | Ty.Ty_real -> Arithmetic.encode_binop
@@ -455,7 +455,7 @@ module Fresh = struct
       | Ty.Ty_bitv S64 -> I64.encode_binop
       | Ty.Ty_fp S32 -> F32.encode_binop
       | Ty.Ty_fp S64 -> F64.encode_binop
-      | Ty.Ty_fp S8 -> assert false
+      | Ty.Ty_fp S8 | Ty_var _ -> assert false
 
     let encode_triop = function
       | Ty.Ty_int | Ty_real -> Arithmetic.encode_triop
@@ -466,7 +466,7 @@ module Fresh = struct
       | Ty.Ty_bitv S64 -> I64.encode_triop
       | Ty.Ty_fp S32 -> F32.encode_triop
       | Ty.Ty_fp S64 -> F64.encode_triop
-      | Ty.Ty_fp S8 -> assert false
+      | Ty.Ty_fp S8 | Ty_var _ -> assert false
 
     let encode_relop = function
       | Ty.Ty_int | Ty.Ty_real -> Arithmetic.encode_relop
@@ -477,7 +477,7 @@ module Fresh = struct
       | Ty.Ty_bitv S64 -> I64.encode_relop
       | Ty.Ty_fp S32 -> F32.encode_relop
       | Ty.Ty_fp S64 -> F64.encode_relop
-      | Ty.Ty_fp S8 -> assert false
+      | Ty.Ty_fp S8 | Ty_var _ -> assert false
 
     let encode_cvtop = function
       | Ty.Ty_int -> Arithmetic.Integer.encode_cvtop
@@ -489,7 +489,7 @@ module Fresh = struct
       | Ty.Ty_bitv S64 -> I64.encode_cvtop
       | Ty.Ty_fp S32 -> F32.encode_cvtop
       | Ty.Ty_fp S64 -> F64.encode_cvtop
-      | Ty.Ty_fp S8 -> assert false
+      | Ty.Ty_fp S8 | Ty_var _ -> assert false
 
     (* let encode_quantifier (t : bool) (vars_list : Symbol.t list) *)
     (*   (body : Z3.Expr.expr) (patterns : Z3.Quantifier.Pattern.pattern list) : *)

@@ -18,22 +18,22 @@ type t =
   | Ty_str
   | Ty_bitv of bitwidth
   | Ty_fp of bitwidth
+  | Ty_var of { id : int }
 
 type unop =
-  | Neg
-  | Not
+  | Abs
+  | Ceil
   | Clz
   | Ctz
-  | Abs
-  | Sqrt
-  | Is_nan
-  | Ceil
   | Floor
-  | Trunc
-  | Nearest
-  (* To remove *)
+  | Is_nan
   | Len
+  | Neg
+  | Nearest
+  | Not
+  | Sqrt
   | Trim
+  | Trunc
 
 type binop =
   | Add
@@ -54,7 +54,6 @@ type binop =
   | Max
   | Rotl
   | Rotr
-  (* To remove *)
   | Nth
   | Concat
 
@@ -214,6 +213,7 @@ let pp fmt = function
   | Ty_fp S8 -> pp_string fmt "f8"
   | Ty_fp S32 -> pp_string fmt "f32"
   | Ty_fp S64 -> pp_string fmt "f64"
+  | Ty_var { id } -> fprintf fmt "'a%d" id
 
 let pp_logic fmt : logic -> unit = function
   | AUFLIA -> pp_string fmt "AUFLIA"
@@ -249,7 +249,5 @@ let size (ty : t) : int =
   | Ty_bitv S32 | Ty_fp S32 -> 4
   | Ty_bitv S64 | Ty_fp S64 -> 8
   | Ty_bitv S8 | Ty_fp S8 -> 1
-  | Ty_int -> 4
-  | Ty_real -> assert false
-  | Ty_bool -> 4
-  | Ty_str -> assert false
+  | Ty_int | Ty_bool -> 4
+  | Ty_real | Ty_str | Ty_var _ -> assert false

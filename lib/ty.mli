@@ -15,22 +15,22 @@ type t =
   | Ty_str
   | Ty_bitv of bitwidth
   | Ty_fp of bitwidth
+  | Ty_var of { id : int }
 
 type unop =
-  | Neg
-  | Not
+  | Abs
+  | Ceil
   | Clz
   | Ctz
-  | Abs
-  | Sqrt
-  | Is_nan
-  | Ceil
   | Floor
-  | Trunc
-  | Nearest
-  (* To remove *)
+  | Is_nan
   | Len
+  | Neg
+  | Nearest
+  | Not
+  | Sqrt
   | Trim
+  | Trunc
 
 type binop =
   | Add
