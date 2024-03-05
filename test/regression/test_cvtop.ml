@@ -2,6 +2,7 @@ open Encoding
 open Ty
 
 let f32 f = Num.F32 (Int32.bits_of_float f)
+
 let f64 f = Num.F64 (Int64.bits_of_float f)
 
 let () =
