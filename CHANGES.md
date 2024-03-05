@@ -1,3 +1,16 @@
+v0.0.4
+======
+
+- Adds Arthur's clz and ctz implementations for i64s
+- Completes missing `eval_numeric` operations
+- Adds more tests to increase code coverage
+- Adds `extend_ixx` to lexer
+- Adds colibri2 mappings
+- Fixes hash-consing in 72eeb6f
+- Rename `declare-fun` to `let-const`
+- Rotate_left and rotate_right operators
+- Print floats in OCaml syntax (Closes #49)
+
 v0.0.3
 ======
 
