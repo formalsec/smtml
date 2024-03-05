@@ -68,7 +68,21 @@ let mk_symbol s = make (Symbol s)
 
 let is_num (e : t) = match view e with Val (Num _) -> true | _ -> false
 
-let ty (_hte : t) : Ty.t = assert false
+let rec ty (hte : t) : Ty.t =
+  match view hte with
+  | Val x -> Value.type_of x
+  | Ptr _ -> Ty_bitv 32
+  | Symbol x -> Symbol.type_of x
+  | Unop (ty, _, _) -> ty
+  | Binop (ty, _, _, _) -> ty
+  | Triop (ty, _, _, _, _) -> ty
+  | Relop (ty, _, _, _) -> ty
+  | Cvtop (ty, _, _) -> ty
+  | Extract (_, h, l) -> Ty_bitv ((h - l) * 8)
+  | Concat (e1, e2) -> (
+    match (ty e1, ty e2) with
+    | Ty_bitv n1, Ty_bitv n2 -> Ty_bitv (n1 + n2)
+    | t1, t2 -> Log.err "Invalid concat of (%a) with (%a)" Ty.pp t1 Ty.pp t2 )
 
 let get_symbols (hte : t list) =
   let tbl = Hashtbl.create 64 in
@@ -76,6 +90,7 @@ let get_symbols (hte : t list) =
     match view hte with
     | Val _ -> ()
     | Ptr (_, offset) -> symbols offset
+    | Symbol s -> Hashtbl.replace tbl s ()
     | Unop (_, _, e1) -> symbols e1
     | Binop (_, _, e1, e2) ->
       symbols e1;
@@ -88,7 +103,6 @@ let get_symbols (hte : t list) =
       symbols e1;
       symbols e2
     | Cvtop (_, _, e) -> symbols e
-    | Symbol s -> Hashtbl.replace tbl s ()
     | Extract (e, _, _) -> symbols e
     | Concat (e1, e2) ->
       symbols e1;
