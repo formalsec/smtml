@@ -1,3 +1,8 @@
+Unreleased
+==========
+
+- Moves theory annotation (`Ty.t`) only to required `expr` variants
+
 v0.0.4
 ======
 

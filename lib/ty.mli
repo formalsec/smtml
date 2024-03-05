@@ -122,11 +122,21 @@ type logic =
   | UFNIA
 
 val pp_unop : Format.formatter -> unop -> unit
+
 val pp_binop : Format.formatter -> binop -> unit
+
 val pp_triop : Format.formatter -> triop -> unit
+
 val pp_relop : Format.formatter -> relop -> unit
+
 val pp_cvtop : Format.formatter -> cvtop -> unit
+
 val pp : Format.formatter -> t -> unit
+
 val pp_logic : Format.formatter -> logic -> unit
+
+val equal : t -> t -> bool
+
 val string_of_type : t -> string
+
 val size : t -> int

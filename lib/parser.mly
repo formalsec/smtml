@@ -53,26 +53,19 @@ let stmt :=
 
 let s_expr :=
   | x = SYMBOL; { mk_symbol @@ Symbol.mk_symbol (get_bind x) x }
-  | c = spec_constant; { Val c @: Value.type_of c }
-  | LPAREN; op = paren_op; RPAREN; { op }
+  | c = spec_constant; { make (Val c) }
+  | LPAREN; op = paren_op; RPAREN; { make op }
 
 let paren_op :=
-  | PTR; LPAREN; ty = TYPE; x = NUM; RPAREN; e = s_expr;
-    { Ptr (Int32.of_int x, e) @: ty }
-  | (ty, op) = UNARY; e = s_expr;
-    { Unop (op, e) @: ty }
-  | (ty, op) = BINARY; e1 = s_expr; e2 = s_expr;
-    { Binop (op, e1, e2) @: ty }
-  | (ty, op) = TERNARY; e1 = s_expr; e2 = s_expr; e3 = s_expr;
-    { Triop (op, e1, e2, e3) @: ty }
-  | (ty, op) = CVTOP; e = s_expr;
-    { Cvtop (op, e) @: ty }
-  | (ty, op) = RELOP; e1 = s_expr; e2 = s_expr;
-    { Relop (op, e1, e2) @: ty }
-  | EXTRACT; ~ = s_expr; l = NUM; h = NUM;
-    { Extract (s_expr, h, l) @: Ty_bitv S32 }
-  | CONCAT; e1 = s_expr; e2 = s_expr;
-    { Concat (e1, e2) @: Ty_bitv S32 }
+  | PTR; LPAREN; _ = TYPE; x = NUM; RPAREN; e = s_expr;
+    { Ptr (Int32.of_int x, e) }
+  | (ty, op) = UNARY; e = s_expr; <Unop>
+  | (ty, op) = BINARY; e1 = s_expr; e2 = s_expr; <Binop>
+  | (ty, op) = TERNARY; e1 = s_expr; e2 = s_expr; e3 = s_expr; <Triop>
+  | (ty, op) = CVTOP; e = s_expr; <Cvtop>
+  | (ty, op) = RELOP; e1 = s_expr; e2 = s_expr; <Relop>
+  | EXTRACT; ~ = s_expr; l = NUM; h = NUM; <Extract>
+  | CONCAT; e1 = s_expr; e2 = s_expr; <Concat>
 
 let spec_constant :=
   | x = NUM; { Int x }

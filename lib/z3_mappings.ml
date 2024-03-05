@@ -512,31 +512,30 @@ module Fresh = struct
     (*   else body *)
 
     let rec encode_expr (hte : Expr.t) : expr =
-      let ty = hte.node.ty in
       let open Expr in
-      match hte.node.e with
+      match view hte with
       | Val v -> encode_val v
       | Ptr (base, offset) ->
         let base' = encode_val (Num (I32 base)) in
         let offset' = encode_expr offset in
         I32.encode_binop Add base' offset'
-      | Unop (op, e) ->
+      | Unop (ty, op, e) ->
         let e' = encode_expr e in
         encode_unop ty op e'
-      | Binop (op, e1, e2) ->
+      | Binop (ty, op, e1, e2) ->
         let e1' = encode_expr e1 in
         let e2' = encode_expr e2 in
         encode_binop ty op e1' e2'
-      | Triop (op, e1, e2, e3) ->
+      | Triop (ty, op, e1, e2, e3) ->
         let e1' = encode_expr e1
         and e2' = encode_expr e2
         and e3' = encode_expr e3 in
         encode_triop ty op e1' e2' e3'
-      | Relop (op, e1, e2) ->
+      | Relop (ty, op, e1, e2) ->
         let e1' = encode_expr e1
         and e2' = encode_expr e2 in
         encode_relop ty op e1' e2'
-      | Cvtop (op, e) ->
+      | Cvtop (ty, op, e) ->
         let e' = encode_expr e in
         encode_cvtop ty op e'
       | Symbol s ->
@@ -696,7 +695,7 @@ module Fresh = struct
       let open Value in
       (* we have a model with completion => should never be None *)
       let e = Z3.Model.eval model (encode_expr c) true |> Option.get in
-      match (c.node.ty, Z3.Sort.get_sort_kind @@ Z3.Expr.get_sort e) with
+      match (Expr.ty c, Z3.Sort.get_sort_kind @@ Z3.Expr.get_sort e) with
       | Ty_int, Z3enums.INT_SORT ->
         Int (Z.to_int @@ Z3.Arithmetic.Integer.get_big_int e)
       | Ty_real, Z3enums.REAL_SORT ->
