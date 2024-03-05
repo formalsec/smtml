@@ -14,8 +14,11 @@ module Make (M : Mappings_intf.S) = struct
   type t = M.optimize
 
   let create () : t = O.make ()
+
   let push (opt : t) : unit = O.push opt
+
   let pop (opt : t) : unit = O.pop opt
+
   let add (opt : t) (es : Expr.t list) : unit = O.add opt es
 
   let check (opt : t) =

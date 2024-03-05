@@ -4,6 +4,7 @@ module Make (Solver : Solver_intf.S) = struct
   open Ast
 
   type solver = Solver.t
+
   type exec_state = solver state
 
   let init_state stmts =
