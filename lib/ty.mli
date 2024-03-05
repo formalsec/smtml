@@ -3,18 +3,13 @@ type _ cast =
   | C32 : int32 cast
   | C64 : int64 cast
 
-type bitwidth =
-  | S8
-  | S32
-  | S64
-
 type t =
   | Ty_int
   | Ty_real
   | Ty_bool
   | Ty_str
-  | Ty_bitv of bitwidth
-  | Ty_fp of bitwidth
+  | Ty_bitv of int
+  | Ty_fp of int
 
 type unop =
   | Neg
@@ -122,11 +117,21 @@ type logic =
   | UFNIA
 
 val pp_unop : Format.formatter -> unop -> unit
+
 val pp_binop : Format.formatter -> binop -> unit
+
 val pp_triop : Format.formatter -> triop -> unit
+
 val pp_relop : Format.formatter -> relop -> unit
+
 val pp_cvtop : Format.formatter -> cvtop -> unit
+
 val pp : Format.formatter -> t -> unit
+
 val pp_logic : Format.formatter -> logic -> unit
+
+val equal : t -> t -> bool
+
 val string_of_type : t -> string
+
 val size : t -> int
