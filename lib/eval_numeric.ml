@@ -65,6 +65,8 @@ module I32Op = struct
       | Not -> Int32.lognot
       | Clz ->
         fun n -> Int32.of_int (Ocaml_intrinsics.Int32.count_leading_zeros n)
+      | Ctz ->
+        fun n -> Int32.of_int (Ocaml_intrinsics.Int32.count_trailing_zeros n)
       | _ -> Log.err {|eval_unop: Unsupported i32 operator "%a"|} Ty.pp_unop op
     in
     fun v -> to_value (f (of_value 1 v))
@@ -153,6 +155,8 @@ module I64Op = struct
       | Not -> Int64.lognot
       | Clz ->
         fun n -> Int64.of_int (Ocaml_intrinsics.Int64.count_leading_zeros n)
+      | Ctz ->
+        fun n -> Int64.of_int (Ocaml_intrinsics.Int64.count_trailing_zeros n)
       | _ -> Log.err {|eval_unop: Unsupported i64 operator "%a"|} Ty.pp_unop op
     in
     fun v -> to_value (f (of_value 1 v))
