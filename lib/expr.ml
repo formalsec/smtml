@@ -14,7 +14,7 @@ and expr =
   | Extract of t * int * int
   | Concat of t * t
 
-module HashedExpr = struct
+module Hc = Hc.Make (struct
   type t = expr
 
   let equal (e1 : expr) (e2 : expr) : bool =
@@ -50,9 +50,7 @@ module HashedExpr = struct
     | Triop (ty, op, e1, e2, e3) -> h (ty, op, e1.tag, e2.tag, e3.tag)
     | Extract (e, hi, lo) -> h (e.tag, hi, lo)
     | Concat (e1, e2) -> h (e1.tag, e2.tag)
-end
-
-module Hc = Hc.Make (HashedExpr)
+end)
 
 let equal (hte1 : t) (hte2 : t) = hte1.tag == hte2.tag
 
@@ -176,81 +174,106 @@ let pp_smt = Pp.pp_smt
 
 let to_string e = Format.asprintf "%a" pp e
 
-let rec simplify_binop ty (op : binop) (hte1 : t) (hte2 : t) =
+let unop ty (op : unop) (hte : t) : t =
+  match view hte with
+  | Val (Num n) -> make (Val (Num (Eval_numeric.eval_unop ty op n)))
+  | _ -> make (Unop (ty, op, hte))
+
+let rec binop ty (op : binop) (hte1 : t) (hte2 : t) : t =
   match (view hte1, view hte2) with
-  | Val (Num n1), Val (Num n2) -> Val (Num (Eval_numeric.eval_binop ty op n1 n2))
+  | Val (Num n1), Val (Num n2) ->
+    make (Val (Num (Eval_numeric.eval_binop ty op n1 n2)))
   | Ptr (b1, os1), Ptr (b2, os2) -> (
     match op with
-    | Sub when b1 = b2 -> simplify_binop ty Sub os1 os2
+    | Sub when b1 = b2 -> binop ty Sub os1 os2
     | _ ->
       (* TODO: simplify to i32 here *)
-      Binop (ty, op, hte1, hte2) )
+      make (Binop (ty, op, hte1, hte2)) )
   | Ptr (base, offset), _ -> (
     match op with
     | Add ->
-      let new_offset = simplify_binop (Ty_bitv 32) Add offset hte2 in
-      Ptr (base, make new_offset)
+      let new_offset = binop (Ty_bitv 32) Add offset hte2 in
+      make (Ptr (base, new_offset))
     | Sub ->
-      let new_offset = simplify_binop (Ty_bitv 32) Sub offset hte2 in
-      Ptr (base, make new_offset)
+      let new_offset = binop (Ty_bitv 32) Sub offset hte2 in
+      make (Ptr (base, new_offset))
     | Rem ->
-      let rhs = make @@ Val (Value.Num (Num.I32 base)) in
-      let addr = make @@ simplify_binop (Ty_bitv 32) Add rhs offset in
-      simplify_binop ty Rem addr hte2
-    | _ -> Binop (ty, op, hte1, hte2) )
+      let rhs = make (Val (Value.Num (Num.I32 base))) in
+      let addr = binop (Ty_bitv 32) Add rhs offset in
+      binop ty Rem addr hte2
+    | _ -> make (Binop (ty, op, hte1, hte2)) )
   | _, Ptr (base, offset) -> (
     match op with
-    | Add ->
-      let new_offset = simplify_binop (Ty_bitv 32) Add offset hte1 in
-      Ptr (base, make new_offset)
-    | _ -> Binop (ty, op, hte1, hte2) )
+    | Add -> make (Ptr (base, binop (Ty_bitv 32) Add offset hte1))
+    | _ -> make (Binop (ty, op, hte1, hte2)) )
   | Val (Num (I32 0l)), _ -> (
     match op with
-    | Add | Or -> view hte2
-    | And | Div | DivU | Mul | Rem | RemU -> Val (Num (I32 0l))
-    | _ -> Binop (ty, op, hte1, hte2) )
+    | Add | Or -> hte2
+    | And | Div | DivU | Mul | Rem | RemU -> make (Val (Num (I32 0l)))
+    | _ -> make (Binop (ty, op, hte1, hte2)) )
   | _, Val (Num (I32 0l)) -> (
     match op with
-    | Add | Or | Sub -> view hte1
-    | And | Mul -> Val (Num (I32 0l))
-    | _ -> Binop (ty, op, hte1, hte2) )
-  | Binop (ty, op2, x, { node = Val (Num v1); _ }), Val (Num v2)
-    when not (is_num x) -> (
+    | Add | Or | Sub -> hte1
+    | And | Mul -> make (Val (Num (I32 0l)))
+    | _ -> make (Binop (ty, op, hte1, hte2)) )
+  | Binop (ty, op2, x, { node = Val (Num v1); _ }), Val (Num v2) -> (
     match (op, op2) with
     | Add, Add ->
-      let v = Eval_numeric.eval_binop ty Add v1 v2 in
-      Binop (ty, Add, x, make (Val (Num v)))
+      let v = make (Val (Num (Eval_numeric.eval_binop ty Add v1 v2))) in
+      make (Binop (ty, Add, x, v))
     (* | Add, Sub | Sub, Add -> *)
     (*   let v = Eval_numeric.eval_binop (I32 Sub) v1 v2 in *)
     (*   Binop (I32 Add, x, Val (Num v)) *)
     | Sub, Sub ->
-      let v = Eval_numeric.eval_binop ty Add v1 v2 in
-      Binop (ty, Sub, x, make (Val (Num v)))
-    | _, _ -> Binop (ty, op, hte1, hte2) )
+      let v = make (Val (Num (Eval_numeric.eval_binop ty Add v1 v2))) in
+      make (Binop (ty, Sub, x, v))
+    | _, _ -> make (Binop (ty, op, hte1, hte2)) )
   (* FIXME: this seems wrong? *)
-  (* | Binop (And, _, _), Val (Num (I32 1l)) -> e1.node.e *)
-  (* | Val (Num (I32 1l)), Binop (And, _, _) -> e2.node.e *)
-  | _ -> Binop (ty, op, hte1, hte2)
+  (* | Binop (_, And, _, _), Val (Num (I32 1l)) -> hte1 *)
+  (* | Val (Num (I32 1l)), Binop (_, And, _, _) -> hte2 *)
+  | _ -> make (Binop (ty, op, hte1, hte2))
 
-let rec simplify_relop ty (op : relop) (hte1 : t) (hte2 : t) =
+let triop ty (op : triop) (e1 : t) (e2 : t) (e3 : t) : t =
+  match op with
+  | Ite -> (
+    match e1.node with
+    | Val True -> e2
+    | Val False -> e3
+    | _ -> make (Triop (ty, op, e1, e2, e3)) )
+  | Substr ->
+    make
+      ( match (e1.node, e2.node, e3.node) with
+      | Val (Str s), Val (Int i), Val (Int len) -> Val (Str (String.sub s i len))
+      | _ -> Triop (ty, op, e1, e2, e3) )
+
+let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
   match (view hte1, view hte2) with
   | Val (Num v1), Val (Num v2) ->
-    Val (if Eval_numeric.eval_relop ty op v1 v2 then True else False)
-  | Ptr (_, _), Val (Num (I32 0l)) | Val (Num (I32 0l)), Ptr (_, _) -> (
-    match op with
-    | Eq -> Val False
-    | Ne -> Val True
-    | _ -> Relop (ty, op, hte1, hte2) )
+    make (Val (if Eval_numeric.eval_relop ty op v1 v2 then True else False))
   | Ptr (b1, os1), Ptr (b2, os2) -> (
     match op with
-    | Eq -> if b1 = b2 then Relop (ty, Eq, os1, os2) else Val False
-    | Ne -> if b1 = b2 then Relop (ty, Ne, os1, os2) else Val True
+    | Eq -> make (if b1 = b2 then Relop (ty, Eq, os1, os2) else Val False)
+    | Ne -> make (if b1 = b2 then Relop (ty, Ne, os1, os2) else Val True)
     | (LtU | LeU | GtU | GeU) as op ->
-      if b1 = b2 then simplify_relop ty op os1 os2
-      else if Eval_numeric.eval_relop ty op (I32 b1) (I32 b2) then Val True
-      else Val False
-    | _ -> Relop (ty, op, hte1, hte2) )
-  | _ -> Relop (ty, op, hte1, hte2)
+      if b1 = b2 then relop ty op os1 os2
+      else
+        make
+          ( if Eval_numeric.eval_relop ty op (I32 b1) (I32 b2) then Val True
+            else Val False )
+    | _ -> make (Relop (ty, op, hte1, hte2)) )
+  | Val (Num n), Ptr (b, { node = Val (Num o); _ }) ->
+    let base = Eval_numeric.eval_binop (Ty_bitv 32) Add (I32 b) o in
+    make (Val (if Eval_numeric.eval_relop ty op n base then True else False))
+  | Ptr (b, { node = Val (Num o); _ }), Val (Num n) ->
+    let base = Eval_numeric.eval_binop (Ty_bitv 32) Add (I32 b) o in
+    make (Val (if Eval_numeric.eval_relop ty op base n then True else False))
+  | _ -> make (Relop (ty, op, hte1, hte2))
+
+let cvtop ty (op : cvtop) (hte : t) : t =
+  make
+    ( match view hte with
+    | Val (Num n) -> Val (Num (Eval_numeric.eval_cvtop ty op n))
+    | _ -> Cvtop (ty, op, hte) )
 
 let nland64 (x : int64) (n : int) =
   let rec loop x' n' acc =
@@ -266,74 +289,99 @@ let nland32 (x : int32) (n : int) =
   in
   loop x n 0l
 
-let simplify_extract (hte : t) h l =
+let extract_ (hte : t) ~(high : int) ~(low : int) : t =
   match view hte with
   | Val (Num (I64 x)) ->
-    let x' = nland64 (Int64.shift_right x (l * 8)) (h - l) in
-    Val (Num (I64 x'))
-  | _ -> if h - l = size (ty hte) then view hte else Extract (hte, h, l)
+    let x' = nland64 (Int64.shift_right x (low * 8)) (high - low) in
+    make (Val (Num (I64 x')))
+  | _ ->
+    if high - low = size (ty hte) then hte else make (Extract (hte, high, low))
 
-let simplify_concat (msb : t) (lsb : t) =
-  match (view msb, view lsb) with
-  | ( Extract ({ node = Val (Num (I64 x2)); _ }, h2, l2)
-    , Extract ({ node = Val (Num (I64 x1)); _ }, h1, l1) ) ->
-    let d1 = h1 - l1 in
-    let d2 = h2 - l2 in
-    let x1' = nland64 (Int64.shift_right x1 (l1 * 8)) d1 in
-    let x2' = nland64 (Int64.shift_right x2 (l2 * 8)) d2 in
-    let x = Int64.(logor (shift_left x2' (d1 * 8)) x1') in
-    Extract (make @@ Val (Num (I64 x)), d1 + d2, 0)
-  | ( Extract ({ node = Val (Num (I32 x2)); _ }, h2, l2)
-    , Extract ({ node = Val (Num (I32 x1)); _ }, h1, l1) ) ->
-    let d1 = h1 - l1 in
-    let d2 = h2 - l2 in
-    let x1' = nland32 (Int32.shift_right x1 (l1 * 8)) d1 in
-    let x2' = nland32 (Int32.shift_right x2 (l2 * 8)) d2 in
-    let x = Int32.(logor (shift_left x2' (d1 * 8)) x1') in
-    Extract (make @@ Val (Num (I32 x)), d1 + d2, 0)
-  | Extract (s1, h, m1), Extract (s2, m2, l) when equal s1 s2 && m1 = m2 ->
-    Extract (s1, h, l)
-  | ( Extract ({ node = Val (Num (I64 x2)); _ }, h2, l2)
-    , Concat
-        ({ node = Extract ({ node = Val (Num (I64 x1)); _ }, h1, l1); _ }, se) )
-    when not (is_num se) ->
-    let d1 = h1 - l1 in
-    let d2 = h2 - l2 in
-    let x1' = nland64 (Int64.shift_right x1 (l1 * 8)) d1 in
-    let x2' = nland64 (Int64.shift_right x2 (l2 * 8)) d2 in
-    let x = Int64.(logor (shift_left x2' (d1 * 8)) x1') in
-    Concat (make @@ Extract (make @@ Val (Num (I64 x)), d1 + d2, 0), se)
-  | _ -> Concat (msb, lsb)
+let concat ~(msb : t) ~(lsb : t) : t =
+  make
+    ( match (view msb, view lsb) with
+    | ( Extract ({ node = Val (Num (I64 x2)); _ }, h2, l2)
+      , Extract ({ node = Val (Num (I64 x1)); _ }, h1, l1) ) ->
+      let d1 = h1 - l1 in
+      let d2 = h2 - l2 in
+      let x1' = nland64 (Int64.shift_right x1 (l1 * 8)) d1 in
+      let x2' = nland64 (Int64.shift_right x2 (l2 * 8)) d2 in
+      let x = Int64.(logor (shift_left x2' (d1 * 8)) x1') in
+      Extract (make @@ Val (Num (I64 x)), d1 + d2, 0)
+    | ( Extract ({ node = Val (Num (I32 x2)); _ }, h2, l2)
+      , Extract ({ node = Val (Num (I32 x1)); _ }, h1, l1) ) ->
+      let d1 = h1 - l1 in
+      let d2 = h2 - l2 in
+      let x1' = nland32 (Int32.shift_right x1 (l1 * 8)) d1 in
+      let x2' = nland32 (Int32.shift_right x2 (l2 * 8)) d2 in
+      let x = Int32.(logor (shift_left x2' (d1 * 8)) x1') in
+      Extract (make @@ Val (Num (I32 x)), d1 + d2, 0)
+    | Extract (s1, h, m1), Extract (s2, m2, l) when equal s1 s2 && m1 = m2 ->
+      Extract (s1, h, l)
+    | ( Extract ({ node = Val (Num (I64 x2)); _ }, h2, l2)
+      , Concat
+          ({ node = Extract ({ node = Val (Num (I64 x1)); _ }, h1, l1); _ }, se)
+      )
+      when not (is_num se) ->
+      let d1 = h1 - l1 in
+      let d2 = h2 - l2 in
+      let x1' = nland64 (Int64.shift_right x1 (l1 * 8)) d1 in
+      let x2' = nland64 (Int64.shift_right x2 (l2 * 8)) d2 in
+      let x = Int64.(logor (shift_left x2' (d1 * 8)) x1') in
+      Concat (make @@ Extract (make @@ Val (Num (I64 x)), d1 + d2, 0), se)
+    | _ -> Concat (msb, lsb) )
 
-let rec simplify ?(extract = true) (hte : t) : t =
+let rec simplify_expr ?(extract = true) (hte : t) : t =
   match view hte with
-  | Val _ -> hte
-  | Ptr (base, offset) -> make @@ Ptr (base, simplify offset)
+  | Val _ | Symbol _ -> hte
+  | Ptr (base, offset) -> make @@ Ptr (base, simplify_expr offset)
+  | Unop (ty, op, e) ->
+    let e = simplify_expr e in
+    unop ty op e
   | Binop (ty, op, e1, e2) ->
-    let e1 = simplify e1 in
-    let e2 = simplify e2 in
-    make @@ simplify_binop ty op e1 e2
+    let e1 = simplify_expr e1 in
+    let e2 = simplify_expr e2 in
+    binop ty op e1 e2
   | Relop (ty, op, e1, e2) ->
-    let e1 = simplify e1 in
-    let e2 = simplify e2 in
-    make @@ simplify_relop ty op e1 e2
-  | Extract (_, _, _) when not extract -> hte
-  | Extract (s, h, l) when extract -> make @@ simplify_extract s h l
+    let e1 = simplify_expr e1 in
+    let e2 = simplify_expr e2 in
+    relop ty op e1 e2
+  | Triop (ty, op, c, e1, e2) ->
+    let c = simplify_expr c in
+    let e1 = simplify_expr e1 in
+    let e2 = simplify_expr e2 in
+    triop ty op c e1 e2
+  | Cvtop (ty, op, e) ->
+    let e = simplify_expr e in
+    cvtop ty op e
+  | Extract (s, high, low) -> if not extract then hte else extract_ s ~high ~low
   | Concat (e1, e2) ->
-    let msb = simplify ~extract:false e1 in
-    let lsb = simplify ~extract:false e2 in
-    make @@ simplify_concat msb lsb
-  | _ -> hte
+    let msb = simplify_expr ~extract:false e1 in
+    let lsb = simplify_expr ~extract:false e2 in
+    concat ~msb ~lsb
+
+let simplify (hte : t) : t =
+  let rec loop x =
+    let simpl_x = simplify_expr x in
+    if equal x simpl_x then simpl_x else loop simpl_x
+  in
+  loop hte
 
 module Bool = struct
+  let of_val = function
+    | Val True -> Some true
+    | Val False -> Some false
+    | _ -> None
+
   let v b = make (match b with true -> Val True | false -> Val False)
 
-  let not (b : t) =
-    make
-      ( match view b with
-      | Val True -> Val False
-      | Val False -> Val True
-      | _ -> Unop (Ty_bool, Not, b) )
+  let not_ (b : t) =
+    match of_val (view b) with
+    | Some b -> v (not b)
+    | None -> (
+      match view b with
+      | Unop (Ty_bool, Not, cond) -> cond
+      | _ -> make (Unop (Ty_bool, Not, b)) )
 
   let ( = ) (b1 : t) (b2 : t) =
     make
@@ -341,27 +389,29 @@ module Bool = struct
       | Val True, Val True | Val False, Val False -> Val True
       | _ -> Relop (Ty_bool, Eq, b1, b2) )
 
-  let ( != ) (b1 : t) (b2 : t) =
+  let distinct (b1 : t) (b2 : t) =
     make
       ( match (view b1, view b2) with
       | Val True, Val False | Val False, Val True -> Val True
       | _ -> Relop (Ty_bool, Ne, b1, b2) )
 
-  let ( && ) (b1 : t) (b2 : t) =
-    make
-      ( match (view b1, view b2) with
-      | Val True, Val True -> Val True
-      | Val False, Val True | Val True, Val False | Val False, Val False ->
-        Val False
-      | _ -> Binop (Ty_bool, And, b1, b2) )
+  let and_ (b1 : t) (b2 : t) =
+    match (of_val (view b1), of_val (view b2)) with
+    | Some b1, Some b2 -> v (b1 && b2)
+    | Some true, _ -> b2
+    | _, Some true -> b1
+    | Some false, _ | _, Some false -> v false
+    | _ -> make (Binop (Ty_bool, And, b1, b2))
 
-  let ( || ) (b1 : t) (b2 : t) =
-    make
-      ( match (view b1, view b2) with
-      | Val False, Val False -> Val False
-      | Val True, Val True | Val False, Val True | Val True, Val False ->
-        Val True
-      | _ -> Binop (Ty_bool, Or, b1, b2) )
+  let or_ (b1 : t) (b2 : t) =
+    match (of_val (view b1), of_val (view b2)) with
+    | Some b1, Some b2 -> v (b1 || b2)
+    | Some false, _ -> b2
+    | _, Some false -> b1
+    | Some true, _ | _, Some true -> v true
+    | _ -> make (Binop (Ty_bool, Or, b1, b2))
+
+  let ite (c : t) (r1 : t) (r2 : t) = triop Ty_bool Ite c r1 r2
 end
 
 module Make (T : sig

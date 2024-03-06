@@ -39,7 +39,16 @@ val pp_list : Format.formatter -> t list -> unit
 
 val to_string : t -> string
 
-val simplify : ?extract:bool -> t -> t
+val unop : Ty.t -> Ty.unop -> t -> t
+
+val binop : Ty.t -> Ty.binop -> t -> t -> t
+
+val relop : Ty.t -> Ty.relop -> t -> t -> t
+
+val cvtop : Ty.t -> Ty.cvtop -> t -> t
+
+(** Fixpoint *)
+val simplify : t -> t
 
 module Hc : sig
   val clear : unit -> unit
@@ -52,15 +61,17 @@ end
 module Bool : sig
   val v : bool -> t
 
-  val not : t -> t
+  val not_ : t -> t
 
   val ( = ) : t -> t -> t
 
-  val ( != ) : t -> t -> t
+  val distinct : t -> t -> t
 
-  val ( && ) : t -> t -> t
+  val and_ : t -> t -> t
 
-  val ( || ) : t -> t -> t
+  val or_ : t -> t -> t
+
+  val ite : t -> t -> t -> t
 end
 
 module Bitv : sig

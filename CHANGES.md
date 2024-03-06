@@ -1,7 +1,8 @@
 Unreleased
 ==========
 
-- Moves theory annotation (`Ty.t`) only to required `expr` variants
+- Adds owi's simplifications and smart op constructors
+- Moves theory annotation (`Ty.t`) only to necessary variants
 
 v0.0.4
 ======
