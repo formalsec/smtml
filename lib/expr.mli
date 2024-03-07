@@ -61,7 +61,7 @@ end
 module Bool : sig
   val v : bool -> t
 
-  val not_ : t -> t
+  val not : t -> t
 
   val ( = ) : t -> t -> t
 

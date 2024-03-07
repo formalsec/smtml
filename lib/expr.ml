@@ -375,7 +375,7 @@ module Bool = struct
 
   let v b = make (match b with true -> Val True | false -> Val False)
 
-  let not_ (b : t) =
+  let not (b : t) =
     match of_val (view b) with
     | Some b -> v (not b)
     | None -> (
