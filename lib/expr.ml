@@ -176,13 +176,16 @@ let to_string e = Format.asprintf "%a" pp e
 
 let unop ty (op : unop) (hte : t) : t =
   match view hte with
-  | Val (Num n) -> make (Val (Num (Eval_numeric.eval_unop ty op n)))
+  | Val (Num n) -> make (Val (Eval_numeric.eval_unop ty op (Num n)))
+  | Val (Int n) -> make (Val (Eval_numeric.eval_unop ty op (Int n)))
   | _ -> make (Unop (ty, op, hte))
 
 let rec binop ty (op : binop) (hte1 : t) (hte2 : t) : t =
   match (view hte1, view hte2) with
   | Val (Num n1), Val (Num n2) ->
-    make (Val (Num (Eval_numeric.eval_binop ty op n1 n2)))
+    make (Val (Eval_numeric.eval_binop ty op (Num n1) (Num n2)))
+  | Val (Int n1), Val (Int n2) ->
+    make (Val (Eval_numeric.eval_binop ty op (Int n1) (Int n2)))
   | Ptr (b1, os1), Ptr (b2, os2) -> (
     match op with
     | Sub when b1 = b2 -> binop ty Sub os1 os2
@@ -219,13 +222,13 @@ let rec binop ty (op : binop) (hte1 : t) (hte2 : t) : t =
   | Binop (ty, op2, x, { node = Val (Num v1); _ }), Val (Num v2) -> (
     match (op, op2) with
     | Add, Add ->
-      let v = make (Val (Num (Eval_numeric.eval_binop ty Add v1 v2))) in
+      let v = make (Val (Eval_numeric.eval_binop ty Add (Num v1) (Num v2))) in
       make (Binop (ty, Add, x, v))
     (* | Add, Sub | Sub, Add -> *)
     (*   let v = Eval_numeric.eval_binop (I32 Sub) v1 v2 in *)
     (*   Binop (I32 Add, x, Val (Num v)) *)
     | Sub, Sub ->
-      let v = make (Val (Num (Eval_numeric.eval_binop ty Add v1 v2))) in
+      let v = make (Val (Eval_numeric.eval_binop ty Add (Num v1) (Num v2))) in
       make (Binop (ty, Sub, x, v))
     | _, _ -> make (Binop (ty, op, hte1, hte2)) )
   (* FIXME: this seems wrong? *)
@@ -249,7 +252,9 @@ let triop ty (op : triop) (e1 : t) (e2 : t) (e3 : t) : t =
 let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
   match (view hte1, view hte2) with
   | Val (Num v1), Val (Num v2) ->
-    make (Val (if Eval_numeric.eval_relop ty op v1 v2 then True else False))
+    make (Val (if Eval_numeric.eval_relop ty op (Num v1) (Num v2) then True else False))
+  | Val (Int v1), Val (Int v2) ->
+    make (Val (if Eval_numeric.eval_relop ty op (Int v1) (Int v2) then True else False))
   | Ptr (b1, os1), Ptr (b2, os2) -> (
     match op with
     | Eq -> make (if b1 = b2 then Relop (ty, Eq, os1, os2) else Val False)
@@ -258,21 +263,21 @@ let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
       if b1 = b2 then relop ty op os1 os2
       else
         make
-          ( if Eval_numeric.eval_relop ty op (I32 b1) (I32 b2) then Val True
+          ( if Eval_numeric.eval_relop ty op (Num (I32 b1)) (Num (I32 b2)) then Val True
             else Val False )
     | _ -> make (Relop (ty, op, hte1, hte2)) )
   | Val (Num n), Ptr (b, { node = Val (Num o); _ }) ->
-    let base = Eval_numeric.eval_binop (Ty_bitv 32) Add (I32 b) o in
-    make (Val (if Eval_numeric.eval_relop ty op n base then True else False))
+    let base = Eval_numeric.eval_binop (Ty_bitv 32) Add (Num (I32 b)) (Num o) in
+    make (Val (if Eval_numeric.eval_relop ty op (Num n) base then True else False))
   | Ptr (b, { node = Val (Num o); _ }), Val (Num n) ->
-    let base = Eval_numeric.eval_binop (Ty_bitv 32) Add (I32 b) o in
-    make (Val (if Eval_numeric.eval_relop ty op base n then True else False))
+    let base = Eval_numeric.eval_binop (Ty_bitv 32) Add (Num (I32 b)) (Num o) in
+    make (Val (if Eval_numeric.eval_relop ty op base (Num n) then True else False))
   | _ -> make (Relop (ty, op, hte1, hte2))
 
 let cvtop ty (op : cvtop) (hte : t) : t =
   make
     ( match view hte with
-    | Val (Num n) -> Val (Num (Eval_numeric.eval_cvtop ty op n))
+    | Val (Num n) -> Val (Eval_numeric.eval_cvtop ty op (Num n))
     | _ -> Cvtop (ty, op, hte) )
 
 let nland64 (x : int64) (n : int) =

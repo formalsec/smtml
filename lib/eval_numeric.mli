@@ -4,12 +4,12 @@ exception DivideByZero
 
 exception Num of Ty.t
 
-exception TypeError of int * Num.t * Ty.t
+exception TypeError of int * Value.t * Ty.t
 
-val eval_unop : Ty.t -> unop -> Num.t -> Num.t
+val eval_unop : Ty.t -> unop -> Value.t -> Value.t
 
-val eval_binop : Ty.t -> binop -> Num.t -> Num.t -> Num.t
+val eval_binop : Ty.t -> binop -> Value.t -> Value.t -> Value.t
 
-val eval_relop : Ty.t -> relop -> Num.t -> Num.t -> bool
+val eval_relop : Ty.t -> relop -> Value.t -> Value.t -> bool
 
-val eval_cvtop : Ty.t -> cvtop -> Num.t -> Num.t
+val eval_cvtop : Ty.t -> cvtop -> Value.t -> Value.t
