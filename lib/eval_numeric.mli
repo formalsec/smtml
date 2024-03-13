@@ -2,7 +2,7 @@ open Ty
 
 exception DivideByZero
 
-exception Num of Ty.t
+exception Value of Ty.t
 
 exception TypeError of int * Value.t * Ty.t
 
