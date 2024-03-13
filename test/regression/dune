@@ -2,5 +2,5 @@
  (deps %{bin:smtml} test_pr_71.smtml test_sqrt.smtml))
 
 (tests
- (names test_cvtop test_fp_get_value test_pr_62 test_pr_77)
+ (names test_cvtop test_fp_get_value test_pr_62 test_pr_77 test_pr_90)
  (libraries encoding))
