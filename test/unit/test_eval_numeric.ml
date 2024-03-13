@@ -2,65 +2,67 @@ open Encoding
 open Ty
 
 let () =
+  let i32 i = Value.Num (I32 i) in
   let i32_unop = Eval_numeric.eval_unop (Ty_bitv 32) in
   let i32_binop = Eval_numeric.eval_binop (Ty_bitv 32) in
   let i32_relop = Eval_numeric.eval_relop (Ty_bitv 32) in
-  assert (i32_unop Neg (I32 1l) = I32 (-1l));
-  assert (i32_unop Not (I32 (-1l)) = I32 0l);
-  assert (i32_binop Add (I32 0l) (I32 1l) = I32 1l);
-  assert (i32_binop Sub (I32 1l) (I32 0l) = I32 1l);
-  let x = i32_binop Mul (I32 2l) (I32 2l) in
-  assert (i32_binop Div x (I32 2l) = I32 2l);
-  assert (i32_binop Rem (I32 10l) (I32 7l) = I32 3l);
-  assert (i32_binop And (I32 1l) (I32 0l) = I32 0l);
-  assert (i32_binop Or (I32 0l) (I32 1l) = I32 1l);
-  assert (i32_binop Xor (I32 1l) (I32 1l) = I32 0l);
-  assert (i32_binop Shl (I32 1l) (I32 2l) = I32 4l);
-  assert (i32_binop ShrA (I32 4l) (I32 2l) = I32 1l);
-  assert (i32_binop Rotl (I32 Int32.min_int) (I32 2l) = I32 2l);
-  assert (i32_binop Rotr (I32 2l) (I32 2l) = I32 Int32.min_int);
-  assert (i32_relop Eq (I32 0l) (I32 0l));
-  assert (i32_relop Ne (I32 0l) (I32 1l));
-  assert (i32_relop Lt (I32 0l) (I32 1l));
-  assert (i32_relop LtU (I32 0l) (I32 (-1l)));
-  assert (i32_relop Le (I32 0l) (I32 1l));
-  assert (i32_relop LeU (I32 0l) (I32 (-1l)));
-  assert (i32_relop Gt (I32 1l) (I32 0l));
-  assert (i32_relop GtU (I32 (-1l)) (I32 0l));
-  assert (i32_relop Ge (I32 1l) (I32 0l));
-  assert (i32_relop GeU (I32 (-1l)) (I32 0l))
+  assert (i32_unop Neg (i32 1l) = i32 (-1l));
+  assert (i32_unop Not (i32 (-1l)) = i32 0l);
+  assert (i32_binop Add (i32 0l) (i32 1l) = i32 1l);
+  assert (i32_binop Sub (i32 1l) (i32 0l) = i32 1l);
+  let x = i32_binop Mul (i32 2l) (i32 2l) in
+  assert (i32_binop Div x (i32 2l) = i32 2l);
+  assert (i32_binop Rem (i32 10l) (i32 7l) = i32 3l);
+  assert (i32_binop And (i32 1l) (i32 0l) = i32 0l);
+  assert (i32_binop Or (i32 0l) (i32 1l) = i32 1l);
+  assert (i32_binop Xor (i32 1l) (i32 1l) = i32 0l);
+  assert (i32_binop Shl (i32 1l) (i32 2l) = i32 4l);
+  assert (i32_binop ShrA (i32 4l) (i32 2l) = i32 1l);
+  assert (i32_binop Rotl (i32 Int32.min_int) (i32 2l) = i32 2l);
+  assert (i32_binop Rotr (i32 2l) (i32 2l) = i32 Int32.min_int);
+  assert (i32_relop Eq (i32 0l) (i32 0l));
+  assert (i32_relop Ne (i32 0l) (i32 1l));
+  assert (i32_relop Lt (i32 0l) (i32 1l));
+  assert (i32_relop LtU (i32 0l) (i32 (-1l)));
+  assert (i32_relop Le (i32 0l) (i32 1l));
+  assert (i32_relop LeU (i32 0l) (i32 (-1l)));
+  assert (i32_relop Gt (i32 1l) (i32 0l));
+  assert (i32_relop GtU (i32 (-1l)) (i32 0l));
+  assert (i32_relop Ge (i32 1l) (i32 0l));
+  assert (i32_relop GeU (i32 (-1l)) (i32 0l))
 
 let () =
+  let i64 i = Value.Num (I64 i) in
   let i64_unop = Eval_numeric.eval_unop (Ty_bitv 64) in
   let i64_binop = Eval_numeric.eval_binop (Ty_bitv 64) in
   let i64_relop = Eval_numeric.eval_relop (Ty_bitv 64) in
-  assert (i64_unop Neg (I64 1L) = I64 (-1L));
-  assert (i64_unop Not (I64 (-1L)) = I64 0L);
-  assert (i64_binop Add (I64 0L) (I64 1L) = I64 1L);
-  assert (i64_binop Sub (I64 1L) (I64 0L) = I64 1L);
-  let x = i64_binop Mul (I64 2L) (I64 2L) in
-  assert (i64_binop Div x (I64 2L) = I64 2L);
-  assert (i64_binop Rem (I64 10L) (I64 7L) = I64 3L);
-  assert (i64_binop And (I64 1L) (I64 0L) = I64 0L);
-  assert (i64_binop Or (I64 0L) (I64 1L) = I64 1L);
-  assert (i64_binop Xor (I64 1L) (I64 1L) = I64 0L);
-  assert (i64_binop Shl (I64 1L) (I64 2L) = I64 4L);
-  assert (i64_binop ShrA (I64 4L) (I64 2L) = I64 1L);
-  assert (i64_binop Rotl (I64 Int64.min_int) (I64 2L) = I64 2L);
-  assert (i64_binop Rotr (I64 2L) (I64 2L) = I64 Int64.min_int);
-  assert (i64_relop Eq (I64 0L) (I64 0L));
-  assert (i64_relop Ne (I64 0L) (I64 1L));
-  assert (i64_relop Lt (I64 0L) (I64 1L));
-  assert (i64_relop LtU (I64 0L) (I64 (-1L)));
-  assert (i64_relop Le (I64 0L) (I64 1L));
-  assert (i64_relop LeU (I64 0L) (I64 (-1L)));
-  assert (i64_relop Gt (I64 1L) (I64 0L));
-  assert (i64_relop GtU (I64 (-1L)) (I64 0L));
-  assert (i64_relop Ge (I64 1L) (I64 0L));
-  assert (i64_relop GeU (I64 (-1L)) (I64 0L))
+  assert (i64_unop Neg (i64 1L) = i64 (-1L));
+  assert (i64_unop Not (i64 (-1L)) = i64 0L);
+  assert (i64_binop Add (i64 0L) (i64 1L) = i64 1L);
+  assert (i64_binop Sub (i64 1L) (i64 0L) = i64 1L);
+  let x = i64_binop Mul (i64 2L) (i64 2L) in
+  assert (i64_binop Div x (i64 2L) = i64 2L);
+  assert (i64_binop Rem (i64 10L) (i64 7L) = i64 3L);
+  assert (i64_binop And (i64 1L) (i64 0L) = i64 0L);
+  assert (i64_binop Or (i64 0L) (i64 1L) = i64 1L);
+  assert (i64_binop Xor (i64 1L) (i64 1L) = i64 0L);
+  assert (i64_binop Shl (i64 1L) (i64 2L) = i64 4L);
+  assert (i64_binop ShrA (i64 4L) (i64 2L) = i64 1L);
+  assert (i64_binop Rotl (i64 Int64.min_int) (i64 2L) = i64 2L);
+  assert (i64_binop Rotr (i64 2L) (i64 2L) = i64 Int64.min_int);
+  assert (i64_relop Eq (i64 0L) (i64 0L));
+  assert (i64_relop Ne (i64 0L) (i64 1L));
+  assert (i64_relop Lt (i64 0L) (i64 1L));
+  assert (i64_relop LtU (i64 0L) (i64 (-1L)));
+  assert (i64_relop Le (i64 0L) (i64 1L));
+  assert (i64_relop LeU (i64 0L) (i64 (-1L)));
+  assert (i64_relop Gt (i64 1L) (i64 0L));
+  assert (i64_relop GtU (i64 (-1L)) (i64 0L));
+  assert (i64_relop Ge (i64 1L) (i64 0L));
+  assert (i64_relop GeU (i64 (-1L)) (i64 0L))
 
 let () =
   let f32_unop = Eval_numeric.eval_unop (Ty_fp 32) in
   let f64_unop = Eval_numeric.eval_unop (Ty_fp 64) in
-  assert (f32_unop Trunc (F32 (Int32.bits_of_float 0.75)) = F32 0l);
-  assert (f64_unop Trunc (F64 (Int64.bits_of_float 0.75)) = F64 0L)
+  assert (f32_unop Trunc (Num (F32 (Int32.bits_of_float 0.75))) = Num (F32 0l));
+  assert (f64_unop Trunc (Num (F64 (Int64.bits_of_float 0.75))) = Num (F64 0L))
