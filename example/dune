@@ -1,0 +1,8 @@
+(executable
+ (name product_mix)
+ (libraries encoding))
+
+(cram
+ (deps
+  ./product_mix.exe
+  (source_tree test)))
