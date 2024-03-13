@@ -176,16 +176,16 @@ let to_string e = Format.asprintf "%a" pp e
 
 let unop ty (op : unop) (hte : t) : t =
   match view hte with
-  | Val (Num _ as n) -> make (Val (Eval_numeric.eval_unop ty op n))
-  | Val (Int _ as i) -> make (Val (Eval_numeric.eval_unop ty op i))
+  | Val ((Int _ | Real _ | Num _) as v) ->
+    make (Val (Eval_numeric.eval_unop ty op v))
   | _ -> make (Unop (ty, op, hte))
 
 let rec binop ty (op : binop) (hte1 : t) (hte2 : t) : t =
   match (view hte1, view hte2) with
-  | Val (Num _ as n1), Val (Num _ as n2) ->
-    make (Val (Eval_numeric.eval_binop ty op n1 n2))
-  | Val (Int _ as i1), Val (Int _ as i2) ->
-    make (Val (Eval_numeric.eval_binop ty op i1 i2))
+  | Val (Int _ as v1), Val (Int _ as v2)
+  | Val (Real _ as v1), Val (Real _ as v2)
+  | Val (Num _ as v1), Val (Num _ as v2) ->
+    make (Val (Eval_numeric.eval_binop ty op v1 v2))
   | Ptr (b1, os1), Ptr (b2, os2) -> (
     match op with
     | Sub when b1 = b2 -> binop ty Sub os1 os2
@@ -251,9 +251,9 @@ let triop ty (op : triop) (e1 : t) (e2 : t) (e3 : t) : t =
 
 let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
   match (view hte1, view hte2) with
+  | Val (Int _ as v1), Val (Int _ as v2)
+  | Val (Real _ as v1), Val (Real _ as v2)
   | Val (Num _ as v1), Val (Num _ as v2) ->
-    make (Val (if Eval_numeric.eval_relop ty op v1 v2 then True else False))
-  | Val (Int _ as v1), Val (Int _ as v2) ->
     make (Val (if Eval_numeric.eval_relop ty op v1 v2 then True else False))
   | Ptr (b1, os1), Ptr (b2, os2) -> (
     match op with
@@ -263,7 +263,8 @@ let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
       if b1 = b2 then relop ty op os1 os2
       else
         make
-          ( if Eval_numeric.eval_relop ty op (Num (I32 b1)) (Num (I32 b2)) then Val True
+          ( if Eval_numeric.eval_relop ty op (Num (I32 b1)) (Num (I32 b2)) then
+              Val True
             else Val False )
     | _ -> make (Relop (ty, op, hte1, hte2)) )
   | Val (Num _ as n), Ptr (b, { node = Val (Num _ as o); _ }) ->
@@ -277,7 +278,8 @@ let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
 let cvtop ty (op : cvtop) (hte : t) : t =
   make
     ( match view hte with
-    | Val (Num _ as n) -> Val (Eval_numeric.eval_cvtop ty op n)
+    | Val ((Int _ | Real _ | Num _) as v) ->
+      Val (Eval_numeric.eval_cvtop ty op v)
     | _ -> Cvtop (ty, op, hte) )
 
 let nland64 (x : int64) (n : int) =
