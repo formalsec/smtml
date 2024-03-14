@@ -1,4 +1,4 @@
-# Encoding [![Build badge](https://github.com/wasp-platform/encoding/actions/workflows/build.yml/badge.svg)](https://github.com/wasp-platform/encoding/actions) [![GPL-3.0](https://img.shields.io/github/license/wasp-platform/encoding)](LICENSE) ![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos-lightgrey)
+# Encoding [![Build badge](https://github.com/wasp-platform/encoding/actions/workflows/build.yml/badge.svg)](https://github.com/wasp-platform/encoding/actions) [![Coverage Status](https://coveralls.io/repos/github/formalsec/encoding/badge.svg)](https://coveralls.io/github/formalsec/encoding) [![GPL-3.0](https://img.shields.io/github/license/wasp-platform/encoding)](LICENSE) ![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos-lightgrey)
 
 Encoding is an OCaml SMT abstraction layer for constraint solvers. The primary
 objective of Encoding is to facilitate the effortless transition between
