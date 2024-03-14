@@ -20,6 +20,7 @@
  (name encoding)
  (synopsis "Smt encoding library")
  (description "An OCaml abstraction layer for constraint solvers.")
+ (depopts colibri2)
  (depends
    dune
    (ocaml (>= "4.14.0"))
@@ -34,10 +35,3 @@
    (odoc :with-doc)
    (hc (>= "0.3"))
    (bisect_ppx (and :with-test (>= "2.5.0") :dev))))
-
-(package
- (allow_empty)
- (name colibri2_mappings)
- (synopsis "Encoding mappings for the colibri2 Solver")
- (depopts colibri2)
- (depends encoding))

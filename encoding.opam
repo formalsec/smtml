@@ -20,6 +20,7 @@ depends: [
   "hc" {>= "0.3"}
   "bisect_ppx" {with-test & >= "2.5.0" & dev}
 ]
+depopts: ["colibri2"]
 build: [
   ["dune" "subst"] {dev}
   [
@@ -36,3 +37,7 @@ build: [
 ]
 dev-repo: "git+https://github.com/formalsec/encoding.git"
 available: (arch = "x86_64" | arch = "arm64") & os != "win32" & arch != "x86_32"
+pin-depends: [
+  [ "colibri2.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#master"]
+  [ "colibrilib.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#master"]
+]

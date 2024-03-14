@@ -39,8 +39,9 @@
   (backend bisect_ppx)))
 
 (library
- (name colibri2_mappings)
- (public_name colibri2_mappings)
+ (wrapped false)
+ (name encoding_colibri2)
+ (public_name encoding.colibri2)
  (modules colibri2_mappings)
  (libraries
   encoding
