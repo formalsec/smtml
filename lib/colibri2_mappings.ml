@@ -168,12 +168,11 @@ module Fresh = struct
       | Ty_real -> DTy.real
       | Ty_bool -> DTy.bool
       | Ty_str -> string_ty
-      | Ty_bitv S8 -> assert false
-      | Ty_bitv S32 -> DTy.bitv 32
-      | Ty_bitv S64 -> DTy.bitv 64
-      | Ty_fp S8 -> assert false
-      | Ty_fp S32 -> float32_ty
-      | Ty_fp S64 -> float64_ty
+      | Ty_bitv 32 -> DTy.bitv 32
+      | Ty_bitv 64 -> DTy.bitv 64
+      | Ty_fp 32 -> float32_ty
+      | Ty_fp 64 -> float64_ty
+      | Ty_fp _ | Ty_bitv _ -> assert false
 
     let tty_to_etype (ty : DTerm.ty) : Ty.t =
       match ty with
@@ -191,13 +190,13 @@ module Fresh = struct
         } ->
         Ty_str
       | { ty_descr = TyApp ({ builtin = DExpr.Bitv 32; _ }, _); _ } ->
-        Ty_bitv S32
+        Ty_bitv 32
       | { ty_descr = TyApp ({ builtin = DExpr.Bitv 64; _ }, _); _ } ->
-        Ty_bitv S64
+        Ty_bitv 64
       | { ty_descr = TyApp ({ builtin = DExpr.Float (8, 24); _ }, _); _ } ->
-        Ty_fp S32
+        Ty_fp 32
       | { ty_descr = TyApp ({ builtin = DExpr.Float (11, 53); _ }, _); _ } ->
-        Ty_fp S64
+        Ty_fp 64
       | _ -> assert false
 
     let sym_cache = SHT.create 17
@@ -505,8 +504,7 @@ module Fresh = struct
       let encode_cvtop sz op e =
         let op' =
           match sz with
-          | Ty.S8 -> assert false
-          | Ty.S32 -> (
+          | 32 -> (
             match op with
             | ExtS n -> DTerm.Bitv.sign_extend n
             | ExtU n -> DTerm.Bitv.zero_extend n
@@ -520,7 +518,7 @@ module Fresh = struct
             | OfBool ->
               fun e -> DTerm.ite e (encode_val C32 1l) (encode_val C32 0l)
             | _ -> assert false )
-          | Ty.S64 -> (
+          | 64 -> (
             match op with
             | ExtS n -> DTerm.Bitv.sign_extend n
             | ExtU n -> DTerm.Bitv.zero_extend n
@@ -533,6 +531,7 @@ module Fresh = struct
             | OfBool ->
               fun e -> DTerm.ite e (encode_val C64 1L) (encode_val C64 0L)
             | _ -> assert false )
+          | _ -> assert false
         in
         op' e
     end
@@ -595,8 +594,7 @@ module Fresh = struct
       let encode_cvtop sz op e =
         let op' =
           match sz with
-          | Ty.S8 -> assert false
-          | Ty.S32 -> (
+          | 32 -> (
             match op with
             | DemoteF64 ->
               DTerm.Float.to_fp 8 24 DTerm.Float.roundNearestTiesToEven
@@ -608,7 +606,7 @@ module Fresh = struct
             | ToString -> fun v -> DTerm.apply_cst f32_to_string [] [ v ]
             | OfString -> fun v -> DTerm.apply_cst string_to_f32 [] [ v ]
             | _ -> assert false )
-          | Ty.S64 -> (
+          | 64 -> (
             match op with
             | PromoteF32 ->
               DTerm.Float.to_fp 11 53 DTerm.Float.roundNearestTiesToEven
@@ -620,6 +618,7 @@ module Fresh = struct
             | ToString -> fun v -> DTerm.apply_cst f64_to_string [] [ v ]
             | OfString -> fun v -> DTerm.apply_cst string_to_f64 [] [ v ]
             | _ -> assert false )
+          | _ -> assert false
         in
         op' e
     end
@@ -694,31 +693,31 @@ module Fresh = struct
     let encore_expr_aux ?(record_sym = fun _ -> ()) (e : Expr.t) : expr =
       let open Expr in
       let rec aux (hte : t) =
-        match hte.node.e with
+        match view hte with
         | Val v -> encode_val v
         | Ptr (base, offset) ->
           let base' = encode_val (Num (I32 base)) in
           let offset' = aux offset in
           DTerm.Bitv.add base' offset'
-        | Unop (op, e) ->
+        | Unop (ty, op, e) ->
           let e' = aux e in
-          encode_unop hte.node.ty op e'
-        | Binop (op, e1, e2) ->
+          encode_unop ty op e'
+        | Binop (ty, op, e1, e2) ->
           let e1' = aux e1 in
           let e2' = aux e2 in
-          encode_binop hte.node.ty op e1' e2'
-        | Triop (op, e1, e2, e3) ->
+          encode_binop ty op e1' e2'
+        | Triop (ty, op, e1, e2, e3) ->
           let e1' = aux e1
           and e2' = aux e2
           and e3' = aux e3 in
-          encode_triop hte.node.ty op e1' e2' e3'
-        | Relop (op, e1, e2) ->
+          encode_triop ty op e1' e2' e3'
+        | Relop (ty, op, e1, e2) ->
           let e1' = aux e1
           and e2' = aux e2 in
-          encode_relop hte.node.ty op e1' e2'
-        | Cvtop (op, e) ->
+          encode_relop ty op e1' e2'
+        | Cvtop (ty, op, e) ->
           let e' = aux e in
-          encode_cvtop hte.node.ty op e'
+          encode_cvtop ty op e'
         | Symbol s ->
           let cst = tcst_of_symbol s in
           record_sym cst;
@@ -961,8 +960,8 @@ module Fresh = struct
         | Some a when A.is_real a ->
           Some (Value.Real (Stdlib.Float.of_string (A.to_string a)))
         | Some _ | None -> None )
-      | Ty_bitv S8 | Ty_bitv S32 | Ty_bitv S64 -> assert false
-      | Ty_fp S8 | Ty_fp S32 | Ty_fp S64 -> assert false
+      | Ty_bitv _ -> assert false
+      | Ty_fp _ -> assert false
       | Ty_str -> assert false
 
     (* let value_of_const ((d, _l) : model) (e : Expr.t) : Value.t option =
@@ -972,7 +971,7 @@ module Fresh = struct
 
     let value (e, _) (c : Expr.t) : Value.t =
       let c2v = Interp.interp e (encode_expr c) in
-      match c2value_to_value c.node.ty c2v with
+      match c2value_to_value (Expr.ty c) c2v with
       | None -> assert false
       | Some v -> v
 
