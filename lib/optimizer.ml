@@ -21,8 +21,7 @@ module Make (M : Mappings_intf.S) = struct
 
   let add (opt : t) (es : Expr.t list) : unit = O.add opt es
 
-  let check (opt : t) =
-    M.satisfiability (time_call ~f:(fun () -> O.check opt) ~accum:solver_time)
+  let check (opt : t) = time_call ~f:(fun () -> O.check opt) ~accum:solver_time
 
   let model opt =
     let+ model = O.model opt in

@@ -12,12 +12,14 @@ let parse_file file = get_contents file |> Parse.from_string
 
 type prover =
   | Z3_prover
+  | Z3_prover2
   | Colibri2_prover
 
 let prover_conv =
   Cmdliner.Arg.enum
     [ ("z3", Z3_prover)
     ; ("Z3", Z3_prover)
+    ; ("z3_2", Z3_prover2)
     ; ("c2", Colibri2_prover)
     ; ("colibri2", Colibri2_prover)
     ; ("Colibri2", Colibri2_prover)
@@ -28,6 +30,7 @@ let parse_cmdline =
     let module Mappings =
       ( val match prover with
             | Z3_prover -> (module Z3_mappings)
+            | Z3_prover2 -> (module Z3_mappings2)
             | Colibri2_prover ->
               Log.err "Please install Colibri2 and use 'smtml2'"
           : Mappings_intf.S )
