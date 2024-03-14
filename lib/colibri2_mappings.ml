@@ -70,21 +70,6 @@ module Fresh = struct
 
     type handle = optimize * (Sim.Core.P.t * bool) option
 
-    type solver =
-      { mutable scheduler : Scheduler.t
-      ; mutable pushpop : Scheduler.bp list
-      ; mutable state :
-          [ `Sat of Colibri2_core.Egraph.wt
-          | `Unknown of Colibri2_core.Egraph.wt
-          | `Search
-          | `Unsat
-          | `StepLimitReached
-          ]
-      ; mutable status_colibri :
-          [ `No | `Sat | `Unsat | `Unknown | `StepLimitReached ] Context.Ref.t
-      ; mutable decls : DTerm.Const.S.t
-      }
-
     type status =
       [ `Sat of Colibri2_core.Egraph.wt
       | `Unknown of Colibri2_core.Egraph.wt
@@ -92,6 +77,15 @@ module Fresh = struct
       | `Unsat
       | `StepLimitReached
       ]
+
+    type solver =
+      { mutable scheduler : Scheduler.t
+      ; mutable pushpop : Scheduler.bp list
+      ; mutable state : status
+      ; mutable status_colibri :
+          [ `No | `Sat | `Unsat | `Unknown | `StepLimitReached ] Context.Ref.t
+      ; mutable decls : DTerm.Const.S.t
+      }
 
     (* additional builtins *)
 
@@ -771,8 +765,6 @@ module Fresh = struct
             term_app1 env s string_to_f64
           | _ -> `Not_found )
 
-    let update_param_value _ _ = ()
-
     (* let add_default_axioms env =
        (* string_to_alpha (alpha_to_string x) = x
           alpha_to_string (string_to_alpha x) = x *)
@@ -823,7 +815,14 @@ module Fresh = struct
 
     let pp_smt ?status:_ _ _ = ()
 
-    let interrupt () = ()
+    let satisfiability =
+      let open Mappings_intf in
+      function
+      | `Sat _ -> Satisfiable
+      | `Unknown _ -> Unknown
+      | `Unsat -> Unsatisfiable
+      | `Search -> assert false
+      | `StepLimitReached -> assert false
 
     module Solver = struct
       let mk_scheduler () =
@@ -836,7 +835,7 @@ module Fresh = struct
           scheduler;
         scheduler
 
-      let make ?logic:_ () =
+      let make ?params:_ ?logic:_ () =
         let scheduler = mk_scheduler () in
         let ctx = Scheduler.get_context scheduler in
         { scheduler
@@ -892,7 +891,7 @@ module Fresh = struct
 
       let check s ~assumptions =
         add s assumptions;
-        Scheduler.check_sat s.scheduler
+        satisfiability @@ Scheduler.check_sat s.scheduler
 
       let model s : model option =
         match Scheduler.check_sat s.scheduler with
@@ -909,6 +908,8 @@ module Fresh = struct
         | `Unsat -> assert false
         | `StepLimitReached -> assert false
         | `Search -> assert false
+
+      let interrupt _ = ()
 
       let pp_statistics _ _ = ()
     end
@@ -938,6 +939,8 @@ module Fresh = struct
       let maximize _ _ = assert false
 
       let minimize _ _ = assert false
+
+      let interrupt _ = ()
 
       let pp_statistics _ _ = ()
     end
@@ -999,15 +1002,6 @@ module Fresh = struct
             | None -> () )
           model;
         m
-
-    let satisfiability =
-      let open Mappings_intf in
-      function
-      | `Sat _ -> Satisfiable
-      | `Unknown _ -> Unknown
-      | `Unsat -> Unsatisfiable
-      | `Search -> assert false
-      | `StepLimitReached -> assert false
 
     let set_debug = Colibri2_stdlib.Debug.set_info_flags
   end
