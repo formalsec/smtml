@@ -43,6 +43,8 @@ val unop : Ty.t -> Ty.unop -> t -> t
 
 val binop : Ty.t -> Ty.binop -> t -> t -> t
 
+val triop : Ty.t -> Ty.triop -> t -> t -> t -> t
+
 val relop : Ty.t -> Ty.relop -> t -> t -> t
 
 val cvtop : Ty.t -> Ty.cvtop -> t -> t
