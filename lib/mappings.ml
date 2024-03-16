@@ -157,7 +157,7 @@ module Make (M : Mappings_intf.M) = struct
     (* let trim = FuncDecl.mk_func_decl_s ctx "Trim" [ str_sort ] str_sort *)
 
     let unop = function
-      | Len -> String.length
+      | Seq_length -> String.length
       | Trim ->
         (* FuncDecl.apply trim [ e ] *)
         assert false
@@ -165,13 +165,13 @@ module Make (M : Mappings_intf.M) = struct
 
     let binop op e1 e2 =
       match op with
-      | Nth -> String.at e1 ~pos:e2
-      | Concat -> String.concat e1 e2
+      | Seq_at -> String.at e1 ~pos:e2
+      | Seq_concat -> String.concat e1 e2
       | _ -> err {|String: Unsupported binop operator "%a"|} Ty.pp_binop op
 
     let triop op e1 e2 e3 =
       match op with
-      | Substr -> String.sub e1 ~pos:e2 ~len:e3
+      | Seq_extract -> String.sub e1 ~pos:e2 ~len:e3
       | _ -> err {|String: Unsupported triop operator "%a"|} Ty.pp_triop op
 
     let relop op e1 e2 =

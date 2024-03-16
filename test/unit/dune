@@ -1,10 +1,11 @@
 (tests
  (names
-  test_bitv8
+  test_bitv
   test_eval_numeric
-  test_hash_consing
+  test_expr_hc
   test_optimizer
-  test_params
+  test_real
+  test_simplify
   test_solver
-  test_simplify)
+  test_solver_params)
  (libraries encoding))

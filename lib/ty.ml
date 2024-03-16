@@ -20,6 +20,7 @@ type unop =
   | Not
   | Clz
   | Ctz
+  (* Float *)
   | Abs
   | Sqrt
   | Is_nan
@@ -27,8 +28,8 @@ type unop =
   | Floor
   | Trunc
   | Nearest
-  (* To remove *)
-  | Len
+  (* String *)
+  | Seq_length
   | Trim
 
 type binop =
@@ -50,9 +51,12 @@ type binop =
   | Max
   | Rotl
   | Rotr
-  (* To remove *)
-  | Nth
-  | Concat
+  (* String *)
+  | Seq_at
+  | Seq_concat
+  | Seq_prefix
+  | Seq_suffix
+  | Seq_contains
 
 type relop =
   | Eq
@@ -68,7 +72,10 @@ type relop =
 
 type triop =
   | Ite
-  | Substr
+  (* String *)
+  | Seq_extract
+  | Seq_replace
+  | Seq_index
 
 type cvtop =
   | ToString
@@ -90,8 +97,11 @@ type cvtop =
   | WrapI64
   | ExtS of int
   | ExtU of int
+  (* String *)
   | String_to_code
   | String_from_code
+  | String_to_int
+  | String_from_int
 
 type logic =
   | AUFLIA
@@ -133,7 +143,7 @@ let pp_unop fmt (op : unop) =
   | Floor -> pp_string fmt "floor"
   | Trunc -> pp_string fmt "trunc"
   | Nearest -> pp_string fmt "nearest"
-  | Len -> pp_string fmt "len"
+  | Seq_length -> pp_string fmt "len"
   | Trim -> pp_string fmt "trim"
 
 let pp_binop fmt (op : binop) =
@@ -156,11 +166,18 @@ let pp_binop fmt (op : binop) =
   | Max -> pp_string fmt "max"
   | Rotl -> pp_string fmt "rotl"
   | Rotr -> pp_string fmt "rotr"
-  | Nth -> pp_string fmt "nth"
-  | Concat -> pp_string fmt "++"
+  | Seq_at -> pp_string fmt "at"
+  | Seq_concat -> pp_string fmt "++"
+  | Seq_prefix -> pp_string fmt "prefixof"
+  | Seq_suffix -> pp_string fmt "suffixof"
+  | Seq_contains -> pp_string fmt "contains"
 
 let pp_triop fmt (op : triop) =
-  match op with Ite -> pp_string fmt "ite" | Substr -> pp_string fmt "sub"
+  match op with
+  | Ite -> pp_string fmt "ite"
+  | Seq_extract -> pp_string fmt "substr"
+  | Seq_replace -> pp_string fmt "replace"
+  | Seq_index -> pp_string fmt "indexof"
 
 let pp_relop fmt (op : relop) =
   match op with
@@ -196,8 +213,10 @@ let pp_cvtop fmt (op : cvtop) =
   | WrapI64 -> pp_string fmt "wrap_i64"
   | ExtS sz -> fprintf fmt "extend_i%d_s" sz
   | ExtU sz -> fprintf fmt "extend_i%d_u" sz
-  | String_to_code -> pp_string fmt "string_to_code"
-  | String_from_code -> pp_string fmt "string_from_code"
+  | String_to_code -> pp_string fmt "to_code"
+  | String_from_code -> pp_string fmt "from_code"
+  | String_to_int -> pp_string fmt "to_int"
+  | String_from_int -> pp_string fmt "from_int"
 
 let pp fmt = function
   | Ty_int -> pp_string fmt "int"

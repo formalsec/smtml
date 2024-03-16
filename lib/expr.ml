@@ -239,14 +239,22 @@ let rec binop ty (op : binop) (hte1 : t) (hte2 : t) : t =
 let triop ty (op : triop) (e1 : t) (e2 : t) (e3 : t) : t =
   match op with
   | Ite -> (
-    match e1.node with
+    match view e1 with
     | Val True -> e2
     | Val False -> e3
     | _ -> make (Triop (ty, op, e1, e2, e3)) )
-  | Substr ->
+  | Seq_extract ->
     make
-      ( match (e1.node, e2.node, e3.node) with
+      ( match (view e1, view e2, view e3) with
       | Val (Str s), Val (Int i), Val (Int len) -> Val (Str (String.sub s i len))
+      | _ -> Triop (ty, op, e1, e2, e3) )
+  | Seq_replace -> make (Triop (ty, op, e1, e2, e3))
+  | Seq_index ->
+    make
+      ( match (view e1, view e2, view e3) with
+      | Val (Str s), Val (Str t), Val (Int i) ->
+        let t = String.get t 0 in
+        Val (Int (String.index_from s i t))
       | _ -> Triop (ty, op, e1, e2, e3) )
 
 let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
