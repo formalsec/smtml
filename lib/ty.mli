@@ -16,6 +16,7 @@ type unop =
   | Not
   | Clz
   | Ctz
+  (* Float *)
   | Abs
   | Sqrt
   | Is_nan
@@ -23,9 +24,9 @@ type unop =
   | Floor
   | Trunc
   | Nearest
-  (* To remove *)
-  | Len
-  | Trim
+  (* String *)
+  | Seq_length (* (str.len String Int) *)
+  | Trim (* uninterpreted *)
 
 type binop =
   | Add
@@ -46,9 +47,12 @@ type binop =
   | Max
   | Rotl
   | Rotr
-  (* To remove *)
-  | Nth
-  | Concat
+  (* String *)
+  | Seq_at        (* (str.at String Int String) *)
+  | Seq_concat    (* (str.substr String Int Int String) *)
+  | Seq_prefix    (* (str.prefixof String String Bool) *)
+  | Seq_suffix    (* (str.suffixof String String Bool) *)
+  | Seq_contains  (* (str.contains String String Bool) *)
 
 type relop =
   | Eq
@@ -64,7 +68,10 @@ type relop =
 
 type triop =
   | Ite
-  | Substr
+  (* String *)
+  | Seq_extract   (* (str.substr String Int Int String) *)
+  | Seq_replace   (* (str.replace String String String String) *)
+  | Seq_index     (* (str.indexof String String Int Int) *)
 
 type cvtop =
   | ToString
@@ -86,8 +93,11 @@ type cvtop =
   | WrapI64
   | ExtS of int
   | ExtU of int
-  | String_to_code
-  | String_from_code
+  (* String *)
+  | String_to_code    (* (str.to_code String Int) *)
+  | String_from_code  (* (str.from_code Int String) *)
+  | String_to_int     (* (str.to_int String Int) *)
+  | String_from_int   (* (str.from_int Int String) *)
 
 type logic =
   | AUFLIA

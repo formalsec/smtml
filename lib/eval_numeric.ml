@@ -340,7 +340,7 @@ module F32 = struct
     | Floor -> to_value' @@ Float.floor v
     | Trunc -> to_value' @@ Float.trunc v
     | Is_nan -> if Float.is_nan v then Value.True else Value.False
-    | Not | Clz | Ctz | Trim | Len ->
+    | Not | Clz | Ctz | Trim | Seq_length ->
       Log.err {|eval_unop: Unsupported f32 operator "%a"|} Ty.pp_unop op
 
   let binop (op : binop) (v1 : Value.t) (v2 : Value.t) : Value.t =
@@ -400,7 +400,7 @@ module F64 = struct
     | Floor -> to_value' @@ Float.floor v
     | Trunc -> to_value' @@ Float.trunc v
     | Is_nan -> if Float.is_nan v then Value.True else Value.False
-    | Not | Clz | Ctz | Trim | Len ->
+    | Not | Clz | Ctz | Trim | Seq_length ->
       Log.err {|eval_unop: Unsupported f32 operator "%a"|} Ty.pp_unop op
 
   let binop (op : binop) (v1 : Value.t) (v2 : Value.t) : Value.t =

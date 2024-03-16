@@ -179,8 +179,9 @@ module Fresh = struct
     end
 
     module Str = struct
-      open Z3
       open Ty
+      module Seq = Z3.Seq
+      module FuncDecl = Z3.FuncDecl
 
       let v s = Seq.mk_string ctx s
 
@@ -188,30 +189,32 @@ module Fresh = struct
 
       let encode_unop op e =
         match op with
-        | Len -> Seq.mk_seq_length ctx e
+        | Seq_length -> Seq.mk_seq_length ctx e
         | Trim -> FuncDecl.apply trim [ e ]
         | _ -> err {|Str: Unsupported Z3 unop operator "%a"|} Ty.pp_unop op
 
       let encode_binop op e1 e2 =
         match op with
-        | Nth ->
-          Seq.mk_seq_extract ctx e1 e2 (Expr.mk_numeral_int ctx 1 int_sort)
-        | Concat -> Seq.mk_seq_concat ctx [ e1; e2 ]
+        | Seq_at -> Seq.mk_seq_at ctx e1 e2
+        | Seq_concat -> Seq.mk_seq_concat ctx [ e1; e2 ]
+        | Seq_prefix -> Seq.mk_seq_prefix ctx e1 e2
+        | Seq_suffix -> Seq.mk_seq_suffix ctx e1 e2
+        | Seq_contains -> Seq.mk_seq_contains ctx e1 e2
         | _ -> err {|Str: Unsupported Z3 binop operator "%a"|} Ty.pp_binop op
 
       let encode_triop = function
-        | Substr -> Seq.mk_seq_extract ctx
+        | Seq_extract -> Seq.mk_seq_extract ctx
+        | Seq_replace -> Seq.mk_seq_replace ctx
+        | Seq_index -> Seq.mk_seq_index ctx
         | op -> err {|Str: Unsupported Z3 triop operator "%a"|} Ty.pp_triop op
 
-      let encode_relop op e1 e2 =
-        match op with
-        | Eq -> Boolean.mk_eq ctx e1 e2
-        | Ne -> Boolean.mk_distinct ctx [ e1; e2 ]
-        | _ -> err {|Str: Unsupported Z3 relop operator "%a"|} Ty.pp_relop op
+      let encode_relop op e1 e2 = Boolean.encode_relop op e1 e2
 
       let encode_cvtop = function
         | String_to_code -> Seq.mk_string_to_code ctx
         | String_from_code -> Seq.mk_string_from_code ctx
+        | String_to_int -> Seq.mk_str_to_int ctx
+        | String_from_int -> Seq.mk_int_to_str ctx
         | op -> err {|Str: Unsupported Z3 cvtop operator "%a"|} Ty.pp_cvtop op
     end
 
