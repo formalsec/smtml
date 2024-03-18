@@ -572,7 +572,7 @@ module Make (M : Mappings_intf.M) = struct
       let* e1 = encode_expr e1 in
       let* e2 = encode_expr e2 in
       M.Bitv.concat e1 e2
-    | List _ | Array _ | Tuple _ | App _  -> assert false
+    | List _ | Array _ | Tuple _ | App _ -> assert false
 
   (* TODO: pp_smt *)
   let pp_smt ?status:_ _ _ = assert false
