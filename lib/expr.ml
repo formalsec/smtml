@@ -9,7 +9,7 @@ and expr =
   | List of t list
   | Array of t array
   | Tuple of t list
-  | App of string * t list
+  | App : [> `Op of string ] * t list -> expr
   | Unop of Ty.t * unop * t
   | Binop of Ty.t * binop * t * t
   | Triop of Ty.t * triop * t * t * t
@@ -33,7 +33,7 @@ module Hc = Hc.Make (struct
     | Array a1, Array a2 ->
       Array.(length a1 = length a2) && Array.for_all2 ( == ) a1 a2
     | Tuple l1, Tuple l2 -> list_eq l1 l2
-    | App (x1, l1), App (x2, l2) -> String.equal x1 x2 && list_eq l1 l2
+    | App (`Op x1, l1), App (`Op x2, l2) -> String.equal x1 x2 && list_eq l1 l2
     | Unop (t1, op1, e1), Unop (t2, op2, e2) ->
       Ty.equal t1 t2 && op1 = op2 && e1 == e2
     | Binop (t1, op1, e1, e3), Binop (t2, op2, e2, e4) ->
@@ -184,7 +184,7 @@ module Pp = struct
     | Symbol s -> Symbol.pp fmt s
     | List v | Tuple v -> fprintf fmt "(%a)" (pp_print_list pp) v
     | Array v -> fprintf fmt "(%a)" (pp_print_array pp) v
-    | App (x, v) -> fprintf fmt "(%s %a)" x (pp_print_list pp) v
+    | App (`Op x, v) -> fprintf fmt "(%s %a)" x (pp_print_list pp) v
     | Unop (ty, op, e) -> fprintf fmt "(%a.%a %a)" Ty.pp ty pp_unop op pp e
     | Binop (ty, op, e1, e2) ->
       fprintf fmt "(%a.%a %a %a)" Ty.pp ty pp_binop op pp e1 pp e2
@@ -195,6 +195,7 @@ module Pp = struct
     | Cvtop (ty, op, e) -> fprintf fmt "(%a.%a %a)" Ty.pp ty pp_cvtop op pp e
     | Extract (e, h, l) -> fprintf fmt "(extract %a %d %d)" pp e l h
     | Concat (e1, e2) -> fprintf fmt "(++ %a %a)" pp e1 pp e2
+    | App _ -> assert false
 
   let pp_list fmt (es : t list) = pp_print_list ~pp_sep:pp_print_space pp fmt es
 
