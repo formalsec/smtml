@@ -166,7 +166,7 @@ module Fresh = struct
       | Ty_bitv 64 -> DTy.bitv 64
       | Ty_fp 32 -> float32_ty
       | Ty_fp 64 -> float64_ty
-      | Ty_fp _ | Ty_bitv _ -> assert false
+      | Ty_fp _ | Ty_bitv _ | Ty_list | Ty_array | Ty_tuple -> assert false
 
     let tty_to_etype (ty : DTerm.ty) : Ty.t =
       match ty with
@@ -641,6 +641,7 @@ module Fresh = struct
       | Ty.Ty_str -> Str.encode_unop
       | Ty.Ty_bitv _ -> Bv.encode_unop
       | Ty.Ty_fp _ -> Fp.encode_unop
+      | Ty.Ty_list | Ty_array | Ty_tuple -> assert false
 
     let encode_binop = function
       | Ty.Ty_int -> I.encode_binop
@@ -649,6 +650,7 @@ module Fresh = struct
       | Ty.Ty_str -> Str.encode_binop
       | Ty.Ty_bitv _ -> Bv.encode_binop
       | Ty.Ty_fp _ -> Fp.encode_binop
+      | Ty.Ty_list | Ty_array | Ty_tuple -> assert false
 
     let encode_triop = function
       | Ty.Ty_int -> I.encode_triop
@@ -657,6 +659,7 @@ module Fresh = struct
       | Ty.Ty_str -> Str.encode_triop
       | Ty.Ty_bitv _ -> Bv.encode_triop
       | Ty.Ty_fp _ -> Fp.encode_triop
+      | Ty.Ty_list | Ty_array | Ty_tuple -> assert false
 
     let encode_relop = function
       | Ty.Ty_int -> I.encode_relop
@@ -665,6 +668,7 @@ module Fresh = struct
       | Ty.Ty_str -> Str.encode_relop
       | Ty.Ty_bitv _ -> Bv.encode_relop
       | Ty.Ty_fp _ -> Fp.encode_relop
+      | Ty.Ty_list | Ty_array | Ty_tuple -> assert false
 
     let encode_cvtop = function
       | Ty.Ty_int -> I.encode_cvtop
@@ -673,6 +677,7 @@ module Fresh = struct
       | Ty.Ty_str -> Str.encode_cvtop
       | Ty.Ty_bitv sz -> Bv.encode_cvtop sz
       | Ty.Ty_fp sz -> Fp.encode_cvtop sz
+      | Ty.Ty_list | Ty_array | Ty_tuple -> assert false
 
     (*let symbol_to_var v =
       DExpr.Term.Var.mk (Symbol.to_string v) (tty_of_etype (Symbol.type_of v))*)
@@ -728,6 +733,7 @@ module Fresh = struct
           let e1' = aux e1
           and e2' = aux e2 in
           DTerm.Bitv.concat e1' e2'
+        | List _ | Array _ | Tuple _ | App _ -> assert false
         (* | Quantifier (t, vars, body, patterns) -> (
            let body' = aux body in
            let encode_pattern (p : t list) =
@@ -968,9 +974,8 @@ module Fresh = struct
         | Some a when A.is_real a ->
           Some (Value.Real (Stdlib.Float.of_string (A.to_string a)))
         | Some _ | None -> None )
-      | Ty_bitv _ -> assert false
-      | Ty_fp _ -> assert false
-      | Ty_str -> assert false
+      | Ty_str | Ty_bitv _ | Ty_fp _ | Ty_list | Ty_array | Ty_tuple ->
+        assert false
 
     (* let value_of_const ((d, _l) : model) (e : Expr.t) : Value.t option =
        let e' = encore_expr_aux e in
