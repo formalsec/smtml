@@ -409,7 +409,7 @@ module F64 = struct
       | Add -> Float.add
       | Sub -> Float.sub
       | Mul -> Float.mul
-      | Div -> Float.mul
+      | Div -> Float.div
       | Rem -> Float.rem
       | Min -> Float.min
       | Max -> Float.max
