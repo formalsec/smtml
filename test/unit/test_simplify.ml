@@ -20,7 +20,12 @@ let () =
     simplify relop = make @@ Val False );
   assert (
     let cvtop = make @@ Cvtop (Ty_bitv 32, WrapI64, I64.v 1L) in
-    simplify cvtop = I32.v 1l )
+    simplify cvtop = I32.v 1l );
+  assert (
+    let x = mk_symbol (Symbol.make Ty_int "x") in
+    let binary = make @@ Binop (Ty_int, Add, x, (make @@ Val (Int 10))) in
+    let sym = make @@ Binop (Ty_int, Add, binary, (make @@ Val (Int 3))) in
+    simplify sym = (make @@ Binop (Ty_int, Add, x, (make @@ Val (Int 13)))))
 
 (* Test Concat of Extracts simplifications *)
 let () =

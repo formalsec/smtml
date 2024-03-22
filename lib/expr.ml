@@ -271,7 +271,7 @@ let rec binop ty (op : binop) (hte1 : t) (hte2 : t) : t =
     | Add | Or | Sub -> hte1
     | And | Mul -> make (Val (Num (I32 0l)))
     | _ -> make (Binop (ty, op, hte1, hte2)) )
-  | Binop (ty, op2, x, { node = Val (Num _ as v1); _ }), Val (Num _ as v2) -> (
+  | Binop (ty, op2, x, { node = Val v1; _ }), Val v2 -> (
     match (op, op2) with
     | Add, Add ->
       let v = make (Val (Eval_numeric.eval_binop ty Add v1 v2)) in
@@ -282,6 +282,9 @@ let rec binop ty (op : binop) (hte1 : t) (hte2 : t) : t =
     | Sub, Sub ->
       let v = make (Val (Eval_numeric.eval_binop ty Add v1 v2)) in
       make (Binop (ty, Sub, x, v))
+    | Mul, Mul ->
+      let v = make (Val (Eval_numeric.eval_binop ty Mul v1 v2)) in
+      make (Binop (ty, Mul, x, v))
     | _, _ -> make (Binop (ty, op, hte1, hte2)) )
   (* FIXME: this seems wrong? *)
   (* | Binop (_, And, _, _), Val (Num (I32 1l)) -> hte1 *)
