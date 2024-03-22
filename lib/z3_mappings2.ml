@@ -359,7 +359,7 @@ module Impl = struct
         (fun const ->
           let x = Symbol.to_string (FuncDecl.get_name const) in
           let t = Types.to_ety (FuncDecl.get_range const) ctx in
-          Sym.mk_symbol t x )
+          Sym.make t x )
         (Model.get_const_decls model)
 
     let eval ?(completion = false) model term = Model.eval model term completion

@@ -212,7 +212,7 @@ module Fresh = struct
         ; id_ty
         ; _
         } ->
-        Symbol.mk_symbol (tty_to_etype id_ty) name
+        Symbol.make (tty_to_etype id_ty) name
       | _ -> assert false
 
     module I :

@@ -42,7 +42,7 @@ let stmt :=
   | LPAREN; LET_CONST; x = SYMBOL; t = TYPE; RPAREN;
     {
       add_bind x t;
-      Ast.Let_const (Symbol.mk_symbol t x)
+      Ast.Let_const (Symbol.make t x)
     }
   | LPAREN; ASSERT; ~ = s_expr; RPAREN; <Ast.Assert>
   | LPAREN; CHECK_SAT; RPAREN; { Ast.Check_sat}
@@ -52,7 +52,7 @@ let stmt :=
   | LPAREN; SET_LOGIC; ~ = LOGIC; RPAREN; <Ast.Set_logic>
 
 let s_expr :=
-  | x = SYMBOL; { mk_symbol @@ Symbol.mk_symbol (get_bind x) x }
+  | x = SYMBOL; { mk_symbol @@ Symbol.make (get_bind x) x }
   | c = spec_constant; { make (Val c) }
   | LPAREN; op = paren_op; RPAREN; { make op }
 

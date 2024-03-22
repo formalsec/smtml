@@ -542,10 +542,9 @@ module Make (M : Mappings_intf.M) = struct
       let* base' = v (Num (I32 base)) in
       let* offset' = encode_expr offset in
       I32.binop Add base' offset'
-    | Symbol s ->
-      let x = Symbol.to_string s in
-      let* ty = get_type @@ Symbol.type_of s in
-      const x ty
+    | Symbol { name; ty } ->
+      let* ty = get_type ty in
+      const name ty
     | Unop (ty, op, e) ->
       let* e = encode_expr e in
       unop ty op e

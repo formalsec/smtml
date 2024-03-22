@@ -1,23 +1,26 @@
 type t =
-  { sort : Ty.t
-  ; name : String.t
+  { ty : Ty.t
+  ; name : string
   }
 
-let ( @: ) (name : string) (sort : Ty.t) = { name; sort }
+let ( @: ) (name : string) (ty : Ty.t) : t = { name; ty }
 
-let mk_symbol (sort : Ty.t) (name : string) = name @: sort
+let make (ty : Ty.t) (name : string)  : t = name @: ty
+
+let mk_symbol (ty : Ty.t) (name : string) : t = name @: ty
 
 let equal (s1 : t) (s2 : t) : bool =
-  s1.sort = s2.sort && String.equal s1.name s2.name
+  Ty.equal s1.ty s2.ty && String.equal s1.name s2.name
 
-let compare t1 t2 =
+let compare (t1 : t) (t2 : t) : int =
   let compare_name = compare t1.name t2.name in
-  if compare_name = 0 then compare t1.sort t2.sort else compare_name
+  if compare_name = 0 then compare t1.ty t2.ty else compare_name
 
-let rename (s : t) (name : String.t) = { s with name }
+let rename (symbol : t) (name : string) : t = { symbol with name }
 
-let type_of (s : t) : Ty.t = s.sort
+let type_of ({ ty; _ } : t) : Ty.t = ty
 
-let pp fmt s = Format.pp_print_string fmt s.name
+let pp (fmt : Format.formatter) ({ name; _ } : t) : unit =
+  Format.pp_print_string fmt name
 
-let to_string (s : t) : string = s.name
+let to_string ({ name; _ } : t) : string = name

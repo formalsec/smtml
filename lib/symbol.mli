@@ -1,8 +1,13 @@
-type t
+type t =
+  { ty : Ty.t
+  ; name : string
+  }
 
 val ( @: ) : string -> Ty.t -> t
 
-val mk_symbol : Ty.t -> string -> t
+val make : Ty.t -> string -> t
+
+val mk_symbol : Ty.t -> string -> t [@@deprecated "Please use 'make' instead"]
 
 val equal : t -> t -> Bool.t
 
