@@ -5,6 +5,7 @@ _perf
 _coverage
 __pycache__
 *.install
+*.coverage
 
 # vim swap files
 *.swp

@@ -11,7 +11,7 @@
   ast
   ;axioms
   constructors_intf
-  eval_numeric
+  eval
   expr
   interpret
   interpret_intf
