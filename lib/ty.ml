@@ -60,6 +60,7 @@ type binop =
   | Seq_prefix
   | Seq_suffix
   | Seq_contains
+  | Seq_last_index
 
 type relop =
   | Eq
@@ -174,6 +175,7 @@ let pp_binop fmt (op : binop) =
   | Seq_prefix -> pp_string fmt "prefixof"
   | Seq_suffix -> pp_string fmt "suffixof"
   | Seq_contains -> pp_string fmt "contains"
+  | Seq_last_index -> pp_string fmt "last_indexof"
 
 let pp_triop fmt (op : triop) =
   match op with

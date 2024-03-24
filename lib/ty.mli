@@ -56,6 +56,7 @@ type binop =
   | Seq_prefix (* (str.prefixof String String Bool) *)
   | Seq_suffix (* (str.suffixof String String Bool) *)
   | Seq_contains (* (str.contains String String Bool) *)
+  | Seq_last_index
 
 type relop =
   | Eq

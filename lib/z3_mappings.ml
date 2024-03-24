@@ -200,6 +200,7 @@ module Fresh = struct
         | Seq_prefix -> Seq.mk_seq_prefix ctx e1 e2
         | Seq_suffix -> Seq.mk_seq_suffix ctx e1 e2
         | Seq_contains -> Seq.mk_seq_contains ctx e1 e2
+        | Seq_last_index -> Seq.mk_seq_last_index ctx e1 e2
         | _ -> err {|Str: Unsupported Z3 binop operator "%a"|} Ty.pp_binop op
 
       let encode_triop = function
