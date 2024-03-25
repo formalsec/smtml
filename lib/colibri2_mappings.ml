@@ -505,8 +505,8 @@ module Fresh = struct
           match sz with
           | 32 -> (
             match op with
-            | ExtS n -> DTerm.Bitv.sign_extend n
-            | ExtU n -> DTerm.Bitv.zero_extend n
+            | Sign_extend n -> DTerm.Bitv.sign_extend n
+            | Zero_extend  n -> DTerm.Bitv.zero_extend n
             | WrapI64 -> assert false
             | TruncSF32 | TruncSF64 ->
               DTerm.Float.to_sbv 32 DTerm.Float.roundTowardZero
@@ -519,8 +519,8 @@ module Fresh = struct
             | _ -> assert false )
           | 64 -> (
             match op with
-            | ExtS n -> DTerm.Bitv.sign_extend n
-            | ExtU n -> DTerm.Bitv.zero_extend n
+            | Sign_extend n -> DTerm.Bitv.sign_extend n
+            | Zero_extend n -> DTerm.Bitv.zero_extend n
             | TruncSF32 | TruncSF64 ->
               DTerm.Float.to_sbv 64 DTerm.Float.roundTowardZero
             | TruncUF32 | TruncUF64 ->

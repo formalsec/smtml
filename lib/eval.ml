@@ -619,8 +619,8 @@ module I32CvtOp = struct
     | TruncSF64 -> I32.to_value (trunc_f64_s (F64.of_value 1 v))
     | TruncUF64 -> I32.to_value (trunc_f64_u (F64.of_value 1 v))
     | Reinterpret_float -> I32.to_value (F32.of_value 1 v)
-    | ExtS n -> I32.to_value (extend_s n (I32.of_value 1 v))
-    | ExtU _n -> I32.to_value (I32.of_value 1 v)
+    | Sign_extend n -> I32.to_value (extend_s n (I32.of_value 1 v))
+    | Zero_extend _n -> I32.to_value (I32.of_value 1 v)
     | OfBool -> v (* already a num here *)
     | ToBool | _ ->
       Log.err {|cvtop: Unsupported i32 operator "%a"|} Ty.pp_cvtop op
@@ -672,8 +672,8 @@ module I64CvtOp = struct
 
   let cvtop (op : cvtop) (v : Value.t) : Value.t =
     match op with
-    | ExtS 32 -> I64.to_value (Int64.of_int32 (I32.of_value 1 v))
-    | ExtU 32 -> I64.to_value (extend_i32_u (I32.of_value 1 v))
+    | Sign_extend 32 -> I64.to_value (Int64.of_int32 (I32.of_value 1 v))
+    | Zero_extend 32 -> I64.to_value (extend_i32_u (I32.of_value 1 v))
     | TruncSF32 -> I64.to_value (trunc_f32_s (F32.of_value 1 v))
     | TruncUF32 -> I64.to_value (trunc_f32_u (F32.of_value 1 v))
     | TruncSF64 -> I64.to_value (trunc_f64_s (F64.of_value 1 v))

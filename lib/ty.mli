@@ -95,8 +95,8 @@ type cvtop =
   | TruncSF64
   | TruncUF64
   | WrapI64
-  | ExtS of int
-  | ExtU of int
+  | Sign_extend of int
+  | Zero_extend of int
   (* String *)
   | String_to_code (* (str.to_code String Int) *)
   | String_from_code (* (str.from_code Int String) *)

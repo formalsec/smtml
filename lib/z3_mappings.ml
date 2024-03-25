@@ -317,8 +317,8 @@ module Fresh = struct
       let encode_cvtop op e =
         match op with
         | WrapI64 -> BitVector.mk_extract ctx (bitwidth - 1) 0 e
-        | ExtS n -> BitVector.mk_sign_ext ctx n e
-        | ExtU n -> BitVector.mk_zero_ext ctx n e
+        | Sign_extend n -> BitVector.mk_sign_ext ctx n e
+        | Zero_extend n -> BitVector.mk_zero_ext ctx n e
         | TruncSF32 | TruncSF64 -> FloatingPoint.mk_to_sbv ctx rtz e bitwidth
         | TruncUF32 | TruncUF64 -> FloatingPoint.mk_to_ubv ctx rtz e bitwidth
         | Reinterpret_float -> FloatingPoint.mk_to_ieee_bv ctx e

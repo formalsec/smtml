@@ -286,8 +286,8 @@ module Make (M : Mappings_intf.M) = struct
     let cvtop op e =
       match op with
       | WrapI64 -> Bitv.extract e ~high:(bitwidth - 1) ~low:0
-      | ExtS n -> Bitv.sign_extend n e
-      | ExtU n -> Bitv.zero_extend n e
+      | Sign_extend n -> Bitv.sign_extend n e
+      | Zero_extend n -> Bitv.zero_extend n e
       | TruncSF32 | TruncSF64 ->
         let* rm = Float.Rounding_mode.rtz in
         Float.to_sbv bitwidth ~rm e

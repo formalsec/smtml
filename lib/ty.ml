@@ -99,8 +99,8 @@ type cvtop =
   | TruncSF64
   | TruncUF64
   | WrapI64
-  | ExtS of int
-  | ExtU of int
+  | Sign_extend of int
+  | Zero_extend of int
   (* String *)
   | String_to_code
   | String_from_code
@@ -216,8 +216,8 @@ let pp_cvtop fmt (op : cvtop) =
   | TruncSF64 -> pp_string fmt "trunc_f64_s"
   | TruncUF64 -> pp_string fmt "trunc_f64_u"
   | WrapI64 -> pp_string fmt "wrap_i64"
-  | ExtS sz -> fprintf fmt "extend_i%d_s" sz
-  | ExtU sz -> fprintf fmt "extend_i%d_u" sz
+  | Sign_extend sz -> fprintf fmt "extend_i%d_s" sz
+  | Zero_extend sz -> fprintf fmt "extend_i%d_u" sz
   | String_to_code -> pp_string fmt "to_code"
   | String_from_code -> pp_string fmt "from_code"
   | String_to_int -> pp_string fmt "to_int"
