@@ -30,6 +30,7 @@
   solver_intf
   symbol
   ty
+  utils
   value
   z3_mappings
   z3_mappings2)

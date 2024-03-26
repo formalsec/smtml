@@ -649,9 +649,9 @@ module Fresh = struct
 
       let check s ~assumptions =
         match Z3.Solver.check s (List.map encode_expr assumptions) with
-        | Z3.Solver.UNKNOWN -> Unknown
-        | Z3.Solver.SATISFIABLE -> Satisfiable
-        | Z3.Solver.UNSATISFIABLE -> Unsatisfiable
+        | Z3.Solver.UNKNOWN -> `Unknown
+        | Z3.Solver.SATISFIABLE -> `Sat
+        | Z3.Solver.UNSATISFIABLE -> `Unsat
 
       let model s = Z3.Solver.get_model s
 
@@ -677,9 +677,9 @@ module Fresh = struct
 
       let check o =
         match Z3.Optimize.check o with
-        | Z3.Solver.UNKNOWN -> Unknown
-        | Z3.Solver.SATISFIABLE -> Satisfiable
-        | Z3.Solver.UNSATISFIABLE -> Unsatisfiable
+        | Z3.Solver.UNKNOWN -> `Unknown
+        | Z3.Solver.SATISFIABLE -> `Sat
+        | Z3.Solver.UNSATISFIABLE -> `Unsat
 
       let model o = Z3.Optimize.get_model o
 

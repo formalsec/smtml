@@ -506,7 +506,7 @@ module Fresh = struct
           | 32 -> (
             match op with
             | Sign_extend n -> DTerm.Bitv.sign_extend n
-            | Zero_extend  n -> DTerm.Bitv.zero_extend n
+            | Zero_extend n -> DTerm.Bitv.zero_extend n
             | WrapI64 -> assert false
             | TruncSF32 | TruncSF64 ->
               DTerm.Float.to_sbv 32 DTerm.Float.roundTowardZero
@@ -826,12 +826,10 @@ module Fresh = struct
 
     let pp_smt ?status:_ _ _ = ()
 
-    let satisfiability =
-      let open Mappings_intf in
-      function
-      | `Sat _ -> Satisfiable
-      | `Unknown _ -> Unknown
-      | `Unsat -> Unsatisfiable
+    let satisfiability = function
+      | `Sat _ -> `Sat
+      | `Unknown _ -> `Unknown
+      | `Unsat -> `Unsat
       | `Search -> assert false
       | `StepLimitReached -> assert false
 

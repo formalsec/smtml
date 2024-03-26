@@ -1,11 +1,5 @@
 let solver_time = ref 0.0
 
-let time_call ~f ~accum =
-  let start = Stdlib.Sys.time () in
-  let ret = f () in
-  accum := !accum +. (Stdlib.Sys.time () -. start);
-  ret
-
 let ( let+ ) o f = Option.map f o
 
 module Make (M : Mappings_intf.S) = struct
@@ -21,7 +15,10 @@ module Make (M : Mappings_intf.S) = struct
 
   let add (opt : t) (es : Expr.t list) : unit = O.add opt es
 
-  let check (opt : t) = time_call ~f:(fun () -> O.check opt) ~accum:solver_time
+  let check (opt : t) =
+    Utils.run_and_time_call
+      ~use:(fun time -> solver_time := !solver_time +. time)
+      (fun () -> O.check opt)
 
   let model opt =
     let+ model = O.model opt in
@@ -30,7 +27,7 @@ module Make (M : Mappings_intf.S) = struct
   let maximize (opt : t) (e : Expr.t) : Value.t option =
     ignore @@ O.maximize opt e;
     match check opt with
-    | Mappings_intf.Satisfiable ->
+    | `Sat ->
       let+ model = O.model opt in
       M.value model e
     | _ -> None
@@ -38,7 +35,7 @@ module Make (M : Mappings_intf.S) = struct
   let minimize (opt : t) (e : Expr.t) : Value.t option =
     ignore @@ O.minimize opt e;
     match check opt with
-    | Mappings_intf.Satisfiable ->
+    | `Sat ->
       let+ model = O.model opt in
       M.value model e
     | _ -> None

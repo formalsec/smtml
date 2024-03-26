@@ -22,8 +22,10 @@ module Make (Solver : Solver_intf.S) = struct
       st (e :: pc)
     | Check_sat ->
       ( match Solver.check solver [] with
-      | true -> Format.printf "sat@\n"
-      | false -> Format.printf "unsat@\n" );
+      | `Sat -> Format.printf "sat@."
+      | `Unsat -> Format.printf "unsat@."
+      | `Unknown -> Format.printf "unknown@."
+      );
       st pc
     | Push ->
       Solver.push solver;
@@ -33,7 +35,7 @@ module Make (Solver : Solver_intf.S) = struct
       st pc
     | Let_const _x -> st pc
     | Get_model ->
-      assert (Solver.check solver []);
+      assert (`Sat = Solver.check solver []);
       let model = Solver.model solver in
       Format.printf "%a@."
         (Format.pp_print_option (Model.pp ~no_values:false))

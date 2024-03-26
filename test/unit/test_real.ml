@@ -13,4 +13,4 @@ let () =
         (Expr.cvtop Ty_real ToString x)
         (Expr.cvtop Ty_real ToString y)
     in
-    Solver.check solver [ c0; c1 ] )
+    `Sat = Solver.check solver [ c0; c1 ] )
