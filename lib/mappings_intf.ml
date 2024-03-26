@@ -1,7 +1,8 @@
 type satisfiability =
-  | Satisfiable
-  | Unsatisfiable
-  | Unknown
+  [ `Sat
+  | `Unsat
+  | `Unknown
+  ]
 
 module type M = sig
   type ty

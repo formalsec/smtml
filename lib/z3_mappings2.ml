@@ -408,9 +408,9 @@ module Impl = struct
 
     let check solver ~assumptions =
       match Solver.check solver assumptions with
-      | Solver.UNKNOWN -> Unknown
-      | Solver.SATISFIABLE -> Satisfiable
-      | Solver.UNSATISFIABLE -> Unsatisfiable
+      | Solver.UNKNOWN -> `Unknown
+      | Solver.SATISFIABLE -> `Sat
+      | Solver.UNSATISFIABLE -> `Unsat
 
     let model solver = Solver.get_model solver
 
@@ -442,9 +442,9 @@ module Impl = struct
 
     let check opt =
       match Optimize.check opt with
-      | Z3.Solver.UNKNOWN -> Unknown
-      | Z3.Solver.SATISFIABLE -> Satisfiable
-      | Z3.Solver.UNSATISFIABLE -> Unsatisfiable
+      | Z3.Solver.UNKNOWN -> `Unknown
+      | Z3.Solver.SATISFIABLE -> `Sat
+      | Z3.Solver.UNSATISFIABLE -> `Unsat
 
     let model opt = Optimize.get_model opt
 

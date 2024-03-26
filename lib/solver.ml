@@ -1,7 +1,5 @@
 include Solver_intf
 
-exception Unknown
-
 let ( let+ ) o f = Option.map f o
 
 module Base (M : Mappings_intf.S) = struct
@@ -9,25 +7,15 @@ module Base (M : Mappings_intf.S) = struct
 
   let solver_count = ref 0
 
-  let time_call f acc =
-    let start = Stdlib.Sys.time () in
-    let ret = f () in
-    acc := !acc +. (Stdlib.Sys.time () -. start);
-    ret
-
   let interrupt solver = M.Solver.interrupt solver
 
   let pp_statistics fmt solver = M.Solver.pp_statistics fmt solver
 
-  let check (solver : M.solver) (es : Expr.t list) : bool =
+  let check (solver : M.solver) (es : Expr.t list) : satisfiability =
     solver_count := !solver_count + 1;
-    let sat =
-      time_call (fun () -> M.Solver.check solver ~assumptions:es) solver_time
-    in
-    match sat with
-    | Mappings_intf.Satisfiable -> true
-    | Mappings_intf.Unknown -> raise Unknown
-    | Mappings_intf.Unsatisfiable -> false
+    Utils.run_and_time_call
+      ~use:(fun time -> solver_time := !solver_time +. time)
+      (fun () -> M.Solver.check solver ~assumptions:es)
 
   let get_value (solver : M.solver) (e : Expr.t) : Expr.t =
     match M.Solver.model solver with
@@ -78,7 +66,8 @@ module Make_batch (Mappings : Mappings_intf.S) = struct
 
   let get_assertions (s : t) : Expr.t list = s.top [@@inline]
 
-  let check (s : t) (es : Expr.t list) : bool = check s.solver (es @ s.top)
+  let check (s : t) (es : Expr.t list) : satisfiability =
+    check s.solver (es @ s.top)
 
   let get_value (solver : t) (e : Expr.t) : Expr.t = get_value solver.solver e
 

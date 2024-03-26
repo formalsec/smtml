@@ -1,3 +1,5 @@
+include Mappings_intf
+
 module type S = sig
   type t
 
@@ -48,7 +50,7 @@ module type S = sig
       solver using the assumptions in [es].
 
       Raises [Unknown] if the SMT solver returns unknown. *)
-  val check : t -> Expr.t list -> bool
+  val check : t -> Expr.t list -> satisfiability
 
   (** [get_value solver e] get an expression denoting the model value of a given
       expression.
@@ -64,6 +66,8 @@ module type S = sig
 end
 
 module type Intf = sig
+  type nonrec satisfiability = satisfiability
+
   module type S = S
 
   (** The Encoding module defines two types of solvers: {!module:Batch} and
