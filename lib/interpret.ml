@@ -24,8 +24,7 @@ module Make (Solver : Solver_intf.S) = struct
       ( match Solver.check solver [] with
       | `Sat -> Format.printf "sat@."
       | `Unsat -> Format.printf "unsat@."
-      | `Unknown -> Format.printf "unknown@."
-      );
+      | `Unknown -> Format.printf "unknown@." );
       st pc
     | Push ->
       Solver.push solver;

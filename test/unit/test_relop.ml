@@ -6,22 +6,22 @@ open Value
 (* int *)
 let () =
   let v i = value (Int i) in
-  assert (relop (Ty_int) Eq (v 0) (v 0) = value True);
-  assert (relop (Ty_int) Ne (v 0) (v 0) = value False);
-  assert (relop (Ty_int) Lt (v 0) (v 1) = value True);
-  assert (relop (Ty_int) Le (v 0) (v 1) = value True);
-  assert (relop (Ty_int) Gt (v 0) (v 1) = value False);
-  assert (relop (Ty_int) Ge (v 0) (v 1) = value False)
+  assert (relop Ty_int Eq (v 0) (v 0) = value True);
+  assert (relop Ty_int Ne (v 0) (v 0) = value False);
+  assert (relop Ty_int Lt (v 0) (v 1) = value True);
+  assert (relop Ty_int Le (v 0) (v 1) = value True);
+  assert (relop Ty_int Gt (v 0) (v 1) = value False);
+  assert (relop Ty_int Ge (v 0) (v 1) = value False)
 
 (* real *)
 let () =
   let v i = value (Real i) in
-  assert (relop (Ty_real) Eq (v 0.0) (v 0.0) = value True);
-  assert (relop (Ty_real) Ne (v 0.0) (v 0.0) = value False);
-  assert (relop (Ty_real) Lt (v 0.0) (v 1.0) = value True);
-  assert (relop (Ty_real) Le (v 0.0) (v 1.0) = value True);
-  assert (relop (Ty_real) Gt (v 0.0) (v 1.0) = value False);
-  assert (relop (Ty_real) Ge (v 0.0) (v 1.0) = value False)
+  assert (relop Ty_real Eq (v 0.0) (v 0.0) = value True);
+  assert (relop Ty_real Ne (v 0.0) (v 0.0) = value False);
+  assert (relop Ty_real Lt (v 0.0) (v 1.0) = value True);
+  assert (relop Ty_real Le (v 0.0) (v 1.0) = value True);
+  assert (relop Ty_real Gt (v 0.0) (v 1.0) = value False);
+  assert (relop Ty_real Ge (v 0.0) (v 1.0) = value False)
 
 (* i32 *)
 let () =
