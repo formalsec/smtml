@@ -5,7 +5,7 @@ type t =
 
 let ( @: ) (name : string) (ty : Ty.t) : t = { name; ty }
 
-let make (ty : Ty.t) (name : string)  : t = name @: ty
+let make (ty : Ty.t) (name : string) : t = name @: ty
 
 let mk_symbol (ty : Ty.t) (name : string) : t = name @: ty
 

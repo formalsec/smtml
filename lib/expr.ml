@@ -305,8 +305,7 @@ let triop ty (op : triop) (e1 : t) (e2 : t) (e3 : t) : t =
   | Val v1, Val v2, Val v3 -> value (Eval.triop ty op v1 v2 v3)
   | Val v, _, _ -> (
     match op with
-    | Ite -> (
-      match v with True -> e2 | False -> e3 | _ -> assert false )
+    | Ite -> ( match v with True -> e2 | False -> e3 | _ -> assert false )
     | _ -> triop' ty op e1 e2 e3 )
   | _ -> triop' ty op e1 e2 e3
 

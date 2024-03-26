@@ -74,6 +74,9 @@ val relop' : Ty.t -> Ty.relop -> t -> t -> t
 (** Smart relop constructor, applies simplifications at constructor level *)
 val cvtop : Ty.t -> Ty.cvtop -> t -> t
 
+(** Dump cvtop constructor, no simplifications *)
+val cvtop' : Ty.t -> Ty.cvtop -> t -> t
+
 (** Smart extract constructor, applies simplifications at constructor level *)
 val extract : t -> high:int -> low:int -> t
 
