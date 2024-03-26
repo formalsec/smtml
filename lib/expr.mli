@@ -50,43 +50,43 @@ val value : Value.t -> t
 (** Smart unop constructor, applies simplifications at constructor level *)
 val unop : Ty.t -> Ty.unop -> t -> t
 
-(** Dump unop constructor, no simplifications *)
+(** Dumb unop constructor, no simplifications *)
 val unop' : Ty.t -> Ty.unop -> t -> t
 
 (** Smart binop constructor, applies simplifications at constructor level *)
 val binop : Ty.t -> Ty.binop -> t -> t -> t
 
-(** Dump binop constructor, no simplifications *)
+(** Dumb binop constructor, no simplifications *)
 val binop' : Ty.t -> Ty.binop -> t -> t -> t
 
 (** Smart triop constructor, applies simplifications at constructor level *)
 val triop : Ty.t -> Ty.triop -> t -> t -> t -> t
 
-(** Dump triop constructor, no simplifications *)
+(** Dumb triop constructor, no simplifications *)
 val triop' : Ty.t -> Ty.triop -> t -> t -> t -> t
 
 (** Smart relop constructor, applies simplifications at constructor level *)
 val relop : Ty.t -> Ty.relop -> t -> t -> t
 
-(** Dump relop constructor, no simplifications *)
+(** Dumb relop constructor, no simplifications *)
 val relop' : Ty.t -> Ty.relop -> t -> t -> t
 
 (** Smart relop constructor, applies simplifications at constructor level *)
 val cvtop : Ty.t -> Ty.cvtop -> t -> t
 
-(** Dump cvtop constructor, no simplifications *)
+(** Dumb cvtop constructor, no simplifications *)
 val cvtop' : Ty.t -> Ty.cvtop -> t -> t
 
 (** Smart extract constructor, applies simplifications at constructor level *)
 val extract : t -> high:int -> low:int -> t
 
-(** Dump extract constructor, no simplifications *)
+(** Dumb extract constructor, no simplifications *)
 val extract' : t -> high:int -> low:int -> t
 
 (** Smart concat constructor, applies simplifications at constructor level *)
 val concat : t -> t -> t
 
-(** Dump concat constructor, no simplifications *)
+(** Dumb concat constructor, no simplifications *)
 val concat' : t -> t -> t
 
 (** Applies expression simplifications until a fixpoint *)
