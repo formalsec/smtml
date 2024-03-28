@@ -47,6 +47,8 @@ type unop =
   | Nearest
   (* String *)
   | Seq_length (* (str.len String Int) *)
+  | Seq_to_lowercase
+  | Seq_to_uppercase
   | Trim (* uninterpreted *)
 
 type binop =
@@ -75,6 +77,7 @@ type binop =
   | Seq_suffix (* (str.suffixof String String Bool) *)
   | Seq_contains (* (str.contains String String Bool) *)
   | Seq_last_index
+  | Seq_split
 
 type relop =
   | Eq
@@ -120,6 +123,7 @@ type cvtop =
   | String_from_code (* (str.from_code Int String) *)
   | String_to_int (* (str.to_int String Int) *)
   | String_from_int (* (str.from_int Int String) *)
+  | String_to_float
 
 type logic =
   | AUFLIA
