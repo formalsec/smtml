@@ -51,8 +51,6 @@ type unop =
   | Nearest
   (* String *)
   | Seq_length
-  | Seq_to_lowercase
-  | Seq_to_uppercase
   | Trim
 
 type binop =
@@ -171,8 +169,6 @@ let pp_unop fmt (op : unop) =
   | Trunc -> pp_string fmt "trunc"
   | Nearest -> pp_string fmt "nearest"
   | Seq_length -> pp_string fmt "len"
-  | Seq_to_lowercase -> pp_string fmt "to_lowercase"
-  | Seq_to_uppercase -> pp_string fmt "to_uppercase"
   | Trim -> pp_string fmt "trim"
 
 let pp_binop fmt (op : binop) =
