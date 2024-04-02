@@ -78,6 +78,19 @@ module Int = struct
       | _ -> Log.err {|relop: Unsupported int operator "%a"|} Ty.pp_relop op
     in
     f (of_value 1 v1) (of_value 2 v2)
+
+  let of_bool : Value.t -> int = function
+    | True -> 1
+    | False -> 0
+    | Int i -> i
+    | _ -> assert false
+  [@@inline]
+
+  let cvtop (op : cvtop) (v : Value.t) : Value.t =
+    match op with
+    | OfBool -> to_value (of_bool v)
+    | Reinterpret_int -> Real (Float.of_int (of_value 1 v))
+    | _ -> Log.err {|cvtop: Unsupported int operator "%a"|} Ty.pp_cvtop op
 end
 
 module Real = struct
@@ -125,43 +138,6 @@ module Real = struct
     in
     f (of_value 1 v1) (of_value 2 v2)
 
-  let convert_int32 (n : float) =
-    match classify_float n with
-    | FP_normal | FP_subnormal ->
-      let i32 = 2. ** 32. in
-      let i31 = 2. ** 31. in
-      let posint = (if n < 0. then -1. else 1.) *. floor (abs_float n) in
-      let int32bit =
-        let smod = mod_float posint i32 in
-        if smod < 0. then smod +. i32 else smod
-      in
-      if int32bit >= i31 then int32bit -. i32 else int32bit
-    | _ -> 0.
-  
-  let convert_uint32 n =
-    match classify_float n with
-    | FP_normal | FP_subnormal ->
-      let i32 = 2. ** 32. in
-      let posint = (if n < 0. then -1. else 1.) *. floor (abs_float n) in
-      let int32bit =
-        let smod = mod_float posint i32 in
-        if smod < 0. then smod +. i32 else smod
-      in
-      int32bit
-    | _ -> 0.
-  
-  let convert_uint16 n =
-    match classify_float n with
-    | FP_normal | FP_subnormal ->
-      let i16 = 2. ** 16. in
-      let posint = (if n < 0. then -1. else 1.) *. floor (abs_float n) in
-      let int16bit =
-        let smod = mod_float posint i16 in
-        if smod < 0. then smod +. i16 else smod
-      in
-      int16bit
-    | _ -> 0.
-
   let cvtop (op : cvtop) (v : Value.t) : Value.t =
     match op with
     | ToString -> Str (Float.to_string (of_value 1 v))
@@ -172,9 +148,6 @@ module Real = struct
       let v = match v with Int v -> v | _ -> raise_notrace (Value Ty_int) in
       to_value (Float.of_int v)
     | Reinterpret_float -> Int (Float.to_int (of_value 1 v))
-    | ConvertSI32 -> to_value (convert_int32 (of_value 1 v))
-    | ConvertUI32 -> to_value (convert_uint32 (of_value 1 v))
-    | ConvertUI64 -> to_value (convert_uint16 (of_value 1 v))
     | _ -> Log.err {|cvtop: Unsupported real operator "%a"|} Ty.pp_cvtop op
 end
 
@@ -254,8 +227,6 @@ module Str = struct
     let str = of_value 1 v in
     match op with
     | Seq_length -> Int.to_value (String.length str)
-    | Seq_to_lowercase -> to_value (String.lowercase_ascii str)
-    | Seq_to_uppercase -> to_value (String.uppercase_ascii str)
     | Trim -> to_value (String.trim str)
     | _ -> Log.err {|unop: Unsupported str operator "%a"|} Ty.pp_unop op
 
@@ -622,20 +593,6 @@ module F64 = struct
     f (of_value' 1 v1) (of_value' 2 v2)
 end
 
-module IntCvtOp = struct
-  let of_bool : Value.t -> int = function
-    | True -> 1
-    | False -> 0
-    | Int i -> i
-    | _ -> assert false
-  [@@inline]
-
-  let cvtop (op : cvtop) (v : Value.t) : Value.t =
-    match op with
-    | OfBool -> Int.to_value (of_bool v)
-    | _ -> Log.err {|cvtop: Unsupported int operator "%a"|} Ty.pp_cvtop op
-end
-
 module I32CvtOp = struct
   let extend_s (n : int) (x : int32) : int32 =
     let shift = 32 - n in
@@ -882,5 +839,5 @@ let relop =
     F64.relop
 
 let cvtop =
-  op IntCvtOp.cvtop Real.cvtop Bool.cvtop Str.cvtop I32CvtOp.cvtop
+  op Int.cvtop Real.cvtop Bool.cvtop Str.cvtop I32CvtOp.cvtop
     I64CvtOp.cvtop F32CvtOp.cvtop F64CvtOp.cvtop
