@@ -187,7 +187,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       (* let trim = FuncDecl.mk_func_decl_s ctx "Trim" [ str_sort ] str_sort *)
 
       let unop = function
-        | Seq_length -> M.String.length
+        | Length -> M.String.length
         | Trim ->
           (* FuncDecl.apply trim [ e ] *)
           assert false
@@ -195,18 +195,18 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let binop op e1 e2 =
         match op with
-        | Seq_at -> M.String.at e1 ~pos:e2
-        | Seq_concat -> M.String.concat e1 e2
-        | Seq_contains -> M.String.contains e1 ~sub:e2
-        | Seq_prefix -> M.String.is_prefix e1 ~prefix:e2
-        | Seq_suffix -> M.String.is_suffix e1 ~suffix:e2
+        | At -> M.String.at e1 ~pos:e2
+        | Concat -> M.String.concat e1 e2
+        | String_contains -> M.String.contains e1 ~sub:e2
+        | String_prefix -> M.String.is_prefix e1 ~prefix:e2
+        | String_suffix -> M.String.is_suffix e1 ~suffix:e2
         | _ -> err {|String: Unsupported binop operator "%a"|} Ty.pp_binop op
 
       let triop op e1 e2 e3 =
         match op with
-        | Seq_extract -> M.String.sub e1 ~pos:e2 ~len:e3
-        | Seq_index -> M.String.index_of e1 ~sub:e2 ~pos:e3
-        | Seq_replace -> M.String.replace e1 ~pattern:e2 ~with_:e3
+        | String_extract -> M.String.sub e1 ~pos:e2 ~len:e3
+        | String_index -> M.String.index_of e1 ~sub:e2 ~pos:e3
+        | String_replace -> M.String.replace e1 ~pattern:e2 ~with_:e3
         | _ -> err {|String: Unsupported triop operator "%a"|} Ty.pp_triop op
 
       let relop op e1 e2 =

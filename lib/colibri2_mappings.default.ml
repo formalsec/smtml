@@ -402,7 +402,7 @@ module Fresh = struct
       let encode_unop op e =
         let op' =
           match op with
-          | Seq_length -> assert false
+          | Length -> assert false
           | Trim -> fun _v -> assert false
           | _ -> assert false
         in
@@ -411,11 +411,11 @@ module Fresh = struct
       let encode_binop op _e1 _e2 =
         let op' =
           match op with
-          | Seq_at -> assert false
-          | Seq_concat -> assert false
-          | Seq_prefix -> assert false
-          | Seq_suffix -> assert false
-          | Seq_contains -> assert false
+          | At -> assert false
+          | Concat -> assert false
+          | String_prefix -> assert false
+          | String_suffix -> assert false
+          | String_contains -> assert false
           | _ -> assert false
         in
         op'
@@ -432,9 +432,9 @@ module Fresh = struct
       let encode_triop op _e1 _e2 _e3 =
         let op' =
           match op with
-          | Seq_extract -> assert false
-          | Seq_replace -> assert false
-          | Seq_index -> assert false
+          | String_extract -> assert false
+          | String_replace -> assert false
+          | String_index -> assert false
           | _ -> err {|Str: Unsupported Z3 triop operator "%a"|} Ty.pp_triop op
         in
         op'
