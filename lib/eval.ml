@@ -259,7 +259,7 @@ module Str = struct
       let t = of_value 2 v2 in
       let i = Int.of_value 3 v3 in
       Int.to_value (indexof str t i)
-    | Ite -> Log.err {|triop: Unsupported str operator "%a"|} Ty.pp_triop op
+    | _ -> Log.err {|triop: Unsupported str operator "%a"|} Ty.pp_triop op
 
   let relop _ = assert false
 
@@ -275,6 +275,48 @@ module Str = struct
     | String_from_int -> to_value (string_of_int (Int.of_value 1 v))
     | String_to_float -> Real.to_value (float_of_string (of_value 1 v))
     | _ -> Log.err {|cvtop: Unsupported str operator "%a"|} Ty.pp_cvtop op
+end
+
+module Lst = struct
+  let of_value (n : int) (v : Value.t) : Value.t list =
+    of_arg
+      (function List lst -> lst | _ -> raise_notrace (Value Ty_list))
+      n v
+  [@@inline]
+
+  let unop (op : unop) (v : Value.t) : Value.t =
+    let lst = of_value 1 v in
+    match op with
+    | Head -> List.hd lst
+    | Tail -> List (List.tl lst)
+    | Length -> Int.to_value (List.length lst)
+    | Reverse -> List (List.rev lst)
+    | _ -> Log.err {|unop: Unsupported list operator "%a"|} Ty.pp_unop op
+
+  let binop (op : binop) (v1 : Value.t) (v2 : Value.t) : Value.t =
+    match op with
+    | At ->
+      let lst = of_value 1 v1 in
+      let i = Int.of_value 2 v2 in
+      List.nth lst i
+    | List_append_last -> List (of_value 1 v1 @ [ v2 ])
+    | List_append -> List (v1 :: of_value 2 v2)
+    | Concat -> List (of_value 1 v1 @ of_value 2 v2)
+    | _ -> Log.err {|binop: Unsupported list operator "%a"|} Ty.pp_binop op
+  
+  let triop (op : triop) (v1 : Value.t) (v2 : Value.t) (v3 : Value.t) : Value.t =
+    match op with
+    | List_set -> 
+      let lst = of_value 1 v1 in
+      let i = Int.of_value 2 v2 in
+      let v = v3 in
+      let rec set i lst v = match i, lst with
+        | 0, _ :: tl -> v :: tl
+        | i, hd :: tl -> hd :: set (i - 1) tl v
+        | _, [] -> Log.err "List.set: index out of bounds"
+      in
+      List (set i lst v)
+    | _ -> Log.err {|triop: Unsupported list operator "%a"|} Ty.pp_triop op
 end
 
 module I32 = struct
@@ -809,35 +851,51 @@ end
 
 (* Dispatch *)
 
-let op int real bool str i32 i64 f32 f64 ty op =
+let op int real bool str lst i32 i64 f32 f64 ty op =
   match ty with
   | Ty_int -> int op
   | Ty_real -> real op
   | Ty_bool -> bool op
   | Ty_str -> str op
+  | Ty_list -> lst op
   | Ty_bitv 32 -> i32 op
   | Ty_bitv 64 -> i64 op
   | Ty_fp 32 -> f32 op
   | Ty_fp 64 -> f64 op
-  | Ty_bitv _ | Ty_fp _ | Ty_array | Ty_list | Ty_tuple -> assert false
+  | Ty_bitv _ | Ty_fp _ | Ty_array | Ty_tuple -> assert false
 [@@inline]
 
 let unop =
-  op Int.unop Real.unop Bool.unop Str.unop I32.unop I64.unop F32.unop F64.unop
+  op Int.unop Real.unop Bool.unop Str.unop Lst.unop I32.unop I64.unop F32.unop F64.unop
 
 let binop =
-  op Int.binop Real.binop Bool.binop Str.binop I32.binop I64.binop F32.binop
+  op Int.binop Real.binop Bool.binop Str.binop Lst.binop I32.binop I64.binop F32.binop
     F64.binop
 
 let triop = function
   | Ty_bool -> Bool.triop
   | Ty_str -> Str.triop
+  | Ty_list -> Lst.triop
   | _ -> assert false
 
-let relop =
-  op Int.relop Real.relop Bool.relop Str.relop I32.relop I64.relop F32.relop
-    F64.relop
+let relop = function
+  | Ty_int -> Int.relop
+  | Ty_real -> Real.relop
+  | Ty_bool -> Bool.relop
+  | Ty_str -> Str.relop
+  | Ty_bitv 32 -> I32.relop
+  | Ty_bitv 64 -> I64.relop
+  | Ty_fp 32 -> F32.relop
+  | Ty_fp 64 -> F64.relop
+  | _ -> assert false
 
-let cvtop =
-  op Int.cvtop Real.cvtop Bool.cvtop Str.cvtop I32CvtOp.cvtop
-    I64CvtOp.cvtop F32CvtOp.cvtop F64CvtOp.cvtop
+let cvtop = function
+  | Ty_int -> Int.cvtop
+  | Ty_real -> Real.cvtop
+  | Ty_bool -> Bool.cvtop
+  | Ty_str -> Str.cvtop
+  | Ty_bitv 32 -> I32CvtOp.cvtop
+  | Ty_bitv 64 -> I64CvtOp.cvtop
+  | Ty_fp 32 -> F32CvtOp.cvtop
+  | Ty_fp 64 -> F64CvtOp.cvtop
+  | _ -> assert false

@@ -493,6 +493,7 @@ module Make (M : Mappings_intf.M) = struct
     | Num (I64 x) -> I64.v x
     | Num (F32 x) -> Float32_impl.v x
     | Num (F64 x) -> Float64_impl.v x
+    | List _ -> assert false
 
   let unop = function
     | Ty.Ty_int -> Int_impl.unop

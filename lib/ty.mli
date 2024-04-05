@@ -48,6 +48,10 @@ type unop =
   (* String *)
   | Seq_length (* (str.len String Int) *)
   | Trim (* uninterpreted *)
+  | Head
+  | Tail
+  | Length
+  | Reverse
 
 type binop =
   | Add
@@ -76,6 +80,10 @@ type binop =
   | Seq_contains (* (str.contains String String Bool) *)
   | Seq_last_index
   | Seq_split
+  | At
+  | List_append_last
+  | List_append
+  | Concat
 
 type relop =
   | Eq
@@ -95,6 +103,7 @@ type triop =
   | Seq_extract (* (str.substr String Int Int String) *)
   | Seq_replace (* (str.replace String String String String) *)
   | Seq_index (* (str.indexof String String Int Int) *)
+  | List_set
 
 type cvtop =
   | ToString
