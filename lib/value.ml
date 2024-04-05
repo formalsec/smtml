@@ -25,6 +25,7 @@ type t =
   | Real of float
   | Str of string
   | Num of Num.t
+  | List of t list
 
 let equal (v1 : t) (v2 : t) : Bool.t =
   match (v1, v2) with
@@ -53,6 +54,7 @@ let type_of (v : t) : Ty.t =
   | Real _ -> Ty_real
   | Str _ -> Ty_str
   | Num n -> Num.type_of n
+  | List _ -> Ty_list
 
 let pp fmt (v : t) =
   let open Format in
@@ -63,6 +65,7 @@ let pp fmt (v : t) =
   | Real x -> fprintf fmt "%F" x
   | Num x -> Num.pp fmt x
   | Str x -> Format.fprintf fmt "%S" x
+  | List _ -> assert false
 
 let pp_num fmt (v : t) =
   match v with Num x -> Num.pp_hex fmt x | _ -> pp fmt v

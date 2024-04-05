@@ -23,6 +23,7 @@ type t =
   | Real of float
   | Str of string
   | Num of Num.t
+  | List of t list
 
 val equal : t -> t -> bool
 
