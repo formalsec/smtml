@@ -49,13 +49,12 @@ type unop =
   | Floor
   | Trunc
   | Nearest
-  (* String *)
-  | Seq_length
-  | Trim
   | Head
   | Tail
-  | Length
   | Reverse
+  | Length
+  (* String *)
+  | Trim
 
 type binop =
   | Add
@@ -76,18 +75,16 @@ type binop =
   | Max
   | Rotl
   | Rotr
-  (* String *)
-  | Seq_at
-  | Seq_concat
-  | Seq_prefix
-  | Seq_suffix
-  | Seq_contains
-  | Seq_last_index
-  | Seq_split
   | At
+  | Concat
   | List_append_last
   | List_append
-  | Concat
+  (* String *)
+  | String_prefix
+  | String_suffix
+  | String_contains
+  | String_last_index
+  | String_split
 
 type relop =
   | Eq
@@ -103,11 +100,11 @@ type relop =
 
 type triop =
   | Ite
-  (* String *)
-  | Seq_extract
-  | Seq_replace
-  | Seq_index
   | List_set
+  (* String *)
+  | String_extract
+  | String_replace
+  | String_index
 
 type cvtop =
   | ToString
@@ -177,12 +174,11 @@ let pp_unop fmt (op : unop) =
   | Floor -> pp_string fmt "floor"
   | Trunc -> pp_string fmt "trunc"
   | Nearest -> pp_string fmt "nearest"
-  | Seq_length -> pp_string fmt "len"
-  | Trim -> pp_string fmt "trim"
   | Head -> pp_string fmt "head"
   | Tail -> pp_string fmt "tail"
-  | Length -> pp_string fmt "length"
   | Reverse -> pp_string fmt "reverse"
+  | Length -> pp_string fmt "length"
+  | Trim -> pp_string fmt "trim"
 
 let pp_binop fmt (op : binop) =
   match op with
@@ -204,24 +200,22 @@ let pp_binop fmt (op : binop) =
   | Max -> pp_string fmt "max"
   | Rotl -> pp_string fmt "rotl"
   | Rotr -> pp_string fmt "rotr"
-  | Seq_at -> pp_string fmt "at"
-  | Seq_concat -> pp_string fmt "++"
-  | Seq_prefix -> pp_string fmt "prefixof"
-  | Seq_suffix -> pp_string fmt "suffixof"
-  | Seq_contains -> pp_string fmt "contains"
-  | Seq_last_index -> pp_string fmt "last_indexof"
-  | Seq_split -> pp_string fmt "split"
   | At -> pp_string fmt "at"
+  | Concat -> pp_string fmt "++"
   | List_append_last -> pp_string fmt "append_last"
   | List_append -> pp_string fmt "append"
-  | Concat -> pp_string fmt "concat"
+  | String_prefix -> pp_string fmt "prefixof"
+  | String_suffix -> pp_string fmt "suffixof"
+  | String_contains -> pp_string fmt "contains"
+  | String_last_index -> pp_string fmt "last_indexof"
+  | String_split -> pp_string fmt "split"
 
 let pp_triop fmt (op : triop) =
   match op with
   | Ite -> pp_string fmt "ite"
-  | Seq_extract -> pp_string fmt "substr"
-  | Seq_replace -> pp_string fmt "replace"
-  | Seq_index -> pp_string fmt "indexof"
+  | String_extract -> pp_string fmt "substr"
+  | String_replace -> pp_string fmt "replace"
+  | String_index -> pp_string fmt "indexof"
   | List_set -> pp_string fmt "set"
 
 let pp_relop fmt (op : relop) =
