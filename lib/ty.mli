@@ -45,13 +45,12 @@ type unop =
   | Floor
   | Trunc
   | Nearest
-  (* String *)
-  | Seq_length (* (str.len String Int) *)
-  | Trim (* uninterpreted *)
   | Head
   | Tail
-  | Length
   | Reverse
+  | Length
+  (* String *)
+  | Trim (* uninterpreted *)
 
 type binop =
   | Add
@@ -72,18 +71,16 @@ type binop =
   | Max
   | Rotl
   | Rotr
-  (* String *)
-  | Seq_at (* (str.at String Int String) *)
-  | Seq_concat (* (str.substr String Int Int String) *)
-  | Seq_prefix (* (str.prefixof String String Bool) *)
-  | Seq_suffix (* (str.suffixof String String Bool) *)
-  | Seq_contains (* (str.contains String String Bool) *)
-  | Seq_last_index
-  | Seq_split
   | At
+  | Concat
   | List_append_last
   | List_append
-  | Concat
+  (* String *)
+  | String_prefix (* (str.prefixof String String Bool) *)
+  | String_suffix (* (str.suffixof String String Bool) *)
+  | String_contains (* (str.contains String String Bool) *)
+  | String_last_index
+  | String_split
 
 type relop =
   | Eq
@@ -99,11 +96,11 @@ type relop =
 
 type triop =
   | Ite
-  (* String *)
-  | Seq_extract (* (str.substr String Int Int String) *)
-  | Seq_replace (* (str.replace String String String String) *)
-  | Seq_index (* (str.indexof String String Int Int) *)
   | List_set
+  (* String *)
+  | String_extract (* (str.substr String Int Int String) *)
+  | String_replace (* (str.replace String String String String) *)
+  | String_index (* (str.indexof String String Int Int) *)
 
 type cvtop =
   | ToString

@@ -206,24 +206,24 @@ module Fresh = struct
 
       let encode_unop op e =
         match op with
-        | Seq_length -> Seq.mk_seq_length ctx e
+        | Length -> Seq.mk_seq_length ctx e
         | Trim -> FuncDecl.apply trim [ e ]
         | _ -> err {|Str: Unsupported Z3 unop operator "%a"|} Ty.pp_unop op
 
       let encode_binop op e1 e2 =
         match op with
-        | Seq_at -> Seq.mk_seq_at ctx e1 e2
-        | Seq_concat -> Seq.mk_seq_concat ctx [ e1; e2 ]
-        | Seq_prefix -> Seq.mk_seq_prefix ctx e1 e2
-        | Seq_suffix -> Seq.mk_seq_suffix ctx e1 e2
-        | Seq_contains -> Seq.mk_seq_contains ctx e1 e2
-        | Seq_last_index -> Seq.mk_seq_last_index ctx e1 e2
+        | At -> Seq.mk_seq_at ctx e1 e2
+        | Concat -> Seq.mk_seq_concat ctx [ e1; e2 ]
+        | String_prefix -> Seq.mk_seq_prefix ctx e1 e2
+        | String_suffix -> Seq.mk_seq_suffix ctx e1 e2
+        | String_contains -> Seq.mk_seq_contains ctx e1 e2
+        | String_last_index -> Seq.mk_seq_last_index ctx e1 e2
         | _ -> err {|Str: Unsupported Z3 binop operator "%a"|} Ty.pp_binop op
 
       let encode_triop = function
-        | Seq_extract -> Seq.mk_seq_extract ctx
-        | Seq_replace -> Seq.mk_seq_replace ctx
-        | Seq_index -> Seq.mk_seq_index ctx
+        | String_extract -> Seq.mk_seq_extract ctx
+        | String_replace -> Seq.mk_seq_replace ctx
+        | String_index -> Seq.mk_seq_index ctx
         | op -> err {|Str: Unsupported Z3 triop operator "%a"|} Ty.pp_triop op
 
       let encode_relop _ = assert false

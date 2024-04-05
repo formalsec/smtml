@@ -226,36 +226,36 @@ module Str = struct
   let unop (op : unop) (v : Value.t) : Value.t =
     let str = of_value 1 v in
     match op with
-    | Seq_length -> Int.to_value (String.length str)
+    | Length -> Int.to_value (String.length str)
     | Trim -> to_value (String.trim str)
     | _ -> Log.err {|unop: Unsupported str operator "%a"|} Ty.pp_unop op
 
   let binop (op : binop) (v1 : Value.t) (v2 : Value.t) : Value.t =
     let str = of_value 1 v1 in
     match op with
-    | Seq_at ->
+    | At ->
       let i = Int.of_value 2 v2 in
       to_value (Format.sprintf "%c" (String.get str i))
-    | Seq_concat -> to_value (str ^ of_value 2 v2)
-    | Seq_prefix ->
+    | Concat -> to_value (str ^ of_value 2 v2)
+    | String_prefix ->
       Bool.to_value (String.starts_with ~prefix:str (of_value 2 v2))
-    | Seq_suffix -> Bool.to_value (String.ends_with ~suffix:str (of_value 2 v2))
-    | Seq_contains -> Bool.to_value (contains str (of_value 2 v2))
+    | String_suffix -> Bool.to_value (String.ends_with ~suffix:str (of_value 2 v2))
+    | String_contains -> Bool.to_value (contains str (of_value 2 v2))
     | _ -> Log.err {|binop: Unsupported str operator "%a"|} Ty.pp_binop op
 
   let triop (op : triop) (v1 : Value.t) (v2 : Value.t) (v3 : Value.t) : Value.t
       =
     let str = of_value 1 v1 in
     match op with
-    | Seq_extract ->
+    | String_extract ->
       let i = Int.of_value 2 v2 in
       let len = Int.of_value 3 v3 in
       to_value (String.sub str i len)
-    | Seq_replace ->
+    | String_replace ->
       let t = of_value 2 v2 in
       let t' = of_value 2 v3 in
       to_value (replace str t t')
-    | Seq_index ->
+    | String_index ->
       let t = of_value 2 v2 in
       let i = Int.of_value 3 v3 in
       Int.to_value (indexof str t i)

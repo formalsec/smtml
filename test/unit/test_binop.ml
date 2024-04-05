@@ -30,11 +30,11 @@ let () =
 let () =
   let i i = value (Int i) in
   let v s = value (Str s) in
-  assert (binop Ty_str Seq_at (v "abc") (i 0) = v "a");
-  assert (binop Ty_str Seq_concat (v "ab") (v "cd") = v "abcd");
-  assert (binop Ty_str Seq_prefix (v "ab") (v "abcd") = value True);
-  assert (binop Ty_str Seq_suffix (v "ab") (v "abcd") = value False);
-  assert (binop Ty_str Seq_contains (v "abcd") (v "bc") = value True)
+  assert (binop Ty_str At (v "abc") (i 0) = v "a");
+  assert (binop Ty_str Concat (v "ab") (v "cd") = v "abcd");
+  assert (binop Ty_str String_prefix (v "ab") (v "abcd") = value True);
+  assert (binop Ty_str String_suffix (v "ab") (v "abcd") = value False);
+  assert (binop Ty_str String_contains (v "abcd") (v "bc") = value True)
 
 (* i32 *)
 let () =
