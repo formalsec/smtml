@@ -319,6 +319,30 @@ module Lst = struct
     | _ -> Log.err {|triop: Unsupported list operator "%a"|} Ty.pp_triop op
 end
 
+module Tuple = struct
+  let of_value (n : int) (v : Value.t) : Value.t list =
+    of_arg
+      (function Tuple lst -> lst | _ -> raise_notrace (Value Ty_tuple))
+      n v
+  [@@inline]
+
+  let unop (op : unop) (v : Value.t) : Value.t =
+    let lst = of_value 1 v in
+    match op with
+    | Head -> List.hd lst
+    | Tail -> Tuple (List.tl lst)
+    | Length -> Int.to_value (List.length lst)
+    | _ -> Log.err {|unop: Unsupported tuple operator "%a"|} Ty.pp_unop op
+
+  let binop (op : binop) (v1 : Value.t) (v2 : Value.t) : Value.t =
+    match op with
+    | At ->
+      let lst = of_value 1 v1 in
+      let i = Int.of_value 2 v2 in
+      List.nth lst i
+    | _ -> Log.err {|binop: Unsupported tuple operator "%a"|} Ty.pp_binop op
+end
+
 module I32 = struct
   let to_value (i : int32) : Value.t = Num (I32 i) [@@inline]
 
@@ -851,25 +875,26 @@ end
 
 (* Dispatch *)
 
-let op int real bool str lst i32 i64 f32 f64 ty op =
+let op int real bool str lst tuple i32 i64 f32 f64 ty op =
   match ty with
   | Ty_int -> int op
   | Ty_real -> real op
   | Ty_bool -> bool op
   | Ty_str -> str op
   | Ty_list -> lst op
+  | Ty_tuple -> tuple op
   | Ty_bitv 32 -> i32 op
   | Ty_bitv 64 -> i64 op
   | Ty_fp 32 -> f32 op
   | Ty_fp 64 -> f64 op
-  | Ty_bitv _ | Ty_fp _ | Ty_array | Ty_tuple -> assert false
+  | Ty_bitv _ | Ty_fp _ | Ty_array -> assert false
 [@@inline]
 
 let unop =
-  op Int.unop Real.unop Bool.unop Str.unop Lst.unop I32.unop I64.unop F32.unop F64.unop
+  op Int.unop Real.unop Bool.unop Str.unop Lst.unop Tuple.unop I32.unop I64.unop F32.unop F64.unop
 
 let binop =
-  op Int.binop Real.binop Bool.binop Str.binop Lst.binop I32.binop I64.binop F32.binop
+  op Int.binop Real.binop Bool.binop Str.binop Lst.binop Tuple.binop I32.binop I64.binop F32.binop
     F64.binop
 
 let triop = function
