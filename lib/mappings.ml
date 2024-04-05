@@ -470,6 +470,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Num (I64 x) -> I64.v x
       | Num (F32 x) -> Float32_impl.v x
       | Num (F64 x) -> Float64_impl.v x
+      | List _ -> assert false
 
     let unop = function
       | Ty.Ty_int -> Int_impl.unop

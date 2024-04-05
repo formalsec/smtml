@@ -52,6 +52,10 @@ type unop =
   (* String *)
   | Seq_length
   | Trim
+  | Head
+  | Tail
+  | Length
+  | Reverse
 
 type binop =
   | Add
@@ -80,6 +84,10 @@ type binop =
   | Seq_contains
   | Seq_last_index
   | Seq_split
+  | At
+  | List_append_last
+  | List_append
+  | Concat
 
 type relop =
   | Eq
@@ -99,6 +107,7 @@ type triop =
   | Seq_extract
   | Seq_replace
   | Seq_index
+  | List_set
 
 type cvtop =
   | ToString
@@ -170,6 +179,10 @@ let pp_unop fmt (op : unop) =
   | Nearest -> pp_string fmt "nearest"
   | Seq_length -> pp_string fmt "len"
   | Trim -> pp_string fmt "trim"
+  | Head -> pp_string fmt "head"
+  | Tail -> pp_string fmt "tail"
+  | Length -> pp_string fmt "length"
+  | Reverse -> pp_string fmt "reverse"
 
 let pp_binop fmt (op : binop) =
   match op with
@@ -198,6 +211,10 @@ let pp_binop fmt (op : binop) =
   | Seq_contains -> pp_string fmt "contains"
   | Seq_last_index -> pp_string fmt "last_indexof"
   | Seq_split -> pp_string fmt "split"
+  | At -> pp_string fmt "at"
+  | List_append_last -> pp_string fmt "append_last"
+  | List_append -> pp_string fmt "append"
+  | Concat -> pp_string fmt "concat"
 
 let pp_triop fmt (op : triop) =
   match op with
@@ -205,6 +222,7 @@ let pp_triop fmt (op : triop) =
   | Seq_extract -> pp_string fmt "substr"
   | Seq_replace -> pp_string fmt "replace"
   | Seq_index -> pp_string fmt "indexof"
+  | List_set -> pp_string fmt "set"
 
 let pp_relop fmt (op : relop) =
   match op with
