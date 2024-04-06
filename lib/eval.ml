@@ -299,7 +299,7 @@ module Lst = struct
       let i = Int.of_value 2 v2 in
       List.nth lst i
     | List_append_last -> List (of_value 1 v1 @ [ v2 ])
-    | List_append -> List (v1 :: of_value 2 v2)
+    | List_append -> List (v2 :: of_value 2 v1)
     | Concat -> List (of_value 1 v1 @ of_value 2 v2)
     | _ -> Log.err {|binop: Unsupported list operator "%a"|} Ty.pp_binop op
 
@@ -309,14 +309,13 @@ module Lst = struct
     | List_set ->
       let lst = of_value 1 v1 in
       let i = Int.of_value 2 v2 in
-      let v = v3 in
       let rec set i lst v =
         match (i, lst) with
         | 0, _ :: tl -> v :: tl
         | i, hd :: tl -> hd :: set (i - 1) tl v
         | _, [] -> Log.err "List.set: index out of bounds"
       in
-      List (set i lst v)
+      List (set i lst v3)
     | _ -> Log.err {|triop: Unsupported list operator "%a"|} Ty.pp_triop op
 end
 
