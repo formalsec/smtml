@@ -648,6 +648,7 @@ module Fresh = struct
       | Num (I64 x) -> Bv.encode_val C64 x
       | Num (F32 x) -> Fp.encode_val C32 x
       | Num (F64 x) -> Fp.encode_val C64 x
+      | _ -> assert false
 
     let encode_unop = function
       | Ty.Ty_int -> I.encode_unop
