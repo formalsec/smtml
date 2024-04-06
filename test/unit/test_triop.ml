@@ -15,3 +15,11 @@ let () =
   let v str = value (Str str) in
   assert (triop Ty_str String_extract (v "abcd") (i 1) (i 2) = v "bc");
   assert (triop Ty_str String_index (v "abcd") (v "bc") (i 0) = i 1)
+
+(* list *)
+let () =
+  let i i = value (Int i) in
+  let v l = value (List l) in
+  assert (
+    triop Ty_list List_set (v [ Int 0; Int 1; Int 2 ]) (i 1) (i 3)
+    = v [ Int 0; Int 3; Int 2 ] )

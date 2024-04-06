@@ -28,22 +28,24 @@ type t =
   | List of t list
   | Tuple of t list
 
-let equal (v1 : t) (v2 : t) : Bool.t =
+let rec equal (v1 : t) (v2 : t) : Bool.t =
   match (v1, v2) with
   | True, True | False, False -> true
   | Int x1, Int x2 -> Int.equal x1 x2
   | Real x1, Real x2 -> x1 = x2
   | Str x1, Str x2 -> String.equal x1 x2
   | Num x1, Num x2 -> Num.(x1 = x2)
+  | List l1, List l2 | Tuple l1, Tuple l2 -> List.equal equal l1 l2
   | _ -> false
 
-let compare v1 v2 =
+let rec compare v1 v2 =
   match (v1, v2) with
   | True, True | False, False -> 0
   | Int x1, Int x2 -> Int.compare x1 x2
   | Real x1, Real x2 -> Float.compare x1 x2
   | Str x1, Str x2 -> String.compare x1 x2
   | Num x1, Num x2 -> Num.compare x1 x2
+  | List l1, List l2 | Tuple l1, Tuple l2 -> List.compare compare l1 l2
   | _ -> compare v1 v2
 
 let type_of (v : t) : Ty.t =

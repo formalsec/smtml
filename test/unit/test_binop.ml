@@ -36,6 +36,27 @@ let () =
   assert (binop Ty_str String_suffix (v "ab") (v "abcd") = value False);
   assert (binop Ty_str String_contains (v "abcd") (v "bc") = value True)
 
+(* list *)
+let () =
+  let i i = value (Int i) in
+  let v l = value (List l) in
+  assert (binop Ty_list At (v [ Int 0; Int 1; Int 2 ]) (i 0) = i 0);
+  assert (
+    binop Ty_list List_append_last (v [ Int 0; Int 1 ]) (i 2)
+    = v [ Int 0; Int 1; Int 2 ] );
+  assert (
+    binop Ty_list List_append (v [ Int 1; Int 2 ]) (i 0)
+    = v [ Int 0; Int 1; Int 2 ] );
+  assert (
+    binop Ty_list Concat (v [ Int 0; Int 1 ]) (v [ Int 2; Int 3 ])
+    = v [ Int 0; Int 1; Int 2; Int 3 ] )
+
+(* tuple *)
+let () =
+  let i i = value (Int i) in
+  let v t = value (Tuple t) in
+  assert (binop Ty_tuple At (v [ Int 0; Int 1 ]) (i 0) = i 0)
+
 (* i32 *)
 let () =
   let v i = value (Num (I32 i)) in
