@@ -239,7 +239,8 @@ module Str = struct
     | Concat -> to_value (str ^ of_value 2 v2)
     | String_prefix ->
       Bool.to_value (String.starts_with ~prefix:str (of_value 2 v2))
-    | String_suffix -> Bool.to_value (String.ends_with ~suffix:str (of_value 2 v2))
+    | String_suffix ->
+      Bool.to_value (String.ends_with ~suffix:str (of_value 2 v2))
     | String_contains -> Bool.to_value (contains str (of_value 2 v2))
     | _ -> Log.err {|binop: Unsupported str operator "%a"|} Ty.pp_binop op
 
@@ -279,9 +280,7 @@ end
 
 module Lst = struct
   let of_value (n : int) (v : Value.t) : Value.t list =
-    of_arg
-      (function List lst -> lst | _ -> raise_notrace (Value Ty_list))
-      n v
+    of_arg (function List lst -> lst | _ -> raise_notrace (Value Ty_list)) n v
   [@@inline]
 
   let unop (op : unop) (v : Value.t) : Value.t =
@@ -303,14 +302,16 @@ module Lst = struct
     | List_append -> List (v1 :: of_value 2 v2)
     | Concat -> List (of_value 1 v1 @ of_value 2 v2)
     | _ -> Log.err {|binop: Unsupported list operator "%a"|} Ty.pp_binop op
-  
-  let triop (op : triop) (v1 : Value.t) (v2 : Value.t) (v3 : Value.t) : Value.t =
+
+  let triop (op : triop) (v1 : Value.t) (v2 : Value.t) (v3 : Value.t) : Value.t
+      =
     match op with
-    | List_set -> 
+    | List_set ->
       let lst = of_value 1 v1 in
       let i = Int.of_value 2 v2 in
       let v = v3 in
-      let rec set i lst v = match i, lst with
+      let rec set i lst v =
+        match (i, lst) with
         | 0, _ :: tl -> v :: tl
         | i, hd :: tl -> hd :: set (i - 1) tl v
         | _, [] -> Log.err "List.set: index out of bounds"

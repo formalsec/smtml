@@ -56,7 +56,7 @@ let type_of (v : t) : Ty.t =
   | Num n -> Num.type_of n
   | List _ -> Ty_list
 
-let pp fmt (v : t) =
+let rec pp fmt (v : t) =
   let open Format in
   match v with
   | True -> pp_print_string fmt "true"
@@ -65,7 +65,10 @@ let pp fmt (v : t) =
   | Real x -> fprintf fmt "%F" x
   | Num x -> Num.pp fmt x
   | Str x -> Format.fprintf fmt "%S" x
-  | List _ -> assert false
+  | List l ->
+    fprintf fmt "[%a]"
+      (pp_print_list ~pp_sep:(fun fmt () -> pp_print_string fmt ", ") pp)
+      l
 
 let pp_num fmt (v : t) =
   match v with Num x -> Num.pp_hex fmt x | _ -> pp fmt v
