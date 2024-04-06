@@ -205,9 +205,19 @@ module Str = struct
     of_arg (function Str str -> str | _ -> raise_notrace (Value Ty_str)) n v
   [@@inline]
 
-  let replace _s _t _t' =
-    (* TODO *)
-    Log.err "TODO: string.replace s t t'"
+  let replace s t t' =
+    let len_s = String.length s in
+    let len_t = String.length t in
+    let rec loop i =
+      if i >= len_s then s
+      else if i + len_t > len_s then s
+      else if String.sub s i len_t = t then
+        let s' = String.sub s 0 i ^ t' in
+        let s'' = String.sub s (i + len_t) (len_s - i - len_t) in
+        s' ^ s''
+      else loop (i + 1)
+    in
+    loop 0
 
   let indexof s sub start =
     let len_s = String.length s in
