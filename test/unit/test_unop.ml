@@ -20,6 +20,12 @@ let () =
   assert (unop Ty_real Trunc (v 1.504) = v 1.0);
   assert (unop Ty_real Is_nan (v Float.nan) = value True)
 
+(* string*)
+let () =
+  let v s = value (Str s) in
+  assert (unop Ty_str Length (v "abc") = value (Int 3));
+  assert (unop Ty_str Trim (v " abc\t\n") = value (Str "abc"))
+
 (* list *)
 let () =
   let v l = value (List l) in
