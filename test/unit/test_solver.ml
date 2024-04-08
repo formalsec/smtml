@@ -5,7 +5,7 @@ module Solver = Solver.Z3_batch
 
 let v i = value (Int i)
 
-let eq i1 i2 = relop Ty_int Eq i1 i2
+let eq i1 i2 = relop Ty_bool Eq i1 i2
 
 let ( >= ) i1 i2 = relop Ty_int Ge i1 i2
 

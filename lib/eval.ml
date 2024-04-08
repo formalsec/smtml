@@ -53,8 +53,6 @@ module Int = struct
   let relop (op : relop) (v1 : Value.t) (v2 : Value.t) : bool =
     let f =
       match op with
-      | Eq -> ( = )
-      | Ne -> ( <> )
       | Lt -> ( < )
       | Le -> ( <= )
       | Gt -> ( > )
@@ -101,8 +99,6 @@ module Real = struct
   let relop (op : relop) (v1 : Value.t) (v2 : Value.t) : bool =
     let f =
       match op with
-      | Eq -> ( = )
-      | Ne -> ( <> )
       | Lt -> ( < )
       | Le -> ( <= )
       | Gt -> ( > )
@@ -161,10 +157,10 @@ module Bool = struct
     | Ite -> ( match of_value 1 c with true -> v1 | false -> v2 )
     | _ -> Log.err {|triop: Unsupported bool operator "%a"|} Ty.pp_triop op
 
-  let rec relop (op : relop) (v1 : Value.t) (v2 : Value.t) =
+  let relop (op : relop) (v1 : Value.t) (v2 : Value.t) =
     match op with
-    | Eq -> Bool.equal (of_value 1 v1) (of_value 2 v2)
-    | Ne -> not (relop Eq v1 v2)
+    | Eq -> Value.equal v1 v2
+    | Ne -> not (Value.equal v1 v2)
     | _ -> Log.err {|relop: Unsupported bool operator "%a"|} Ty.pp_relop op
 
   let cvtop _ _ = assert false
@@ -233,11 +229,7 @@ module Str = struct
       Int.to_value (indexof str t i)
     | Ite -> Log.err {|triop: Unsupported str operator "%a"|} Ty.pp_triop op
 
-  let rec relop (op : relop) (v1 : Value.t) (v2 : Value.t) : bool =
-    match op with
-    | Eq -> String.equal (of_value 1 v1) (of_value 2 v2)
-    | Ne -> not (relop Eq v1 v2)
-    | _ -> Log.err {|relop: Unsupported str operator "%a"|} Ty.pp_relop op
+  let relop _ = assert false
 
   let cvtop (op : cvtop) (v : Value.t) : Value.t =
     match op with
@@ -332,8 +324,6 @@ module I32 = struct
   let relop (op : relop) (v1 : Value.t) (v2 : Value.t) : bool =
     let f =
       match op with
-      | Eq -> ( = )
-      | Ne -> ( <> )
       | Lt -> ( < )
       | LtU -> lt_u
       | Le -> ( <= )
@@ -342,6 +332,7 @@ module I32 = struct
       | GtU -> gt_u
       | Ge -> ( >= )
       | GeU -> ge_u
+      | Eq | Ne -> assert false
     in
     f (of_value 1 v1) (of_value 2 v2)
 end
@@ -426,8 +417,6 @@ module I64 = struct
   let relop (op : relop) (v1 : Value.t) (v2 : Value.t) : bool =
     let f =
       match op with
-      | Eq -> ( = )
-      | Ne -> ( <> )
       | Lt -> ( < )
       | LtU -> lt_u
       | Le -> ( <= )
@@ -436,6 +425,7 @@ module I64 = struct
       | GtU -> gt_u
       | Ge -> ( >= )
       | GeU -> ge_u
+      | Eq | Ne -> assert false
     in
     f (of_value 1 v1) (of_value 2 v2)
 end

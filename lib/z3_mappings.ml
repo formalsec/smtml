@@ -99,8 +99,6 @@ module Fresh = struct
 
       let encode_relop op e1 e2 =
         match op with
-        | Eq -> Boolean.mk_eq ctx e1 e2
-        | Ne -> Boolean.mk_distinct ctx [ e1; e2 ]
         | Lt -> Arithmetic.mk_lt ctx e1 e2
         | Gt -> Arithmetic.mk_gt ctx e1 e2
         | Le -> Arithmetic.mk_le ctx e1 e2
@@ -209,7 +207,7 @@ module Fresh = struct
         | Seq_index -> Seq.mk_seq_index ctx
         | op -> err {|Str: Unsupported Z3 triop operator "%a"|} Ty.pp_triop op
 
-      let encode_relop op e1 e2 = Boolean.encode_relop op e1 e2
+      let encode_relop _ = assert false
 
       let encode_cvtop = function
         | String_to_code -> Seq.mk_string_to_code ctx
@@ -303,8 +301,6 @@ module Fresh = struct
 
       let encode_relop op e1 e2 =
         match op with
-        | Eq -> Boolean.mk_eq ctx e1 e2
-        | Ne -> Boolean.mk_distinct ctx [ e1; e2 ]
         | Lt -> BitVector.mk_slt ctx e1 e2
         | LtU -> BitVector.mk_ult ctx e1 e2
         | Le -> BitVector.mk_sle ctx e1 e2
@@ -313,6 +309,7 @@ module Fresh = struct
         | GtU -> BitVector.mk_ugt ctx e1 e2
         | Ge -> BitVector.mk_sge ctx e1 e2
         | GeU -> BitVector.mk_uge ctx e1 e2
+        | Eq | Ne -> assert false
 
       let encode_cvtop op e =
         match op with
