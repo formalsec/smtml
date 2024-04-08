@@ -2,17 +2,14 @@
 (let-const y bool)
 (let-const z bool)
 (let-const w bool)
-(assert (bool.ne x false))
+(assert (distinct x false))
 (assert
-  (bool.and
-    (bool.or (bool.not x) y)
-    (bool.or (bool.not y) z)))
-(assert (bool.or (bool.not x) z))
+  (and
+    (or (not x) y)
+    (or (not y) z)))
+(assert (or (not x) z))
 (check-sat)
-(assert (= w (bool.ite (bool.xor x z) true false)))
-(assert
-  (bool.or
-    (bool.not (bool.and x z))
-    (bool.not w)))
+(assert (= w (ite (xor x z) true false)))
+(assert (or (not (and x z)) (not w)))
 (check-sat)
 (get-model)
