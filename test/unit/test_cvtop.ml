@@ -19,8 +19,8 @@ let f64 f = value (Num (F64 (Int64.bits_of_float f)))
 
 (* int *)
 let () =
-  assert (cvtop Ty_int OfBool (value (True)) = int 1);
-  assert (cvtop Ty_int OfBool (value (False)) = int 0);
+  assert (cvtop Ty_int OfBool (value True) = int 1);
+  assert (cvtop Ty_int OfBool (value False) = int 0);
   assert (cvtop Ty_int Reinterpret_int (int 1) = real 1.)
 
 (* real *)
