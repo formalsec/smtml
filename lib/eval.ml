@@ -876,11 +876,12 @@ let op int real bool str lst i32 i64 f32 f64 ty op =
 [@@inline]
 
 let unop =
-  op Int.unop Real.unop Bool.unop Str.unop Lst.unop I32.unop I64.unop F32.unop F64.unop
+  op Int.unop Real.unop Bool.unop Str.unop Lst.unop I32.unop I64.unop F32.unop
+    F64.unop
 
 let binop =
-  op Int.binop Real.binop Bool.binop Str.binop Lst.binop I32.binop I64.binop F32.binop
-    F64.binop
+  op Int.binop Real.binop Bool.binop Str.binop Lst.binop I32.binop I64.binop
+    F32.binop F64.binop
 
 let triop = function
   | Ty_bool -> Bool.triop

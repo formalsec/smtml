@@ -74,8 +74,7 @@ let rec pp fmt (v : t) =
       (pp_print_list ~pp_sep:(fun fmt () -> pp_print_string fmt ", ") pp)
       l
   | App (`Op op, vs) ->
-    fprintf fmt "%s(%a)"
-      op
+    fprintf fmt "%s(%a)" op
       (pp_print_list ~pp_sep:(fun fmt () -> pp_print_string fmt ", ") pp)
       vs
   | _ -> assert false

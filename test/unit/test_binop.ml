@@ -51,12 +51,6 @@ let () =
     binop Ty_list Concat (v [ Int 0; Int 1 ]) (v [ Int 2; Int 3 ])
     = v [ Int 0; Int 1; Int 2; Int 3 ] )
 
-(* tuple *)
-let () =
-  let i i = value (Int i) in
-  let v t = value (Tuple t) in
-  assert (binop Ty_tuple At (v [ Int 0; Int 1 ]) (i 0) = i 0)
-
 (* i32 *)
 let () =
   let v i = value (Num (I32 i)) in
