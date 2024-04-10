@@ -37,13 +37,6 @@ let () =
     unop Ty_list Reverse (v [ Int 1; Int 2; Int 3 ])
     = value (List [ Int 3; Int 2; Int 1 ]) )
 
-(* tuple *)
-let () =
-  let v t = value (Tuple t) in
-  assert (unop Ty_tuple Head (v [ Int 0; Int 1 ]) = value (Int 0));
-  assert (unop Ty_tuple Tail (v [ Int 0; Int 1 ]) = value (Tuple [ Int 1 ]));
-  assert (unop Ty_tuple Length (v [ Int 0; Int 1 ]) = value (Int 2))
-
 (* i32 *)
 let () =
   let v i = value (Num (I32 i)) in

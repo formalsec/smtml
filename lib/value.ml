@@ -26,7 +26,6 @@ type t =
   | Str of string
   | Num of Num.t
   | List of t list
-  | Tuple of t list
 
 let rec equal (v1 : t) (v2 : t) : Bool.t =
   match (v1, v2) with
@@ -35,7 +34,7 @@ let rec equal (v1 : t) (v2 : t) : Bool.t =
   | Real x1, Real x2 -> x1 = x2
   | Str x1, Str x2 -> String.equal x1 x2
   | Num x1, Num x2 -> Num.(x1 = x2)
-  | List l1, List l2 | Tuple l1, Tuple l2 -> List.equal equal l1 l2
+  | List l1, List l2 -> List.equal equal l1 l2
   | _ -> false
 
 let rec compare v1 v2 =
@@ -45,7 +44,7 @@ let rec compare v1 v2 =
   | Real x1, Real x2 -> Float.compare x1 x2
   | Str x1, Str x2 -> String.compare x1 x2
   | Num x1, Num x2 -> Num.compare x1 x2
-  | List l1, List l2 | Tuple l1, Tuple l2 -> List.compare compare l1 l2
+  | List l1, List l2 -> List.compare compare l1 l2
   | _ -> compare v1 v2
 
 let type_of (v : t) : Ty.t =
@@ -56,7 +55,6 @@ let type_of (v : t) : Ty.t =
   | Str _ -> Ty_str
   | Num n -> Num.type_of n
   | List _ -> Ty_list
-  | Tuple _ -> Ty_tuple
 
 let rec pp fmt (v : t) =
   let open Format in
@@ -71,10 +69,6 @@ let rec pp fmt (v : t) =
     fprintf fmt "[%a]"
       (pp_print_list ~pp_sep:(fun fmt () -> pp_print_string fmt ", ") pp)
       l
-  | Tuple t ->
-    fprintf fmt "(%a)"
-      (pp_print_list ~pp_sep:(fun fmt () -> pp_print_string fmt ", ") pp)
-      t
 
 let pp_num fmt (v : t) =
   match v with Num x -> Num.pp_hex fmt x | _ -> pp fmt v

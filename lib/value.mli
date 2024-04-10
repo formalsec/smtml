@@ -24,7 +24,6 @@ type t =
   | Str of string
   | Num of Num.t
   | List of t list
-  | Tuple of t list
 
 val equal : t -> t -> bool
 

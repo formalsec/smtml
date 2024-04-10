@@ -483,7 +483,6 @@ module Fresh = struct
       | Num (F32 x) -> F32.v x
       | Num (F64 x) -> F64.v x
       | List _ -> assert false
-      | Tuple _ -> assert false
 
     let encode_unop = function
       | Ty.Ty_int | Ty.Ty_real -> Arithmetic.encode_unop
