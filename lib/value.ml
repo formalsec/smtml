@@ -26,6 +26,7 @@ type t =
   | Str of string
   | Num of Num.t
   | List of t list
+  | App : [> `Op of string ] * t list -> t
 
 let rec equal (v1 : t) (v2 : t) : Bool.t =
   match (v1, v2) with
@@ -57,6 +58,7 @@ let type_of (v : t) : Ty.t =
   | Str _ -> Ty_str
   | Num n -> Num.type_of n
   | List _ -> Ty_list
+  | App _ -> Ty_app
 
 let rec pp fmt (v : t) =
   let open Format in
@@ -71,6 +73,12 @@ let rec pp fmt (v : t) =
     fprintf fmt "[%a]"
       (pp_print_list ~pp_sep:(fun fmt () -> pp_print_string fmt ", ") pp)
       l
+  | App (`Op op, vs) ->
+    fprintf fmt "%s(%a)"
+      op
+      (pp_print_list ~pp_sep:(fun fmt () -> pp_print_string fmt ", ") pp)
+      vs
+  | _ -> assert false
 
 let pp_num fmt (v : t) =
   match v with Num x -> Num.pp_hex fmt x | _ -> pp fmt v
