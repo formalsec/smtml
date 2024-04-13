@@ -37,7 +37,8 @@
  (private_modules lexer parser)
  (libraries hc z3 ocaml_intrinsics)
  (instrumentation
-  (backend bisect_ppx)))
+  (backend bisect_ppx --exclusions lib/bisect.exclude)
+  (deps bisect.exclude)))
 
 (library
  (wrapped false)
