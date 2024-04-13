@@ -103,6 +103,25 @@ end
 
 module Batch (M : Mappings_intf.S) : Solver_intf.S = Make_batch (M)
 
+module Cached (M : Mappings_intf.S) : sig
+  include Solver_intf.S
+
+  module Cache : Cache_intf.S
+end = struct
+  include Make_batch (M)
+  module Cache = Cache.Strong
+
+  let cache = Cache.create 256
+
+  let check s es =
+    match Cache.find_opt cache es with
+    | Some res -> res
+    | None ->
+      let result = check s es in
+      Cache.add cache es result;
+      result
+end
+
 module Incremental (M : Mappings_intf.S) : Solver_intf.S = Make_incremental (M)
 
 module Z3_batch : Solver_intf.S = Batch (Z3_mappings)
