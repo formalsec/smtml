@@ -79,6 +79,7 @@ module Fresh = struct
             x_int
             Arithmetic.(mk_add ctx [ x_int; Integer.mk_numeral_i ctx 1 ])
         | Floor -> Arithmetic.Real.mk_real2int ctx e
+        | Trunc -> Arithmetic.Real.mk_real2int ctx e
         | Nearest | Is_nan | _ ->
           err {|Arith: Unsupported Z3 unop operator "%a"|} Ty.pp_unop op
 
