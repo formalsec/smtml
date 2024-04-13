@@ -92,6 +92,16 @@ module type Intf = sig
 
   (** {1 Incremental Model}
 
+      (Experimental) Like the Batch mode described above, but queries are
+      cached *)
+  module Cached (M : Mappings_intf.S) : sig
+    include S
+
+    module Cache : Cache_intf.S
+  end
+
+  (** {1 Incremental Model}
+
       In the Incremental module, constraints are managed incrementally,
       signifying that upon their addition to the solver, this module promptly
       communicates with the underlying SMT solver. Unlike the batch solver,
