@@ -1,15 +1,5 @@
 open Encoding
 
-let get_contents = function
-  | "-" -> In_channel.input_all In_channel.stdin
-  | filename ->
-    let chan = open_in filename in
-    Fun.protect
-      ~finally:(fun () -> close_in chan)
-      (fun () -> In_channel.input_all chan)
-
-let parse_file file = get_contents file |> Parse.from_string
-
 type prover =
   | Z3_prover
   | Z3_prover2
@@ -45,12 +35,12 @@ let parse_cmdline =
     let state =
       match files with
       | [] ->
-        let ast = parse_file "-" in
+        let ast = Parse.from_file ~filename:"-" in
         Some (Interpret.start ast)
       | _ ->
         List.fold_left
-          (fun state file ->
-            let ast = Parse.from_file ~filename:file in
+          (fun state filename ->
+            let ast = Parse.from_file ~filename in
             Some (Interpret.start ?state ast) )
           None files
     in
