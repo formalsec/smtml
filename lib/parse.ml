@@ -17,7 +17,7 @@ let parse_with_error lexbuf =
     exit 1
 
 let from_file ~filename =
-  let chan = open_in filename in
+  let chan = match filename with "-" -> stdin | _ -> open_in filename in
   Fun.protect
     ~finally:(fun () -> close_in chan)
     (fun () ->
