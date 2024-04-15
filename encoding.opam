@@ -41,6 +41,6 @@ build: [
 dev-repo: "git+https://github.com/formalsec/encoding.git"
 available: (arch = "x86_64" | arch = "arm64") & os != "win32" & arch != "x86_32"
 pin-depends: [
-  [ "colibri2.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#master"]
-  [ "colibrilib.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#master"]
+  [ "colibri2.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#ae18d699b19e7967a81ccae6db454edfa968feae"]
+  [ "colibrilib.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#ae18d699b19e7967a81ccae6db454edfa968feae"]
 ]
