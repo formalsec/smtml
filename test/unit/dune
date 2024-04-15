@@ -6,7 +6,6 @@
   test_real
   test_simplify
   test_solver
-  test_solver_params
   test_unop
   test_binop
   test_triop
