@@ -23,6 +23,7 @@ depends: [
 depopts: [
   "colibri2"
   "bitwuzla-cxx" {>= "0.4.0"}
+  "cvc5"
 ]
 build: [
   ["dune" "subst"] {dev}
@@ -43,4 +44,5 @@ available: arch != "arm32" & arch != "x86_32"
 pin-depends: [
   ["colibri2.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#ae18d699b19e7967a81ccae6db454edfa968feae"]
   ["colibrilib.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#ae18d699b19e7967a81ccae6db454edfa968feae"]
+  ["cvc5.~dev" "git+https://github.com/formalsec/ocaml-cvc5#main"]
 ]

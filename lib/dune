@@ -65,3 +65,11 @@
  (modules bitwuzla_mappings)
  (libraries smtml bitwuzla-cxx)
  (optional))
+
+(library
+ (wrapped false)
+ (name smtml_cvc5)
+ (public_name smtml.cvc5)
+ (modules cvc5_mappings)
+ (libraries smtml cvc5)
+ (optional))
