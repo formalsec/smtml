@@ -1,0 +1,15 @@
+(library
+ (name encoding_tests)
+ (modules test_solver_params)
+ (libraries encoding))
+
+(test
+ (name test_z3)
+ (modules test_z3)
+ (libraries encoding encoding_tests))
+
+(test
+ (name test_colibri2)
+ (modules test_colibri2)
+ (libraries encoding_tests encoding.colibri2)
+ (build_if %{lib-available:encoding.colibri2}))
