@@ -1,4 +1,4 @@
-open Encoding
+open Smtml
 
 module Make (M : Mappings_intf.S) = struct
   open Params
