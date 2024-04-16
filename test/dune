@@ -1,21 +1,21 @@
 (library
- (name encoding_tests)
+ (name smtml_tests)
  (modules test_harness test_solver_params test_lia)
- (libraries encoding))
+ (libraries smtml))
 
 (test
  (name test_z3)
  (modules test_z3)
- (libraries encoding encoding_tests))
+ (libraries smtml smtml_tests))
 
 (test
  (name test_colibri2)
  (modules test_colibri2)
- (libraries encoding_tests encoding.colibri2)
- (build_if %{lib-available:encoding.colibri2}))
+ (libraries smtml_tests smtml.colibri2)
+ (build_if %{lib-available:smtml.colibri2}))
 
 (test
  (name test_bitwuzla)
  (modules test_bitwuzla)
- (libraries encoding_tests encoding.bitwuzla)
- (build_if %{lib-available:encoding.bitwuzla}))
+ (libraries smtml_tests smtml.bitwuzla)
+ (build_if %{lib-available:smtml.bitwuzla}))
