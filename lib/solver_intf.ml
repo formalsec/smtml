@@ -106,13 +106,13 @@ module type Intf = sig
   (** {!module:Batch} is parameterized by the mapping module [M] implementing
       {!module-type:Mappings_intf.S}. In this mode, the solver delays all
       interactions with the underlying SMT solver until it becomes necessary. *)
-  module Batch (M : Mappings_intf.S) : S
+  module Batch (_ : Mappings_intf.S) : S
 
   (** {1 Incremental Model}
 
       (Experimental) Like the Batch mode described above, but queries are
       cached *)
-  module Cached (M : Mappings_intf.S) : sig
+  module Cached (_ : Mappings_intf.S) : sig
     include S
 
     module Cache : Cache_intf.S
@@ -130,7 +130,7 @@ module type Intf = sig
       solver parameterized by the mapping module [M]. In this mode, the
       Incremental solver engages with the underlying SMT solver in nearly every
       interaction. *)
-  module Incremental (M : Mappings_intf.S) : S
+  module Incremental (_ : Mappings_intf.S) : S
 
   (** {!module:Z3_batch} is a concrete instantiation of {!module:Batch} with
       {!module:Z3_mappings}, providing a solver specifically tailored for the Z3
