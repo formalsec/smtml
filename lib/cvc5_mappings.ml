@@ -246,17 +246,16 @@ module Impl = struct
     let concat t1 t2 = Term.mk_term tm Kind.Bitvector_concat [| t1; t2 |]
 
     let extract x ~high ~low =
-      let h = Term.mk_int tm high in
-      let l = Term.mk_int tm low in
-      Term.mk_term tm Kind.Bitvector_extract [| x; h; l |]
+      let op = Op.mk_op tm Kind.Bitvector_extract [| high; low |] in
+      Term.mk_term_op tm op [| x |]
 
     let zero_extend n t =
-      let n = Term.mk_int tm n in
-      Term.mk_term tm Kind.Bitvector_zero_extend [| t; n |]
+      let op = Op.mk_op tm Kind.Bitvector_zero_extend [| n |] in
+      Term.mk_term_op tm op [| t |]
 
     let sign_extend n t =
-      let n = Term.mk_int tm n in
-      Term.mk_term tm Kind.Bitvector_sign_extend [| t; n |]
+      let op = Op.mk_op tm Kind.Bitvector_sign_extend [| n |] in
+      Term.mk_term_op tm op [| t |]
   end
 
   module Float = struct
