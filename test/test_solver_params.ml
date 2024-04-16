@@ -2,7 +2,7 @@ open Encoding
 
 module Make (M : Mappings_intf.S) = struct
   open Params
-  module Solver = Solver.Batch (M)
+  module Solver = Solver.Incremental (M)
 
   let () =
     assert (default_value Timeout = Int32.(to_int max_int));

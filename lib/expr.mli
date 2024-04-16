@@ -65,6 +65,8 @@ val to_string : t -> string
 
 val value : Value.t -> t
 
+val symbol : Symbol.t -> t
+
 (** Smart unop constructor, applies simplifications at constructor level *)
 val unop : Ty.t -> Ty.unop -> t -> t
 

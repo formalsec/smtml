@@ -96,6 +96,8 @@ let ( @: ) e _ = make e
 
 let view (hte : t) : expr = hte.node [@@inline]
 
+let symbol s = make (Symbol s)
+
 let mk_symbol s = make (Symbol s)
 
 let is_num (e : t) = match view e with Val (Num _) -> true | _ -> false
