@@ -110,8 +110,7 @@ module type Intf = sig
 
   (** {1 Incremental Model}
 
-      (Experimental) Like the Batch mode described above, but queries are
-      cached *)
+      (Experimental) Like the Batch mode described above, but queries are cached *)
   module Cached (_ : Mappings_intf.S) : sig
     include S
 
