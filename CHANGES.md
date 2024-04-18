@@ -1,6 +1,11 @@
-Unreleased
-==========
+v0.1.0
+======
 
+- Renames project to `Smt.ml` and library to `smtml`
+- Minor fixes and typos
+- Adds preliminary support for the Bitwuzla solver
+- Completes concrete simplifications
+- `Solver.check` now returns a `Sat | Unsat | Unknown` instead of a `bool` value
 - Adds owi's simplifications and smart op constructors
 - Moves theory annotation (`Ty.t`) only to necessary variants
 
