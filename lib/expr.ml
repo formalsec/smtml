@@ -520,9 +520,9 @@ struct
 
   let ( ~- ) e = unop T.ty Neg e
 
-  let ( = ) e1 e2 = relop T.ty Eq e1 e2
+  let ( = ) e1 e2 = relop Ty_bool Eq e1 e2
 
-  let ( != ) e1 e2 = relop T.ty Ne e1 e2
+  let ( != ) e1 e2 = relop Ty_bool Ne e1 e2
 
   let ( > ) e1 e2 = relop T.ty Gt e1 e2
 
@@ -560,19 +560,33 @@ module Bitv = struct
 end
 
 module Fpa = struct
-  module F32 = Make (struct
-    type elt = float
+  module F32 = struct
+    include Make (struct
+      type elt = float
 
-    let ty = Ty_fp 32
+      let ty = Ty_fp 32
 
-    let num f = Num.F32 (Int32.bits_of_float f)
-  end)
+      let num f = Num.F32 (Int32.bits_of_float f)
+    end)
 
-  module F64 = Make (struct
-    type elt = float
+    (* Redeclare equality due to incorrect theory annotation *)
+    let ( = ) e1 e2 = relop (Ty_fp 32) Eq e1 e2
 
-    let ty = Ty_fp 64
+    let ( != ) e1 e2 = relop (Ty_fp 32) Ne e1 e2
+  end
 
-    let num f = Num.F64 (Int64.bits_of_float f)
-  end)
+  module F64 = struct
+    include Make (struct
+      type elt = float
+
+      let ty = Ty_fp 64
+
+      let num f = Num.F64 (Int64.bits_of_float f)
+    end)
+
+    (* Redeclare equality due to incorrect theory annotation *)
+    let ( = ) e1 e2 = relop (Ty_fp 64) Eq e1 e2
+
+    let ( != ) e1 e2 = relop (Ty_fp 64) Ne e1 e2
+  end
 end

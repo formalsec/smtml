@@ -338,7 +338,7 @@ module Fresh = struct
         | TruncSF32 | TruncSF64 -> FloatingPoint.mk_to_sbv ctx rtz e bitwidth
         | TruncUF32 | TruncUF64 -> FloatingPoint.mk_to_ubv ctx rtz e bitwidth
         | Reinterpret_float -> FloatingPoint.mk_to_ieee_bv ctx e
-        | ToBool -> encode_relop Ne e (v (Ixx.of_int 0))
+        | ToBool -> Boolean.mk_eq ctx e (v (Ixx.of_int 0)) |> Boolean.mk_not ctx
         | OfBool -> Boolean.mk_ite ctx e (v (Ixx.of_int 1)) (v (Ixx.of_int 0))
         | _ -> assert false
     end
