@@ -1,4 +1,4 @@
-open Encoding
+open Smtml
 open Bitwuzla_cxx
 include Mappings_intf
 

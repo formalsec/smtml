@@ -1,6 +1,6 @@
 (executable
  (name product_mix)
- (libraries encoding))
+ (libraries smtml))
 
 (cram
  (deps

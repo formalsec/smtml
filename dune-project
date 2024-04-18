@@ -1,25 +1,25 @@
 (lang dune 3.0)
 (using menhir 2.1)
 
-(name encoding)
+(name smtml)
 
 (generate_opam_files true)
 
 (source
- (github formalsec/encoding))
+ (github formalsec/smtml))
 
 (authors "Filipe Marques <filipe.s.marques@tecnico.ulisboa.pt>")
 
 (maintainers "Filipe Marques <filipe.s.marques@tecnico.ulisboa.pt>")
 
-(documentation "https://formalsec.github.io/encoding/encoding/index.html")
+(documentation "https://formalsec.github.io/smtml/smtml/index.html")
 
 (license "GPL-3.0-only")
 
 (package
- (name encoding)
- (synopsis "Smt encoding library")
- (description "An OCaml abstraction layer for constraint solvers.")
+ (name smtml)
+ (synopsis "A Front-end library for SMT solvers in OCaml")
+ (description "A Multi Back-end Front-end for SMT Solvers in OCaml.")
  (depopts colibri2 (bitwuzla-cxx (>= "0.4.0")))
  (depends
    dune

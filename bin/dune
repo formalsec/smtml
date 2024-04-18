@@ -2,7 +2,7 @@
  (name main)
  (public_name smtml)
  (modules main)
- (libraries encoding cmdliner)
+ (libraries smtml cmdliner)
  (instrumentation
   (backend bisect_ppx)))
 
@@ -10,5 +10,5 @@
  (public_name smtml2)
  (name main2)
  (modules main2)
- (libraries cmdliner encoding encoding.colibri2 encoding.bitwuzla)
+ (libraries cmdliner smtml smtml.colibri2 smtml.bitwuzla)
  (optional))

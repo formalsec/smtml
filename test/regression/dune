@@ -3,4 +3,4 @@
 
 (tests
  (names test_fp_get_value test_pr_77)
- (libraries encoding))
+ (libraries smtml))
