@@ -1,4 +1,4 @@
-open Encoding
+open Smtml
 
 type prover =
   | Z3_prover

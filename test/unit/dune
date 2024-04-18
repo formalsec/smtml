@@ -12,4 +12,4 @@
   test_triop
   test_relop
   test_cvtop)
- (libraries encoding))
+ (libraries smtml))

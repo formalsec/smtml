@@ -1,4 +1,4 @@
-open Encoding
+open Smtml
 module Batch = Solver.Z3_batch
 
 let () =

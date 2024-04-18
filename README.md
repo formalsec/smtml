@@ -1,11 +1,11 @@
-# Encoding [![Build badge](https://github.com/wasp-platform/encoding/actions/workflows/build.yml/badge.svg)](https://github.com/wasp-platform/encoding/actions) [![Coverage Status](https://coveralls.io/repos/github/formalsec/encoding/badge.svg)](https://coveralls.io/github/formalsec/encoding) [![GPL-3.0](https://img.shields.io/github/license/wasp-platform/encoding)](LICENSE) ![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos-lightgrey)
+# Smt.ml [![Build badge](https://github.com/formalsec/encoding/actions/workflows/build.yml/badge.svg)](https://github.com/formalsec/encoding/actions) [![Coverage Status](https://coveralls.io/repos/github/formalsec/encoding/badge.svg)](https://coveralls.io/github/formalsec/encoding) [![GPL-3.0](https://img.shields.io/github/license/wasp-platform/encoding)](LICENSE) ![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos-lightgrey)
 
-Encoding is an OCaml SMT abstraction layer for constraint solvers. The primary
-objective of Encoding is to facilitate the effortless transition between
+Smt.ml is a Multi Back-end Front-end for SMT Solvers in OCaml. The primary
+objective of Smt.ml is to facilitate the effortless transition between
 different SMT solvers during program analysis, as certain SMT solvers may prove
-more efficient at handling specific logics and formulas. Presently, Encoding
-offers support for [Z3] and [Colibri2], and ongoing efforts are directed
-towards incorporating support for [Bitwuzla], [Alt-Ergo], and [CVC5].
+more efficient at handling specific logics and formulas. Presently, Smt.ml
+offers support for [Z3], [Colibri2], and [Bitwuzla], and ongoing efforts are directed
+towards incorporating support for [cvc5] and [Alt-Ergo].
 
 ## Installation
 
@@ -22,7 +22,7 @@ opam switch create 5.1.0 5.1.0
 - And, then install encoding:
 
 ```sh
-opam install encoding
+opam install smtml
 ```
 
 ### Build from source
@@ -30,8 +30,8 @@ opam install encoding
 - Install the library dependencies:
 
 ```sh
-git clone https://github.com/wasp-platform/encoding.git
-cd encoding
+git clone https://github.com/formalsec/smtml.git
+cd smtml
 opam install . --deps-only
 ```
 
@@ -42,7 +42,7 @@ dune build
 dune runtest
 ```
 
-- Install `encoding` on your path by running:
+- Install `smtml` on your path by running:
 
 ```sh
 dune install
@@ -55,16 +55,22 @@ dune install
 | [Z3] | Yes |
 | [Colibri2] | Yes |
 | [Bitwuzla] | Ongoing |
+| [cvc5] | Ongoing |
 | [Alt-Ergo] | Planned |
-| [CVC5] | Planned |
 | [Minisat] | Planned |
 
 ## About
 
 ### Project Name
 
-While this project is currently named *Encoding*, there are plans to rename it
-to *Smtml* in the future.
+The name `Smt.ml` is a portmanteau of the terms `SMT` and `OCaml`. The `.ml`
+extension is a common file extension for OCaml source files. The library itself
+is named `smtml` and can be imported into OCaml programs using the following
+syntax:
+
+```ocaml
+open Smtml
+```
 
 ### Changelog
 

@@ -5,8 +5,8 @@
  (modules parser))
 
 (library
- (name encoding)
- (public_name encoding)
+ (name smtml)
+ (public_name smtml)
  (modules
   ast
   ;axioms
@@ -44,11 +44,11 @@
 
 (library
  (wrapped false)
- (name encoding_colibri2)
- (public_name encoding.colibri2)
+ (name smtml_colibri2)
+ (public_name smtml.colibri2)
  (modules colibri2_mappings)
  (libraries
-  encoding
+  smtml
   colibri2.core
   colibri2.solver
   colibri2.theories.bool
@@ -60,8 +60,8 @@
 
 (library
  (wrapped false)
- (name encoding_bitwuzla)
- (public_name encoding.bitwuzla)
+ (name smtml_bitwuzla)
+ (public_name smtml.bitwuzla)
  (modules bitwuzla_mappings)
- (libraries encoding bitwuzla-cxx)
+ (libraries smtml bitwuzla-cxx)
  (optional))

@@ -1,4 +1,4 @@
-open Encoding
+open Smtml
 open Expr
 module I8 = Bitv.I8
 module I32 = Bitv.I32

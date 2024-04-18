@@ -1,4 +1,4 @@
-open Encoding
+open Smtml
 
 let () =
   let open Num in

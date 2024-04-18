@@ -1,4 +1,4 @@
-open Encoding
+open Smtml
 
 module Fresh = struct
   module DExpr = Colibri2_core.Expr
