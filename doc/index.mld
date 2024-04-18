@@ -1,42 +1,43 @@
-{0 Encoding}
+{0 Smtml}
 
-The full API can be {{:Encoding/index.html} found here}.
-Coverage {{:https://formalsec.github.io/encoding/coverage/index.html} here}
+The full API can be {{:Smtml/index.html} found here}.
+Coverage {{:https://formalsec.github.io/smtml/coverage/index.html} here}
 
-{e Encoding} is a free and open-source OCaml SMT constraint abstraction layer
+{e Smt.ml} is a free and open-source OCaml SMT constraint abstraction layer
 that serves as an abstracted constraint-solving wrapper, currently utilising
-Z3 as its backend solver. However, future plans for Encoding include support
-for other solvers in its backend, such as Yices and CVC5.
+Z3 as its backend solver. However, future plans for Smt.ml include support
+for other solvers in its backend, such as Yices and cvc5.
 
 {1 Creating Solvers}
 
-To begin creating solvers, utilize the modules provided in {!module:Encoding.Solver}
-for Z3 encoding. The simplest approach to creating a solver in the Encoding
+To begin creating solvers, utilize the modules provided in {!module:Smtml.Solver}
+for Z3 encoding. The simplest approach to creating a solver in the Smtml
 is outlined below:
 
 {@ocaml[
-module Z3 = Encoding.Solver.Z3_incremental
+module Z3 = Smtml.Solver.Z3_incremental
 
 let solver : Z3.t = Z3.create ()
 ]}
 
 For a comprehensive understanding of the solver functions and modes, refer to the
-documentation {{:Encoding/Solver/index.html} found here}.
+documentation {{:Smtml/Solver/index.html} found here}.
 
 {1 Creating Expressions}
 
 To provide constraints to the solver, it is necessary to first construct
-expressions of type {!type:Encoding.Expr.t}. These expressions consist of two
-key components: an arbitrary grammar expression of type {!type:Encoding.Expr.expr}
-for building logical expressions, and a theory annotation of type {!type:Encoding.Ty.t}
+expressions of type {!type:Smtml.Expr.t}. These expressions consist of two
+key components: an arbitrary grammar expression of type {!type:Smtml.Expr.expr}
+for building logical expressions, and a theory annotation of type {!type:Smtml.Ty.t}
 that informs the SMT solver about the theory in which to encode our expressions.
-The combination of these two components is achieved using the [@:] operator.
+The combination of these two components is achieved using the constructors
+[unop], [binop], [relop], etc.
 
 As an illustration, consider the creation of the logical formula equivalent to
 [not (not x) = x]:
 
 {@ocaml[
-open Encoding
+open Smtml
 open Ty
 open Expr
 
@@ -44,11 +45,11 @@ open Expr
 let x = mk_symbol Symbol.("x" @: Ty_bool)
 
 (* Creating unary operations *)
-let not_x : Expr.t = Unop (Not, x) @: Ty_bool
-let not_not_x : Expr.t = Unop (Not, not_x) @: Ty_bool
+let not_x : Expr.t = unop Ty_bool Not x
+let not_not_x : Expr.t = unop Ty_bool Not not_x
 
 (* Creating the equality *)
-let expr : Expr.t = Relop (Eq, not_not_x, x) @: Ty_bool
+let expr : Expr.t = relop Ty_bool Eq not_not_x x
 ]}
 
 Once our proposition is encoded in the abstract grammar, it can be passed to
@@ -66,9 +67,9 @@ In many cases, the ability to swiftly retrieve concrete values or sets of values
 from a set of satisfiable constraints proves to be immensely beneficial. The
 Encoding facilitates this process through two essential functions:
 
-+ {!val:Encoding.Solver_intf.S.get_value} allows the retrieval of a single value
++ {!val:Smtml.Solver_intf.S.get_value} allows the retrieval of a single value
   from the solver.
-+ {!val:Encoding.Solver_intf.S.model} enables the retrieval of all possible assignments
++ {!val:Smtml.Solver_intf.S.model} enables the retrieval of all possible assignments
   within our constraints.
 
 To illustrate, let's consider retrieving the value of [x] from our previous example:
