@@ -304,15 +304,21 @@ module I32 = struct
     Int32.logor (shr_u x (Int32.of_int n)) (shl x (Int32.of_int (32 - n)))
   [@@inline]
 
+  let clz n =
+    let n = Ocaml_intrinsics.Int32.count_leading_zeros n in
+    Int32.of_int n
+
+  let ctz n =
+    let n = Ocaml_intrinsics.Int32.count_trailing_zeros n in
+    Int32.of_int n
+
   let unop (op : unop) (v : Value.t) : Value.t =
     let f =
       match op with
       | Neg -> Int32.neg
       | Not -> Int32.lognot
-      | Clz ->
-        fun n -> Int32.of_int (Ocaml_intrinsics.Int32.count_leading_zeros n)
-      | Ctz ->
-        fun n -> Int32.of_int (Ocaml_intrinsics.Int32.count_trailing_zeros n)
+      | Clz -> clz
+      | Ctz -> ctz
       | _ -> Log.err {|unop: Unsupported i32 operator "%a"|} Ty.pp_unop op
     in
     to_value (f (of_value 1 v))
@@ -397,15 +403,21 @@ module I64 = struct
     Int64.logor (shr_u x (Int64.of_int n)) (shl x (Int64.of_int (64 - n)))
   [@@inline]
 
+  let clz n =
+    let n = Ocaml_intrinsics.Int64.count_leading_zeros n in
+    Int64.of_int n
+
+  let ctz n =
+    let n = Ocaml_intrinsics.Int64.count_trailing_zeros n in
+    Int64.of_int n
+
   let unop (op : unop) (v : Value.t) : Value.t =
     let f =
       match op with
       | Neg -> Int64.neg
       | Not -> Int64.lognot
-      | Clz ->
-        fun n -> Int64.of_int (Ocaml_intrinsics.Int64.count_leading_zeros n)
-      | Ctz ->
-        fun n -> Int64.of_int (Ocaml_intrinsics.Int64.count_trailing_zeros n)
+      | Clz -> clz
+      | Ctz -> ctz
       | _ -> Log.err {|unop: Unsupported i64 operator "%a"|} Ty.pp_unop op
     in
     to_value (f (of_value 1 v))
