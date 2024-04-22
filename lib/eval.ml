@@ -27,7 +27,12 @@ open Ty
 
 exception Value of Ty.t
 
-exception TypeError of int * Value.t * Ty.t
+exception
+  TypeError of
+    { index : int
+    ; value : Value.t
+    ; ty : Ty.t
+    }
 
 exception DivideByZero
 
@@ -35,7 +40,8 @@ exception ConversionToInteger
 
 exception IntegerOverflow
 
-let of_arg f n v = try f v with Value t -> raise (TypeError (n, v, t))
+let of_arg f n v =
+  try f v with Value t -> raise (TypeError { index = n; value = v; ty = t })
 [@@inline]
 
 module Int = struct
@@ -750,7 +756,7 @@ module I64CvtOp = struct
     | TruncSF64 -> I64.to_value (trunc_f64_s (F64.of_value 1 v))
     | TruncUF64 -> I64.to_value (trunc_f64_u (F64.of_value 1 v))
     | Reinterpret_float -> I64.to_value (F64.of_value 1 v)
-    | WrapI64 -> raise (TypeError (1, v, Ty_bitv 64))
+    | WrapI64 -> raise (TypeError { index = 1; value = v; ty = Ty_bitv 64 })
     | ToBool | OfBool | _ ->
       Log.err {|cvtop: Unsupported i64 operator "%a"|} Ty.pp_cvtop op
 end
@@ -802,7 +808,7 @@ module F32CvtOp = struct
     | ConvertSI64 -> F32.to_value (convert_i64_s (I64.of_value 1 v))
     | ConvertUI64 -> F32.to_value (convert_i64_u (I64.of_value 1 v))
     | Reinterpret_int -> F32.to_value (I32.of_value 1 v)
-    | PromoteF32 -> raise (TypeError (1, v, Ty_fp 32))
+    | PromoteF32 -> raise (TypeError { index = 1; value = v; ty = Ty_fp 32 })
     | ToString | OfString | _ ->
       Log.err {|cvtop: Unsupported f32 operator "%a"|} Ty.pp_cvtop op
 end
@@ -854,7 +860,7 @@ module F64CvtOp = struct
     | ConvertSI64 -> F64.to_value (convert_i64_s (I64.of_value 1 v))
     | ConvertUI64 -> F64.to_value (convert_i64_u (I64.of_value 1 v))
     | Reinterpret_int -> F64.to_value (I64.of_value 1 v)
-    | DemoteF64 -> raise (TypeError (1, v, Ty_bitv 64))
+    | DemoteF64 -> raise (TypeError { index = 1; value = v; ty = Ty_bitv 64 })
     | ToString | OfString | _ ->
       Log.err {|cvtop: Unsupported f64 operator "%a"|} Ty.pp_cvtop op
 end
