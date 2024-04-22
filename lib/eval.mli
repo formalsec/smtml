@@ -22,7 +22,12 @@ exception DivideByZero
 
 exception Value of Ty.t
 
-exception TypeError of int * Value.t * Ty.t
+exception
+  TypeError of
+    { index : int
+    ; value : Value.t
+    ; ty : Ty.t
+    }
 
 val unop : Ty.t -> unop -> Value.t -> Value.t
 
