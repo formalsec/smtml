@@ -18,6 +18,8 @@
 
 open Ty
 
+type op_type
+
 exception DivideByZero
 
 exception Value of Ty.t
@@ -27,6 +29,7 @@ exception
     { index : int
     ; value : Value.t
     ; ty : Ty.t
+    ; op : op_type
     }
 
 val unop : Ty.t -> unop -> Value.t -> Value.t
