@@ -347,7 +347,22 @@ module Impl = struct
   end
 
   module Solver = struct
-    let make ?params:_ ?logic:_ () = Solver.mk_solver tm
+    let set_params slv params =
+      Solver.set_option slv "e-matching"
+        (string_of_bool @@ Params.get params Ematching);
+      Solver.set_option slv "tlimit" (string_of_int @@ Params.get params Timeout);
+      Solver.set_option slv "produce-models"
+        (string_of_bool @@ Params.get params Model);
+      Solver.set_option slv "produce-unsat-cores"
+        (string_of_bool @@ Params.get params Unsat_core)
+
+    let make ?params ?logic () =
+      let logic =
+        Option.map (fun l -> Format.asprintf "%a" Ty.pp_logic l) logic
+      in
+      let slv = Solver.mk_solver ?logic tm in
+      Option.iter (set_params slv) params;
+      slv
 
     let clone _ = assert false
 
