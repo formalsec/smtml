@@ -33,7 +33,7 @@ module Impl = struct
 
   type handle = unit
 
-  type optimizer = unit (* Not supported? *)
+  type optimizer = unit (* Not supported *)
 
   type cont = unit
 
@@ -65,7 +65,15 @@ module Impl = struct
 
   let real r = Term.mk_real_s tm (Float.to_string r)
 
-  let const symbol ty = Term.mk_const_s tm ty symbol
+  let cache = Hashtbl.create 100
+
+  let const symbol ty =
+    match Hashtbl.find_opt cache symbol with
+    | Some t -> t
+    | None ->
+      let t = Term.mk_const_s tm ty symbol in
+      Hashtbl.add cache symbol t;
+      t
 
   let not_ t = Term.mk_term tm Kind.Not [| t |]
 
@@ -393,6 +401,7 @@ module Impl = struct
     let pp_statistics _ = assert false
   end
 
+  (* Not supported *)
   module Optimizer = struct
     let make _ = assert false
 
