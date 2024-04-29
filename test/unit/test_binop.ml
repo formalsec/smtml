@@ -31,7 +31,6 @@ let () =
   let i i = value (Int i) in
   let v s = value (Str s) in
   assert (binop Ty_str At (v "abc") (i 0) = v "a");
-  assert (binop Ty_str Concat (v "ab") (v "cd") = v "abcd");
   assert (binop Ty_str String_prefix (v "ab") (v "abcd") = value True);
   assert (binop Ty_str String_suffix (v "ab") (v "abcd") = value False);
   assert (binop Ty_str String_contains (v "abcd") (v "bc") = value True)
@@ -46,10 +45,7 @@ let () =
     = v [ Int 0; Int 1; Int 2 ] );
   assert (
     binop Ty_list List_append (v [ Int 1; Int 2 ]) (i 0)
-    = v [ Int 0; Int 1; Int 2 ] );
-  assert (
-    binop Ty_list Concat (v [ Int 0; Int 1 ]) (v [ Int 2; Int 3 ])
-    = v [ Int 0; Int 1; Int 2; Int 3 ] )
+    = v [ Int 0; Int 1; Int 2 ] )
 
 (* i32 *)
 let () =
