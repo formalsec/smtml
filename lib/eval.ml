@@ -172,7 +172,7 @@ end
 module Bool = struct
   let to_value (b : bool) : Value.t = if b then True else False [@@inline]
 
-  let of_value (n : int) (op : op_type) (v : Value.t)  : bool =
+  let of_value (n : int) (op : op_type) (v : Value.t) : bool =
     of_arg
       (function
         | True -> true | False -> false | _ -> raise_notrace (Value Ty_bool) )
@@ -180,7 +180,7 @@ module Bool = struct
   [@@inline]
 
   let unop (op : unop) (v : Value.t) : Value.t =
-    let b = of_value 1 (`Unop op) v  in
+    let b = of_value 1 (`Unop op) v in
     match op with
     | Not -> to_value (not b)
     | _ -> Log.err {|unop: Unsupported bool operator "%a"|} Ty.pp_unop op
@@ -204,7 +204,7 @@ module Bool = struct
 
   let triop (op : triop) (c : Value.t) (v1 : Value.t) (v2 : Value.t) : Value.t =
     match op with
-    | Ite -> ( match of_value 1 (`Triop op) c  with true -> v1 | false -> v2 )
+    | Ite -> ( match of_value 1 (`Triop op) c with true -> v1 | false -> v2 )
     | _ -> Log.err {|triop: Unsupported bool operator "%a"|} Ty.pp_triop op
 
   let relop (op : relop) (v1 : Value.t) (v2 : Value.t) =
@@ -218,8 +218,10 @@ module Bool = struct
   let naryop (op : naryop) (vs : Value.t list) : Value.t =
     let b =
       match op with
-      | AndN -> List.fold_left ( && ) true (List.map (of_value 0 (`Naryop op)) vs)
-      | OrN -> List.fold_left ( || ) false (List.map (of_value 0 (`Naryop op)) vs)
+      | AndN ->
+        List.fold_left ( && ) true (List.map (of_value 0 (`Naryop op)) vs)
+      | OrN ->
+        List.fold_left ( || ) false (List.map (of_value 0 (`Naryop op)) vs)
       | _ -> Log.err {|naryop: Unsupported bool operator "%a"|} Ty.pp_naryop op
     in
     to_value b
@@ -228,7 +230,7 @@ end
 module Str = struct
   let to_value (str : string) : Value.t = Str str [@@inline]
 
-  let of_value (n : int) (op : op_type) (v : Value.t)  : string =
+  let of_value (n : int) (op : op_type) (v : Value.t) : string =
     of_arg
       (function Str str -> str | _ -> raise_notrace (Value Ty_str))
       n v op
