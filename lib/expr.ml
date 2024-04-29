@@ -374,12 +374,12 @@ let cvtop ty (op : cvtop) (hte : t) : t =
   | Val v -> value (Eval.cvtop ty op v)
   | _ -> cvtop' ty op hte
 
-let naryop' (ty : Ty.t) (op : naryop) (es : t list) : t = make (Naryop (ty, op, es))
+let naryop' (ty : Ty.t) (op : naryop) (es : t list) : t =
+  make (Naryop (ty, op, es))
 [@@inline]
 
 let naryop (ty : Ty.t) (op : naryop) (es : t list) : t =
-  match List.map view es with
-  | _ -> naryop' ty op es
+  match List.map view es with _ -> naryop' ty op es
 
 let nland64 (x : int64) (n : int) =
   let rec loop x' n' acc =
