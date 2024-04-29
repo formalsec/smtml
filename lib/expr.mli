@@ -32,6 +32,7 @@ and expr =
   | Triop of Ty.t * Ty.triop * t * t * t
   | Relop of Ty.t * Ty.relop * t * t
   | Cvtop of Ty.t * Ty.cvtop * t
+  | Naryop of Ty.t * Ty.naryop * t list
   | Extract of t * int * int
   | Concat of t * t
 

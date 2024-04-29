@@ -41,3 +41,5 @@ val triop : Ty.t -> triop -> Value.t -> Value.t -> Value.t -> Value.t
 val relop : Ty.t -> relop -> Value.t -> Value.t -> bool
 
 val cvtop : Ty.t -> cvtop -> Value.t -> Value.t
+
+val naryop : Ty.t -> naryop -> Value.t list -> Value.t

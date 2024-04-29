@@ -235,7 +235,7 @@ module Impl = struct
 
     let at str ~pos ctx = Seq.mk_seq_at ctx str pos
 
-    let concat e1 e2 ctx = Seq.mk_seq_concat ctx [ e1; e2 ]
+    let concat es ctx = Seq.mk_seq_concat ctx es
 
     let sub str ~pos ~len ctx = Seq.mk_seq_extract ctx str pos len
   end

@@ -185,7 +185,6 @@ module Make (M : Mappings_intf.M) = struct
     let binop op e1 e2 =
       match op with
       | At -> String.at e1 ~pos:e2
-      | Concat -> String.concat e1 e2
       | _ -> err {|String: Unsupported binop operator "%a"|} Ty.pp_binop op
 
     let triop op e1 e2 e3 =
@@ -203,6 +202,11 @@ module Make (M : Mappings_intf.M) = struct
       | String_to_code -> String.to_code
       | String_from_code -> String.of_code
       | op -> err {|String: Unsupported cvtop operator "%a"|} Ty.pp_cvtop op
+
+    let naryop op es =
+      match op with
+      | Concat -> String.concat es
+      | _ -> err {|String: Unsupported naryop operator "%a"|} Ty.pp_naryop op
   end
 
   module type Bitv_sig = sig
@@ -590,6 +594,7 @@ module Make (M : Mappings_intf.M) = struct
     | Cvtop (ty, op, e) ->
       let* e = encode_expr e in
       cvtop ty op e
+    | Naryop _ -> assert false
     | Extract (e, h, l) ->
       let* e = encode_expr e in
       M.Bitv.extract e ~high:((h * 8) - 1) ~low:(l * 8)

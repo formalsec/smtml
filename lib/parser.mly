@@ -48,6 +48,7 @@ let get_bind x = Hashtbl.find varmap x
 %token <Ty.t * Ty.triop> TERNARY
 %token <Ty.t * Ty.relop> RELOP
 %token <Ty.t * Ty.cvtop> CVTOP
+%token <Ty.t * Ty.naryop> NARY
 %token <Ty.t> TYPE
 %token <Ty.logic> LOGIC
 
@@ -82,6 +83,7 @@ let paren_op :=
   | (ty, op) = TERNARY; e1 = s_expr; e2 = s_expr; e3 = s_expr; <Triop>
   | (ty, op) = CVTOP; e = s_expr; <Cvtop>
   | (ty, op) = RELOP; e1 = s_expr; e2 = s_expr; <Relop>
+  | (ty, op) = NARY; es = list(s_expr); <Naryop>
   | EXTRACT; ~ = s_expr; l = NUM; h = NUM; { Extract ( s_expr, h, l) }
   | CONCAT; e1 = s_expr; e2 = s_expr; <Concat>
 

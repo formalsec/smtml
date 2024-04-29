@@ -194,6 +194,12 @@ module Fresh = struct
         | _ -> err {|Bool: Unsupported Z3 relop operator "%a"|} Ty.pp_relop op
 
       let encode_cvtop _op _e = assert false
+
+      let encode_naryop op es =
+        match op with
+        | AndN -> Boolean.mk_and ctx es
+        | OrN -> Boolean.mk_or ctx es
+        | _ -> err {|Bool: Unsupported Z3 naryop operator "%a"|} Ty.pp_naryop op
     end
 
     module Str = struct
@@ -214,7 +220,6 @@ module Fresh = struct
       let encode_binop op e1 e2 =
         match op with
         | At -> Seq.mk_seq_at ctx e1 e2
-        | Concat -> Seq.mk_seq_concat ctx [ e1; e2 ]
         | String_prefix -> Seq.mk_seq_prefix ctx e1 e2
         | String_suffix -> Seq.mk_seq_suffix ctx e1 e2
         | String_contains -> Seq.mk_seq_contains ctx e1 e2
@@ -235,6 +240,11 @@ module Fresh = struct
         | String_to_int -> Seq.mk_str_to_int ctx
         | String_from_int -> Seq.mk_int_to_str ctx
         | op -> err {|Str: Unsupported Z3 cvtop operator "%a"|} Ty.pp_cvtop op
+
+      let encode_naryop op es =
+        match op with
+        | Concat -> Seq.mk_seq_concat ctx es
+        | _ -> err {|Str: Unsupported Z3 naryop operator "%a"|} Ty.pp_naryop op
     end
 
     module type Bv_sig = sig
@@ -547,6 +557,11 @@ module Fresh = struct
       | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_array | Ty_tuple | Ty_app ->
         assert false
 
+    let encode_naryop = function
+      | Ty.Ty_bool -> Boolean.encode_naryop
+      | Ty.Ty_str -> Str.encode_naryop
+      | _ -> assert false
+
     (* let encode_quantifier (t : bool) (vars_list : Symbol.t list) *)
     (*   (body : Z3.Expr.expr) (patterns : Z3.Quantifier.Pattern.pattern list) : *)
     (*   Z3.Expr.expr = *)
@@ -598,6 +613,9 @@ module Fresh = struct
       | Cvtop (ty, op, e) ->
         let e' = encode_expr e in
         encode_cvtop ty op e'
+      | Naryop (ty, op, es) ->
+        let es' = List.map encode_expr es in
+        encode_naryop ty op es'
       | Symbol { name; ty } -> Z3.Expr.mk_const_s ctx name (get_sort ty)
       | Extract (e, h, l) ->
         let e' = encode_expr e in

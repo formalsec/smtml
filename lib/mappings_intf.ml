@@ -174,7 +174,7 @@ module type M = sig
 
     val at : term -> pos:term -> term t
 
-    val concat : term -> term -> term t
+    val concat : term list -> term t
 
     val sub : term -> pos:term -> len:term -> term t
   end

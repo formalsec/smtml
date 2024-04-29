@@ -88,7 +88,7 @@ let keywords =
      ; ("real.of_string", CVTOP (Ty_real, OfString))
      ; ("str.len", UNARY (Ty_str, Length))
      ; ("str.at", BINARY (Ty_str, At))
-     ; ("str.++", BINARY (Ty_str, Concat))
+     ; ("str.++", NARY (Ty_str, Concat))
      ; ("str.prefixof", BINARY (Ty_str, String_prefix))
      ; ("str.suffixof", BINARY (Ty_str, String_suffix))
      ; ("str.contains", BINARY (Ty_str, String_contains))
