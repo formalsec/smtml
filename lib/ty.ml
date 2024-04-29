@@ -77,7 +77,6 @@ type binop =
   | Rotl
   | Rotr
   | At
-  | Concat
   | List_append_last
   | List_append
   (* String *)
@@ -133,6 +132,11 @@ type cvtop =
   | String_to_int
   | String_from_int
   | String_to_float
+
+type naryop =
+  | AndN
+  | OrN
+  | Concat
 
 type logic =
   | AUFLIA
@@ -202,7 +206,6 @@ let pp_binop fmt (op : binop) =
   | Rotl -> pp_string fmt "rotl"
   | Rotr -> pp_string fmt "rotr"
   | At -> pp_string fmt "at"
-  | Concat -> pp_string fmt "++"
   | List_append_last -> pp_string fmt "append_last"
   | List_append -> pp_string fmt "append"
   | String_prefix -> pp_string fmt "prefixof"
@@ -258,6 +261,12 @@ let pp_cvtop fmt (op : cvtop) =
   | String_to_int -> pp_string fmt "to_int"
   | String_from_int -> pp_string fmt "from_int"
   | String_to_float -> pp_string fmt "to_float"
+
+let pp_naryop fmt (op : naryop) =
+  match op with
+  | AndN -> pp_string fmt "and"
+  | OrN -> pp_string fmt "or"
+  | Concat -> pp_string fmt "++"
 
 let pp fmt = function
   | Ty_int -> pp_string fmt "int"
