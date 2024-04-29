@@ -73,7 +73,6 @@ type binop =
   | Rotl
   | Rotr
   | At
-  | Concat
   | List_append_last
   | List_append
   (* String *)
@@ -130,6 +129,11 @@ type cvtop =
   | String_from_int (* (str.from_int Int String) *)
   | String_to_float
 
+type naryop =
+  | AndN
+  | OrN
+  | Concat
+
 type logic =
   | AUFLIA
   | AUFLIRA
@@ -167,6 +171,8 @@ val pp_triop : Format.formatter -> triop -> unit
 val pp_relop : Format.formatter -> relop -> unit
 
 val pp_cvtop : Format.formatter -> cvtop -> unit
+
+val pp_naryop : Format.formatter -> naryop -> unit
 
 val pp : Format.formatter -> t -> unit
 
