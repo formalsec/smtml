@@ -218,7 +218,7 @@ module M = struct
 
       let at str ~pos = Seq.mk_seq_at ctx str pos
 
-      let concat e1 e2 = Seq.mk_seq_concat ctx [ e1; e2 ]
+      let concat es = Seq.mk_seq_concat ctx es
 
       let is_prefix e1 ~prefix = Seq.mk_seq_prefix ctx e1 prefix
 

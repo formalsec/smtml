@@ -158,7 +158,7 @@ module type M = sig
 
     val at : term -> pos:term -> term
 
-    val concat : term -> term -> term
+    val concat : term list -> term
 
     val contains : term -> sub:term -> term
 

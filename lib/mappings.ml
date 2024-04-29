@@ -197,7 +197,6 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       let binop op e1 e2 =
         match op with
         | At -> M.String.at e1 ~pos:e2
-        | Concat -> M.String.concat e1 e2
         | String_contains -> M.String.contains e1 ~sub:e2
         | String_prefix -> M.String.is_prefix e1 ~prefix:e2
         | String_suffix -> M.String.is_suffix e1 ~suffix:e2
@@ -222,6 +221,11 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | String_to_int -> M.String.to_int
         | String_from_int -> M.String.of_int
         | op -> err {|String: Unsupported cvtop operator "%a"|} Ty.pp_cvtop op
+
+      let naryop op es =
+        match op with
+        | Concat -> M.String.concat es
+        | _ -> err {|String: Unsupported naryop operator "%a"|} Ty.pp_naryop op
     end
 
     module type Bitv_sig = sig
@@ -537,6 +541,10 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_array | Ty_tuple | Ty_app ->
         assert false
 
+    let naryop = function
+      | Ty.Ty_str -> String_impl.naryop
+      | ty -> err "Naryop for type \"%a\" not implemented" Ty.pp ty
+
     let rec encode_expr symbol_table (hte : Expr.t) : M.term =
       match Expr.view hte with
       | Val value -> v value
@@ -564,6 +572,9 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Cvtop (ty, op, e) ->
         let e = encode_expr symbol_table e in
         cvtop ty op e
+      | Naryop (ty, op, es) ->
+        let es = List.map (encode_expr symbol_table) es in
+        naryop ty op es
       | Extract (e, h, l) ->
         let e = encode_expr symbol_table e in
         M.Bitv.extract e ~high:((h * 8) - 1) ~low:(l * 8)

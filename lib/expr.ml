@@ -33,6 +33,7 @@ and expr =
   | Triop of Ty.t * triop * t * t * t
   | Relop of Ty.t * relop * t * t
   | Cvtop of Ty.t * cvtop * t
+  | Naryop of Ty.t * naryop * t list
   | Extract of t * int * int
   | Concat of t * t
 
@@ -62,6 +63,8 @@ module Expr = struct
       Ty.equal t1 t2 && op1 = op2 && e1 == e2 && e3 == e4 && e5 == e6
     | Cvtop (t1, op1, e1), Cvtop (t2, op2, e2) ->
       Ty.equal t1 t2 && op1 = op2 && e1 == e2
+    | Naryop (t1, op1, l1), Naryop (t2, op2, l2) ->
+      Ty.equal t1 t2 && op1 = op2 && list_eq l1 l2
     | Extract (e1, h1, l1), Extract (e2, h2, l2) ->
       e1 == e2 && h1 = h2 && l1 = l2
     | Concat (e1, e3), Concat (e2, e4) -> e1 == e2 && e3 == e4
@@ -82,6 +85,7 @@ module Expr = struct
     | Binop (ty, op, e1, e2) -> h (ty, op, e1.tag, e2.tag)
     | Relop (ty, op, e1, e2) -> h (ty, op, e1.tag, e2.tag)
     | Triop (ty, op, e1, e2, e3) -> h (ty, op, e1.tag, e2.tag, e3.tag)
+    | Naryop (ty, op, es) -> h (ty, op, es)
     | Extract (e, hi, lo) -> h (e.tag, hi, lo)
     | Concat (e1, e2) -> h (e1.tag, e2.tag)
 end
@@ -118,6 +122,7 @@ let rec ty (hte : t) : Ty.t =
   | Triop (ty, _, _, _, _) -> ty
   | Relop (ty, _, _, _) -> ty
   | Cvtop (ty, _, _) -> ty
+  | Naryop (ty, _, _) -> ty
   | Extract (_, h, l) -> Ty_bitv ((h - l) * 8)
   | Concat (e1, e2) -> (
     match (ty e1, ty e2) with
@@ -138,6 +143,7 @@ let rec is_symbolic (v : t) : bool =
     is_symbolic v1 || is_symbolic v2 || is_symbolic v3
   | Cvtop (_, _, v) -> is_symbolic v
   | Relop (_, _, v1, v2) -> is_symbolic v1 || is_symbolic v2
+  | Naryop (_, _, vs) -> List.exists is_symbolic vs
   | Extract (e, _, _) -> is_symbolic e
   | Concat (e1, e2) -> is_symbolic e1 || is_symbolic e2
 
@@ -163,6 +169,7 @@ let get_symbols (hte : t list) =
       symbols e1;
       symbols e2
     | Cvtop (_, _, e) -> symbols e
+    | Naryop (_, _, es) -> List.iter symbols es
     | Extract (e, _, _) -> symbols e
     | Concat (e1, e2) ->
       symbols e1;
@@ -215,6 +222,8 @@ module Pp = struct
     | Relop (ty, op, e1, e2) ->
       fprintf fmt "(%a.%a %a %a)" Ty.pp ty pp_relop op pp e1 pp e2
     | Cvtop (ty, op, e) -> fprintf fmt "(%a.%a %a)" Ty.pp ty pp_cvtop op pp e
+    | Naryop (ty, op, es) ->
+      fprintf fmt "(%a.%a %a)" Ty.pp ty pp_naryop op (pp_print_list pp) es
     | Extract (e, h, l) -> fprintf fmt "(extract %a %d %d)" pp e l h
     | Concat (e1, e2) -> fprintf fmt "(++ %a %a)" pp e1 pp e2
     | App _ -> assert false
@@ -365,6 +374,13 @@ let cvtop ty (op : cvtop) (hte : t) : t =
   | Val v -> value (Eval.cvtop ty op v)
   | _ -> cvtop' ty op hte
 
+let naryop' (ty : Ty.t) (op : naryop) (es : t list) : t = make (Naryop (ty, op, es))
+[@@inline]
+
+let naryop (ty : Ty.t) (op : naryop) (es : t list) : t =
+  match List.map view es with
+  | _ -> naryop' ty op es
+
 let nland64 (x : int64) (n : int) =
   let rec loop x' n' acc =
     if n' = 0 then Int64.logand x' acc
@@ -451,6 +467,9 @@ let rec simplify_expr ?(rm_extract = true) (hte : t) : t =
   | Cvtop (ty, op, e) ->
     let e = simplify_expr e in
     cvtop ty op e
+  | Naryop (ty, op, es) ->
+    let es = List.map (simplify_expr ~rm_extract:false) es in
+    naryop ty op es
   | Extract (s, high, low) ->
     if not rm_extract then hte else extract s ~high ~low
   | Concat (e1, e2) ->
