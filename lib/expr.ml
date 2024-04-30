@@ -379,7 +379,13 @@ let naryop' (ty : Ty.t) (op : naryop) (es : t list) : t =
 [@@inline]
 
 let naryop (ty : Ty.t) (op : naryop) (es : t list) : t =
-  match List.map view es with _ -> naryop' ty op es
+  if List.for_all (fun e -> match view e with Val _ -> true | _ -> false) es
+  then
+    let vs =
+      List.map (fun e -> match view e with Val v -> v | _ -> assert false) es
+    in
+    value (Eval.naryop ty op vs)
+  else naryop' ty op es
 
 let nland64 (x : int64) (n : int) =
   let rec loop x' n' acc =

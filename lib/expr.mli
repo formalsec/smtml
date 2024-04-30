@@ -98,6 +98,12 @@ val cvtop : Ty.t -> Ty.cvtop -> t -> t
 (** Dumb cvtop constructor, no simplifications *)
 val cvtop' : Ty.t -> Ty.cvtop -> t -> t
 
+(** Smart naryop constructor, applies simplifications at constructor level *)
+val naryop : Ty.t -> Ty.naryop -> t list -> t
+
+(** Dumb naryop constructor, no simplifications *)
+val naryop' : Ty.t -> Ty.naryop -> t list -> t
+
 (** Smart extract constructor, applies simplifications at constructor level *)
 val extract : t -> high:int -> low:int -> t
 
