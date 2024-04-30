@@ -18,7 +18,14 @@
 
 open Ty
 
-type op_type
+type op_type =
+  [ `Unop of Ty.unop
+  | `Binop of Ty.binop
+  | `Relop of Ty.relop
+  | `Triop of Ty.triop
+  | `Cvtop of Ty.cvtop
+  | `Naryop of Ty.naryop
+  ]
 
 exception DivideByZero
 
