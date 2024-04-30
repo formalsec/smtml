@@ -11,5 +11,6 @@
   test_binop
   test_triop
   test_relop
-  test_cvtop)
+  test_cvtop
+  test_naryop)
  (libraries smtml))
