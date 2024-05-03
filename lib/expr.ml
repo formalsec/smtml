@@ -265,6 +265,10 @@ let unop' (ty : Ty.t) (op : unop) (hte : t) : t = make (Unop (ty, op, hte))
 let unop (ty : Ty.t) (op : unop) (hte : t) : t =
   match view hte with
   | Val v -> value (Eval.unop ty op v)
+  | Unop (_, op', hte') -> (
+    match (op, op') with
+    | Not, Not | Neg, Neg | Reverse, Reverse -> hte'
+    | _, _ -> unop' ty op hte )
   | _ -> unop' ty op hte
 
 let binop' (ty : Ty.t) (op : binop) (hte1 : t) (hte2 : t) : t =
