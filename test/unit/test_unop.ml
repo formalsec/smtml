@@ -6,7 +6,9 @@ open Value
 (* int *)
 let () =
   let v i = value (Int i) in
-  assert (unop Ty_int Neg (v 1) = v ~-1)
+  assert (unop Ty_int Neg (v 1) = v ~-1);
+  assert (unop Ty_int Abs (v ~-1) = v 1);
+  assert (unop Ty_int Neg (unop Ty_int Neg (v 1)) = v 1)
 
 (* real *)
 let () =
@@ -26,6 +28,13 @@ let () =
   assert (unop Ty_str Length (v "abc") = value (Int 3));
   assert (unop Ty_str Trim (v " abc\t\n") = value (Str "abc"))
 
+(* bool *)
+let () =
+  let true_ = value True in
+  let false_ = value False in
+  assert (unop Ty_bool Not true_ = false_);
+  assert (unop Ty_bool Not (unop Ty_bool Not true_) = true_)
+
 (* list *)
 let () =
   let v l = value (List l) in
@@ -35,7 +44,10 @@ let () =
   assert (unop Ty_list Length (v [ Int 1; Int 2; Int 3 ]) = value (Int 3));
   assert (
     unop Ty_list Reverse (v [ Int 1; Int 2; Int 3 ])
-    = value (List [ Int 3; Int 2; Int 1 ]) )
+    = value (List [ Int 3; Int 2; Int 1 ]) );
+  assert (
+    unop Ty_list Reverse (unop Ty_list Reverse (v [ Int 1; Int 2; Int 3 ]))
+    = v [ Int 1; Int 2; Int 3 ] )
 
 (* i32 *)
 let () =
