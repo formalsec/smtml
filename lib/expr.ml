@@ -326,6 +326,15 @@ let rec binop ty (op : binop) (hte1 : t) (hte2 : t) : t =
       let v = value (Eval.binop ty Mul v1 v2) in
       binop' ty Mul x v
     | _, _ -> binop' ty op hte1 hte2 )
+  | Val v1, Binop (ty, op2, x, { node = Val v2; _ }) -> (
+    match (op, op2) with
+    | Add, Add ->
+      let v = value (Eval.binop ty Add v1 v2) in
+      binop' ty Add v x
+    | Mul, Mul ->
+      let v = value (Eval.binop ty Mul v1 v2) in
+      binop' ty Mul v x
+    | _, _ -> binop' ty op hte1 hte2 )
   (* FIXME: this seems wrong? *)
   (* | Binop (_, And, _, _), Val (Num (I32 1l)) -> hte1 *)
   (* | Val (Num (I32 1l)), Binop (_, And, _, _) -> hte2 *)
