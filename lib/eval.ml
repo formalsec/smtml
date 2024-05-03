@@ -66,6 +66,7 @@ module Int = struct
     let f =
       match op with
       | Neg -> ( ~- )
+      | Abs -> abs
       | _ -> Log.err {|unop: Unsupported int operator "%a"|} Ty.pp_unop op
     in
     to_value (f (of_value 1 (`Unop op) v))
