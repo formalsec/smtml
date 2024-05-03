@@ -24,11 +24,16 @@ let () =
 
 (* Test simplify of left- and righ- associative operators *)
 let () =
+  let x = mk_symbol (Symbol.make Ty_int "x") in
+  let v i = value (Int i) in
   assert (
-    let x = mk_symbol (Symbol.make Ty_int "x") in
-    let binary = binop' Ty_int Add x (value (Int 10)) in
-    let sym = binop' Ty_int Add binary (value (Int 3)) in
-    simplify sym = binop' Ty_int Add x (value (Int 13)) )
+    let binary = binop' Ty_int Add x (v 10) in
+    let sym = binop' Ty_int Add binary (v 3) in
+    simplify sym = binop' Ty_int Add x (v 13) );
+  assert (
+    let binary = binop' Ty_int Add x (v 10) in
+    let sym = binop' Ty_int Add (v 3) binary in
+    simplify sym = binop' Ty_int Add (v 13) x )
 
 (* Test Concat of Extracts simplifications *)
 let () =
