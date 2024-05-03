@@ -140,6 +140,7 @@ module Real = struct
       | Rem -> Float.rem
       | Min -> Float.min
       | Max -> Float.max
+      | Pow -> Float.pow
       | _ -> Log.err {|binop: Unsupported real operator "%a"|} Ty.pp_binop op
     in
     to_value (f (of_value 1 (`Binop op) v1) (of_value 2 (`Binop op) v2))
