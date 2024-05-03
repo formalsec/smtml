@@ -36,6 +36,8 @@ let rec equal (v1 : t) (v2 : t) : Bool.t =
   | Str x1, Str x2 -> String.equal x1 x2
   | Num x1, Num x2 -> Num.equal x1 x2
   | List l1, List l2 -> List.equal equal l1 l2
+  | App (`Op op1, vs1), App (`Op op2, vs2) ->
+    String.equal op1 op2 && List.equal equal vs1 vs2
   | _ -> false
 
 let rec compare v1 v2 =
@@ -48,6 +50,9 @@ let rec compare v1 v2 =
   | Str x1, Str x2 -> String.compare x1 x2
   | Num x1, Num x2 -> Num.compare x1 x2
   | List l1, List l2 -> List.compare compare l1 l2
+  | App (`Op op1, vs1), App (`Op op2, vs2) ->
+    let c = String.compare op1 op2 in
+    if c = 0 then List.compare compare vs1 vs2 else c
   | _ -> compare v1 v2
 
 let type_of (v : t) : Ty.t =
