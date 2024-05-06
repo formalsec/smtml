@@ -13,7 +13,14 @@ let () =
   assert (binop Ty_int Rem (v 0) (v 1) = v 0);
   assert (binop Ty_int Pow (v 2) (v 2) = v 4);
   assert (binop Ty_int Min (v 2) (v 4) = v 2);
-  assert (binop Ty_int Max (v 2) (v 4) = v 4)
+  assert (binop Ty_int Max (v 2) (v 4) = v 4);
+  assert (binop Ty_int And (v 1) (v 0) = v 0);
+  assert (binop Ty_int Or (v 0) (v 1) = v 1);
+  assert (binop Ty_int Xor (v 1) (v 1) = v 0);
+  assert (binop Ty_int Shl (v 1) (v 2) = v 4);
+  assert (binop Ty_int ShrA (v 4) (v 2) = v 1);
+  assert (binop Ty_int ShrA (v (-4)) (v 2) = v (-1));
+  assert (binop Ty_int ShrL (v (-4)) (v 2) <> v (-1))
 
 (* real *)
 let () =
