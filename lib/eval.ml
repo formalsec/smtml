@@ -84,6 +84,12 @@ module Int = struct
       | Pow -> fun x y -> int_of_float (float_of_int x ** float_of_int y)
       | Min -> min
       | Max -> max
+      | And -> ( land )
+      | Or -> ( lor )
+      | Xor -> ( lxor )
+      | Shl -> ( lsl )
+      | ShrL -> ( lsr )
+      | ShrA -> ( asr )
       | _ -> Log.err {|binop: Unsupported int operator "%a"|} Ty.pp_binop op
     in
     to_value (f (of_value 1 (`Binop op) v1) (of_value 2 (`Binop op) v2))
