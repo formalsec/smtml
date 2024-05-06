@@ -50,6 +50,8 @@ exception ConversionToInteger
 
 exception IntegerOverflow
 
+exception IndexOutOfBounds
+
 let of_arg f n v op =
   try f v
   with Value t -> raise (TypeError { index = n; value = v; ty = t; op })
@@ -277,9 +279,10 @@ module Str = struct
     let op' = `Binop op in
     let str = of_value 1 op' v1 in
     match op with
-    | At ->
+    | At -> (
       let i = Int.of_value 2 op' v2 in
-      to_value (Format.sprintf "%c" (String.get str i))
+      try to_value (Format.sprintf "%c" (String.get str i))
+      with Invalid_argument _ -> raise IndexOutOfBounds )
     | String_prefix ->
       Bool.to_value (String.starts_with ~prefix:str (of_value 2 op' v2))
     | String_suffix ->
@@ -348,10 +351,11 @@ module Lst = struct
   let binop (op : binop) (v1 : Value.t) (v2 : Value.t) : Value.t =
     let op' = `Binop op in
     match op with
-    | At ->
+    | At -> (
       let lst = of_value 1 op' v1 in
       let i = Int.of_value 2 op' v2 in
-      List.nth lst i
+      try List.nth lst i
+      with Failure _ | Invalid_argument _ -> raise IndexOutOfBounds )
     | List_append_last -> List (of_value 1 op' v1 @ [ v2 ])
     | List_append -> List (v2 :: of_value 2 op' v1)
     | _ -> Log.err {|binop: Unsupported list operator "%a"|} Ty.pp_binop op
