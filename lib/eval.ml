@@ -52,6 +52,8 @@ exception IntegerOverflow
 
 exception IndexOutOfBounds
 
+exception ParseNumError
+
 let of_arg f n v op =
   try f v
   with Value t -> raise (TypeError { index = n; value = v; ty = t; op })
@@ -326,9 +328,15 @@ module Str = struct
     | String_from_code ->
       let code = Int.of_value 1 op' v in
       to_value (String.make 1 (Char.chr code))
-    | String_to_int -> Int.to_value (int_of_string (of_value 1 op' v))
+    | String_to_int ->
+      let s = of_value 1 op' v in
+      let i = try int_of_string s with Failure _ -> raise ParseNumError in
+      Int.to_value i
     | String_from_int -> to_value (string_of_int (Int.of_value 1 op' v))
-    | String_to_float -> Real.to_value (float_of_string (of_value 1 op' v))
+    | String_to_float ->
+      let s = of_value 1 op' v in
+      let f = try float_of_string s with Failure _ -> raise ParseNumError in
+      Real.to_value f
     | _ -> Log.err {|cvtop: Unsupported str operator "%a"|} Ty.pp_cvtop op
 
   let naryop (op : naryop) (vs : Value.t list) : Value.t =
