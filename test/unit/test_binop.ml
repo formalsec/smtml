@@ -44,8 +44,9 @@ let () =
     binop (Ty_bitv 32) Rem ptr (v 1l) = v 0l );
   assert (binop (Ty_bitv 32) Add (v 0l) (v 1l) = v 1l);
   assert (binop (Ty_bitv 32) Sub (v 1l) (v 0l) = v 1l);
-  let x = binop (Ty_bitv 32) Mul (v 2l) (v 2l) in
-  assert (binop (Ty_bitv 32) Div x (v 2l) = v 2l);
+  assert (
+    let x = binop (Ty_bitv 32) Mul (v 2l) (v 2l) in
+    binop (Ty_bitv 32) Div x (v 2l) = v 2l );
   assert (binop (Ty_bitv 32) Rem (v 10l) (v 7l) = v 3l);
   assert (binop (Ty_bitv 32) And (v 1l) (v 0l) = v 0l);
   assert (binop (Ty_bitv 32) Or (v 0l) (v 1l) = v 1l);
@@ -60,8 +61,9 @@ let () =
   let v i = value (Num (I64 i)) in
   assert (binop (Ty_bitv 64) Add (v 0L) (v 1L) = v 1L);
   assert (binop (Ty_bitv 64) Sub (v 1L) (v 0L) = v 1L);
-  let x = binop (Ty_bitv 64) Mul (v 2L) (v 2L) in
-  assert (binop (Ty_bitv 64) Div x (v 2L) = v 2L);
+  assert (
+    let x = binop (Ty_bitv 64) Mul (v 2L) (v 2L) in
+    binop (Ty_bitv 64) Div x (v 2L) = v 2L );
   assert (binop (Ty_bitv 64) Rem (v 10L) (v 7L) = v 3L);
   assert (binop (Ty_bitv 64) And (v 1L) (v 0L) = v 0L);
   assert (binop (Ty_bitv 64) Or (v 0L) (v 1L) = v 1L);
