@@ -181,6 +181,7 @@ module Fresh = struct
       | Ty_real -> DTy.real
       | Ty_bool -> DTy.bool
       | Ty_str -> string_ty
+      | Ty_bitv 8 -> DTy.bitv 8
       | Ty_bitv 32 -> DTy.bitv 32
       | Ty_bitv 64 -> DTy.bitv 64
       | Ty_fp 32 -> float32_ty
