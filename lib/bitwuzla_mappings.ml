@@ -172,11 +172,25 @@ module Impl = struct
 
     let of_code _ = assert false
 
+    let to_int _ = assert false
+
+    let of_int _ = assert false
+
     let at _ = assert false
 
     let concat _ = assert false
 
+    let contains _ ~sub:_ = assert false
+
+    let prefix _ ~s:_ = assert false
+
+    let suffix _ ~s:_ = assert false
+
     let sub _ ~pos:_ ~len:_ = assert false
+
+    let index _ ~sub:_ ~off:_ = assert false
+
+    let replace _ ~s2:_ ~s3:_ = assert false
   end
 
   module Bitv = struct
