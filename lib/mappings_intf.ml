@@ -172,11 +172,25 @@ module type M = sig
 
     val of_code : term -> term t
 
+    val to_int : term -> term t
+
+    val of_int : term -> term t
+
     val at : term -> pos:term -> term t
 
     val concat : term -> term -> term t
 
+    val contains : term -> sub:term -> term t
+
+    val prefix : term -> s:term -> term t
+
+    val suffix : term -> s:term -> term t
+
     val sub : term -> pos:term -> len:term -> term t
+
+    val index : term -> sub:term -> off:term -> term t
+
+    val replace : term -> s2:term -> s3:term -> term t
   end
 
   module Bitv : sig

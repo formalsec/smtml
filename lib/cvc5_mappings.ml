@@ -187,13 +187,29 @@ module Impl = struct
 
     let of_code t = Term.mk_term tm Kind.String_from_code [| t |]
 
+    let to_int t = Term.mk_term tm Kind.String_to_int [| t |]
+
+    let of_int t = Term.mk_term tm Kind.String_from_int [| t |]
+
     let at t ~pos =
       let one = Term.mk_int tm 1 in
       Term.mk_term tm Kind.String_substr [| t; pos; one |]
 
     let concat t1 t2 = Term.mk_term tm Kind.String_concat [| t1; t2 |]
 
-    let sub s ~pos:p ~len:l = Term.mk_term tm Kind.String_substr [| s; p; l |]
+    let contains t1 ~sub = Term.mk_term tm Kind.String_contains [| t1; sub |]
+
+    let prefix t1 ~s = Term.mk_term tm Kind.String_prefix [| t1; s |]
+
+    let suffix t1 ~s = Term.mk_term tm Kind.String_suffix [| t1; s |]
+
+    let sub s ~pos ~len = Term.mk_term tm Kind.String_substr [| s; pos; len |]
+
+    let index t1 ~sub ~off =
+      Term.mk_term tm Kind.String_indexof [| t1; sub; off |]
+
+    let replace t1 ~s2 ~s3 =
+      Term.mk_term tm Kind.String_replace [| t1; s2; s3 |]
   end
 
   module Bitv = struct
@@ -280,10 +296,13 @@ module Impl = struct
     end
 
     let v f es eb =
-      let size = es + eb in
-      let b = Int64.bits_of_float f in
-      let bt = Term.mk_bv tm size b in
-      Term.mk_fp tm es eb bt
+      match Float.is_nan f with
+      | true ->
+        Term.mk_fp_nan tm es eb
+      | _ ->
+        let b = Int64.bits_of_float f in
+        let bt = Term.mk_bv tm (es + eb) b in
+        Term.mk_fp tm es eb bt
 
     let neg t = Term.mk_term tm Kind.Floatingpoint_neg [| t |]
 
@@ -291,10 +310,11 @@ module Impl = struct
 
     let sqrt ~rm t = Term.mk_term tm Kind.Floatingpoint_sqrt [| rm; t |]
 
-    let is_nan t = Term.mk_term tm Kind.Floatingpoint_is_nan [| t |]
+    let is_nan t = 
+      Term.mk_term tm Kind.Floatingpoint_is_nan [| t |]
 
-    let round_to_integral ~rm:_ t =
-      Term.mk_term tm Kind.Floatingpoint_rti [| t |]
+    let round_to_integral ~rm t =
+      Term.mk_term tm Kind.Floatingpoint_rti [| rm; t |]
 
     let add ~rm t1 t2 = Term.mk_term tm Kind.Floatingpoint_add [| rm; t1; t2 |]
 
