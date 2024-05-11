@@ -385,7 +385,7 @@ module Lst = struct
         match (i, lst) with
         | 0, _ :: tl -> v :: tl
         | i, hd :: tl -> hd :: set (i - 1) tl v
-        | _, [] -> Log.err "List.set: index out of bounds"
+        | _, [] -> raise IndexOutOfBounds
       in
       List (set i lst v3)
     | _ -> Log.err {|triop: Unsupported list operator "%a"|} Ty.pp_triop op
