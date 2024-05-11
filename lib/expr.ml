@@ -269,6 +269,13 @@ let unop (ty : Ty.t) (op : unop) (hte : t) : t =
     match (op, op') with
     | Not, Not | Neg, Neg | Reverse, Reverse -> hte'
     | _, _ -> unop' ty op hte )
+  | List es -> (
+    match op with
+    | Head when List.length es <> 0 -> List.hd es
+    | Tail when List.length es > 1 -> make (List (List.tl es))
+    | Reverse -> make (List (List.rev es))
+    | Length -> value (Int (List.length es))
+    | _ -> unop' ty op hte )
   | _ -> unop' ty op hte
 
 let binop' (ty : Ty.t) (op : binop) (hte1 : t) (hte2 : t) : t =
@@ -335,6 +342,10 @@ let rec binop ty (op : binop) (hte1 : t) (hte2 : t) : t =
       let v = value (Eval.binop ty Mul v1 v2) in
       binop' ty Mul v x
     | _, _ -> binop' ty op hte1 hte2 )
+  | List es, Val (Int n) when n >= 0 && n < List.length es -> (
+    match op with
+    | At -> List.nth es n
+    | _ -> binop' ty op hte1 hte2 )
   (* FIXME: this seems wrong? *)
   (* | Binop (_, And, _, _), Val (Num (I32 1l)) -> hte1 *)
   (* | Val (Num (I32 1l)), Binop (_, And, _, _) -> hte2 *)
