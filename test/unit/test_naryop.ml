@@ -7,10 +7,10 @@ open Value
 let () =
   let t = value True in
   let f = value False in
-  assert (naryop Ty_bool AndN [ t; t; t; t ] = t);
-  assert (naryop Ty_bool OrN [ f; f; f; f ] = f);
-  assert (naryop Ty_bool AndN [ t; f; t ] = f);
-  assert (naryop Ty_bool OrN [ f; t; f ] = t)
+  assert (naryop Ty_bool Logand [ t; t; t; t ] = t);
+  assert (naryop Ty_bool Logor [ f; f; f; f ] = f);
+  assert (naryop Ty_bool Logand [ t; f; t ] = f);
+  assert (naryop Ty_bool Logor [ f; t; f ] = t)
 
 (* str *)
 let () =
