@@ -223,7 +223,7 @@ module Pp = struct
       fprintf fmt "(%a.%a %a %a)" Ty.pp ty pp_relop op pp e1 pp e2
     | Cvtop (ty, op, e) -> fprintf fmt "(%a.%a %a)" Ty.pp ty pp_cvtop op pp e
     | Naryop (ty, op, es) ->
-      fprintf fmt "(%a.%a %a)" Ty.pp ty pp_naryop op (pp_print_list pp) es
+      fprintf fmt "(%a.%a (%a))" Ty.pp ty pp_naryop op (pp_print_list pp) es
     | Extract (e, h, l) -> fprintf fmt "(extract %a %d %d)" pp e l h
     | Concat (e1, e2) -> fprintf fmt "(++ %a %a)" pp e1 pp e2
     | App _ -> assert false
@@ -263,19 +263,15 @@ let unop' (ty : Ty.t) (op : unop) (hte : t) : t = make (Unop (ty, op, hte))
 [@@inline]
 
 let unop (ty : Ty.t) (op : unop) (hte : t) : t =
-  match view hte with
-  | Val v -> value (Eval.unop ty op v)
-  | Unop (_, op', hte') -> (
-    match (op, op') with
-    | Not, Not | Neg, Neg | Reverse, Reverse -> hte'
-    | _, _ -> unop' ty op hte )
-  | List es -> (
-    match op with
-    | Head when List.length es <> 0 -> List.hd es
-    | Tail when List.length es > 1 -> make (List (List.tl es))
-    | Reverse -> make (List (List.rev es))
-    | Length -> value (Int (List.length es))
-    | _ -> unop' ty op hte )
+  match (op, view hte) with
+  | _, Val v -> value (Eval.unop ty op v)
+  | Not, Unop (_, Not, hte') -> hte'
+  | Neg, Unop (_, Neg, hte') -> hte'
+  | Reverse, Unop (_, Reverse, hte') -> hte'
+  | Head, List (hd :: _) -> hd
+  | Tail, List (_ :: tl) -> make (List tl)
+  | Reverse, List es -> make (List (List.rev es))
+  | Length, List es -> value (Int (List.length es))
   | _ -> unop' ty op hte
 
 let binop' (ty : Ty.t) (op : binop) (hte1 : t) (hte2 : t) : t =
@@ -342,10 +338,8 @@ let rec binop ty (op : binop) (hte1 : t) (hte2 : t) : t =
       let v = value (Eval.binop ty Mul v1 v2) in
       binop' ty Mul v x
     | _, _ -> binop' ty op hte1 hte2 )
-  | List es, Val (Int n) when n >= 0 && n < List.length es -> (
-    match op with
-    | At -> List.nth es n
-    | _ -> binop' ty op hte1 hte2 )
+  | List es, Val (Int n) -> (
+    match op with At -> List.nth es n | _ -> binop' ty op hte1 hte2 )
   (* FIXME: this seems wrong? *)
   (* | Binop (_, And, _, _), Val (Num (I32 1l)) -> hte1 *)
   (* | Val (Num (I32 1l)), Binop (_, And, _, _) -> hte2 *)
