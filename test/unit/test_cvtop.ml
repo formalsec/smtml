@@ -36,7 +36,7 @@ let () =
   assert (cvtop Ty_str String_to_int (str "42") = int 42);
   assert (cvtop Ty_str String_from_int (int 42) = str "42");
   assert (cvtop Ty_str String_to_float (str "1.") = real 1.)
-  
+
 (* i32 *)
 let () =
   assert (cvtop (Ty_bitv 32) TruncSF32 (f32 8.5) = i32 8l);

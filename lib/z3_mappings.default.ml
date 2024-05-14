@@ -197,8 +197,8 @@ module Fresh = struct
 
       let encode_naryop op es =
         match op with
-        | AndN -> Boolean.mk_and ctx es
-        | OrN -> Boolean.mk_or ctx es
+        | Logand -> Boolean.mk_and ctx es
+        | Logor -> Boolean.mk_or ctx es
         | _ -> err {|Bool: Unsupported Z3 naryop operator "%a"|} Ty.pp_naryop op
     end
 

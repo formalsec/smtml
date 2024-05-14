@@ -110,7 +110,6 @@ module Int = struct
   let of_bool : Value.t -> int = function
     | True -> 1
     | False -> 0
-    | Int i -> i
     | _ -> assert false
   [@@inline]
 
@@ -230,10 +229,12 @@ module Bool = struct
   let naryop (op : naryop) (vs : Value.t list) : Value.t =
     let b =
       match op with
-      | AndN ->
-        List.fold_left ( && ) true (List.map (of_value 0 (`Naryop op)) vs)
-      | OrN ->
-        List.fold_left ( || ) false (List.map (of_value 0 (`Naryop op)) vs)
+      | Logand ->
+        List.fold_left ( && ) true
+          (List.mapi (fun i -> of_value i (`Naryop op)) vs)
+      | Logor ->
+        List.fold_left ( || ) false
+          (List.mapi (fun i -> of_value i (`Naryop op)) vs)
       | _ -> Log.err {|naryop: Unsupported bool operator "%a"|} Ty.pp_naryop op
     in
     to_value b
@@ -381,19 +382,19 @@ module Lst = struct
     | List_set ->
       let lst = of_value 1 op' v1 in
       let i = Int.of_value 2 op' v2 in
-      let rec set i lst v =
+      let rec set i lst v acc =
         match (i, lst) with
-        | 0, _ :: tl -> v :: tl
-        | i, hd :: tl -> hd :: set (i - 1) tl v
+        | 0, _ :: tl -> List.rev_append acc (v :: tl)
+        | i, hd :: tl -> set (i - 1) tl v (hd :: acc)
         | _, [] -> raise IndexOutOfBounds
       in
-      List (set i lst v3)
+      List (set i lst v3 [])
     | _ -> Log.err {|triop: Unsupported list operator "%a"|} Ty.pp_triop op
 
   let naryop (op : naryop) (vs : Value.t list) : Value.t =
     let op' = `Naryop op in
     match op with
-    | Concat -> List (List.concat (List.map (of_value 0 op') vs))
+    | Concat -> List (List.concat_map (of_value 0 op') vs)
     | _ -> Log.err {|naryop: Unsupported list operator "%a"|} Ty.pp_naryop op
 end
 
