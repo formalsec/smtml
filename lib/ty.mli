@@ -80,7 +80,6 @@ type binop =
   | String_suffix (* (str.suffixof String String Bool) *)
   | String_contains (* (str.contains String String Bool) *)
   | String_last_index
-  | String_split
 
 type relop =
   | Eq
@@ -130,8 +129,8 @@ type cvtop =
   | String_to_float
 
 type naryop =
-  | AndN
-  | OrN
+  | Logand
+  | Logor
   | Concat
 
 type logic =

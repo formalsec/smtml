@@ -84,7 +84,6 @@ type binop =
   | String_suffix
   | String_contains
   | String_last_index
-  | String_split
 
 type relop =
   | Eq
@@ -134,8 +133,8 @@ type cvtop =
   | String_to_float
 
 type naryop =
-  | AndN
-  | OrN
+  | Logand
+  | Logor
   | Concat
 
 type logic =
@@ -212,7 +211,6 @@ let pp_binop fmt (op : binop) =
   | String_suffix -> pp_string fmt "suffixof"
   | String_contains -> pp_string fmt "contains"
   | String_last_index -> pp_string fmt "last_indexof"
-  | String_split -> pp_string fmt "split"
 
 let pp_triop fmt (op : triop) =
   match op with
@@ -264,8 +262,8 @@ let pp_cvtop fmt (op : cvtop) =
 
 let pp_naryop fmt (op : naryop) =
   match op with
-  | AndN -> pp_string fmt "and"
-  | OrN -> pp_string fmt "or"
+  | Logand -> pp_string fmt "and"
+  | Logor -> pp_string fmt "or"
   | Concat -> pp_string fmt "++"
 
 let pp fmt = function
