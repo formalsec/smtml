@@ -103,6 +103,8 @@ module Int = struct
       | Le -> ( <= )
       | Gt -> ( > )
       | Ge -> ( >= )
+      | Eq -> ( = )
+      | Ne -> ( <> )
       | _ -> Log.err {|relop: Unsupported int operator "%a"|} Ty.pp_relop op
     in
     f (of_value 1 (`Relop op) v1) (of_value 2 (`Relop op) v2)
@@ -162,6 +164,8 @@ module Real = struct
       | Le -> ( <= )
       | Gt -> ( > )
       | Ge -> ( >= )
+      | Eq -> ( = )
+      | Ne -> ( <> )
       | _ -> Log.err {|relop: Unsupported real operator "%a"|} Ty.pp_relop op
     in
     f (of_value 1 (`Relop op) v1) (of_value 2 (`Relop op) v2)
@@ -318,7 +322,18 @@ module Str = struct
       Int.to_value (indexof str t i)
     | _ -> Log.err {|triop: Unsupported str operator "%a"|} Ty.pp_triop op
 
-  let relop _ = assert false
+  let relop (op : relop) (v1 : Value.t) (v2 : Value.t) : bool =
+    let f =
+      match op with
+      | Lt -> ( < )
+      | Le -> ( <= )
+      | Gt -> ( > )
+      | Ge -> ( >= )
+      | Eq -> ( = )
+      | Ne -> ( <> )
+      | _ -> Log.err {|relop: Unsupported string operator "%a"|} Ty.pp_relop op
+    in
+    f (of_value 1 (`Relop op) v1) (of_value 2 (`Relop op) v2)
 
   let cvtop (op : cvtop) (v : Value.t) : Value.t =
     let op' = `Cvtop op in
