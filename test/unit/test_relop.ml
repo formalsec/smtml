@@ -7,6 +7,8 @@ let int i = value (Int i)
 
 let real f = value (Real f)
 
+let str s = value (Str s)
+
 let i32 i = value (Num (I32 i))
 
 let i64 i = value (Num (I64 i))
@@ -43,6 +45,17 @@ let () =
   assert (relop Ty_real Le (real 0.0) (real 1.0) = value True);
   assert (relop Ty_real Gt (real 0.0) (real 1.0) = value False);
   assert (relop Ty_real Ge (real 0.0) (real 1.0) = value False)
+
+(* str *)
+let () =
+  assert (relop Ty_str Lt (str "a") (str "b") = value True);
+  assert (relop Ty_str Le (str "a") (str "b") = value True);
+  assert (relop Ty_str Gt (str "a") (str "b") = value False);
+  assert (relop Ty_str Ge (str "a") (str "b") = value False);
+  assert (relop Ty_str Eq (str "a") (str "a") = value True);
+  assert (relop Ty_str Ne (str "a") (str "a") = value False);
+  assert (relop Ty_str Eq (str "a") (str "b") = value False);
+  assert (relop Ty_str Ne (str "a") (str "b") = value True)
 
 (* i32 *)
 let () =
