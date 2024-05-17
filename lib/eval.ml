@@ -119,6 +119,7 @@ module Int = struct
     match op with
     | OfBool -> to_value (of_bool v)
     | Reinterpret_int -> Real (Float.of_int (of_value 1 (`Cvtop op) v))
+    | ToString -> Str (string_of_int (of_value 1 (`Cvtop op) v))
     | _ -> Log.err {|cvtop: Unsupported int operator "%a"|} Ty.pp_cvtop op
 end
 
