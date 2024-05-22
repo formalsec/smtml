@@ -17,6 +17,8 @@ let f32 f = value (Num (F32 (Int32.bits_of_float f)))
 
 let f64 f = value (Num (F64 (Int64.bits_of_float f)))
 
+let app f args = value (App (f, args))
+
 (* bool *)
 let () =
   assert (relop Ty_bool Eq (int 0) (int 0) = value True);
@@ -92,3 +94,10 @@ let () =
   assert (relop (Ty_fp 64) Le (f64 0.0) (f64 1.0) = value True);
   assert (relop (Ty_fp 64) Gt (f64 0.0) (f64 1.0) = value False);
   assert (relop (Ty_fp 64) Ge (f64 0.0) (f64 1.0) = value False)
+
+(* app *)
+let () =
+  assert (relop Ty_app Eq (app (`Op "undefined") []) (app (`Op "undefined") []) = value True);
+  assert (relop Ty_app Ne (app (`Op "undefined") []) (app (`Op "undefined") []) = value False);
+  assert (relop Ty_app Eq (app (`Op "undefined") []) (int 1) = value False);
+  assert (relop Ty_app Eq (int 1) (app (`Op "undefined") []) = value False)
