@@ -373,6 +373,14 @@ let relop' (ty : Ty.t) (op : relop) (hte1 : t) (hte2 : t) : t =
 
 let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
   match (view hte1, view hte2) with
+  | Val (App (`Op s1, _)), Val (App (`Op s2, _)) ->
+    if String.equal s1 s2 then value (if op = Eq then True else False)
+    else relop' ty op hte1 hte2
+  | Val (App _), Val _ | Val _, Val (App _) -> (
+    match op with
+    | Eq -> value False
+    | Ne -> value True
+    | _ -> relop' ty op hte1 hte2 )
   | Val v1, Val v2 -> value (if Eval.relop ty op v1 v2 then True else False)
   | Ptr (b1, os1), Ptr (b2, os2) -> (
     match op with
