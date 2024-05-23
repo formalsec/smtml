@@ -143,6 +143,7 @@ type logic =
   | QF_NIA
   | QF_NRA
   | QF_RDL
+  | QF_S
   | QF_UF
   | QF_UFBV
   | QF_UFIDL
@@ -270,6 +271,7 @@ let pp_logic fmt : logic -> unit = function
   | QF_NIA -> pp_string fmt "QF_NIA"
   | QF_NRA -> pp_string fmt "QF_NRA"
   | QF_RDL -> pp_string fmt "QF_RDL"
+  | QF_S -> pp_string fmt "QF_S"
   | QF_UF -> pp_string fmt "QF_UF"
   | QF_UFBV -> pp_string fmt "QF_UFBV"
   | QF_UFIDL -> pp_string fmt "QF_UFIDL"
