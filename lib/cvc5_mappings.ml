@@ -199,17 +199,17 @@ module Impl = struct
 
     let contains t1 ~sub = Term.mk_term tm Kind.String_contains [| t1; sub |]
 
-    let prefix t1 ~s = Term.mk_term tm Kind.String_prefix [| t1; s |]
+    let is_prefix t1 ~prefix = Term.mk_term tm Kind.String_prefix [| t1; prefix |]
 
-    let suffix t1 ~s = Term.mk_term tm Kind.String_suffix [| t1; s |]
+    let is_suffix t1 ~suffix = Term.mk_term tm Kind.String_suffix [| t1; suffix |]
 
     let sub s ~pos ~len = Term.mk_term tm Kind.String_substr [| s; pos; len |]
 
-    let index t1 ~sub ~off =
-      Term.mk_term tm Kind.String_indexof [| t1; sub; off |]
+    let index_of t1 ~sub ~pos =
+      Term.mk_term tm Kind.String_indexof [| t1; sub; pos |]
 
-    let replace t1 ~s2 ~s3 =
-      Term.mk_term tm Kind.String_replace [| t1; s2; s3 |]
+    let replace t1 ~pattern ~with_ =
+      Term.mk_term tm Kind.String_replace [| t1; pattern; with_ |]
   end
 
   module Bitv = struct
@@ -300,7 +300,7 @@ module Impl = struct
       | true ->
         Term.mk_fp_nan tm es eb
       | _ ->
-        let b = Int64.bits_of_float f in
+        let b = int_of_float f in
         let bt = Term.mk_bv tm (es + eb) b in
         Term.mk_fp tm es eb bt
 
