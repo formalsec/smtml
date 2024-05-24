@@ -182,15 +182,15 @@ module Impl = struct
 
     let contains _ ~sub:_ = assert false
 
-    let prefix _ ~s:_ = assert false
+    let is_prefix _ ~prefix:_ = assert false
 
-    let suffix _ ~s:_ = assert false
+    let is_suffix _ ~suffix:_ = assert false
 
     let sub _ ~pos:_ ~len:_ = assert false
 
-    let index _ ~sub:_ ~off:_ = assert false
+    let index_of _ ~sub:_ ~pos:_ = assert false
 
-    let replace _ ~s2:_ ~s3:_ = assert false
+    let replace _ ~pattern:_ ~with_:_ = assert false
   end
 
   module Bitv = struct

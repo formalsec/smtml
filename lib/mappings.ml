@@ -186,15 +186,15 @@ module Make (M : Mappings_intf.M) = struct
       | Seq_at -> String.at e1 ~pos:e2
       | Seq_concat -> String.concat e1 e2
       | Seq_contains -> String.contains e1 ~sub:e2
-      | Seq_prefix -> String.prefix e1 ~s:e2
-      | Seq_suffix -> String.suffix e1 ~s:e2
+      | Seq_prefix -> String.is_prefix e1 ~prefix:e2
+      | Seq_suffix -> String.is_suffix e1 ~suffix:e2
       | _ -> err {|String: Unsupported binop operator "%a"|} Ty.pp_binop op
 
     let triop op e1 e2 e3 =
       match op with
       | Seq_extract -> String.sub e1 ~pos:e2 ~len:e3
-      | Seq_index -> String.index e1 ~sub:e2 ~off:e3
-      | Seq_replace -> String.replace e1 ~s2:e2 ~s3:e3
+      | Seq_index -> String.index_of e1 ~sub:e2 ~pos:e3
+      | Seq_replace -> String.replace e1 ~pattern:e2 ~with_:e3
       | _ -> err {|String: Unsupported triop operator "%a"|} Ty.pp_triop op
 
     let relop op e1 e2 =

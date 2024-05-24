@@ -182,15 +182,15 @@ module type M = sig
 
     val contains : term -> sub:term -> term t
 
-    val prefix : term -> s:term -> term t
+    val is_prefix : term -> prefix:term -> term t
 
-    val suffix : term -> s:term -> term t
+    val is_suffix : term -> suffix:term -> term t
 
     val sub : term -> pos:term -> len:term -> term t
 
-    val index : term -> sub:term -> off:term -> term t
+    val index_of : term -> sub:term -> pos:term -> term t
 
-    val replace : term -> s2:term -> s3:term -> term t
+    val replace : term -> pattern:term -> with_:term -> term t
   end
 
   module Bitv : sig

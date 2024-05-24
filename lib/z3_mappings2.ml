@@ -241,17 +241,17 @@ module Impl = struct
 
     let concat e1 e2 ctx = Seq.mk_seq_concat ctx [ e1; e2 ]
 
-    let prefix e1 ~s ctx = Seq.mk_seq_prefix ctx e1 s
+    let is_prefix e1 ~prefix ctx = Seq.mk_seq_prefix ctx e1 prefix
 
-    let suffix e1 ~s ctx = Seq.mk_seq_suffix ctx e1 s
+    let is_suffix e1 ~suffix ctx = Seq.mk_seq_suffix ctx e1 suffix
 
     let contains e1 ~sub ctx = Seq.mk_seq_contains ctx e1 sub
 
     let sub str ~pos ~len ctx = Seq.mk_seq_extract ctx str pos len
 
-    let index e1 ~sub ~off ctx = Seq.mk_seq_index ctx e1 sub off
+    let index_of e1 ~sub ~pos ctx = Seq.mk_seq_index ctx e1 sub pos
 
-    let replace e1 ~s2 ~s3 ctx = Seq.mk_seq_replace ctx e1 s2 s3
+    let replace e1 ~pattern ~with_ ctx = Seq.mk_seq_replace ctx e1 pattern with_
   end
 
   module Bitv = struct
