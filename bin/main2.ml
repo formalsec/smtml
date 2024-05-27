@@ -45,7 +45,8 @@ let parse_cmdline =
             | Z3_prover2 -> (module Z3_mappings2)
             | Colibri2_prover -> (module Colibri2_mappings)
             | Bitwuzla_prover -> (module Bitwuzla_mappings)
-            | Cvc5_prover -> failwith "cvc5 turned off for now due to formalsec/ocaml-cvc5#19"
+            | Cvc5_prover ->
+              failwith "cvc5 turned off for now due to formalsec/ocaml-cvc5#19"
           : Mappings_intf.S )
     in
     Mappings.set_debug debug;

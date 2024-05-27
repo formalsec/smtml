@@ -199,9 +199,11 @@ module Impl = struct
 
     let contains t1 ~sub = Term.mk_term tm Kind.String_contains [| t1; sub |]
 
-    let is_prefix t1 ~prefix = Term.mk_term tm Kind.String_prefix [| t1; prefix |]
+    let is_prefix t1 ~prefix =
+      Term.mk_term tm Kind.String_prefix [| t1; prefix |]
 
-    let is_suffix t1 ~suffix = Term.mk_term tm Kind.String_suffix [| t1; suffix |]
+    let is_suffix t1 ~suffix =
+      Term.mk_term tm Kind.String_suffix [| t1; suffix |]
 
     let sub s ~pos ~len = Term.mk_term tm Kind.String_substr [| s; pos; len |]
 
@@ -297,8 +299,7 @@ module Impl = struct
 
     let v f es eb =
       match Float.is_nan f with
-      | true ->
-        Term.mk_fp_nan tm es eb
+      | true -> Term.mk_fp_nan tm es eb
       | _ ->
         let b = int_of_float f in
         let bt = Term.mk_bv tm (es + eb) b in
@@ -310,8 +311,7 @@ module Impl = struct
 
     let sqrt ~rm t = Term.mk_term tm Kind.Floatingpoint_sqrt [| rm; t |]
 
-    let is_nan t = 
-      Term.mk_term tm Kind.Floatingpoint_is_nan [| t |]
+    let is_nan t = Term.mk_term tm Kind.Floatingpoint_is_nan [| t |]
 
     let round_to_integral ~rm t =
       Term.mk_term tm Kind.Floatingpoint_rti [| rm; t |]
