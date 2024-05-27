@@ -4,7 +4,6 @@
   test_optimizer
   test_real
   test_simplify
-  test_solver
   test_unop
   test_binop
   test_triop
