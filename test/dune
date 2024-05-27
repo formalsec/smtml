@@ -1,6 +1,6 @@
 (library
  (name smtml_tests)
- (modules test_bv test_harness test_solver_params test_lia)
+ (modules test_bv test_fp test_harness test_solver_params test_solver test_lia)
  (libraries smtml))
 
 (test
