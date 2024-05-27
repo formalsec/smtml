@@ -10,5 +10,5 @@
  (public_name smtml2)
  (name main2)
  (modules main2)
- (libraries cmdliner smtml smtml.colibri2 smtml.bitwuzla smtml.cvc5)
+ (libraries cmdliner smtml smtml.colibri2 smtml.bitwuzla)
  (optional))
