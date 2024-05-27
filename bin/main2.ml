@@ -20,6 +20,7 @@ open Smtml
 
 type prover =
   | Z3_prover
+  | Cvc5_prover
   | Colibri2_prover
   | Bitwuzla_prover
 
