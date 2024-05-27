@@ -276,19 +276,19 @@ module Impl = struct
 
     let abs t = mk_term1 Kind.Fp_abs t
 
-    let sqrt ~rm:_ _ = assert false
+    let sqrt ~rm t = mk_term2 Kind.Fp_sqrt rm t
 
     let is_nan t = mk_term1 Kind.Fp_is_nan t
 
-    let round_to_integral ~rm:_ _ = assert false
+    let round_to_integral ~rm t = mk_term2 Kind.Fp_rti rm t
 
-    let add ~rm:_ _ = assert false
+    let add ~rm lhs rhs = mk_term3 Kind.Fp_add rm lhs rhs
 
-    let sub ~rm:_ _ = assert false
+    let sub ~rm lhs rhs = mk_term3 Kind.Fp_sub rm lhs rhs
 
-    let mul ~rm:_ _ = assert false
+    let mul ~rm lhs rhs = mk_term3 Kind.Fp_mul rm lhs rhs
 
-    let div ~rm:_ _ = assert false
+    let div ~rm lhs rhs = mk_term3 Kind.Fp_div rm lhs rhs
 
     let min t1 t2 = mk_term2 Kind.Fp_min t1 t2
 
@@ -306,19 +306,28 @@ module Impl = struct
 
     let ge t1 t2 = mk_term2 Kind.Fp_geq t1 t2
 
-    let to_fp _ _ ~rm:_ _ = assert false
+    (* TODO *)
+    let to_fp _eb _sb ~rm:_ _t =
+      (* match rm with *)
+      (* | Some rm -> mk_term2_indexed2 Kind.Fp_to_fp_from_fp rm t eb sb *)
+      (* | None -> mk_term1_indexed2 Kind.Fp_to_fp_from_bv t eb sb *)
+      failwith "Bitwuzla_mappings: to_fp not implemented"
 
-    let sbv_to_fp _ _ ~rm:_ _ = assert false
+    let sbv_to_fp eb sb ~rm bv =
+      mk_term2_indexed2 Kind.Fp_to_fp_from_sbv rm bv eb sb
 
-    let ubv_to_fp _ _ ~rm:_ _ = assert false
+    let ubv_to_fp eb sb ~rm bv =
+      mk_term2_indexed2 Kind.Fp_to_fp_from_ubv rm bv eb sb
 
-    let to_ubv _ ~rm:_ _ = assert false
+    let to_ubv m ~rm t = mk_term2_indexed1 Kind.Fp_to_ubv rm t m
 
-    let to_sbv _ ~rm:_ _ = assert false
+    let to_sbv m ~rm t = mk_term2_indexed1 Kind.Fp_to_sbv rm t m
 
-    let of_ieee_bv _ = assert false
+    (* TODO *)
+    let of_ieee_bv _ = failwith "Bitwuzla_mappings: of_ieee_bv not implemented"
 
-    let to_ieee_bv _ = assert false
+    (* TODO *)
+    let to_ieee_bv _ = failwith "Bitwuzla_mappings: to_ieee_bv not implemented"
   end
 
   module Model = struct
@@ -330,7 +339,7 @@ module Impl = struct
   module Solver = struct
     let make ?params:_ ?logic:_ () = Solver.create (Options.default ())
 
-    let clone _ = assert false
+    let clone _solver = assert false
 
     let push solver = Solver.push solver 1
 
@@ -349,9 +358,13 @@ module Impl = struct
 
     let model _ = assert false
 
-    let add_simplifier solver = solver
+    let add_simplifier solver =
+      (* does nothing *)
+      solver
 
-    let interrupt _ = ()
+    let interrupt _ =
+      (* does nothing *)
+      ()
 
     let pp_statistics fmt solver = Solver.pp_statistics fmt solver
   end
