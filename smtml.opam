@@ -42,7 +42,7 @@ build: [
 dev-repo: "git+https://github.com/formalsec/smtml.git"
 available: arch != "arm32" & arch != "x86_32"
 pin-depends: [
-  ["colibri2.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#ae18d699b19e7967a81ccae6db454edfa968feae"]
-  ["colibrilib.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#ae18d699b19e7967a81ccae6db454edfa968feae"]
+  ["colibri2.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#e804b0bab4293306e07e003c78a4f84909b3aba7"]
+  ["colibrilib.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#e804b0bab4293306e07e003c78a4f84909b3aba7"]
   ["cvc5.~dev" "git+https://github.com/formalsec/ocaml-cvc5#main"]
 ]
