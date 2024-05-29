@@ -22,14 +22,19 @@ module Make (M : Mappings_intf.S) = struct
     let symbol_x = Symbol.("x" @: Ty_int) in
     let x = Expr.mk_symbol symbol_x in
     assert_sat (Solver.check solver []);
-    assert_sat (Solver.check solver Int.[ x >= int 0 ]);
+    Solver.push solver;
+    Solver.add solver Int.[ x >= int 0 ];
+    assert_sat (Solver.check solver []);
     assert (
       let v = Solver.get_value solver x in
       Expr.equal v (int 0) );
+    Solver.pop solver 1;
+    Solver.push solver;
     assert_sat (Solver.check solver [ x = int 3 ]);
     assert (
       let v = Solver.get_value solver Int.(x * x) in
       Expr.equal v (int 9) );
+    Solver.pop solver 1;
     assert_sat (Solver.check solver []);
     let model = Solver.model ~symbols:[ symbol_x ] solver in
     let val_x = Option.bind model (fun m -> Model.evaluate m symbol_x) in
