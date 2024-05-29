@@ -846,9 +846,14 @@ module Fresh = struct
 
     let pp_smt ?status:_ _ _ = ()
 
-    let satisfiability = function
-      | `Sat _ -> `Sat
-      | `Unknown _ | `UnknownUnsat -> `Unknown
+    let satisfiability s = function
+      | `Sat d ->
+        s.state <- `Sat d;
+        `Sat
+      | `Unknown d ->
+        s.state <- `Unknown d;
+        `Unknown
+      | `UnknownUnsat -> `Unknown
       | `Unsat -> `Unsat
 
     module Solver = struct
@@ -856,7 +861,10 @@ module Fresh = struct
         let scheduler = Scheduler.new_solver ~learning:false () in
         Scheduler.init_theories
           ~theories:
-            ( Colibri2_theories_bool.Ite.th_register :: LRA.LRA.th_register
+            ( Colibri2_theories_bool.Boolean.th_register
+            :: Colibri2_theories_bool.Equality.th_register
+            :: Colibri2_theories_bool.Ite.th_register
+            :: Colibri2_theories_LRA.LRA.th_register
             :: Colibri2_theories_fp.Fp.th_register
             :: Colibri2_core.ForSchedulers.default_theories () )
           scheduler;
@@ -907,6 +915,7 @@ module Fresh = struct
         Colibri2_theories_bool.Boolean.set_true env n
 
       let add s es =
+        Format.fprintf Format.err_formatter "C2_mapps.add %a@." Expr.pp_list es;
         Scheduler.add_assertion s.scheduler (fun d ->
             let es' =
               List.map
@@ -917,12 +926,14 @@ module Fresh = struct
             List.iter (fun e -> new_assertion d e) es' )
 
       let check s ~assumptions =
+        Format.fprintf Format.err_formatter "C2_mapps.check %a@." Expr.pp_list
+          assumptions;
         match assumptions with
-        | [] -> satisfiability @@ Scheduler.check_sat s.scheduler
+        | [] -> satisfiability s @@ Scheduler.check_sat s.scheduler
         | _ ->
           let bp = Scheduler.push s.scheduler in
           add s assumptions;
-          let res = satisfiability @@ Scheduler.check_sat s.scheduler in
+          let res = satisfiability s @@ Scheduler.check_sat s.scheduler in
           Scheduler.pop_to s.scheduler bp;
           res
 
