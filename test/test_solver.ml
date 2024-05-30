@@ -3,7 +3,7 @@ open Smtml
 module Make (M : Mappings_intf.S) = struct
   open Test_harness
   module Cached = Solver.Cached (M)
-  module Solver = Solver.Batch (M)
+  module Solver = Solver.Incremental (M)
 
   let () =
     let open Infix in
@@ -30,7 +30,8 @@ module Make (M : Mappings_intf.S) = struct
       Expr.equal v (int 0) );
     Solver.pop solver 1;
     Solver.push solver;
-    assert_sat (Solver.check solver [ x = int 3 ]);
+    Solver.add solver [ x = int 3 ];
+    assert_sat (Solver.check solver []);
     assert (
       let v = Solver.get_value solver Int.(x * x) in
       Expr.equal v (int 9) );
@@ -39,7 +40,8 @@ module Make (M : Mappings_intf.S) = struct
     let model = Solver.model ~symbols:[ symbol_x ] solver in
     let val_x = Option.bind model (fun m -> Model.evaluate m symbol_x) in
     assert (Option.is_some val_x);
-    assert_sat (Solver.check solver [ x = int 5 ]);
+    Solver.add solver [ x = int 5 ];
+    assert_sat (Solver.check solver []);
     let model = Solver.model solver in
     let val_x = Option.bind model (fun m -> Model.evaluate m symbol_x) in
     assert (Stdlib.(Some (Value.Int 5) = val_x))
