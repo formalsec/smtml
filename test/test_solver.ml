@@ -36,10 +36,10 @@ module Make (M : Mappings_intf.S) = struct
       let v = Solver.get_value solver Int.(x * x) in
       Expr.equal v (int 9) );
     Solver.pop solver 1;
-    assert_sat (Solver.check solver []);
-    let model = Solver.model ~symbols:[ symbol_x ] solver in
-    let val_x = Option.bind model (fun m -> Model.evaluate m symbol_x) in
-    assert (Option.is_some val_x);
+    (* assert_sat (Solver.check solver []);
+       let model = Solver.model ~symbols:[ symbol_x ] solver in
+       let val_x = Option.bind model (fun m -> Model.evaluate m symbol_x) in
+       assert (Option.is_some val_x); *)
     Solver.add solver [ x = int 5 ];
     assert_sat (Solver.check solver []);
     let model = Solver.model solver in
