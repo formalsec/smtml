@@ -915,7 +915,6 @@ module Fresh = struct
         Colibri2_theories_bool.Boolean.set_true env n
 
       let add s es =
-        Format.fprintf Format.err_formatter "C2_mapps.add %a@." Expr.pp_list es;
         Scheduler.add_assertion s.scheduler (fun d ->
             let es' =
               List.map
@@ -926,8 +925,6 @@ module Fresh = struct
             List.iter (fun e -> new_assertion d e) es' )
 
       let check s ~assumptions =
-        Format.fprintf Format.err_formatter "C2_mapps.check %a@." Expr.pp_list
-          assumptions;
         match assumptions with
         | [] -> satisfiability s @@ Scheduler.check_sat s.scheduler
         | _ ->
