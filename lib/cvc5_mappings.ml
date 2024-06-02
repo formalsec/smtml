@@ -195,7 +195,7 @@ module Impl = struct
       let one = Term.mk_int tm 1 in
       Term.mk_term tm Kind.String_substr [| t; pos; one |]
 
-    let concat t1 t2 = Term.mk_term tm Kind.String_concat [| t1; t2 |]
+    let concat t = Term.mk_term tm Kind.String_concat (Array.of_list t)
 
     let contains t1 ~sub = Term.mk_term tm Kind.String_contains [| t1; sub |]
 
@@ -302,7 +302,7 @@ module Impl = struct
       | true -> Term.mk_fp_nan tm es eb
       | _ ->
         let b = int_of_float f in
-        let bt = Term.mk_bv tm (es + eb) b in
+        let bt = Term.mk_bv tm (es + eb) (Int64.of_int b) in
         Term.mk_fp tm es eb bt
 
     let neg t = Term.mk_term tm Kind.Floatingpoint_neg [| t |]
@@ -402,8 +402,6 @@ module Impl = struct
 
     let add solver ts = List.iter (Solver.assert_formula solver) ts
 
-    (* FIXME: refactor Result class to only include
-       SAT/UNSAT/UNKNOWN types? *)
     let check solver ~assumptions =
       let assumptions = Array.of_list assumptions in
       let result = Solver.check_sat_assuming solver assumptions in
