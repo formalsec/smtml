@@ -28,6 +28,7 @@
   parser
   params
   parse
+  poly_mappings
   solver
   solver_intf
   symbol
