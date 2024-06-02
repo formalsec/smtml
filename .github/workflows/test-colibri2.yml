@@ -1,0 +1,32 @@
+name: Test Colibri2
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      OPAMCONFIRMLEVEL: unsafe-yes
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup OCaml 4.14
+        uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: "4.14"
+          dune-cache: true
+          allow-prerelease-opam: true
+      - name: Install dependencies
+        run: |
+          opam install -y . --deps-only --with-test
+          opam upgrade colibri2
+      - name: Build
+        run: opam exec -- dune build @install
+      - name: Test
+        run: opam exec -- dune exec ./test/test_colibri2.exe

@@ -151,6 +151,7 @@ type logic =
   | QF_NIA
   | QF_NRA
   | QF_RDL
+  | QF_S
   | QF_UF
   | QF_UFBV
   | QF_UFIDL

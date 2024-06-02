@@ -1,4 +1,4 @@
-# Smt.ml [![Build badge](https://github.com/formalsec/encoding/actions/workflows/build.yml/badge.svg)](https://github.com/formalsec/encoding/actions) [![Coverage Status](https://coveralls.io/repos/github/formalsec/encoding/badge.svg)](https://coveralls.io/github/formalsec/encoding) [![GPL-3.0](https://img.shields.io/github/license/wasp-platform/encoding)](LICENSE) ![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos-lightgrey)
+# Smt.ml [![Build badge](https://github.com/formalsec/smtml/actions/workflows/build.yml/badge.svg)](https://github.com/formalsec/smtml/actions) [![Coverage Status](https://coveralls.io/repos/github/formalsec/smtml/badge.svg)](https://coveralls.io/github/formalsec/smtml) [![GPL-3.0](https://img.shields.io/github/license/formalsec/smtml)](LICENSE) ![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos-lightgrey)
 
 Smt.ml is a Multi Back-end Front-end for SMT Solvers in OCaml. The primary
 objective of Smt.ml is to facilitate the effortless transition between

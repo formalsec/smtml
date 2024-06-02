@@ -181,6 +181,7 @@ module Fresh = struct
       | Ty_real -> DTy.real
       | Ty_bool -> DTy.bool
       | Ty_str -> string_ty
+      | Ty_bitv 8 -> DTy.bitv 8
       | Ty_bitv 32 -> DTy.bitv 32
       | Ty_bitv 64 -> DTy.bitv 64
       | Ty_fp 32 -> float32_ty
@@ -846,19 +847,25 @@ module Fresh = struct
 
     let pp_smt ?status:_ _ _ = ()
 
-    let satisfiability = function
-      | `Sat _ -> `Sat
-      | `Unknown _ -> `Unknown
+    let satisfiability s = function
+      | `Sat d ->
+        s.state <- `Sat d;
+        `Sat
+      | `Unknown d ->
+        s.state <- `Unknown d;
+        `Unknown
+      | `UnknownUnsat -> `Unknown
       | `Unsat -> `Unsat
-      | `Search -> assert false
-      | `StepLimitReached -> assert false
 
     module Solver = struct
       let mk_scheduler () =
         let scheduler = Scheduler.new_solver ~learning:false () in
         Scheduler.init_theories
           ~theories:
-            ( Colibri2_theories_bool.Ite.th_register :: LRA.LRA.th_register
+            ( Colibri2_theories_bool.Boolean.th_register
+            :: Colibri2_theories_bool.Equality.th_register
+            :: Colibri2_theories_bool.Ite.th_register
+            :: Colibri2_theories_LRA.LRA.th_register
             :: Colibri2_theories_fp.Fp.th_register
             :: Colibri2_core.ForSchedulers.default_theories () )
           scheduler;
@@ -903,6 +910,11 @@ module Fresh = struct
         s.status_colibri <- Context.Ref.create ctx `No;
         s.decls <- DTerm.Const.S.empty
 
+      let new_assertion env e =
+        let n = Colibri2_core.Ground.convert env e in
+        Colibri2_core.Egraph.register env n;
+        Colibri2_theories_bool.Boolean.set_true env n
+
       let add s es =
         Scheduler.add_assertion s.scheduler (fun d ->
             let es' =
@@ -911,16 +923,17 @@ module Fresh = struct
                      s.decls <- DTerm.Const.S.add c s.decls ) )
                 es
             in
-            List.iter
-              (fun e ->
-                let n = Colibri2_core.Ground.convert d e in
-                Colibri2_core.Egraph.register d n;
-                Colibri2_theories_bool.Boolean.set_true d n )
-              es' )
+            List.iter (fun e -> new_assertion d e) es' )
 
       let check s ~assumptions =
-        add s assumptions;
-        satisfiability @@ Scheduler.check_sat s.scheduler
+        match assumptions with
+        | [] -> satisfiability s @@ Scheduler.check_sat s.scheduler
+        | _ ->
+          let bp = Scheduler.push s.scheduler in
+          add s assumptions;
+          let res = satisfiability s @@ Scheduler.check_sat s.scheduler in
+          Scheduler.pop_to s.scheduler bp;
+          res
 
       let model s : model option =
         match Scheduler.check_sat s.scheduler with
@@ -935,8 +948,7 @@ module Fresh = struct
           in
           Some (d, l)
         | `Unsat -> assert false
-        | `StepLimitReached -> assert false
-        | `Search -> assert false
+        | `UnknownUnsat -> assert false
 
       let interrupt _ = ()
 

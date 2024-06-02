@@ -1,6 +1,6 @@
 (cram
- (deps %{bin:smtml} test_pr_71.smtml test_sqrt.smtml))
+ (deps %{bin:smtml} test_pr_71.smtml))
 
 (tests
- (names test_fp_get_value test_pr_77)
+ (names test_pr_77)
  (libraries smtml))

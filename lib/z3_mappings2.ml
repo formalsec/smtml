@@ -233,11 +233,25 @@ module Impl = struct
 
     let of_code e ctx = Seq.mk_string_from_code ctx e
 
+    let to_int e ctx = Seq.mk_str_to_int ctx e
+
+    let of_int e ctx = Seq.mk_int_to_str ctx e
+
     let at str ~pos ctx = Seq.mk_seq_at ctx str pos
 
     let concat es ctx = Seq.mk_seq_concat ctx es
 
+    let is_prefix e1 ~prefix ctx = Seq.mk_seq_prefix ctx e1 prefix
+
+    let is_suffix e1 ~suffix ctx = Seq.mk_seq_suffix ctx e1 suffix
+
+    let contains e1 ~sub ctx = Seq.mk_seq_contains ctx e1 sub
+
     let sub str ~pos ~len ctx = Seq.mk_seq_extract ctx str pos len
+
+    let index_of e1 ~sub ~pos ctx = Seq.mk_seq_index ctx e1 sub pos
+
+    let replace e1 ~pattern ~with_ ctx = Seq.mk_seq_replace ctx e1 pattern with_
   end
 
   module Bitv = struct

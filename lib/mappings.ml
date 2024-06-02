@@ -185,11 +185,16 @@ module Make (M : Mappings_intf.M) = struct
     let binop op e1 e2 =
       match op with
       | At -> String.at e1 ~pos:e2
+      | String_contains -> String.contains e1 ~sub:e2
+      | String_prefix -> String.is_prefix e1 ~prefix:e2
+      | String_suffix -> String.is_suffix e1 ~suffix:e2
       | _ -> err {|String: Unsupported binop operator "%a"|} Ty.pp_binop op
 
     let triop op e1 e2 e3 =
       match op with
       | String_extract -> String.sub e1 ~pos:e2 ~len:e3
+      | String_index -> String.index_of e1 ~sub:e2 ~pos:e3
+      | String_replace -> String.replace e1 ~pattern:e2 ~with_:e3
       | _ -> err {|String: Unsupported triop operator "%a"|} Ty.pp_triop op
 
     let relop op e1 e2 =
@@ -201,6 +206,8 @@ module Make (M : Mappings_intf.M) = struct
     let cvtop = function
       | String_to_code -> String.to_code
       | String_from_code -> String.of_code
+      | String_to_int -> String.to_int
+      | String_from_int -> String.of_int
       | op -> err {|String: Unsupported cvtop operator "%a"|} Ty.pp_cvtop op
 
     let naryop op es =

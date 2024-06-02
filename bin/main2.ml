@@ -20,6 +20,8 @@ open Smtml
 
 type prover =
   | Z3_prover
+  | Z3_prover2
+  | Cvc5_prover
   | Colibri2_prover
   | Bitwuzla_prover
 
@@ -27,10 +29,12 @@ let prover_conv =
   Cmdliner.Arg.enum
     [ ("z3", Z3_prover)
     ; ("Z3", Z3_prover)
+    ; ("z3-2", Z3_prover2)
     ; ("c2", Colibri2_prover)
     ; ("colibri2", Colibri2_prover)
     ; ("Colibri2", Colibri2_prover)
     ; ("bitwuzla", Bitwuzla_prover)
+    ; ("cvc5", Cvc5_prover)
     ]
 
 let parse_cmdline =
@@ -38,8 +42,11 @@ let parse_cmdline =
     let module Mappings =
       ( val match prover with
             | Z3_prover -> (module Z3_mappings)
+            | Z3_prover2 -> (module Z3_mappings2)
             | Colibri2_prover -> (module Colibri2_mappings)
             | Bitwuzla_prover -> (module Bitwuzla_mappings)
+            | Cvc5_prover ->
+              failwith "cvc5 turned off for now due to formalsec/ocaml-cvc5#19"
           : Mappings_intf.S )
     in
     Mappings.set_debug debug;

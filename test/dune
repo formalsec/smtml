@@ -1,0 +1,27 @@
+(library
+ (name smtml_tests)
+ (modules
+  test_bv
+  test_fp
+  test_harness
+  test_solver_params
+  test_solver
+  test_lia)
+ (libraries smtml))
+
+(test
+ (name test_z3)
+ (modules test_z3)
+ (libraries smtml smtml_tests))
+
+(test
+ (name test_colibri2)
+ (modules test_colibri2)
+ (libraries smtml_tests smtml.colibri2)
+ (build_if %{lib-available:smtml.colibri2}))
+
+(test
+ (name test_bitwuzla)
+ (modules test_bitwuzla)
+ (libraries smtml_tests smtml.bitwuzla)
+ (build_if %{lib-available:smtml.bitwuzla}))
