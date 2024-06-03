@@ -545,8 +545,12 @@ module Fresh = struct
     let encode_relop (t : Ty.t) (relop : Ty.relop) (e1 : expr) (e2 : expr) :
       expr =
       match t, relop with
-      | _, Eq -> Z3.Boolean.mk_eq ctx e1 e2
-      | _, Ne -> Z3.Boolean.mk_distinct ctx [ e1; e2 ]
+      | _, Eq -> 
+        let e = Z3.Boolean.mk_eq ctx e1 e2 in
+        Z3.Expr.mk_app ctx poly_operations.boolean_constructor [ e ]
+      | _, Ne -> 
+        let e = Z3.Boolean.mk_distinct ctx [ e1; e2 ] in
+        Z3.Expr.mk_app ctx poly_operations.boolean_constructor [ e ]
       | Ty.Ty_int, _ -> relop_ints_to_bools (Arithmetic.encode_relop relop) e1 e2
       | Ty.Ty_real, _ -> relop_reals_to_bools (Arithmetic.encode_relop relop) e1 e2
       | _ -> assert false
