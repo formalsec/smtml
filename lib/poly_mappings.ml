@@ -70,13 +70,13 @@ module Fresh = struct
       { (****************)
         (* constructors *)
         (****************)
-        undefined_constructor : Z3.FuncDecl.func_decl
-      ; null_constructor : Z3.FuncDecl.func_decl
+        _undefined_constructor : Z3.FuncDecl.func_decl
+      ; _null_constructor : Z3.FuncDecl.func_decl
       ; boolean_constructor : Z3.FuncDecl.func_decl
       ; int_constructor : Z3.FuncDecl.func_decl
       ; real_constructor : Z3.FuncDecl.func_decl
       ; string_constructor : Z3.FuncDecl.func_decl
-      ; loc_constructor : Z3.FuncDecl.func_decl
+      ; _loc_constructor : Z3.FuncDecl.func_decl
       ; (*************)
         (* accessors *)
         (*************)
@@ -142,9 +142,9 @@ module Fresh = struct
     (* Constructors *)
     let constructors = Z3.Datatype.get_constructors poly_sort
 
-    let undefined_constructor = List.nth constructors 0
+    let _undefined_constructor = List.nth constructors 0
 
-    let null_constructor = List.nth constructors 1
+    let _null_constructor = List.nth constructors 1
 
     let boolean_constructor = List.nth constructors 2
 
@@ -154,7 +154,7 @@ module Fresh = struct
 
     let string_constructor = List.nth constructors 5
 
-    let loc_constructor = List.nth constructors 6
+    let _loc_constructor = List.nth constructors 6
 
     (* Accessors *)
     let accessors = Z3.Datatype.get_accessors poly_sort
@@ -168,13 +168,13 @@ module Fresh = struct
     let string_accessor = List.nth (List.nth accessors 5) 0
 
     let poly_operations =
-      { undefined_constructor
-      ; null_constructor
+      { _undefined_constructor
+      ; _null_constructor
       ; boolean_constructor
       ; int_constructor
       ; real_constructor
       ; string_constructor
-      ; loc_constructor
+      ; _loc_constructor
       ; boolean_accessor
       ; int_accessor
       ; real_accessor
@@ -453,12 +453,18 @@ module Fresh = struct
         | _ -> err {|Str: Unsupported Z3 naryop operator "%a"|} Ty.pp_naryop op
     end
 
-    let encode_val : Value.t -> Z3.Expr.expr = function
+    let rec encode_val : Value.t -> Z3.Expr.expr = function
       | True -> Z3.Expr.mk_app ctx boolean_constructor [ Boolean.true_ ]
       | False -> Z3.Expr.mk_app ctx boolean_constructor [ Boolean.false_ ]
       | Int v -> Z3.Expr.mk_app ctx int_constructor [ Arithmetic.Integer.v v ]
       | Real v -> Z3.Expr.mk_app ctx real_constructor [ Arithmetic.Real.v v ]
       | Str v -> Z3.Expr.mk_app ctx string_constructor [ Str.v v ]
+      | App (v, l) ->
+        let l' = List.map encode_val l in
+        (match v with
+        | `Op "undefined" -> Z3.Expr.mk_app ctx _undefined_constructor l'
+        | `Op "null" -> Z3.Expr.mk_app ctx _null_constructor l'
+        | _ -> assert false)
       | _ -> assert false
 
     let unop_ints op e =
@@ -674,7 +680,6 @@ module Fresh = struct
       let check s ~assumptions =
         let l =
           List.map check_bool_sort (List.map encode_expr assumptions) in
-        List.iter (fun x -> print_endline (Z3.Expr.to_string x)) l;
         match Z3.Solver.check s l with
         | Z3.Solver.UNKNOWN -> `Unknown
         | Z3.Solver.SATISFIABLE -> `Sat
@@ -784,7 +789,6 @@ module Fresh = struct
 
     let values_of_model ?(symbols : Symbol.t list option)
       (model : Z3.Model.model) : Model.t =
-      (* print_endline (Z3.Model.to_string model); *)
       let m = Hashtbl.create 512 in
       let symbols' = Option.value symbols ~default:(symbols_of_model model) in
       List.iter
