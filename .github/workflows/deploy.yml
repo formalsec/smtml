@@ -20,13 +20,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup OCaml 4.14
         uses: ocaml/setup-ocaml@v2
         with:
           ocaml-compiler: "4.14"
+
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v3
+
       - name: Install and Build
         run: |
           opam install -y . --deps-only --with-doc --with-test
@@ -36,6 +39,7 @@ jobs:
           opam exec -- bisect-ppx-report send-to Coveralls
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:

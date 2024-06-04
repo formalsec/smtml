@@ -16,17 +16,29 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/_opam
+          key: ${{ matrix.os }}-opam-${{ matrix.ocaml-compiler }}-${{ hashFiles('**.opam') }}
+          restore-keys: |
+            ${{ matrix.os }}-opam-${{ matrix.ocaml-compiler }}-
+
       - name: Setup OCaml 4.14
         uses: ocaml/setup-ocaml@v2
         with:
           ocaml-compiler: "4.14"
           dune-cache: true
           allow-prerelease-opam: true
+
       - name: Install dependencies
         run: |
           opam install -y . --deps-only --with-test
           opam install bitwuzla-cxx
+
       - name: Build
         run: opam exec -- dune build @install
+
       - name: Test
         run: opam exec -- dune exec ./test/test_bitwuzla.exe
