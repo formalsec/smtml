@@ -18,10 +18,10 @@
  (name test_colibri2)
  (modules test_colibri2)
  (libraries smtml_tests smtml.colibri2)
- (build_if %{lib-available:smtml.colibri2}))
+ (build_if %{lib-available:colibri2.core}))
 
 (test
  (name test_bitwuzla)
  (modules test_bitwuzla)
  (libraries smtml_tests smtml.bitwuzla)
- (build_if %{lib-available:smtml.bitwuzla}))
+ (build_if %{lib-available:bitwuzla-cxx}))
