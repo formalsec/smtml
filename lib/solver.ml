@@ -21,13 +21,31 @@ include Solver_intf
 let ( let+ ) o f = Option.map f o
 
 module Base (M : Mappings_intf.S) = struct
+  type t = M.solver
+
+  type solver = t
+
   let solver_time = ref 0.0
 
   let solver_count = ref 0
 
+  let pp_statistics fmt solver = M.Solver.pp_statistics fmt solver
+
+  let create ?params ?logic () : t = M.Solver.make ?params ?logic ()
+
   let interrupt solver = M.Solver.interrupt solver
 
-  let pp_statistics fmt solver = M.Solver.pp_statistics fmt solver
+  let clone (solver : t) : t = M.Solver.clone solver
+
+  let push (solver : t) : unit = M.Solver.push solver
+
+  let pop (solver : t) (lvl : int) : unit = M.Solver.pop solver lvl
+
+  let reset (solver : t) : unit = M.Solver.reset solver
+
+  let add (solver : t) (es : Expr.t list) : unit = M.Solver.add solver es
+
+  let get_assertions (_solver : t) : Expr.t list = assert false
 
   let check (solver : M.solver) (es : Expr.t list) : satisfiability =
     solver_count := !solver_count + 1;
@@ -37,7 +55,7 @@ module Base (M : Mappings_intf.S) = struct
 
   let get_value (solver : M.solver) (e : Expr.t) : Expr.t =
     match M.Solver.model solver with
-    | Some m -> Expr.(make @@ Val (M.value m e))
+    | Some m -> Expr.make @@ Val (M.value m e)
     | None -> Log.err "get_value: Trying to get a value from an unsat solver"
 
   let model ?(symbols : Symbol.t list option) (s : M.solver) : Model.t option =
@@ -96,29 +114,6 @@ module Make_batch (Mappings : Mappings_intf.S) = struct
 end
 
 (* TODO: Our base solver can be incrmental itself? *)
-module Make_incremental (Mappings : Mappings_intf.S) = struct
-  include Base (Mappings)
-
-  type t = Mappings.solver
-
-  type solver = t
-
-  let create ?params ?logic () : t =
-    Mappings.Solver.make ?params ?logic () |> Mappings.Solver.add_simplifier
-
-  let clone (solver : t) : t = Mappings.Solver.clone solver
-
-  let push (solver : t) : unit = Mappings.Solver.push solver
-
-  let pop (solver : t) (lvl : int) : unit = Mappings.Solver.pop solver lvl
-
-  let reset (solver : t) : unit = Mappings.Solver.reset solver
-
-  let add (solver : t) (es : Expr.t list) : unit = Mappings.Solver.add solver es
-
-  let get_assertions (_solver : t) : Expr.t list = assert false
-end
-
 module Batch (M : Mappings_intf.S) : Solver_intf.S = Make_batch (M)
 
 module Cached (M : Mappings_intf.S) : sig
@@ -140,7 +135,7 @@ end = struct
       result
 end
 
-module Incremental (M : Mappings_intf.S) : Solver_intf.S = Make_incremental (M)
+module Incremental (M : Mappings_intf.S) : Solver_intf.S = Base (M)
 
 module Z3_batch : Solver_intf.S = Batch (Z3_mappings)
 
