@@ -29,6 +29,7 @@ jobs:
 
       - name: Cache
         uses: actions/cache@v3
+        id: cache
         with:
           path: ${{ github.workspace }}/_opam
           key: ${{ matrix.os }}-opam-${{ matrix.ocaml-compiler }}-${{ hashFiles('**.opam') }}
@@ -43,6 +44,7 @@ jobs:
           allow-prerelease-opam: true
 
       - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
         run: opam install -y . --deps-only --with-test
 
       - name: Build
