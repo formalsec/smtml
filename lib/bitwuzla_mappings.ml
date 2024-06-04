@@ -80,7 +80,7 @@ module Impl = struct
   let ite cond t1 t2 = mk_term3 Kind.Ite cond t1 t2
 
   module Types = struct
-    let int = Obj.magic 0 [@@alert not_implemented "Not supported"]
+    let int = Obj.magic 0
 
     let real = Obj.magic 0
 
