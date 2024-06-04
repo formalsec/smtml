@@ -97,7 +97,11 @@ let () =
 
 (* app *)
 let () =
-  assert (relop Ty_app Eq (app (`Op "undefined") []) (app (`Op "undefined") []) = value True);
-  assert (relop Ty_app Ne (app (`Op "undefined") []) (app (`Op "undefined") []) = value False);
+  assert (
+    relop Ty_app Eq (app (`Op "undefined") []) (app (`Op "undefined") [])
+    = value True );
+  assert (
+    relop Ty_app Ne (app (`Op "undefined") []) (app (`Op "undefined") [])
+    = value False );
   assert (relop Ty_app Eq (app (`Op "undefined") []) (int 1) = value False);
   assert (relop Ty_app Eq (int 1) (app (`Op "undefined") []) = value False)

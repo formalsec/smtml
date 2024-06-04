@@ -317,8 +317,10 @@ module Fresh = struct
 
       let encode_triop op e1 e2 e3 =
         match op with
-        | Ite -> 
-          let cond = Z3.Expr.mk_app ctx poly_operations.boolean_accessor [ e1 ] in
+        | Ite ->
+          let cond =
+            Z3.Expr.mk_app ctx poly_operations.boolean_accessor [ e1 ]
+          in
           Boolean.mk_ite ctx cond e2 e3
         | op -> err {|Bool: Unsupported Z3 triop operator "%a"|} Ty.pp_triop op
 
@@ -342,8 +344,14 @@ module Fresh = struct
 
       let encode_unop op e =
         match op with
-        | Length -> Seq.mk_seq_length ctx e
-        | Trim -> FuncDecl.apply trim [ e ]
+        | Length -> 
+          let n_e = Z3.Expr.mk_app ctx poly_operations.string_accessor [ e ] in
+          let op_e = Seq.mk_seq_length ctx n_e in
+          Z3.Expr.mk_app ctx poly_operations.int_constructor [ op_e ]
+        | Trim -> 
+          let n_e = Z3.Expr.mk_app ctx poly_operations.string_accessor [ e ] in
+          let op_e = FuncDecl.apply trim [ n_e ] in
+          Z3.Expr.mk_app ctx poly_operations.string_constructor [ op_e ]
         | _ -> err {|Str: Unsupported Z3 unop operator "%a"|} Ty.pp_unop op
 
       let encode_binop op e1 e2 =
@@ -459,12 +467,12 @@ module Fresh = struct
       | Int v -> Z3.Expr.mk_app ctx int_constructor [ Arithmetic.Integer.v v ]
       | Real v -> Z3.Expr.mk_app ctx real_constructor [ Arithmetic.Real.v v ]
       | Str v -> Z3.Expr.mk_app ctx string_constructor [ Str.v v ]
-      | App (v, l) ->
+      | App (v, l) -> (
         let l' = List.map encode_val l in
-        (match v with
+        match v with
         | `Op "undefined" -> Z3.Expr.mk_app ctx _undefined_constructor l'
         | `Op "null" -> Z3.Expr.mk_app ctx _null_constructor l'
-        | _ -> assert false)
+        | _ -> assert false )
       | _ -> assert false
 
     let unop_ints op e =
@@ -482,17 +490,12 @@ module Fresh = struct
       let op_e = op n_e in
       Z3.Expr.mk_app ctx poly_operations.boolean_constructor [ op_e ]
 
-    let unop_strings op e =
-      let n_e = Z3.Expr.mk_app ctx poly_operations.string_accessor [ e ] in
-      let op_e = op n_e in
-      Z3.Expr.mk_app ctx poly_operations.string_constructor [ op_e ]
-
     let encode_unop (t : Ty.t) (unop : Ty.unop) (e : expr) : expr =
       match t with
       | Ty.Ty_int -> unop_ints (Arithmetic.encode_unop unop) e
       | Ty.Ty_real -> unop_reals (Arithmetic.encode_unop unop) e
       | Ty.Ty_bool -> unop_bools (Boolean.encode_unop unop) e
-      | Ty.Ty_str -> unop_strings (Str.encode_unop unop) e
+      | Ty.Ty_str -> Str.encode_unop unop e
       | _ -> assert false
 
     let binop_ints_to_ints op e1 e2 =
@@ -544,15 +547,17 @@ module Fresh = struct
 
     let encode_relop (t : Ty.t) (relop : Ty.relop) (e1 : expr) (e2 : expr) :
       expr =
-      match t, relop with
-      | _, Eq -> 
+      match (t, relop) with
+      | _, Eq ->
         let e = Z3.Boolean.mk_eq ctx e1 e2 in
         Z3.Expr.mk_app ctx poly_operations.boolean_constructor [ e ]
-      | _, Ne -> 
+      | _, Ne ->
         let e = Z3.Boolean.mk_distinct ctx [ e1; e2 ] in
         Z3.Expr.mk_app ctx poly_operations.boolean_constructor [ e ]
-      | Ty.Ty_int, _ -> relop_ints_to_bools (Arithmetic.encode_relop relop) e1 e2
-      | Ty.Ty_real, _ -> relop_reals_to_bools (Arithmetic.encode_relop relop) e1 e2
+      | Ty.Ty_int, _ ->
+        relop_ints_to_bools (Arithmetic.encode_relop relop) e1 e2
+      | Ty.Ty_real, _ ->
+        relop_reals_to_bools (Arithmetic.encode_relop relop) e1 e2
       | _ -> assert false
 
     let encode_cvtop = function
@@ -589,8 +594,7 @@ module Fresh = struct
     let rec encode_expr (hte : Expr.t) : expr =
       let open Expr in
       match view hte with
-      | Val v -> 
-        encode_val v
+      | Val v -> encode_val v
       | Unop (ty, op, e) ->
         let e' = encode_expr e in
         encode_unop ty op e'
@@ -673,17 +677,14 @@ module Fresh = struct
       let check_bool_sort e =
         match Z3.Boolean.is_bool e with
         | true -> e
-        | false ->
-          Z3.Expr.mk_app ctx poly_operations.boolean_accessor [ e ]
+        | false -> Z3.Expr.mk_app ctx poly_operations.boolean_accessor [ e ]
 
       let add s es =
-        let l =
-          List.map check_bool_sort (List.map encode_expr es) in
+        let l = List.map check_bool_sort (List.map encode_expr es) in
         Z3.Solver.add s l
 
       let check s ~assumptions =
-        let l =
-          List.map check_bool_sort (List.map encode_expr assumptions) in
+        let l = List.map check_bool_sort (List.map encode_expr assumptions) in
         match Z3.Solver.check s l with
         | Z3.Solver.UNKNOWN -> `Unknown
         | Z3.Solver.SATISFIABLE -> `Sat
@@ -735,9 +736,9 @@ module Fresh = struct
     end
 
     let recover_z3_num (n : Z3.Expr.expr) : float option =
-      if (Z3.Expr.is_numeral n) then (
+      if Z3.Expr.is_numeral n then
         Some (float_of_string (Z3.Arithmetic.Real.to_decimal_string n 16))
-      ) else None
+      else None
 
     let recover_z3_int (n : Z3.Expr.expr) : int option =
       let i = recover_z3_num n in
@@ -747,18 +748,14 @@ module Fresh = struct
       let open Value in
       let e = Z3.Model.eval model (encode_expr c) true |> Option.get in
       match (Expr.ty c, Z3.Sort.get_sort_kind @@ Z3.Expr.get_sort e) with
-      | Ty_int, Z3enums.DATATYPE_SORT ->
+      | Ty_int, Z3enums.DATATYPE_SORT -> (
         let e' = Z3.Expr.mk_app ctx poly_operations.int_accessor [ e ] in
         let v = Z3.Model.eval model e' true |> Option.get in
-        (match recover_z3_int v with
-        | Some i -> Int i
-        | None -> assert false)
-      | Ty_real, Z3enums.DATATYPE_SORT ->
+        match recover_z3_int v with Some i -> Int i | None -> assert false )
+      | Ty_real, Z3enums.DATATYPE_SORT -> (
         let e' = Z3.Expr.mk_app ctx poly_operations.real_accessor [ e ] in
         let v = Z3.Model.eval model e' true |> Option.get in
-        (match recover_z3_num v with
-        | Some f -> Real f
-        | None -> assert false)
+        match recover_z3_num v with Some f -> Real f | None -> assert false )
       | Ty_bool, Z3enums.DATATYPE_SORT ->
         let e' = Z3.Expr.mk_app ctx poly_operations.boolean_accessor [ e ] in
         let v = Z3.Model.eval model e' true |> Option.get in
