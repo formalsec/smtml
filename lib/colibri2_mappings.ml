@@ -203,10 +203,7 @@ module Fresh = struct
         ; _
         } ->
         Ty_str
-      | { ty_descr = TyApp ({ builtin = DExpr.Bitv 32; _ }, _); _ } ->
-        Ty_bitv 32
-      | { ty_descr = TyApp ({ builtin = DExpr.Bitv 64; _ }, _); _ } ->
-        Ty_bitv 64
+      | { ty_descr = TyApp ({ builtin = DExpr.Bitv n; _ }, _); _ } -> Ty_bitv n
       | { ty_descr = TyApp ({ builtin = DExpr.Float (8, 24); _ }, _); _ } ->
         Ty_fp 32
       | { ty_descr = TyApp ({ builtin = DExpr.Float (11, 53); _ }, _); _ } ->
@@ -1003,8 +1000,20 @@ module Fresh = struct
         | Some a when A.is_real a ->
           Some (Value.Real (Stdlib.Float.of_string (A.to_string a)))
         | Some _ | None -> None )
-      | Ty_str | Ty_bitv _ | Ty_fp _ | Ty_list | Ty_array | Ty_tuple ->
-        assert false
+      | Ty_bitv n -> (
+        match
+          Colibri2_core.Value.value Colibri2_theories_LRA.RealValue.key v
+        with
+        | Some a when A.is_integer a ->
+          Some
+            (Value.Num
+               ( match n with
+               | 8 -> I8 (A.to_int a)
+               | 32 -> I32 (Int32.of_int (A.to_int a))
+               | 64 -> I64 (Int64.of_int (A.to_int a))
+               | _ -> assert false ) )
+        | _ -> assert false )
+      | Ty_str | Ty_fp _ | Ty_list | Ty_array | Ty_tuple -> assert false
 
     (* let value_of_const ((d, _l) : model) (e : Expr.t) : Value.t option =
        let e' = encore_expr_aux e in
