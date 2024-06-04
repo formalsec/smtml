@@ -21,19 +21,32 @@ jobs:
           - "5.1"
     runs-on: ${{ matrix.os }}
     env:
-      OPAMCONFIRMLEVEL: unsafe-yes # allow opam depext to yes package manager prompts
+      # allow opam depext to yes package manager prompts
+      OPAMCONFIRMLEVEL: unsafe-yes
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/_opam
+          key: ${{ matrix.os }}-opam-${{ matrix.ocaml-compiler }}-${{ hashFiles('**.opam') }}
+          restore-keys: |
+            ${{ matrix.os }}-opam-${{ matrix.ocaml-compiler }}-
+
       - name: Setup OCaml ${{ matrix.ocaml-compiler }}
         uses: ocaml/setup-ocaml@v2
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
           dune-cache: true
           allow-prerelease-opam: true
+
       - name: Install dependencies
         run: opam install -y . --deps-only --with-test
+
       - name: Build
         run: opam exec -- dune build @install
+
       - name: Test
         run: opam exec -- dune runtest
