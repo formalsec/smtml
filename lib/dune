@@ -49,22 +49,32 @@
  (modules colibri2_mappings)
  (libraries
   smtml
-  colibri2.core
-  colibri2.solver
-  colibri2.theories.bool
-  colibri2.theories.quantifiers
-  colibri2.theories.LRA
-  colibri2.theories.LRA.stages.stage2
-  colibri2.theories.fp)
- (optional))
+  (select
+   colibri2_mappings.ml
+   from
+   (colibri2.core
+    colibri2.solver
+    colibri2.theories.bool
+    colibri2.theories.quantifiers
+    colibri2.theories.LRA
+    colibri2.theories.LRA.stages.stage2
+    colibri2.theories.fp
+    ->
+    colibri2_mappings.default.ml)
+   (-> colibri2_mappings.nop.ml))))
 
 (library
  (wrapped false)
  (name smtml_bitwuzla)
  (public_name smtml.bitwuzla)
  (modules bitwuzla_mappings)
- (libraries smtml bitwuzla-cxx)
- (optional))
+ (libraries
+  smtml
+  (select
+   bitwuzla_mappings.ml
+   from
+   (bitwuzla-cxx -> bitwuzla_mappings.default.ml)
+   (-> bitwuzla_mappings.nop.ml))))
 
 (library
  (wrapped false)
