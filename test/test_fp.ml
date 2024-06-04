@@ -2,7 +2,7 @@ open Smtml
 open Test_harness
 
 module Make (M : Mappings_intf.S) = struct
-  module Solver = Solver.Batch (M)
+  module Solver = Solver.Incremental (M)
   module F32 = Expr.Fpa.F32
   module F64 = Expr.Fpa.F64
 
@@ -11,11 +11,16 @@ module Make (M : Mappings_intf.S) = struct
     let solver = Solver.create ~logic:QF_BVFP () in
     let x = F32.sym "x" in
     let const = F32.v 50.0 in
-    assert (`Sat = Solver.check solver F32.[ x = const ]);
-    assert (Solver.get_value solver x = const);
+    Solver.add solver F32.[ x = const ];
+    assert_sat (Solver.check solver []);
+    assert (Expr.equal (Solver.get_value solver x) const)
+
+  let () =
+    let solver = Solver.create ~logic:QF_BVFP () in
     let x = F64.sym "x" in
     let const = F64.v 50.0 in
-    assert_sat (Solver.check solver F64.[ x = const ]);
+    Solver.add solver F64.[ x = const ];
+    assert_sat (Solver.check solver []);
     assert (Expr.equal (Solver.get_value solver x) const)
 
   (* Sqrt *)
