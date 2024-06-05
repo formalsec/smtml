@@ -1013,7 +1013,19 @@ module Fresh = struct
                | 64 -> I64 (Int64.of_int (A.to_int a))
                | _ -> assert false ) )
         | _ -> assert false )
-      | Ty_str | Ty_fp _ | Ty_list | Ty_array | Ty_tuple -> assert false
+      | Ty_fp n -> (
+        match Colibri2_core.Value.value Colibri2_theories_fp.Fp_value.key v with
+        | None -> assert false
+        | Some a ->
+          Some
+            (Value.Num
+               ( match n with
+               | 32 ->
+                 F32 (Int32.bits_of_float (Farith.F.to_float Farith.Mode.NE a))
+               | 64 ->
+                 F64 (Int64.bits_of_float (Farith.F.to_float Farith.Mode.NE a))
+               | _ -> assert false ) ) )
+      | Ty_str | Ty_list | Ty_array | Ty_tuple -> assert false
 
     (* let value_of_const ((d, _l) : model) (e : Expr.t) : Value.t option =
        let e' = encore_expr_aux e in
