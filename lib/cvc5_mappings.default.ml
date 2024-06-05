@@ -16,7 +16,6 @@
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
 
-open Smtml
 open Cvc5
 include Mappings_intf
 

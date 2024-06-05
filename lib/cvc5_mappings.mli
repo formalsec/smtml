@@ -17,4 +17,4 @@
 (***************************************************************************)
 
 (** @inline *)
-include Smtml.Mappings_intf.S
+include Mappings_intf.S
