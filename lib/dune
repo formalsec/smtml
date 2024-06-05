@@ -15,6 +15,7 @@
   cache_intf
   constructors_intf
   colibri2_mappings
+  cvc5_mappings
   eval
   expr
   interpret
@@ -60,15 +61,12 @@
    bitwuzla_mappings.ml
    from
    (bitwuzla-cxx -> bitwuzla_mappings.default.ml)
-   (-> bitwuzla_mappings.nop.ml)))
+   (-> bitwuzla_mappings.nop.ml))
+  (select
+   cvc5_mappings.ml
+   from
+   (cvc5 -> cvc5_mappings.default.ml)
+   (-> cvc5_mappings.nop.ml)))
  (instrumentation
   (backend bisect_ppx --exclusions lib/bisect.exclude)
   (deps bisect.exclude)))
-
-(library
- (wrapped false)
- (name smtml_cvc5)
- (public_name smtml.cvc5)
- (modules cvc5_mappings)
- (libraries smtml cvc5)
- (optional))
