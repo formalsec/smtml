@@ -1,3 +1,11 @@
+v0.1.1
+======
+
+- Improves interoperability with multiple solvers
+- Bug fixes for `colibri2` and `z3`
+- Adds preliminary support for cvc5
+
+
 v0.1.0
 ======
 
