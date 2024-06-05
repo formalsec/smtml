@@ -17,8 +17,6 @@
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
 
-open Smtml
-
 module Fresh = struct
   module DExpr = Colibri2_core.Expr
   module DTy = DExpr.Ty

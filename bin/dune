@@ -2,6 +2,6 @@
  (name main)
  (public_name smtml)
  (modules main)
- (libraries cmdliner smtml smtml.colibri2 smtml.bitwuzla)
+ (libraries cmdliner smtml)
  (instrumentation
   (backend bisect_ppx)))

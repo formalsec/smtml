@@ -16,7 +16,6 @@
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
 
-open Smtml
 open Bitwuzla_cxx
 include Mappings_intf
 
