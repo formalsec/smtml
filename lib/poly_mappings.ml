@@ -70,13 +70,13 @@ module Fresh = struct
       { (****************)
         (* constructors *)
         (****************)
-        _undefined_constructor : Z3.FuncDecl.func_decl
-      ; _null_constructor : Z3.FuncDecl.func_decl
+        undefined_constructor : Z3.FuncDecl.func_decl
+      ; null_constructor : Z3.FuncDecl.func_decl
       ; boolean_constructor : Z3.FuncDecl.func_decl
       ; int_constructor : Z3.FuncDecl.func_decl
       ; real_constructor : Z3.FuncDecl.func_decl
       ; string_constructor : Z3.FuncDecl.func_decl
-      ; _loc_constructor : Z3.FuncDecl.func_decl
+      ; loc_constructor : Z3.FuncDecl.func_decl
       ; (*************)
         (* accessors *)
         (*************)
@@ -142,9 +142,9 @@ module Fresh = struct
     (* Constructors *)
     let constructors = Z3.Datatype.get_constructors poly_sort
 
-    let _undefined_constructor = List.nth constructors 0
+    let undefined_constructor = List.nth constructors 0
 
-    let _null_constructor = List.nth constructors 1
+    let null_constructor = List.nth constructors 1
 
     let boolean_constructor = List.nth constructors 2
 
@@ -154,7 +154,7 @@ module Fresh = struct
 
     let string_constructor = List.nth constructors 5
 
-    let _loc_constructor = List.nth constructors 6
+    let loc_constructor = List.nth constructors 6
 
     (* Accessors *)
     let accessors = Z3.Datatype.get_accessors poly_sort
@@ -168,13 +168,13 @@ module Fresh = struct
     let string_accessor = List.nth (List.nth accessors 5) 0
 
     let poly_operations =
-      { _undefined_constructor
-      ; _null_constructor
+      { undefined_constructor
+      ; null_constructor
       ; boolean_constructor
       ; int_constructor
       ; real_constructor
       ; string_constructor
-      ; _loc_constructor
+      ; loc_constructor
       ; boolean_accessor
       ; int_accessor
       ; real_accessor
@@ -344,11 +344,11 @@ module Fresh = struct
 
       let encode_unop op e =
         match op with
-        | Length -> 
+        | Length ->
           let n_e = Z3.Expr.mk_app ctx poly_operations.string_accessor [ e ] in
           let op_e = Seq.mk_seq_length ctx n_e in
           Z3.Expr.mk_app ctx poly_operations.int_constructor [ op_e ]
-        | Trim -> 
+        | Trim ->
           let n_e = Z3.Expr.mk_app ctx poly_operations.string_accessor [ e ] in
           let op_e = FuncDecl.apply trim [ n_e ] in
           Z3.Expr.mk_app ctx poly_operations.string_constructor [ op_e ]
@@ -461,17 +461,31 @@ module Fresh = struct
         | _ -> err {|Str: Unsupported Z3 naryop operator "%a"|} Ty.pp_naryop op
     end
 
-    let rec encode_val : Value.t -> Z3.Expr.expr = function
-      | True -> Z3.Expr.mk_app ctx boolean_constructor [ Boolean.true_ ]
-      | False -> Z3.Expr.mk_app ctx boolean_constructor [ Boolean.false_ ]
-      | Int v -> Z3.Expr.mk_app ctx int_constructor [ Arithmetic.Integer.v v ]
-      | Real v -> Z3.Expr.mk_app ctx real_constructor [ Arithmetic.Real.v v ]
-      | Str v -> Z3.Expr.mk_app ctx string_constructor [ Str.v v ]
+    let symtable = Hashtbl.create 512
+
+    let encode_val : Value.t -> Z3.Expr.expr = function
+      | True ->
+        Z3.Expr.mk_app ctx poly_operations.boolean_constructor [ Boolean.true_ ]
+      | False ->
+        Z3.Expr.mk_app ctx poly_operations.boolean_constructor
+          [ Boolean.false_ ]
+      | Int v ->
+        Z3.Expr.mk_app ctx poly_operations.int_constructor
+          [ Arithmetic.Integer.v v ]
+      | Real v ->
+        Z3.Expr.mk_app ctx poly_operations.real_constructor
+          [ Arithmetic.Real.v v ]
+      | Str v ->
+        Z3.Expr.mk_app ctx poly_operations.string_constructor [ Str.v v ]
       | App (v, l) -> (
-        let l' = List.map encode_val l in
-        match v with
-        | `Op "undefined" -> Z3.Expr.mk_app ctx _undefined_constructor l'
-        | `Op "null" -> Z3.Expr.mk_app ctx _null_constructor l'
+        match (v, List.hd l) with
+        | `Op "symbol", Str "undefined" ->
+          Z3.Expr.mk_app ctx poly_operations.undefined_constructor []
+        | `Op "symbol", Str "null" ->
+          Z3.Expr.mk_app ctx poly_operations.null_constructor []
+        | `Op "loc", Int i ->
+          Z3.Expr.mk_app ctx poly_operations.loc_constructor
+            [ Arithmetic.Integer.v i ]
         | _ -> assert false )
       | _ -> assert false
 
@@ -617,7 +631,9 @@ module Fresh = struct
       | Naryop (ty, op, es) ->
         let es' = List.map encode_expr es in
         encode_naryop ty op es'
-      | Symbol { name; _ } -> Z3.Expr.mk_const_s ctx name poly_sort
+      | Symbol { name; _ } ->
+        Hashtbl.replace symtable name hte;
+        Z3.Expr.mk_const_s ctx name poly_sort
       | _ -> assert false
 
     let set_params (params : Params.t) =
@@ -766,27 +782,11 @@ module Fresh = struct
         Str (Z3.Seq.get_string ctx v)
       | _ -> assert false
 
-    let type_of_sort (sort : Z3.Sort.sort) : Ty.t =
-      match Z3.Sort.get_sort_kind sort with
-      | Z3enums.INT_SORT -> Ty.Ty_int
-      | Z3enums.REAL_SORT -> Ty.Ty_real
-      | Z3enums.BOOL_SORT -> Ty.Ty_bool
-      | Z3enums.SEQ_SORT -> Ty.Ty_str
-      | Z3enums.BV_SORT -> Ty.Ty_bitv (Z3.BitVector.get_size sort)
-      | Z3enums.FLOATING_POINT_SORT ->
-        let ebits = Z3.FloatingPoint.get_ebits ctx sort in
-        let sbits = Z3.FloatingPoint.get_sbits ctx sort in
-        Ty_fp (ebits + sbits)
-      | Z3enums.DATATYPE_SORT -> Ty_app
-      | _ -> assert false
-
     let symbols_of_model (model : Z3.Model.model) : Symbol.t list =
-      List.map
-        (fun const ->
-          let x = Z3.Symbol.to_string (Z3.FuncDecl.get_name const) in
-          let t = type_of_sort (Z3.FuncDecl.get_range const) in
-          Symbol.make t x )
-        (Z3.Model.get_const_decls model)
+      let decls = Z3.Model.get_const_decls model in
+      let name_list =  List.map Z3.FuncDecl.get_name decls |> List.map Z3.Symbol.get_string in
+      let sym_list = Hashtbl.fold (fun k v acc -> if List.mem k name_list then v :: acc else acc) symtable [] in
+      Expr.get_symbols sym_list
 
     let values_of_model ?(symbols : Symbol.t list option)
       (model : Z3.Model.model) : Model.t =
