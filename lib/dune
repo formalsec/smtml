@@ -33,6 +33,7 @@
   parse
   solver
   solver_intf
+  solver_dispatcher
   symbol
   ty
   utils

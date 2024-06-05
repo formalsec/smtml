@@ -17,29 +17,23 @@
 (***************************************************************************)
 
 open Smtml
-
-type prover =
-  | Z3_prover
-  | Z3_prover2
-  | Cvc5_prover
-  | Colibri2_prover
-  | Bitwuzla_prover
+open Solver_dispatcher
 
 type prove_mode =
   | Batch
   | Cached
   | Incremental
 
-let prover_conv =
+let solver_conv =
   Cmdliner.Arg.enum
-    [ ("z3", Z3_prover)
-    ; ("Z3", Z3_prover)
-    ; ("z3-2", Z3_prover2)
-    ; ("c2", Colibri2_prover)
-    ; ("colibri2", Colibri2_prover)
-    ; ("Colibri2", Colibri2_prover)
-    ; ("bitwuzla", Bitwuzla_prover)
-    ; ("cvc5", Cvc5_prover)
+    [ ("z3", Z3_solver)
+    ; ("Z3", Z3_solver)
+    ; ("z3-2", Z3_solver2)
+    ; ("c2", Colibri2_solver)
+    ; ("colibri2", Colibri2_solver)
+    ; ("Colibri2", Colibri2_solver)
+    ; ("bitwuzla", Bitwuzla_solver)
+    ; ("cvc5", Cvc5_solver)
     ]
 
 let prove_mode_conv =
@@ -47,16 +41,8 @@ let prove_mode_conv =
     [ ("batch", Batch); ("cached", Cached); ("incremental", Incremental) ]
 
 let parse_cmdline =
-  let aux files prover prover_mode debug print_statistics =
-    let module Mappings =
-      ( val match prover with
-            | Z3_prover -> (module Z3_mappings)
-            | Z3_prover2 -> (module Z3_mappings2)
-            | Colibri2_prover -> (module Colibri2_mappings)
-            | Bitwuzla_prover -> (module Bitwuzla_mappings)
-            | Cvc5_prover -> (module Cvc5_mappings)
-          : Mappings_intf.S )
-    in
+  let aux files solver prover_mode debug print_statistics =
+    let module Mappings = (val mappings_of_solver solver : Mappings_intf.S) in
     Mappings.set_debug debug;
     let module Solver =
       ( val match prover_mode with
@@ -97,8 +83,8 @@ let parse_cmdline =
     Arg.(value & pos_all string [] & info [] ~docv:"files" ~doc:"files to read")
   and prover =
     Arg.(
-      value & opt prover_conv Z3_prover
-      & info [ "p"; "prover" ] ~doc:"SMT solver to use" )
+      value & opt solver_conv Z3_solver
+      & info [ "s"; "solver" ] ~doc:"SMT solver to use" )
   and prover_mode =
     Arg.(
       value & opt prove_mode_conv Batch & info [ "mode" ] ~doc:"SMT solver mode" )
