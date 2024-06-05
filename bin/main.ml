@@ -28,7 +28,6 @@ let solver_conv =
   Cmdliner.Arg.enum
     [ ("z3", Z3_solver)
     ; ("Z3", Z3_solver)
-    ; ("z3-2", Z3_solver2)
     ; ("c2", Colibri2_solver)
     ; ("colibri2", Colibri2_solver)
     ; ("Colibri2", Colibri2_solver)

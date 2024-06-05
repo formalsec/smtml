@@ -71,3 +71,15 @@
  (instrumentation
   (backend bisect_ppx --exclusions lib/bisect.exclude)
   (deps bisect.exclude)))
+
+(rule
+ (targets
+  colibri2_mappings.nop.ml
+  bitwuzla_mappings.nop.ml
+  cvc5_mappings.nop.ml)
+ (deps mappings.nop.ml)
+ (action
+  (progn
+   (bash "sed -e 's/__SOLVER__/Colibri2/' mappings.nop.ml > colibri2_mappings.nop.ml")
+   (bash "sed -e 's/__SOLVER__/Bitwuzla/' mappings.nop.ml > bitwuzla_mappings.nop.ml")
+   (bash "sed -e 's/__SOLVER__/cvc5/' mappings.nop.ml > cvc5_mappings.nop.ml"))))
