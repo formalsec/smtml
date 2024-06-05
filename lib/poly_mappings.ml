@@ -72,6 +72,7 @@ module Fresh = struct
         (****************)
         undefined_constructor : Z3.FuncDecl.func_decl
       ; null_constructor : Z3.FuncDecl.func_decl
+      ; error_constructor : Z3.FuncDecl.func_decl
       ; boolean_constructor : Z3.FuncDecl.func_decl
       ; int_constructor : Z3.FuncDecl.func_decl
       ; real_constructor : Z3.FuncDecl.func_decl
@@ -97,6 +98,10 @@ module Fresh = struct
     let null_constructor =
       Z3.Datatype.mk_constructor ctx (mk_string_symb "Null")
         (mk_string_symb "isNull") [] [] []
+
+    let error_constructor =
+      Z3.Datatype.mk_constructor ctx (mk_string_symb "Error")
+        (mk_string_symb "isError") [] [] []
 
     let bool_constructor =
       Z3.Datatype.mk_constructor ctx (mk_string_symb "Bool")
@@ -132,6 +137,7 @@ module Fresh = struct
       Z3.Datatype.mk_sort ctx (mk_string_symb "Poly")
         [ undefined_constructor
         ; null_constructor
+        ; error_constructor
         ; bool_constructor
         ; int_constructor
         ; real_constructor
@@ -146,30 +152,33 @@ module Fresh = struct
 
     let null_constructor = List.nth constructors 1
 
-    let boolean_constructor = List.nth constructors 2
+    let error_constructor = List.nth constructors 2
 
-    let int_constructor = List.nth constructors 3
+    let boolean_constructor = List.nth constructors 3
 
-    let real_constructor = List.nth constructors 4
+    let int_constructor = List.nth constructors 4
 
-    let string_constructor = List.nth constructors 5
+    let real_constructor = List.nth constructors 5
 
-    let loc_constructor = List.nth constructors 6
+    let string_constructor = List.nth constructors 6
+
+    let loc_constructor = List.nth constructors 7
 
     (* Accessors *)
     let accessors = Z3.Datatype.get_accessors poly_sort
 
-    let boolean_accessor = List.nth (List.nth accessors 2) 0
+    let boolean_accessor = List.nth (List.nth accessors 3) 0
 
-    let int_accessor = List.nth (List.nth accessors 3) 0
+    let int_accessor = List.nth (List.nth accessors 4) 0
 
-    let real_accessor = List.nth (List.nth accessors 4) 0
+    let real_accessor = List.nth (List.nth accessors 5) 0
 
-    let string_accessor = List.nth (List.nth accessors 5) 0
+    let string_accessor = List.nth (List.nth accessors 6) 0
 
     let poly_operations =
       { undefined_constructor
       ; null_constructor
+      ; error_constructor
       ; boolean_constructor
       ; int_constructor
       ; real_constructor
@@ -478,14 +487,17 @@ module Fresh = struct
       | Str v ->
         Z3.Expr.mk_app ctx poly_operations.string_constructor [ Str.v v ]
       | App (v, l) -> (
-        match (v, List.hd l) with
-        | `Op "symbol", Str "undefined" ->
+        match v with
+        | `Op "symbol" ->
           Z3.Expr.mk_app ctx poly_operations.undefined_constructor []
-        | `Op "symbol", Str "null" ->
-          Z3.Expr.mk_app ctx poly_operations.null_constructor []
-        | `Op "loc", Int i ->
-          Z3.Expr.mk_app ctx poly_operations.loc_constructor
-            [ Arithmetic.Integer.v i ]
+        | `Op "null" -> Z3.Expr.mk_app ctx poly_operations.null_constructor []
+        | `Op "error" -> Z3.Expr.mk_app ctx poly_operations.error_constructor []
+        | `Op "loc" -> (
+          match List.hd l with
+          | Int v ->
+            Z3.Expr.mk_app ctx poly_operations.loc_constructor
+              [ Arithmetic.Integer.v v ]
+          | _ -> assert false )
         | _ -> assert false )
       | _ -> assert false
 
@@ -784,8 +796,14 @@ module Fresh = struct
 
     let symbols_of_model (model : Z3.Model.model) : Symbol.t list =
       let decls = Z3.Model.get_const_decls model in
-      let name_list =  List.map Z3.FuncDecl.get_name decls |> List.map Z3.Symbol.get_string in
-      let sym_list = Hashtbl.fold (fun k v acc -> if List.mem k name_list then v :: acc else acc) symtable [] in
+      let name_list =
+        List.map Z3.FuncDecl.get_name decls |> List.map Z3.Symbol.get_string
+      in
+      let sym_list =
+        Hashtbl.fold
+          (fun k v acc -> if List.mem k name_list then v :: acc else acc)
+          symtable []
+      in
       Expr.get_symbols sym_list
 
     let values_of_model ?(symbols : Symbol.t list option)
