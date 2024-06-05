@@ -36,7 +36,7 @@ module Impl = struct
 
   type 'a t = 'a
 
-  let make_cont () = failwith "__SOLVER__ not installed"
+  let make_cont () = Format.ksprintf failwith "%s not installed" solver_name
 
   module Cont = struct
     let return _ = assert false
