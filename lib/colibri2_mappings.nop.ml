@@ -15,7 +15,7 @@
 (* You should have received a copy of the GNU General Public License       *)
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
-open Smtml.Mappings_intf
+open Mappings_intf
 
 module Impl = struct
   type ty
@@ -369,4 +369,4 @@ end
 
 module Impl' : M = Impl
 
-include Smtml.Mappings.Make (Impl)
+include Mappings.Make (Impl)

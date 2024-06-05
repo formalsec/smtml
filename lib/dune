@@ -9,10 +9,12 @@
  (public_name smtml)
  (modules
   ast
+  bitwuzla_mappings
   ;axioms
   cache
   cache_intf
   constructors_intf
+  colibri2_mappings
   eval
   expr
   interpret
@@ -37,18 +39,10 @@
   z3_mappings
   z3_mappings2)
  (private_modules lexer parser)
- (libraries hc z3 ocaml_intrinsics)
- (instrumentation
-  (backend bisect_ppx --exclusions lib/bisect.exclude)
-  (deps bisect.exclude)))
-
-(library
- (wrapped false)
- (name smtml_colibri2)
- (public_name smtml.colibri2)
- (modules colibri2_mappings)
  (libraries
-  smtml
+  hc
+  z3
+  ocaml_intrinsics
   (select
    colibri2_mappings.ml
    from
@@ -61,20 +55,15 @@
     colibri2.theories.fp
     ->
     colibri2_mappings.default.ml)
-   (-> colibri2_mappings.nop.ml))))
-
-(library
- (wrapped false)
- (name smtml_bitwuzla)
- (public_name smtml.bitwuzla)
- (modules bitwuzla_mappings)
- (libraries
-  smtml
+   (-> colibri2_mappings.nop.ml))
   (select
    bitwuzla_mappings.ml
    from
    (bitwuzla-cxx -> bitwuzla_mappings.default.ml)
-   (-> bitwuzla_mappings.nop.ml))))
+   (-> bitwuzla_mappings.nop.ml)))
+ (instrumentation
+  (backend bisect_ppx --exclusions lib/bisect.exclude)
+  (deps bisect.exclude)))
 
 (library
  (wrapped false)
