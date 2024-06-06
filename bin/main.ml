@@ -25,15 +25,8 @@ type prove_mode =
   | Incremental
 
 let solver_conv =
-  Cmdliner.Arg.enum
-    [ ("z3", Z3_solver)
-    ; ("Z3", Z3_solver)
-    ; ("c2", Colibri2_solver)
-    ; ("colibri2", Colibri2_solver)
-    ; ("Colibri2", Colibri2_solver)
-    ; ("bitwuzla", Bitwuzla_solver)
-    ; ("cvc5", Cvc5_solver)
-    ]
+  Cmdliner.Arg.conv
+    (Solver_dispatcher.solver_type_of_string, Solver_dispatcher.pp_solver_type)
 
 let prove_mode_conv =
   Cmdliner.Arg.enum
