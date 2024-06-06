@@ -36,7 +36,7 @@ and expr =
   | Extract of t * int * int
   | Concat of t * t
 
-module Hc = Hc.Make (struct
+module Expr = struct
   type t = expr
 
   let list_eq (l1 : 'a list) (l2 : 'a list) : bool =
@@ -84,7 +84,9 @@ module Hc = Hc.Make (struct
     | Triop (ty, op, e1, e2, e3) -> h (ty, op, e1.tag, e2.tag, e3.tag)
     | Extract (e, hi, lo) -> h (e.tag, hi, lo)
     | Concat (e1, e2) -> h (e1.tag, e2.tag)
-end)
+end
+
+module Hc = Hc.Make [@inlined hint] (Expr)
 
 let equal (hte1 : t) (hte2 : t) = hte1.tag == hte2.tag
 
