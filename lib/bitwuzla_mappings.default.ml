@@ -64,7 +64,7 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : Mappings_intf.M = struct
 
     let real = Obj.magic 0
 
-    let bool = Obj.magic 0
+    let bool = mk_bool_sort ()
 
     let string = Obj.magic 0
 
@@ -311,22 +311,22 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : Mappings_intf.M = struct
   end
 
   module Model = struct
-    let get_symbols _ = assert false
+    let get_symbols _ = failwith "Bitwuzla_mappings: get_symbols not implemented"
 
-    let eval ?completion:_ _ = assert false
+    let eval ?completion:_ _ = failwith "Bitwuzla_mappings: eval not implemented"
   end
 
   module Solver = struct
     let make ?params:_ ?logic:_ () =
       Solver.create (Bitwuzla_cxx.Options.default ())
 
-    let clone _solver = assert false
+    let clone _solver = failwith "Bitwuzla_mappings: clone not implemented"
 
     let push solver = Solver.push solver 1
 
     let pop solver n = Solver.pop solver n
 
-    let reset _ = assert false
+    let reset _ = failwith "Bitwuzla_mappings: reset not implemented"
 
     let add solver ts = List.iter (Solver.assert_formula solver) ts
 
@@ -337,7 +337,7 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : Mappings_intf.M = struct
       | Result.Unsat -> `Unsat
       | Result.Unknown -> `Unknown
 
-    let model _ = assert false
+    let model _ = failwith "Bitwuzla_mappings: model not implemented"
 
     let add_simplifier solver =
       (* does nothing *)
