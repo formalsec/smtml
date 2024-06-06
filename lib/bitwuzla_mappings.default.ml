@@ -16,10 +16,11 @@
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
 
-open Bitwuzla_cxx
 include Mappings_intf
 
-module Impl = struct
+module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : Mappings_intf.M = struct
+  open B
+
   type ty = Sort.t
 
   type term = Term.t
@@ -33,26 +34,6 @@ module Impl = struct
   type handle = unit
 
   type optimizer = unit (* Not supported? *)
-
-  type cont = unit
-
-  type 'a t = 'a
-
-  let make_cont () = ()
-
-  module Cont = struct
-    let return v = v [@@inline]
-
-    let bind v f = f v [@@inline]
-
-    let ( let* ) v f = bind v f [@@inline]
-
-    let map v f = f v [@@inline]
-
-    let ( let+ ) v f = map v f [@@inline]
-
-    let run v () = v [@@inline]
-  end
 
   let true_ = mk_true ()
 
@@ -336,7 +317,8 @@ module Impl = struct
   end
 
   module Solver = struct
-    let make ?params:_ ?logic:_ () = Solver.create (Options.default ())
+    let make ?params:_ ?logic:_ () =
+      Solver.create (Bitwuzla_cxx.Options.default ())
 
     let clone _solver = assert false
 
@@ -391,10 +373,9 @@ module Impl = struct
   end
 end
 
-module Impl' : M = Impl
-
-module Fresh = struct
-  module Make () = Mappings.Make (Impl)
+module Bitwuzla_with_make : Mappings_intf.M_with_make = struct
+  module Make () = Fresh_bitwuzla (Bitwuzla_cxx.Make ())
+  include Fresh_bitwuzla (Bitwuzla_cxx)
 end
 
-include Fresh.Make ()
+include Mappings.Make (Bitwuzla_with_make)

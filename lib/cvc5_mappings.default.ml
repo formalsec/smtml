@@ -19,7 +19,7 @@
 open Cvc5
 include Mappings_intf
 
-module Impl = struct
+module Fresh_cvc5 () = struct
   type ty = Sort.sort
 
   type term = Term.term
@@ -34,27 +34,7 @@ module Impl = struct
 
   type optimizer = unit (* Not supported *)
 
-  type cont = unit
-
-  type 'a t = 'a
-
   let tm = TermManager.mk_tm ()
-
-  let make_cont () = ()
-
-  module Cont = struct
-    let return v = v [@@inline]
-
-    let bind v f = f v [@@inline]
-
-    let ( let* ) v f = bind v f [@@inline]
-
-    let map v f = f v [@@inline]
-
-    let ( let+ ) v f = map v f [@@inline]
-
-    let run v () = v [@@inline]
-  end
 
   let true_ = Term.mk_true tm
 
@@ -444,10 +424,9 @@ module Impl = struct
   end
 end
 
-module Impl' : M = Impl
-
-module Fresh = struct
-  module Make () = Mappings.Make (Impl)
+module Cvc5_with_make : Mappings_intf.M_with_make = struct
+  module Make () = Fresh_cvc5 ()
+  include Fresh_cvc5 ()
 end
 
-include Fresh.Make ()
+include Mappings.Make (Cvc5_with_make)

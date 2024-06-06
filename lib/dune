@@ -38,8 +38,8 @@
   ty
   utils
   value
-  z3_mappings
-  z3_mappings2)
+  z3_mappings)
+;  z3_mappings2)
  (private_modules lexer parser)
  (libraries
   hc

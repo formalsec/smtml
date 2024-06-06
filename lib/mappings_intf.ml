@@ -37,66 +37,46 @@ module type M = sig
 
   type optimizer
 
-  type cont
+  val true_ : term
 
-  type 'a t
+  val false_ : term
 
-  val make_cont : unit -> cont
+  val int : int -> term
 
-  module Cont : sig
-    val return : 'a -> 'a t
+  val real : float -> term
 
-    val bind : 'a t -> ('a -> 'b t) -> 'b t
+  val const : string -> ty -> term
 
-    val ( let* ) : 'a t -> ('a -> 'b t) -> 'b t
+  val not_ : term -> term
 
-    val map : 'a t -> ('a -> 'b) -> 'b t
+  val and_ : term -> term -> term
 
-    val ( let+ ) : 'a t -> ('a -> 'b) -> 'b t
+  val or_ : term -> term -> term
 
-    val run : 'a t -> cont -> 'a
-  end
+  val xor : term -> term -> term
 
-  val true_ : term t
+  val eq : term -> term -> term
 
-  val false_ : term t
+  val distinct : term list -> term
 
-  val int : int -> term t
-
-  val real : float -> term t
-
-  val const : string -> ty -> term t
-
-  val not_ : term -> term t
-
-  val and_ : term -> term -> term t
-
-  val or_ : term -> term -> term t
-
-  val xor : term -> term -> term t
-
-  val eq : term -> term -> term t
-
-  val distinct : term list -> term t
-
-  val ite : term -> term -> term -> term t
+  val ite : term -> term -> term -> term
 
   module Types : sig
-    val int : ty t
+    val int : ty
 
-    val real : ty t
+    val real : ty
 
-    val bool : ty t
+    val bool : ty
 
-    val string : ty t
+    val string : ty
 
-    val bitv : int -> ty t
+    val bitv : int -> ty
 
-    val float : int -> int -> ty t
+    val float : int -> int -> ty
 
     val ty : term -> ty
 
-    val to_ety : ty -> Ty.t t
+    val to_ety : ty -> Ty.t
   end
 
   module Interp : sig
@@ -106,241 +86,241 @@ module type M = sig
 
     val to_bool : interp -> bool
 
-    val to_string : interp -> string t
+    val to_string : interp -> string
 
     val to_bitv : interp -> int -> int64
 
-    val to_float : interp -> int -> int -> float t
+    val to_float : interp -> int -> int -> float
   end
 
   module Int : sig
-    val neg : term -> term t
+    val neg : term -> term
 
-    val to_real : term -> term t
+    val to_real : term -> term
 
-    val add : term -> term -> term t
+    val add : term -> term -> term
 
-    val sub : term -> term -> term t
+    val sub : term -> term -> term
 
-    val mul : term -> term -> term t
+    val mul : term -> term -> term
 
-    val div : term -> term -> term t
+    val div : term -> term -> term
 
-    val rem : term -> term -> term t
+    val rem : term -> term -> term
 
-    val pow : term -> term -> term t
+    val pow : term -> term -> term
 
-    val lt : term -> term -> term t
+    val lt : term -> term -> term
 
-    val le : term -> term -> term t
+    val le : term -> term -> term
 
-    val gt : term -> term -> term t
+    val gt : term -> term -> term
 
-    val ge : term -> term -> term t
+    val ge : term -> term -> term
   end
 
   module Real : sig
-    val neg : term -> term t
+    val neg : term -> term
 
-    val to_int : term -> term t
+    val to_int : term -> term
 
-    val add : term -> term -> term t
+    val add : term -> term -> term
 
-    val sub : term -> term -> term t
+    val sub : term -> term -> term
 
-    val mul : term -> term -> term t
+    val mul : term -> term -> term
 
-    val div : term -> term -> term t
+    val div : term -> term -> term
 
-    val pow : term -> term -> term t
+    val pow : term -> term -> term
 
-    val lt : term -> term -> term t
+    val lt : term -> term -> term
 
-    val le : term -> term -> term t
+    val le : term -> term -> term
 
-    val gt : term -> term -> term t
+    val gt : term -> term -> term
 
-    val ge : term -> term -> term t
+    val ge : term -> term -> term
   end
 
   module String : sig
-    val v : string -> term t
+    val v : string -> term
 
-    val length : term -> term t
+    val length : term -> term
 
-    val to_code : term -> term t
+    val to_code : term -> term
 
-    val of_code : term -> term t
+    val of_code : term -> term
 
-    val to_int : term -> term t
+    val to_int : term -> term
 
-    val of_int : term -> term t
+    val of_int : term -> term
 
-    val at : term -> pos:term -> term t
+    val at : term -> pos:term -> term
 
-    val concat : term -> term -> term t
+    val concat : term -> term -> term
 
-    val contains : term -> sub:term -> term t
+    val contains : term -> sub:term -> term
 
-    val is_prefix : term -> prefix:term -> term t
+    val is_prefix : term -> prefix:term -> term
 
-    val is_suffix : term -> suffix:term -> term t
+    val is_suffix : term -> suffix:term -> term
 
-    val sub : term -> pos:term -> len:term -> term t
+    val sub : term -> pos:term -> len:term -> term
 
-    val index_of : term -> sub:term -> pos:term -> term t
+    val index_of : term -> sub:term -> pos:term -> term
 
-    val replace : term -> pattern:term -> with_:term -> term t
+    val replace : term -> pattern:term -> with_:term -> term
   end
 
   module Bitv : sig
-    val v : string -> int -> term t
+    val v : string -> int -> term
 
-    val neg : term -> term t
+    val neg : term -> term
 
-    val lognot : term -> term t
+    val lognot : term -> term
 
-    val add : term -> term -> term t
+    val add : term -> term -> term
 
-    val sub : term -> term -> term t
+    val sub : term -> term -> term
 
-    val mul : term -> term -> term t
+    val mul : term -> term -> term
 
-    val div : term -> term -> term t
+    val div : term -> term -> term
 
-    val div_u : term -> term -> term t
+    val div_u : term -> term -> term
 
-    val logor : term -> term -> term t
+    val logor : term -> term -> term
 
-    val logand : term -> term -> term t
+    val logand : term -> term -> term
 
-    val logxor : term -> term -> term t
+    val logxor : term -> term -> term
 
-    val shl : term -> term -> term t
+    val shl : term -> term -> term
 
-    val ashr : term -> term -> term t
+    val ashr : term -> term -> term
 
-    val lshr : term -> term -> term t
+    val lshr : term -> term -> term
 
-    val rem : term -> term -> term t
+    val rem : term -> term -> term
 
-    val rem_u : term -> term -> term t
+    val rem_u : term -> term -> term
 
-    val rotate_left : term -> term -> term t
+    val rotate_left : term -> term -> term
 
-    val rotate_right : term -> term -> term t
+    val rotate_right : term -> term -> term
 
-    val lt : term -> term -> term t
+    val lt : term -> term -> term
 
-    val lt_u : term -> term -> term t
+    val lt_u : term -> term -> term
 
-    val le : term -> term -> term t
+    val le : term -> term -> term
 
-    val le_u : term -> term -> term t
+    val le_u : term -> term -> term
 
-    val gt : term -> term -> term t
+    val gt : term -> term -> term
 
-    val gt_u : term -> term -> term t
+    val gt_u : term -> term -> term
 
-    val ge : term -> term -> term t
+    val ge : term -> term -> term
 
-    val ge_u : term -> term -> term t
+    val ge_u : term -> term -> term
 
-    val concat : term -> term -> term t
+    val concat : term -> term -> term
 
-    val extract : term -> high:int -> low:int -> term t
+    val extract : term -> high:int -> low:int -> term
 
-    val zero_extend : int -> term -> term t
+    val zero_extend : int -> term -> term
 
-    val sign_extend : int -> term -> term t
+    val sign_extend : int -> term -> term
   end
 
   module Float : sig
     (* Rounding modes *)
     module Rounding_mode : sig
       (* Round nearest ties to even *)
-      val rne : term t
+      val rne : term
 
       (* Round nearest ties to away *)
-      val rna : term t
+      val rna : term
 
       (* Round toward positive *)
-      val rtp : term t
+      val rtp : term
 
       (* Round toward negative *)
-      val rtn : term t
+      val rtn : term
 
       (* Round toward zero *)
-      val rtz : term t
+      val rtz : term
     end
 
-    val v : float -> int -> int -> term t
+    val v : float -> int -> int -> term
 
-    val neg : term -> term t
+    val neg : term -> term
 
-    val abs : term -> term t
+    val abs : term -> term
 
     (* [sqrt ~rm t] where [rm] is the rounding mode *)
-    val sqrt : rm:term -> term -> term t
+    val sqrt : rm:term -> term -> term
 
-    val is_nan : term -> term t
+    val is_nan : term -> term
 
     (* [round_to_integral ~rm t] where [rm] is the rounding mode *)
-    val round_to_integral : rm:term -> term -> term t
+    val round_to_integral : rm:term -> term -> term
 
     (* [add ~rm t1 t2] where [rm] is the rounding mode *)
-    val add : rm:term -> term -> term -> term t
+    val add : rm:term -> term -> term -> term
 
     (* [sub ~rm t1 t2] where [rm] is the rounding mode *)
-    val sub : rm:term -> term -> term -> term t
+    val sub : rm:term -> term -> term -> term
 
     (* [mul ~rm t1 t2] where [rm] is the rounding mode *)
-    val mul : rm:term -> term -> term -> term t
+    val mul : rm:term -> term -> term -> term
 
     (* [div ~rm t1 t2] where [rm] is the rounding mode *)
-    val div : rm:term -> term -> term -> term t
+    val div : rm:term -> term -> term -> term
 
-    val min : term -> term -> term t
+    val min : term -> term -> term
 
-    val max : term -> term -> term t
+    val max : term -> term -> term
 
-    val rem : term -> term -> term t
+    val rem : term -> term -> term
 
-    val eq : term -> term -> term t
+    val eq : term -> term -> term
 
-    val lt : term -> term -> term t
+    val lt : term -> term -> term
 
-    val le : term -> term -> term t
+    val le : term -> term -> term
 
-    val gt : term -> term -> term t
+    val gt : term -> term -> term
 
-    val ge : term -> term -> term t
+    val ge : term -> term -> term
 
-    val to_fp : int -> int -> rm:term -> term -> term t
+    val to_fp : int -> int -> rm:term -> term -> term
 
-    val sbv_to_fp : int -> int -> rm:term -> term -> term t
+    val sbv_to_fp : int -> int -> rm:term -> term -> term
 
-    val ubv_to_fp : int -> int -> rm:term -> term -> term t
+    val ubv_to_fp : int -> int -> rm:term -> term -> term
 
-    val to_ubv : int -> rm:term -> term -> term t
+    val to_ubv : int -> rm:term -> term -> term
 
-    val to_sbv : int -> rm:term -> term -> term t
+    val to_sbv : int -> rm:term -> term -> term
 
-    val of_ieee_bv : int -> int -> term -> term t
+    val of_ieee_bv : int -> int -> term -> term
 
-    val to_ieee_bv : term -> term t
+    val to_ieee_bv : term -> term
   end
 
   module Model : sig
-    val get_symbols : model -> Symbol.t list t
+    val get_symbols : model -> Symbol.t list
 
     val eval : ?completion:bool -> model -> term -> interp option
   end
 
   module Solver : sig
-    val make : ?params:Params.t -> ?logic:Ty.logic -> unit -> solver t
+    val make : ?params:Params.t -> ?logic:Ty.logic -> unit -> solver
 
-    val clone : solver -> solver t
+    val clone : solver -> solver
 
     val push : solver -> unit
 
@@ -354,15 +334,15 @@ module type M = sig
 
     val model : solver -> model option
 
-    val add_simplifier : solver -> solver t
+    val add_simplifier : solver -> solver
 
-    val interrupt : unit -> unit t
+    val interrupt : unit -> unit
 
     val pp_statistics : Format.formatter -> solver -> unit
   end
 
   module Optimizer : sig
-    val make : unit -> optimizer t
+    val make : unit -> optimizer
 
     val push : optimizer -> unit
 
@@ -378,10 +358,16 @@ module type M = sig
 
     val minimize : optimizer -> term -> handle
 
-    val interrupt : unit -> unit t
+    val interrupt : unit -> unit
 
     val pp_statistics : Format.formatter -> optimizer -> unit
   end
+end
+
+module type M_with_make = sig
+  module Make () : M
+
+  include M
 end
 
 module type S = sig
