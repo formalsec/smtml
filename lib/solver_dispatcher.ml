@@ -5,7 +5,8 @@ type solver_type =
   | Colibri2_solver
   | Bitwuzla_solver
 
-let mappings_of_solver : solver_type -> (module Mappings_intf.S) = function
+let mappings_of_solver : solver_type -> (module Mappings_intf.S_with_fresh) =
+  function
   | Z3_solver -> (module Z3_mappings)
   | Cvc5_solver -> (module Cvc5_mappings)
   | Colibri2_solver -> (module Colibri2_mappings)
