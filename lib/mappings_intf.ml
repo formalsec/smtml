@@ -384,7 +384,7 @@ module type M = sig
   end
 end
 
-module type S = sig
+module type S0 = sig
   type model
 
   type solver
@@ -446,4 +446,12 @@ module type S = sig
 
     val pp_statistics : Format.formatter -> optimize -> unit
   end
+end
+
+module type S = sig
+  module Fresh : sig
+    module Make () : S0
+  end
+
+  include S0
 end

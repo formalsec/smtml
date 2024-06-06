@@ -16,9 +16,5 @@
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
 
-module Fresh : sig
-  module Make () : Mappings_intf.S
-end
-
 (** @inline *)
 include Mappings_intf.S
