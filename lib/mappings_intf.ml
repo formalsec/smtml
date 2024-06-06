@@ -447,3 +447,11 @@ module type S = sig
     val pp_statistics : Format.formatter -> optimize -> unit
   end
 end
+
+module type S_with_fresh = sig
+  module Fresh : sig
+    module Make () : S
+  end
+
+  include S
+end

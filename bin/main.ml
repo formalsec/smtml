@@ -34,7 +34,9 @@ let prove_mode_conv =
 
 let parse_cmdline =
   let aux files solver prover_mode debug print_statistics =
-    let module Mappings = (val mappings_of_solver solver : Mappings_intf.S) in
+    let module Mappings =
+      (val mappings_of_solver solver : Mappings_intf.S_with_fresh)
+    in
     Mappings.set_debug debug;
     let module Solver =
       ( val match prover_mode with
