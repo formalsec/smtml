@@ -446,4 +446,8 @@ end
 
 module Impl' : M = Impl
 
-include Mappings.Make (Impl)
+module Fresh = struct
+  module Make () = Mappings.Make (Impl)
+end
+
+include Fresh.Make ()
