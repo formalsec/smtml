@@ -24,6 +24,7 @@
   log
   mappings
   mappings_intf
+  mappings_intf_with_fresh
   model
   num
   op_intf

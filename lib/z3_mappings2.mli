@@ -17,4 +17,4 @@
 (***************************************************************************)
 
 (** @inline *)
-include Mappings_intf.S
+include Mappings_intf_with_fresh.S
