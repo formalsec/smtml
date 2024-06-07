@@ -20,12 +20,11 @@
  (name smtml)
  (synopsis "A Front-end library for SMT solvers in OCaml")
  (description "A Multi Back-end Front-end for SMT Solvers in OCaml.")
- (depopts colibri2 (bitwuzla-cxx (>= "0.4.0")) cvc5)
+ (depopts colibri2 (bitwuzla-cxx (>= "0.4.0")) cvc5 (z3 (and (>= "4.12.2") (< "4.13"))))
  (depends
    dune
    (ocaml (>= "4.14.0"))
    ocaml_intrinsics
-   (z3 (and (>= "4.12.2") (< "4.13")))
    (menhir
     (and
     :build

@@ -12,7 +12,6 @@ depends: [
   "dune" {>= "3.14"}
   "ocaml" {>= "4.14.0"}
   "ocaml_intrinsics"
-  "z3" {>= "4.12.2" & < "4.13"}
   "menhir" {build & >= "20220210"}
   "cmdliner" {>= "1.2.0"}
   "zarith" {>= "1.5"}
@@ -24,6 +23,7 @@ depopts: [
   "colibri2"
   "bitwuzla-cxx" {>= "0.4.0"}
   "cvc5"
+  "z3" {>= "4.12.2" & < "4.13"}
 ]
 build: [
   ["dune" "subst"] {dev}

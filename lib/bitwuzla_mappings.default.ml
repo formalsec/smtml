@@ -311,9 +311,11 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : Mappings_intf.M = struct
   end
 
   module Model = struct
-    let get_symbols _ = failwith "Bitwuzla_mappings: get_symbols not implemented"
+    let get_symbols _ =
+      failwith "Bitwuzla_mappings: get_symbols not implemented"
 
-    let eval ?completion:_ _ = failwith "Bitwuzla_mappings: eval not implemented"
+    let eval ?completion:_ _ =
+      failwith "Bitwuzla_mappings: eval not implemented"
   end
 
   module Solver = struct
