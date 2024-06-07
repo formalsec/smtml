@@ -39,11 +39,10 @@
   utils
   value
   z3_mappings)
-;  z3_mappings2)
+ ;  z3_mappings2)
  (private_modules lexer parser)
  (libraries
   hc
-  z3
   ocaml_intrinsics
   (select
    colibri2_mappings.ml
@@ -64,6 +63,11 @@
    (bitwuzla-cxx -> bitwuzla_mappings.default.ml)
    (-> bitwuzla_mappings.nop.ml))
   (select
+   z3_mappings.ml
+   from
+   (z3 -> z3_mappings.default.ml)
+   (-> z3_mappings.nop.ml))
+  (select
    cvc5_mappings.ml
    from
    (cvc5 -> cvc5_mappings.default.ml)
@@ -76,10 +80,16 @@
  (targets
   colibri2_mappings.nop.ml
   bitwuzla_mappings.nop.ml
-  cvc5_mappings.nop.ml)
+  cvc5_mappings.nop.ml
+  z3_mappings.nop.ml)
  (deps mappings.nop.ml)
  (action
   (progn
+   (with-stdout-to
+    z3_mappings.nop.ml
+    (progn
+     (echo "let solver_name = \"Z3\"\n")
+     (cat mappings.nop.ml)))
    (with-stdout-to
     colibri2_mappings.nop.ml
     (progn
