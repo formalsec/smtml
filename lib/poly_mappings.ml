@@ -42,30 +42,6 @@ module Fresh = struct
 
     let str_sort = Z3.Seq.mk_string_sort ctx
 
-    let bv8_sort = Z3.BitVector.mk_sort ctx 8
-
-    let bv32_sort = Z3.BitVector.mk_sort ctx 32
-
-    let bv64_sort = Z3.BitVector.mk_sort ctx 64
-
-    let fp32_sort = Z3.FloatingPoint.mk_sort_single ctx
-
-    let fp64_sort = Z3.FloatingPoint.mk_sort_double ctx
-
-    let _get_sort (e : Ty.t) : Z3.Sort.sort =
-      match e with
-      | Ty_int -> int_sort
-      | Ty_real -> real_sort
-      | Ty_bool -> bool_sort
-      | Ty_str -> str_sort
-      | Ty_bitv 8 -> bv8_sort
-      | Ty_bitv 32 -> bv32_sort
-      | Ty_bitv 64 -> bv64_sort
-      | Ty_fp 32 -> fp32_sort
-      | Ty_fp 64 -> fp64_sort
-      | Ty_bitv _ | Ty_fp _ | Ty_list | Ty_tuple | Ty_array | Ty_app ->
-        assert false
-
     type poly_operations_t =
       { (****************)
         (* constructors *)

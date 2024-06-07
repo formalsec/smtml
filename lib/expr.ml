@@ -397,6 +397,11 @@ let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
   | Ptr (b, { node = Val (Num _ as o); _ }), Val (Num _ as n) ->
     let base = Eval.binop (Ty_bitv 32) Add (Num (I32 b)) o in
     value (if Eval.relop ty op base n then True else False)
+  | List l1, List l2 -> (
+    match op with
+    | Eq -> value (if List.equal equal l1 l2 then True else False)
+    | Ne -> value (if List.equal equal l1 l2 then False else True)
+    | _ -> relop' ty op hte1 hte2 )
   | _ -> relop' ty op hte1 hte2
 
 let cvtop' (ty : Ty.t) (op : cvtop) (hte : t) : t = make (Cvtop (ty, op, hte))
