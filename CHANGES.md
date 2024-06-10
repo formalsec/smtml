@@ -1,3 +1,9 @@
+## Unreleased
+
+### Changes
+
+- Makes Z3 optional
+
 v0.1.1
 ======
 

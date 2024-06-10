@@ -1,4 +1,4 @@
-name: Test Colibri2
+name: Test Z3
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  test-colibri2:
+  test-bitwuzla:
     runs-on: ubuntu-latest
     env:
       OPAMCONFIRMLEVEL: unsafe-yes
@@ -27,10 +27,10 @@ jobs:
       - name: Install dependencies
         run: |
           opam install -y . --deps-only --with-test
-          opam upgrade colibri2
+          opam install z3
 
       - name: Build
         run: opam exec -- dune build @install
 
       - name: Test
-        run: opam exec -- dune exec ./test/test_colibri2.exe
+        run: opam exec -- dune runtest
