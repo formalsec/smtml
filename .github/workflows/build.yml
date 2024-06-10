@@ -19,6 +19,7 @@ jobs:
         ocaml-compiler:
           - "4.14"
           - "5.1"
+          - "5.2"
     runs-on: ${{ matrix.os }}
     env:
       # allow opam depext to yes package manager prompts
@@ -26,15 +27,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Cache
-        uses: actions/cache@v3
-        id: cache
-        with:
-          path: ${{ github.workspace }}/_opam
-          key: ${{ matrix.os }}-opam-${{ matrix.ocaml-compiler }}-${{ hashFiles('**.opam') }}
-          restore-keys: |
-            ${{ matrix.os }}-opam-${{ matrix.ocaml-compiler }}-
 
       - name: Setup OCaml ${{ matrix.ocaml-compiler }}
         uses: ocaml/setup-ocaml@v2
@@ -49,6 +41,3 @@ jobs:
 
       - name: Build
         run: opam exec -- dune build @install
-
-      - name: Test
-        run: opam exec -- dune runtest
