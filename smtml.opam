@@ -9,21 +9,21 @@ homepage: "https://github.com/formalsec/smtml"
 doc: "https://formalsec.github.io/smtml/smtml/index.html"
 bug-reports: "https://github.com/formalsec/smtml/issues"
 depends: [
-  "dune" {>= "3.14"}
+  "dune" {>= "3.14" & build}
   "ocaml" {>= "4.14.0"}
   "ocaml_intrinsics"
-  "menhir" {build & >= "20220210"}
   "cmdliner" {>= "1.2.0"}
   "zarith" {>= "1.5"}
-  "odoc" {with-doc}
   "hc" {>= "0.3"}
-  "bisect_ppx" {with-test & >= "2.5.0" & dev}
+  "menhir" {build & >= "20220210"}
+  "odoc" {with-doc}
+  "bisect_ppx" {with-test & >= "2.5.0"}
 ]
 depopts: [
+  "z3" {>= "4.12.2" & <= "4.13"}
   "colibri2"
   "bitwuzla-cxx" {>= "0.4.0"}
   "cvc5"
-  "z3" {>= "4.12.2" & < "4.13"}
 ]
 build: [
   ["dune" "subst"] {dev}
