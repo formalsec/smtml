@@ -1,19 +1,21 @@
 ## Unreleased
 
-### Changes
+### Added
+### Changed
 
 - Makes Z3 optional
 
-v0.1.1
-======
+### Fixed
+
+- Parametric mappings should only create sorts once
+
+## v0.1.1
 
 - Improves interoperability with multiple solvers
 - Bug fixes for `colibri2` and `z3`
 - Adds preliminary support for cvc5
 
-
-v0.1.0
-======
+## v0.1.0
 
 - Renames project to `Smt.ml` and library to `smtml`
 - Minor fixes and typos
@@ -23,8 +25,7 @@ v0.1.0
 - Adds owi's simplifications and smart op constructors
 - Moves theory annotation (`Ty.t`) only to necessary variants
 
-v0.0.4
-======
+## v0.0.4
 
 - Adds Arthur's clz and ctz implementations for i64s
 - Completes missing `eval_numeric` operations
@@ -36,8 +37,7 @@ v0.0.4
 - Rotate_left and rotate_right operators
 - Print floats in OCaml syntax (Closes #49)
 
-v0.0.3
-======
+## v0.0.3
 
 - Improve bitv creation interface
 - Add naive hash-consing of expressions
@@ -45,8 +45,7 @@ v0.0.3
 - Start migrating inline tests to standard tests
 - No simplifier on batch solver
 
-v0.0.2
-======
+## v0.0.2
 
 - Support for bv8
 - Refactor optimizer interface
@@ -58,7 +57,6 @@ v0.0.2
 - Improves documentation
 - Relax ocaml compiler constraint to `>= 4.14.0`
 
-v0.0.1
-======
+## v0.0.1
 
 Initial release
