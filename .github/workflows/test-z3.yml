@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  test-bitwuzla:
+  test-z3:
     runs-on: ubuntu-latest
     env:
       OPAMCONFIRMLEVEL: unsafe-yes
