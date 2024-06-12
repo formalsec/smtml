@@ -387,19 +387,20 @@ module M = struct
         ~pp_sep:(fun fmt () -> Format.fprintf fmt "@\n")
         pp_entry fmt entries
 
-    let _set_and_build_params (params : P.t) : (string * string) list =
+    let set_params (params : P.t) =
       Z3.set_global_param "smt.ematching"
         (string_of_bool @@ P.get params Ematching);
-      [ ("timeout", string_of_int @@ P.get params Timeout)
-      ; ("model", string_of_bool @@ P.get params Model)
-      ; ("unsat_core", string_of_bool @@ P.get params Unsat_core)
-      ]
+      Z3.Params.update_param_value ctx "timeout"
+        (string_of_int @@ P.get params Timeout);
+      Z3.Params.update_param_value ctx "model"
+        (string_of_bool @@ P.get params Model);
+      Z3.Params.update_param_value ctx "unsat_core"
+        (string_of_bool @@ P.get params Unsat_core)
 
     module Solver = struct
       (* TODO: parameters *)
-      let make ?params:_ ?logic () =
-        (* let params = Option.fold params ~none:[] ~some:set_and_build_params in *)
-        (* let ctx = mk_context params in *)
+      let make ?params ?logic () =
+        Option.iter set_params params;
         let logic =
           Option.map
             (fun l ->
