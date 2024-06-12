@@ -7,11 +7,9 @@ module Make (M : Mappings_intf.S) = struct
 
   let () =
     let solver = Solver.create ~logic:QF_BVFP () in
-    let symbol_x = Symbol.("x" @: Ty_bitv 8) in
-    let x = Expr.mk_symbol symbol_x in
+    let x = Expr.symbol @@ Symbol.make (Ty_bitv 8) "x" in
     Solver.add solver I8.[ x > v 0; x < v 2 ];
     assert_sat (Solver.check solver []);
-    let model = Solver.model solver in
-    let val_x = Option.bind model (fun m -> Model.evaluate m symbol_x) in
-    assert (Stdlib.(Some (Value.Num (I8 1)) = val_x))
+    let val_x = Solver.get_value solver x in
+    assert (Expr.equal val_x (I8.v 1))
 end

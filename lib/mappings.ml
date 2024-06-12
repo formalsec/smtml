@@ -18,7 +18,7 @@
 
 include Mappings_intf
 
-module Make (M_with_make : M_with_make) = struct
+module Make (M_with_make : M_with_make) : S_with_fresh = struct
   module Make_ (M : M) : S = struct
     open Ty
 
@@ -42,6 +42,8 @@ module Make (M_with_make : M_with_make) = struct
 
     let f64 = M.Types.float 11 53
 
+    let symbol_table = Hashtbl.create 251
+
     let get_type = function
       | Ty_int -> M.Types.int
       | Ty_real -> M.Types.real
@@ -53,6 +55,14 @@ module Make (M_with_make : M_with_make) = struct
       | Ty_fp 32 -> f32
       | Ty_fp 64 -> f64
       | Ty_bitv _ | Ty_fp _ | Ty_list | Ty_array | Ty_tuple -> assert false
+
+    let make_symbol symbol ty =
+      match Hashtbl.find_opt symbol_table symbol with
+      | Some sym -> sym
+      | None ->
+        let sym = M.const symbol ty in
+        Hashtbl.replace symbol_table symbol sym;
+        sym
 
     module Bool_impl = struct
       let true_ = M.true_
@@ -520,7 +530,7 @@ module Make (M_with_make : M_with_make) = struct
         I32.binop Add base' offset'
       | Symbol { name; ty } ->
         let ty = get_type ty in
-        M.const name ty
+        make_symbol name ty
       | Unop (ty, op, e) ->
         let e = encode_expr e in
         unop ty op e
@@ -653,5 +663,3 @@ module Make (M_with_make : M_with_make) = struct
 
   include Make_ (M_with_make)
 end
-
-module Make' (M : M_with_make) : S_with_fresh = Make (M)

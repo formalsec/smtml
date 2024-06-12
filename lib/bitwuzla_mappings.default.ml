@@ -18,7 +18,7 @@
 
 include Mappings_intf
 
-module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : Mappings_intf.M = struct
+module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
   open B
 
   type ty = Sort.t
@@ -27,21 +27,23 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : Mappings_intf.M = struct
 
   type interp = Term.t
 
-  type model = unit (* TODO *)
+  type model = Solver.t
 
   type solver = Solver.t
 
+  (* Not supported *)
   type handle = unit
 
-  type optimizer = unit (* Not supported? *)
+  (* Not supported *)
+  type optimizer = unit
 
   let true_ = mk_true ()
 
   let false_ = mk_false ()
 
-  let int _ = assert false
+  let int _ = failwith "Bitwuzla_mappings: int not implemented"
 
-  let real _ = assert false
+  let real _ = failwith "Bitwuzla_mappings: real not implemented"
 
   let const symbol ty = mk_const ~symbol ty
 
@@ -60,13 +62,13 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : Mappings_intf.M = struct
   let ite cond t1 t2 = mk_term3 Kind.Ite cond t1 t2
 
   module Types = struct
-    let int = Obj.magic 0
+    let int = Obj.magic 0xdeadc0de
 
-    let real = Obj.magic 0
+    let real = Obj.magic 0xdeadbeef
 
     let bool = mk_bool_sort ()
 
-    let string = Obj.magic 0
+    let string = Obj.magic 0xbadcafe
 
     let bitv bitwidth = mk_bv_sort bitwidth
 
@@ -74,49 +76,49 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : Mappings_intf.M = struct
 
     let ty t = Term.sort t
 
-    let to_ety _ = assert false
+    let to_ety _ = failwith "Bitwuzla_mappings: to_ety not implemented"
   end
 
   module Interp = struct
-    let to_int _ = assert false
+    let to_int _ = failwith "Bitwuzla_mappings: to_int not implemented"
 
-    let to_real _ = assert false
+    let to_real _ = failwith "Bitwuzla_mappings: to_real not implemented"
 
     let to_bool t = Term.value Term.Bool t
 
-    let to_string _ = assert false
+    let to_string _ = failwith "Bitwuzla_mappings: to_string not implemented"
 
     let to_bitv t _bitwidth = Z.to_int64 @@ Term.value Term.Z t
 
     let to_float t _ebits _sbits =
       let _v = Term.value Term.IEEE_754 t in
-      assert false
+      failwith "Bitwuzla_mappings: to_float not implemented"
   end
 
   module Int = struct
-    let neg _ = assert false
+    let neg _ = failwith "Bitwuzla_mappings: Int.neg not implemented"
 
-    let to_real _ = assert false
+    let to_real _ = failwith "Bitwuzla_mappings: Int.to_real not implemented"
 
-    let add _ = assert false
+    let add _ = failwith "Bitwuzla_mappings: Int.add not implemented"
 
-    let sub _ = assert false
+    let sub _ = failwith "Bitwuzla_mappings: Int.sub not implemented"
 
-    let mul _ = assert false
+    let mul _ = failwith "Bitwuzla_mappings: Int.mul not implemented"
 
-    let div _ = assert false
+    let div _ = failwith "Bitwuzla_mappings: Int.div not implemented"
 
-    let rem _ = assert false
+    let rem _ = failwith "Bitwuzla_mappings: Int.rem not implemented"
 
-    let pow _ = assert false
+    let pow _ = failwith "Bitwuzla_mappings: Int.pow not implemented"
 
-    let lt _ = assert false
+    let lt _ = failwith "Bitwuzla_mappings: Int.lt not implemented"
 
-    let le _ = assert false
+    let le _ = failwith "Bitwuzla_mappings: Int.le not implemented"
 
-    let gt _ = assert false
+    let gt _ = failwith "Bitwuzla_mappings: Int.gt not implemented"
 
-    let ge _ = assert false
+    let ge _ = failwith "Bitwuzla_mappings: Int.ge not implemented"
   end
 
   module Real = struct
@@ -314,13 +316,16 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : Mappings_intf.M = struct
     let get_symbols _ =
       failwith "Bitwuzla_mappings: get_symbols not implemented"
 
-    let eval ?completion:_ _ =
-      failwith "Bitwuzla_mappings: eval not implemented"
+    let eval ?completion:_ solver term = Some (Solver.get_value solver term)
   end
 
   module Solver = struct
-    let make ?params:_ ?logic:_ () =
-      Solver.create (Bitwuzla_cxx.Options.default ())
+    let update_options _params options =
+      Bitwuzla_cxx.Options.(set options Produce_models true);
+      options
+
+    let make ?params ?logic:_ () =
+      Bitwuzla_cxx.Options.default () |> update_options params |> Solver.create
 
     let clone _solver = failwith "Bitwuzla_mappings: clone not implemented"
 
@@ -339,7 +344,7 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : Mappings_intf.M = struct
       | Result.Unsat -> `Unsat
       | Result.Unknown -> `Unknown
 
-    let model _ = failwith "Bitwuzla_mappings: model not implemented"
+    let model solver = Some solver
 
     let add_simplifier solver =
       (* does nothing *)
@@ -375,9 +380,9 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : Mappings_intf.M = struct
   end
 end
 
-module Bitwuzla_with_make : Mappings_intf.M_with_make = struct
-  module Make () = Fresh_bitwuzla (Bitwuzla_cxx.Make ())
-  include Fresh_bitwuzla (Bitwuzla_cxx)
-end
-
-include Mappings.Make (Bitwuzla_with_make)
+include (
+  Mappings.Make (struct
+    module Make () = Fresh_bitwuzla (Bitwuzla_cxx.Make ())
+    include Fresh_bitwuzla (Bitwuzla_cxx)
+  end) :
+    S_with_fresh )
