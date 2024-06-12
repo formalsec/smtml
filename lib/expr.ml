@@ -255,6 +255,11 @@ let pp_smt = Pp.pp_smt
 
 let to_string e = Format.asprintf "%a" pp e
 
+let is_list (hte : t) : bool =
+  match ty hte, view hte with
+  | Ty_list, _ | _, List _ -> true
+  | _ -> false
+
 let value (v : Value.t) : t = make (Val v) [@@inline]
 
 let unop' (ty : Ty.t) (op : unop) (hte : t) : t = make (Unop (ty, op, hte))
@@ -365,6 +370,19 @@ let triop ty (op : triop) (e1 : t) (e2 : t) (e3 : t) : t =
     | _ -> triop' ty op e1 e2 e3 )
   | _ -> triop' ty op e1 e2 e3
 
+let naryop' (ty : Ty.t) (op : naryop) (es : t list) : t =
+  make (Naryop (ty, op, es))
+[@@inline]
+
+let naryop (ty : Ty.t) (op : naryop) (es : t list) : t =
+  if List.for_all (fun e -> match view e with Val _ -> true | _ -> false) es
+  then
+    let vs =
+      List.map (fun e -> match view e with Val v -> v | _ -> assert false) es
+    in
+    value (Eval.naryop ty op vs)
+  else naryop' ty op es
+
 let relop' (ty : Ty.t) (op : relop) (hte1 : t) (hte2 : t) : t =
   make (Relop (ty, op, hte1, hte2))
 [@@inline]
@@ -399,9 +417,21 @@ let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
     value (if Eval.relop ty op base n then True else False)
   | List l1, List l2 -> (
     match op with
-    | Eq -> value (if List.equal equal l1 l2 then True else False)
-    | Ne -> value (if List.equal equal l1 l2 then False else True)
+    | Eq when List.length l1 <> List.length l2 -> value False
+    | Eq ->
+      let l = List.fold_left2 (fun l' e1 e2 -> relop Ty_bool Eq e1 e2 :: l') [] l1 l2 in
+      naryop Ty_bool Logand l
+    | Ne when List.length l1 <> List.length l2 -> value True
+    | Ne ->
+      let l = List.fold_left2 (fun l' e1 e2 -> relop Ty_bool Ne e1 e2 :: l') [] l1 l2 in
+      naryop Ty_bool Logand l
     | _ -> relop' ty op hte1 hte2 )
+  | List _, _ ->
+    assert (is_list hte2 |> not);
+    value False
+  | _, List _ -> 
+    assert (is_list hte1 |> not);
+    value False
   | _ -> relop' ty op hte1 hte2
 
 let cvtop' (ty : Ty.t) (op : cvtop) (hte : t) : t = make (Cvtop (ty, op, hte))
@@ -411,19 +441,6 @@ let cvtop ty (op : cvtop) (hte : t) : t =
   match view hte with
   | Val v -> value (Eval.cvtop ty op v)
   | _ -> cvtop' ty op hte
-
-let naryop' (ty : Ty.t) (op : naryop) (es : t list) : t =
-  make (Naryop (ty, op, es))
-[@@inline]
-
-let naryop (ty : Ty.t) (op : naryop) (es : t list) : t =
-  if List.for_all (fun e -> match view e with Val _ -> true | _ -> false) es
-  then
-    let vs =
-      List.map (fun e -> match view e with Val v -> v | _ -> assert false) es
-    in
-    value (Eval.naryop ty op vs)
-  else naryop' ty op es
 
 let nland64 (x : int64) (n : int) =
   let rec loop x' n' acc =
