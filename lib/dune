@@ -67,6 +67,13 @@
    from
    (z3 -> z3_mappings.default.ml)
    (-> z3_mappings.nop.ml))
+  ;; This is the improved version of the mappings
+  ;; Will replace the previous one at some point
+  (select
+   z3_mappings2.ml
+   from
+   (z3 -> z3_mappings2.default.ml)
+   (-> z3_mappings2.nop.ml))
   (select
    cvc5_mappings.ml
    from
@@ -87,6 +94,11 @@
   (progn
    (with-stdout-to
     z3_mappings.nop.ml
+    (progn
+     (echo "let solver_name = \"Z3\"\n")
+     (cat mappings.nop.ml)))
+   (with-stdout-to
+    z3_mappings2.nop.ml
     (progn
      (echo "let solver_name = \"Z3\"\n")
      (cat mappings.nop.ml)))
