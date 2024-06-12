@@ -18,8 +18,8 @@
 
 include Mappings_intf
 
-module Make (M0 : Mappings_intf.M_with_make) = struct
-  module MakeMake (M : Mappings_intf.M) : Mappings_intf.S = struct
+module Make (M_with_make : M_with_make) = struct
+  module Make_ (M : M) : S = struct
     open Ty
 
     type model = M.model
@@ -32,16 +32,26 @@ module Make (M0 : Mappings_intf.M_with_make) = struct
 
     let err = Log.err
 
+    let i8 = M.Types.bitv 8
+
+    let i32 = M.Types.bitv 32
+
+    let i64 = M.Types.bitv 64
+
+    let f32 = M.Types.float 8 24
+
+    let f64 = M.Types.float 11 53
+
     let get_type = function
       | Ty_int -> M.Types.int
       | Ty_real -> M.Types.real
       | Ty_bool -> M.Types.bool
       | Ty_str -> M.Types.string
-      | Ty_bitv 8 -> M.Types.bitv 8
-      | Ty_bitv 32 -> M.Types.bitv 32
-      | Ty_bitv 64 -> M.Types.bitv 64
-      | Ty_fp 32 -> M.Types.float 8 24
-      | Ty_fp 64 -> M.Types.float 11 53
+      | Ty_bitv 8 -> i8
+      | Ty_bitv 32 -> i32
+      | Ty_bitv 64 -> i64
+      | Ty_fp 32 -> f32
+      | Ty_fp 64 -> f64
       | Ty_bitv _ | Ty_fp _ | Ty_list | Ty_array | Ty_tuple -> assert false
 
     module Bool_impl = struct
@@ -89,8 +99,7 @@ module Make (M0 : Mappings_intf.M_with_make) = struct
         | op -> err {|Int: Unsupported binop operator "%a"|} Ty.pp_binop op
 
       let relop = function
-        | Eq -> M.eq
-        | Ne -> fun e1 e2 -> M.distinct [ e1; e2 ]
+        | Eq | Ne -> assert false
         | Lt -> M.Int.lt
         | Gt -> M.Int.gt
         | Le -> M.Int.le
@@ -110,17 +119,15 @@ module Make (M0 : Mappings_intf.M_with_make) = struct
       let v f = M.real f [@@inline]
 
       let unop op e =
+        let open M in
         match op with
-        | Neg -> M.Real.neg e
-        | Abs -> M.ite (M.Real.gt e (M.real 0.)) e (M.Real.neg e)
-        | Sqrt -> M.Real.pow e (v 0.5)
+        | Neg -> Real.neg e
+        | Abs -> ite (Real.gt e (real 0.)) e (Real.neg e)
+        | Sqrt -> Real.pow e (v 0.5)
         | Ceil ->
           let x_int = M.Real.to_int e in
-          let x_int_real = M.Int.to_real x_int in
-          let x_int_real_eq_e = M.eq x_int_real e in
-          let x_int_add_one = M.Int.add x_int (M.int 1) in
-          M.ite x_int_real_eq_e x_int x_int_add_one
-        | Floor -> M.Real.to_int e
+          ite (eq (Int.to_real x_int) e) x_int (Int.add x_int (int 1))
+        | Floor -> Real.to_int e
         | Nearest | Is_nan | _ ->
           err {|Real: Unsupported unop operator "%a"|} Ty.pp_unop op
 
@@ -212,26 +219,22 @@ module Make (M0 : Mappings_intf.M_with_make) = struct
     end
 
     module Bitv_impl (B : Bitv_sig) = struct
+      open M
       include B
 
-      (* Stolen from @krtab in OCamlPro/owi #195 *)
+      (* Stolen from @krtab in OCamlPro/owi#195 *)
       let clz n =
         let rec loop (lb : int) (ub : int) =
           if ub = lb + 1 then v @@ Ixx.of_int (bitwidth - ub)
           else
             let mid = (lb + ub) / 2 in
-            let pow_two_mid = Ixx.(shift_left (of_int 1) mid) in
-            let pow_two_mid = v pow_two_mid in
-            let n_lt_pow_two = M.Bitv.lt_u n pow_two_mid in
-            let left = loop lb mid in
-            let right = loop mid ub in
-            M.ite n_lt_pow_two left right
+            let pow_two_mid = v Ixx.(shift_left (of_int 1) mid) in
+            ite (Bitv.lt_u n pow_two_mid) (loop lb mid) (loop mid ub)
         in
-        let zero = v (Ixx.of_int 0) in
-        let n_eq_zero = M.eq n zero in
-        let bitwidth' = v (Ixx.of_int bitwidth) in
-        let right = loop 0 bitwidth in
-        M.ite n_eq_zero bitwidth' right
+        ite
+          (eq n (v @@ Ixx.of_int 0))
+          (v @@ Ixx.of_int bitwidth)
+          (loop 0 bitwidth)
 
       (* Stolen from @krtab in OCamlPro/owi #195 *)
       let ctz n =
@@ -240,42 +243,34 @@ module Make (M0 : Mappings_intf.M_with_make) = struct
           if ub = lb + 1 then v (Ixx.of_int lb)
           else
             let mid = (lb + ub) / 2 in
-            let pow_two_mid = Ixx.(shift_left (of_int 1) mid) in
-            let pow_two_mid = v pow_two_mid in
-            let rem_pow_two = M.Bitv.rem n pow_two_mid in
-            let rem_pow_eq_zero = M.eq rem_pow_two zero in
-            let right = loop mid ub in
-            let left = loop lb mid in
-            M.ite rem_pow_eq_zero right left
+            let pow_two_mid = v Ixx.(shift_left (of_int 1) mid) in
+            M.ite (eq (Bitv.rem n pow_two_mid) zero) (loop mid ub) (loop lb mid)
         in
-        let n_eq_zero = M.eq n zero in
-        let bitwidth' = v (Ixx.of_int bitwidth) in
-        let right = loop 0 bitwidth in
-        M.ite n_eq_zero bitwidth' right
+        ite (eq n zero) (v @@ Ixx.of_int bitwidth) (loop 0 bitwidth)
 
       let unop = function
         | Clz -> clz
         | Ctz -> ctz
-        | Neg -> M.Bitv.neg
-        | Not -> M.Bitv.lognot
+        | Neg -> Bitv.neg
+        | Not -> Bitv.lognot
         | op -> err {|Bitv: Unsupported unary operator "%a"|} Ty.pp_unop op
 
       let binop = function
-        | Add -> M.Bitv.add
-        | Sub -> M.Bitv.sub
-        | Mul -> M.Bitv.mul
-        | Div -> M.Bitv.div
-        | DivU -> M.Bitv.div_u
-        | And -> M.Bitv.logand
-        | Xor -> M.Bitv.logxor
-        | Or -> M.Bitv.logor
-        | Shl -> M.Bitv.shl
-        | ShrA -> M.Bitv.ashr
-        | ShrL -> M.Bitv.lshr
-        | Rem -> M.Bitv.rem
-        | RemU -> M.Bitv.rem_u
-        | Rotl -> M.Bitv.rotate_left
-        | Rotr -> M.Bitv.rotate_right
+        | Add -> Bitv.add
+        | Sub -> Bitv.sub
+        | Mul -> Bitv.mul
+        | Div -> Bitv.div
+        | DivU -> Bitv.div_u
+        | And -> Bitv.logand
+        | Xor -> Bitv.logxor
+        | Or -> Bitv.logor
+        | Shl -> Bitv.shl
+        | ShrA -> Bitv.ashr
+        | ShrL -> Bitv.lshr
+        | Rem -> Bitv.rem
+        | RemU -> Bitv.rem_u
+        | Rotl -> Bitv.rotate_left
+        | Rotr -> Bitv.rotate_right
         | op -> err {|Bitv: Unsupported binary operator "%a"|} Ty.pp_binop op
 
       let triop op _ =
@@ -283,36 +278,28 @@ module Make (M0 : Mappings_intf.M_with_make) = struct
 
       let relop op e1 e2 =
         match op with
-        | Eq -> M.eq e1 e2
-        | Ne -> M.distinct [ e1; e2 ]
-        | Lt -> M.Bitv.lt e1 e2
-        | LtU -> M.Bitv.lt_u e1 e2
-        | Le -> M.Bitv.le e1 e2
-        | LeU -> M.Bitv.le_u e1 e2
-        | Gt -> M.Bitv.gt e1 e2
-        | GtU -> M.Bitv.gt_u e1 e2
-        | Ge -> M.Bitv.ge e1 e2
-        | GeU -> M.Bitv.ge_u e1 e2
+        | Eq | Ne -> assert false
+        | Lt -> Bitv.lt e1 e2
+        | LtU -> Bitv.lt_u e1 e2
+        | Le -> Bitv.le e1 e2
+        | LeU -> Bitv.le_u e1 e2
+        | Gt -> Bitv.gt e1 e2
+        | GtU -> Bitv.gt_u e1 e2
+        | Ge -> Bitv.ge e1 e2
+        | GeU -> Bitv.ge_u e1 e2
 
       let cvtop op e =
         match op with
-        | WrapI64 -> M.Bitv.extract e ~high:(bitwidth - 1) ~low:0
-        | Sign_extend n -> M.Bitv.sign_extend n e
-        | Zero_extend n -> M.Bitv.zero_extend n e
+        | WrapI64 -> Bitv.extract e ~high:(bitwidth - 1) ~low:0
+        | Sign_extend n -> Bitv.sign_extend n e
+        | Zero_extend n -> Bitv.zero_extend n e
         | TruncSF32 | TruncSF64 ->
-          let rm = M.Float.Rounding_mode.rtz in
-          M.Float.to_sbv bitwidth ~rm e
+          Float.to_sbv bitwidth ~rm:Float.Rounding_mode.rtz e
         | TruncUF32 | TruncUF64 ->
-          let rm = M.Float.Rounding_mode.rtz in
-          M.Float.to_ubv bitwidth ~rm e
-        | Reinterpret_float -> M.Float.to_ieee_bv e
-        | ToBool ->
-          let zero = v (Ixx.of_int 0) in
-          M.distinct [ e; zero ]
-        | OfBool ->
-          let one = v (Ixx.of_int 1) in
-          let zero = v (Ixx.of_int 0) in
-          M.ite e one zero
+          Float.to_ubv bitwidth ~rm:Float.Rounding_mode.rtz e
+        | Reinterpret_float -> Float.to_ieee_bv e
+        | ToBool -> M.distinct [ e; v @@ Ixx.of_int 0 ]
+        | OfBool -> ite e (v @@ Ixx.of_int 1) (v @@ Ixx.of_int 0)
         | _ -> assert false
     end
 
@@ -364,47 +351,30 @@ module Make (M0 : Mappings_intf.M_with_make) = struct
     end
 
     module Float_impl (F : Float_sig) = struct
+      open M
       include F
 
       let unop op e =
         match op with
-        | Neg -> M.Float.neg e
-        | Abs -> M.Float.abs e
-        | Sqrt ->
-          let rne = M.Float.Rounding_mode.rne in
-          M.Float.sqrt ~rm:rne e
-        | Is_nan -> M.Float.is_nan e
-        | Ceil ->
-          let rm = M.Float.Rounding_mode.rtp in
-          M.Float.round_to_integral ~rm e
-        | Floor ->
-          let rm = M.Float.Rounding_mode.rtn in
-          M.Float.round_to_integral ~rm e
-        | Trunc ->
-          let rm = M.Float.Rounding_mode.rtz in
-          M.Float.round_to_integral ~rm e
-        | Nearest ->
-          let rm = M.Float.Rounding_mode.rne in
-          M.Float.round_to_integral ~rm e
+        | Neg -> Float.neg e
+        | Abs -> Float.abs e
+        | Sqrt -> Float.sqrt ~rm:Float.Rounding_mode.rne e
+        | Is_nan -> Float.is_nan e
+        | Ceil -> Float.round_to_integral ~rm:Float.Rounding_mode.rtp e
+        | Floor -> Float.round_to_integral ~rm:Float.Rounding_mode.rtn e
+        | Trunc -> Float.round_to_integral ~rm:Float.Rounding_mode.rtz e
+        | Nearest -> Float.round_to_integral ~rm:Float.Rounding_mode.rne e
         | _ -> err {|Fp: Unsupported Z3 unary operator "%a"|} Ty.pp_unop op
 
       let binop op e1 e2 =
         match op with
-        | Add ->
-          let rm = M.Float.Rounding_mode.rne in
-          M.Float.add ~rm e1 e2
-        | Sub ->
-          let rm = M.Float.Rounding_mode.rne in
-          M.Float.sub ~rm e1 e2
-        | Mul ->
-          let rm = M.Float.Rounding_mode.rne in
-          M.Float.mul ~rm e1 e2
-        | Div ->
-          let rm = M.Float.Rounding_mode.rne in
-          M.Float.div ~rm e1 e2
-        | Min -> M.Float.min e1 e2
-        | Max -> M.Float.max e1 e2
-        | Rem -> M.Float.rem e1 e2
+        | Add -> Float.add ~rm:Float.Rounding_mode.rne e1 e2
+        | Sub -> Float.sub ~rm:Float.Rounding_mode.rne e1 e2
+        | Mul -> Float.mul ~rm:Float.Rounding_mode.rne e1 e2
+        | Div -> Float.div ~rm:Float.Rounding_mode.rne e1 e2
+        | Min -> Float.min e1 e2
+        | Max -> Float.max e1 e2
+        | Rem -> Float.rem e1 e2
         | _ -> err {|Fp: Unsupported Z3 binop operator "%a"|} Ty.pp_binop op
 
       let triop op _ =
@@ -412,28 +382,23 @@ module Make (M0 : Mappings_intf.M_with_make) = struct
 
       let relop op e1 e2 =
         match op with
-        | Eq -> M.Float.eq e1 e2
-        | Ne ->
-          let eq_ = M.Float.eq e1 e2 in
-          M.not_ eq_
-        | Lt -> M.Float.lt e1 e2
-        | Le -> M.Float.le e1 e2
-        | Gt -> M.Float.gt e1 e2
-        | Ge -> M.Float.ge e1 e2
+        | Eq -> Float.eq e1 e2
+        | Ne -> not_ @@ Float.eq e1 e2
+        | Lt -> Float.lt e1 e2
+        | Le -> Float.le e1 e2
+        | Gt -> Float.gt e1 e2
+        | Ge -> Float.ge e1 e2
         | _ -> err {|Fp: Unsupported Z3 relop operator "%a"|} Ty.pp_relop op
 
       let cvtop op e =
         match op with
         | PromoteF32 | DemoteF64 ->
-          let rm = M.Float.Rounding_mode.rne in
-          M.Float.to_fp eb sb ~rm e
+          Float.to_fp eb sb ~rm:Float.Rounding_mode.rne e
         | ConvertSI32 | ConvertSI64 ->
-          let rm = M.Float.Rounding_mode.rne in
-          M.Float.sbv_to_fp eb sb ~rm e
+          Float.sbv_to_fp eb sb ~rm:Float.Rounding_mode.rne e
         | ConvertUI32 | ConvertUI64 ->
-          let rm = M.Float.Rounding_mode.rne in
-          M.Float.ubv_to_fp eb sb ~rm e
-        | Reinterpret_int -> M.Float.of_ieee_bv eb sb e
+          Float.ubv_to_fp eb sb ~rm:Float.Rounding_mode.rne e
+        | Reinterpret_int -> Float.of_ieee_bv eb sb e
         | ToString ->
           (* TODO: FuncDecl.apply to_string [ e ] *)
           assert false
@@ -683,10 +648,10 @@ module Make (M0 : Mappings_intf.M_with_make) = struct
   end
 
   module Fresh = struct
-    module Make () = MakeMake (M0.Make ())
+    module Make () = Make_ (M_with_make.Make ())
   end
 
-  include MakeMake (M0)
+  include Make_ (M_with_make)
 end
 
-module Make' (M : Mappings_intf.M_with_make) : S_with_fresh = Make (M)
+module Make' (M : M_with_make) : S_with_fresh = Make (M)

@@ -18,9 +18,9 @@
 
 module Nop = struct
   module Make () = struct
-    type ty
+    type ty = unit
 
-    type term
+    type term = unit
 
     type interp
 
@@ -32,9 +32,9 @@ module Nop = struct
 
     type optimizer
 
-    let true_ = Obj.magic 0
+    let true_ = ()
 
-    let false_ = Obj.magic 0
+    let false_ = ()
 
     let int _ = assert false
 
@@ -57,17 +57,17 @@ module Nop = struct
     let ite _ = assert false
 
     module Types = struct
-      let int = Obj.magic 0
+      let int = ()
 
-      let real = Obj.magic 0
+      let real = ()
 
-      let bool = Obj.magic 0
+      let bool = ()
 
-      let string = Obj.magic 0
+      let string = ()
 
-      let bitv = Obj.magic 0
+      let bitv _ = ()
 
-      let float _ = assert false
+      let float _ _ = ()
 
       let ty _ = assert false
 
@@ -232,15 +232,15 @@ module Nop = struct
 
     module Float = struct
       module Rounding_mode = struct
-        let rne = Obj.magic 0
+        let rne = ()
 
-        let rna = Obj.magic 0
+        let rna = ()
 
-        let rtp = Obj.magic 0
+        let rtp = ()
 
-        let rtn = Obj.magic 0
+        let rtn = ()
 
-        let rtz = Obj.magic 0
+        let rtz = ()
       end
 
       let v _ = assert false
@@ -300,51 +300,52 @@ module Nop = struct
       let eval ?completion:_ _ = assert false
     end
 
+    let die () = Format.ksprintf failwith "%s not installed" solver_name
+
     module Solver = struct
-      let make ?params:_ ?logic:_ =
-        Format.ksprintf failwith "%s not installed" solver_name
+      let make ?params:_ ?logic:_ = die ()
 
-      let clone _ = assert false
+      let clone _ = die ()
 
-      let push _ = assert false
+      let push _ = die ()
 
-      let pop _ = assert false
+      let pop _ = die ()
 
-      let reset _ = assert false
+      let reset _ = die ()
 
-      let add _ = assert false
+      let add _ = die ()
 
-      let check _ ~assumptions:_ = assert false
+      let check _ ~assumptions:_ = die ()
 
-      let model _ = assert false
+      let model _ = die ()
 
-      let add_simplifier _ = assert false
+      let add_simplifier _ = die ()
 
-      let interrupt _ = assert false
+      let interrupt _ = die ()
 
-      let pp_statistics _ = assert false
+      let pp_statistics _ = die ()
     end
 
     module Optimizer = struct
-      let make _ = assert false
+      let make _ = die ()
 
-      let push _ = assert false
+      let push _ = die ()
 
-      let pop _ = assert false
+      let pop _ = die ()
 
-      let add _ = assert false
+      let add _ = die ()
 
-      let check _ = assert false
+      let check _ = die ()
 
-      let model _ = assert false
+      let model _ = die ()
 
-      let maximize _ = assert false
+      let maximize _ = die ()
 
-      let minimize _ = assert false
+      let minimize _ = die ()
 
-      let interrupt _ = assert false
+      let interrupt _ = die ()
 
-      let pp_statistics _ = assert false
+      let pp_statistics _ = die ()
     end
   end
 
