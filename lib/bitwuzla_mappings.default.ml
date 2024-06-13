@@ -18,6 +18,8 @@
 
 include Mappings_intf
 
+let _debug = false
+
 module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
   open B
 
@@ -90,9 +92,26 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
     let to_bitv t _bitwidth = Z.to_int64 @@ Term.value Term.Z t
 
-    let to_float t _ebits _sbits =
-      let _v = Term.value Term.IEEE_754 t in
-      failwith "Bitwuzla_mappings: to_float not implemented"
+    let to_float t ebits sbits =
+      let fp_size = ebits + sbits in
+      let sign, exp, significant = Term.value Term.IEEE_754 t in
+      let bs = sign ^ exp ^ significant in
+      assert (String.length bs = fp_size);
+      let _n, int64_ =
+        String.fold_left
+          (fun (n, acc) c ->
+            let bit =
+              match c with '0' -> 0L | '1' -> 1L | _ -> assert false
+            in
+            let acc = Int64.logor acc bit in
+            let acc = if n = fp_size - 1 then acc else Int64.shift_left acc 1 in
+            (n + 1, acc) )
+          (0, 0L) bs
+      in
+      match fp_size with
+      | 32 -> Int32.float_of_bits (Int64.to_int32 int64_)
+      | 64 -> Int64.float_of_bits int64_
+      | _ -> assert false
   end
 
   module Int = struct
@@ -251,8 +270,8 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     end
 
     let v real ebits sbits =
-      let real = string_of_float real in
-      mk_fp_value_from_real (Types.float ebits sbits) Rounding_mode.rne real
+      let real_s = string_of_float real in
+      mk_fp_value_from_real (Types.float ebits sbits) Rounding_mode.rne real_s
 
     let neg t = mk_term1 Kind.Fp_neg t
 
