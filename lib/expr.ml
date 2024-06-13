@@ -347,7 +347,7 @@ let rec binop ty (op : binop) (hte1 : t) (hte2 : t) : t =
     | List_append_last -> make (List (es @ [ hte2 ]))
     | List_append -> make (List (hte2 :: es))
     | _ -> binop' ty op hte1 hte2 )
-  | List es, Val _ -> (
+  | List es, Val _ | List es, Symbol _ -> (
     match op with
     | List_append_last -> make (List (es @ [ hte2 ]))
     | List_append -> make (List (hte2 :: es))
