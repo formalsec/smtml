@@ -22,13 +22,24 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
   module Make_ (M : M) : S = struct
     open Ty
 
-    type model = M.model
+    type sym_tbl = (Symbol.t, M.term) Hashtbl.t
 
-    type solver = M.solver
+    type model =
+      { model : M.model
+      ; symbol_table : sym_tbl
+      }
+
+    type solver =
+      { solver : M.solver
+      ; symbol_table : sym_tbl
+      }
 
     type handle = M.handle
 
-    type optimize = M.optimizer
+    type optimize =
+      { opt : M.optimizer
+      ; symbol_table : sym_tbl
+      }
 
     let err = Log.err
 
@@ -42,8 +53,6 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
     let f64 = M.Types.float 11 53
 
-    let symbol_table = Hashtbl.create 251
-
     let get_type = function
       | Ty_int -> M.Types.int
       | Ty_real -> M.Types.real
@@ -56,12 +65,12 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty_fp 64 -> f64
       | Ty_bitv _ | Ty_fp _ | Ty_list | Ty_array | Ty_tuple -> assert false
 
-    let make_symbol symbol ty =
-      match Hashtbl.find_opt symbol_table symbol with
+    let make_symbol (symbol_table : sym_tbl) (s : Symbol.t) : M.term =
+      match Hashtbl.find_opt symbol_table s with
       | Some sym -> sym
       | None ->
-        let sym = M.const symbol ty in
-        Hashtbl.replace symbol_table symbol sym;
+        let sym = M.const s.name (get_type s.ty) in
+        Hashtbl.replace symbol_table s sym;
         sym
 
     module Bool_impl = struct
@@ -521,139 +530,155 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty.Ty_fp 64 -> Float64_impl.cvtop
       | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_array | Ty_tuple -> assert false
 
-    let rec encode_expr (hte : Expr.t) : M.term =
+    let rec encode_expr symbol_table (hte : Expr.t) : M.term =
       match Expr.view hte with
       | Val value -> v value
       | Ptr (base, offset) ->
         let base' = v (Num (I32 base)) in
-        let offset' = encode_expr offset in
+        let offset' = encode_expr symbol_table offset in
         I32.binop Add base' offset'
-      | Symbol { name; ty } ->
-        let ty = get_type ty in
-        make_symbol name ty
+      | Symbol sym -> make_symbol symbol_table sym
       | Unop (ty, op, e) ->
-        let e = encode_expr e in
+        let e = encode_expr symbol_table e in
         unop ty op e
       | Binop (ty, op, e1, e2) ->
-        let e1 = encode_expr e1 in
-        let e2 = encode_expr e2 in
+        let e1 = encode_expr symbol_table e1 in
+        let e2 = encode_expr symbol_table e2 in
         binop ty op e1 e2
       | Triop (ty, op, e1, e2, e3) ->
-        let e1 = encode_expr e1 in
-        let e2 = encode_expr e2 in
-        let e3 = encode_expr e3 in
+        let e1 = encode_expr symbol_table e1 in
+        let e2 = encode_expr symbol_table e2 in
+        let e3 = encode_expr symbol_table e3 in
         triop ty op e1 e2 e3
       | Relop (ty, op, e1, e2) ->
-        let e1 = encode_expr e1 in
-        let e2 = encode_expr e2 in
+        let e1 = encode_expr symbol_table e1 in
+        let e2 = encode_expr symbol_table e2 in
         relop ty op e1 e2
       | Cvtop (ty, op, e) ->
-        let e = encode_expr e in
+        let e = encode_expr symbol_table e in
         cvtop ty op e
       | Extract (e, h, l) ->
-        let e = encode_expr e in
+        let e = encode_expr symbol_table e in
         M.Bitv.extract e ~high:((h * 8) - 1) ~low:(l * 8)
       | Concat (e1, e2) ->
-        let e1 = encode_expr e1 in
-        let e2 = encode_expr e2 in
+        let e1 = encode_expr symbol_table e1 in
+        let e2 = encode_expr symbol_table e2 in
         M.Bitv.concat e1 e2
       | List _ | Array _ | Tuple _ | App _ -> assert false
 
     (* TODO: pp_smt *)
     let pp_smt ?status:_ _ _ = assert false
 
-    let value (m : model) (c : Expr.t) : Value.t =
-      let open M in
-      let term = encode_expr c in
-      let v = Model.eval ~completion:true m term |> Option.get in
-      match Expr.ty c with
-      | Ty_int -> Value.Int (Interp.to_int v)
-      | Ty_real -> Value.Real (Interp.to_real v)
-      | Ty_bool -> if Interp.to_bool v then Value.True else Value.False
+    let value_of_term model ty term =
+      let v = M.Model.eval ~completion:true model term |> Option.get in
+      match ty with
+      | Ty_int -> Value.Int (M.Interp.to_int v)
+      | Ty_real -> Value.Real (M.Interp.to_real v)
+      | Ty_bool -> if M.Interp.to_bool v then Value.True else Value.False
       | Ty_str ->
-        let str = Interp.to_string v in
+        let str = M.Interp.to_string v in
         Value.Str str
       | Ty_bitv 8 ->
-        let i8 = Interp.to_bitv v 8 in
+        let i8 = M.Interp.to_bitv v 8 in
         Value.Num (I8 (Int64.to_int i8))
       | Ty_bitv 32 ->
-        let i32 = Interp.to_bitv v 32 in
+        let i32 = M.Interp.to_bitv v 32 in
         Value.Num (I32 (Int64.to_int32 i32))
       | Ty_bitv 64 ->
-        let i64 = Interp.to_bitv v 64 in
+        let i64 = M.Interp.to_bitv v 64 in
         Value.Num (I64 i64)
       | Ty_fp 32 ->
-        let float = Interp.to_float v 8 24 in
+        let float = M.Interp.to_float v 8 24 in
         Value.Num (F32 (Int32.bits_of_float float))
       | Ty_fp 64 ->
-        let float = Interp.to_float v 11 53 in
+        let float = M.Interp.to_float v 11 53 in
         Value.Num (F64 (Int64.bits_of_float float))
       | Ty_bitv _ | Ty_fp _ | Ty_list | Ty_array | Ty_tuple -> assert false
 
-    let values_of_model ?symbols model =
+    let value ({ model = m; symbol_table } : model) (c : Expr.t) : Value.t =
+      value_of_term m (Expr.ty c) (encode_expr symbol_table c)
+
+    let values_of_model ?symbols ({ model; symbol_table } as model0) =
       let m = Hashtbl.create 512 in
-      let symbols =
-        match symbols with
-        | None -> M.Model.get_symbols model
-        | Some symbols -> symbols
-      in
-      List.iter
-        (fun sym ->
-          let v = value model (Expr.mk_symbol sym) in
-          Hashtbl.replace m sym v )
-        symbols;
+      ( match symbols with
+      | Some symbols ->
+        List.iter
+          (fun sym ->
+            let v = value model0 (Expr.mk_symbol sym) in
+            Hashtbl.replace m sym v )
+          symbols
+      | None ->
+        Hashtbl.iter
+          (fun (sym : Symbol.t) term ->
+            let v = value_of_term model sym.ty term in
+            Hashtbl.replace m sym v )
+          symbol_table );
       m
 
     let set_debug _ = ()
 
     module Solver = struct
-      let make ?params ?logic () = M.Solver.make ?params ?logic ()
+      let make ?params ?logic () =
+        { solver = M.Solver.make ?params ?logic ()
+        ; symbol_table = Hashtbl.create 16
+        }
 
-      let clone solver = M.Solver.clone solver
+      let clone { solver; symbol_table } =
+        { solver = M.Solver.clone solver
+        ; symbol_table = Hashtbl.copy symbol_table
+        }
 
-      let push solver = M.Solver.push solver
+      let push { solver; _ } = M.Solver.push solver
 
-      let pop solver n = M.Solver.pop solver n
+      let pop { solver; _ } n = M.Solver.pop solver n
 
-      let reset solver = M.Solver.reset solver
+      let reset { solver; _ } = M.Solver.reset solver
 
-      let add solver (exprs : Expr.t list) =
-        M.Solver.add solver (List.map encode_expr exprs)
+      let add { solver; symbol_table } (exprs : Expr.t list) =
+        M.Solver.add solver (List.map (encode_expr symbol_table) exprs)
 
-      let check solver ~assumptions =
-        M.Solver.check solver ~assumptions:(List.map encode_expr assumptions)
+      let check { solver; symbol_table } ~assumptions =
+        let assumptions = List.map (encode_expr symbol_table) assumptions in
+        M.Solver.check solver ~assumptions
 
-      let model solver = M.Solver.model solver
+      let model { solver; symbol_table } =
+        M.Solver.model solver
+        |> Option.map (fun m -> { model = m; symbol_table })
 
-      let add_simplifier solver = M.Solver.add_simplifier solver
+      let add_simplifier { solver; symbol_table } =
+        { solver = M.Solver.add_simplifier solver; symbol_table }
 
       let interrupt _ = M.Solver.interrupt ()
 
-      let pp_statistics fmt solver = M.Solver.pp_statistics fmt solver
+      let pp_statistics fmt { solver; _ } = M.Solver.pp_statistics fmt solver
     end
 
     module Optimizer = struct
-      let make = M.Optimizer.make
+      let make () =
+        { opt = M.Optimizer.make (); symbol_table = Hashtbl.create 16 }
 
-      let push = M.Optimizer.push
+      let push { opt; _ } = M.Optimizer.push opt
 
-      let pop = M.Optimizer.pop
+      let pop { opt; _ } = M.Optimizer.pop opt
 
-      let add opt exprs = M.Optimizer.add opt (List.map encode_expr exprs)
+      let add { opt; symbol_table } exprs =
+        M.Optimizer.add opt (List.map (encode_expr symbol_table) exprs)
 
-      let check = M.Optimizer.check
+      let check { opt; _ } = M.Optimizer.check opt
 
-      let model = M.Optimizer.model
+      let model { opt; symbol_table } =
+        M.Optimizer.model opt
+        |> Option.map (fun m -> { model = m; symbol_table })
 
-      let maximize opt (expr : Expr.t) =
-        M.Optimizer.maximize opt (encode_expr expr)
+      let maximize { opt; symbol_table } (expr : Expr.t) =
+        M.Optimizer.maximize opt (encode_expr symbol_table expr)
 
-      let minimize opt (expr : Expr.t) =
-        M.Optimizer.minimize opt (encode_expr expr)
+      let minimize { opt; symbol_table } (expr : Expr.t) =
+        M.Optimizer.minimize opt (encode_expr symbol_table expr)
 
       let interrupt _ = M.Optimizer.interrupt ()
 
-      let pp_statistics fmt opt = M.Optimizer.pp_statistics fmt opt
+      let pp_statistics fmt { opt; _ } = M.Optimizer.pp_statistics fmt opt
     end
   end
 

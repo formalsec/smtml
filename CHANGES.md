@@ -1,6 +1,9 @@
 ## Unreleased
 
 ### Added
+
+- Model generation for Bitwuzla
+
 ### Changed
 
 - Makes Z3 optional
