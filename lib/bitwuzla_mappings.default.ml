@@ -141,57 +141,63 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
   end
 
   module Real = struct
-    let neg _ = assert false
+    let neg _ = failwith "Bitwuzla_mappings: Real.neg not implemented"
 
-    let to_int _ = assert false
+    let to_int _ = failwith "Bitwuzla_mappings: Real.to_int not implemented"
 
-    let add _ = assert false
+    let add _ = failwith "Bitwuzla_mappings: Real.add not implemented"
 
-    let sub _ = assert false
+    let sub _ = failwith "Bitwuzla_mappings: Real.sub not implemented"
 
-    let mul _ = assert false
+    let mul _ = failwith "Bitwuzla_mappings: Real.mul not implemented"
 
-    let div _ = assert false
+    let div _ = failwith "Bitwuzla_mappings: Real.div not implemented"
 
-    let pow _ = assert false
+    let pow _ = failwith "Bitwuzla_mappings: Real.pow not implemented"
 
-    let lt _ = assert false
+    let lt _ = failwith "Bitwuzla_mappings: Real.lt not implemented"
 
-    let le _ = assert false
+    let le _ = failwith "Bitwuzla_mappings: Real.le not implemented"
 
-    let gt _ = assert false
+    let gt _ = failwith "Bitwuzla_mappings: Real.gt not implemented"
 
-    let ge _ = assert false
+    let ge _ = failwith "Bitwuzla_mappings: Real.ge not implemented"
   end
 
   module String = struct
-    let v _ = assert false
+    let v _ = failwith "Bitwuzla_mappings: String.v not implemented"
 
-    let length _ = assert false
+    let length _ = failwith "Bitwuzla_mappings: String.length not implemented"
 
-    let to_code _ = assert false
+    let to_code _ = failwith "Bitwuzla_mappings: String.to_code not implemented"
 
-    let of_code _ = assert false
+    let of_code _ = failwith "Bitwuzla_mappings: String.of_code not implemented"
 
-    let to_int _ = assert false
+    let to_int _ = failwith "Bitwuzla_mappings: String.to_int not implemented"
 
-    let of_int _ = assert false
+    let of_int _ = failwith "Bitwuzla_mappings: String.of_int not implemented"
 
-    let at _ = assert false
+    let at _ = failwith "Bitwuzla_mappings: String.at not implemented"
 
-    let concat _ = assert false
+    let concat _ = failwith "Bitwuzla_mappings: String.concat not implemented"
 
-    let contains _ ~sub:_ = assert false
+    let contains _ ~sub:_ =
+      failwith "Bitwuzla_mappings: String.contains not implemented"
 
-    let is_prefix _ ~prefix:_ = assert false
+    let is_prefix _ ~prefix:_ =
+      failwith "Bitwuzla_mappings: String.is_prefix not implemented"
 
-    let is_suffix _ ~suffix:_ = assert false
+    let is_suffix _ ~suffix:_ =
+      failwith "Bitwuzla_mappings: String.is_suffix not implemented"
 
-    let sub _ ~pos:_ ~len:_ = assert false
+    let sub _ ~pos:_ ~len:_ =
+      failwith "Bitwuzla_mappings: String.sub not implemented"
 
-    let index_of _ ~sub:_ ~pos:_ = assert false
+    let index_of _ ~sub:_ ~pos:_ =
+      failwith "Bitwuzla_mappings: String.index_of not implemented"
 
-    let replace _ ~pattern:_ ~with_:_ = assert false
+    let replace _ ~pattern:_ ~with_:_ =
+      failwith "Bitwuzla_mappings: String.replace not implemented"
   end
 
   module Bitv = struct
@@ -377,25 +383,29 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
   end
 
   module Optimizer = struct
-    let make _ = assert false
+    let make _ = failwith "Bitwuzla_mappings: Optimizer.make not implemented"
 
-    let push _ = assert false
+    let push _ = failwith "Bitwuzla_mappings: Optimizer.push not implemented"
 
-    let pop _ = assert false
+    let pop _ = failwith "Bitwuzla_mappings: Optimizer.pop not implemented"
 
-    let add _ = assert false
+    let add _ = failwith "Bitwuzla_mappings: Optimizer.add not implemented"
 
-    let check _ = assert false
+    let check _ = failwith "Bitwuzla_mappings: Optimizer.check not implemented"
 
-    let model _ = assert false
+    let model _ = failwith "Bitwuzla_mappings: Optimizer.model not implemented"
 
-    let maximize _ = assert false
+    let maximize _ =
+      failwith "Bitwuzla_mappings: Optimizer.maximize not implemented"
 
-    let minimize _ = assert false
+    let minimize _ =
+      failwith "Bitwuzla_mappings: Optimizer.minimize not implemented"
 
-    let interrupt _ = assert false
+    let interrupt _ =
+      failwith "Bitwuzla_mappings: Optimizer.interrupt not implemented"
 
-    let pp_statistics _ = assert false
+    let pp_statistics _ =
+      failwith "Bitwuzla_mappings: Optimizer.pp_statistics not implemented"
   end
 end
 
