@@ -16,6 +16,6 @@
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
 
-val from_file : filename:string -> Ast.t list
+val from_file : filename:string -> Ast.script
 
-val from_string : string -> Ast.t list
+val from_string : string -> Ast.script

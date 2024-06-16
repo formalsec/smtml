@@ -68,7 +68,7 @@ module Make (Solver : Solver_intf.S) = struct
     | [] -> state
     | stmt :: stmts -> loop (eval stmt { state with stmts })
 
-  let start ?state (stmts : Ast.t list) : exec_state =
+  let start ?state (stmts : Ast.script) : exec_state =
     let st =
       match state with
       | None -> init_state stmts

@@ -25,6 +25,8 @@ type t =
   | Get_model
   | Set_logic of Ty.logic
 
+type script = t list
+
 val pp : Format.formatter -> t -> unit
 
 val to_string : t -> string
