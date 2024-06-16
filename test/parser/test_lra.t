@@ -1,5 +1,5 @@
 Test real parsing:
-  $ dune exec -- smtml test_lra.smtml
+  $ smtml run test_lra.smtml
   sat
   (model
     (x -2.)

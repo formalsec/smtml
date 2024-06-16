@@ -1,3 +1,3 @@
 Test float parsing:
-  $ smtml test_pr_71.smtml
+  $ smtml run test_pr_71.smtml
   sat

@@ -33,7 +33,7 @@ let prove_mode_conv =
     [ ("batch", Batch); ("cached", Cached); ("incremental", Incremental) ]
 
 let parse_cmdline =
-  let aux files solver prover_mode debug print_statistics =
+  let run debug files solver prover_mode print_statistics =
     let module Mappings =
       (val mappings_of_solver solver : Mappings_intf.S_with_fresh)
     in
@@ -72,24 +72,53 @@ let parse_cmdline =
         Solver.pp_statistics state.solver
     end
   in
+
+  let to_smt2 debug solver file =
+    let module Mappings =
+      (val mappings_of_solver solver : Mappings_intf.S_with_fresh)
+    in
+    Mappings.set_debug debug;
+    let ast = Parse.from_file ~filename:file in
+    let assertions =
+      List.filter_map (function Ast.Assert e -> Some e | _ -> None) ast
+    in
+    Format.printf "%a@." (Mappings.pp_smt ?status:None) assertions
+  in
+
   let open Cmdliner in
+  let file0 =
+    Arg.(
+      required
+      & pos 0 (some string) None
+      & info [] ~docv:"files" ~doc:"files to read" )
+  in
   let files =
     Arg.(value & pos_all string [] & info [] ~docv:"files" ~doc:"files to read")
-  and prover =
+  in
+  let solver =
     Arg.(
       value & opt solver_conv Z3_solver
       & info [ "s"; "solver" ] ~doc:"SMT solver to use" )
-  and prover_mode =
+  in
+  let solver_mode =
     Arg.(
       value & opt prove_mode_conv Batch & info [ "mode" ] ~doc:"SMT solver mode" )
-  and debug =
+  in
+  let debug =
     Arg.(value & flag & info [ "debug" ] ~doc:"Print debugging messages")
-  and print_statistics =
+  in
+  let print_statistics =
     Arg.(value & flag & info [ "st" ] ~doc:"Print statistics")
   in
-  Cmd.v
-    (Cmd.info "smtml" ~version:"%%VERSION%%")
-    Term.(const aux $ files $ prover $ prover_mode $ debug $ print_statistics)
+
+  let run_cmd =
+    Cmd.v (Cmd.info "run")
+      Term.(const run $ debug $ files $ solver $ solver_mode $ print_statistics)
+  in
+  let to_smt2 =
+    Cmd.v (Cmd.info "to-smt2") Term.(const to_smt2 $ debug $ solver $ file0)
+  in
+  Cmd.group (Cmd.info "smtml" ~version:"%%VERSION%%") [ run_cmd; to_smt2 ]
 
 let () =
   match Cmdliner.Cmd.eval_value parse_cmdline with
