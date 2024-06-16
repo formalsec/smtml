@@ -25,6 +25,8 @@ type t =
   | Get_model
   | Set_logic of Ty.logic
 
+type script = t list
+
 let pp fmt (instr : t) =
   match instr with
   | Assert e -> Format.fprintf fmt "(assert @[<h 2>%a@])" Expr.pp e

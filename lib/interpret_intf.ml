@@ -17,7 +17,7 @@
 (***************************************************************************)
 
 type 'a state =
-  { stmts : Ast.t list
+  { stmts : Ast.script
   ; smap : (string, Ty.t) Hashtbl.t
   ; pc : Expr.t list
   ; solver : 'a
@@ -28,7 +28,7 @@ module type S = sig
 
   type exec_state
 
-  val start : ?state:exec_state -> Ast.t list -> exec_state
+  val start : ?state:exec_state -> Ast.script -> exec_state
 end
 
 module type Intf = sig
