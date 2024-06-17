@@ -8,6 +8,7 @@ availability of installed solvers
 
 ### Changed
 
+- Exposes `Optimizer.Make` to allow for parametric optimizers
 - Makes Z3 optional
 
 ### Fixed
