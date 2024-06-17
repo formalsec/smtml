@@ -16,6 +16,8 @@
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
 
+include Optimizer_intf
+
 let solver_time = ref 0.0
 
 let ( let+ ) o f = Option.map f o
@@ -32,6 +34,12 @@ module Make (M : Mappings_intf.S) = struct
   let pop (opt : t) : unit = O.pop opt
 
   let add (opt : t) (es : Expr.t list) : unit = O.add opt es
+
+  let protect (opt : t) (f : unit -> 'a) : 'a =
+    push opt;
+    let result = f () in
+    pop opt;
+    result
 
   let check (opt : t) =
     Utils.run_and_time_call

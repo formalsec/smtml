@@ -28,6 +28,7 @@
   num
   op_intf
   optimizer
+  optimizer_intf
   parser
   params
   parse
