@@ -6,13 +6,16 @@
   test_harness
   test_solver_params
   test_solver
-  test_lia)
+  test_lia
+  test_lra
+  test_optimizer)
  (libraries smtml))
 
 (test
  (name test_z3)
  (modules test_z3)
- (libraries smtml smtml_tests))
+ (libraries smtml smtml_tests)
+ (build_if %{lib-available:z3}))
 
 (test
  (name test_colibri2)

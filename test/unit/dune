@@ -1,8 +1,6 @@
 (tests
  (names
   test_expr_hc
-  test_optimizer
-  test_real
   test_simplify
   test_unop
   test_binop
