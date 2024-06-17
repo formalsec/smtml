@@ -412,6 +412,9 @@ end
 include (
   Mappings.Make (struct
     module Make () = Fresh_bitwuzla (Bitwuzla_cxx.Make ())
+
+    let is_available = true
+
     include Fresh_bitwuzla (Bitwuzla_cxx)
   end) :
     S_with_fresh )

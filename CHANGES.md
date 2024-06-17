@@ -2,6 +2,8 @@
 
 ### Added
 
+- Adds `Solver_dispacher.{is_available|available_solvers|solver}` to check
+availability of installed solvers
 - Model generation for Bitwuzla
 
 ### Changed

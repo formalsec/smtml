@@ -367,6 +367,8 @@ end
 module type M_with_make = sig
   module Make () : M
 
+  val is_available : bool
+
   include M
 end
 
@@ -438,6 +440,8 @@ module type S_with_fresh = sig
   module Fresh : sig
     module Make () : S
   end
+
+  val is_available : bool
 
   include S
 end

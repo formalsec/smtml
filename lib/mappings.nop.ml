@@ -349,6 +349,8 @@ module Nop = struct
     end
   end
 
+  let is_available = false
+
   include Make ()
 end
 

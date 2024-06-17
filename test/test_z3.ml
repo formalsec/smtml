@@ -1,5 +1,8 @@
 open Smtml
 open Smtml_tests
+
+let () = assert Z3_mappings.is_available
+
 module Test_solver_params = Test_solver_params.Make (Z3_mappings.Fresh.Make ())
 module Test_solver = Test_solver.Make (Z3_mappings.Fresh.Make ())
 module Test_bv = Test_bv.Make (Z3_mappings.Fresh.Make ())
