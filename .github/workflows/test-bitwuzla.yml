@@ -33,4 +33,4 @@ jobs:
         run: opam exec -- dune build @install
 
       - name: Test
-        run: opam exec -- dune exec ./test/test_bitwuzla.exe
+        run: opam exec -- dune runtest
