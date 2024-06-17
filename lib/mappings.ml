@@ -686,5 +686,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
     module Make () = Make_ (M_with_make.Make ())
   end
 
+  let is_available = M_with_make.is_available
+
   include Make_ (M_with_make)
 end

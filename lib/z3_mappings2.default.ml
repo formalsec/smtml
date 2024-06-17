@@ -472,6 +472,8 @@ module M = struct
     end
   end
 
+  let is_available = true
+
   include Make ()
 end
 

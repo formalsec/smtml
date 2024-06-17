@@ -426,6 +426,9 @@ end
 
 module Cvc5_with_make : Mappings_intf.M_with_make = struct
   module Make () = Fresh_cvc5 ()
+
+  let is_available = true
+
   include Fresh_cvc5 ()
 end
 

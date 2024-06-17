@@ -816,4 +816,6 @@ module Fresh = struct
   end
 end
 
+let is_available = true
+
 include Fresh.Make ()
