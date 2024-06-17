@@ -280,8 +280,7 @@ module Fresh_cvc5 () = struct
       match Float.is_nan f with
       | true -> Term.mk_fp_nan tm es eb
       | _ ->
-        let b = int_of_float f in
-        let bt = Term.mk_bv tm (es + eb) b in
+        let bt = Term.mk_bv tm (es + eb) (Int64.of_float f) in
         Term.mk_fp tm es eb bt
 
     let neg t = Term.mk_term tm Kind.Floatingpoint_neg [| t |]
