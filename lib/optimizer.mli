@@ -16,4 +16,5 @@
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
 
-include Optimizer_intf.Intf (** @inline *)
+(** @inline *)
+include Optimizer_intf.Intf

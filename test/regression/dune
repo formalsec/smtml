@@ -1,4 +1,5 @@
 (cram
+ (enabled_if %{lib-available:z3})
  (deps %{bin:smtml} test_pr_71.smtml))
 
 (tests
