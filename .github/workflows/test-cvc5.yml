@@ -1,4 +1,4 @@
-name: Test Colibri2
+name: Test cvc5
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  test-colibri2:
+  test-cvc5:
     runs-on: ubuntu-latest
     env:
       OPAMCONFIRMLEVEL: unsafe-yes
@@ -27,7 +27,7 @@ jobs:
       - name: Install dependencies
         run: |
           opam install -y . --deps-only --with-test
-          opam upgrade colibri2
+          opam install cvc5
 
       - name: Build
         run: opam exec -- dune build @install
