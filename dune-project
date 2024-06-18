@@ -32,7 +32,7 @@
    (>= "0.4.0"))
   cvc5)
  (depends
-  (dune :build)
+  dune
   (ocaml
    (>= "4.14.0"))
   ocaml_intrinsics

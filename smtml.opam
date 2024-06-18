@@ -9,7 +9,7 @@ homepage: "https://github.com/formalsec/smtml"
 doc: "https://formalsec.github.io/smtml/smtml/index.html"
 bug-reports: "https://github.com/formalsec/smtml/issues"
 depends: [
-  "dune" {>= "3.14" & build}
+  "dune" {>= "3.14"}
   "ocaml" {>= "4.14.0"}
   "ocaml_intrinsics"
   "cmdliner" {>= "1.2.0"}
