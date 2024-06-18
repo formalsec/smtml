@@ -1,6 +1,12 @@
 ## Unreleased
 
 ### Added
+### Changed
+### Fixed
+
+## v0.1.2
+
+### Added
 
 - Adds `Solver_dispacher.{is_available|available_solvers|solver}` to check
 availability of installed solvers
