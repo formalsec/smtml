@@ -35,7 +35,8 @@
   dune
   (ocaml
    (>= "4.14.0"))
-  ocaml_intrinsics
+  (ocaml_intrinsics
+   (< "v0.17.0"))
   (cmdliner
    (>= "1.2.0"))
   (zarith
