@@ -172,9 +172,7 @@ module Fresh = struct
 
       let int i = Arithmetic.Integer.mk_numeral_i ctx i
 
-      let float f = 
-        if Float.is_nan f then Arithmetic.Real.mk_numeral_i ctx (Float.to_int f) else
-        Arithmetic.Real.mk_numeral_s ctx (Float.to_string f)
+      let float f = Arithmetic.Real.mk_numeral_s ctx (Float.to_string f)
 
       let encode_unop op e =
         match op with

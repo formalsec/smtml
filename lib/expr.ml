@@ -256,16 +256,27 @@ let pp_smt = Pp.pp_smt
 let to_string e = Format.asprintf "%a" pp e
 
 let is_list (hte : t) : bool =
-  match ty hte, view hte with
-  | Ty_list, _ | _, List _ -> true
-  | _ -> false
+  match (ty hte, view hte) with Ty_list, _ | _, List _ -> true | _ -> false
 
 let value (v : Value.t) : t = make (Val v) [@@inline]
+
+let triop' (ty : Ty.t) (op : triop) (e1 : t) (e2 : t) (e3 : t) : t =
+  make (Triop (ty, op, e1, e2, e3))
+[@@inline]
+
+let triop ty (op : triop) (e1 : t) (e2 : t) (e3 : t) : t =
+  match (view e1, view e2, view e3) with
+  | Val v1, Val v2, Val v3 -> value (Eval.triop ty op v1 v2 v3)
+  | Val v, _, _ -> (
+    match op with
+    | Ite -> ( match v with True -> e2 | False -> e3 | _ -> assert false )
+    | _ -> triop' ty op e1 e2 e3 )
+  | _ -> triop' ty op e1 e2 e3
 
 let unop' (ty : Ty.t) (op : unop) (hte : t) : t = make (Unop (ty, op, hte))
 [@@inline]
 
-let unop (ty : Ty.t) (op : unop) (hte : t) : t =
+let rec unop (ty : Ty.t) (op : unop) (hte : t) : t =
   match (op, view hte) with
   | _, Val v -> value (Eval.unop ty op v)
   | Not, Unop (_, Not, hte') -> hte'
@@ -275,6 +286,10 @@ let unop (ty : Ty.t) (op : unop) (hte : t) : t =
   | Tail, List (_ :: tl) -> make (List tl)
   | Reverse, List es -> make (List (List.rev es))
   | Length, List es -> value (Int (List.length es))
+  | Head, Triop (ty', Ite, cond, hte1, hte2) ->
+    triop ty' Ite cond (unop ty Head hte1) (unop ty Head hte2)
+  | Tail, Triop (ty', Ite, cond, hte1, hte2) ->
+    triop ty' Ite cond (unop ty Tail hte1) (unop ty Tail hte2)
   | _ -> unop' ty op hte
 
 let binop' (ty : Ty.t) (op : binop) (hte1 : t) (hte2 : t) : t =
@@ -357,19 +372,6 @@ let rec binop ty (op : binop) (hte1 : t) (hte2 : t) : t =
   (* | Val (Num (I32 1l)), Binop (_, And, _, _) -> hte2 *)
   | _ -> binop' ty op hte1 hte2
 
-let triop' (ty : Ty.t) (op : triop) (e1 : t) (e2 : t) (e3 : t) : t =
-  make (Triop (ty, op, e1, e2, e3))
-[@@inline]
-
-let triop ty (op : triop) (e1 : t) (e2 : t) (e3 : t) : t =
-  match (view e1, view e2, view e3) with
-  | Val v1, Val v2, Val v3 -> value (Eval.triop ty op v1 v2 v3)
-  | Val v, _, _ -> (
-    match op with
-    | Ite -> ( match v with True -> e2 | False -> e3 | _ -> assert false )
-    | _ -> triop' ty op e1 e2 e3 )
-  | _ -> triop' ty op e1 e2 e3
-
 let naryop' (ty : Ty.t) (op : naryop) (es : t list) : t =
   make (Naryop (ty, op, es))
 [@@inline]
@@ -390,9 +392,11 @@ let relop' (ty : Ty.t) (op : relop) (hte1 : t) (hte2 : t) : t =
 let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
   match (view hte1, view hte2) with
   | Val (App (`Op s1, l1)), Val (App (`Op s2, l2)) -> (
-    match op, String.equal s1 s2 with 
-    | Eq, true -> if (List.equal Value.equal l1 l2) then value True else value False
-    | Ne, true -> if (List.equal Value.equal l1 l2) then value False else value True
+    match (op, String.equal s1 s2) with
+    | Eq, true ->
+      if List.equal Value.equal l1 l2 then value True else value False
+    | Ne, true ->
+      if List.equal Value.equal l1 l2 then value False else value True
     | Ne, false -> value True
     | _ -> relop' ty op hte1 hte2 )
   | Val (App _), Val _ | Val _, Val (App _) -> (
@@ -422,17 +426,21 @@ let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
     match op with
     | Eq when List.length l1 <> List.length l2 -> value False
     | Eq ->
-      let l = List.fold_left2 (fun l' e1 e2 -> relop Ty_bool Eq e1 e2 :: l') [] l1 l2 in
+      let l =
+        List.fold_left2 (fun l' e1 e2 -> relop Ty_bool Eq e1 e2 :: l') [] l1 l2
+      in
       naryop Ty_bool Logand l
     | Ne when List.length l1 <> List.length l2 -> value True
     | Ne ->
-      let l = List.fold_left2 (fun l' e1 e2 -> relop Ty_bool Ne e1 e2 :: l') [] l1 l2 in
+      let l =
+        List.fold_left2 (fun l' e1 e2 -> relop Ty_bool Ne e1 e2 :: l') [] l1 l2
+      in
       naryop Ty_bool Logand l
     | _ -> relop' ty op hte1 hte2 )
   | List _, _ ->
     assert (is_list hte2 |> not);
     value False
-  | _, List _ -> 
+  | _, List _ ->
     assert (is_list hte1 |> not);
     value False
   | _ -> relop' ty op hte1 hte2
