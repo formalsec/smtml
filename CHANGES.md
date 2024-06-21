@@ -2,6 +2,22 @@
 
 ### Added
 
+- Added `List` and `App` values (@joaomhmpereira)
+- Added `Naryop` to `Expr` (@joaomhmpereira)
+- Added `val Expr.ptr : int32 -> t -> t` constructor (@filipeom)
+- Added missing concrete simplification to `Eval` (@joaomhmpereira)
+
+### Changed
+
+- Renamed `Seq_` operators to `String_` (@joaomhmpereira)
+- `String.concat` is now a nary operator (@joaomhmpereira)
+- Made `Eval.TypeError` more explicit on which operator triggered the error. (@joaomhmpereira)
+- Made `Expr.Ptr` a record (@filipeom)
+
+### Fixed
+
+## v0.1.3
+
 ### Changed
 
 - Changed `Num.( = )` to `Num.equal` to be more consistent with other modules
