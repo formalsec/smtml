@@ -23,7 +23,7 @@ type t =
   | F32 of int32
   | F64 of int64
 
-let ( = ) (n1 : t) (n2 : t) : bool =
+let equal (n1 : t) (n2 : t) : bool =
   match (n1, n2) with
   | I8 i1, I8 i2 -> i1 = i2
   | I32 i1, I32 i2 -> i1 = i2
