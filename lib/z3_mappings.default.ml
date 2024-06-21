@@ -71,8 +71,7 @@ module Fresh = struct
       | Ty_bitv 64 -> bv64_sort
       | Ty_fp 32 -> fp32_sort
       | Ty_fp 64 -> fp64_sort
-      | Ty_bitv _ | Ty_fp _ | Ty_list | Ty_tuple | Ty_array | Ty_app ->
-        assert false
+      | Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app -> assert false
 
     module Arithmetic = struct
       open Ty
@@ -505,8 +504,7 @@ module Fresh = struct
       | Ty.Ty_bitv 64 -> I64.encode_unop
       | Ty.Ty_fp 32 -> F32.encode_unop
       | Ty.Ty_fp 64 -> F64.encode_unop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_array | Ty_tuple | Ty_app ->
-        assert false
+      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app -> assert false
 
     let encode_binop = function
       | Ty.Ty_int | Ty.Ty_real -> Arithmetic.encode_binop
@@ -517,8 +515,7 @@ module Fresh = struct
       | Ty.Ty_bitv 64 -> I64.encode_binop
       | Ty.Ty_fp 32 -> F32.encode_binop
       | Ty.Ty_fp 64 -> F64.encode_binop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_array | Ty_tuple | Ty_app ->
-        assert false
+      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app -> assert false
 
     let encode_triop = function
       | Ty.Ty_int | Ty_real -> Arithmetic.encode_triop
@@ -529,8 +526,7 @@ module Fresh = struct
       | Ty.Ty_bitv 64 -> I64.encode_triop
       | Ty.Ty_fp 32 -> F32.encode_triop
       | Ty.Ty_fp 64 -> F64.encode_triop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_array | Ty_tuple | Ty_app ->
-        assert false
+      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app -> assert false
 
     let encode_relop = function
       | Ty.Ty_int | Ty.Ty_real -> Arithmetic.encode_relop
@@ -541,8 +537,7 @@ module Fresh = struct
       | Ty.Ty_bitv 64 -> I64.encode_relop
       | Ty.Ty_fp 32 -> F32.encode_relop
       | Ty.Ty_fp 64 -> F64.encode_relop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_array | Ty_tuple | Ty_app ->
-        assert false
+      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app -> assert false
 
     let encode_cvtop = function
       | Ty.Ty_int -> Arithmetic.Integer.encode_cvtop
@@ -554,8 +549,7 @@ module Fresh = struct
       | Ty.Ty_bitv 64 -> I64.encode_cvtop
       | Ty.Ty_fp 32 -> F32.encode_cvtop
       | Ty.Ty_fp 64 -> F64.encode_cvtop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_array | Ty_tuple | Ty_app ->
-        assert false
+      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app -> assert false
 
     let encode_naryop = function
       | Ty.Ty_bool -> Boolean.encode_naryop
@@ -586,10 +580,6 @@ module Fresh = struct
       let open Expr in
       match view hte with
       | Val v -> encode_val v
-      | List _es -> assert false
-      | Tuple _es -> assert false
-      | Array _es -> assert false
-      | App _ -> assert false
       | Ptr (base, offset) ->
         let base' = encode_val (Num (I32 base)) in
         let offset' = encode_expr offset in
@@ -624,6 +614,7 @@ module Fresh = struct
         let e1' = encode_expr e1
         and e2' = encode_expr e2 in
         Z3.BitVector.mk_concat ctx e1' e2'
+      | List _ | App _ -> assert false
     (* | Quantifier (t, vars, body, patterns) -> *)
     (*   let body' = encode_expr body in *)
     (*   let encode_pattern p = *)

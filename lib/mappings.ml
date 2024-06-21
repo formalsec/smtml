@@ -63,8 +63,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty_bitv 64 -> i64
       | Ty_fp 32 -> f32
       | Ty_fp 64 -> f64
-      | Ty_bitv _ | Ty_fp _ | Ty_list | Ty_array | Ty_tuple | Ty_app ->
-        assert false
+      | Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app -> assert false
 
     let make_symbol (symbol_table : sym_tbl) (s : Symbol.t) : M.term =
       match Hashtbl.find_opt symbol_table s with
@@ -487,8 +486,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty.Ty_bitv 64 -> I64.unop
       | Ty.Ty_fp 32 -> Float32_impl.unop
       | Ty.Ty_fp 64 -> Float64_impl.unop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_array | Ty_tuple | Ty_app ->
-        assert false
+      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app -> assert false
 
     let binop = function
       | Ty.Ty_int -> Int_impl.binop
@@ -500,8 +498,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty.Ty_bitv 64 -> I64.binop
       | Ty.Ty_fp 32 -> Float32_impl.binop
       | Ty.Ty_fp 64 -> Float64_impl.binop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_array | Ty_tuple | Ty_app ->
-        assert false
+      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app -> assert false
 
     let triop = function
       | Ty.Ty_int | Ty.Ty_real -> assert false
@@ -512,8 +509,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty.Ty_bitv 64 -> I64.triop
       | Ty.Ty_fp 32 -> Float32_impl.triop
       | Ty.Ty_fp 64 -> Float64_impl.triop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_array | Ty_tuple | Ty_app ->
-        assert false
+      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app -> assert false
 
     let relop = function
       | Ty.Ty_int -> Int_impl.relop
@@ -525,8 +521,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty.Ty_bitv 64 -> I64.relop
       | Ty.Ty_fp 32 -> Float32_impl.relop
       | Ty.Ty_fp 64 -> Float64_impl.relop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_array | Ty_tuple | Ty_app ->
-        assert false
+      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app -> assert false
 
     let cvtop = function
       | Ty.Ty_int -> Int_impl.cvtop
@@ -538,8 +533,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty.Ty_bitv 64 -> I64.cvtop
       | Ty.Ty_fp 32 -> Float32_impl.cvtop
       | Ty.Ty_fp 64 -> Float64_impl.cvtop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_array | Ty_tuple | Ty_app ->
-        assert false
+      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app -> assert false
 
     let naryop = function
       | Ty.Ty_str -> String_impl.naryop
@@ -582,7 +576,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         let e1 = encode_expr symbol_table e1 in
         let e2 = encode_expr symbol_table e2 in
         M.Bitv.concat e1 e2
-      | List _ | Array _ | Tuple _ | App _ -> assert false
+      | List _ |  App _ -> assert false
 
     (* TODO: pp_smt *)
     let pp_smt ?status:_ _ _ = assert false
@@ -611,8 +605,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty_fp 64 ->
         let float = M.Interp.to_float v 11 53 in
         Value.Num (F64 (Int64.bits_of_float float))
-      | Ty_bitv _ | Ty_fp _ | Ty_list | Ty_array | Ty_tuple | Ty_app ->
-        assert false
+      | Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app -> assert false
 
     let value ({ model = m; symbol_table } : model) (c : Expr.t) : Value.t =
       value_of_term m (Expr.ty c) (encode_expr symbol_table c)
