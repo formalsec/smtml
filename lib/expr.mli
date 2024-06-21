@@ -24,8 +24,6 @@ and expr =
   | Ptr of int32 * t
   | Symbol of Symbol.t
   | List of t list
-  | Array of t array
-  | Tuple of t list
   | App : [> `Op of string ] * t list -> expr
   | Unop of Ty.t * Ty.unop * t
   | Binop of Ty.t * Ty.binop * t * t

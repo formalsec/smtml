@@ -174,7 +174,7 @@ module Fresh_cvc5 () = struct
       let one = Term.mk_int tm 1 in
       Term.mk_term tm Kind.String_substr [| t; pos; one |]
 
-    let concat t1 t2 = Term.mk_term tm Kind.String_concat [| t1; t2 |]
+    let concat ts = Term.mk_term tm Kind.String_concat (Array.of_list ts)
 
     let contains t1 ~sub = Term.mk_term tm Kind.String_contains [| t1; sub |]
 

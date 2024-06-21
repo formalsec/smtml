@@ -184,7 +184,7 @@ module Fresh = struct
       | Ty_bitv 64 -> DTy.bitv 64
       | Ty_fp 32 -> float32_ty
       | Ty_fp 64 -> float64_ty
-      | Ty_fp _ | Ty_bitv _ | Ty_list | Ty_array | Ty_tuple -> assert false
+      | Ty_fp _ | Ty_bitv _ | Ty_list | Ty_app -> assert false
 
     let tty_to_etype (ty : DTerm.ty) : Ty.t =
       match ty with
@@ -412,7 +412,6 @@ module Fresh = struct
         let op' =
           match op with
           | At -> assert false
-          | Concat -> assert false
           | String_prefix -> assert false
           | String_suffix -> assert false
           | String_contains -> assert false
@@ -657,7 +656,9 @@ module Fresh = struct
       | Ty.Ty_str -> Str.encode_unop
       | Ty.Ty_bitv _ -> Bv.encode_unop
       | Ty.Ty_fp _ -> Fp.encode_unop
-      | Ty.Ty_list | Ty_array | Ty_tuple -> assert false
+      | (Ty.Ty_list | Ty_app) as op ->
+        err "Colibri2_mappings: Trying to code unsupported op of type %a" Ty.pp
+          op
 
     let encode_binop = function
       | Ty.Ty_int -> I.encode_binop
@@ -666,7 +667,9 @@ module Fresh = struct
       | Ty.Ty_str -> Str.encode_binop
       | Ty.Ty_bitv _ -> Bv.encode_binop
       | Ty.Ty_fp _ -> Fp.encode_binop
-      | Ty.Ty_list | Ty_array | Ty_tuple -> assert false
+      | (Ty.Ty_list | Ty_app) as op ->
+        err "Colibri2_mappings: Trying to code unsupported op of type %a" Ty.pp
+          op
 
     let encode_triop = function
       | Ty.Ty_int -> I.encode_triop
@@ -675,7 +678,9 @@ module Fresh = struct
       | Ty.Ty_str -> Str.encode_triop
       | Ty.Ty_bitv _ -> Bv.encode_triop
       | Ty.Ty_fp _ -> Fp.encode_triop
-      | Ty.Ty_list | Ty_array | Ty_tuple -> assert false
+      | (Ty.Ty_list | Ty_app) as op ->
+        err "Colibri2_mappings: Trying to code unsupported op of type %a" Ty.pp
+          op
 
     let encode_relop = function
       | Ty.Ty_int -> I.encode_relop
@@ -684,7 +689,9 @@ module Fresh = struct
       | Ty.Ty_str -> Str.encode_relop
       | Ty.Ty_bitv _ -> Bv.encode_relop
       | Ty.Ty_fp _ -> Fp.encode_relop
-      | Ty.Ty_list | Ty_array | Ty_tuple -> assert false
+      | (Ty.Ty_list | Ty_app) as op ->
+        err "Colibri2_mappings: Trying to code unsupported op of type %a" Ty.pp
+          op
 
     let encode_cvtop = function
       | Ty.Ty_int -> I.encode_cvtop
@@ -693,7 +700,9 @@ module Fresh = struct
       | Ty.Ty_str -> Str.encode_cvtop
       | Ty.Ty_bitv sz -> Bv.encode_cvtop sz
       | Ty.Ty_fp sz -> Fp.encode_cvtop sz
-      | Ty.Ty_list | Ty_array | Ty_tuple -> assert false
+      | (Ty.Ty_list | Ty_app) as op ->
+        err "Colibri2_mappings: Trying to code unsupported op of type %a" Ty.pp
+          op
 
     (*let symbol_to_var v =
       DExpr.Term.Var.mk (Symbol.to_string v) (tty_of_etype (Symbol.type_of v))*)
@@ -719,6 +728,10 @@ module Fresh = struct
           let base' = encode_val (Num (I32 base)) in
           let offset' = aux offset in
           DTerm.Bitv.add base' offset'
+        | Symbol s ->
+          let cst = tcst_of_symbol s in
+          record_sym cst;
+          DTerm.of_cst cst
         | Unop (ty, op, e) ->
           let e' = aux e in
           encode_unop ty op e'
@@ -738,10 +751,7 @@ module Fresh = struct
         | Cvtop (ty, op, e) ->
           let e' = aux e in
           encode_cvtop ty op e'
-        | Symbol s ->
-          let cst = tcst_of_symbol s in
-          record_sym cst;
-          DTerm.of_cst cst
+        | Naryop _ -> err "Colibri2_mappings: Trying to encode naryop"
         | Extract (e, h, l) ->
           let e' = aux e in
           DTerm.Bitv.extract ((h * 8) - 1) (l * 8) e'
@@ -749,7 +759,7 @@ module Fresh = struct
           let e1' = aux e1
           and e2' = aux e2 in
           DTerm.Bitv.concat e1' e2'
-        | List _ | Array _ | Tuple _ | App _ -> assert false
+        | List _ | App _ -> assert false
         (* | Quantifier (t, vars, body, patterns) -> (
            let body' = aux body in
            let encode_pattern (p : t list) =
@@ -1024,7 +1034,9 @@ module Fresh = struct
                | 64 ->
                  F64 (Int64.bits_of_float (Farith.F.to_float Farith.Mode.NE a))
                | _ -> assert false ) ) )
-      | Ty_str | Ty_list | Ty_array | Ty_tuple -> assert false
+      | Ty_str | Ty_list | Ty_app ->
+        err "Colibri2_mappings2: Unsuppoted model generation of type %a" Ty.pp
+          ty
 
     (* let value_of_const ((d, _l) : model) (e : Expr.t) : Value.t option =
        let e' = encore_expr_aux e in
