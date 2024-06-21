@@ -13,7 +13,7 @@ let () =
     let binary = binop' (Ty_bitv 32) Add (I32.v 1l) (I32.v 1l) in
     simplify binary = I32.v 2l );
   assert (
-    let triop = triop' Ty_bool Ite (Bool.v true) (I32.v 1l) (I32.v 0l) in
+    let triop = triop' Ty_bool Ite Bool.true_ (I32.v 1l) (I32.v 0l) in
     simplify triop = I32.v 1l );
   assert (
     let relop = relop' (Ty_bitv 32) Lt (I32.v 2l) (I32.v 1l) in
