@@ -1,8 +1,14 @@
 ## Unreleased
 
 ### Added
+
 ### Changed
+
+- Changed `Num.( = )` to `Num.equal` to be more consistent with other modules
+
 ### Fixed
+
+- Fixed comparison of boolean values
 
 ## v0.1.2
 

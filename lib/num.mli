@@ -23,7 +23,7 @@ type t =
   | F32 of int32
   | F64 of int64
 
-val ( = ) : t -> t -> bool
+val equal : t -> t -> bool
 
 val compare : t -> t -> int
 

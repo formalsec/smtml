@@ -32,12 +32,14 @@ let equal (v1 : t) (v2 : t) : Bool.t =
   | Int x1, Int x2 -> Int.equal x1 x2
   | Real x1, Real x2 -> x1 = x2
   | Str x1, Str x2 -> String.equal x1 x2
-  | Num x1, Num x2 -> Num.(x1 = x2)
+  | Num x1, Num x2 -> Num.equal x1 x2
   | _ -> false
 
 let compare v1 v2 =
   match (v1, v2) with
   | True, True | False, False -> 0
+  | False, True -> -1
+  | True, False -> 1
   | Int x1, Int x2 -> Int.compare x1 x2
   | Real x1, Real x2 -> Float.compare x1 x2
   | Str x1, Str x2 -> String.compare x1 x2
