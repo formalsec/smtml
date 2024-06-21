@@ -724,7 +724,7 @@ module Fresh = struct
       let rec aux (hte : t) =
         match view hte with
         | Val v -> encode_val v
-        | Ptr (base, offset) ->
+        | Ptr { base; offset } ->
           let base' = encode_val (Num (I32 base)) in
           let offset' = aux offset in
           DTerm.Bitv.add base' offset'
