@@ -25,8 +25,6 @@ and expr =
   | Ptr of int32 * t
   | Symbol of Symbol.t
   | List of t list
-  | Array of t array
-  | Tuple of t list
   | App : [> `Op of string ] * t list -> expr
   | Unop of Ty.t * unop * t
   | Binop of Ty.t * binop * t * t
@@ -49,9 +47,6 @@ module Expr = struct
     | Ptr (b1, o1), Ptr (b2, o2) -> b1 = b2 && o1 == o2
     | Symbol s1, Symbol s2 -> Symbol.equal s1 s2
     | List l1, List l2 -> list_eq l1 l2
-    | Array a1, Array a2 ->
-      Array.(length a1 = length a2) && Array.for_all2 ( == ) a1 a2
-    | Tuple l1, Tuple l2 -> list_eq l1 l2
     | App (`Op x1, l1), App (`Op x2, l2) -> String.equal x1 x2 && list_eq l1 l2
     | Unop (t1, op1, e1), Unop (t2, op2, e2) ->
       Ty.equal t1 t2 && op1 = op2 && e1 == e2
@@ -77,8 +72,6 @@ module Expr = struct
     | Ptr (b, o) -> h (b, o.tag)
     | Symbol s -> h s
     | List v -> h v
-    | Array es -> h es
-    | Tuple es -> h es
     | App (x, es) -> h (x, es)
     | Unop (ty, op, e) -> h (ty, op, e.tag)
     | Cvtop (ty, op, e) -> h (ty, op, e.tag)
@@ -114,8 +107,6 @@ let rec ty (hte : t) : Ty.t =
   | Ptr _ -> Ty_bitv 32
   | Symbol x -> Symbol.type_of x
   | List _ -> Ty_list
-  | Array _ -> Ty_array
-  | Tuple _ -> Ty_tuple
   | App _ -> assert false
   | Unop (ty, _, _) -> ty
   | Binop (ty, _, _, _) -> ty
@@ -134,8 +125,7 @@ let rec is_symbolic (v : t) : bool =
   | Val _ -> false
   | Symbol _ -> true
   | Ptr (_, offset) -> is_symbolic offset
-  | List vs | Tuple vs -> List.exists is_symbolic vs
-  | Array vs -> Array.exists is_symbolic vs
+  | List vs -> List.exists is_symbolic vs
   | App (_, vs) -> List.exists is_symbolic vs
   | Unop (_, _, v) -> is_symbolic v
   | Binop (_, _, v1, v2) -> is_symbolic v1 || is_symbolic v2
@@ -154,8 +144,7 @@ let get_symbols (hte : t list) =
     | Val _ -> ()
     | Ptr (_, offset) -> symbols offset
     | Symbol s -> Hashtbl.replace tbl s ()
-    | List es | Tuple es -> List.iter symbols es
-    | Array es -> Array.iter symbols es
+    | List es -> List.iter symbols es
     | App (_, es) -> List.iter symbols es
     | Unop (_, _, e1) -> symbols e1
     | Binop (_, _, e1, e2) ->
@@ -198,21 +187,12 @@ let negate_relop (hte : t) : (t, string) Result.t =
 module Pp = struct
   open Format
 
-  let pp_print_array pp_v fmt v =
-    let is_first = ref true in
-    Array.iter
-      (fun v ->
-        if !is_first then is_first := false else pp_print_string fmt " ";
-        pp_v fmt v )
-      v
-
   let rec pp fmt (hte : t) =
     match view hte with
     | Val v -> Value.pp fmt v
     | Ptr (base, offset) -> fprintf fmt "(Ptr (i32 %ld) %a)" base pp offset
     | Symbol s -> Symbol.pp fmt s
-    | List v | Tuple v -> fprintf fmt "(%a)" (pp_print_list pp) v
-    | Array v -> fprintf fmt "(%a)" (pp_print_array pp) v
+    | List v -> fprintf fmt "(%a)" (pp_print_list pp) v
     | App (`Op x, v) -> fprintf fmt "(%s %a)" x (pp_print_list pp) v
     | Unop (ty, op, e) -> fprintf fmt "(%a.%a %a)" Ty.pp ty pp_unop op pp e
     | Binop (ty, op, e1, e2) ->
@@ -486,8 +466,6 @@ let rec simplify_expr ?(rm_extract = true) (hte : t) : t =
   | Val _ | Symbol _ -> hte
   | Ptr (base, offset) -> make @@ Ptr (base, simplify_expr offset)
   | List es -> make @@ List (List.map simplify_expr es)
-  | Array es -> make @@ Array (Array.map simplify_expr es)
-  | Tuple es -> make @@ Tuple (List.map simplify_expr es)
   | App (x, es) -> make @@ App (x, List.map simplify_expr es)
   | Unop (ty, op, e) ->
     let e = simplify_expr e in
