@@ -580,7 +580,7 @@ module Fresh = struct
       let open Expr in
       match view hte with
       | Val v -> encode_val v
-      | Ptr (base, offset) ->
+      | Ptr { base; offset } ->
         let base' = encode_val (Num (I32 base)) in
         let offset' = encode_expr offset in
         I32.encode_binop Add base' offset'
