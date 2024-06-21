@@ -1,6 +1,9 @@
 open Smtml
 open Expr
 
+(* We already have some hc exprs in the table *)
+let length0 = Expr.Hc.length ()
+
 let () =
   let module I32 = Expr.Bitv.I32 in
   assert (I32.sym "x" == I32.sym "x");
@@ -13,9 +16,9 @@ let () =
   let b = binop (Ty_bitv 32) Add left_b right_b in
   assert (a == b);
   (*
-     There should be only 3 elements in the hashcons table:
+     There should be only 3 elements added in the hashcons table:
        1. x
        2. y
        3. x + y
   *)
-  assert (Expr.Hc.length () == 3)
+  assert (Expr.Hc.length () - length0 == 3)
