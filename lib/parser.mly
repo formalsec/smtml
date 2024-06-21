@@ -76,8 +76,8 @@ let s_expr :=
   | LPAREN; op = paren_op; RPAREN; { make op }
 
 let paren_op :=
-  | PTR; LPAREN; _ = TYPE; x = NUM; RPAREN; e = s_expr;
-    { Ptr (Int32.of_int x, e) }
+  | PTR; LPAREN; _ = TYPE; x = NUM; RPAREN; offset = s_expr;
+    { Ptr { base = Int32.of_int x; offset } }
   | (ty, op) = UNARY; e = s_expr; <Unop>
   | (ty, op) = BINARY; e1 = s_expr; e2 = s_expr; <Binop>
   | (ty, op) = TERNARY; e1 = s_expr; e2 = s_expr; e3 = s_expr; <Triop>

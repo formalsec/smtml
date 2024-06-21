@@ -58,7 +58,7 @@ let () =
 let () =
   let v i = value (Num (I32 i)) in
   assert (
-    let ptr = make @@ Ptr (8390670l, v 2l) in
+    let ptr = ptr 8390670l (v 2l) in
     binop (Ty_bitv 32) Rem ptr (v 1l) = v 0l );
   assert (binop (Ty_bitv 32) Add (v 0l) (v 1l) = v 1l);
   assert (binop (Ty_bitv 32) Sub (v 1l) (v 0l) = v 1l);

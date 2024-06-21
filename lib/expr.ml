@@ -22,7 +22,10 @@ type t = expr Hc.hash_consed
 
 and expr =
   | Val of Value.t
-  | Ptr of int32 * t
+  | Ptr of
+      { base : int32
+      ; offset : t
+      }
   | Symbol of Symbol.t
   | List of t list
   | App : [> `Op of string ] * t list -> expr
@@ -44,7 +47,8 @@ module Expr = struct
   let equal (e1 : expr) (e2 : expr) : bool =
     match (e1, e2) with
     | Val v1, Val v2 -> Value.equal v1 v2
-    | Ptr (b1, o1), Ptr (b2, o2) -> b1 = b2 && o1 == o2
+    | Ptr { base = b1; offset = o1 }, Ptr { base = b2; offset = o2 } ->
+      Int32.equal b1 b2 && o1 == o2
     | Symbol s1, Symbol s2 -> Symbol.equal s1 s2
     | List l1, List l2 -> list_eq l1 l2
     | App (`Op x1, l1), App (`Op x2, l2) -> String.equal x1 x2 && list_eq l1 l2
@@ -69,7 +73,7 @@ module Expr = struct
     let h x = Hashtbl.hash x in
     match e with
     | Val v -> h v
-    | Ptr (b, o) -> h (b, o.tag)
+    | Ptr { base; offset } -> h (base, offset.tag)
     | Symbol s -> h s
     | List v -> h v
     | App (x, es) -> h (x, es)
@@ -124,7 +128,7 @@ let rec is_symbolic (v : t) : bool =
   match view v with
   | Val _ -> false
   | Symbol _ -> true
-  | Ptr (_, offset) -> is_symbolic offset
+  | Ptr { offset; _ } -> is_symbolic offset
   | List vs -> List.exists is_symbolic vs
   | App (_, vs) -> List.exists is_symbolic vs
   | Unop (_, _, v) -> is_symbolic v
@@ -142,7 +146,7 @@ let get_symbols (hte : t list) =
   let rec symbols (hte : t) =
     match view hte with
     | Val _ -> ()
-    | Ptr (_, offset) -> symbols offset
+    | Ptr { offset; _ } -> symbols offset
     | Symbol s -> Hashtbl.replace tbl s ()
     | List es -> List.iter symbols es
     | App (_, es) -> List.iter symbols es
@@ -190,7 +194,7 @@ module Pp = struct
   let rec pp fmt (hte : t) =
     match view hte with
     | Val v -> Value.pp fmt v
-    | Ptr (base, offset) -> fprintf fmt "(Ptr (i32 %ld) %a)" base pp offset
+    | Ptr { base; offset } -> fprintf fmt "(Ptr (i32 %ld) %a)" base pp offset
     | Symbol s -> Symbol.pp fmt s
     | List v -> fprintf fmt "(%a)" (pp_print_list pp) v
     | App (`Op x, v) -> fprintf fmt "(%s %a)" x (pp_print_list pp) v
@@ -239,6 +243,8 @@ let to_string e = Format.asprintf "%a" pp e
 
 let value (v : Value.t) : t = make (Val v) [@@inline]
 
+let ptr base offset = make (Ptr { base; offset })
+
 let unop' (ty : Ty.t) (op : unop) (hte : t) : t = make (Unop (ty, op, hte))
 [@@inline]
 
@@ -261,28 +267,28 @@ let binop' (ty : Ty.t) (op : binop) (hte1 : t) (hte2 : t) : t =
 let rec binop ty (op : binop) (hte1 : t) (hte2 : t) : t =
   match (view hte1, view hte2) with
   | Val v1, Val v2 -> value (Eval.binop ty op v1 v2)
-  | Ptr (b1, os1), Ptr (b2, os2) -> (
+  | Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } -> (
     match op with
     | Sub when b1 = b2 -> binop ty Sub os1 os2
     | _ ->
       (* TODO: simplify to i32 here *)
       binop' ty op hte1 hte2 )
-  | Ptr (base, offset), _ -> (
+  | Ptr { base; offset }, _ -> (
     match op with
     | Add ->
       let new_offset = binop (Ty_bitv 32) Add offset hte2 in
-      make (Ptr (base, new_offset))
+      ptr base new_offset
     | Sub ->
       let new_offset = binop (Ty_bitv 32) Sub offset hte2 in
-      make (Ptr (base, new_offset))
+      ptr base new_offset
     | Rem ->
       let rhs = value (Num (I32 base)) in
       let addr = binop (Ty_bitv 32) Add rhs offset in
       binop ty Rem addr hte2
     | _ -> binop' ty op hte1 hte2 )
-  | _, Ptr (base, offset) -> (
+  | _, Ptr { base; offset } -> (
     match op with
-    | Add -> make (Ptr (base, binop (Ty_bitv 32) Add offset hte1))
+    | Add -> ptr base (binop (Ty_bitv 32) Add offset hte1)
     | _ -> binop' ty op hte1 hte2 )
   | Val (Num (I32 0l)), _ -> (
     match op with
@@ -362,7 +368,7 @@ let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
     | Ne -> value True
     | _ -> relop' ty op hte1 hte2 )
   | Val v1, Val v2 -> value (if Eval.relop ty op v1 v2 then True else False)
-  | Ptr (b1, os1), Ptr (b2, os2) -> (
+  | Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } -> (
     match op with
     | Eq -> if b1 = b2 then relop' ty Eq os1 os2 else value False
     | Ne -> if b1 = b2 then relop' ty Ne os1 os2 else value True
@@ -373,11 +379,11 @@ let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
           ( if Eval.relop ty op (Num (I32 b1)) (Num (I32 b2)) then True
             else False )
     | _ -> relop' ty op hte1 hte2 )
-  | Val (Num _ as n), Ptr (b, { node = Val (Num _ as o); _ }) ->
-    let base = Eval.binop (Ty_bitv 32) Add (Num (I32 b)) o in
+  | Val (Num _ as n), Ptr { base; offset = { node = Val (Num _ as o); _ } } ->
+    let base = Eval.binop (Ty_bitv 32) Add (Num (I32 base)) o in
     value (if Eval.relop ty op n base then True else False)
-  | Ptr (b, { node = Val (Num _ as o); _ }), Val (Num _ as n) ->
-    let base = Eval.binop (Ty_bitv 32) Add (Num (I32 b)) o in
+  | Ptr { base; offset = { node = Val (Num _ as o); _ } }, Val (Num _ as n) ->
+    let base = Eval.binop (Ty_bitv 32) Add (Num (I32 base)) o in
     value (if Eval.relop ty op base n then True else False)
   | _ -> relop' ty op hte1 hte2
 
@@ -464,7 +470,7 @@ let concat (msb : t) (lsb : t) : t =
 let rec simplify_expr ?(rm_extract = true) (hte : t) : t =
   match view hte with
   | Val _ | Symbol _ -> hte
-  | Ptr (base, offset) -> make @@ Ptr (base, simplify_expr offset)
+  | Ptr { base; offset } -> ptr base (simplify_expr offset)
   | List es -> make @@ List (List.map simplify_expr es)
   | App (x, es) -> make @@ App (x, List.map simplify_expr es)
   | Unop (ty, op, e) ->

@@ -542,7 +542,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
     let rec encode_expr symbol_table (hte : Expr.t) : M.term =
       match Expr.view hte with
       | Val value -> v value
-      | Ptr (base, offset) ->
+      | Ptr { base; offset } ->
         let base' = v (Num (I32 base)) in
         let offset' = encode_expr symbol_table offset in
         I32.binop Add base' offset'
@@ -576,7 +576,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         let e1 = encode_expr symbol_table e1 in
         let e2 = encode_expr symbol_table e2 in
         M.Bitv.concat e1 e2
-      | List _ |  App _ -> assert false
+      | List _ | App _ -> assert false
 
     (* TODO: pp_smt *)
     let pp_smt ?status:_ _ _ = assert false

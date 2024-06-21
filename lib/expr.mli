@@ -21,7 +21,10 @@ type t = expr Hc.hash_consed
 
 and expr =
   | Val of Value.t
-  | Ptr of int32 * t
+  | Ptr of
+      { base : int32
+      ; offset : t
+      }
   | Symbol of Symbol.t
   | List of t list
   | App : [> `Op of string ] * t list -> expr
@@ -63,6 +66,8 @@ val pp_list : Format.formatter -> t list -> unit
 val to_string : t -> string
 
 val value : Value.t -> t
+
+val ptr : int32 -> t -> t
 
 val symbol : Symbol.t -> t
 
