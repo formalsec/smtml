@@ -131,11 +131,13 @@ module Hc : sig
 end
 
 module Bool : sig
-  val v : bool -> t
+  val true_ : t
 
-  val not : t -> t
+  val false_ : t
 
-  val ( = ) : t -> t -> t
+  val not_ : t -> t
+
+  val equal : t -> t -> t
 
   val distinct : t -> t -> t
 

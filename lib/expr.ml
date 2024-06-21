@@ -345,12 +345,10 @@ let triop' (ty : Ty.t) (op : triop) (e1 : t) (e2 : t) (e3 : t) : t =
 [@@inline]
 
 let triop ty (op : triop) (e1 : t) (e2 : t) (e3 : t) : t =
-  match (view e1, view e2, view e3) with
-  | Val v1, Val v2, Val v3 -> value (Eval.triop ty op v1 v2 v3)
-  | Val v, _, _ -> (
-    match op with
-    | Ite -> ( match v with True -> e2 | False -> e3 | _ -> assert false )
-    | _ -> triop' ty op e1 e2 e3 )
+  match (op, view e1, view e2, view e3) with
+  | Ite, Val True, _, _ -> e2
+  | Ite, Val False, _, _ -> e3
+  | op, Val v1, Val v2, Val v3 -> value (Eval.triop ty op v1 v2 v3)
   | _ -> triop' ty op e1 e2 e3
 
 let relop' (ty : Ty.t) (op : relop) (hte1 : t) (hte2 : t) : t =
@@ -515,41 +513,44 @@ module Bool = struct
     | Val False -> Some false
     | _ -> None
 
-  let v b = make (match b with true -> Val True | false -> Val False)
+  let true_ = value True
 
-  let not (b : t) =
-    match of_val (view b) with
-    | Some b -> v (not b)
+  let false_ = value False
+
+  let to_val b = if b then true_ else false_
+
+  let not_ (b : t) =
+    let bexpr = view b in
+    match of_val bexpr with
+    | Some b -> to_val (not b)
     | None -> (
-      match view b with
+      match bexpr with
       | Unop (Ty_bool, Not, cond) -> cond
-      | _ -> unop' Ty_bool Not b )
+      | _ -> unop Ty_bool Not b )
 
-  let ( = ) (b1 : t) (b2 : t) =
+  let equal (b1 : t) (b2 : t) =
     match (view b1, view b2) with
-    | Val True, Val True | Val False, Val False -> value True
-    | _ -> relop' Ty_bool Eq b1 b2
+    | Val True, Val True | Val False, Val False -> true_
+    | _ -> relop Ty_bool Eq b1 b2
 
   let distinct (b1 : t) (b2 : t) =
     match (view b1, view b2) with
-    | Val True, Val False | Val False, Val True -> value True
-    | _ -> relop' Ty_bool Ne b1 b2
+    | Val True, Val False | Val False, Val True -> true_
+    | _ -> relop Ty_bool Ne b1 b2
 
   let and_ (b1 : t) (b2 : t) =
     match (of_val (view b1), of_val (view b2)) with
-    | Some b1, Some b2 -> v (b1 && b2)
     | Some true, _ -> b2
     | _, Some true -> b1
-    | Some false, _ | _, Some false -> value False
-    | _ -> binop' Ty_bool And b1 b2
+    | Some false, _ | _, Some false -> false_
+    | _ -> binop Ty_bool And b1 b2
 
   let or_ (b1 : t) (b2 : t) =
     match (of_val (view b1), of_val (view b2)) with
-    | Some b1, Some b2 -> v (b1 || b2)
     | Some false, _ -> b2
     | _, Some false -> b1
-    | Some true, _ | _, Some true -> value True
-    | _ -> binop' Ty_bool Or b1 b2
+    | Some true, _ | _, Some true -> true_
+    | _ -> binop Ty_bool Or b1 b2
 
   let ite (c : t) (r1 : t) (r2 : t) = triop Ty_bool Ite c r1 r2
 end
