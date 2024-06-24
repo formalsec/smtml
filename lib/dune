@@ -61,7 +61,7 @@
   (select
    bitwuzla_mappings.ml
    from
-   (bitwuzla-cxx -> bitwuzla_mappings.default.ml)
+   (threads bitwuzla-cxx -> bitwuzla_mappings.default.ml)
    (-> bitwuzla_mappings.nop.ml))
   (select
    z3_mappings.ml
