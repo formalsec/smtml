@@ -519,7 +519,9 @@ module Bool = struct
 
   let to_val b = if b then true_ else false_
 
-  let not_ (b : t) =
+  let v b = to_val b [@@inline]
+
+  let not (b : t) =
     let bexpr = view b in
     match of_val bexpr with
     | Some b -> to_val (not b)

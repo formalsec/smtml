@@ -135,7 +135,9 @@ module Bool : sig
 
   val false_ : t
 
-  val not_ : t -> t
+  val v : bool -> t
+
+  val not : t -> t
 
   val equal : t -> t -> t
 
