@@ -20,7 +20,13 @@ include Mappings_intf
 
 let _debug = false
 
-let leaky_list = ref []
+let leak =
+  let leaky_list = ref [] in
+  let mutex = Mutex.create () in
+  fun module_ ->
+    Mutex.lock mutex;
+    leaky_list := module_ :: !leaky_list;
+    Mutex.unlock mutex
 
 module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
   open B
@@ -416,7 +422,7 @@ include (
     module Make () = struct
       let bitwuzla = (module Bitwuzla_cxx.Make () : Bitwuzla_cxx.S)
 
-      let () = leaky_list := bitwuzla :: !leaky_list
+      let () = leak bitwuzla
 
       include Fresh_bitwuzla ((val bitwuzla))
     end
