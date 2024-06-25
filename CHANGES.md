@@ -16,6 +16,8 @@
 
 ### Fixed
 
+- Missing bitwuzla operators `to_fp` and `of_ieee_bv`.
+
 ## v0.1.3
 
 ### Changed

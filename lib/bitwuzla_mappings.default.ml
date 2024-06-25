@@ -321,12 +321,7 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
     let ge t1 t2 = mk_term2 Kind.Fp_geq t1 t2
 
-    (* TODO *)
-    let to_fp _eb _sb ~rm:_ _t =
-      (* match rm with *)
-      (* | Some rm -> mk_term2_indexed2 Kind.Fp_to_fp_from_fp rm t eb sb *)
-      (* | None -> mk_term1_indexed2 Kind.Fp_to_fp_from_bv t eb sb *)
-      failwith "Bitwuzla_mappings: to_fp not implemented"
+    let to_fp eb sb ~rm t = mk_term2_indexed2 Kind.Fp_to_fp_from_fp rm t eb sb
 
     let sbv_to_fp eb sb ~rm bv =
       mk_term2_indexed2 Kind.Fp_to_fp_from_sbv rm bv eb sb
@@ -338,8 +333,7 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
     let to_sbv m ~rm t = mk_term2_indexed1 Kind.Fp_to_sbv rm t m
 
-    (* TODO *)
-    let of_ieee_bv _ = failwith "Bitwuzla_mappings: of_ieee_bv not implemented"
+    let of_ieee_bv eb sb bv = mk_term1_indexed2 Kind.Fp_to_fp_from_bv bv eb sb
 
     (* TODO *)
     let to_ieee_bv _ = failwith "Bitwuzla_mappings: to_ieee_bv not implemented"
