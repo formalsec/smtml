@@ -43,8 +43,6 @@ val hash : t -> int
 
 val make : expr -> t
 
-val ( @: ) : expr -> Ty.t -> t [@@deprecated "Please use 'make' instead"]
-
 val view : t -> expr
 
 val ty : t -> Ty.t

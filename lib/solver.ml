@@ -21,46 +21,60 @@ include Solver_intf
 let ( let+ ) o f = Option.map f o
 
 module Base (M : Mappings_intf.S) = struct
-  type t = M.solver
-
-  type solver = t
+  type t =
+    { solver : M.solver
+    ; mutable mode : solver_mode
+    }
 
   let solver_time = ref 0.0
 
   let solver_count = ref 0
 
-  let pp_statistics fmt solver = M.Solver.pp_statistics fmt solver
+  let pp_statistics fmt { solver; _ } = M.Solver.pp_statistics fmt solver
 
-  let create ?params ?logic () : t = M.Solver.make ?params ?logic ()
+  let create ?params ?logic () : t =
+    { solver = M.Solver.make ?params ?logic (); mode = Start_mode }
 
-  let interrupt solver = M.Solver.interrupt solver
+  let reset (solver : t) : unit =
+    M.Solver.reset solver.solver;
+    solver.mode <- Start_mode
 
-  let clone (solver : t) : t = M.Solver.clone solver
+  let reset_assertions (_solver : t) : unit = ()
 
-  let push (solver : t) : unit = M.Solver.push solver
+  let set_logic _ = assert false
 
-  let pop (solver : t) (lvl : int) : unit = M.Solver.pop solver lvl
+  let set_option _ = assert false
 
-  let reset (solver : t) : unit = M.Solver.reset solver
+  let push (solver : t) (_n : int) : unit = M.Solver.push solver
 
-  let add (solver : t) (es : Expr.t list) : unit = M.Solver.add solver es
+  let pop (solver : t) (n : int) : unit = M.Solver.pop solver n
+
+  let assert_ (solver : t) (es : Expr.t list) : unit = M.Solver.add solver es
+
+  let add = assert_
 
   let get_assertions (_solver : t) : Expr.t list = assert false
 
-  let check (solver : M.solver) (es : Expr.t list) : satisfiability =
+  let check_sat (solver : M.solver) ~assumptions:(es : Expr.t list) :
+    satisfiability =
     solver_count := !solver_count + 1;
     Utils.run_and_time_call
       ~use:(fun time -> solver_time := !solver_time +. time)
       (fun () -> M.Solver.check solver ~assumptions:es)
+
+  let check s es = check_sat s ~assumptions:es
 
   let get_value (solver : M.solver) (e : Expr.t) : Expr.t =
     match M.Solver.model solver with
     | Some m -> Expr.make @@ Val (M.value m e)
     | None -> Log.err "get_value: Trying to get a value from an unsat solver"
 
-  let model ?(symbols : Symbol.t list option) (s : M.solver) : Model.t option =
-    let+ model = M.Solver.model s in
-    M.values_of_model ?symbols model
+  let get_model ?(symbols : Symbol.t list option) (s : M.solver) : Model.t =
+    match M.Solver.model s with
+    | Some m -> M.values_of_model ?symbols m
+    | None -> assert false
+
+  let model ?symbols s = Some (get_model ?symbols s)
 end
 
 module Make_batch (Mappings : Mappings_intf.S) = struct
@@ -109,8 +123,6 @@ module Make_batch (Mappings : Mappings_intf.S) = struct
 
   let model ?(symbols : Symbol.t list option) (s : t) : Model.t option =
     model ?symbols s.solver
-
-  let interrupt { solver; _ } = interrupt solver
 end
 
 (* TODO: Our base solver can be incrmental itself? *)

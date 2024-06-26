@@ -9,6 +9,6 @@ module Make (M : Mappings_intf.S) = struct
   let () =
     let solver = Solver.create ~logic:QF_LIA () in
     let a = symbol "a" Ty_int in
-    Solver.add solver [ a + int 1 = int 2 => ((a * int 2) + int 2 = int 4) ];
-    assert_sat (Solver.check solver [])
+    Solver.assert_ solver [ a + int 1 = int 2 => ((a * int 2) + int 2 = int 4) ];
+    assert_sat (Solver.check_sat solver ~assumptions:[])
 end

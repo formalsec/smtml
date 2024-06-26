@@ -14,5 +14,5 @@ module Make (M : Mappings_intf.S) = struct
           (Expr.cvtop Ty_real ToString x)
           (Expr.cvtop Ty_real ToString y)
       in
-      `Sat = Solver.check solver [ c0; c1 ] )
+      `Sat = Solver.check_sat solver ~assumptions:[ c0; c1 ] )
 end

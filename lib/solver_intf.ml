@@ -18,10 +18,14 @@
 
 include Mappings_intf
 
+type solver_mode =
+  | Start_mode
+  | Assert_mode
+  | Sat_mode
+  | Unsat_mode
+
 module type S = sig
   type t
-
-  type solver
 
   (** Time spent inside SMT solver. *)
   val solver_time : float ref
@@ -43,32 +47,40 @@ module type S = sig
       performant. The default logic is {e unknown_theory}. *)
   val create : ?params:Params.t -> ?logic:Ty.logic -> unit -> t
 
-  (** Interrupt solver. *)
-  val interrupt : t -> unit
+  (** Resets the solver, i.e., remove all assertions from the solver. *)
+  val reset : t -> unit
 
-  (** Clone a given solver. *)
-  val clone : t -> t
+  val reset_assertions : t -> unit
 
-  (** Create a backtracking point. *)
-  val push : t -> unit
+  val set_logic : t -> Ty.logic -> unit
+
+  val set_option : t -> Params.t -> unit
+
+  (** Create backtracking points. *)
+  val push : t -> int -> unit
 
   (** [pop solver n] backtracks [n] backtracking points. *)
   val pop : t -> int -> unit
 
-  (** Resets the solver, i.e., remove all assertions from the solver. *)
-  val reset : t -> unit
+  (** In the process of deprecation, use 'assert_' instead. *)
+  val add : t -> Expr.t list -> unit
+  [@@deprecated "Please use 'assert_' instead"]
 
   (** Assert one or multiple constraints into the solver. *)
-  val add : t -> Expr.t list -> unit
+  val assert_ : t -> Expr.t list -> unit
 
   (** The set of assertions in the solver. *)
   val get_assertions : t -> Expr.t list
 
-  (** [check solver es] checks the satisfiability of the assertions in the
-      solver using the assumptions in [es].
+  (** In the process of deprecation, use 'check_sat' instead. *)
+  val check : t -> Expr.t list -> satisfiability
+  [@@deprecated "Please use 'check_sat' instead'"]
+
+  (** [check_sat solver assumptions] checks the satisfiability of the assertions
+      in the solver using [assumptions].
 
       Raises [Unknown] if the SMT solver returns unknown. *)
-  val check : t -> Expr.t list -> satisfiability
+  val check_sat : t -> assumptions:Expr.t list -> satisfiability
 
   (** [get_value solver e] get an expression denoting the model value of a given
       expression.
@@ -76,11 +88,14 @@ module type S = sig
       Requires that the last {!val:check} query returned [true]. *)
   val get_value : t -> Expr.t -> Expr.t
 
-  (** The model of the last [check].
-
-      The result is [None] if [check] was not invoked before, or its result was
-      not [Satisfiable]. *)
+  (** In the process of deprecation, use 'get_model' instead. *)
   val model : ?symbols:Symbol.t list -> t -> Model.t option
+  [@@deprecated "Please use 'check_sat' instead'"]
+
+  (** The model of the last [check_sat].
+
+      Will raise an exception if solver is not in sat mode. *)
+  val get_model : ?symbols:Symbol.t list -> t -> Model.t
 end
 
 module type Intf = sig
