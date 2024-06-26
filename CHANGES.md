@@ -1,5 +1,7 @@
 ## Unreleased
 
+## v0.2.0
+
 ### Added
 
 - Added `List` and `App` values (@joaomhmpereira)
