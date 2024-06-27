@@ -34,6 +34,4 @@ val type_of : t -> Ty.t
 
 val pp : Format.formatter -> t -> unit
 
-val pp_num : Format.formatter -> t -> unit
-
 val to_string : t -> string

@@ -84,7 +84,4 @@ let rec pp fmt (v : t) =
       vs
   | _ -> assert false
 
-let pp_num fmt (v : t) =
-  match v with Num x -> Num.pp_hex fmt x | _ -> pp fmt v
-
 let to_string v = Format.asprintf "%a" pp v

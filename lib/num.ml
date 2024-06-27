@@ -55,17 +55,11 @@ let type_of (n : t) =
 
 let pp fmt (n : t) =
   match n with
-  | I8 i -> Format.fprintf fmt "(i8 %d)" i
-  | I32 i -> Format.fprintf fmt "(i32 %ld)" i
-  | I64 i -> Format.fprintf fmt "(i64 %Ld)" i
-  | F32 f -> Format.fprintf fmt "(f32 %F)" (Int32.float_of_bits f)
-  | F64 f -> Format.fprintf fmt "(f64 %F)" (Int64.float_of_bits f)
-
-let pp_hex fmt (n : t) =
-  match n with
-  | I8 i -> Format.fprintf fmt "0x%x" i
-  | I32 i | F32 i -> Format.fprintf fmt "0x%lx" i
-  | I64 i | F64 i -> Format.fprintf fmt "0x%Lx" i
+  | I8 i -> Format.fprintf fmt "0x%02x" (i land 0xff)
+  | I32 i -> Format.fprintf fmt "0x%08lx" i
+  | I64 i -> Format.fprintf fmt "0x%016Lx" i
+  | F32 f -> Format.fprintf fmt "(fp 0x%08lx)" f
+  | F64 f -> Format.fprintf fmt "(fp 0x%016Lx)" f
 
 let to_string (n : t) : string = Format.asprintf "%a" pp n
 
