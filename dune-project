@@ -22,15 +22,24 @@
  (synopsis "A Front-end library for SMT solvers in OCaml")
  (description "A Multi Back-end Front-end for SMT Solvers in OCaml.")
  ; Optional solver dependencies
+ ; Change here sould be mirrored in "conflicts"
  (depopts
   (z3
    (and
     (>= "4.12.2")
-    (<= "4.13")))
+    (< "4.14")))
   colibri2
   (bitwuzla-cxx
    (>= "0.4.0"))
   cvc5)
+ (conflicts
+  (z3
+   (or
+    (< "4.12.2")
+    (>= "4.14")))
+   (bitwuzla-cxx
+    (< "0.4.0"))
+ )
  (depends
   dune
   (ocaml

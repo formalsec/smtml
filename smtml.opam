@@ -20,10 +20,14 @@ depends: [
   "bisect_ppx" {with-test & >= "2.5.0"}
 ]
 depopts: [
-  "z3" {>= "4.12.2" & <= "4.13"}
+  "z3" {>= "4.12.2" & < "4.14"}
   "colibri2"
   "bitwuzla-cxx" {>= "0.4.0"}
   "cvc5"
+]
+conflicts: [
+  "z3" {< "4.12.2" | >= "4.14"}
+  "bitwuzla-cxx" {< "0.4.0"}
 ]
 build: [
   ["dune" "subst"] {dev}
