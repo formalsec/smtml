@@ -1,5 +1,15 @@
 ## Unreleased
 
+### Added
+### Fixed
+### Changed
+
+## v0.2.1
+
+### Fixed
+
+- Add conflicts on solvers versions outside depopt range (@krtab)
+
 ## v0.2.0
 
 ### Added
