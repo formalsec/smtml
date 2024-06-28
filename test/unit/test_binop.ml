@@ -3,6 +3,8 @@ open Ty
 open Expr
 open Value
 
+let ( = ) = Expr.equal
+
 (* int *)
 let () =
   let v i = value (Int i) in
