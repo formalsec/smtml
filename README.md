@@ -48,13 +48,21 @@ dune runtest
 dune install
 ```
 
+### Code Coverage Reports
+
+```sh
+BISECT_FILE=`pwd`/bisect dune runtest --force --instrument-with bisect_ppx
+bisect-ppx-report summary # Shell summary
+bisect-ppx-report html    # Detailed Report in _coverage/index.html
+```
+
 ## Supported Solvers
 
 | Solver | Status |
 |--------|--------|
 | [Z3] | Yes |
 | [Colibri2] | Yes |
-| [Bitwuzla] | Ongoing |
+| [Bitwuzla] | Yes |
 | [cvc5] | Ongoing |
 | [Alt-Ergo] | Planned |
 | [Minisat] | Planned |
