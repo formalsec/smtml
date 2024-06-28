@@ -253,7 +253,6 @@ let unop (ty : Ty.t) (op : unop) (hte : t) : t =
   | _, Val v -> value (Eval.unop ty op v)
   | Not, Unop (_, Not, hte') -> hte'
   | Neg, Unop (_, Neg, hte') -> hte'
-  | Reverse, Unop (_, Reverse, hte') -> hte'
   | Head, List (hd :: _) -> hd
   | Tail, List (_ :: tl) -> make (List tl)
   | Reverse, List es -> make (List (List.rev es))
@@ -265,79 +264,42 @@ let binop' (ty : Ty.t) (op : binop) (hte1 : t) (hte2 : t) : t =
 [@@inline]
 
 let rec binop ty (op : binop) (hte1 : t) (hte2 : t) : t =
-  match (view hte1, view hte2) with
-  | Val v1, Val v2 -> value (Eval.binop ty op v1 v2)
-  | Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } -> (
-    match op with
-    | Sub when b1 = b2 -> binop ty Sub os1 os2
-    | _ ->
-      (* TODO: simplify to i32 here *)
-      binop' ty op hte1 hte2 )
-  | Ptr { base; offset }, _ -> (
-    match op with
-    | Add ->
-      let new_offset = binop (Ty_bitv 32) Add offset hte2 in
-      ptr base new_offset
-    | Sub ->
-      let new_offset = binop (Ty_bitv 32) Sub offset hte2 in
-      ptr base new_offset
-    | Rem ->
-      let rhs = value (Num (I32 base)) in
-      let addr = binop (Ty_bitv 32) Add rhs offset in
-      binop ty Rem addr hte2
-    | _ -> binop' ty op hte1 hte2 )
-  | _, Ptr { base; offset } -> (
-    match op with
-    | Add -> ptr base (binop (Ty_bitv 32) Add offset hte1)
-    | _ -> binop' ty op hte1 hte2 )
-  | Val (Num (I32 0l)), _ -> (
-    match op with
-    | Add | Or -> hte2
-    | And | Div | DivU | Mul | Rem | RemU -> hte1
-    | _ -> binop' ty op hte1 hte2 )
-  | _, Val (Num (I32 0l)) -> (
-    match op with
-    | Add | Or | Sub -> hte1
-    | And | Mul -> hte2
-    | _ -> binop' ty op hte1 hte2 )
-  | Binop (ty, op2, x, { node = Val v1; _ }), Val v2 -> (
-    match (op, op2) with
-    | Add, Add ->
-      let v = value (Eval.binop ty Add v1 v2) in
-      binop' ty Add x v
-    (* | Add, Sub | Sub, Add -> *)
-    (*   let v = Eval_numeric.binop (I32 Sub) v1 v2 in *)
-    (*   Binop (I32 Add, x, Val (Num v)) *)
-    | Sub, Sub ->
-      let v = value (Eval.binop ty Add v1 v2) in
-      binop' ty Sub x v
-    | Mul, Mul ->
-      let v = value (Eval.binop ty Mul v1 v2) in
-      binop' ty Mul x v
-    | _, _ -> binop' ty op hte1 hte2 )
-  | Val v1, Binop (ty, op2, x, { node = Val v2; _ }) -> (
-    match (op, op2) with
-    | Add, Add ->
-      let v = value (Eval.binop ty Add v1 v2) in
-      binop' ty Add v x
-    | Mul, Mul ->
-      let v = value (Eval.binop ty Mul v1 v2) in
-      binop' ty Mul v x
-    | _, _ -> binop' ty op hte1 hte2 )
-  | List es, Val (Int n) -> (
-    match op with
-    | At -> List.nth es n
-    | List_append_last -> make (List (es @ [ hte2 ]))
-    | List_append -> make (List (hte2 :: es))
-    | _ -> binop' ty op hte1 hte2 )
-  | List es, Val _ -> (
-    match op with
-    | List_append_last -> make (List (es @ [ hte2 ]))
-    | List_append -> make (List (hte2 :: es))
-    | _ -> binop' ty op hte1 hte2 )
-  (* FIXME: this seems wrong? *)
-  (* | Binop (_, And, _, _), Val (Num (I32 1l)) -> hte1 *)
-  (* | Val (Num (I32 1l)), Binop (_, And, _, _) -> hte2 *)
+  match (op, view hte1, view hte2) with
+  | op, Val v1, Val v2 -> value (Eval.binop ty op v1 v2)
+  | Sub, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
+    if b1 = b2 then binop ty Sub os1 os2 else binop' ty op hte1 hte2
+  | Add, Ptr { base; offset }, _ ->
+    ptr base (binop (Ty_bitv 32) Add offset hte2)
+  | Sub, Ptr { base; offset }, _ ->
+    ptr base (binop (Ty_bitv 32) Sub offset hte2)
+  | Rem, Ptr { base; offset }, _ ->
+    let rhs = value (Num (I32 base)) in
+    let addr = binop (Ty_bitv 32) Add rhs offset in
+    binop ty Rem addr hte2
+  | Add, _, Ptr { base; offset } ->
+    ptr base (binop (Ty_bitv 32) Add offset hte1)
+  | (Add | Or), Val (Num (I32 0l)), _ -> hte2
+  | (And | Div | DivU | Mul | Rem | RemU), Val (Num (I32 0l)), _ -> hte1
+  | (Add | Or), _, Val (Num (I32 0l)) -> hte1
+  | (And | Mul), _, Val (Num (I32 0l)) -> hte2
+  | Add, Binop (ty, Add, x, { node = Val v1; _ }), Val v2 ->
+    let v = value (Eval.binop ty Add v1 v2) in
+    binop' ty Add x v
+  | Sub, Binop (ty, Sub, x, { node = Val v1; _ }), Val v2 ->
+    let v = value (Eval.binop ty Add v1 v2) in
+    binop' ty Sub x v
+  | Mul, Binop (ty, Mul, x, { node = Val v1; _ }), Val v2 ->
+    let v = value (Eval.binop ty Mul v1 v2) in
+    binop' ty Mul x v
+  | Add, Val v1, Binop (ty, Add, x, { node = Val v2; _ }) ->
+    let v = value (Eval.binop ty Add v1 v2) in
+    binop' ty Add v x
+  | Mul, Val v1, Binop (ty, Mul, x, { node = Val v2; _ }) ->
+    let v = value (Eval.binop ty Mul v1 v2) in
+    binop' ty Mul v x
+  | At, List es, Val (Int n) -> List.nth es n
+  | List_append_last, List es, _ -> make (List (es @ [ hte2 ]))
+  | List_append, List es, _ -> make (List (hte2 :: es))
   | _ -> binop' ty op hte1 hte2
 
 let triop' (ty : Ty.t) (op : triop) (e1 : t) (e2 : t) (e3 : t) : t =
@@ -357,10 +319,9 @@ let relop' (ty : Ty.t) (op : relop) (hte1 : t) (hte2 : t) : t =
 
 let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
   match (op, view hte1, view hte2) with
-  | Eq, Val (App (`Op s1, _)), Val (App (`Op s2, _)) ->
-    if String.equal s1 s2 then value True else value False
-  | Ne, Val (App (`Op s1, _)), Val (App (`Op s2, _)) ->
-    if String.equal s1 s2 then value False else value True
+  | op, Val (App (`Op s1, _)), Val (App (`Op s2, _)) ->
+    if String.equal s1 s2 then value (if op = Eq then True else False)
+    else relop' ty op hte1 hte2
   | Eq, Val (App _), Val _ | Eq, Val _, Val (App _) -> value False
   | Ne, Val (App _), Val _ | Ne, Val _, Val (App _) -> value True
   | (Ne, Val (Real v), Symbol _ | Ne, Symbol _, Val (Real v))
@@ -369,23 +330,23 @@ let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
   | (_, Val (Real v), Symbol _ | _, Symbol _, Val (Real v))
     when Float.is_nan v || Float.is_infinite v ->
     value False
-  | _, Val v1, Val v2 -> value (if Eval.relop ty op v1 v2 then True else False)
-  | _, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } -> (
-    match op with
-    | Eq -> if b1 = b2 then relop' ty Eq os1 os2 else value False
-    | Ne -> if b1 = b2 then relop' ty Ne os1 os2 else value True
-    | (LtU | LeU | GtU | GeU) as op ->
-      if b1 = b2 then relop ty op os1 os2
-      else
-        value
-          ( if Eval.relop ty op (Num (I32 b1)) (Num (I32 b2)) then True
-            else False )
-    | _ -> relop' ty op hte1 hte2 )
-  | _, Val (Num _ as n), Ptr { base; offset = { node = Val (Num _ as o); _ } }
+  | op, Val v1, Val v2 -> value (if Eval.relop ty op v1 v2 then True else False)
+  | Eq, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
+    if b1 = b2 then relop' ty Eq os1 os2 else value False
+  | Ne, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
+    if b1 = b2 then relop' ty Ne os1 os2 else value True
+  | ( (LtU | LeU | GtU | GeU)
+    , Ptr { base = b1; offset = os1 }
+    , Ptr { base = b2; offset = os2 } ) ->
+    if b1 = b2 then relop ty op os1 os2
+    else
+      value
+        (if Eval.relop ty op (Num (I32 b1)) (Num (I32 b2)) then True else False)
+  | op, Val (Num _ as n), Ptr { base; offset = { node = Val (Num _ as o); _ } }
     ->
     let base = Eval.binop (Ty_bitv 32) Add (Num (I32 base)) o in
     value (if Eval.relop ty op n base then True else False)
-  | _, Ptr { base; offset = { node = Val (Num _ as o); _ } }, Val (Num _ as n)
+  | op, Ptr { base; offset = { node = Val (Num _ as o); _ } }, Val (Num _ as n)
     ->
     let base = Eval.binop (Ty_bitv 32) Add (Num (I32 base)) o in
     value (if Eval.relop ty op base n then True else False)
