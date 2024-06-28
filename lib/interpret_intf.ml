@@ -19,7 +19,6 @@
 type 'a state =
   { stmts : Ast.script
   ; smap : (string, Ty.t) Hashtbl.t
-  ; pc : Expr.t list
   ; solver : 'a
   }
 
