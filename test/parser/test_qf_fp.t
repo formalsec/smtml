@@ -15,9 +15,8 @@ Test fp parsing:
     (x (fp 0xc02ccccd))
     (z (fp 0xc0000000)))
   sat
+  sat
   (model
     (r (fp 0x7ff0000000000000))
     (s (fp 0xda00000028000800))
-    (u (fp 0x7ff8000000000001))
-    (x (fp 0xc02ccccd))
     (y (fp 0x425249567d93c000)))

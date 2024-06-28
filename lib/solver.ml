@@ -85,13 +85,18 @@ module Make_batch (Mappings : Mappings_intf.S) = struct
   let clone ({ solver; top; stack } : t) : t =
     { solver; top; stack = Stack.copy stack }
 
-  let push ({ top; stack; _ } : t) : unit = Stack.push top stack
+  let push ({ top; stack; solver } : t) : unit =
+    Mappings.Solver.push solver;
+    Stack.push top stack
 
-  let pop (s : t) (lvl : int) : unit =
+  let rec pop (s : t) (lvl : int) : unit =
     assert (lvl <= Stack.length s.stack);
-    for _ = 1 to lvl do
-      s.top <- Stack.pop s.stack
-    done
+    if lvl <= 0 then ()
+    else begin
+      Mappings.Solver.pop s.solver 1;
+      s.top <- Stack.pop s.stack;
+      pop s (lvl - 1)
+    end
 
   let reset (s : t) =
     Mappings.Solver.reset s.solver;
