@@ -19,6 +19,7 @@
 include Mappings_intf
 module P = Params
 module Sym = Symbol
+module Stats = Statistics
 
 let err = Log.err
 
@@ -387,6 +388,22 @@ module M = struct
         ~pp_sep:(fun fmt () -> Format.fprintf fmt "@\n")
         pp_entry fmt entries
 
+    let get_statistics (stats : Statistics.statistics) =
+      let statistics = Z3.Statistics.get_entries stats in
+      let add_entry map entry =
+        let key = Z3.Statistics.Entry.get_key entry in
+        let value =
+          if Z3.Statistics.Entry.is_int entry then
+            `Int (Z3.Statistics.Entry.get_int entry)
+          else begin
+            assert (Z3.Statistics.Entry.is_float entry);
+            `Float (Z3.Statistics.Entry.get_float entry)
+          end
+        in
+        Stats.Map.add key value map
+      in
+      List.fold_left add_entry Stats.Map.empty statistics
+
     let set_params (params : P.t) =
       Z3.set_global_param "smt.ematching"
         (string_of_bool @@ P.get params Ematching);
@@ -440,6 +457,9 @@ module M = struct
 
       let interrupt () = Tactic.interrupt ctx
 
+      let get_statistics solver =
+        get_statistics (Z3.Solver.get_statistics solver)
+
       let pp_statistics fmt solver =
         pp_statistics fmt @@ Solver.get_statistics solver
     end
@@ -466,6 +486,8 @@ module M = struct
       let minimize opt term = Optimize.minimize opt term
 
       let interrupt () = Tactic.interrupt ctx
+
+      let get_statistics opt = get_statistics (Optimize.get_statistics opt)
 
       let pp_statistics fmt opt =
         pp_statistics fmt @@ Optimize.get_statistics opt

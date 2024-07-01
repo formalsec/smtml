@@ -8,5 +8,6 @@
   test_relop
   test_cvtop
   test_naryop
-  test_model)
+  test_model
+  test_statistics)
  (libraries smtml yojson))

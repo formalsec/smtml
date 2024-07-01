@@ -381,6 +381,9 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
       (* does nothing *)
       ()
 
+    let get_statistics _ =
+      failwith "Bitwuzla_mappings: Solver.get_statistics not implemented"
+
     let pp_statistics fmt solver = Solver.pp_statistics fmt solver
   end
 
@@ -405,6 +408,9 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
     let interrupt _ =
       failwith "Bitwuzla_mappings: Optimizer.interrupt not implemented"
+
+    let get_statistics _ =
+      failwith "Bitwuzla_mappings: Solver.get_statistics not implemented"
 
     let pp_statistics _ =
       failwith "Bitwuzla_mappings: Optimizer.pp_statistics not implemented"

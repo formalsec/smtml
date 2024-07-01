@@ -396,6 +396,9 @@ module Fresh_cvc5 () = struct
 
     let interrupt _ = ()
 
+    let get_statistics _ =
+      failwith "Cvc5_mappings: Solver.get_statistics not implemented!"
+
     let pp_statistics _ = assert false
   end
 
@@ -420,6 +423,9 @@ module Fresh_cvc5 () = struct
     let interrupt _ = assert false
 
     let pp_statistics _ = assert false
+
+    let get_statistics _ =
+      failwith "Cvc5_mappings: Optimizer.get_statistics not implemented!"
   end
 end
 
