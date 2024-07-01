@@ -338,6 +338,8 @@ module type M = sig
 
     val interrupt : unit -> unit
 
+    val get_statistics : solver -> Statistics.t
+
     val pp_statistics : Format.formatter -> solver -> unit
   end
 
@@ -359,6 +361,8 @@ module type M = sig
     val minimize : optimizer -> term -> handle
 
     val interrupt : unit -> unit
+
+    val get_statistics : optimizer -> Statistics.t
 
     val pp_statistics : Format.formatter -> optimizer -> unit
   end
@@ -410,7 +414,7 @@ module type S = sig
 
     val interrupt : solver -> unit
 
-    val pp_statistics : Format.formatter -> solver -> unit
+    val get_statistics : solver -> Statistics.t
   end
 
   module Optimizer : sig
@@ -432,7 +436,7 @@ module type S = sig
 
     val interrupt : optimize -> unit
 
-    val pp_statistics : Format.formatter -> optimize -> unit
+    val get_statistics : optimize -> Statistics.t
   end
 end
 

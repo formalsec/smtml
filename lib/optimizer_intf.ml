@@ -20,6 +20,8 @@ module type S = sig
   val maximize : t -> Expr.t -> Value.t option
 
   val minimize : t -> Expr.t -> Value.t option
+
+  val get_statistics : t -> Statistics.t
 end
 
 module type Intf = sig

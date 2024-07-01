@@ -643,10 +643,21 @@ module Fresh = struct
         (Z3.SMT.benchmark_to_smtstring ctx "" "" st "" (List.tl es')
            (List.hd es') )
 
-    let pp_entry fmt entry =
-      let key = Z3.Statistics.Entry.get_key entry in
-      let value = Z3.Statistics.Entry.to_string_value entry in
-      Format.fprintf fmt "(%s %s)" key value
+    let get_statistics stats =
+      let statistics = Z3.Statistics.get_entries stats in
+      let add_entry map entry =
+        let key = Z3.Statistics.Entry.get_key entry in
+        let value =
+          if Z3.Statistics.Entry.is_int entry then
+            `Int (Z3.Statistics.Entry.get_int entry)
+          else begin
+            assert (Z3.Statistics.Entry.is_float entry);
+            `Float (Z3.Statistics.Entry.get_float entry)
+          end
+        in
+        Statistics.Map.add key value map
+      in
+      List.fold_left add_entry Statistics.Map.empty statistics
 
     module Solver = struct
       let make ?params ?logic () : solver =
@@ -690,13 +701,8 @@ module Fresh = struct
 
       let interrupt _ = Z3.Tactic.interrupt ctx
 
-      let pp_statistics fmt solver =
-        let module Entry = Z3.Statistics.Entry in
-        let stats = Z3.Solver.get_statistics solver in
-        let entries = Z3.Statistics.get_entries stats in
-        Format.pp_print_list
-          ~pp_sep:(fun fmt () -> Format.fprintf fmt "@\n")
-          pp_entry fmt entries
+      let get_statistics solver =
+        get_statistics (Z3.Solver.get_statistics solver)
     end
 
     module Optimizer = struct
@@ -722,13 +728,8 @@ module Fresh = struct
 
       let interrupt _ = Z3.Tactic.interrupt ctx
 
-      let pp_statistics fmt o =
-        let module Entry = Z3.Statistics.Entry in
-        let stats = Z3.Optimize.get_statistics o in
-        let entries = Z3.Statistics.get_entries stats in
-        Format.pp_print_list
-          ~pp_sep:(fun fmt () -> Format.fprintf fmt "@\n")
-          pp_entry fmt entries
+      let get_statistics solver =
+        get_statistics (Z3.Optimize.get_statistics solver)
     end
 
     let set (s : string) (i : int) (n : char) =

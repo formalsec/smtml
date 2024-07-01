@@ -957,7 +957,8 @@ module Fresh = struct
 
       let interrupt _ = ()
 
-      let pp_statistics _ _ = ()
+      let get_statistics _ =
+        err "Colibri2_mappings: Solver.get_statistics not implemented"
     end
 
     module Optimizer = struct
@@ -988,7 +989,8 @@ module Fresh = struct
 
       let interrupt _ = ()
 
-      let pp_statistics _ _ = ()
+      let get_statistics _ =
+        err "Colibri2_mappings: Optimizer.get_statistics not implemented"
     end
 
     let c2value_to_value (ty : Ty.t) (v : Colibri2_core.Value.t) =

@@ -18,7 +18,6 @@
 
 type t = (Symbol.t, Value.t) Hashtbl.t
 
-
 let iter f model = Hashtbl.iter (fun a b -> f (a, b)) model
 
 let get_symbols (model : t) : Symbol.t List.t =

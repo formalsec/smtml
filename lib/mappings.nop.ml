@@ -323,6 +323,8 @@ module Nop = struct
 
       let interrupt _ = die ()
 
+      let get_statistics _ = die ()
+
       let pp_statistics _ = die ()
     end
 
@@ -344,6 +346,8 @@ module Nop = struct
       let minimize _ = die ()
 
       let interrupt _ = die ()
+
+      let get_statistics _ = die ()
 
       let pp_statistics _ = die ()
     end

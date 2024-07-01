@@ -36,6 +36,7 @@
   solver_intf
   solver_dispatcher
   symbol
+  statistics
   ty
   utils
   value

@@ -63,6 +63,9 @@ module type S = sig
 
   (** The set of assertions in the solver. *)
   val get_assertions : t -> Expr.t list
+  [@@deprecated "Please use 'get_statistics' instead"]
+
+  val get_statistics : t -> Statistics.t
 
   (** [check solver es] checks the satisfiability of the assertions in the
       solver using the assumptions in [es].
