@@ -662,7 +662,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let interrupt _ = M.Solver.interrupt ()
 
-      let pp_statistics fmt { solver; _ } = M.Solver.pp_statistics fmt solver
+      let get_statistics { solver; _ } = M.Solver.get_statistics solver
     end
 
     module Optimizer = struct
@@ -690,7 +690,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let interrupt _ = M.Optimizer.interrupt ()
 
-      let pp_statistics fmt { opt; _ } = M.Optimizer.pp_statistics fmt opt
+      let get_statistics { opt; _ } = M.Optimizer.get_statistics opt
     end
   end
 

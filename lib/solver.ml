@@ -29,7 +29,7 @@ module Base (M : Mappings_intf.S) = struct
 
   let solver_count = ref 0
 
-  let pp_statistics fmt solver = M.Solver.pp_statistics fmt solver
+  let pp_statistics _fmt _solver = ()
 
   let create ?params ?logic () : t = M.Solver.make ?params ?logic ()
 
@@ -46,6 +46,9 @@ module Base (M : Mappings_intf.S) = struct
   let add (solver : t) (es : Expr.t list) : unit = M.Solver.add solver es
 
   let get_assertions (_solver : t) : Expr.t list = assert false
+
+  let get_statistics (solver : t) : Statistics.t =
+    M.Solver.get_statistics solver
 
   let check (solver : M.solver) (es : Expr.t list) : satisfiability =
     solver_count := !solver_count + 1;
@@ -106,6 +109,8 @@ module Make_batch (Mappings : Mappings_intf.S) = struct
   let add (s : t) (es : Expr.t list) : unit = s.top <- es @ s.top
 
   let get_assertions (s : t) : Expr.t list = s.top [@@inline]
+
+  let get_statistics (s : t) : Statistics.t = get_statistics s.solver
 
   let check (s : t) (es : Expr.t list) : satisfiability =
     check s.solver (es @ s.top)
