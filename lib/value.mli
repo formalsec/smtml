@@ -26,12 +26,14 @@ type t =
   | List of t list
   | App : [> `Op of string ] * t list -> t
 
-val equal : t -> t -> bool
-
 val compare : t -> t -> int
 
-val type_of : t -> Ty.t
+val equal : t -> t -> bool
 
 val pp : Format.formatter -> t -> unit
 
 val to_string : t -> string
+
+val to_json : t -> Yojson.Basic.t
+
+val type_of : t -> Ty.t
