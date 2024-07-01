@@ -23,14 +23,16 @@ type t =
   | F32 of int32
   | F64 of int64
 
-val equal : t -> t -> bool
-
 val compare : t -> t -> int
 
-val type_of : t -> Ty.t
+val equal : t -> t -> bool
+
+val num_of_bool : bool -> t
 
 val pp : Format.formatter -> t -> unit
 
 val to_string : t -> string
 
-val num_of_bool : bool -> t
+val to_json : t -> Yojson.Basic.t
+
+val type_of : t -> Ty.t

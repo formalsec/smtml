@@ -7,5 +7,6 @@
   test_triop
   test_relop
   test_cvtop
-  test_naryop)
- (libraries smtml))
+  test_naryop
+  test_model)
+ (libraries smtml yojson))

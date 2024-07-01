@@ -28,19 +28,7 @@ type t =
   | List of t list
   | App : [> `Op of string ] * t list -> t
 
-let rec equal (v1 : t) (v2 : t) : Bool.t =
-  match (v1, v2) with
-  | True, True | False, False -> true
-  | Int x1, Int x2 -> Int.equal x1 x2
-  | Real x1, Real x2 -> x1 = x2
-  | Str x1, Str x2 -> String.equal x1 x2
-  | Num x1, Num x2 -> Num.equal x1 x2
-  | List l1, List l2 -> List.equal equal l1 l2
-  | App (`Op op1, vs1), App (`Op op2, vs2) ->
-    String.equal op1 op2 && List.equal equal vs1 vs2
-  | _ -> false
-
-let rec compare v1 v2 =
+let rec compare (v1 : t) (v2 : t) : int =
   match (v1, v2) with
   | True, True | False, False -> 0
   | False, True -> -1
@@ -55,17 +43,19 @@ let rec compare v1 v2 =
     if c = 0 then List.compare compare vs1 vs2 else c
   | _ -> compare v1 v2
 
-let type_of (v : t) : Ty.t =
-  match v with
-  | True | False -> Ty_bool
-  | Int _ -> Ty_int
-  | Real _ -> Ty_real
-  | Str _ -> Ty_str
-  | Num n -> Num.type_of n
-  | List _ -> Ty_list
-  | App _ -> Ty_app
+let rec equal (v1 : t) (v2 : t) : bool =
+  match (v1, v2) with
+  | True, True | False, False -> true
+  | Int x1, Int x2 -> Int.equal x1 x2
+  | Real x1, Real x2 -> x1 = x2
+  | Str x1, Str x2 -> String.equal x1 x2
+  | Num x1, Num x2 -> Num.equal x1 x2
+  | List l1, List l2 -> List.equal equal l1 l2
+  | App (`Op op1, vs1), App (`Op op2, vs2) ->
+    String.equal op1 op2 && List.equal equal vs1 vs2
+  | _ -> false
 
-let rec pp fmt (v : t) =
+let rec pp (fmt : Format.formatter) (v : t) : unit =
   let open Format in
   match v with
   | True -> pp_print_string fmt "true"
@@ -84,4 +74,25 @@ let rec pp fmt (v : t) =
       vs
   | _ -> assert false
 
-let to_string v = Format.asprintf "%a" pp v
+let to_string (v : t) : string = Format.asprintf "%a" pp v
+
+let rec to_json (v : t) : Yojson.Basic.t =
+  match v with
+  | True -> `Bool true
+  | False -> `Bool false
+  | Int int -> `Int int
+  | Real real -> `Float real
+  | Str str -> `String str
+  | Num n -> Num.to_json n
+  | List l -> `List (List.map to_json l)
+  | App _ -> assert false
+
+let type_of (v : t) : Ty.t =
+  match v with
+  | True | False -> Ty_bool
+  | Int _ -> Ty_int
+  | Real _ -> Ty_real
+  | Str _ -> Ty_str
+  | Num n -> Num.type_of n
+  | List _ -> Ty_list
+  | App _ -> Ty_app

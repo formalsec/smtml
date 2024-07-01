@@ -23,18 +23,20 @@ type t =
 
 val ( @: ) : string -> Ty.t -> t
 
+val compare : t -> t -> int
+
+val equal : t -> t -> Bool.t
+
 val make : Ty.t -> string -> t
 
 val mk_symbol : Ty.t -> string -> t [@@deprecated "Please use 'make' instead"]
 
-val equal : t -> t -> Bool.t
+val pp : Format.formatter -> t -> unit
 
 val rename : t -> string -> t
 
-val type_of : t -> Ty.t
-
 val to_string : t -> string
 
-val compare : t -> t -> int
+val to_json : t -> Yojson.Basic.t
 
-val pp : Format.formatter -> t -> unit
+val type_of : t -> Ty.t

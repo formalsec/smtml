@@ -45,6 +45,7 @@
  (libraries
   hc
   ocaml_intrinsics
+  yojson
   (select
    colibri2_mappings.ml
    from

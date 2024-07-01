@@ -18,12 +18,17 @@
 
 type t = (Symbol.t, Value.t) Hashtbl.t
 
-val get_symbols : t -> Symbol.t List.t
+val iter : (Symbol.t * Value.t -> unit) -> t -> unit
 
-val get_bindings : t -> (Symbol.t * Value.t) List.t
+val get_symbols : t -> Symbol.t list
 
-val evaluate : t -> Symbol.t -> Value.t Option.t
+(** bindings are sorted by symbol *)
+val get_bindings : t -> (Symbol.t * Value.t) list
 
-val pp : Format.formatter -> ?no_values:bool -> t -> Unit.t
+val evaluate : t -> Symbol.t -> Value.t option
 
-val to_string : t -> String.t
+val pp : Format.formatter -> ?no_values:bool -> t -> unit
+
+val to_string : t -> string
+
+val to_json : t -> Yojson.t

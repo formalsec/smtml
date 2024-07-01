@@ -54,6 +54,7 @@
    (and
     :build
     (>= "20220210")))
+  yojson
   (odoc
    :with-doc)
   (bisect_ppx
