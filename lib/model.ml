@@ -51,12 +51,16 @@ let to_string (model : t) : string =
   Format.asprintf "%a" (pp ~no_values:false) model
 
 let to_json (model : t) : Yojson.t =
-  let model :> Yojson.t list =
-    Hashtbl.fold
-      (fun s v acc ->
-        let s = Symbol.to_json s in
-        let v = `Assoc [ ("value", Value.to_json v) ] in
-        Yojson.Basic.Util.combine s v :: acc )
-      model []
+  let combine = Yojson.Basic.Util.combine in
+  let add_assignment sym value assignments =
+    let assignment =
+      match Symbol.to_json sym with
+      | `Assoc [ (name, props) ] ->
+        let value = `Assoc [ ("value", Value.to_json value) ] in
+        `Assoc [ (name, combine props value) ]
+      | _ -> failwith "Model: Symbol.to_json returned something impossible"
+    in
+    combine assignments assignment
   in
-  `Assoc [ ("model", `List model) ]
+  let model :> Yojson.t = Hashtbl.fold add_assignment model (`Assoc []) in
+  `Assoc [ ("model", model) ]

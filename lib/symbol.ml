@@ -42,7 +42,6 @@ let rename (symbol : t) (name : string) : t = { symbol with name }
 let to_string ({ name; _ } : t) : string = name
 
 let to_json ({ name; ty } : t) : Yojson.Basic.t =
-  `Assoc
-    [ ("name", `String name); ("ty", `String (Format.asprintf "%a" Ty.pp ty)) ]
+  `Assoc [ (name, `Assoc [ ("ty", `String (Format.asprintf "%a" Ty.pp ty)) ]) ]
 
 let type_of ({ ty; _ } : t) : Ty.t = ty
