@@ -1,8 +1,15 @@
 ## Unreleased
 
 ### Added
+
+- Add `Model.to_json` function
+- Add `Solver.get_statistics` function
+
 ### Fixed
 ### Changed
+
+- Print bitvectors and fps in hexadecimal
+- Deprecated `Solver.get_statistics`
 
 ## v0.2.1
 
