@@ -32,6 +32,7 @@
   parser
   params
   parse
+  poly_mappings
   solver
   solver_intf
   solver_dispatcher
@@ -78,6 +79,11 @@
    (z3 -> z3_mappings2.default.ml)
    (-> z3_mappings2.nop.ml))
   (select
+   poly_mappings.ml
+   from
+   (z3 -> poly_mappings.default.ml)
+   (-> poly_mappings.nop.ml))
+  (select
    cvc5_mappings.ml
    from
    (cvc5 -> cvc5_mappings.default.ml)
@@ -91,7 +97,8 @@
   colibri2_mappings.nop.ml
   bitwuzla_mappings.nop.ml
   cvc5_mappings.nop.ml
-  z3_mappings.nop.ml)
+  z3_mappings.nop.ml
+  poly_mappings.nop.ml)
  (deps mappings.nop.ml)
  (action
   (progn
@@ -102,6 +109,11 @@
      (cat mappings.nop.ml)))
    (with-stdout-to
     z3_mappings2.nop.ml
+    (progn
+     (echo "let solver_name = \"Z3\"\n")
+     (cat mappings.nop.ml)))
+   (with-stdout-to
+    poly_mappings.nop.ml
     (progn
      (echo "let solver_name = \"Z3\"\n")
      (cat mappings.nop.ml)))
