@@ -356,17 +356,21 @@ let relop' (ty : Ty.t) (op : relop) (hte1 : t) (hte2 : t) : t =
 [@@inline]
 
 let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
-  match (view hte1, view hte2) with
-  | Val (App (`Op s1, _)), Val (App (`Op s2, _)) ->
-    if String.equal s1 s2 then value (if op = Eq then True else False)
-    else relop' ty op hte1 hte2
-  | Val (App _), Val _ | Val _, Val (App _) -> (
-    match op with
-    | Eq -> value False
-    | Ne -> value True
-    | _ -> relop' ty op hte1 hte2 )
-  | Val v1, Val v2 -> value (if Eval.relop ty op v1 v2 then True else False)
-  | Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } -> (
+  match (op, view hte1, view hte2) with
+  | Eq, Val (App (`Op s1, _)), Val (App (`Op s2, _)) ->
+    if String.equal s1 s2 then value True else value False
+  | Ne, Val (App (`Op s1, _)), Val (App (`Op s2, _)) ->
+    if String.equal s1 s2 then value False else value True
+  | Eq, Val (App _), Val _ | Eq, Val _, Val (App _) -> value False
+  | Ne, Val (App _), Val _ | Ne, Val _, Val (App _) -> value True
+  | (Ne, Val (Real v), Symbol _ | Ne, Symbol _, Val (Real v))
+    when Float.is_nan v || Float.is_infinite v ->
+    value True
+  | (_, Val (Real v), Symbol _ | _, Symbol _, Val (Real v))
+    when Float.is_nan v || Float.is_infinite v ->
+    value False
+  | _, Val v1, Val v2 -> value (if Eval.relop ty op v1 v2 then True else False)
+  | _, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } -> (
     match op with
     | Eq -> if b1 = b2 then relop' ty Eq os1 os2 else value False
     | Ne -> if b1 = b2 then relop' ty Ne os1 os2 else value True
@@ -377,13 +381,15 @@ let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
           ( if Eval.relop ty op (Num (I32 b1)) (Num (I32 b2)) then True
             else False )
     | _ -> relop' ty op hte1 hte2 )
-  | Val (Num _ as n), Ptr { base; offset = { node = Val (Num _ as o); _ } } ->
+  | _, Val (Num _ as n), Ptr { base; offset = { node = Val (Num _ as o); _ } }
+    ->
     let base = Eval.binop (Ty_bitv 32) Add (Num (I32 base)) o in
     value (if Eval.relop ty op n base then True else False)
-  | Ptr { base; offset = { node = Val (Num _ as o); _ } }, Val (Num _ as n) ->
+  | _, Ptr { base; offset = { node = Val (Num _ as o); _ } }, Val (Num _ as n)
+    ->
     let base = Eval.binop (Ty_bitv 32) Add (Num (I32 base)) o in
     value (if Eval.relop ty op base n then True else False)
-  | _ -> relop' ty op hte1 hte2
+  | _, _, _ -> relop' ty op hte1 hte2
 
 let cvtop' (ty : Ty.t) (op : cvtop) (hte : t) : t = make (Cvtop (ty, op, hte))
 [@@inline]
