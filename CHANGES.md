@@ -2,6 +2,8 @@
 
 ### Added
 
+- Add unitary value `Value.Unit`
+- Add simplification cases for Nan and Infinity floats (@joaomhmpereira)
 - Add `Model.to_json` function
 - Add `Solver.get_statistics` function
 
