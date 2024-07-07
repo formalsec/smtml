@@ -19,6 +19,7 @@
 type t =
   | True
   | False
+  | Unit
   | Int of int
   | Real of float
   | Str of string

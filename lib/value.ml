@@ -21,6 +21,7 @@ open Ty
 type t =
   | True
   | False
+  | Unit
   | Int of int
   | Real of float
   | Str of string
@@ -30,7 +31,7 @@ type t =
 
 let rec compare (v1 : t) (v2 : t) : int =
   match (v1, v2) with
-  | True, True | False, False -> 0
+  | True, True | False, False | Unit, Unit -> 0
   | False, True -> -1
   | True, False -> 1
   | Int x1, Int x2 -> Int.compare x1 x2
@@ -45,7 +46,7 @@ let rec compare (v1 : t) (v2 : t) : int =
 
 let rec equal (v1 : t) (v2 : t) : bool =
   match (v1, v2) with
-  | True, True | False, False -> true
+  | True, True | False, False | Unit, Unit -> true
   | Int x1, Int x2 -> Int.equal x1 x2
   | Real x1, Real x2 -> x1 = x2
   | Str x1, Str x2 -> String.equal x1 x2
@@ -60,6 +61,7 @@ let rec pp (fmt : Format.formatter) (v : t) : unit =
   match v with
   | True -> pp_print_string fmt "true"
   | False -> pp_print_string fmt "false"
+  | Unit -> pp_print_string fmt "unit"
   | Int x -> pp_print_int fmt x
   | Real x -> fprintf fmt "%F" x
   | Num x -> Num.pp fmt x
@@ -80,6 +82,7 @@ let rec to_json (v : t) : Yojson.Basic.t =
   match v with
   | True -> `Bool true
   | False -> `Bool false
+  | Unit -> `String "unit"
   | Int int -> `Int int
   | Real real -> `Float real
   | Str str -> `String str
@@ -90,6 +93,7 @@ let rec to_json (v : t) : Yojson.Basic.t =
 let type_of (v : t) : Ty.t =
   match v with
   | True | False -> Ty_bool
+  | Unit -> Ty_unit
   | Int _ -> Ty_int
   | Real _ -> Ty_real
   | Str _ -> Ty_str

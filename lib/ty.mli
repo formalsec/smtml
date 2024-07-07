@@ -30,6 +30,7 @@ type t =
   | Ty_fp of int
   | Ty_list
   | Ty_app
+  | Ty_unit
 
 type unop =
   | Neg
