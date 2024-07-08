@@ -353,6 +353,8 @@ let rec binop ty (op : binop) (hte1 : t) (hte2 : t) : t =
     | List_append_last -> make (List (es @ [ hte2 ]))
     | List_append -> make (List (hte2 :: es))
     | _ -> binop' ty op hte1 hte2 )
+  | Triop (ty', Ite, cond, hte1', hte2'), Val (Int _) ->
+    triop ty' Ite cond (binop ty op hte1' hte2) (binop ty op hte2' hte2)
   (* FIXME: this seems wrong? *)
   (* | Binop (_, And, _, _), Val (Num (I32 1l)) -> hte1 *)
   (* | Val (Num (I32 1l)), Binop (_, And, _, _) -> hte2 *)
