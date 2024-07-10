@@ -380,17 +380,19 @@ let relop' (ty : Ty.t) (op : relop) (hte1 : t) (hte2 : t) : t =
 let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
   match (op, view hte1, view hte2) with
   | Eq, Val (App (`Op s1, l1)), Val (App (`Op s2, l2)) ->
-    if String.equal s1 s2 && List.equal Value.equal l1 l2 then value True else value False
+    if String.equal s1 s2 && List.equal Value.equal l1 l2 then value True
+    else value False
   | Ne, Val (App (`Op s1, l1)), Val (App (`Op s2, l2)) ->
-    if String.equal s1 s2 && List.equal Value.equal l1 l2 then value False else value True
+    if String.equal s1 s2 && List.equal Value.equal l1 l2 then value False
+    else value True
   | Eq, Val (App _), Val _ | Eq, Val _, Val (App _) -> value False
   | Ne, Val (App _), Val _ | Ne, Val _, Val (App _) -> value True
-  | (Ne, Val (Real v), Symbol _ | Ne, Symbol _, Val (Real v))
-    when Float.is_nan v || Float.is_infinite v ->
+  | Ne, Val (Real v), Symbol _ when Float.is_nan v || Float.is_infinite v ->
     value True
-  | (_, Val (Real v), Symbol _ | _, Symbol _, Val (Real v))
-    when Float.is_nan v || Float.is_infinite v ->
-    value False
+  | Ne, Symbol _, Val (Real v) when Float.is_nan v || Float.is_infinite v ->
+    value True
+  | _, Val (Real v), _ when Float.is_nan v || Float.is_infinite v -> value False
+  | _, _, Val (Real v) when Float.is_nan v || Float.is_infinite v -> value False
   | _, Val v1, Val v2 -> value (if Eval.relop ty op v1 v2 then True else False)
   | _, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } -> (
     match op with
@@ -411,7 +413,7 @@ let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
     ->
     let base = Eval.binop (Ty_bitv 32) Add (Num (I32 base)) o in
     value (if Eval.relop ty op base n then True else False)
-  | Eq, List l1, List l2 -> 
+  | Eq, List l1, List l2 ->
     if List.length l1 <> List.length l2 then value False
     else
       let l =
