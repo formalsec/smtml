@@ -272,6 +272,8 @@ let rec unop (ty : Ty.t) (op : unop) (hte : t) : t =
   | Tail, List (_ :: tl) -> make (List tl)
   | Reverse, List es -> make (List (List.rev es))
   | Length, List es -> value (Int (List.length es))
+  | Length, Triop (ty', Ite, cond, hte1, hte2) ->
+    triop ty' Ite cond (unop ty Length hte1) (unop ty Length hte2)
   | Head, Triop (ty', Ite, cond, hte1, hte2) ->
     triop ty' Ite cond (unop ty Head hte1) (unop ty Head hte2)
   | Tail, Triop (ty', Ite, cond, hte1, hte2) ->
@@ -353,6 +355,13 @@ let rec binop ty (op : binop) (hte1 : t) (hte2 : t) : t =
     | List_append_last -> make (List (es @ [ hte2 ]))
     | List_append -> make (List (hte2 :: es))
     | _ -> binop' ty op hte1 hte2 )
+  | List _, Triop (ty', Ite, cond, hte1', hte2') -> (
+    match op with
+    | List_append_last ->
+      triop ty' Ite cond (binop ty op hte1 hte1') (binop ty op hte1 hte2')
+    | List_append ->
+      triop ty' Ite cond (binop ty op hte1 hte1') (binop ty op hte1 hte2')
+    | _ -> binop' ty op hte1 hte2 )
   | Triop (ty', Ite, cond, hte1', hte2'), Val (Int _) ->
     triop ty' Ite cond (binop ty op hte1' hte2) (binop ty op hte2' hte2)
   (* FIXME: this seems wrong? *)
@@ -387,10 +396,8 @@ let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
     else value True
   | Eq, Val (App _), Val _ | Eq, Val _, Val (App _) -> value False
   | Ne, Val (App _), Val _ | Ne, Val _, Val (App _) -> value True
-  | Ne, Val (Real v), Symbol _ when Float.is_nan v || Float.is_infinite v ->
-    value True
-  | Ne, Symbol _, Val (Real v) when Float.is_nan v || Float.is_infinite v ->
-    value True
+  | Ne, Val (Real v), _ when Float.is_nan v || Float.is_infinite v -> value True
+  | Ne, _, Val (Real v) when Float.is_nan v || Float.is_infinite v -> value True
   | _, Val (Real v), _ when Float.is_nan v || Float.is_infinite v -> value False
   | _, _, Val (Real v) when Float.is_nan v || Float.is_infinite v -> value False
   | _, Val v1, Val v2 -> value (if Eval.relop ty op v1 v2 then True else False)
