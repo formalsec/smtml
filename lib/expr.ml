@@ -332,9 +332,9 @@ let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
     value False
   | op, Val v1, Val v2 -> value (if Eval.relop ty op v1 v2 then True else False)
   | Eq, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
-    if b1 = b2 then relop' ty Eq os1 os2 else value False
+    if b1 = b2 then relop Ty_bool Eq os1 os2 else value False
   | Ne, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
-    if b1 = b2 then relop' ty Ne os1 os2 else value True
+    if b1 = b2 then relop Ty_bool Ne os1 os2 else value True
   | ( (LtU | LeU | GtU | GeU)
     , Ptr { base = b1; offset = os1 }
     , Ptr { base = b2; offset = os2 } ) ->
