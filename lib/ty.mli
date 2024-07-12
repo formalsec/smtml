@@ -32,105 +32,93 @@ type t =
   | Ty_app
   | Ty_unit
 
-type unop =
-  | Neg
-  | Not
-  | Clz
-  | Ctz
-  (* Float *)
-  | Abs
-  | Sqrt
-  | Is_nan
-  | Ceil
-  | Floor
-  | Trunc
-  | Nearest
-  | Head
-  | Tail
-  | Reverse
-  | Length
-  (* String *)
-  | Trim (* uninterpreted *)
-
-type binop =
-  | Add
-  | Sub
-  | Mul
-  | Div
-  | DivU
-  | Rem
-  | RemU
-  | Shl
-  | ShrA
-  | ShrL
-  | And
-  | Or
-  | Xor
-  | Pow
-  | Min
-  | Max
-  | Rotl
-  | Rotr
-  | At
-  | List_append_last
-  | List_append
-  (* String *)
-  | String_prefix (* (str.prefixof String String Bool) *)
-  | String_suffix (* (str.suffixof String String Bool) *)
-  | String_contains (* (str.contains String String Bool) *)
-  | String_last_index
-
-type relop =
-  | Eq
-  | Ne
-  | Lt
-  | LtU
-  | Gt
-  | GtU
-  | Le
-  | LeU
-  | Ge
-  | GeU
-
-type triop =
-  | Ite
-  | List_set
-  (* String *)
-  | String_extract (* (str.substr String Int Int String) *)
-  | String_replace (* (str.replace String String String String) *)
-  | String_index (* (str.indexof String String Int Int) *)
-
-type cvtop =
-  | ToString
-  | OfString
-  | ToBool
-  | OfBool
-  | Reinterpret_int
-  | Reinterpret_float
-  | DemoteF64
-  | PromoteF32
-  | ConvertSI32
-  | ConvertUI32
-  | ConvertSI64
-  | ConvertUI64
-  | TruncSF32
-  | TruncUF32
-  | TruncSF64
-  | TruncUF64
-  | WrapI64
-  | Sign_extend of int
-  | Zero_extend of int
-  (* String *)
-  | String_to_code (* (str.to_code String Int) *)
-  | String_from_code (* (str.from_code Int String) *)
-  | String_to_int (* (str.to_int String Int) *)
-  | String_from_int (* (str.from_int Int String) *)
-  | String_to_float
-
-type naryop =
-  | Logand
-  | Logor
-  | Concat
+type 'a op =
+  | Neg : [ `Unary ] op
+  | Not : [ `Unary ] op
+  | Clz : [ `Unary ] op
+  | Ctz : [ `Unary ] op
+  | Abs : [ `Unary ] op
+  | Sqrt : [ `Unary ] op
+  | Is_nan : [ `Unary ] op
+  | Ceil : [ `Unary ] op
+  | Floor : [ `Unary ] op
+  | Trunc : [ `Unary ] op
+  | Nearest : [ `Unary ] op
+  | Length : [ `Unary ] op
+  | List_head : [ `Unary ] op
+  | List_tail : [ `Unary ] op
+  | List_reverse : [ `Unary ] op
+  | Add : [ `Binary ] op
+  | Sub : [ `Binary ] op
+  | Mul : [ `Binary ] op
+  | Div : [ `Binary ] op
+  | DivU : [ `Binary ] op
+  | Rem : [ `Binary ] op
+  | RemU : [ `Binary ] op
+  | Shl : [ `Binary ] op
+  | ShrA : [ `Binary ] op
+  | ShrL : [ `Binary ] op
+  | And : [ `Binary ] op
+  | Or : [ `Binary ] op
+  | Xor : [ `Binary ] op
+  | Pow : [ `Binary ] op
+  | Min : [ `Binary ] op
+  | Max : [ `Binary ] op
+  | Rotl : [ `Binary ] op
+  | Rotr : [ `Binary ] op
+  | At : [ `Binary ] op
+  | List_append_last : [ `Binary ] op
+  | List_append : [ `Binary ] op
+  | Eq : [ `Binary ] op
+  | Ne : [ `Binary ] op
+  | Lt : [ `Binary ] op
+  | LtU : [ `Binary ] op
+  | Gt : [ `Binary ] op
+  | GtU : [ `Binary ] op
+  | Le : [ `Binary ] op
+  | LeU : [ `Binary ] op
+  | Ge : [ `Binary ] op
+  | GeU : [ `Binary ] op
+  | Ite : [ `Ternary ] op
+  | List_set : [ `Ternary ] op
+  | ToString : [ `Unary ] op
+  | OfString : [ `Unary ] op
+  | ToBool : [ `Unary ] op
+  | OfBool : [ `Unary ] op
+  | Reinterpret_int : [ `Unary ] op
+  | Reinterpret_float : [ `Unary ] op
+  | DemoteF64 : [ `Unary ] op
+  | PromoteF32 : [ `Unary ] op
+  | ConvertSI32 : [ `Unary ] op
+  | ConvertUI32 : [ `Unary ] op
+  | ConvertSI64 : [ `Unary ] op
+  | ConvertUI64 : [ `Unary ] op
+  | TruncSF32 : [ `Unary ] op
+  | TruncUF32 : [ `Unary ] op
+  | TruncSF64 : [ `Unary ] op
+  | TruncUF64 : [ `Unary ] op
+  | WrapI64 : [ `Unary ] op
+  | Sign_extend : int -> [ `Unary ] op
+  | Zero_extend : int -> [ `Unary ] op
+  | Logand : [ `Nary ] op
+  | Logor : [ `Nary ] op
+  | Concat : [ `Nary ] op
+  | String_trim : [ `Unary ] op
+  (* Binop *)
+  | String_prefix : [ `Binary ] op
+  | String_suffix : [ `Binary ] op
+  | String_contains : [ `Binary ] op
+  | String_last_index : [ `Binary ] op
+  (* Triop *)
+  | String_extract : [ `Ternary ] op
+  | String_replace : [ `Ternary ] op
+  | String_index : [ `Ternary ] op
+  (* Cvtop *)
+  | String_to_code : [ `Unary ] op
+  | String_from_code : [ `Unary ] op
+  | String_to_int : [ `Unary ] op
+  | String_from_int : [ `Unary ] op
+  | String_to_float : [ `Unary ] op
 
 type logic =
   | AUFLIA
@@ -160,23 +148,15 @@ type logic =
   | UFLRA
   | UFNIA
 
-val pp_unop : Format.formatter -> unop -> unit
-
-val pp_binop : Format.formatter -> binop -> unit
-
-val pp_triop : Format.formatter -> triop -> unit
-
-val pp_relop : Format.formatter -> relop -> unit
-
-val pp_cvtop : Format.formatter -> cvtop -> unit
-
-val pp_naryop : Format.formatter -> naryop -> unit
-
 val pp : Format.formatter -> t -> unit
+
+val pp_op : Format.formatter -> 'a op -> unit
 
 val pp_logic : Format.formatter -> logic -> unit
 
 val equal : t -> t -> bool
+
+val equal_op : 'a op -> 'a op -> bool
 
 val string_of_type : t -> string
 

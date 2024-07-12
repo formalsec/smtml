@@ -33,7 +33,7 @@ let () =
   let ty = Ty_str in
   let v s = value (Str s) in
   assert (unop ty Length (v "abc") = value (Int 3));
-  assert (unop ty Trim (v " abc\t\n") = value (Str "abc"))
+  assert (unop ty String_trim (v " abc\t\n") = value (Str "abc"))
 
 (* bool *)
 let () =
@@ -51,15 +51,18 @@ let () =
   let x = Expr.symbol (Symbol.make Ty_int "x") in
   let y = Expr.symbol (Symbol.make Ty_int "y") in
   let slist = Expr.make (List [ x; y ]) in
-  assert (unop ty Head vlist = value (Int 1));
-  assert (Expr.equal (unop ty Tail vlist) (v [ Int 2; Int 3 ]));
+  assert (unop ty List_head vlist = value (Int 1));
+  assert (Expr.equal (unop ty List_tail vlist) (v [ Int 2; Int 3 ]));
   assert (Expr.equal (unop ty Length vlist) (value (Int 3)));
   assert (
-    Expr.equal (unop ty Reverse vlist) (value (List [ Int 3; Int 2; Int 1 ])) );
-  assert (Expr.equal (unop ty Head slist) x);
-  assert (Expr.equal (unop ty Tail slist) (Expr.make (List [ y ])));
+    Expr.equal
+      (unop ty List_reverse vlist)
+      (value (List [ Int 3; Int 2; Int 1 ])) );
+  assert (Expr.equal (unop ty List_head slist) x);
+  assert (Expr.equal (unop ty List_tail slist) (Expr.make (List [ y ])));
   assert (Expr.equal (unop ty Length slist) (value (Int 2)));
-  assert (Expr.equal (unop ty Reverse (unop Ty_list Reverse slist)) slist)
+  assert (
+    Expr.equal (unop ty List_reverse (unop Ty_list List_reverse slist)) slist )
 
 (* i32 *)
 let () =

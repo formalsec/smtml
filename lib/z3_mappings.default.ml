@@ -100,10 +100,14 @@ module Fresh = struct
         | Floor -> Arithmetic.Real.mk_real2int ctx e
         | Trunc -> Arithmetic.Real.mk_real2int ctx e
         | Nearest | Is_nan | _ ->
-          err {|Arith: Unsupported Z3 unop operator "%a"|} Ty.pp_unop op
+          err {|Arith: Unsupported Z3 unop operator "%a"|} Ty.pp_op op
 
       let encode_binop op e1 e2 =
         match op with
+        | Lt -> Arithmetic.mk_lt ctx e1 e2
+        | Gt -> Arithmetic.mk_gt ctx e1 e2
+        | Le -> Arithmetic.mk_le ctx e1 e2
+        | Ge -> Arithmetic.mk_ge ctx e1 e2
         | Add -> Arithmetic.mk_add ctx [ e1; e2 ]
         | Sub -> Arithmetic.mk_sub ctx [ e1; e2 ]
         | Mul -> Arithmetic.mk_mul ctx [ e1; e2 ]
@@ -112,18 +116,7 @@ module Fresh = struct
         | Pow -> Arithmetic.mk_power ctx e1 e2
         | Min -> Boolean.mk_ite ctx (Arithmetic.mk_le ctx e1 e2) e1 e2
         | Max -> Boolean.mk_ite ctx (Arithmetic.mk_ge ctx e1 e2) e1 e2
-        | _ -> err {|Real: Unsupported Z3 binop operator "%a"|} Ty.pp_binop op
-
-      let encode_triop op _ =
-        err {|Arith: Unsupported Z3 triop operator "%a"|} Ty.pp_triop op
-
-      let encode_relop op e1 e2 =
-        match op with
-        | Lt -> Arithmetic.mk_lt ctx e1 e2
-        | Gt -> Arithmetic.mk_gt ctx e1 e2
-        | Le -> Arithmetic.mk_le ctx e1 e2
-        | Ge -> Arithmetic.mk_ge ctx e1 e2
-        | op -> err {|Arith: Unsupported Z3 relop operator "%a"|} Ty.pp_relop op
+        | _ -> err {|Real: Unsupported Z3 binop operator "%a"|} Ty.pp_op op
 
       module Integer = struct
         let v i = int i
@@ -134,12 +127,12 @@ module Fresh = struct
         let str2int =
           FuncDecl.mk_func_decl_s ctx "StringToInt" [ str_sort ] int_sort
 
-        let encode_cvtop op e =
+        let _encode_cvtop op e =
           match op with
           | ToString -> FuncDecl.apply int2str [ e ]
           | OfString -> FuncDecl.apply str2int [ e ]
           | Reinterpret_float -> Arithmetic.Real.mk_real2int ctx e
-          | op -> err {|Int: Unsupported Z3 cvtop operator "%a"|} Ty.pp_cvtop op
+          | op -> err {|Int: Unsupported Z3 cvtop operator "%a"|} Ty.pp_op op
       end
 
       module Real = struct
@@ -154,13 +147,13 @@ module Fresh = struct
         let to_uint32 =
           FuncDecl.mk_func_decl_s ctx "ToUInt32" [ real_sort ] real_sort
 
-        let encode_cvtop op e =
+        let _encode_cvtop op e =
           match op with
           | ToString -> FuncDecl.apply real2str [ e ]
           | OfString -> FuncDecl.apply str2real [ e ]
           | ConvertUI32 -> FuncDecl.apply to_uint32 [ e ]
           | Reinterpret_int -> Arithmetic.Integer.mk_int2real ctx e
-          | _ -> err {|Real: Unsupported Z3 cvtop operator "%a"|} Ty.pp_cvtop op
+          | _ -> err {|Real: Unsupported Z3 cvtop operator "%a"|} Ty.pp_op op
       end
     end
 
@@ -174,32 +167,26 @@ module Fresh = struct
 
       let encode_unop = function
         | Not -> Boolean.mk_not ctx
-        | op -> err {|Bool: Unsupported Z3 unop operator "%a"|} Ty.pp_unop op
+        | op -> err {|Bool: Unsupported Z3 unop operator "%a"|} Ty.pp_op op
 
       let encode_binop op e1 e2 =
         match op with
+        | Eq -> Boolean.mk_eq ctx e1 e2
+        | Ne -> Boolean.mk_distinct ctx [ e1; e2 ]
         | And -> Boolean.mk_and ctx [ e1; e2 ]
         | Or -> Boolean.mk_or ctx [ e1; e2 ]
         | Xor -> Boolean.mk_xor ctx e1 e2
-        | _ -> err {|Bool: Unsupported Z3 binop operator "%a"|} Ty.pp_binop op
+        | _ -> err {|Bool: Unsupported Z3 binop operator "%a"|} Ty.pp_op op
 
       let encode_triop = function
         | Ite -> Boolean.mk_ite ctx
-        | op -> err {|Bool: Unsupported Z3 triop operator "%a"|} Ty.pp_triop op
-
-      let encode_relop op e1 e2 =
-        match op with
-        | Eq -> Boolean.mk_eq ctx e1 e2
-        | Ne -> Boolean.mk_distinct ctx [ e1; e2 ]
-        | _ -> err {|Bool: Unsupported Z3 relop operator "%a"|} Ty.pp_relop op
-
-      let encode_cvtop _op _e = assert false
+        | op -> err {|Bool: Unsupported Z3 triop operator "%a"|} Ty.pp_op op
 
       let encode_naryop op es =
         match op with
         | Logand -> Boolean.mk_and ctx es
         | Logor -> Boolean.mk_or ctx es
-        | _ -> err {|Bool: Unsupported Z3 naryop operator "%a"|} Ty.pp_naryop op
+        | _ -> err {|Bool: Unsupported Z3 naryop operator "%a"|} Ty.pp_op op
     end
 
     module Str = struct
@@ -214,8 +201,13 @@ module Fresh = struct
       let encode_unop op e =
         match op with
         | Length -> Seq.mk_seq_length ctx e
-        | Trim -> FuncDecl.apply trim [ e ]
-        | _ -> err {|Str: Unsupported Z3 unop operator "%a"|} Ty.pp_unop op
+        | String_trim -> FuncDecl.apply trim [ e ]
+        | String_to_code -> Seq.mk_string_to_code ctx e
+        | String_from_code -> Seq.mk_string_from_code ctx e
+        | String_to_int -> Seq.mk_str_to_int ctx e
+        | String_from_int -> Seq.mk_int_to_str ctx e
+        | String_to_float | _ ->
+          err {|Str: Unsupported unop operator "%a"|} Ty.pp_op op
 
       let encode_binop op e1 e2 =
         match op with
@@ -224,27 +216,18 @@ module Fresh = struct
         | String_suffix -> Seq.mk_seq_suffix ctx e1 e2
         | String_contains -> Seq.mk_seq_contains ctx e1 e2
         | String_last_index -> Seq.mk_seq_last_index ctx e1 e2
-        | _ -> err {|Str: Unsupported Z3 binop operator "%a"|} Ty.pp_binop op
+        | _ -> err {|Str: Unsupported binop operator "%a"|} Ty.pp_op op
 
       let encode_triop = function
         | String_extract -> Seq.mk_seq_extract ctx
         | String_replace -> Seq.mk_seq_replace ctx
         | String_index -> Seq.mk_seq_index ctx
-        | op -> err {|Str: Unsupported Z3 triop operator "%a"|} Ty.pp_triop op
-
-      let encode_relop _ = assert false
-
-      let encode_cvtop = function
-        | String_to_code -> Seq.mk_string_to_code ctx
-        | String_from_code -> Seq.mk_string_from_code ctx
-        | String_to_int -> Seq.mk_str_to_int ctx
-        | String_from_int -> Seq.mk_int_to_str ctx
-        | op -> err {|Str: Unsupported Z3 cvtop operator "%a"|} Ty.pp_cvtop op
+        | op -> err {|Str: Unsupported triop operator "%a"|} Ty.pp_op op
 
       let encode_naryop op es =
         match op with
         | Concat -> Seq.mk_seq_concat ctx es
-        | _ -> err {|Str: Unsupported Z3 naryop operator "%a"|} Ty.pp_naryop op
+        | _ -> err {|Str: Unsupported naryop operator "%a"|} Ty.pp_op op
     end
 
     module type Bv_sig = sig
@@ -306,9 +289,17 @@ module Fresh = struct
         | Neg -> BitVector.mk_neg ctx
         | Clz -> clz
         | Ctz -> ctz
-        | op -> err {|Bv: Unsupported Z3 unary operator "%a"|} Ty.pp_unop op
+        | op -> err {|Bv: Unsupported Z3 unary operator "%a"|} Ty.pp_op op
 
       let encode_binop = function
+        | Lt -> BitVector.mk_slt ctx
+        | LtU -> BitVector.mk_ult ctx
+        | Le -> BitVector.mk_sle ctx
+        | LeU -> BitVector.mk_ule ctx
+        | Gt -> BitVector.mk_sgt ctx
+        | GtU -> BitVector.mk_ugt ctx
+        | Ge -> BitVector.mk_sge ctx
+        | GeU -> BitVector.mk_uge ctx
         | Add -> BitVector.mk_add ctx
         | Sub -> BitVector.mk_sub ctx
         | Mul -> BitVector.mk_mul ctx
@@ -324,24 +315,9 @@ module Fresh = struct
         | RemU -> BitVector.mk_urem ctx
         | Rotl -> BitVector.mk_ext_rotate_left ctx
         | Rotr -> BitVector.mk_ext_rotate_right ctx
-        | op -> err {|Bv: Unsupported Z3 binary operator "%a"|} Ty.pp_binop op
+        | op -> err {|Bv: Unsupported Z3 binary operator "%a"|} Ty.pp_op op
 
-      let encode_triop op _ =
-        err {|Bv: Unsupported Z3 triop operator "%a"|} Ty.pp_triop op
-
-      let encode_relop op e1 e2 =
-        match op with
-        | Lt -> BitVector.mk_slt ctx e1 e2
-        | LtU -> BitVector.mk_ult ctx e1 e2
-        | Le -> BitVector.mk_sle ctx e1 e2
-        | LeU -> BitVector.mk_ule ctx e1 e2
-        | Gt -> BitVector.mk_sgt ctx e1 e2
-        | GtU -> BitVector.mk_ugt ctx e1 e2
-        | Ge -> BitVector.mk_sge ctx e1 e2
-        | GeU -> BitVector.mk_uge ctx e1 e2
-        | Eq | Ne -> assert false
-
-      let encode_cvtop op e =
+      let _encode_cvtop op e =
         match op with
         | WrapI64 -> BitVector.mk_extract ctx (bitwidth - 1) 0 e
         | Sign_extend n -> BitVector.mk_sign_ext ctx n e
@@ -414,22 +390,9 @@ module Fresh = struct
         | Floor -> FloatingPoint.mk_round_to_integral ctx rtn
         | Trunc -> FloatingPoint.mk_round_to_integral ctx rtz
         | Nearest -> FloatingPoint.mk_round_to_integral ctx rne
-        | op -> err {|Fp: Unsupported Z3 unary operator "%a"|} Ty.pp_unop op
+        | op -> err {|Fp: Unsupported Z3 unary operator "%a"|} Ty.pp_op op
 
-      let encode_binop = function
-        | Add -> FloatingPoint.mk_add ctx rne
-        | Sub -> FloatingPoint.mk_sub ctx rne
-        | Mul -> FloatingPoint.mk_mul ctx rne
-        | Div -> FloatingPoint.mk_div ctx rne
-        | Min -> FloatingPoint.mk_min ctx
-        | Max -> FloatingPoint.mk_max ctx
-        | Rem -> FloatingPoint.mk_rem ctx
-        | op -> err {|Fp: Unsupported Z3 binop operator "%a"|} Ty.pp_binop op
-
-      let encode_triop op _ =
-        err {|Fp: Unsupported Z3 triop operator "%a"|} Ty.pp_triop op
-
-      let encode_relop op e1 e2 =
+      let encode_binop op e1 e2 =
         match op with
         | Eq -> FloatingPoint.mk_eq ctx e1 e2
         | Ne -> FloatingPoint.mk_eq ctx e1 e2 |> Boolean.mk_not ctx
@@ -437,9 +400,16 @@ module Fresh = struct
         | Le -> FloatingPoint.mk_leq ctx e1 e2
         | Gt -> FloatingPoint.mk_gt ctx e1 e2
         | Ge -> FloatingPoint.mk_geq ctx e1 e2
-        | _ -> err {|Fp: Unsupported Z3 relop operator "%a"|} Ty.pp_relop op
+        | Add -> FloatingPoint.mk_add ctx rne e1 e2
+        | Sub -> FloatingPoint.mk_sub ctx rne e1 e2
+        | Mul -> FloatingPoint.mk_mul ctx rne e1 e2
+        | Div -> FloatingPoint.mk_div ctx rne e1 e2
+        | Min -> FloatingPoint.mk_min ctx e1 e2
+        | Max -> FloatingPoint.mk_max ctx e1 e2
+        | Rem -> FloatingPoint.mk_rem ctx e1 e2
+        | op -> err {|Fp: Unsupported Z3 binop operator "%a"|} Ty.pp_op op
 
-      let encode_cvtop op e =
+      let _encode_cvtop op e =
         match op with
         | PromoteF32 | DemoteF64 -> FloatingPoint.mk_to_fp_float ctx rne e sort
         | ConvertSI32 | ConvertSI64 ->
@@ -449,7 +419,7 @@ module Fresh = struct
         | Reinterpret_int -> FloatingPoint.mk_to_fp_bv ctx e sort
         | ToString -> FuncDecl.apply to_string [ e ]
         | OfString -> FuncDecl.apply of_string [ e ]
-        | _ -> err {|Fp: Unsupported Z3 cvtop operator "%a"|} Ty.pp_cvtop op
+        | _ -> err {|Fp: Unsupported Z3 cvtop operator "%a"|} Ty.pp_op op
     end
 
     module F32 = Make_fp (struct
@@ -504,7 +474,7 @@ module Fresh = struct
       | Ty.Ty_bitv 64 -> I64.encode_unop
       | Ty.Ty_fp 32 -> F32.encode_unop
       | Ty.Ty_fp 64 -> F64.encode_unop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit -> assert false
+      | _ -> assert false
 
     let encode_binop = function
       | Ty.Ty_int | Ty.Ty_real -> Arithmetic.encode_binop
@@ -515,41 +485,12 @@ module Fresh = struct
       | Ty.Ty_bitv 64 -> I64.encode_binop
       | Ty.Ty_fp 32 -> F32.encode_binop
       | Ty.Ty_fp 64 -> F64.encode_binop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit -> assert false
+      | _ -> assert false
 
     let encode_triop = function
-      | Ty.Ty_int | Ty_real -> Arithmetic.encode_triop
       | Ty.Ty_bool -> Boolean.encode_triop
       | Ty.Ty_str -> Str.encode_triop
-      | Ty.Ty_bitv 8 -> I8.encode_triop
-      | Ty.Ty_bitv 32 -> I32.encode_triop
-      | Ty.Ty_bitv 64 -> I64.encode_triop
-      | Ty.Ty_fp 32 -> F32.encode_triop
-      | Ty.Ty_fp 64 -> F64.encode_triop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit -> assert false
-
-    let encode_relop = function
-      | Ty.Ty_int | Ty.Ty_real -> Arithmetic.encode_relop
-      | Ty.Ty_bool -> Boolean.encode_relop
-      | Ty.Ty_str -> Str.encode_relop
-      | Ty.Ty_bitv 8 -> I8.encode_relop
-      | Ty.Ty_bitv 32 -> I32.encode_relop
-      | Ty.Ty_bitv 64 -> I64.encode_relop
-      | Ty.Ty_fp 32 -> F32.encode_relop
-      | Ty.Ty_fp 64 -> F64.encode_relop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit -> assert false
-
-    let encode_cvtop = function
-      | Ty.Ty_int -> Arithmetic.Integer.encode_cvtop
-      | Ty.Ty_real -> Arithmetic.Real.encode_cvtop
-      | Ty.Ty_bool -> Boolean.encode_cvtop
-      | Ty.Ty_str -> Str.encode_cvtop
-      | Ty.Ty_bitv 8 -> I8.encode_cvtop
-      | Ty.Ty_bitv 32 -> I32.encode_cvtop
-      | Ty.Ty_bitv 64 -> I64.encode_cvtop
-      | Ty.Ty_fp 32 -> F32.encode_cvtop
-      | Ty.Ty_fp 64 -> F64.encode_cvtop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit -> assert false
+      | _ -> assert false
 
     let encode_naryop = function
       | Ty.Ty_bool -> Boolean.encode_naryop
@@ -584,26 +525,19 @@ module Fresh = struct
         let base' = encode_val (Num (I32 base)) in
         let offset' = encode_expr offset in
         I32.encode_binop Add base' offset'
-      | Unop (ty, op, e) ->
-        let e' = encode_expr e in
-        encode_unop ty op e'
-      | Binop (ty, op, e1, e2) ->
-        let e1' = encode_expr e1 in
-        let e2' = encode_expr e2 in
-        encode_binop ty op e1' e2'
-      | Triop (ty, op, e1, e2, e3) ->
-        let e1' = encode_expr e1
-        and e2' = encode_expr e2
-        and e3' = encode_expr e3 in
-        encode_triop ty op e1' e2' e3'
-      | Relop (ty, op, e1, e2) ->
-        let e1' = encode_expr e1
-        and e2' = encode_expr e2 in
-        encode_relop ty op e1' e2'
-      | Cvtop (ty, op, e) ->
-        let e' = encode_expr e in
-        encode_cvtop ty op e'
-      | Naryop (ty, op, es) ->
+      | Op { ty; op; args = U e } ->
+        let e = encode_expr e in
+        encode_unop ty op e
+      | Op { ty; op; args = B (e1, e2) } ->
+        let e1 = encode_expr e1 in
+        let e2 = encode_expr e2 in
+        encode_binop ty op e1 e2
+      | Op { ty; op; args = T (e1, e2, e3) } ->
+        let e1 = encode_expr e1
+        and e2 = encode_expr e2
+        and e3 = encode_expr e3 in
+        encode_triop ty op e1 e2 e3
+      | Op { ty; op; args = N es } ->
         let es' = List.map encode_expr es in
         encode_naryop ty op es'
       | Symbol { name; ty } -> Z3.Expr.mk_const_s ctx name (get_sort ty)

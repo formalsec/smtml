@@ -16,11 +16,11 @@ let () =
     let triop = triop' Ty_bool Ite Bool.true_ (I32.v 1l) (I32.v 0l) in
     simplify triop = I32.v 1l );
   assert (
-    let relop = relop' (Ty_bitv 32) Lt (I32.v 2l) (I32.v 1l) in
-    simplify relop = make @@ Val False );
+    let binop = binop' (Ty_bitv 32) Lt (I32.v 2l) (I32.v 1l) in
+    simplify binop = make @@ Val False );
   assert (
-    let cvtop = cvtop' (Ty_bitv 32) WrapI64 (I64.v 1L) in
-    simplify cvtop = I32.v 1l )
+    let unop = unop' (Ty_bitv 32) WrapI64 (I64.v 1L) in
+    simplify unop = I32.v 1l )
 
 (* Test simplify of left- and righ- associative operators *)
 let () =

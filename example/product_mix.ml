@@ -7,11 +7,11 @@ let int x = Expr.value (Int x)
 
 let symbol x = Expr.mk_symbol Symbol.(x @: Ty_int)
 
-let ( = ) i1 i2 = Expr.relop Ty_bool Eq i1 i2
+let ( = ) i1 i2 = Expr.binop Ty_bool Eq i1 i2
 
-let ( >= ) i1 i2 = Expr.relop Ty_int Ge i1 i2
+let ( >= ) i1 i2 = Expr.binop Ty_int Ge i1 i2
 
-let ( <= ) i1 i2 = Expr.relop Ty_int Le i1 i2
+let ( <= ) i1 i2 = Expr.binop Ty_int Le i1 i2
 
 let ( + ) i1 i2 = Expr.binop Ty_int Add i1 i2
 

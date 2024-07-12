@@ -81,63 +81,51 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let unop = function
         | Not -> M.not_
-        | op -> err {|Bool: Unsupported Z3 unop operator "%a"|} Ty.pp_unop op
+        | op -> err {|Bool: Unsupported Z3 unop operator "%a"|} Ty.pp_op op
 
-      let binop = function
-        | And -> M.and_
-        | Or -> M.or_
-        | Xor -> M.xor
-        | op -> err {|Bool: Unsupported Z3 binop operator "%a"|} Ty.pp_binop op
-
-      let triop = function
-        | Ite -> M.ite
-        | op -> err {|Bool: Unsupported Z3 triop operator "%a"|} Ty.pp_triop op
-
-      let relop op e1 e2 =
+      let binop op e1 e2 =
         match op with
         | Eq -> M.eq e1 e2
         | Ne -> M.distinct [ e1; e2 ]
-        | _ -> err {|Bool: Unsupported Z3 relop operator "%a"|} Ty.pp_relop op
+        | And -> M.and_ e1 e2
+        | Or -> M.or_ e1 e2
+        | Xor -> M.xor e1 e2
+        | op -> err {|Bool: Unsupported Z3 binop operator "%a"|} Ty.pp_op op
 
-      let cvtop _op _e = assert false
+      let triop = function
+        | Ite -> M.ite
+        | op -> err {|Bool: Unsupported Z3 triop operator "%a"|} Ty.pp_op op
     end
 
     module Int_impl = struct
       let v i = M.int i [@@inline]
 
+      (* TODO: Uninterpreted cvtops *)
       let unop = function
         | Neg -> M.Int.neg
-        | op -> err {|Int: Unsupported unop operator "%a"|} Ty.pp_unop op
+        | ToString -> assert false
+        | OfString -> assert false
+        | Reinterpret_float -> M.Real.to_int
+        | op -> err {|Int: Unsupported unop operator "%a"|} Ty.pp_op op
 
       let binop = function
+        | Lt -> M.Int.lt
+        | Gt -> M.Int.gt
+        | Le -> M.Int.le
+        | Ge -> M.Int.ge
         | Add -> M.Int.add
         | Sub -> M.Int.sub
         | Mul -> M.Int.mul
         | Div -> M.Int.div
         | Rem -> M.Int.rem
         | Pow -> M.Int.pow
-        | op -> err {|Int: Unsupported binop operator "%a"|} Ty.pp_binop op
-
-      let relop = function
-        | Eq | Ne -> assert false
-        | Lt -> M.Int.lt
-        | Gt -> M.Int.gt
-        | Le -> M.Int.le
-        | Ge -> M.Int.ge
-        | op -> err {|Int: Unsupported relop operator "%a"|} Ty.pp_relop op
-
-      (* TODO: Uninterpreted cvtops *)
-      let cvtop op e =
-        match op with
-        | ToString -> assert false
-        | OfString -> assert false
-        | Reinterpret_float -> M.Real.to_int e
-        | op -> err {|Int: Unsupported cvtop operator "%a"|} Ty.pp_cvtop op
+        | op -> err {|Int: Unsupported binop operator "%a"|} Ty.pp_op op
     end
 
     module Real_impl = struct
       let v f = M.real f [@@inline]
 
+      (* TODO: Uninterpreted cvtops *)
       let unop op e =
         let open M in
         match op with
@@ -148,21 +136,14 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           let x_int = M.Real.to_int e in
           ite (eq (Int.to_real x_int) e) x_int (Int.add x_int (int 1))
         | Floor -> Real.to_int e
+        | ToString -> assert false
+        | OfString -> assert false
+        | ConvertUI32 -> assert false
+        | Reinterpret_int -> M.Int.to_real e
         | Nearest | Is_nan | _ ->
-          err {|Real: Unsupported unop operator "%a"|} Ty.pp_unop op
+          err {|Real: Unsupported unop operator "%a"|} Ty.pp_op op
 
       let binop op e1 e2 =
-        match op with
-        | Add -> M.Real.add e1 e2
-        | Sub -> M.Real.sub e1 e2
-        | Mul -> M.Real.mul e1 e2
-        | Div -> M.Real.div e1 e2
-        | Pow -> M.Real.pow e1 e2
-        | Min -> M.ite (M.Real.le e1 e2) e1 e2
-        | Max -> M.ite (M.Real.ge e1 e2) e1 e2
-        | _ -> err {|Real: Unsupported binop operator "%a"|} Ty.pp_binop op
-
-      let relop op e1 e2 =
         match op with
         | Eq -> M.eq e1 e2
         | Ne -> M.distinct [ e1; e2 ]
@@ -170,16 +151,14 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Gt -> M.Real.gt e1 e2
         | Le -> M.Real.le e1 e2
         | Ge -> M.Real.ge e1 e2
-        | _ -> err {|Real: Unsupported relop operator "%a"|} Ty.pp_relop op
-
-      (* TODO: Uninterpreted cvtops *)
-      let cvtop op e =
-        match op with
-        | ToString -> assert false
-        | OfString -> assert false
-        | ConvertUI32 -> assert false
-        | Reinterpret_int -> M.Int.to_real e
-        | op -> err {|Real: Unsupported cvtop operator "%a"|} Ty.pp_cvtop op
+        | Add -> M.Real.add e1 e2
+        | Sub -> M.Real.sub e1 e2
+        | Mul -> M.Real.mul e1 e2
+        | Div -> M.Real.div e1 e2
+        | Pow -> M.Real.pow e1 e2
+        | Min -> M.ite (M.Real.le e1 e2) e1 e2
+        | Max -> M.ite (M.Real.ge e1 e2) e1 e2
+        | _ -> err {|Real: Unsupported binop operator "%a"|} Ty.pp_op op
     end
 
     module String_impl = struct
@@ -189,10 +168,16 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let unop = function
         | Length -> M.String.length
-        | Trim ->
-          (* FuncDecl.apply trim [ e ] *)
+        | String_trim ->
           assert false
-        | op -> err {|String: Unsupported unop operator "%a"|} Ty.pp_unop op
+          (* FuncDecl.apply trim [ e ] *)
+          (* assert false *)
+        | String_to_code -> M.String.to_code
+        | String_from_code -> M.String.of_code
+        | String_to_int -> M.String.to_int
+        | String_from_int -> M.String.of_int
+        | String_to_float -> assert false
+        | op -> err {|String: Unsupported unop operator "%a"|} Ty.pp_op op
 
       let binop op e1 e2 =
         match op with
@@ -200,32 +185,20 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | String_contains -> M.String.contains e1 ~sub:e2
         | String_prefix -> M.String.is_prefix e1 ~prefix:e2
         | String_suffix -> M.String.is_suffix e1 ~suffix:e2
-        | _ -> err {|String: Unsupported binop operator "%a"|} Ty.pp_binop op
+        | String_last_index -> assert false
+        | _ -> err {|String: Unsupported binop operator "%a"|} Ty.pp_op op
 
       let triop op e1 e2 e3 =
         match op with
         | String_extract -> M.String.sub e1 ~pos:e2 ~len:e3
         | String_index -> M.String.index_of e1 ~sub:e2 ~pos:e3
         | String_replace -> M.String.replace e1 ~pattern:e2 ~with_:e3
-        | _ -> err {|String: Unsupported triop operator "%a"|} Ty.pp_triop op
-
-      let relop op e1 e2 =
-        match op with
-        | Eq -> M.eq e1 e2
-        | Ne -> M.distinct [ e1; e2 ]
-        | _ -> err {|String: Unsupported relop operator "%a"|} Ty.pp_relop op
-
-      let cvtop = function
-        | String_to_code -> M.String.to_code
-        | String_from_code -> M.String.of_code
-        | String_to_int -> M.String.to_int
-        | String_from_int -> M.String.of_int
-        | op -> err {|String: Unsupported cvtop operator "%a"|} Ty.pp_cvtop op
+        | _ -> err {|String: Unsupported triop operator "%a"|} Ty.pp_op op
 
       let naryop op es =
         match op with
         | Concat -> M.String.concat es
-        | _ -> err {|String: Unsupported naryop operator "%a"|} Ty.pp_naryop op
+        | _ -> err {|String: Unsupported naryop operator "%a"|} Ty.pp_op op
     end
 
     module type Bitv_sig = sig
@@ -277,9 +250,17 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Ctz -> ctz
         | Neg -> Bitv.neg
         | Not -> Bitv.lognot
-        | op -> err {|Bitv: Unsupported unary operator "%a"|} Ty.pp_unop op
+        | op -> err {|Bitv: Unsupported unary operator "%a"|} Ty.pp_op op
 
       let binop = function
+        | Lt -> Bitv.lt
+        | LtU -> Bitv.lt_u
+        | Le -> Bitv.le
+        | LeU -> Bitv.le_u
+        | Gt -> Bitv.gt
+        | GtU -> Bitv.gt_u
+        | Ge -> Bitv.ge
+        | GeU -> Bitv.ge_u
         | Add -> Bitv.add
         | Sub -> Bitv.sub
         | Mul -> Bitv.mul
@@ -295,24 +276,9 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | RemU -> Bitv.rem_u
         | Rotl -> Bitv.rotate_left
         | Rotr -> Bitv.rotate_right
-        | op -> err {|Bitv: Unsupported binary operator "%a"|} Ty.pp_binop op
+        | op -> err {|Bitv: Unsupported binary operator "%a"|} Ty.pp_op op
 
-      let triop op _ =
-        err {|Bitv: Unsupported triop operator "%a"|} Ty.pp_triop op
-
-      let relop op e1 e2 =
-        match op with
-        | Eq | Ne -> assert false
-        | Lt -> Bitv.lt e1 e2
-        | LtU -> Bitv.lt_u e1 e2
-        | Le -> Bitv.le e1 e2
-        | LeU -> Bitv.le_u e1 e2
-        | Gt -> Bitv.gt e1 e2
-        | GtU -> Bitv.gt_u e1 e2
-        | Ge -> Bitv.ge e1 e2
-        | GeU -> Bitv.ge_u e1 e2
-
-      let cvtop op e =
+      let _cvtop op e =
         match op with
         | WrapI64 -> Bitv.extract e ~high:(bitwidth - 1) ~low:0
         | Sign_extend n -> Bitv.sign_extend n e
@@ -388,23 +354,9 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Floor -> Float.round_to_integral ~rm:Float.Rounding_mode.rtn e
         | Trunc -> Float.round_to_integral ~rm:Float.Rounding_mode.rtz e
         | Nearest -> Float.round_to_integral ~rm:Float.Rounding_mode.rne e
-        | _ -> err {|Fp: Unsupported Z3 unary operator "%a"|} Ty.pp_unop op
+        | _ -> err {|Fp: Unsupported unary operator "%a"|} Ty.pp_op op
 
       let binop op e1 e2 =
-        match op with
-        | Add -> Float.add ~rm:Float.Rounding_mode.rne e1 e2
-        | Sub -> Float.sub ~rm:Float.Rounding_mode.rne e1 e2
-        | Mul -> Float.mul ~rm:Float.Rounding_mode.rne e1 e2
-        | Div -> Float.div ~rm:Float.Rounding_mode.rne e1 e2
-        | Min -> Float.min e1 e2
-        | Max -> Float.max e1 e2
-        | Rem -> Float.rem e1 e2
-        | _ -> err {|Fp: Unsupported Z3 binop operator "%a"|} Ty.pp_binop op
-
-      let triop op _ =
-        err {|Fp: Unsupported Z3 triop operator "%a"|} Ty.pp_triop op
-
-      let relop op e1 e2 =
         match op with
         | Eq -> Float.eq e1 e2
         | Ne -> not_ @@ Float.eq e1 e2
@@ -412,9 +364,16 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Le -> Float.le e1 e2
         | Gt -> Float.gt e1 e2
         | Ge -> Float.ge e1 e2
-        | _ -> err {|Fp: Unsupported Z3 relop operator "%a"|} Ty.pp_relop op
+        | Add -> Float.add ~rm:Float.Rounding_mode.rne e1 e2
+        | Sub -> Float.sub ~rm:Float.Rounding_mode.rne e1 e2
+        | Mul -> Float.mul ~rm:Float.Rounding_mode.rne e1 e2
+        | Div -> Float.div ~rm:Float.Rounding_mode.rne e1 e2
+        | Min -> Float.min e1 e2
+        | Max -> Float.max e1 e2
+        | Rem -> Float.rem e1 e2
+        | _ -> err {|Fp: Unsupported binop operator "%a"|} Ty.pp_op op
 
-      let cvtop op e =
+      let _cvtop op e =
         match op with
         | PromoteF32 | DemoteF64 ->
           Float.to_fp eb sb ~rm:Float.Rounding_mode.rne e
@@ -429,7 +388,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | OfString ->
           (* TODO: FuncDecl.apply of_string [ e ] *)
           assert false
-        | _ -> err {|Fp: Unsupported Z3 cvtop operator "%a"|} Ty.pp_cvtop op
+        | _ -> err {|Fp: Unsupported cvtop operator "%a"|} Ty.pp_op op
     end
 
     module Float32_impl = Float_impl (struct
@@ -487,7 +446,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty.Ty_bitv 64 -> I64.unop
       | Ty.Ty_fp 32 -> Float32_impl.unop
       | Ty.Ty_fp 64 -> Float64_impl.unop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit -> assert false
+      | _ -> assert false
 
     let binop = function
       | Ty.Ty_int -> Int_impl.binop
@@ -499,42 +458,25 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty.Ty_bitv 64 -> I64.binop
       | Ty.Ty_fp 32 -> Float32_impl.binop
       | Ty.Ty_fp 64 -> Float64_impl.binop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit -> assert false
+      | _ -> assert false
 
     let triop = function
       | Ty.Ty_int | Ty.Ty_real -> assert false
       | Ty.Ty_bool -> Bool_impl.triop
       | Ty.Ty_str -> String_impl.triop
-      | Ty.Ty_bitv 8 -> I8.triop
-      | Ty.Ty_bitv 32 -> I32.triop
-      | Ty.Ty_bitv 64 -> I64.triop
-      | Ty.Ty_fp 32 -> Float32_impl.triop
-      | Ty.Ty_fp 64 -> Float64_impl.triop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit -> assert false
+      | _ -> assert false
 
-    let relop = function
-      | Ty.Ty_int -> Int_impl.relop
-      | Ty.Ty_real -> Real_impl.relop
-      | Ty.Ty_bool -> Bool_impl.relop
-      | Ty.Ty_str -> String_impl.relop
-      | Ty.Ty_bitv 8 -> I8.relop
-      | Ty.Ty_bitv 32 -> I32.relop
-      | Ty.Ty_bitv 64 -> I64.relop
-      | Ty.Ty_fp 32 -> Float32_impl.relop
-      | Ty.Ty_fp 64 -> Float64_impl.relop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit -> assert false
-
-    let cvtop = function
-      | Ty.Ty_int -> Int_impl.cvtop
-      | Ty.Ty_real -> Real_impl.cvtop
-      | Ty.Ty_bool -> Bool_impl.cvtop
-      | Ty.Ty_str -> String_impl.cvtop
-      | Ty.Ty_bitv 8 -> I8.cvtop
-      | Ty.Ty_bitv 32 -> I32.cvtop
-      | Ty.Ty_bitv 64 -> I64.cvtop
-      | Ty.Ty_fp 32 -> Float32_impl.cvtop
-      | Ty.Ty_fp 64 -> Float64_impl.cvtop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit -> assert false
+    (* let cvtop = function *)
+    (*   | Ty.Ty_int -> Int_impl.cvtop *)
+    (*   | Ty.Ty_real -> Real_impl.cvtop *)
+    (*   | Ty.Ty_bool -> Bool_impl.cvtop *)
+    (*   | Ty.Ty_str -> String_impl.cvtop *)
+    (*   | Ty.Ty_bitv 8 -> I8.cvtop *)
+    (*   | Ty.Ty_bitv 32 -> I32.cvtop *)
+    (*   | Ty.Ty_bitv 64 -> I64.cvtop *)
+    (*   | Ty.Ty_fp 32 -> Float32_impl.cvtop *)
+    (*   | Ty.Ty_fp 64 -> Float64_impl.cvtop *)
+    (*   | _ -> assert false *)
 
     let naryop = function
       | Ty.Ty_str -> String_impl.naryop
@@ -548,26 +490,19 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         let offset' = encode_expr symbol_table offset in
         I32.binop Add base' offset'
       | Symbol sym -> make_symbol symbol_table sym
-      | Unop (ty, op, e) ->
+      | Op { ty; op; args = U e } ->
         let e = encode_expr symbol_table e in
         unop ty op e
-      | Binop (ty, op, e1, e2) ->
+      | Op { ty; op; args = B (e1, e2) } ->
         let e1 = encode_expr symbol_table e1 in
         let e2 = encode_expr symbol_table e2 in
         binop ty op e1 e2
-      | Triop (ty, op, e1, e2, e3) ->
+      | Op { ty; op; args = T (e1, e2, e3) } ->
         let e1 = encode_expr symbol_table e1 in
         let e2 = encode_expr symbol_table e2 in
         let e3 = encode_expr symbol_table e3 in
         triop ty op e1 e2 e3
-      | Relop (ty, op, e1, e2) ->
-        let e1 = encode_expr symbol_table e1 in
-        let e2 = encode_expr symbol_table e2 in
-        relop ty op e1 e2
-      | Cvtop (ty, op, e) ->
-        let e = encode_expr symbol_table e in
-        cvtop ty op e
-      | Naryop (ty, op, es) ->
+      | Op { ty; op; args = N es } ->
         let es = List.map (encode_expr symbol_table) es in
         naryop ty op es
       | Extract (e, h, l) ->

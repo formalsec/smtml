@@ -36,105 +36,93 @@ type t =
   | Ty_app
   | Ty_unit
 
-type unop =
-  | Neg
-  | Not
-  | Clz
-  | Ctz
-  (* Float *)
-  | Abs
-  | Sqrt
-  | Is_nan
-  | Ceil
-  | Floor
-  | Trunc
-  | Nearest
-  | Head
-  | Tail
-  | Reverse
-  | Length
-  (* String *)
-  | Trim
-
-type binop =
-  | Add
-  | Sub
-  | Mul
-  | Div
-  | DivU
-  | Rem
-  | RemU
-  | Shl
-  | ShrA
-  | ShrL
-  | And
-  | Or
-  | Xor
-  | Pow
-  | Min
-  | Max
-  | Rotl
-  | Rotr
-  | At
-  | List_append_last
-  | List_append
-  (* String *)
-  | String_prefix
-  | String_suffix
-  | String_contains
-  | String_last_index
-
-type relop =
-  | Eq
-  | Ne
-  | Lt
-  | LtU
-  | Gt
-  | GtU
-  | Le
-  | LeU
-  | Ge
-  | GeU
-
-type triop =
-  | Ite
-  | List_set
-  (* String *)
-  | String_extract
-  | String_replace
-  | String_index
-
-type cvtop =
-  | ToString
-  | OfString
-  | ToBool
-  | OfBool
-  | Reinterpret_int
-  | Reinterpret_float
-  | DemoteF64
-  | PromoteF32
-  | ConvertSI32
-  | ConvertUI32
-  | ConvertSI64
-  | ConvertUI64
-  | TruncSF32
-  | TruncUF32
-  | TruncSF64
-  | TruncUF64
-  | WrapI64
-  | Sign_extend of int
-  | Zero_extend of int
-  (* String *)
-  | String_to_code
-  | String_from_code
-  | String_to_int
-  | String_from_int
-  | String_to_float
-
-type naryop =
-  | Logand
-  | Logor
-  | Concat
+type 'a op =
+  | Neg : [ `Unary ] op
+  | Not : [ `Unary ] op
+  | Clz : [ `Unary ] op
+  | Ctz : [ `Unary ] op
+  | Abs : [ `Unary ] op
+  | Sqrt : [ `Unary ] op
+  | Is_nan : [ `Unary ] op
+  | Ceil : [ `Unary ] op
+  | Floor : [ `Unary ] op
+  | Trunc : [ `Unary ] op
+  | Nearest : [ `Unary ] op
+  | Length : [ `Unary ] op
+  | List_head : [ `Unary ] op
+  | List_tail : [ `Unary ] op
+  | List_reverse : [ `Unary ] op
+  | Add : [ `Binary ] op
+  | Sub : [ `Binary ] op
+  | Mul : [ `Binary ] op
+  | Div : [ `Binary ] op
+  | DivU : [ `Binary ] op
+  | Rem : [ `Binary ] op
+  | RemU : [ `Binary ] op
+  | Shl : [ `Binary ] op
+  | ShrA : [ `Binary ] op
+  | ShrL : [ `Binary ] op
+  | And : [ `Binary ] op
+  | Or : [ `Binary ] op
+  | Xor : [ `Binary ] op
+  | Pow : [ `Binary ] op
+  | Min : [ `Binary ] op
+  | Max : [ `Binary ] op
+  | Rotl : [ `Binary ] op
+  | Rotr : [ `Binary ] op
+  | At : [ `Binary ] op
+  | List_append_last : [ `Binary ] op
+  | List_append : [ `Binary ] op
+  | Eq : [ `Binary ] op
+  | Ne : [ `Binary ] op
+  | Lt : [ `Binary ] op
+  | LtU : [ `Binary ] op
+  | Gt : [ `Binary ] op
+  | GtU : [ `Binary ] op
+  | Le : [ `Binary ] op
+  | LeU : [ `Binary ] op
+  | Ge : [ `Binary ] op
+  | GeU : [ `Binary ] op
+  | Ite : [ `Ternary ] op
+  | List_set : [ `Ternary ] op
+  | ToString : [ `Unary ] op
+  | OfString : [ `Unary ] op
+  | ToBool : [ `Unary ] op
+  | OfBool : [ `Unary ] op
+  | Reinterpret_int : [ `Unary ] op
+  | Reinterpret_float : [ `Unary ] op
+  | DemoteF64 : [ `Unary ] op
+  | PromoteF32 : [ `Unary ] op
+  | ConvertSI32 : [ `Unary ] op
+  | ConvertUI32 : [ `Unary ] op
+  | ConvertSI64 : [ `Unary ] op
+  | ConvertUI64 : [ `Unary ] op
+  | TruncSF32 : [ `Unary ] op
+  | TruncUF32 : [ `Unary ] op
+  | TruncSF64 : [ `Unary ] op
+  | TruncUF64 : [ `Unary ] op
+  | WrapI64 : [ `Unary ] op
+  | Sign_extend : int -> [ `Unary ] op
+  | Zero_extend : int -> [ `Unary ] op
+  | Logand : [ `Nary ] op
+  | Logor : [ `Nary ] op
+  | Concat : [ `Nary ] op
+  | String_trim : [ `Unary ] op
+  (* Binop *)
+  | String_prefix : [ `Binary ] op
+  | String_suffix : [ `Binary ] op
+  | String_contains : [ `Binary ] op
+  | String_last_index : [ `Binary ] op
+  (* Triop *)
+  | String_extract : [ `Ternary ] op
+  | String_replace : [ `Ternary ] op
+  | String_index : [ `Ternary ] op
+  (* Cvtop *)
+  | String_to_code : [ `Unary ] op
+  | String_from_code : [ `Unary ] op
+  | String_to_int : [ `Unary ] op
+  | String_from_int : [ `Unary ] op
+  | String_to_float : [ `Unary ] op
 
 type logic =
   | AUFLIA
@@ -164,7 +152,18 @@ type logic =
   | UFLRA
   | UFNIA
 
-let pp_unop fmt (op : unop) =
+let pp fmt = function
+  | Ty_int -> pp_string fmt "int"
+  | Ty_real -> pp_string fmt "real"
+  | Ty_bool -> pp_string fmt "bool"
+  | Ty_str -> pp_string fmt "str"
+  | Ty_bitv n -> fprintf fmt "i%d" n
+  | Ty_fp n -> fprintf fmt "f%d" n
+  | Ty_list -> pp_string fmt "list"
+  | Ty_app -> pp_string fmt "app"
+  | Ty_unit -> pp_string fmt "unit"
+
+let pp_op (type a) fmt (op : a op) =
   match op with
   | Neg -> pp_string fmt "neg"
   | Not -> pp_string fmt "not"
@@ -177,14 +176,10 @@ let pp_unop fmt (op : unop) =
   | Floor -> pp_string fmt "floor"
   | Trunc -> pp_string fmt "trunc"
   | Nearest -> pp_string fmt "nearest"
-  | Head -> pp_string fmt "head"
-  | Tail -> pp_string fmt "tail"
-  | Reverse -> pp_string fmt "reverse"
+  | List_head -> pp_string fmt "head"
+  | List_tail -> pp_string fmt "tail"
+  | List_reverse -> pp_string fmt "reverse"
   | Length -> pp_string fmt "length"
-  | Trim -> pp_string fmt "trim"
-
-let pp_binop fmt (op : binop) =
-  match op with
   | Add -> pp_string fmt "add"
   | Sub -> pp_string fmt "sub"
   | Mul -> pp_string fmt "mul"
@@ -206,21 +201,8 @@ let pp_binop fmt (op : binop) =
   | At -> pp_string fmt "at"
   | List_append_last -> pp_string fmt "append_last"
   | List_append -> pp_string fmt "append"
-  | String_prefix -> pp_string fmt "prefixof"
-  | String_suffix -> pp_string fmt "suffixof"
-  | String_contains -> pp_string fmt "contains"
-  | String_last_index -> pp_string fmt "last_indexof"
-
-let pp_triop fmt (op : triop) =
-  match op with
   | Ite -> pp_string fmt "ite"
-  | String_extract -> pp_string fmt "substr"
-  | String_replace -> pp_string fmt "replace"
-  | String_index -> pp_string fmt "indexof"
   | List_set -> pp_string fmt "set"
-
-let pp_relop fmt (op : relop) =
-  match op with
   | Eq -> pp_string fmt "eq"
   | Ne -> pp_string fmt "ne"
   | Lt -> pp_string fmt "lt"
@@ -231,9 +213,6 @@ let pp_relop fmt (op : relop) =
   | LeU -> pp_string fmt "le_u"
   | Ge -> pp_string fmt "ge"
   | GeU -> pp_string fmt "ge_u"
-
-let pp_cvtop fmt (op : cvtop) =
-  match op with
   | ToString -> pp_string fmt "to_string"
   | OfString -> pp_string fmt "of_string"
   | ToBool -> pp_string fmt "to_bool"
@@ -253,28 +232,22 @@ let pp_cvtop fmt (op : cvtop) =
   | WrapI64 -> pp_string fmt "wrap_i64"
   | Sign_extend sz -> fprintf fmt "extend_i%d_s" sz
   | Zero_extend sz -> fprintf fmt "extend_i%d_u" sz
+  | Logand -> pp_string fmt "and"
+  | Logor -> pp_string fmt "or"
+  | Concat -> pp_string fmt "++"
+  | String_trim -> pp_string fmt "trim"
+  | String_prefix -> pp_string fmt "prefixof"
+  | String_suffix -> pp_string fmt "suffixof"
+  | String_contains -> pp_string fmt "contains"
+  | String_last_index -> pp_string fmt "last_indexof"
+  | String_extract -> pp_string fmt "substr"
+  | String_replace -> pp_string fmt "replace"
+  | String_index -> pp_string fmt "indexof"
   | String_to_code -> pp_string fmt "to_code"
   | String_from_code -> pp_string fmt "from_code"
   | String_to_int -> pp_string fmt "to_int"
   | String_from_int -> pp_string fmt "from_int"
   | String_to_float -> pp_string fmt "to_float"
-
-let pp_naryop fmt (op : naryop) =
-  match op with
-  | Logand -> pp_string fmt "and"
-  | Logor -> pp_string fmt "or"
-  | Concat -> pp_string fmt "++"
-
-let pp fmt = function
-  | Ty_int -> pp_string fmt "int"
-  | Ty_real -> pp_string fmt "real"
-  | Ty_bool -> pp_string fmt "bool"
-  | Ty_str -> pp_string fmt "str"
-  | Ty_bitv n -> fprintf fmt "i%d" n
-  | Ty_fp n -> fprintf fmt "f%d" n
-  | Ty_list -> pp_string fmt "list"
-  | Ty_app -> pp_string fmt "app"
-  | Ty_unit -> pp_string fmt "unit"
 
 let pp_logic fmt : logic -> unit = function
   | AUFLIA -> pp_string fmt "AUFLIA"
@@ -309,6 +282,22 @@ let equal t1 t2 =
   | Ty_int, Ty_int | Ty_real, Ty_real | Ty_bool, Ty_bool | Ty_str, Ty_str ->
     true
   | Ty_bitv n1, Ty_bitv n2 | Ty_fp n1, Ty_fp n2 -> n1 = n2
+  | _ -> false
+
+let equal_op (type a) (op1 : a op) (op2 : a op) : bool =
+  match (op1, op2) with
+  | String_trim, String_trim -> true
+  | String_prefix, String_prefix -> true
+  | String_suffix, String_suffix -> true
+  | String_contains, String_contains -> true
+  | String_last_index, String_last_index -> true
+  | String_extract, String_extract -> true
+  | String_replace, String_replace -> true
+  | String_index, String_index -> true
+  | String_to_code, String_to_code -> true
+  | String_from_code, String_from_code -> true
+  | String_to_int, String_to_int -> true
+  | String_from_int, String_from_int -> true
   | _ -> false
 
 let string_of_type (ty : t) : string = Format.asprintf "%a" pp ty

@@ -18,15 +18,6 @@
 
 open Ty
 
-type op_type =
-  [ `Unop of Ty.unop
-  | `Binop of Ty.binop
-  | `Relop of Ty.relop
-  | `Triop of Ty.triop
-  | `Cvtop of Ty.cvtop
-  | `Naryop of Ty.naryop
-  ]
-
 exception DivideByZero
 
 exception Value of Ty.t
@@ -36,17 +27,17 @@ exception
     { index : int
     ; value : Value.t
     ; ty : Ty.t
-    ; op : op_type
+    (* ; op : [ `Unary | `Binary | `Ternary | `Nary ] Ty.op *)
     }
 
-val unop : Ty.t -> unop -> Value.t -> Value.t
+exception ConversionToInteger
 
-val binop : Ty.t -> binop -> Value.t -> Value.t -> Value.t
+exception IntegerOverflow
 
-val triop : Ty.t -> triop -> Value.t -> Value.t -> Value.t -> Value.t
+val unop : Ty.t -> [ `Unary ] op -> Value.t -> Value.t
 
-val relop : Ty.t -> relop -> Value.t -> Value.t -> bool
+val binop : Ty.t -> [ `Binary ] op -> Value.t -> Value.t -> Value.t
 
-val cvtop : Ty.t -> cvtop -> Value.t -> Value.t
+val triop : Ty.t -> [ `Ternary ] op -> Value.t -> Value.t -> Value.t -> Value.t
 
-val naryop : Ty.t -> naryop -> Value.t list -> Value.t
+val naryop : Ty.t -> [ `Nary ] op -> Value.t list -> Value.t

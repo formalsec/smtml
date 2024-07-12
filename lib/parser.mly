@@ -43,12 +43,10 @@ let get_bind x = Hashtbl.find varmap x
 %token <bool> BOOL
 %token <string> STR
 %token <string> SYMBOL
-%token <Ty.t * Ty.unop> UNARY
-%token <Ty.t * Ty.binop> BINARY
-%token <Ty.t * Ty.triop> TERNARY
-%token <Ty.t * Ty.relop> RELOP
-%token <Ty.t * Ty.cvtop> CVTOP
-%token <Ty.t * Ty.naryop> NARY
+%token <Ty.t * [ `Unary ] Ty.op> UNARY
+%token <Ty.t * [ `Binary ] Ty.op> BINARY
+%token <Ty.t * [ `Ternary ] Ty.op> TERNARY
+%token <Ty.t * [ `Nary ] Ty.op> NARY
 %token <Ty.t> TYPE
 %token <Ty.logic> LOGIC
 
@@ -78,12 +76,14 @@ let s_expr :=
 let paren_op :=
   | PTR; LPAREN; _ = TYPE; x = NUM; RPAREN; offset = s_expr;
     { Ptr { base = Int32.of_int x; offset } }
-  | (ty, op) = UNARY; e = s_expr; <Unop>
-  | (ty, op) = BINARY; e1 = s_expr; e2 = s_expr; <Binop>
-  | (ty, op) = TERNARY; e1 = s_expr; e2 = s_expr; e3 = s_expr; <Triop>
-  | (ty, op) = CVTOP; e = s_expr; <Cvtop>
-  | (ty, op) = RELOP; e1 = s_expr; e2 = s_expr; <Relop>
-  | (ty, op) = NARY; es = list(s_expr); <Naryop>
+  | (ty, op) = UNARY; e = s_expr;
+    { Op { ty; op; args = U e } }
+  | (ty, op) = BINARY; e1 = s_expr; e2 = s_expr;
+    { Op { ty; op; args = B (e1, e2) } }
+  | (ty, op) = TERNARY; e1 = s_expr; e2 = s_expr; e3 = s_expr;
+    { Op { ty; op; args = T (e1, e2, e3) } }
+  | (ty, op) = NARY; es = list(s_expr);
+    { Op { ty; op; args = N es } }
   | EXTRACT; ~ = s_expr; l = NUM; h = NUM; { Extract ( s_expr, h, l) }
   | CONCAT; e1 = s_expr; e2 = s_expr; <Concat>
 

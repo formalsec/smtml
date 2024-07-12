@@ -8,11 +8,11 @@ module Make (M : Mappings_intf.S) = struct
     assert (
       let x = Expr.mk_symbol Symbol.("x" @: Ty_real) in
       let y = Expr.mk_symbol Symbol.("y" @: Ty_real) in
-      let c0 = Expr.relop Ty_bool Eq x y in
+      let c0 = Expr.binop Ty_bool Eq x y in
       let c1 =
-        Expr.relop Ty_bool Eq
-          (Expr.cvtop Ty_real ToString x)
-          (Expr.cvtop Ty_real ToString y)
+        Expr.binop Ty_bool Eq
+          (Expr.unop Ty_real ToString x)
+          (Expr.unop Ty_real ToString y)
       in
       `Sat = Solver.check solver [ c0; c1 ] )
 end

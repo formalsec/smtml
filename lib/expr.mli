@@ -28,14 +28,20 @@ and expr =
   | Symbol of Symbol.t
   | List of t list
   | App : [> `Op of string ] * t list -> expr
-  | Unop of Ty.t * Ty.unop * t
-  | Binop of Ty.t * Ty.binop * t * t
-  | Triop of Ty.t * Ty.triop * t * t * t
-  | Relop of Ty.t * Ty.relop * t * t
-  | Cvtop of Ty.t * Ty.cvtop * t
-  | Naryop of Ty.t * Ty.naryop * t list
+  | Op :
+      { ty : Ty.t
+      ; op : 'a Ty.op
+      ; args : 'a ar
+      }
+      -> expr
   | Extract of t * int * int
   | Concat of t * t
+
+and 'a ar =
+  | U : t -> [ `Unary ] ar
+  | B : t * t -> [ `Binary ] ar
+  | T : t * t * t -> [ `Ternary ] ar
+  | N : t list -> [ `Nary ] ar
 
 val equal : t -> t -> bool
 
@@ -55,8 +61,6 @@ val is_symbolic : t -> bool
 
 val get_symbols : t list -> Symbol.t list
 
-val negate_relop : t -> (t, string) Result.t
-
 val pp : Format.formatter -> t -> unit
 
 val pp_smt : Format.formatter -> t list -> unit
@@ -72,40 +76,28 @@ val ptr : int32 -> t -> t
 val symbol : Symbol.t -> t
 
 (** Smart unop constructor, applies simplifications at constructor level *)
-val unop : Ty.t -> Ty.unop -> t -> t
+val unop : Ty.t -> [ `Unary ] Ty.op -> t -> t
 
 (** Dumb unop constructor, no simplifications *)
-val unop' : Ty.t -> Ty.unop -> t -> t
+val unop' : Ty.t -> [ `Unary ] Ty.op -> t -> t
 
 (** Smart binop constructor, applies simplifications at constructor level *)
-val binop : Ty.t -> Ty.binop -> t -> t -> t
+val binop : Ty.t -> [ `Binary ] Ty.op -> t -> t -> t
 
 (** Dumb binop constructor, no simplifications *)
-val binop' : Ty.t -> Ty.binop -> t -> t -> t
+val binop' : Ty.t -> [ `Binary ] Ty.op -> t -> t -> t
 
 (** Smart triop constructor, applies simplifications at constructor level *)
-val triop : Ty.t -> Ty.triop -> t -> t -> t -> t
+val triop : Ty.t -> [ `Ternary ] Ty.op -> t -> t -> t -> t
 
 (** Dumb triop constructor, no simplifications *)
-val triop' : Ty.t -> Ty.triop -> t -> t -> t -> t
-
-(** Smart relop constructor, applies simplifications at constructor level *)
-val relop : Ty.t -> Ty.relop -> t -> t -> t
-
-(** Dumb relop constructor, no simplifications *)
-val relop' : Ty.t -> Ty.relop -> t -> t -> t
-
-(** Smart relop constructor, applies simplifications at constructor level *)
-val cvtop : Ty.t -> Ty.cvtop -> t -> t
-
-(** Dumb cvtop constructor, no simplifications *)
-val cvtop' : Ty.t -> Ty.cvtop -> t -> t
+val triop' : Ty.t -> [ `Ternary ] Ty.op -> t -> t -> t -> t
 
 (** Smart naryop constructor, applies simplifications at constructor level *)
-val naryop : Ty.t -> Ty.naryop -> t list -> t
+val naryop : Ty.t -> [ `Nary ] Ty.op -> t list -> t
 
 (** Dumb naryop constructor, no simplifications *)
-val naryop' : Ty.t -> Ty.naryop -> t list -> t
+val naryop' : Ty.t -> [ `Nary ] Ty.op -> t list -> t
 
 (** Smart extract constructor, applies simplifications at constructor level *)
 val extract : t -> high:int -> low:int -> t
