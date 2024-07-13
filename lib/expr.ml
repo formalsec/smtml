@@ -252,17 +252,28 @@ let triop' (ty : Ty.t) (op : triop) (e1 : t) (e2 : t) (e3 : t) : t =
   make (Triop (ty, op, e1, e2, e3))
 [@@inline]
 
-let triop ty (op : triop) (e1 : t) (e2 : t) (e3 : t) : t =
-  match (op, view e1, view e2, view e3) with
-  | Ite, Val True, _, _ -> e2
-  | Ite, Val False, _, _ -> e3
-  | op, Val v1, Val v2, Val v3 -> value (Eval.triop ty op v1 v2 v3)
-  | _ -> triop' ty op e1 e2 e3
-
 let unop' (ty : Ty.t) (op : unop) (hte : t) : t = make (Unop (ty, op, hte))
 [@@inline]
 
-let rec unop (ty : Ty.t) (op : unop) (hte : t) : t =
+let binop' (ty : Ty.t) (op : binop) (hte1 : t) (hte2 : t) : t =
+  make (Binop (ty, op, hte1, hte2))
+[@@inline]
+
+let rec triop ty (op : triop) (e1 : t) (e2 : t) (e3 : t) : t =
+  match (op, view e1, view e2, view e3) with
+  | Ite, Val True, _, _ -> e2
+  | Ite, Val False, _, _ -> e3
+  | Ite, _, _, _ when equal e2 e3 -> e2
+  | Ite, _, Val True, Val False -> e1
+  | Ite, _, Val False, Val True -> unop Ty_bool Not e1
+  | Ite, _, Val False, _ -> binop Ty_bool And (unop Ty_bool Not e1) e3
+  | Ite, _, _ , Val False -> binop Ty_bool And e1 e2
+  | op, Val v1, Val v2, Val v3 -> value (Eval.triop ty op v1 v2 v3)
+  | _ -> triop' ty op e1 e2 e3
+
+and
+
+  unop (ty : Ty.t) (op : unop) (hte : t) : t =
   match (op, view hte) with
   | _, Val v -> value (Eval.unop ty op v)
   | Not, Unop (_, Not, hte') -> hte'
@@ -280,11 +291,9 @@ let rec unop (ty : Ty.t) (op : unop) (hte : t) : t =
     triop ty' Ite cond (unop ty Tail hte1) (unop ty Tail hte2)
   | _ -> unop' ty op hte
 
-let binop' (ty : Ty.t) (op : binop) (hte1 : t) (hte2 : t) : t =
-  make (Binop (ty, op, hte1, hte2))
-[@@inline]
+and 
 
-let rec binop ty (op : binop) (hte1 : t) (hte2 : t) : t =
+  binop ty (op : binop) (hte1 : t) (hte2 : t) : t =
   match (view hte1, view hte2) with
   | Val v1, Val v2 -> value (Eval.binop ty op v1 v2)
   | Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } -> (
@@ -350,17 +359,10 @@ let rec binop ty (op : binop) (hte1 : t) (hte2 : t) : t =
     | List_append_last -> make (List (es @ [ hte2 ]))
     | List_append -> make (List (hte2 :: es))
     | _ -> binop' ty op hte1 hte2 )
-  | List es, Val _ | List es, Symbol _ -> (
+  | List es, _ -> (
     match op with
     | List_append_last -> make (List (es @ [ hte2 ]))
     | List_append -> make (List (hte2 :: es))
-    | _ -> binop' ty op hte1 hte2 )
-  | List _, Triop (ty', Ite, cond, hte1', hte2') -> (
-    match op with
-    | List_append_last ->
-      triop ty' Ite cond (binop ty op hte1 hte1') (binop ty op hte1 hte2')
-    | List_append ->
-      triop ty' Ite cond (binop ty op hte1 hte1') (binop ty op hte1 hte2')
     | _ -> binop' ty op hte1 hte2 )
   | Triop (ty', Ite, cond, hte1', hte2'), Val (Int _) ->
     triop ty' Ite cond (binop ty op hte1' hte2) (binop ty op hte2' hte2)
@@ -440,6 +442,10 @@ let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
   | _, _, List _ ->
     assert (is_list hte1 |> not);
     value False
+  | Eq, _ , Val True -> hte1
+  | Eq, Val True, _ -> hte2
+  | Eq, Val False, _ -> unop Ty_bool Not hte2
+  | Eq, _, Val False -> unop Ty_bool Not hte1
   | _, _, _ -> relop' ty op hte1 hte2
 
 let cvtop' (ty : Ty.t) (op : cvtop) (hte : t) : t = make (Cvtop (ty, op, hte))
