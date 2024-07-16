@@ -294,15 +294,16 @@ and
 and 
 
   binop ty (op : binop) (hte1 : t) (hte2 : t) : t =
-  match (view hte1, view hte2) with
-  | Val v1, Val v2 -> value (Eval.binop ty op v1 v2)
-  | Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } -> (
+  match (op, view hte1, view hte2) with
+  | And, _, _ when equal hte1 hte2 -> hte1
+  | _, Val v1, Val v2 -> value (Eval.binop ty op v1 v2)
+  | _, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } -> (
     match op with
     | Sub when b1 = b2 -> binop ty Sub os1 os2
     | _ ->
       (* TODO: simplify to i32 here *)
       binop' ty op hte1 hte2 )
-  | Ptr { base; offset }, _ -> (
+  | _, Ptr { base; offset }, _ -> (
     match op with
     | Add ->
       let new_offset = binop (Ty_bitv 32) Add offset hte2 in
@@ -315,21 +316,21 @@ and
       let addr = binop (Ty_bitv 32) Add rhs offset in
       binop ty Rem addr hte2
     | _ -> binop' ty op hte1 hte2 )
-  | _, Ptr { base; offset } -> (
+  | _, _, Ptr { base; offset } -> (
     match op with
     | Add -> ptr base (binop (Ty_bitv 32) Add offset hte1)
     | _ -> binop' ty op hte1 hte2 )
-  | Val (Num (I32 0l)), _ -> (
+  | _, Val (Num (I32 0l)), _ -> (
     match op with
     | Add | Or -> hte2
     | And | Div | DivU | Mul | Rem | RemU -> hte1
     | _ -> binop' ty op hte1 hte2 )
-  | _, Val (Num (I32 0l)) -> (
+  | _, _, Val (Num (I32 0l)) -> (
     match op with
     | Add | Or | Sub -> hte1
     | And | Mul -> hte2
     | _ -> binop' ty op hte1 hte2 )
-  | Binop (ty, op2, x, { node = Val v1; _ }), Val v2 -> (
+  | _, Binop (ty, op2, x, { node = Val v1; _ }), Val v2 -> (
     match (op, op2) with
     | Add, Add ->
       let v = value (Eval.binop ty Add v1 v2) in
@@ -344,7 +345,7 @@ and
       let v = value (Eval.binop ty Mul v1 v2) in
       binop' ty Mul x v
     | _, _ -> binop' ty op hte1 hte2 )
-  | Val v1, Binop (ty, op2, x, { node = Val v2; _ }) -> (
+  | _, Val v1, Binop (ty, op2, x, { node = Val v2; _ }) -> (
     match (op, op2) with
     | Add, Add ->
       let v = value (Eval.binop ty Add v1 v2) in
@@ -353,18 +354,18 @@ and
       let v = value (Eval.binop ty Mul v1 v2) in
       binop' ty Mul v x
     | _, _ -> binop' ty op hte1 hte2 )
-  | List es, Val (Int n) -> (
+  | _, List es, Val (Int n) -> (
     match op with
     | At -> List.nth es n
     | List_append_last -> make (List (es @ [ hte2 ]))
     | List_append -> make (List (hte2 :: es))
     | _ -> binop' ty op hte1 hte2 )
-  | List es, _ -> (
+  | _, List es, _ -> (
     match op with
     | List_append_last -> make (List (es @ [ hte2 ]))
     | List_append -> make (List (hte2 :: es))
     | _ -> binop' ty op hte1 hte2 )
-  | Triop (ty', Ite, cond, hte1', hte2'), Val (Int _) ->
+  | _, Triop (ty', Ite, cond, hte1', hte2'), Val (Int _) ->
     triop ty' Ite cond (binop ty op hte1' hte2) (binop ty op hte2' hte2)
   (* FIXME: this seems wrong? *)
   (* | Binop (_, And, _, _), Val (Num (I32 1l)) -> hte1 *)
