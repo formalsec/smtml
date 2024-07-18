@@ -69,9 +69,10 @@ module Fresh = struct
       | Ty_bitv 8 -> bv8_sort
       | Ty_bitv 32 -> bv32_sort
       | Ty_bitv 64 -> bv64_sort
+      | Ty_bitv n -> Z3.BitVector.mk_sort ctx n
       | Ty_fp 32 -> fp32_sort
       | Ty_fp 64 -> fp64_sort
-      | Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit -> assert false
+      | Ty_fp _ | Ty_list | Ty_app | Ty_unit -> assert false
 
     module Arithmetic = struct
       open Ty
@@ -788,6 +789,13 @@ module Fresh = struct
           (* It can never be something else *)
           assert false )
       | Ty_str, Z3enums.SEQ_SORT -> Str (Z3.Seq.get_string ctx e)
+      | Ty_bitv 1, Z3enums.BV_SORT ->
+        (* Hack: properly represent values with bitwidth = 1 *)
+        let bit = int64_of_bv e in
+        if bit = 1L then True
+        else (
+          assert (bit = 0L);
+          False )
       | Ty_bitv 8, Z3enums.BV_SORT -> Num (I8 (Int64.to_int (int64_of_bv e)))
       | Ty_bitv 32, Z3enums.BV_SORT -> Num (I32 (Int64.to_int32 (int64_of_bv e)))
       | Ty_bitv 64, Z3enums.BV_SORT -> Num (I64 (int64_of_bv e))

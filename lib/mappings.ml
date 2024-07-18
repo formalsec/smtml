@@ -61,9 +61,10 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty_bitv 8 -> i8
       | Ty_bitv 32 -> i32
       | Ty_bitv 64 -> i64
+      | Ty_bitv n -> M.Types.bitv n
       | Ty_fp 32 -> f32
       | Ty_fp 64 -> f64
-      | Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit -> assert false
+      | Ty_fp _ | Ty_list | Ty_app | Ty_unit -> assert false
 
     let make_symbol (symbol_table : sym_tbl) (s : Symbol.t) : M.term =
       match Hashtbl.find_opt symbol_table s with
@@ -590,6 +591,12 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty_str ->
         let str = M.Interp.to_string v in
         Value.Str str
+      | Ty_bitv 1 ->
+        let b = M.Interp.to_bitv v 1 in
+        if b = 1L then Value.True
+        else (
+          assert (b = 0L);
+          Value.False )
       | Ty_bitv 8 ->
         let i8 = M.Interp.to_bitv v 8 in
         Value.Num (I8 (Int64.to_int i8))
