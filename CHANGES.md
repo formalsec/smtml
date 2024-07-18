@@ -1,7 +1,14 @@
 ## Unreleased
 
 ### Added
+### Fixed
+### Changed
 
+## v0.2.2
+
+### Added
+
+- Allow creating and lifting bitvecs of bitwidth = 1
 - Add unitary value `Value.Unit`
 - Add simplification cases for Nan and Infinity floats (@joaomhmpereira)
 - Add `Model.to_json` function
@@ -10,7 +17,7 @@
 ### Fixed
 ### Changed
 
-- Print bitvectors and fps in hexadecimal
+- Print bitvectors and fps in hexadecimal and removed `Value.pp_num`
 - Deprecated `Solver.get_statistics`
 
 ## v0.2.1
