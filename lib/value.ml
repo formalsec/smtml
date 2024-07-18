@@ -42,13 +42,17 @@ let rec compare (v1 : t) (v2 : t) : int =
   | App (`Op op1, vs1), App (`Op op2, vs2) ->
     let c = String.compare op1 op2 in
     if c = 0 then List.compare compare vs1 vs2 else c
-  | _ -> compare v1 v2
+  | _ ->
+    (* TODO: infinite loop ?! *)
+    compare v1 v2
 
 let rec equal (v1 : t) (v2 : t) : bool =
   match (v1, v2) with
   | True, True | False, False | Unit, Unit -> true
   | Int x1, Int x2 -> Int.equal x1 x2
-  | Real x1, Real x2 -> x1 = x2
+  | Real x1, Real x2 ->
+    (* TODO: is this what we want regarding `nan` ? *)
+    Float.equal x1 x2
   | Str x1, Str x2 -> String.equal x1 x2
   | Num x1, Num x2 -> Num.equal x1 x2
   | List l1, List l2 -> List.equal equal l1 l2
@@ -56,27 +60,24 @@ let rec equal (v1 : t) (v2 : t) : bool =
     String.equal op1 op2 && List.equal equal vs1 vs2
   | _ -> false
 
-let rec pp (fmt : Format.formatter) (v : t) : unit =
-  let open Format in
+let rec pp (fmt : Fmt.formatter) (v : t) : unit =
   match v with
-  | True -> pp_print_string fmt "true"
-  | False -> pp_print_string fmt "false"
-  | Unit -> pp_print_string fmt "unit"
-  | Int x -> pp_print_int fmt x
-  | Real x -> fprintf fmt "%F" x
+  | True -> Fmt.string fmt "true"
+  | False -> Fmt.string fmt "false"
+  | Unit -> Fmt.string fmt "unit"
+  | Int x -> Fmt.int fmt x
+  | Real x -> Fmt.pf fmt "%F" x
   | Num x -> Num.pp fmt x
-  | Str x -> Format.fprintf fmt "%S" x
+  | Str x -> Fmt.pf fmt "%S" x
   | List l ->
-    fprintf fmt "[%a]"
-      (pp_print_list ~pp_sep:(fun fmt () -> pp_print_string fmt ", ") pp)
-      l
+    Fmt.pf fmt "[%a]" (Fmt.list ~sep:(fun fmt () -> Fmt.string fmt ", ") pp) l
   | App (`Op op, vs) ->
-    fprintf fmt "%s(%a)" op
-      (pp_print_list ~pp_sep:(fun fmt () -> pp_print_string fmt ", ") pp)
+    Fmt.pf fmt "%s(%a)" op
+      (Fmt.list ~sep:(fun fmt () -> Fmt.string fmt ", ") pp)
       vs
   | _ -> assert false
 
-let to_string (v : t) : string = Format.asprintf "%a" pp v
+let to_string (v : t) : string = Fmt.str "%a" pp v
 
 let rec to_json (v : t) : Yojson.Basic.t =
   match v with

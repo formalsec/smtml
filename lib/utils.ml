@@ -17,7 +17,8 @@
 (***************************************************************************)
 
 let run_and_time_call ~use f =
-  let start = Sys.time () in
+  let start = (Rusage.get Self).utime in
   let result = f () in
-  use (Sys.time () -. start);
+  let stop = (Rusage.get Self).utime in
+  use (stop -. start);
   result

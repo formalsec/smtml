@@ -29,14 +29,14 @@ type script = t list
 
 let pp fmt (instr : t) =
   match instr with
-  | Assert e -> Format.fprintf fmt "(assert @[<h 2>%a@])" Expr.pp e
-  | Check_sat -> Format.pp_print_string fmt "(check-sat)"
-  | Push -> Format.pp_print_string fmt "(push)"
-  | Pop n -> Format.fprintf fmt "(pop %d)" n
+  | Assert e -> Fmt.pf fmt "(assert @[<h 2>%a@])" Expr.pp e
+  | Check_sat -> Fmt.string fmt "(check-sat)"
+  | Push -> Fmt.string fmt "(push)"
+  | Pop n -> Fmt.pf fmt "(pop %d)" n
   | Let_const s ->
     let ty = Symbol.type_of s in
-    Format.fprintf fmt "(let-const %a %a)" Symbol.pp s Ty.pp ty
-  | Get_model -> Format.pp_print_string fmt "(get-model)"
-  | Set_logic logic -> Format.fprintf fmt "(set-logic %a)" Ty.pp_logic logic
+    Fmt.pf fmt "(let-const %a %a)" Symbol.pp s Ty.pp ty
+  | Get_model -> Fmt.string fmt "(get-model)"
+  | Set_logic logic -> Fmt.pf fmt "(set-logic %a)" Ty.pp_logic logic
 
-let to_string (instr : t) : string = Format.asprintf "%a" pp instr
+let to_string (instr : t) : string = Fmt.str "%a" pp instr

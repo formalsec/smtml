@@ -160,21 +160,30 @@ type logic =
   | UFLRA
   | UFNIA
 
-val pp_unop : Format.formatter -> unop -> unit
+val pp_unop : Fmt.formatter -> unop -> unit
 
-val pp_binop : Format.formatter -> binop -> unit
+val pp_binop : Fmt.formatter -> binop -> unit
 
-val pp_triop : Format.formatter -> triop -> unit
+val pp_triop : Fmt.formatter -> triop -> unit
 
-val pp_relop : Format.formatter -> relop -> unit
+val pp_relop : Fmt.formatter -> relop -> unit
 
-val pp_cvtop : Format.formatter -> cvtop -> unit
+val pp_cvtop : Fmt.formatter -> cvtop -> unit
 
-val pp_naryop : Format.formatter -> naryop -> unit
+val pp_naryop : Fmt.formatter -> naryop -> unit
 
-val pp : Format.formatter -> t -> unit
+val pp : Fmt.formatter -> t -> unit
 
-val pp_logic : Format.formatter -> logic -> unit
+val pp_logic : Fmt.formatter -> logic -> unit
+
+val compare : t -> t -> int
+
+val unop_equal : unop -> unop -> bool
+val binop_equal : binop -> binop -> bool
+val relop_equal : relop -> relop -> bool
+val triop_equal : triop -> triop -> bool
+val cvtop_equal : cvtop -> cvtop -> bool
+val naryop_equal : naryop -> naryop -> bool
 
 val equal : t -> t -> bool
 

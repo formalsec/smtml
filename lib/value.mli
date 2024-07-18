@@ -31,7 +31,7 @@ val compare : t -> t -> int
 
 val equal : t -> t -> bool
 
-val pp : Format.formatter -> t -> unit
+val pp : Fmt.formatter -> t -> unit
 
 val to_string : t -> string
 

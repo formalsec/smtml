@@ -49,12 +49,12 @@ let parse_cmdline =
     let state =
       match files with
       | [] ->
-        let ast = Parse.from_file ~filename:"-" in
+        let ast = Parse.from_file (Fpath.v "-") in
         Some (Interpret.start ast)
       | _ ->
         List.fold_left
           (fun state filename ->
-            let ast = Parse.from_file ~filename in
+            let ast = Parse.from_file filename in
             Some (Interpret.start ?state ast) )
           None files
     in
@@ -73,12 +73,12 @@ let parse_cmdline =
     end
   in
 
-  let to_smt2 debug solver file =
+  let to_smt2 debug solver filename =
     let module Mappings =
       (val mappings_of_solver solver : Mappings_intf.S_with_fresh)
     in
     Mappings.set_debug debug;
-    let ast = Parse.from_file ~filename:file in
+    let ast = Parse.from_file filename in
     let assertions =
       List.filter_map (function Ast.Assert e -> Some e | _ -> None) ast
     in
@@ -86,14 +86,15 @@ let parse_cmdline =
   in
 
   let open Cmdliner in
+  let path = ((fun s -> `Ok (Fpath.v s)), Fpath.pp) in
   let file0 =
     Arg.(
       required
-      & pos 0 (some string) None
+      & pos 0 (some path) None
       & info [] ~docv:"files" ~doc:"files to read" )
   in
   let files =
-    Arg.(value & pos_all string [] & info [] ~docv:"files" ~doc:"files to read")
+    Arg.(value & pos_all path [] & info [] ~docv:"files" ~doc:"files to read")
   in
   let solver =
     Arg.(

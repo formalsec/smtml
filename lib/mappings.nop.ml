@@ -300,7 +300,7 @@ module Nop = struct
       let eval ?completion:_ _ = assert false
     end
 
-    let die () = Format.ksprintf failwith "%s not installed" solver_name
+    let die () = Fmt.failwith "%s not installed" solver_name
 
     module Solver = struct
       let make ?params:_ ?logic:_ = die ()

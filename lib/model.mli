@@ -27,7 +27,7 @@ val get_bindings : t -> (Symbol.t * Value.t) list
 
 val evaluate : t -> Symbol.t -> Value.t option
 
-val pp : Format.formatter -> ?no_values:bool -> t -> unit
+val pp : Fmt.formatter -> ?no_values:bool -> t -> unit
 
 val to_string : t -> string
 
