@@ -260,11 +260,19 @@ rule token = parse
   | ')' { RPAREN }
 
   | "nan" { DEC Float.nan }
-  | numeral as s { NUM (int_of_string s) }
-  | decimal as s { DEC (Float.of_string s) }
-  | bool as s { BOOL (s = "true") }
-  | hexadec { failwith "TODO: Lexer(hexadec)" }
-  | binary { failwith "TODO: Lexer(binary)" }
+  | numeral as s {
+    match int_of_string s with
+    | Some i -> NUM i
+    | None -> assert false
+  }
+  | decimal as s {
+    match float_of_string s with
+    | Some f -> DEC f
+    | None -> assert false
+  }
+  | bool as s { BOOL (String.equal s "true") }
+  | hexadec { Fmt.failwith "TODO: Lexer(hexadec)" }
+  | binary { Fmt.failwith "TODO: Lexer(binary)" }
   | '"' { string (Buffer.create 17) lexbuf }
 
   | symbol as x { try Hashtbl.find keywords x with Not_found -> SYMBOL x }
@@ -274,7 +282,7 @@ rule token = parse
   | newline { new_line lexbuf; token lexbuf }
   | eof { EOF }
 
-  | _ { error ("Unexpected char: " ^ Lexing.lexeme lexbuf) }
+  | _ { Fmt.kstr error "Unexpected char: %s" (Lexing.lexeme lexbuf) }
 
 and comment = parse
   | newline { new_line lexbuf; token lexbuf }
@@ -285,5 +293,5 @@ and string buf = parse
   | '"' '"' { Buffer.add_char buf '"'; string buf lexbuf }
   | [^ '"']+
     { Buffer.add_string buf (Lexing.lexeme lexbuf); string buf lexbuf }
-  | eof { error "nonterminated string" }
-  | _ { error ("illegal string char: " ^ Lexing.lexeme lexbuf) }
+  | eof { Fmt.kstr error "nonterminated string" }
+  | _ { Fmt.kstr error "illegal string char: %s" (Lexing.lexeme lexbuf) }

@@ -29,7 +29,7 @@ val equal : t -> t -> bool
 
 val num_of_bool : bool -> t
 
-val pp : Format.formatter -> t -> unit
+val pp : Fmt.formatter -> t -> unit
 
 val to_string : t -> string
 

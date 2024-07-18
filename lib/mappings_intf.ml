@@ -340,7 +340,7 @@ module type M = sig
 
     val get_statistics : solver -> Statistics.t
 
-    val pp_statistics : Format.formatter -> solver -> unit
+    val pp_statistics : Fmt.formatter -> solver -> unit
   end
 
   module Optimizer : sig
@@ -364,7 +364,7 @@ module type M = sig
 
     val get_statistics : optimizer -> Statistics.t
 
-    val pp_statistics : Format.formatter -> optimizer -> unit
+    val pp_statistics : Fmt.formatter -> optimizer -> unit
   end
 end
 
@@ -389,7 +389,7 @@ module type S = sig
 
   val values_of_model : ?symbols:Symbol.t list -> model -> Model.t
 
-  val pp_smt : ?status:bool -> Format.formatter -> Expr.t list -> unit
+  val pp_smt : ?status:bool -> Fmt.formatter -> Expr.t list -> unit
 
   val set_debug : bool -> unit
 

@@ -21,8 +21,6 @@ module P = Params
 module Sym = Symbol
 module Stats = Statistics
 
-let err = Log.err
-
 module M = struct
   module Make () = struct
     open Z3
@@ -106,7 +104,7 @@ module M = struct
         | Z3enums.L_TRUE -> true
         | Z3enums.L_FALSE -> false
         | Z3enums.L_UNDEF ->
-          err "Z3_mappings2: to_bool: something went terribly wrong!"
+          Fmt.failwith "Z3_mappings2: to_bool: something went terribly wrong!"
 
       let to_string interp = Seq.get_string ctx interp
 
@@ -380,13 +378,11 @@ module M = struct
     let pp_entry fmt (entry : Statistics.Entry.statistics_entry) =
       let key = Statistics.Entry.get_key entry in
       let value = Statistics.Entry.to_string_value entry in
-      Format.fprintf fmt "(%s %s)" key value
+      Fmt.pf fmt "(%s %s)" key value
 
     let pp_statistics fmt (stats : Statistics.statistics) =
       let entries = Statistics.get_entries stats in
-      Format.pp_print_list
-        ~pp_sep:(fun fmt () -> Format.fprintf fmt "@\n")
-        pp_entry fmt entries
+      Fmt.list ~sep:(fun fmt () -> Fmt.pf fmt "@\n") pp_entry fmt entries
 
     let get_statistics (stats : Statistics.statistics) =
       let statistics = Z3.Statistics.get_entries stats in
@@ -420,8 +416,7 @@ module M = struct
         Option.iter set_params params;
         let logic =
           Option.map
-            (fun l ->
-              Format.kasprintf (Z3.Symbol.mk_string ctx) "%a" Ty.pp_logic l )
+            (fun l -> Fmt.kstr (Z3.Symbol.mk_string ctx) "%a" Ty.pp_logic l)
             logic
         in
         Z3.Solver.mk_solver ctx logic

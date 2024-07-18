@@ -51,7 +51,7 @@ module Base (M : Mappings_intf.S) = struct
     M.Solver.get_statistics solver
 
   let check (solver : M.solver) (es : Expr.t list) : satisfiability =
-    solver_count := !solver_count + 1;
+    incr solver_count;
     Utils.run_and_time_call
       ~use:(fun time -> solver_time := !solver_time +. time)
       (fun () -> M.Solver.check solver ~assumptions:es)
@@ -59,7 +59,8 @@ module Base (M : Mappings_intf.S) = struct
   let get_value (solver : M.solver) (e : Expr.t) : Expr.t =
     match M.Solver.model solver with
     | Some m -> Expr.make @@ Val (M.value m e)
-    | None -> Log.err "get_value: Trying to get a value from an unsat solver"
+    | None ->
+      Fmt.failwith "get_value: Trying to get a value from an unsat solver"
 
   let model ?(symbols : Symbol.t list option) (s : M.solver) : Model.t option =
     let+ model = M.Solver.model s in

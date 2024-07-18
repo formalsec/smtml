@@ -1,4 +1,4 @@
-(lang dune 3.14)
+(lang dune 3.10)
 
 (using menhir 2.1)
 
@@ -54,6 +54,7 @@
    (and
     :build
     (>= "20220210")))
+  rusage
   (yojson (>= "1.6.0"))
   (odoc
    :with-doc)

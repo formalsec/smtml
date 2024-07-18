@@ -39,9 +39,9 @@ module Make (Solver : Solver_intf.S) = struct
       state
     | Check_sat ->
       ( match Solver.check solver [] with
-      | `Sat -> Format.printf "sat@."
-      | `Unsat -> Format.printf "unsat@."
-      | `Unknown -> Format.printf "unknown@." );
+      | `Sat -> Fmt.pr "sat@."
+      | `Unsat -> Fmt.pr "unsat@."
+      | `Unknown -> Fmt.pr "unknown@." );
       state
     | Push ->
       Solver.push solver;
@@ -51,11 +51,11 @@ module Make (Solver : Solver_intf.S) = struct
       state
     | Let_const _x -> state
     | Get_model ->
-      assert (`Sat = Solver.check solver []);
+      assert (
+        (function `Sat -> true | `Unsat | `Unknown -> false)
+          (Solver.check solver []) );
       let model = Solver.model solver in
-      Format.printf "%a@."
-        (Format.pp_print_option (Model.pp ~no_values:false))
-        model;
+      Fmt.pr "%a@." (Fmt.option (Model.pp ~no_values:false)) model;
       state
     | Set_logic logic ->
       let solver = Solver.create ~logic () in

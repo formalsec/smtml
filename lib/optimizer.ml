@@ -51,7 +51,7 @@ module Make (M : Mappings_intf.S) = struct
     M.values_of_model model
 
   let maximize (opt : t) (e : Expr.t) : Value.t option =
-    ignore @@ O.maximize opt e;
+    let _ : M.handle = O.maximize opt e in
     match check opt with
     | `Sat ->
       let+ model = O.model opt in
@@ -59,7 +59,7 @@ module Make (M : Mappings_intf.S) = struct
     | _ -> None
 
   let minimize (opt : t) (e : Expr.t) : Value.t option =
-    ignore @@ O.minimize opt e;
+    let _ : M.handle = O.minimize opt e in
     match check opt with
     | `Sat ->
       let+ model = O.model opt in

@@ -25,37 +25,38 @@ type t =
 
 let compare n1 n2 =
   match (n1, n2) with
-  | I8 i1, I8 i2 -> compare i1 i2
-  | I32 i1, I32 i2 -> compare i1 i2
-  | I64 i1, I64 i2 -> compare i1 i2
-  | F32 i1, F32 i2 -> compare (Int32.float_of_bits i1) (Int32.float_of_bits i2)
-  | F64 i1, F64 i2 -> compare (Int64.float_of_bits i1) (Int64.float_of_bits i2)
-  (*
-     Stdlib.compare guarantees that elements of a same variant will be "ordered
-     together"
-  *)
-  | I8 _, _ | I32 _, _ | I64 _, _ | F32 _, _ | F64 _, _ -> compare n1 n2
+  | I8 i1, I8 i2 -> Int.compare i1 i2
+  | I32 i1, I32 i2 -> Int32.compare i1 i2
+  | I64 i1, I64 i2 -> Int64.compare i1 i2
+  | F32 i1, F32 i2 ->
+    (* TODO: is this really what we want on `nan` ? *)
+    Float.compare (Int32.float_of_bits i1) (Int32.float_of_bits i2)
+  | F64 i1, F64 i2 ->
+    Float.compare (Int64.float_of_bits i1) (Int64.float_of_bits i2)
+  | I8 _, _ -> -1
+  | I32 _, I8 _ -> 1
+  | I32 _, _ -> -1
+  | I64 _, (I8 _ | I32 _) -> 1
+  | I64 _, _ -> -1
+  | F32 _, (I8 _ | I32 _ | I64 _) -> 1
+  | F32 _, _ -> -1
+  | F64 _, _ -> 1
 
 let equal (n1 : t) (n2 : t) : bool =
-  match (n1, n2) with
-  | I8 i1, I8 i2 -> i1 = i2
-  | I32 i1, I32 i2 -> i1 = i2
-  | I64 i1, I64 i2 -> i1 = i2
-  | F32 i1, F32 i2 -> Int32.float_of_bits i1 = Int32.float_of_bits i2
-  | F64 i1, F64 i2 -> Int64.float_of_bits i1 = Int64.float_of_bits i2
-  | I8 _, _ | I32 _, _ | I64 _, _ | F32 _, _ | F64 _, _ -> false
+  (* TODO: is this what we want on `nan` ? *)
+  compare n1 n2 = 0
 
 let num_of_bool (b : bool) : t = I32 (if b then 1l else 0l)
 
 let pp fmt (n : t) =
   match n with
-  | I8 i -> Format.fprintf fmt "0x%02x" (i land 0xff)
-  | I32 i -> Format.fprintf fmt "0x%08lx" i
-  | I64 i -> Format.fprintf fmt "0x%016Lx" i
-  | F32 f -> Format.fprintf fmt "(fp 0x%08lx)" f
-  | F64 f -> Format.fprintf fmt "(fp 0x%016Lx)" f
+  | I8 i -> Fmt.pf fmt "0x%02x" (i land 0xff)
+  | I32 i -> Fmt.pf fmt "0x%08lx" i
+  | I64 i -> Fmt.pf fmt "0x%016Lx" i
+  | F32 f -> Fmt.pf fmt "(fp 0x%08lx)" f
+  | F64 f -> Fmt.pf fmt "(fp 0x%016Lx)" f
 
-let to_string (n : t) : string = Format.asprintf "%a" pp n
+let to_string (n : t) : string = Fmt.str "%a" pp n
 
 let to_json (n : t) : Yojson.Basic.t = `String (to_string n)
 

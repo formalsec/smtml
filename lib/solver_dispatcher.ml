@@ -19,7 +19,7 @@ let solver_type_of_string (s : string) :
   | "bitwuzla" -> Ok Bitwuzla_solver
   | "colibri2" -> Ok Colibri2_solver
   | "cvc5" -> Ok Cvc5_solver
-  | s -> Error (`Msg (Format.sprintf "unknown solver %s" s))
+  | s -> Error (`Msg (Fmt.str "unknown solver %s" s))
 
 let is_available : solver_type -> bool = function
   | Z3_solver -> Z3_mappings.is_available
@@ -39,7 +39,7 @@ let solver : ((module Mappings_intf.S_with_fresh), [> `Msg of string ]) result =
   | solver :: _ -> Ok (mappings_of_solver solver)
 
 let pp_solver_type fmt = function
-  | Z3_solver -> Format.fprintf fmt "Z3"
-  | Bitwuzla_solver -> Format.fprintf fmt "Bitwuzla"
-  | Colibri2_solver -> Format.fprintf fmt "Colibri2"
-  | Cvc5_solver -> Format.fprintf fmt "cvc5"
+  | Z3_solver -> Fmt.pf fmt "Z3"
+  | Bitwuzla_solver -> Fmt.pf fmt "Bitwuzla"
+  | Colibri2_solver -> Fmt.pf fmt "Colibri2"
+  | Cvc5_solver -> Fmt.pf fmt "cvc5"

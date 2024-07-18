@@ -2,7 +2,8 @@
  (modules lexer))
 
 (menhir
- (modules parser))
+ (modules parser)
+ (flags --table))
 
 (library
  (name smtml)
@@ -21,7 +22,6 @@
   interpret
   interpret_intf
   lexer
-  log
   mappings
   mappings_intf
   model
@@ -43,9 +43,14 @@
   z3_mappings
   z3_mappings2)
  (private_modules lexer parser)
+ (flags
+  (:standard -open Prelude))
  (libraries
   hc
+  menhirLib
   ocaml_intrinsics
+  prelude
+  rusage
   yojson
   (select
    colibri2_mappings.ml

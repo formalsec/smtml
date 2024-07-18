@@ -34,21 +34,19 @@ let evaluate (model : t) (symb : Symbol.t) : Value.t option =
   Hashtbl.find_opt model symb
 
 let pp_bindings fmt ?(no_values = false) model =
-  Format.pp_print_list
-    ~pp_sep:(fun fmt () -> Format.fprintf fmt "@\n")
+  Fmt.list
+    ~sep:(fun fmt () -> Fmt.pf fmt "@\n")
     (fun fmt (key, data) ->
-      if not no_values then
-        Format.fprintf fmt "(%a %a)" Symbol.pp key Value.pp data
+      if not no_values then Fmt.pf fmt "(%a %a)" Symbol.pp key Value.pp data
       else
         let t = Symbol.type_of key in
-        Format.fprintf fmt "(%a %a)" Symbol.pp key Ty.pp t )
+        Fmt.pf fmt "(%a %a)" Symbol.pp key Ty.pp t )
     fmt (get_bindings model)
 
 let pp fmt ?(no_values = false) model =
-  Format.fprintf fmt "(model@\n  @[<v>%a@])" (pp_bindings ~no_values) model
+  Fmt.pf fmt "(model@\n  @[<v>%a@])" (pp_bindings ~no_values) model
 
-let to_string (model : t) : string =
-  Format.asprintf "%a" (pp ~no_values:false) model
+let to_string (model : t) : string = Fmt.str "%a" (pp ~no_values:false) model
 
 let to_json (model : t) : Yojson.t =
   let combine = Yojson.Basic.Util.combine in
@@ -58,7 +56,7 @@ let to_json (model : t) : Yojson.t =
       | `Assoc [ (name, props) ] ->
         let value = `Assoc [ ("value", Value.to_json value) ] in
         `Assoc [ (name, combine props value) ]
-      | _ -> failwith "Model: Symbol.to_json returned something impossible"
+      | _ -> Fmt.failwith "Model: Symbol.to_json returned something impossible"
     in
     combine assignments assignment
   in

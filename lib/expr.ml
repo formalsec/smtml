@@ -42,31 +42,35 @@ module Expr = struct
   type t = expr
 
   let list_eq (l1 : 'a list) (l2 : 'a list) : bool =
-    if List.compare_lengths l1 l2 = 0 then List.for_all2 ( == ) l1 l2 else false
+    if List.compare_lengths l1 l2 = 0 then List.for_all2 phys_equal l1 l2
+    else false
 
   let equal (e1 : expr) (e2 : expr) : bool =
     match (e1, e2) with
     | Val v1, Val v2 -> Value.equal v1 v2
     | Ptr { base = b1; offset = o1 }, Ptr { base = b2; offset = o2 } ->
-      Int32.equal b1 b2 && o1 == o2
+      Int32.equal b1 b2 && phys_equal o1 o2
     | Symbol s1, Symbol s2 -> Symbol.equal s1 s2
     | List l1, List l2 -> list_eq l1 l2
     | App (`Op x1, l1), App (`Op x2, l2) -> String.equal x1 x2 && list_eq l1 l2
     | Unop (t1, op1, e1), Unop (t2, op2, e2) ->
-      Ty.equal t1 t2 && op1 = op2 && e1 == e2
+      Ty.equal t1 t2 && Ty.unop_equal op1 op2 && phys_equal e1 e2
     | Binop (t1, op1, e1, e3), Binop (t2, op2, e2, e4) ->
-      Ty.equal t1 t2 && op1 = op2 && e1 == e2 && e3 == e4
+      Ty.equal t1 t2 && Ty.binop_equal op1 op2 && phys_equal e1 e2
+      && phys_equal e3 e4
     | Relop (t1, op1, e1, e3), Relop (t2, op2, e2, e4) ->
-      Ty.equal t1 t2 && op1 = op2 && e1 == e2 && e3 == e4
+      Ty.equal t1 t2 && Ty.relop_equal op1 op2 && phys_equal e1 e2
+      && phys_equal e3 e4
     | Triop (t1, op1, e1, e3, e5), Triop (t2, op2, e2, e4, e6) ->
-      Ty.equal t1 t2 && op1 = op2 && e1 == e2 && e3 == e4 && e5 == e6
+      Ty.equal t1 t2 && Ty.triop_equal op1 op2 && phys_equal e1 e2
+      && phys_equal e3 e4 && phys_equal e5 e6
     | Cvtop (t1, op1, e1), Cvtop (t2, op2, e2) ->
-      Ty.equal t1 t2 && op1 = op2 && e1 == e2
+      Ty.equal t1 t2 && Ty.cvtop_equal op1 op2 && phys_equal e1 e2
     | Naryop (t1, op1, l1), Naryop (t2, op2, l2) ->
-      Ty.equal t1 t2 && op1 = op2 && list_eq l1 l2
+      Ty.equal t1 t2 && Ty.naryop_equal op1 op2 && list_eq l1 l2
     | Extract (e1, h1, l1), Extract (e2, h2, l2) ->
-      e1 == e2 && h1 = h2 && l1 = l2
-    | Concat (e1, e3), Concat (e2, e4) -> e1 == e2 && e3 == e4
+      phys_equal e1 e2 && h1 = h2 && l1 = l2
+    | Concat (e1, e3), Concat (e2, e4) -> phys_equal e1 e2 && phys_equal e3 e4
     | _ -> false
 
   let hash (e : expr) : int =
@@ -89,7 +93,7 @@ end
 
 module Hc = Hc.Make [@inlined hint] (Expr)
 
-let equal (hte1 : t) (hte2 : t) = hte1.tag == hte2.tag
+let equal (hte1 : t) (hte2 : t) = Int.equal hte1.tag hte2.tag
 
 let hash (hte : t) = hte.tag
 
@@ -122,7 +126,8 @@ let rec ty (hte : t) : Ty.t =
   | Concat (e1, e2) -> (
     match (ty e1, ty e2) with
     | Ty_bitv n1, Ty_bitv n2 -> Ty_bitv (n1 + n2)
-    | t1, t2 -> Log.err "Invalid concat of (%a) with (%a)" Ty.pp t1 Ty.pp t2 )
+    | t1, t2 ->
+      Fmt.failwith "Invalid concat of (%a) with (%a)" Ty.pp t1 Ty.pp t2 )
 
 let rec is_symbolic (v : t) : bool =
   match view v with
@@ -189,48 +194,48 @@ let negate_relop (hte : t) : (t, string) Result.t =
   Result.map make e
 
 module Pp = struct
-  open Format
-
   let rec pp fmt (hte : t) =
     match view hte with
     | Val v -> Value.pp fmt v
-    | Ptr { base; offset } -> fprintf fmt "(Ptr (i32 %ld) %a)" base pp offset
+    | Ptr { base; offset } -> Fmt.pf fmt "(Ptr (i32 %ld) %a)" base pp offset
     | Symbol s -> Symbol.pp fmt s
-    | List v -> fprintf fmt "(%a)" (pp_print_list pp) v
-    | App (`Op x, v) -> fprintf fmt "(%s %a)" x (pp_print_list pp) v
-    | Unop (ty, op, e) -> fprintf fmt "(%a.%a %a)" Ty.pp ty pp_unop op pp e
+    | List v -> Fmt.pf fmt "(%a)" (Fmt.list pp) v
+    | App (`Op x, v) -> Fmt.pf fmt "(%s %a)" x (Fmt.list pp) v
+    | Unop (ty, op, e) -> Fmt.pf fmt "(%a.%a %a)" Ty.pp ty pp_unop op pp e
     | Binop (ty, op, e1, e2) ->
-      fprintf fmt "(%a.%a %a %a)" Ty.pp ty pp_binop op pp e1 pp e2
+      Fmt.pf fmt "(%a.%a %a %a)" Ty.pp ty pp_binop op pp e1 pp e2
     | Triop (ty, op, e1, e2, e3) ->
-      fprintf fmt "(%a.%a %a %a %a)" Ty.pp ty pp_triop op pp e1 pp e2 pp e3
+      Fmt.pf fmt "(%a.%a %a %a %a)" Ty.pp ty pp_triop op pp e1 pp e2 pp e3
     | Relop (ty, op, e1, e2) ->
-      fprintf fmt "(%a.%a %a %a)" Ty.pp ty pp_relop op pp e1 pp e2
-    | Cvtop (ty, op, e) -> fprintf fmt "(%a.%a %a)" Ty.pp ty pp_cvtop op pp e
+      Fmt.pf fmt "(%a.%a %a %a)" Ty.pp ty pp_relop op pp e1 pp e2
+    | Cvtop (ty, op, e) -> Fmt.pf fmt "(%a.%a %a)" Ty.pp ty pp_cvtop op pp e
     | Naryop (ty, op, es) ->
-      fprintf fmt "(%a.%a (%a))" Ty.pp ty pp_naryop op (pp_print_list pp) es
-    | Extract (e, h, l) -> fprintf fmt "(extract %a %d %d)" pp e l h
-    | Concat (e1, e2) -> fprintf fmt "(++ %a %a)" pp e1 pp e2
+      Fmt.pf fmt "(%a.%a (%a))" Ty.pp ty pp_naryop op (Fmt.list pp) es
+    | Extract (e, h, l) -> Fmt.pf fmt "(extract %a %d %d)" pp e l h
+    | Concat (e1, e2) -> Fmt.pf fmt "(++ %a %a)" pp e1 pp e2
     | App _ -> assert false
 
-  let pp_list fmt (es : t list) = pp_print_list ~pp_sep:pp_print_space pp fmt es
+  let pp_list fmt (es : t list) = Fmt.list ~sep:Fmt.sp pp fmt es
+
+  let pp_newline fmt () = Fmt.string fmt "@\n"
 
   let pp_smt fmt (es : t list) : unit =
     let pp_symbols fmt syms =
-      pp_print_list ~pp_sep:pp_print_newline
+      Fmt.list ~sep:pp_newline
         (fun fmt sym ->
           let t = Symbol.type_of sym in
-          fprintf fmt "(let-const %a %a)" Symbol.pp sym Ty.pp t )
+          Fmt.pf fmt "(let-const %a %a)" Symbol.pp sym Ty.pp t )
         fmt syms
     in
     let pp_asserts fmt es =
-      pp_print_list ~pp_sep:pp_print_newline
-        (fun fmt e -> fprintf fmt "(assert @[<h 2>%a@])" pp e)
+      Fmt.list ~sep:pp_newline
+        (fun fmt e -> Fmt.pf fmt "(assert @[<h 2>%a@])" pp e)
         fmt es
     in
     let syms = get_symbols es in
-    if List.length syms > 0 then fprintf fmt "%a@\n" pp_symbols syms;
-    if List.length es > 0 then fprintf fmt "%a@\n" pp_asserts es;
-    pp_print_string fmt "(check-sat)"
+    if List.length syms > 0 then Fmt.pf fmt "%a@\n" pp_symbols syms;
+    if List.length es > 0 then Fmt.pf fmt "%a@\n" pp_asserts es;
+    Fmt.string fmt "(check-sat)"
 end
 
 let pp = Pp.pp
@@ -239,7 +244,7 @@ let pp_list = Pp.pp_list
 
 let pp_smt = Pp.pp_smt
 
-let to_string e = Format.asprintf "%a" pp e
+let to_string e = Fmt.str "%a" pp e
 
 let value (v : Value.t) : t = make (Val v) [@@inline]
 
@@ -267,7 +272,7 @@ let rec binop ty (op : binop) (hte1 : t) (hte2 : t) : t =
   match (op, view hte1, view hte2) with
   | op, Val v1, Val v2 -> value (Eval.binop ty op v1 v2)
   | Sub, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
-    if b1 = b2 then binop ty Sub os1 os2 else binop' ty op hte1 hte2
+    if Int32.equal b1 b2 then binop ty Sub os1 os2 else binop' ty op hte1 hte2
   | Add, Ptr { base; offset }, _ ->
     ptr base (binop (Ty_bitv 32) Add offset hte2)
   | Sub, Ptr { base; offset }, _ ->
@@ -320,7 +325,8 @@ let relop' (ty : Ty.t) (op : relop) (hte1 : t) (hte2 : t) : t =
 let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
   match (op, view hte1, view hte2) with
   | op, Val (App (`Op s1, _)), Val (App (`Op s2, _)) ->
-    if String.equal s1 s2 then value (if op = Eq then True else False)
+    if String.equal s1 s2 then
+      value (if Ty.relop_equal Eq op then True else False)
     else relop' ty op hte1 hte2
   | Eq, Val (App _), Val _ | Eq, Val _, Val (App _) -> value False
   | Ne, Val (App _), Val _ | Ne, Val _, Val (App _) -> value True
@@ -332,13 +338,13 @@ let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
     value False
   | op, Val v1, Val v2 -> value (if Eval.relop ty op v1 v2 then True else False)
   | Eq, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
-    if b1 = b2 then relop Ty_bool Eq os1 os2 else value False
+    if Int32.equal b1 b2 then relop Ty_bool Eq os1 os2 else value False
   | Ne, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
-    if b1 = b2 then relop Ty_bool Ne os1 os2 else value True
+    if Int32.equal b1 b2 then relop Ty_bool Ne os1 os2 else value True
   | ( (LtU | LeU | GtU | GeU)
     , Ptr { base = b1; offset = os1 }
     , Ptr { base = b2; offset = os2 } ) ->
-    if b1 = b2 then relop ty op os1 os2
+    if Int32.equal b1 b2 then relop ty op os1 os2
     else
       value
         (if Eval.relop ty op (Num (I32 b1)) (Num (I32 b2)) then True else False)

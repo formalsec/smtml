@@ -27,6 +27,6 @@ type t =
 
 type script = t list
 
-val pp : Format.formatter -> t -> unit
+val pp : Fmt.formatter -> t -> unit
 
 val to_string : t -> string

@@ -31,7 +31,7 @@ val make : Ty.t -> string -> t
 
 val mk_symbol : Ty.t -> string -> t [@@deprecated "Please use 'make' instead"]
 
-val pp : Format.formatter -> t -> unit
+val pp : Fmt.formatter -> t -> unit
 
 val rename : t -> string -> t
 
