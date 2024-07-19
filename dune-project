@@ -54,7 +54,7 @@
    (and
     :build
     (>= "20220210")))
-  yojson
+  (yojson (>= "1.6.0"))
   (odoc
    :with-doc)
   (bisect_ppx
