@@ -300,7 +300,16 @@ module Nop = struct
       let eval ?completion:_ _ = assert false
     end
 
-    let die () = Fmt.failwith "%s not installed" solver_name
+    let die () =
+      Fmt.epr
+        "The %s solver is not installed. You must install it through opam with \
+         the command `opam install %s`. You could also try to use another \
+         solver (have a look at the supported solvers here: \
+         https://github.com/formalsec/smtml?tab=readme-ov-file#supported-solvers). \
+         Note that installing the solver with your system package manager is \
+         not enough, you must install it through opam."
+        solver_name solver_package;
+      exit 1
 
     module Solver = struct
       let make ?params:_ ?logic:_ = die ()
