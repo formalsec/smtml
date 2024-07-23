@@ -18,8 +18,6 @@
 
 include Mappings_intf
 
-let _debug = false
-
 let leak =
   let leaky_list = ref [] in
   let mutex = Mutex.create () in
@@ -51,9 +49,9 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
   let false_ = mk_false ()
 
-  let int _ = failwith "Bitwuzla_mappings: int not implemented"
+  let int _ = Fmt.failwith "Bitwuzla_mappings: int not implemented"
 
-  let real _ = failwith "Bitwuzla_mappings: real not implemented"
+  let real _ = Fmt.failwith "Bitwuzla_mappings: real not implemented"
 
   let const symbol ty = mk_const ~symbol ty
 
@@ -86,24 +84,25 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
     let ty t = Term.sort t
 
-    let to_ety _ = failwith "Bitwuzla_mappings: to_ety not implemented"
+    let to_ety _ = Fmt.failwith "Bitwuzla_mappings: to_ety not implemented"
   end
 
   module Interp = struct
-    let to_int _ = failwith "Bitwuzla_mappings: to_int not implemented"
+    let to_int _ = Fmt.failwith "Bitwuzla_mappings: to_int not implemented"
 
-    let to_real _ = failwith "Bitwuzla_mappings: to_real not implemented"
+    let to_real _ = Fmt.failwith "Bitwuzla_mappings: to_real not implemented"
 
     let to_bool t = Term.value Term.Bool t
 
-    let to_string _ = failwith "Bitwuzla_mappings: to_string not implemented"
+    let to_string _ =
+      Fmt.failwith "Bitwuzla_mappings: to_string not implemented"
 
     let to_bitv t _bitwidth = Z.to_int64 @@ Term.value Term.Z t
 
     let to_float t ebits sbits =
       let fp_size = ebits + sbits in
       let sign, exp, significant = Term.value Term.IEEE_754 t in
-      let bs = sign ^ exp ^ significant in
+      let bs = String.(cat sign (cat exp significant)) in
       assert (String.length bs = fp_size);
       let _n, int64_ =
         String.fold_left
@@ -123,89 +122,96 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
   end
 
   module Int = struct
-    let neg _ = failwith "Bitwuzla_mappings: Int.neg not implemented"
+    let neg _ = Fmt.failwith "Bitwuzla_mappings: Int.neg not implemented"
 
-    let to_real _ = failwith "Bitwuzla_mappings: Int.to_real not implemented"
+    let to_real _ =
+      Fmt.failwith "Bitwuzla_mappings: Int.to_real not implemented"
 
-    let add _ = failwith "Bitwuzla_mappings: Int.add not implemented"
+    let add _ = Fmt.failwith "Bitwuzla_mappings: Int.add not implemented"
 
-    let sub _ = failwith "Bitwuzla_mappings: Int.sub not implemented"
+    let sub _ = Fmt.failwith "Bitwuzla_mappings: Int.sub not implemented"
 
-    let mul _ = failwith "Bitwuzla_mappings: Int.mul not implemented"
+    let mul _ = Fmt.failwith "Bitwuzla_mappings: Int.mul not implemented"
 
-    let div _ = failwith "Bitwuzla_mappings: Int.div not implemented"
+    let div _ = Fmt.failwith "Bitwuzla_mappings: Int.div not implemented"
 
-    let rem _ = failwith "Bitwuzla_mappings: Int.rem not implemented"
+    let rem _ = Fmt.failwith "Bitwuzla_mappings: Int.rem not implemented"
 
-    let pow _ = failwith "Bitwuzla_mappings: Int.pow not implemented"
+    let pow _ = Fmt.failwith "Bitwuzla_mappings: Int.pow not implemented"
 
-    let lt _ = failwith "Bitwuzla_mappings: Int.lt not implemented"
+    let lt _ = Fmt.failwith "Bitwuzla_mappings: Int.lt not implemented"
 
-    let le _ = failwith "Bitwuzla_mappings: Int.le not implemented"
+    let le _ = Fmt.failwith "Bitwuzla_mappings: Int.le not implemented"
 
-    let gt _ = failwith "Bitwuzla_mappings: Int.gt not implemented"
+    let gt _ = Fmt.failwith "Bitwuzla_mappings: Int.gt not implemented"
 
-    let ge _ = failwith "Bitwuzla_mappings: Int.ge not implemented"
+    let ge _ = Fmt.failwith "Bitwuzla_mappings: Int.ge not implemented"
   end
 
   module Real = struct
-    let neg _ = failwith "Bitwuzla_mappings: Real.neg not implemented"
+    let neg _ = Fmt.failwith "Bitwuzla_mappings: Real.neg not implemented"
 
-    let to_int _ = failwith "Bitwuzla_mappings: Real.to_int not implemented"
+    let to_int _ = Fmt.failwith "Bitwuzla_mappings: Real.to_int not implemented"
 
-    let add _ = failwith "Bitwuzla_mappings: Real.add not implemented"
+    let add _ = Fmt.failwith "Bitwuzla_mappings: Real.add not implemented"
 
-    let sub _ = failwith "Bitwuzla_mappings: Real.sub not implemented"
+    let sub _ = Fmt.failwith "Bitwuzla_mappings: Real.sub not implemented"
 
-    let mul _ = failwith "Bitwuzla_mappings: Real.mul not implemented"
+    let mul _ = Fmt.failwith "Bitwuzla_mappings: Real.mul not implemented"
 
-    let div _ = failwith "Bitwuzla_mappings: Real.div not implemented"
+    let div _ = Fmt.failwith "Bitwuzla_mappings: Real.div not implemented"
 
-    let pow _ = failwith "Bitwuzla_mappings: Real.pow not implemented"
+    let pow _ = Fmt.failwith "Bitwuzla_mappings: Real.pow not implemented"
 
-    let lt _ = failwith "Bitwuzla_mappings: Real.lt not implemented"
+    let lt _ = Fmt.failwith "Bitwuzla_mappings: Real.lt not implemented"
 
-    let le _ = failwith "Bitwuzla_mappings: Real.le not implemented"
+    let le _ = Fmt.failwith "Bitwuzla_mappings: Real.le not implemented"
 
-    let gt _ = failwith "Bitwuzla_mappings: Real.gt not implemented"
+    let gt _ = Fmt.failwith "Bitwuzla_mappings: Real.gt not implemented"
 
-    let ge _ = failwith "Bitwuzla_mappings: Real.ge not implemented"
+    let ge _ = Fmt.failwith "Bitwuzla_mappings: Real.ge not implemented"
   end
 
   module String = struct
-    let v _ = failwith "Bitwuzla_mappings: String.v not implemented"
+    let v _ = Fmt.failwith "Bitwuzla_mappings: String.v not implemented"
 
-    let length _ = failwith "Bitwuzla_mappings: String.length not implemented"
+    let length _ =
+      Fmt.failwith "Bitwuzla_mappings: String.length not implemented"
 
-    let to_code _ = failwith "Bitwuzla_mappings: String.to_code not implemented"
+    let to_code _ =
+      Fmt.failwith "Bitwuzla_mappings: String.to_code not implemented"
 
-    let of_code _ = failwith "Bitwuzla_mappings: String.of_code not implemented"
+    let of_code _ =
+      Fmt.failwith "Bitwuzla_mappings: String.of_code not implemented"
 
-    let to_int _ = failwith "Bitwuzla_mappings: String.to_int not implemented"
+    let to_int _ =
+      Fmt.failwith "Bitwuzla_mappings: String.to_int not implemented"
 
-    let of_int _ = failwith "Bitwuzla_mappings: String.of_int not implemented"
+    let of_int _ =
+      Fmt.failwith "Bitwuzla_mappings: String.of_int not implemented"
 
-    let at _ = failwith "Bitwuzla_mappings: String.at not implemented"
+    let at _ = Fmt.failwith "Bitwuzla_mappings: String.at not implemented"
 
-    let concat _ = failwith "Bitwuzla_mappings: String.concat not implemented"
+    let concat _ =
+      Fmt.failwith "Bitwuzla_mappings: String.concat not implemented"
 
     let contains _ ~sub:_ =
-      failwith "Bitwuzla_mappings: String.contains not implemented"
+      Fmt.failwith "Bitwuzla_mappings: String.contains not implemented"
 
     let is_prefix _ ~prefix:_ =
-      failwith "Bitwuzla_mappings: String.is_prefix not implemented"
+      Fmt.failwith "Bitwuzla_mappings: String.is_prefix not implemented"
 
     let is_suffix _ ~suffix:_ =
-      failwith "Bitwuzla_mappings: String.is_suffix not implemented"
+      Fmt.failwith "Bitwuzla_mappings: String.is_suffix not implemented"
 
     let sub _ ~pos:_ ~len:_ =
-      failwith "Bitwuzla_mappings: String.sub not implemented"
+      Fmt.failwith "Bitwuzla_mappings: String.sub not implemented"
 
     let index_of _ ~sub:_ ~pos:_ =
-      failwith "Bitwuzla_mappings: String.index_of not implemented"
+      Fmt.failwith "Bitwuzla_mappings: String.index_of not implemented"
 
     let replace _ ~pattern:_ ~with_:_ =
-      failwith "Bitwuzla_mappings: String.replace not implemented"
+      Fmt.failwith "Bitwuzla_mappings: String.replace not implemented"
   end
 
   module Bitv = struct
@@ -336,12 +342,13 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     let of_ieee_bv eb sb bv = mk_term1_indexed2 Kind.Fp_to_fp_from_bv bv eb sb
 
     (* TODO *)
-    let to_ieee_bv _ = failwith "Bitwuzla_mappings: to_ieee_bv not implemented"
+    let to_ieee_bv _ =
+      Fmt.failwith "Bitwuzla_mappings: to_ieee_bv not implemented"
   end
 
   module Model = struct
     let get_symbols _ =
-      failwith "Bitwuzla_mappings: get_symbols not implemented"
+      Fmt.failwith "Bitwuzla_mappings: get_symbols not implemented"
 
     let eval ?completion:_ solver term = Some (Solver.get_value solver term)
   end
@@ -354,13 +361,13 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     let make ?params ?logic:_ () =
       Bitwuzla_cxx.Options.default () |> update_options params |> Solver.create
 
-    let clone _solver = failwith "Bitwuzla_mappings: clone not implemented"
+    let clone _solver = Fmt.failwith "Bitwuzla_mappings: clone not implemented"
 
     let push solver = Solver.push solver 1
 
     let pop solver n = Solver.pop solver n
 
-    let reset _ = failwith "Bitwuzla_mappings: reset not implemented"
+    let reset _ = Fmt.failwith "Bitwuzla_mappings: reset not implemented"
 
     let add solver ts = List.iter (Solver.assert_formula solver) ts
 
@@ -382,38 +389,42 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
       ()
 
     let get_statistics _ =
-      failwith "Bitwuzla_mappings: Solver.get_statistics not implemented"
+      Fmt.failwith "Bitwuzla_mappings: Solver.get_statistics not implemented"
 
     let pp_statistics fmt solver = Solver.pp_statistics fmt solver
   end
 
   module Optimizer = struct
-    let make _ = failwith "Bitwuzla_mappings: Optimizer.make not implemented"
+    let make _ =
+      Fmt.failwith "Bitwuzla_mappings: Optimizer.make not implemented"
 
-    let push _ = failwith "Bitwuzla_mappings: Optimizer.push not implemented"
+    let push _ =
+      Fmt.failwith "Bitwuzla_mappings: Optimizer.push not implemented"
 
-    let pop _ = failwith "Bitwuzla_mappings: Optimizer.pop not implemented"
+    let pop _ = Fmt.failwith "Bitwuzla_mappings: Optimizer.pop not implemented"
 
-    let add _ = failwith "Bitwuzla_mappings: Optimizer.add not implemented"
+    let add _ = Fmt.failwith "Bitwuzla_mappings: Optimizer.add not implemented"
 
-    let check _ = failwith "Bitwuzla_mappings: Optimizer.check not implemented"
+    let check _ =
+      Fmt.failwith "Bitwuzla_mappings: Optimizer.check not implemented"
 
-    let model _ = failwith "Bitwuzla_mappings: Optimizer.model not implemented"
+    let model _ =
+      Fmt.failwith "Bitwuzla_mappings: Optimizer.model not implemented"
 
     let maximize _ =
-      failwith "Bitwuzla_mappings: Optimizer.maximize not implemented"
+      Fmt.failwith "Bitwuzla_mappings: Optimizer.maximize not implemented"
 
     let minimize _ =
-      failwith "Bitwuzla_mappings: Optimizer.minimize not implemented"
+      Fmt.failwith "Bitwuzla_mappings: Optimizer.minimize not implemented"
 
     let interrupt _ =
-      failwith "Bitwuzla_mappings: Optimizer.interrupt not implemented"
+      Fmt.failwith "Bitwuzla_mappings: Optimizer.interrupt not implemented"
 
     let get_statistics _ =
-      failwith "Bitwuzla_mappings: Solver.get_statistics not implemented"
+      Fmt.failwith "Bitwuzla_mappings: Solver.get_statistics not implemented"
 
     let pp_statistics _ =
-      failwith "Bitwuzla_mappings: Optimizer.pp_statistics not implemented"
+      Fmt.failwith "Bitwuzla_mappings: Optimizer.pp_statistics not implemented"
   end
 end
 

@@ -44,6 +44,8 @@
   dune
   (ocaml
    (>= "4.14.0"))
+  (prelude
+   (>= "0.2"))
   ocaml_intrinsics
   (cmdliner
    (>= "1.2.0"))
