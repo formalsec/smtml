@@ -71,8 +71,6 @@ module Fresh = struct
     let ceiling = ceil
   end
 
-  let err = Log.err
-
   module Make () = struct
     exception Error of string
 
@@ -247,7 +245,9 @@ module Fresh = struct
         let op' =
           match op with
           | Neg -> DTerm.Int.minus
-          | _ -> err {|Int: Unsupported Z3 unop operator "%a"|} Ty.pp_unop op
+          | _ ->
+            Fmt.failwith {|Int: Unsupported Z3 unop operator "%a"|} Ty.pp_unop
+              op
         in
         op' e
 
@@ -278,7 +278,8 @@ module Fresh = struct
           | Le -> DTerm.Int.le
           | Ge -> DTerm.Int.ge
           | _ ->
-            err {|Arith: Unsupported Z3 relop operator "%a"|} Ty.pp_relop op
+            Fmt.failwith {|Arith: Unsupported Z3 relop operator "%a"|}
+              Ty.pp_relop op
         in
         op' e1 e2
 
@@ -287,12 +288,15 @@ module Fresh = struct
           match op with
           | ToString -> fun v -> DTerm.apply_cst int_to_string [] [ v ]
           | OfString -> fun v -> DTerm.apply_cst string_to_int [] [ v ]
-          | _ -> err {|Int: Unsupported Z3 cvtop operator "%a"|} Ty.pp_cvtop op
+          | _ ->
+            Fmt.failwith {|Int: Unsupported Z3 cvtop operator "%a"|} Ty.pp_cvtop
+              op
         in
         op' e
 
       let encode_triop op _ _ _ =
-        err {|Arith: Unsupported Z3 triop operator "%a"|} Ty.pp_triop op
+        Fmt.failwith {|Arith: Unsupported Z3 triop operator "%a"|} Ty.pp_triop
+          op
     end
 
     module Real :
@@ -320,7 +324,8 @@ module Fresh = struct
                 Colibri2_theories_LRA.RealValue.Builtin.colibri_ceil [] [ e ]
           | Floor -> DTerm.Real.floor
           | Nearest | Is_nan | _ ->
-            err {|Real: Unsupported Z3 cvtop operator "%a"|} Ty.pp_unop op
+            Fmt.failwith {|Real: Unsupported Z3 cvtop operator "%a"|} Ty.pp_unop
+              op
         in
         op' e
 
@@ -333,7 +338,9 @@ module Fresh = struct
           | Div -> DTerm.Real.div
           | Min -> fun e1 e2 -> DTerm.ite (DTerm.Real.le e1 e2) e1 e2
           | Max -> fun e1 e2 -> DTerm.ite (DTerm.Real.le e1 e2) e2 e1
-          | _ -> err {|Real: Unsupported Z3 binop operator "%a"|} Ty.pp_binop op
+          | _ ->
+            Fmt.failwith {|Real: Unsupported Z3 binop operator "%a"|}
+              Ty.pp_binop op
         in
         op' e1 e2
 
@@ -347,7 +354,8 @@ module Fresh = struct
           | Le -> DTerm.Real.le
           | Ge -> DTerm.Real.ge
           | _ ->
-            err {|Arith: Unsupported Z3 relop operator "%a"|} Ty.pp_relop op
+            Fmt.failwith {|Arith: Unsupported Z3 relop operator "%a"|}
+              Ty.pp_relop op
         in
         op' e1 e2
 
@@ -358,12 +366,15 @@ module Fresh = struct
           | OfString -> fun v -> DTerm.apply_cst string_to_real [] [ v ]
           | ConvertUI32 -> fun t -> DTerm.apply_cst real_to_uint32 [] [ t ]
           | Reinterpret_int -> DTerm.Int.to_real
-          | _ -> err {|Real: Unsupported Z3 cvtop operator "%a"|} Ty.pp_cvtop op
+          | _ ->
+            Fmt.failwith {|Real: Unsupported Z3 cvtop operator "%a"|}
+              Ty.pp_cvtop op
         in
         op' e
 
       let encode_triop op _ _ _ =
-        err {|Arith: Unsupported Z3 triop operator "%a"|} Ty.pp_triop op
+        Fmt.failwith {|Arith: Unsupported Z3 triop operator "%a"|} Ty.pp_triop
+          op
     end
 
     module Boolean = struct
@@ -424,7 +435,9 @@ module Fresh = struct
           match op with
           | Eq -> DTerm.eq
           | Ne -> DTerm.neq
-          | _ -> err {|Str: Unsupported Z3 relop operator "%a"|} Ty.pp_relop op
+          | _ ->
+            Fmt.failwith {|Str: Unsupported Z3 relop operator "%a"|} Ty.pp_relop
+              op
         in
         op'
 
@@ -434,7 +447,9 @@ module Fresh = struct
           | String_extract -> assert false
           | String_replace -> assert false
           | String_index -> assert false
-          | _ -> err {|Str: Unsupported Z3 triop operator "%a"|} Ty.pp_triop op
+          | _ ->
+            Fmt.failwith {|Str: Unsupported Z3 triop operator "%a"|} Ty.pp_triop
+              op
         in
         op'
 
@@ -450,13 +465,17 @@ module Fresh = struct
           let n = if i >= 0 then i else i land ((1 lsl 8) - 1) in
           (* necessary to have the same behaviour as Z3 *)
           DTerm.Bitv.mk
-            (Dolmen_type.Misc.Bitv.parse_decimal ("bv" ^ Int.to_string n) 8)
+            (Dolmen_type.Misc.Bitv.parse_decimal
+               (String.cat "bv" (Int.to_string n))
+               8 )
         | C32 ->
           let iint = Int32.to_int i in
           let n = if iint >= 0 then iint else iint land ((1 lsl 32) - 1) in
           (* necessary to have the same behaviour as Z3 *)
           DTerm.Bitv.mk
-            (Dolmen_type.Misc.Bitv.parse_decimal ("bv" ^ Int.to_string n) 32)
+            (Dolmen_type.Misc.Bitv.parse_decimal
+               (String.cat "bv" (Int.to_string n))
+               32 )
         | C64 ->
           let n =
             if Int64.compare i Int64.zero >= 0 then Z.of_int64 i
@@ -464,14 +483,18 @@ module Fresh = struct
           in
           (* necessary to have the same behaviour as Z3 *)
           DTerm.Bitv.mk
-            (Dolmen_type.Misc.Bitv.parse_decimal ("bv" ^ Z.to_string n) 64)
+            (Dolmen_type.Misc.Bitv.parse_decimal
+               (String.cat "bv" (Z.to_string n))
+               64 )
 
       let encode_unop op e =
         let op' =
           match op with
           | Not -> DTerm.Bitv.not
           | Neg -> DTerm.Bitv.neg
-          | _ -> err {|Bv: Unsupported Z3 unary operator "%a"|} Ty.pp_unop op
+          | _ ->
+            Fmt.failwith {|Bv: Unsupported Z3 unary operator "%a"|} Ty.pp_unop
+              op
         in
         op' e
 
@@ -491,12 +514,14 @@ module Fresh = struct
           | Shl -> DTerm.Bitv.shl
           | Rem -> DTerm.Bitv.srem
           | RemU -> DTerm.Bitv.urem
-          | _ -> err {|Bv: Unsupported Z3 binary operator "%a"|} Ty.pp_binop op
+          | _ ->
+            Fmt.failwith {|Bv: Unsupported Z3 binary operator "%a"|} Ty.pp_binop
+              op
         in
         op' e1 e2
 
       let encode_triop op _ =
-        err {|Bv: Unsupported Z3 triop operator "%a"|} Ty.pp_triop op
+        Fmt.failwith {|Bv: Unsupported Z3 triop operator "%a"|} Ty.pp_triop op
 
       let encode_relop op e1 e2 =
         let op' =
@@ -554,7 +579,7 @@ module Fresh = struct
 
       let encode_val (type a) (sz : a Ty.cast) (f : a) =
         match sz with
-        | C8 -> err "Unable to create FP numeral using 8 bits"
+        | C8 -> Fmt.failwith "Unable to create FP numeral using 8 bits"
         | C32 -> DTerm.Float.ieee_format_to_fp 8 24 (Bv.encode_val C32 f)
         | C64 -> DTerm.Float.ieee_format_to_fp 11 53 (Bv.encode_val C64 f)
 
@@ -570,7 +595,9 @@ module Fresh = struct
           | Trunc -> DTerm.Float.roundToIntegral DTerm.Float.roundTowardZero
           | Nearest ->
             DTerm.Float.roundToIntegral DTerm.Float.roundNearestTiesToEven
-          | _ -> err {|Fp: Unsupported Z3 unary operator "%a"|} Ty.pp_unop op
+          | _ ->
+            Fmt.failwith {|Fp: Unsupported Z3 unary operator "%a"|} Ty.pp_unop
+              op
         in
         op' e
 
@@ -584,12 +611,14 @@ module Fresh = struct
           | Min -> DTerm.Float.min
           | Max -> DTerm.Float.max
           | Rem -> DTerm.Float.rem
-          | _ -> err {|Fp: Unsupported Z3 binop operator "%a"|} Ty.pp_binop op
+          | _ ->
+            Fmt.failwith {|Fp: Unsupported Z3 binop operator "%a"|} Ty.pp_binop
+              op
         in
         op' e1 e2
 
       let encode_triop op _ =
-        err {|Fp: Unsupported Z3 triop operator "%a"|} Ty.pp_triop op
+        Fmt.failwith {|Fp: Unsupported Z3 triop operator "%a"|} Ty.pp_triop op
 
       let encode_relop op e1 e2 =
         let op' =
@@ -600,7 +629,9 @@ module Fresh = struct
           | Le -> DTerm.Float.leq
           | Gt -> DTerm.Float.gt
           | Ge -> DTerm.Float.geq
-          | _ -> err {|Fp: Unsupported Z3 relop operator "%a"|} Ty.pp_relop op
+          | _ ->
+            Fmt.failwith {|Fp: Unsupported Z3 relop operator "%a"|} Ty.pp_relop
+              op
         in
         op' e1 e2
 
@@ -657,8 +688,8 @@ module Fresh = struct
       | Ty.Ty_bitv _ -> Bv.encode_unop
       | Ty.Ty_fp _ -> Fp.encode_unop
       | (Ty.Ty_list | Ty_app | Ty_unit) as op ->
-        err "Colibri2_mappings: Trying to code unsupported op of type %a" Ty.pp
-          op
+        Fmt.failwith
+          "Colibri2_mappings: Trying to code unsupported op of type %a" Ty.pp op
 
     let encode_binop = function
       | Ty.Ty_int -> I.encode_binop
@@ -668,8 +699,8 @@ module Fresh = struct
       | Ty.Ty_bitv _ -> Bv.encode_binop
       | Ty.Ty_fp _ -> Fp.encode_binop
       | (Ty.Ty_list | Ty_app | Ty_unit) as op ->
-        err "Colibri2_mappings: Trying to code unsupported op of type %a" Ty.pp
-          op
+        Fmt.failwith
+          "Colibri2_mappings: Trying to code unsupported op of type %a" Ty.pp op
 
     let encode_triop = function
       | Ty.Ty_int -> I.encode_triop
@@ -679,8 +710,8 @@ module Fresh = struct
       | Ty.Ty_bitv _ -> Bv.encode_triop
       | Ty.Ty_fp _ -> Fp.encode_triop
       | (Ty.Ty_list | Ty_app | Ty_unit) as op ->
-        err "Colibri2_mappings: Trying to code unsupported op of type %a" Ty.pp
-          op
+        Fmt.failwith
+          "Colibri2_mappings: Trying to code unsupported op of type %a" Ty.pp op
 
     let encode_relop = function
       | Ty.Ty_int -> I.encode_relop
@@ -690,8 +721,8 @@ module Fresh = struct
       | Ty.Ty_bitv _ -> Bv.encode_relop
       | Ty.Ty_fp _ -> Fp.encode_relop
       | (Ty.Ty_list | Ty_app | Ty_unit) as op ->
-        err "Colibri2_mappings: Trying to code unsupported op of type %a" Ty.pp
-          op
+        Fmt.failwith
+          "Colibri2_mappings: Trying to code unsupported op of type %a" Ty.pp op
 
     let encode_cvtop = function
       | Ty.Ty_int -> I.encode_cvtop
@@ -701,8 +732,8 @@ module Fresh = struct
       | Ty.Ty_bitv sz -> Bv.encode_cvtop sz
       | Ty.Ty_fp sz -> Fp.encode_cvtop sz
       | (Ty.Ty_list | Ty_app | Ty_unit) as op ->
-        err "Colibri2_mappings: Trying to code unsupported op of type %a" Ty.pp
-          op
+        Fmt.failwith
+          "Colibri2_mappings: Trying to code unsupported op of type %a" Ty.pp op
 
     (*let symbol_to_var v =
       DExpr.Term.Var.mk (Symbol.to_string v) (tty_of_etype (Symbol.type_of v))*)
@@ -751,7 +782,7 @@ module Fresh = struct
         | Cvtop (ty, op, e) ->
           let e' = aux e in
           encode_cvtop ty op e'
-        | Naryop _ -> err "Colibri2_mappings: Trying to encode naryop"
+        | Naryop _ -> Fmt.failwith "Colibri2_mappings: Trying to encode naryop"
         | Extract (e, h, l) ->
           let e' = aux e in
           DTerm.Bitv.extract ((h * 8) - 1) (l * 8) e'
@@ -958,7 +989,7 @@ module Fresh = struct
       let interrupt _ = ()
 
       let get_statistics _ =
-        err "Colibri2_mappings: Solver.get_statistics not implemented"
+        Fmt.failwith "Colibri2_mappings: Solver.get_statistics not implemented"
     end
 
     module Optimizer = struct
@@ -990,7 +1021,8 @@ module Fresh = struct
       let interrupt _ = ()
 
       let get_statistics _ =
-        err "Colibri2_mappings: Optimizer.get_statistics not implemented"
+        Fmt.failwith
+          "Colibri2_mappings: Optimizer.get_statistics not implemented"
     end
 
     let c2value_to_value (ty : Ty.t) (v : Colibri2_core.Value.t) =
@@ -1009,7 +1041,7 @@ module Fresh = struct
         with
         | Some a when A.is_integer a -> Some (Value.Int (A.to_int a))
         | Some a when A.is_real a ->
-          Some (Value.Real (Stdlib.Float.of_string (A.to_string a)))
+          Some (Value.Real (Float.of_string (A.to_string a)))
         | Some _ | None -> None )
       | Ty_bitv n -> (
         match
@@ -1037,8 +1069,8 @@ module Fresh = struct
                  F64 (Int64.bits_of_float (Farith.F.to_float Farith.Mode.NE a))
                | _ -> assert false ) ) )
       | Ty_str | Ty_list | Ty_app | Ty_unit ->
-        err "Colibri2_mappings2: Unsuppoted model generation of type %a" Ty.pp
-          ty
+        Fmt.failwith
+          "Colibri2_mappings2: Unsuppoted model generation of type %a" Ty.pp ty
 
     (* let value_of_const ((d, _l) : model) (e : Expr.t) : Value.t option =
        let e' = encore_expr_aux e in

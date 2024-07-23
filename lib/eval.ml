@@ -441,13 +441,13 @@ module I32 = struct
 
   let cmp_u x op y = op Int32.(add x min_int) Int32.(add y min_int) [@@inline]
 
-  let lt_u x y = cmp_u x ( < ) y [@@inline]
+  let lt_u x y = cmp_u x Int32.( < ) y [@@inline]
 
-  let le_u x y = cmp_u x ( <= ) y [@@inline]
+  let le_u x y = cmp_u x Int32.( <= ) y [@@inline]
 
-  let gt_u x y = cmp_u x ( > ) y [@@inline]
+  let gt_u x y = cmp_u x Int32.( > ) y [@@inline]
 
-  let ge_u x y = cmp_u x ( >= ) y [@@inline]
+  let ge_u x y = cmp_u x Int32.( >= ) y [@@inline]
 
   let shift f x y = f x Int32.(to_int (logand y 31l)) [@@inline]
 
@@ -517,13 +517,13 @@ module I32 = struct
   let relop (op : relop) (v1 : Value.t) (v2 : Value.t) : bool =
     let f =
       match op with
-      | Lt -> ( < )
+      | Lt -> Int32.( < )
       | LtU -> lt_u
-      | Le -> ( <= )
+      | Le -> Int32.( <= )
       | LeU -> le_u
-      | Gt -> ( > )
+      | Gt -> Int32.( > )
       | GtU -> gt_u
-      | Ge -> ( >= )
+      | Ge -> Int32.( >= )
       | GeU -> ge_u
       | Eq | Ne -> assert false
     in
@@ -541,13 +541,13 @@ module I64 = struct
 
   let cmp_u x op y = op Int64.(add x min_int) Int64.(add y min_int) [@@inline]
 
-  let lt_u x y = cmp_u x ( < ) y [@@inline]
+  let lt_u x y = cmp_u x Int64.( < ) y [@@inline]
 
-  let le_u x y = cmp_u x ( <= ) y [@@inline]
+  let le_u x y = cmp_u x Int64.( <= ) y [@@inline]
 
-  let gt_u x y = cmp_u x ( > ) y [@@inline]
+  let gt_u x y = cmp_u x Int64.( > ) y [@@inline]
 
-  let ge_u x y = cmp_u x ( >= ) y [@@inline]
+  let ge_u x y = cmp_u x Int64.( >= ) y [@@inline]
 
   let shift f x y = f x Int64.(to_int (logand y 63L)) [@@inline]
 
@@ -617,13 +617,13 @@ module I64 = struct
   let relop (op : relop) (v1 : Value.t) (v2 : Value.t) : bool =
     let f =
       match op with
-      | Lt -> ( < )
+      | Lt -> Int64.( < )
       | LtU -> lt_u
-      | Le -> ( <= )
+      | Le -> Int64.( <= )
       | LeU -> le_u
-      | Gt -> ( > )
+      | Gt -> Int64.( > )
       | GtU -> gt_u
-      | Ge -> ( >= )
+      | Ge -> Int64.( >= )
       | GeU -> ge_u
       | Eq | Ne -> assert false
     in
@@ -680,12 +680,12 @@ module F32 = struct
   let relop (op : relop) (v1 : Value.t) (v2 : Value.t) : bool =
     let f =
       match op with
-      | Eq -> ( = )
-      | Ne -> ( <> )
-      | Lt -> ( < )
-      | Le -> ( <= )
-      | Gt -> ( > )
-      | Ge -> ( >= )
+      | Eq -> Float.( = )
+      | Ne -> Float.( <> )
+      | Lt -> Float.( < )
+      | Le -> Float.( <= )
+      | Gt -> Float.( > )
+      | Ge -> Float.( >= )
       | _ ->
         Fmt.failwith {|relop: Unsupported f32 operator "%a"|} Ty.pp_relop op
     in
@@ -742,12 +742,12 @@ module F64 = struct
   let relop (op : relop) (v1 : Value.t) (v2 : Value.t) : bool =
     let f =
       match op with
-      | Eq -> ( = )
-      | Ne -> ( <> )
-      | Lt -> ( < )
-      | Le -> ( <= )
-      | Gt -> ( > )
-      | Ge -> ( >= )
+      | Eq -> Float.( = )
+      | Ne -> Float.( <> )
+      | Lt -> Float.( < )
+      | Le -> Float.( <= )
+      | Gt -> Float.( > )
+      | Ge -> Float.( >= )
       | _ ->
         Fmt.failwith {|relop: Unsupported f32 operator "%a"|} Ty.pp_relop op
     in
@@ -760,34 +760,36 @@ module I32CvtOp = struct
     Int32.(shift_right (shift_left x shift) shift)
 
   let trunc_f32_s (x : int32) =
-    if x <> x then raise ConversionToInteger
+    if Int32.(x <> x) then raise ConversionToInteger
     else
       let xf = F32.to_float x in
-      if xf >= -.Int32.(to_float min_int) || xf < Int32.(to_float min_int) then
-        raise IntegerOverflow
+      if
+        Float.(xf >= -.Int32.(to_float min_int) || xf < Int32.(to_float min_int))
+      then raise IntegerOverflow
       else Int32.of_float xf
 
   let trunc_f32_u (x : int32) =
-    if x <> x then raise ConversionToInteger
+    if Int32.(x <> x) then raise ConversionToInteger
     else
       let xf = F32.to_float x in
-      if xf >= -.Int32.(to_float min_int) *. 2.0 || xf <= -1.0 then
+      if Float.(xf >= -.Int32.(to_float min_int) *. 2.0 || xf <= -1.0) then
         raise IntegerOverflow
       else Int32.of_float xf
 
   let trunc_f64_s (x : int64) =
-    if x <> x then raise ConversionToInteger
+    if Int64.(x <> x) then raise ConversionToInteger
     else
       let xf = F64.to_float x in
-      if xf >= -.Int64.(to_float min_int) || xf < Int64.(to_float min_int) then
-        raise IntegerOverflow
+      if
+        Float.(xf >= -.Int64.(to_float min_int) || xf < Int64.(to_float min_int))
+      then raise IntegerOverflow
       else Int32.of_float xf
 
   let trunc_f64_u (x : int64) =
-    if x <> x then raise ConversionToInteger
+    if Int64.(x <> x) then raise ConversionToInteger
     else
       let xf = F64.to_float x in
-      if xf >= -.Int64.(to_float min_int) *. 2.0 || xf <= -1.0 then
+      if Float.(xf >= -.Int64.(to_float min_int) *. 2.0 || xf <= -1.0) then
         raise IntegerOverflow
       else Int32.of_float xf
 
@@ -816,38 +818,40 @@ module I64CvtOp = struct
     Int64.(logand (of_int32 x) 0x0000_0000_ffff_ffffL)
 
   let trunc_f32_s (x : int32) =
-    if x <> x then raise ConversionToInteger
+    if Int32.(x <> x) then raise ConversionToInteger
     else
       let xf = F32.to_float x in
-      if xf >= -.Int64.(to_float min_int) || xf < Int64.(to_float min_int) then
-        raise IntegerOverflow
+      if
+        Float.(xf >= -.Int64.(to_float min_int) || xf < Int64.(to_float min_int))
+      then raise IntegerOverflow
       else Int64.of_float xf
 
-  let trunc_f32_u x =
-    if x <> x then raise ConversionToInteger
+  let trunc_f32_u (x : int32) =
+    if Int32.(x <> x) then raise ConversionToInteger
     else
       let xf = F32.to_float x in
-      if xf >= -.Int64.(to_float min_int) *. 2.0 || xf <= -1.0 then
+      if Float.(xf >= -.Int64.(to_float min_int) *. 2.0 || xf <= -1.0) then
         raise IntegerOverflow
-      else if xf >= -.Int64.(to_float min_int) then
+      else if Float.(xf >= -.Int64.(to_float min_int)) then
         Int64.(logxor (of_float (xf -. 0x1p63)) min_int)
       else Int64.of_float xf
 
   let trunc_f64_s (x : int64) =
-    if x <> x then raise ConversionToInteger
+    if Int64.(x <> x) then raise ConversionToInteger
     else
       let xf = F64.to_float x in
-      if xf >= -.Int64.(to_float min_int) || xf < Int64.(to_float min_int) then
-        raise IntegerOverflow
+      if
+        Float.(xf >= -.Int64.(to_float min_int) || xf < Int64.(to_float min_int))
+      then raise IntegerOverflow
       else Int64.of_float xf
 
-  let trunc_f64_u x =
-    if x <> x then raise ConversionToInteger
+  let trunc_f64_u (x : int64) =
+    if Int64.(x <> x) then raise ConversionToInteger
     else
       let xf = F64.to_float x in
-      if xf >= -.Int64.(to_float min_int) *. 2.0 || xf <= -1.0 then
+      if Float.(xf >= -.Int64.(to_float min_int) *. 2.0 || xf <= -1.0) then
         raise IntegerOverflow
-      else if xf >= -.Int64.(to_float min_int) then
+      else if Float.(xf >= -.Int64.(to_float min_int)) then
         Int64.(logxor (of_float (xf -. 0x1p63)) min_int)
       else Int64.of_float xf
 
@@ -872,7 +876,7 @@ end
 module F32CvtOp = struct
   let demote_f64 x =
     let xf = F64.to_float x in
-    if xf = xf then F32.of_float xf
+    if Float.(xf = xf) then F32.of_float xf
     else
       let nan64bits = x in
       let sign_field =
@@ -926,9 +930,10 @@ module F32CvtOp = struct
 end
 
 module F64CvtOp = struct
+  Float.is_nan
   let promote_f32 x =
     let xf = F32.to_float x in
-    if xf = xf then F64.of_float xf
+    if Float.(xf = xf) then F64.of_float xf
     else
       let nan32bits = I64CvtOp.extend_i32_u x in
       let sign_field =
