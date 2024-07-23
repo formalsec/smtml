@@ -29,7 +29,6 @@ let compare n1 n2 =
   | I32 i1, I32 i2 -> Int32.compare i1 i2
   | I64 i1, I64 i2 -> Int64.compare i1 i2
   | F32 i1, F32 i2 ->
-    (* TODO: is this really what we want on `nan` ? *)
     Float.compare (Int32.float_of_bits i1) (Int32.float_of_bits i2)
   | F64 i1, F64 i2 ->
     Float.compare (Int64.float_of_bits i1) (Int64.float_of_bits i2)
@@ -42,9 +41,7 @@ let compare n1 n2 =
   | F32 _, F64 _ -> -1
   | F64 _, _ -> 1
 
-let equal (n1 : t) (n2 : t) : bool =
-  (* TODO: is this what we want on `nan` ? *)
-  compare n1 n2 = 0
+let equal (n1 : t) (n2 : t) : bool = compare n1 n2 = 0
 
 let num_of_bool (b : bool) : t = I32 (if b then 1l else 0l)
 

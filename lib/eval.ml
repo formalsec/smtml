@@ -164,17 +164,15 @@ module Real = struct
   let relop (op : relop) (v1 : Value.t) (v2 : Value.t) : bool =
     let f =
       match op with
-      | Lt -> ( < )
-      | Le -> ( <= )
-      | Gt -> ( > )
-      | Ge -> ( >= )
-      | Eq -> ( = )
-      | Ne -> ( <> )
+      | Lt -> Float.( < )
+      | Le -> Float.( <= )
+      | Gt -> Float.( > )
+      | Ge -> Float.( >= )
+      | Eq -> Float.( = )
+      | Ne -> Float.( <> )
       | _ ->
         Fmt.failwith {|relop: Unsupported real operator "%a"|} Ty.pp_relop op
     in
-    (* TODO: check that this is doing what we want with NaN *)
-    let f x y = f (Float.compare x y) 0 in
     f (of_value 1 (`Relop op) v1) (of_value 2 (`Relop op) v2)
 
   let cvtop (op : cvtop) (v : Value.t) : Value.t =
@@ -931,6 +929,7 @@ end
 
 module F64CvtOp = struct
   Float.is_nan
+
   let promote_f32 x =
     let xf = F32.to_float x in
     if Float.(xf = xf) then F64.of_float xf
