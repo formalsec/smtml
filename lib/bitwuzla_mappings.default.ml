@@ -45,6 +45,9 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
   (* Not supported *)
   type optimizer = unit
 
+  (* Not supported *)
+  type func_decl = unit
+
   let true_ = mk_true ()
 
   let false_ = mk_false ()
@@ -344,6 +347,12 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     (* TODO *)
     let to_ieee_bv _ =
       Fmt.failwith "Bitwuzla_mappings: to_ieee_bv not implemented"
+  end
+
+  module Func = struct
+    let make _ _ _ = ()
+
+    let apply () _ = false_
   end
 
   module Model = struct

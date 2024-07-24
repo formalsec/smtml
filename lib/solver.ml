@@ -147,7 +147,3 @@ end = struct
 end
 
 module Incremental (M : Mappings_intf.S) : Solver_intf.S = Base (M)
-
-module Z3_batch : Solver_intf.S = Batch (Z3_mappings)
-
-module Z3_incremental : Solver_intf.S = Incremental (Z3_mappings)

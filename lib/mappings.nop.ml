@@ -32,6 +32,8 @@ module Nop = struct
 
     type optimizer
 
+    type func_decl = unit
+
     let true_ = ()
 
     let false_ = ()
@@ -292,6 +294,12 @@ module Nop = struct
       let of_ieee_bv _ = assert false
 
       let to_ieee_bv _ = assert false
+    end
+
+    module Func = struct
+      let make _ _ _ = ()
+
+      let apply () _ = ()
     end
 
     module Model = struct

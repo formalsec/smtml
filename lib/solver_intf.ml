@@ -133,14 +133,4 @@ module type Intf = sig
       Incremental solver engages with the underlying SMT solver in nearly every
       interaction. *)
   module Incremental (_ : Mappings_intf.S) : S
-
-  (** {!module:Z3_batch} is a concrete instantiation of {!module:Batch} with
-      {!module:Z3_mappings}, providing a solver specifically tailored for the Z3
-      SMT solver. *)
-  module Z3_batch : S
-
-  (** {!module:Z3_incremental} is a specific instantiation of
-      {!module:Incremental} with {!module:Z3_mappings}, creating an incremental
-      solver designed for the Z3 SMT solver.*)
-  module Z3_incremental : S
 end
