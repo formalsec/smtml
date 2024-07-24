@@ -40,8 +40,7 @@
   ty
   utils
   value
-  z3_mappings
-  z3_mappings2)
+  z3_mappings)
  (private_modules lexer parser)
  (flags
   (:standard -open Prelude))
@@ -75,13 +74,6 @@
    from
    (z3 -> z3_mappings.default.ml)
    (-> z3_mappings.nop.ml))
-  ;; This is the improved version of the mappings
-  ;; Will replace the previous one at some point
-  (select
-   z3_mappings2.ml
-   from
-   (z3 -> z3_mappings2.default.ml)
-   (-> z3_mappings2.nop.ml))
   (select
    cvc5_mappings.ml
    from
@@ -102,12 +94,6 @@
   (progn
    (with-stdout-to
     z3_mappings.nop.ml
-    (progn
-     (echo "let solver_name = \"Z3\"\n")
-     (echo "let solver_package = \"z3\"\n")
-     (cat mappings.nop.ml)))
-   (with-stdout-to
-    z3_mappings2.nop.ml
     (progn
      (echo "let solver_name = \"Z3\"\n")
      (echo "let solver_package = \"z3\"\n")

@@ -37,6 +37,8 @@ module type M = sig
 
   type optimizer
 
+  type func_decl
+
   val true_ : term
 
   val false_ : term
@@ -309,6 +311,12 @@ module type M = sig
     val of_ieee_bv : int -> int -> term -> term
 
     val to_ieee_bv : term -> term
+  end
+
+  module Func : sig
+    val make : string -> ty list -> ty -> func_decl
+
+    val apply : func_decl -> term list -> term
   end
 
   module Model : sig

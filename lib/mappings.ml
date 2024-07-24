@@ -21,24 +21,27 @@ include Mappings_intf
 module Make (M_with_make : M_with_make) : S_with_fresh = struct
   module Make_ (M : M) : S = struct
     open Ty
+    module Smap = Map.Make (Symbol)
 
-    type sym_tbl = (Symbol.t, M.term) Hashtbl.t
+    type symbol_ctx = M.term Smap.t
 
     type model =
       { model : M.model
-      ; symbol_table : sym_tbl
+      ; ctx : symbol_ctx
       }
 
     type solver =
       { solver : M.solver
-      ; symbol_table : sym_tbl
+      ; ctx : symbol_ctx Stack.t
+      ; mutable last_ctx :
+          symbol_ctx option (* Used to save last check-sat ctx *)
       }
 
     type handle = M.handle
 
     type optimize =
       { opt : M.optimizer
-      ; symbol_table : sym_tbl
+      ; ctx : symbol_ctx Stack.t
       }
 
     let i8 = M.Types.bitv 8
@@ -50,6 +53,16 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
     let f32 = M.Types.float 8 24
 
     let f64 = M.Types.float 11 53
+
+    let int2str = M.Func.make "int_to_string" [ M.Types.int ] M.Types.string
+
+    let str2int = M.Func.make "string_to_int" [ M.Types.string ] M.Types.int
+
+    let real2str = M.Func.make "real_to_string " [ M.Types.real ] M.Types.string
+
+    let str2real = M.Func.make "string_to_real" [ M.Types.string ] M.Types.real
+
+    let str_trim = M.Func.make "string_trim" [ M.Types.string ] M.Types.string
 
     let get_type = function
       | Ty_int -> M.Types.int
@@ -64,13 +77,12 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty_fp 64 -> f64
       | Ty_fp _ | Ty_list | Ty_app | Ty_unit -> assert false
 
-    let make_symbol (symbol_table : sym_tbl) (s : Symbol.t) : M.term =
-      match Hashtbl.find_opt symbol_table s with
-      | Some sym -> sym
+    let make_symbol (ctx : symbol_ctx) (s : Symbol.t) : symbol_ctx * M.term =
+      match Smap.find_opt s ctx with
+      | Some sym -> (ctx, sym)
       | None ->
         let sym = M.const s.name (get_type s.ty) in
-        Hashtbl.replace symbol_table s sym;
-        sym
+        (Smap.add s sym ctx, sym)
 
     module Bool_impl = struct
       let true_ = M.true_
@@ -134,11 +146,10 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | op ->
           Fmt.failwith {|Int: Unsupported relop operator "%a"|} Ty.pp_relop op
 
-      (* TODO: Uninterpreted cvtops *)
       let cvtop op e =
         match op with
-        | ToString -> assert false
-        | OfString -> assert false
+        | ToString -> M.Func.apply int2str [ e ]
+        | OfString -> M.Func.apply str2int [ e ]
         | Reinterpret_float -> M.Real.to_int e
         | op ->
           Fmt.failwith {|Int: Unsupported cvtop operator "%a"|} Ty.pp_cvtop op
@@ -183,12 +194,10 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | _ ->
           Fmt.failwith {|Real: Unsupported relop operator "%a"|} Ty.pp_relop op
 
-      (* TODO: Uninterpreted cvtops *)
       let cvtop op e =
         match op with
-        | ToString -> assert false
-        | OfString -> assert false
-        | ConvertUI32 -> assert false
+        | ToString -> M.Func.apply real2str [ e ]
+        | OfString -> M.Func.apply str2real [ e ]
         | Reinterpret_int -> M.Int.to_real e
         | op ->
           Fmt.failwith {|Real: Unsupported cvtop operator "%a"|} Ty.pp_cvtop op
@@ -197,13 +206,10 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
     module String_impl = struct
       let v s = M.String.v s [@@inline]
 
-      (* let trim = FuncDecl.mk_func_decl_s ctx "Trim" [ str_sort ] str_sort *)
-
-      let unop = function
-        | Length -> M.String.length
-        | Trim ->
-          (* FuncDecl.apply trim [ e ] *)
-          assert false
+      let unop op e =
+        match op with
+        | Length -> M.String.length e
+        | Trim -> M.Func.apply str_trim [ e ]
         | op ->
           Fmt.failwith {|String: Unsupported unop operator "%a"|} Ty.pp_unop op
 
@@ -569,44 +575,57 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty.Ty_str -> String_impl.naryop
       | ty -> Fmt.failwith "Naryop for type \"%a\" not implemented" Ty.pp ty
 
-    let rec encode_expr symbol_table (hte : Expr.t) : M.term =
+    let rec encode_expr ctx (hte : Expr.t) : symbol_ctx * M.term =
       match Expr.view hte with
-      | Val value -> v value
+      | Val value -> (ctx, v value)
       | Ptr { base; offset } ->
         let base' = v (Num (I32 base)) in
-        let offset' = encode_expr symbol_table offset in
-        I32.binop Add base' offset'
-      | Symbol sym -> make_symbol symbol_table sym
+        let ctx, offset' = encode_expr ctx offset in
+        (ctx, I32.binop Add base' offset')
+      | Symbol sym -> make_symbol ctx sym
       | Unop (ty, op, e) ->
-        let e = encode_expr symbol_table e in
-        unop ty op e
+        let ctx, e = encode_expr ctx e in
+        (ctx, unop ty op e)
       | Binop (ty, op, e1, e2) ->
-        let e1 = encode_expr symbol_table e1 in
-        let e2 = encode_expr symbol_table e2 in
-        binop ty op e1 e2
+        let ctx, e1 = encode_expr ctx e1 in
+        let ctx, e2 = encode_expr ctx e2 in
+        (ctx, binop ty op e1 e2)
       | Triop (ty, op, e1, e2, e3) ->
-        let e1 = encode_expr symbol_table e1 in
-        let e2 = encode_expr symbol_table e2 in
-        let e3 = encode_expr symbol_table e3 in
-        triop ty op e1 e2 e3
+        let ctx, e1 = encode_expr ctx e1 in
+        let ctx, e2 = encode_expr ctx e2 in
+        let ctx, e3 = encode_expr ctx e3 in
+        (ctx, triop ty op e1 e2 e3)
       | Relop (ty, op, e1, e2) ->
-        let e1 = encode_expr symbol_table e1 in
-        let e2 = encode_expr symbol_table e2 in
-        relop ty op e1 e2
+        let ctx, e1 = encode_expr ctx e1 in
+        let ctx, e2 = encode_expr ctx e2 in
+        (ctx, relop ty op e1 e2)
       | Cvtop (ty, op, e) ->
-        let e = encode_expr symbol_table e in
-        cvtop ty op e
+        let ctx, e = encode_expr ctx e in
+        (ctx, cvtop ty op e)
       | Naryop (ty, op, es) ->
-        let es = List.map (encode_expr symbol_table) es in
-        naryop ty op es
+        let ctx, es =
+          List.fold_left
+            (fun (ctx, es) e ->
+              let ctx, e = encode_expr ctx e in
+              (ctx, e :: es) )
+            (ctx, []) es
+        in
+        (ctx, naryop ty op es)
       | Extract (e, h, l) ->
-        let e = encode_expr symbol_table e in
-        M.Bitv.extract e ~high:((h * 8) - 1) ~low:(l * 8)
+        let ctx, e = encode_expr ctx e in
+        (ctx, M.Bitv.extract e ~high:((h * 8) - 1) ~low:(l * 8))
       | Concat (e1, e2) ->
-        let e1 = encode_expr symbol_table e1 in
-        let e2 = encode_expr symbol_table e2 in
-        M.Bitv.concat e1 e2
+        let ctx, e1 = encode_expr ctx e1 in
+        let ctx, e2 = encode_expr ctx e2 in
+        (ctx, M.Bitv.concat e1 e2)
       | List _ | App _ -> assert false
+
+    let encode_exprs ctx (es : Expr.t list) : symbol_ctx * M.term list =
+      List.fold_left
+        (fun (ctx, es) e ->
+          let ctx, e = encode_expr ctx e in
+          (ctx, e :: es) )
+        (ctx, []) es
 
     (* TODO: pp_smt *)
     let pp_smt ?status:_ _ _ = assert false
@@ -643,10 +662,11 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         Value.Num (F64 (Int64.bits_of_float float))
       | Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit -> assert false
 
-    let value ({ model = m; symbol_table } : model) (c : Expr.t) : Value.t =
-      value_of_term m (Expr.ty c) (encode_expr symbol_table c)
+    let value ({ model = m; ctx } : model) (c : Expr.t) : Value.t =
+      let _, e = encode_expr ctx c in
+      value_of_term m (Expr.ty c) e
 
-    let values_of_model ?symbols ({ model; symbol_table } as model0) =
+    let values_of_model ?symbols ({ model; ctx } as model0) =
       let m = Hashtbl.create 512 in
       ( match symbols with
       | Some symbols ->
@@ -656,45 +676,60 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
             Hashtbl.replace m sym v )
           symbols
       | None ->
-        Hashtbl.iter
+        Smap.iter
           (fun (sym : Symbol.t) term ->
             let v = value_of_term model sym.ty term in
             Hashtbl.replace m sym v )
-          symbol_table );
+          ctx );
       m
 
     let set_debug _ = ()
 
     module Solver = struct
       let make ?params ?logic () =
-        { solver = M.Solver.make ?params ?logic ()
-        ; symbol_table = Hashtbl.create 16
-        }
+        let ctx = Stack.create () in
+        Stack.push Smap.empty ctx;
+        { solver = M.Solver.make ?params ?logic (); ctx; last_ctx = None }
 
-      let clone { solver; symbol_table } =
-        { solver = M.Solver.clone solver
-        ; symbol_table = Hashtbl.copy symbol_table
-        }
+      let clone { solver; ctx; last_ctx } =
+        { solver = M.Solver.clone solver; ctx = Stack.copy ctx; last_ctx }
 
-      let push { solver; _ } = M.Solver.push solver
+      let push { solver; ctx; _ } =
+        let top = Stack.top ctx in
+        Stack.push top ctx;
+        M.Solver.push solver
 
-      let pop { solver; _ } n = M.Solver.pop solver n
+      let pop { solver; ctx; _ } n =
+        let _ = Stack.pop ctx in
+        M.Solver.pop solver n
 
-      let reset { solver; _ } = M.Solver.reset solver
+      let reset (s : solver) =
+        Stack.clear s.ctx;
+        Stack.push Smap.empty s.ctx;
+        s.last_ctx <- None;
+        M.Solver.reset s.solver
 
-      let add { solver; symbol_table } (exprs : Expr.t list) =
-        M.Solver.add solver (List.map (encode_expr symbol_table) exprs)
+      let add (s : solver) (exprs : Expr.t list) =
+        let ctx = Stack.pop s.ctx in
+        let ctx, exprs = encode_exprs ctx exprs in
+        Stack.push ctx s.ctx;
+        M.Solver.add s.solver exprs
 
-      let check { solver; symbol_table } ~assumptions =
-        let assumptions = List.map (encode_expr symbol_table) assumptions in
-        M.Solver.check solver ~assumptions
+      let check (s : solver) ~assumptions =
+        let ctx = Stack.top s.ctx in
+        let ctx, assumptions = encode_exprs ctx assumptions in
+        s.last_ctx <- Some ctx;
+        M.Solver.check s.solver ~assumptions
 
-      let model { solver; symbol_table } =
-        M.Solver.model solver
-        |> Option.map (fun m -> { model = m; symbol_table })
+      let model { solver; last_ctx; _ } =
+        match last_ctx with
+        | Some ctx ->
+          M.Solver.model solver |> Option.map (fun m -> { model = m; ctx })
+        | None ->
+          Fmt.failwith "model: Trying to fetch model berfore check-sat call"
 
-      let add_simplifier { solver; symbol_table } =
-        { solver = M.Solver.add_simplifier solver; symbol_table }
+      let add_simplifier s =
+        { s with solver = M.Solver.add_simplifier s.solver }
 
       let interrupt _ = M.Solver.interrupt ()
 
@@ -703,26 +738,37 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
     module Optimizer = struct
       let make () =
-        { opt = M.Optimizer.make (); symbol_table = Hashtbl.create 16 }
+        let ctx = Stack.create () in
+        Stack.push Smap.empty ctx;
+        { opt = M.Optimizer.make (); ctx }
 
       let push { opt; _ } = M.Optimizer.push opt
 
       let pop { opt; _ } = M.Optimizer.pop opt
 
-      let add { opt; symbol_table } exprs =
-        M.Optimizer.add opt (List.map (encode_expr symbol_table) exprs)
+      let add (o : optimize) exprs =
+        let ctx = Stack.pop o.ctx in
+        let ctx, exprs = encode_exprs ctx exprs in
+        Stack.push ctx o.ctx;
+        M.Optimizer.add o.opt exprs
 
       let check { opt; _ } = M.Optimizer.check opt
 
-      let model { opt; symbol_table } =
-        M.Optimizer.model opt
-        |> Option.map (fun m -> { model = m; symbol_table })
+      let model { opt; ctx } =
+        let ctx = Stack.top ctx in
+        M.Optimizer.model opt |> Option.map (fun m -> { model = m; ctx })
 
-      let maximize { opt; symbol_table } (expr : Expr.t) =
-        M.Optimizer.maximize opt (encode_expr symbol_table expr)
+      let maximize (o : optimize) (expr : Expr.t) =
+        let ctx = Stack.pop o.ctx in
+        let ctx, expr = encode_expr ctx expr in
+        Stack.push ctx o.ctx;
+        M.Optimizer.maximize o.opt expr
 
-      let minimize { opt; symbol_table } (expr : Expr.t) =
-        M.Optimizer.minimize opt (encode_expr symbol_table expr)
+      let minimize (o : optimize) (expr : Expr.t) =
+        let ctx = Stack.pop o.ctx in
+        let ctx, expr = encode_expr ctx expr in
+        Stack.push ctx o.ctx;
+        M.Optimizer.minimize o.opt expr
 
       let interrupt _ = M.Optimizer.interrupt ()
 
