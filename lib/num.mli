@@ -23,11 +23,18 @@ type t =
   | F32 of int32
   | F64 of int64
 
+type printer =
+  [ `Pretty
+  | `Hexadecimal
+  ]
+
 val compare : t -> t -> int
 
 val equal : t -> t -> bool
 
 val num_of_bool : bool -> t
+
+val set_default_printer : printer -> unit
 
 val pp : Fmt.formatter -> t -> unit
 

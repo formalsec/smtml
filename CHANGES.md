@@ -4,6 +4,16 @@
 ### Fixed
 ### Changed
 
+## v0.2.3
+
+### Added
+
+- Add `Num.set_default_printer` to change between pretty and hexa modes
+
+### Changed
+
+- Reverted `Num.pp` hexadecimal printing
+
 ## v0.2.2
 
 ### Added
