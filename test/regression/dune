@@ -5,7 +5,7 @@
 (cram
  (applies_to test_issue_183)
  (enabled_if
-  (not %{lib-available:colibri2})))
+  (not %{lib-available:colibri2.core})))
 
 (tests
  (names test_pr_77)
