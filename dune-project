@@ -47,6 +47,8 @@
   (prelude
    (>= "0.2"))
   ocaml_intrinsics
+  (fmt
+   (>= "0.8.7"))
   (cmdliner
    (>= "1.2.0"))
   (zarith
