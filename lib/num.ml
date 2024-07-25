@@ -23,6 +23,11 @@ type t =
   | F32 of int32
   | F64 of int64
 
+type printer =
+  [ `Pretty
+  | `Hexadecimal
+  ]
+
 let compare n1 n2 =
   match (n1, n2) with
   | I8 i1, I8 i2 -> Int.compare i1 i2
@@ -45,13 +50,29 @@ let equal (n1 : t) (n2 : t) : bool = compare n1 n2 = 0
 
 let num_of_bool (b : bool) : t = I32 (if b then 1l else 0l)
 
-let pp fmt (n : t) =
+let pp_num fmt (n : t) =
+  match n with
+  | I8 i -> Fmt.pf fmt "(i8 %d)" i
+  | I32 i -> Fmt.pf fmt "(i32 %ld)" i
+  | I64 i -> Fmt.pf fmt "(i64 %Ld)" i
+  | F32 f -> Fmt.pf fmt "(f32 %F)" (Int32.float_of_bits f)
+  | F64 f -> Fmt.pf fmt "(f64 %F)" (Int64.float_of_bits f)
+
+let pp_hex fmt (n : t) =
   match n with
   | I8 i -> Fmt.pf fmt "0x%02x" (i land 0xff)
   | I32 i -> Fmt.pf fmt "0x%08lx" i
   | I64 i -> Fmt.pf fmt "0x%016Lx" i
   | F32 f -> Fmt.pf fmt "(fp 0x%08lx)" f
   | F64 f -> Fmt.pf fmt "(fp 0x%016Lx)" f
+
+let printer = ref pp_num
+
+let set_default_printer = function
+  | `Pretty -> printer := pp_num
+  | `Hexadecimal -> printer := pp_hex
+
+let pp fmt v = !printer fmt v
 
 let to_string (n : t) : string = Fmt.str "%a" pp n
 
