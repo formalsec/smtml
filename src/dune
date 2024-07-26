@@ -80,7 +80,7 @@
    (cvc5 -> cvc5_mappings.default.ml)
    (-> cvc5_mappings.nop.ml)))
  (instrumentation
-  (backend bisect_ppx --exclusions lib/bisect.exclude)
+  (backend bisect_ppx --exclusions src/bisect.exclude)
   (deps bisect.exclude)))
 
 (rule

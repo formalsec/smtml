@@ -1,5 +1,3 @@
-file "lib/mappings.ml"
-file "lib/z3_mappings2.ml"
-file "lib/colibri2_mappings.ml"
-file "lib/bitwuzla_mappings.ml"
-file "lib/cvc5_mappings.ml"
+file "src/colibri2_mappings.ml"
+file "src/bitwuzla_mappings.ml"
+file "src/cvc5_mappings.ml"
