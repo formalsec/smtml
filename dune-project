@@ -45,7 +45,7 @@
   (ocaml
    (>= "4.14.0"))
   (prelude
-   (>= "0.2"))
+   (>= "0.3"))
   ocaml_intrinsics
   (fmt
    (>= "0.8.7"))
