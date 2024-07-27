@@ -56,7 +56,9 @@ let rec equal (v1 : t) (v2 : t) : bool =
   | List l1, List l2 -> List.equal equal l1 l2
   | App (`Op op1, vs1), App (`Op op2, vs2) ->
     String.equal op1 op2 && List.equal equal vs1 vs2
-  | _ -> false
+  | (True | False | Unit | Int _ | Real _ | Str _ | Num _ | List _ | App _), _
+    ->
+    false
 
 let rec pp (fmt : Fmt.formatter) (v : t) : unit =
   match v with
@@ -73,7 +75,7 @@ let rec pp (fmt : Fmt.formatter) (v : t) : unit =
     Fmt.pf fmt "%s(%a)" op
       (Fmt.list ~sep:(fun fmt () -> Fmt.string fmt ", ") pp)
       vs
-  | _ -> assert false
+  | App _ -> assert false
 
 let to_string (v : t) : string = Fmt.str "%a" pp v
 

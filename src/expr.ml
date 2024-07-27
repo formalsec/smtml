@@ -71,7 +71,10 @@ module Expr = struct
     | Extract (e1, h1, l1), Extract (e2, h2, l2) ->
       phys_equal e1 e2 && h1 = h2 && l1 = l2
     | Concat (e1, e3), Concat (e2, e4) -> phys_equal e1 e2 && phys_equal e3 e4
-    | _ -> false
+    | ( ( Val _ | Ptr _ | Symbol _ | List _ | App _ | Unop _ | Binop _ | Triop _
+        | Relop _ | Cvtop _ | Naryop _ | Extract _ | Concat _ )
+      , _ ) ->
+      false
 
   let hash (e : expr) : int =
     let h x = Hashtbl.hash x in
