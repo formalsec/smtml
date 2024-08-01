@@ -613,6 +613,7 @@ module Fresh = struct
         let e1' = encode_expr e1
         and e2' = encode_expr e2 in
         Z3.BitVector.mk_concat ctx e1' e2'
+      | Stringop _ -> failwith "in and not_in not implemented yet"
       | List _ | App _ -> assert false
     (* | Quantifier (t, vars, body, patterns) -> *)
     (*   let body' = encode_expr body in *)

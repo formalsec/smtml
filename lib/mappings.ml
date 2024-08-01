@@ -576,7 +576,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         let e1 = encode_expr symbol_table e1 in
         let e2 = encode_expr symbol_table e2 in
         M.Bitv.concat e1 e2
-      | List _ | App _ -> assert false
+      | List _ | App _ | Stringop _ -> assert false
 
     (* TODO: pp_smt *)
     let pp_smt ?status:_ _ _ = assert false

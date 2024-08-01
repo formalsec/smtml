@@ -16,6 +16,8 @@
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
 
+module StringSet : Set.S with type elt = string
+
 (** Term definitions of the abstract syntax *)
 type t = expr Hc.hash_consed
 
@@ -34,6 +36,7 @@ and expr =
   | Relop of Ty.t * Ty.relop * t * t
   | Cvtop of Ty.t * Ty.cvtop * t
   | Naryop of Ty.t * Ty.naryop * t list
+  | Stringop of Ty.t * Ty.stringop * t * StringSet.t
   | Extract of t * int * int
   | Concat of t * t
 

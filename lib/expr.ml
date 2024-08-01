@@ -18,6 +18,8 @@
 
 open Ty
 
+module StringSet = Set.Make(String)
+
 type t = expr Hc.hash_consed
 
 and expr =
@@ -35,6 +37,7 @@ and expr =
   | Relop of Ty.t * relop * t * t
   | Cvtop of Ty.t * cvtop * t
   | Naryop of Ty.t * naryop * t list
+  | Stringop of Ty.t * stringop * t * StringSet.t
   | Extract of t * int * int
   | Concat of t * t
 
@@ -64,6 +67,8 @@ module Expr = struct
       Ty.equal t1 t2 && op1 = op2 && e1 == e2
     | Naryop (t1, op1, l1), Naryop (t2, op2, l2) ->
       Ty.equal t1 t2 && op1 = op2 && list_eq l1 l2
+    | Stringop (t1, op1, e1, s1), Stringop (t2, op2, e2, s2) ->
+      Ty.equal t1 t2 && op1 = op2 && e1 == e2 && StringSet.equal s1 s2
     | Extract (e1, h1, l1), Extract (e2, h2, l2) ->
       e1 == e2 && h1 = h2 && l1 = l2
     | Concat (e1, e3), Concat (e2, e4) -> e1 == e2 && e3 == e4
@@ -83,6 +88,7 @@ module Expr = struct
     | Relop (ty, op, e1, e2) -> h (ty, op, e1.tag, e2.tag)
     | Triop (ty, op, e1, e2, e3) -> h (ty, op, e1.tag, e2.tag, e3.tag)
     | Naryop (ty, op, es) -> h (ty, op, es)
+    | Stringop (ty, op, e, s) -> h (ty, op, e.tag, s)
     | Extract (e, hi, lo) -> h (e.tag, hi, lo)
     | Concat (e1, e2) -> h (e1.tag, e2.tag)
 end
@@ -111,13 +117,14 @@ let rec ty (hte : t) : Ty.t =
   | Ptr _ -> Ty_bitv 32
   | Symbol x -> Symbol.type_of x
   | List _ -> Ty_list
-  | App _ -> assert false
+  | App _ -> Ty_app
   | Unop (ty, _, _) -> ty
   | Binop (ty, _, _, _) -> ty
   | Triop (ty, _, _, _, _) -> ty
   | Relop (ty, _, _, _) -> ty
   | Cvtop (ty, _, _) -> ty
   | Naryop (ty, _, _) -> ty
+  | Stringop (_, _, _, _) -> Ty_bool (* This is type bool but the module Ty_str *)
   | Extract (_, h, l) -> Ty_bitv ((h - l) * 8)
   | Concat (e1, e2) -> (
     match (ty e1, ty e2) with
@@ -138,6 +145,7 @@ let rec is_symbolic (v : t) : bool =
   | Cvtop (_, _, v) -> is_symbolic v
   | Relop (_, _, v1, v2) -> is_symbolic v1 || is_symbolic v2
   | Naryop (_, _, vs) -> List.exists is_symbolic vs
+  | Stringop (_, _, v, _) -> is_symbolic v
   | Extract (e, _, _) -> is_symbolic e
   | Concat (e1, e2) -> is_symbolic e1 || is_symbolic e2
 
@@ -163,6 +171,7 @@ let get_symbols (hte : t list) =
       symbols e2
     | Cvtop (_, _, e) -> symbols e
     | Naryop (_, _, es) -> List.iter symbols es
+    | Stringop (_, _, e, _) -> symbols e
     | Extract (e, _, _) -> symbols e
     | Concat (e1, e2) ->
       symbols e1;
@@ -208,6 +217,7 @@ module Pp = struct
     | Cvtop (ty, op, e) -> fprintf fmt "(%a.%a %a)" Ty.pp ty pp_cvtop op pp e
     | Naryop (ty, op, es) ->
       fprintf fmt "(%a.%a (%a))" Ty.pp ty pp_naryop op (pp_print_list pp) es
+    | Stringop (ty, op, e, s) -> fprintf fmt "(%a.%a %a {%a})" Ty.pp ty pp_stringop op pp e (pp_print_list ~pp_sep:(fun fmt () -> fprintf fmt "; ") pp_print_string) (StringSet.elements s)
     | Extract (e, h, l) -> fprintf fmt "(extract %a %d %d)" pp e l h
     | Concat (e1, e2) -> fprintf fmt "(++ %a %a)" pp e1 pp e2
     | App _ -> assert false
@@ -259,6 +269,20 @@ let binop' (ty : Ty.t) (op : binop) (hte1 : t) (hte2 : t) : t =
   make (Binop (ty, op, hte1, hte2))
 [@@inline]
 
+let relop' (ty : Ty.t) (op : relop) (hte1 : t) (hte2 : t) : t =
+  make (Relop (ty, op, hte1, hte2))
+[@@inline]
+
+let naryop' (ty : Ty.t) (op : naryop) (es : t list) : t =
+  make (Naryop (ty, op, es))
+[@@inline]
+
+let stringop' (ty : Ty.t) (op : stringop) (hte : t) (s : StringSet.t) : t =
+  make (Stringop (ty, op, hte, s))
+[@@inline]
+
+let stringop (ty : Ty.t) (op : stringop) (hte : t) (s : StringSet.t) : t = stringop' ty op hte s
+
 let rec triop ty (op : triop) (e1 : t) (e2 : t) (e3 : t) : t =
   match (op, view e1, view e2, view e3) with
   | Ite, Val True, _, _ -> e2
@@ -268,6 +292,10 @@ let rec triop ty (op : triop) (e1 : t) (e2 : t) (e3 : t) : t =
   | Ite, _, Val False, Val True -> unop Ty_bool Not e1
   | Ite, _, Val False, _ -> binop Ty_bool And (unop Ty_bool Not e1) e3
   | Ite, _, _ , Val False -> binop Ty_bool And e1 e2
+  | Ite, _, Val True, _ -> binop Ty_bool Or e1 e3
+  | Ite, _, _, Val True -> binop Ty_bool Or (unop Ty_bool Not e1) e2
+  | Ite, _, _, _ when equal e1 e2 -> binop Ty_bool Or e1 e3
+  | Ite, _, _, _ when equal e1 e3 -> binop Ty_bool And e1 e2
   | op, Val v1, Val v2, Val v3 -> value (Eval.triop ty op v1 v2 v3)
   | _ -> triop' ty op e1 e2 e3
 
@@ -277,6 +305,9 @@ and
   match (op, view hte) with
   | _, Val v -> value (Eval.unop ty op v)
   | Not, Unop (_, Not, hte') -> hte'
+  | Not, Relop _ -> (match negate_relop hte with | Ok e -> e | Error msg -> failwith msg)
+  | Not, Stringop (_, In, e, es) -> stringop Ty_str NotIn e es
+  | Not, Stringop (_, NotIn, e, es) -> stringop Ty_str In e es
   | Neg, Unop (_, Neg, hte') -> hte'
   | Reverse, Unop (_, Reverse, hte') -> hte'
   | Head, List (hd :: _) -> hd
@@ -295,7 +326,6 @@ and
 
   binop ty (op : binop) (hte1 : t) (hte2 : t) : t =
   match (op, view hte1, view hte2) with
-  | And, _, _ when equal hte1 hte2 -> hte1
   | _, Val v1, Val v2 -> value (Eval.binop ty op v1 v2)
   | _, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } -> (
     match op with
@@ -365,32 +395,84 @@ and
     | List_append_last -> make (List (es @ [ hte2 ]))
     | List_append -> make (List (hte2 :: es))
     | _ -> binop' ty op hte1 hte2 )
-  | _, Triop (ty', Ite, cond, hte1', hte2'), Val (Int _) ->
+  | _, Triop (ty', Ite, cond, hte1', hte2'), Val _ ->
     triop ty' Ite cond (binop ty op hte1' hte2) (binop ty op hte2' hte2)
+  | And, _, _ when equal hte1 hte2 -> hte1
+  | And, _, Binop (_, Or, e3, e4) when equal hte1 e3 || equal hte1 e4 -> hte1
+  | And, Binop (_, Or, e1, e2), _ when equal hte2 e1 || equal hte2 e2 -> hte2
+  | And, _, Naryop (_, Logor, es) when List.exists (equal hte1) es -> hte1
+  | And, Naryop (_, Logor, es), _ when List.exists (equal hte2) es -> hte2
+  | And, _ , Binop (_, And, e3, e4) -> 
+    if equal hte1 e3 then 
+      binop ty op hte1 e4
+    else if equal hte1 e4 then
+      binop ty op hte1 e3
+    else
+      binop ty op hte1 (naryop Ty_bool Logand [ e3; e4 ])
+  | And, Binop (_, And, e1, e2), _ -> binop ty op hte2 (naryop Ty_bool Logand [ e1; e2 ])
+  | And, _, Naryop (_, Logand, es) -> naryop Ty_bool Logand (hte1 :: es)
+  | And, Naryop (_, Logand, es), _ -> naryop Ty_bool Logand (hte2 :: es)
+  | And, e1, e2 -> (
+    match e1, e2 with
+    | Stringop (_, NotIn, e1, es1), Stringop (_, NotIn, e2, es2) when
+      equal e1 e2-> 
+        stringop Ty_str NotIn e1 (StringSet.union es1 es2)
+    | Stringop (_, In, e1, es1), Stringop (_, In, e2, es2) when
+      equal e1 e2 -> 
+        stringop Ty_str In e1 (StringSet.inter es1 es2)
+    | (Stringop (_, In, e1, es1), Stringop (_, NotIn, e2, es2)
+    | Stringop (_, NotIn, e2, es2), Stringop (_, In, e1, es1)) when
+      equal e1 e2 && (StringSet.is_empty (StringSet.inter es1 es2)) -> 
+      stringop Ty_str In e1 es1
+    | (Relop (_, Ne, e1, e2), Relop (_, Eq, e3, e4)
+    | Relop (_, Eq, e3, e4), Relop (_, Ne, e1, e2)) -> (
+      match view e1, view e2, view e3, view e4 with
+      | (Symbol s1, Val v1, Symbol s2, Val v2 
+      | Val v1, Symbol s1, Val v2, Symbol s2) when Symbol.equal s1 s2 ->
+        if Value.equal v1 v2 then value False else relop Ty_bool Eq e3 e4
+      | _ -> binop' ty op hte1 hte2)
+    | (Relop (_, Ne, e1, e2), Relop (ty, (Lt | Le) , e3, e4)
+    | Relop (ty, (Lt | Le), e3, e4), Relop (_, Ne, e1, e2)) when
+      (equal e1 e3 && equal e2 e4 || equal e1 e4 && equal e2 e3) -> relop ty Lt e3 e4
+    | (Relop (_, Ne, e1, e2), Relop (ty, (Gt | Ge), e3, e4)
+    | Relop (ty, (Gt | Ge), e3, e4), Relop (_, Ne, e1, e2)) when
+      (equal e1 e3 && equal e2 e4 || equal e1 e4 && equal e2 e3) -> relop ty Gt e3 e4
+    | (Relop (_, Eq, e1, e2), Relop (ty, (Lt | Le) , e3, e4)
+    | Relop (ty, (Lt | Le), e3, e4), Relop (_, Eq, e1, e2)) when
+      (equal e1 e3 && equal e2 e4 || equal e1 e4 && equal e2 e3) -> relop ty Le e3 e4
+    | (Relop (_, Eq, e1, e2), Relop (ty, (Gt | Ge) , e3, e4)
+    | Relop (ty, (Gt | Ge), e3, e4), Relop (_, Eq, e1, e2)) when
+      (equal e1 e3 && equal e2 e4 || equal e1 e4 && equal e2 e3) -> relop ty Ge e3 e4
+    | _ -> binop' ty op hte1 hte2 
+  )
+  | Or, _, _ when equal hte1 hte2 -> hte1
+  | Or, Val False, _ -> hte2
+  | Or, _, Val False -> hte1
+  | Or, _, Binop (_, And, e3, e4) when equal hte1 e3 || equal hte1 e4 -> hte1
+  | Or, Stringop (_, In, e1, es1), Stringop (_, In, e2, es2) when 
+    equal e1 e2 -> stringop Ty_str In e1 (StringSet.union es1 es2)
+  | Or, Stringop (_, NotIn, e1, es1), Stringop (_, NotIn, e2, es2) when 
+    equal e1 e2 -> stringop Ty_str NotIn e1 (StringSet.inter es1 es2)
+  | (Or, Stringop (_, In, e1, es1), Stringop (_, NotIn, e2, es2)
+  | Or, Stringop (_, NotIn, e2, es2), Stringop (_, In, e1, es1)) when 
+    equal e1 e2 && (StringSet.subset es1 es2) -> 
+    stringop Ty_str NotIn e2 (StringSet.diff es2 es1)
+  | Or, _, Binop (_, Or, e3, e4) -> binop ty op hte1 (naryop Ty_bool Logor [ e3; e4 ])
+  | Or, Binop (_, Or, e1, e2), _ -> binop ty op hte2 (naryop Ty_bool Logor [ e1; e2 ])
+  | Or, _, Naryop (_, Logor, es) -> naryop Ty_bool Logor (hte1 :: es)
   (* FIXME: this seems wrong? *)
   (* | Binop (_, And, _, _), Val (Num (I32 1l)) -> hte1 *)
   (* | Val (Num (I32 1l)), Binop (_, And, _, _) -> hte2 *)
   | _ -> binop' ty op hte1 hte2
 
-let naryop' (ty : Ty.t) (op : naryop) (es : t list) : t =
-  make (Naryop (ty, op, es))
-[@@inline]
+and
 
-let naryop (ty : Ty.t) (op : naryop) (es : t list) : t =
-  if List.for_all (fun e -> match view e with Val _ -> true | _ -> false) es
-  then
-    let vs =
-      List.map (fun e -> match view e with Val v -> v | _ -> assert false) es
-    in
-    value (Eval.naryop ty op vs)
-  else naryop' ty op es
-
-let relop' (ty : Ty.t) (op : relop) (hte1 : t) (hte2 : t) : t =
-  make (Relop (ty, op, hte1, hte2))
-[@@inline]
-
-let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
+relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
   match (op, view hte1, view hte2) with
+  | Eq, Symbol s, Val (Str s1) when Ty.equal (Symbol.type_of s) Ty_str ->
+    stringop Ty_str In hte1 (StringSet.singleton s1)
+  | Ne, Symbol s, Val (Str s1) when Ty.equal (Symbol.type_of s) Ty_str ->
+      stringop Ty_str NotIn hte1 (StringSet.singleton s1)
   | Eq, Val (App (`Op s1, l1)), Val (App (`Op s2, l2)) ->
     if String.equal s1 s2 && List.equal Value.equal l1 l2 then value True
     else value False
@@ -399,6 +481,10 @@ let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
     else value True
   | Eq, Val (App _), Val _ | Eq, Val _, Val (App _) -> value False
   | Ne, Val (App _), Val _ | Ne, Val _, Val (App _) -> value True
+  | Eq, Relop _, Val (App _) | Eq, Val (App _),  Relop _ -> value False
+  | Eq, Symbol _, Val (App _) | Eq, Val (App _), Symbol _ -> value False
+  | (Eq, Symbol s, Val v | Eq, Val v, Symbol s) 
+    when not (Ty.equal (Symbol.type_of s) (Value.type_of v)) -> value False
   | Ne, Val (Real v), _ when Float.is_nan v || Float.is_infinite v -> value True
   | Ne, _, Val (Real v) when Float.is_nan v || Float.is_infinite v -> value True
   | _, Val (Real v), _ when Float.is_nan v || Float.is_infinite v -> value False
@@ -447,7 +533,26 @@ let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
   | Eq, Val True, _ -> hte2
   | Eq, Val False, _ -> unop Ty_bool Not hte2
   | Eq, _, Val False -> unop Ty_bool Not hte1
+  | Eq, Triop (ty', Ite, cond, hte1', hte2'), Val _ -> 
+    triop ty' Ite cond (relop ty Eq hte1' hte2) (relop ty Eq hte2' hte2)
+  | Eq, Val _, Triop (ty', Ite, cond, hte1', hte2') -> 
+    triop ty' Ite cond (relop ty Eq hte1 hte1') (relop ty Eq hte1 hte2')
   | _, _, _ -> relop' ty op hte1 hte2
+
+and
+
+naryop (ty : Ty.t) (op : naryop) (es : t list) : t =
+  if List.for_all (fun e -> match view e with Val _ -> true | _ -> false) es
+  then
+    let vs =
+      List.map (fun e -> match view e with Val v -> v | _ -> assert false) es
+    in
+    value (Eval.naryop ty op vs)
+  else (
+    match op, es with
+    | _, [ e ] -> e
+    | _, _ -> naryop' ty op es)
+    
 
 let cvtop' (ty : Ty.t) (op : cvtop) (hte : t) : t = make (Cvtop (ty, op, hte))
 [@@inline]
@@ -544,6 +649,9 @@ let rec simplify_expr ?(rm_extract = true) (hte : t) : t =
   | Naryop (ty, op, es) ->
     let es = List.map (simplify_expr ~rm_extract:false) es in
     naryop ty op es
+  | Stringop (ty, op, e, s) ->
+    let e = simplify_expr e in
+    stringop ty op e s
   | Extract (s, high, low) ->
     if not rm_extract then hte else extract s ~high ~low
   | Concat (e1, e2) ->

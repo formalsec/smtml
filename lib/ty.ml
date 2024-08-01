@@ -136,6 +136,10 @@ type naryop =
   | Logor
   | Concat
 
+type stringop =
+  | In 
+  | NotIn
+
 type logic =
   | AUFLIA
   | AUFLIRA
@@ -261,9 +265,14 @@ let pp_cvtop fmt (op : cvtop) =
 
 let pp_naryop fmt (op : naryop) =
   match op with
-  | Logand -> pp_string fmt "and"
-  | Logor -> pp_string fmt "or"
+  | Logand -> pp_string fmt "land"
+  | Logor -> pp_string fmt "lor"
   | Concat -> pp_string fmt "++"
+
+let pp_stringop fmt (op : stringop) =
+  match op with
+  | In -> pp_string fmt "in"
+  | NotIn -> pp_string fmt "not_in"
 
 let pp fmt = function
   | Ty_int -> pp_string fmt "int"

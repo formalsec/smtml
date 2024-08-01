@@ -132,6 +132,10 @@ type naryop =
   | Logor
   | Concat
 
+type stringop =
+  | In 
+  | NotIn
+
 type logic =
   | AUFLIA
   | AUFLIRA
@@ -171,6 +175,8 @@ val pp_relop : Format.formatter -> relop -> unit
 val pp_cvtop : Format.formatter -> cvtop -> unit
 
 val pp_naryop : Format.formatter -> naryop -> unit
+
+val pp_stringop : Format.formatter -> stringop -> unit
 
 val pp : Format.formatter -> t -> unit
 

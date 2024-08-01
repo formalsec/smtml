@@ -444,6 +444,28 @@ module Fresh = struct
         match op with
         | Concat -> Seq.mk_seq_concat ctx es
         | _ -> err {|Str: Unsupported Z3 naryop operator "%a"|} Ty.pp_naryop op
+      
+      let encode_stringop op e es =
+        let naryop_bools_to_bools op es =
+          let n_es =
+            List.map
+              (fun e -> Z3.Expr.mk_app ctx poly_operations.boolean_accessor [ e ])
+              es
+          in
+          let op_e = op n_es in
+          Z3.Expr.mk_app ctx poly_operations.boolean_constructor [ op_e ]
+        in
+        match op with
+        | In -> 
+          naryop_bools_to_bools (Boolean.encode_naryop Ty.Logor)
+            (List.map (fun e' -> 
+              let e = Z3.Boolean.mk_eq ctx e e' in
+              Z3.Expr.mk_app ctx poly_operations.boolean_constructor [ e ]) es)
+        | NotIn -> 
+          naryop_bools_to_bools (Boolean.encode_naryop Ty.Logand)
+            (List.map (fun e' -> 
+              let e = Z3.Boolean.mk_distinct ctx [e ;e'] in
+              Z3.Expr.mk_app ctx poly_operations.boolean_constructor [ e ]) es)
     end
 
     let symtable = Hashtbl.create 512
@@ -592,6 +614,11 @@ module Fresh = struct
       | Ty.Ty_bool -> naryop_bools_to_bools (Boolean.encode_naryop naryop) es
       | Ty.Ty_str -> naryop_str_to_str (Str.encode_naryop naryop) es
       | _ -> assert false
+    
+    let encode_stringop (t : Ty.t) (stringop : Ty.stringop) (e : expr) es : expr =
+      match t with
+      | Ty.Ty_str -> Str.encode_stringop stringop e es
+      | _ -> assert false
 
     let rec encode_expr (hte : Expr.t) : expr =
       let open Expr in
@@ -622,6 +649,10 @@ module Fresh = struct
       | Symbol { name; _ } ->
         Hashtbl.replace symtable name hte;
         Z3.Expr.mk_const_s ctx name poly_sort
+      | Stringop (ty, op, e, es) ->
+        let e = encode_expr e in
+        let es' = List.map (fun e' -> encode_val (Str e')) (Expr.StringSet.elements es) in 
+        encode_stringop ty op e es'
       | _ -> assert false
 
     let set_params (params : Params.t) =
