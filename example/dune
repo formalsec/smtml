@@ -6,4 +6,4 @@
  (enabled_if %{lib-available:z3})
  (deps
   ./product_mix.exe
-  (source_tree test)))
+  (source_tree in)))
