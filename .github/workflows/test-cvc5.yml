@@ -12,6 +12,7 @@ jobs:
   test-cvc5:
     runs-on: ubuntu-latest
     env:
+      OPAMJOBS: 4
       OPAMCONFIRMLEVEL: unsafe-yes
     steps:
       - name: Checkout
