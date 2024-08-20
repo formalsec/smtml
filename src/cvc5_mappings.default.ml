@@ -26,13 +26,15 @@ module Fresh_cvc5 () = struct
 
   type interp = Term.term
 
-  type model = unit (* TODO *)
+  type model = Solver.solver
 
   type solver = Solver.solver
 
   type handle = unit
 
   type optimizer = unit (* Not supported *)
+
+  type func_decl = unit
 
   let tm = TermManager.mk_tm ()
 
@@ -345,11 +347,18 @@ module Fresh_cvc5 () = struct
     let to_ieee_bv _ = assert false
   end
 
+  module Func = struct
+    let make _ _ _ = ()
+
+    let apply () _ = false_
+  end
+
   (* TODO *)
   module Model = struct
-    let get_symbols _ = assert false
+    let get_symbols _ =
+      Fmt.failwith "Cvc5_mappings: get_symbols not implemented"
 
-    let eval ?completion:_ _ = assert false
+    let eval ?completion:_ solver term = Some (Solver.get_value solver term)
   end
 
   module Solver = struct
@@ -363,9 +372,7 @@ module Fresh_cvc5 () = struct
         (string_of_bool @@ Params.get params Unsat_core)
 
     let make ?params ?logic () =
-      let logic =
-        Option.map (fun l -> Format.asprintf "%a" Ty.pp_logic l) logic
-      in
+      let logic = Option.map (fun l -> Fmt.str "%a" Ty.pp_logic l) logic in
       let slv = Solver.mk_solver ?logic tm in
       Option.iter (set_params slv) params;
       slv
@@ -390,42 +397,53 @@ module Fresh_cvc5 () = struct
       | false -> (
         match Result.is_unsat result with true -> `Unsat | false -> `Unknown )
 
-    let model _ = assert false
+    let model solver = Some solver
 
     let add_simplifier solver = solver
 
     let interrupt _ = ()
 
     let get_statistics _ =
-      failwith "Cvc5_mappings: Solver.get_statistics not implemented!"
+      Fmt.failwith "Cvc5_mappings: Solver.get_statistics not implemented!"
 
-    let pp_statistics _ = assert false
+    let pp_statistics _ =
+      Fmt.failwith "Cvc5_mappings: Solver.pp_statistics not implemented!"
   end
 
   (* Not supported *)
   module Optimizer = struct
-    let make _ = assert false
+    let make _ =
+      Fmt.failwith "Cvc5_mappings: Optimizer.make not implemented"
 
-    let push _ = assert false
+    let push _ =
+      Fmt.failwith "Cvc5_mappings: Optimizer.push not implemented"
 
-    let pop _ = assert false
+    let pop _ =
+      Fmt.failwith "Cvc5_mappings: Optimizer.pop not implemented"
 
-    let add _ = assert false
+    let add _ =
+      Fmt.failwith "Cvc5_mappings: Optimizer.add not implemented"
 
-    let check _ = assert false
+    let check _ =
+      Fmt.failwith "Cvc5_mappings: Optimizer.check not implemented"
 
-    let model _ = assert false
+    let model _ =
+      Fmt.failwith "Cvc5_mappings: Optimizer.model not implemented"
 
-    let maximize _ = assert false
+    let maximize _ =
+      Fmt.failwith "Cvc5_mappings: Optimizer.maximize not implemented"
 
-    let minimize _ = assert false
+    let minimize _ =
+      Fmt.failwith "Cvc5_mappings: Optimizer.minimize not implemented"
 
-    let interrupt _ = assert false
+    let interrupt _ =
+      Fmt.failwith "Cvc5_mappings: Optimizer.interrupt not implemented"
 
-    let pp_statistics _ = assert false
+    let pp_statistics _ =
+      Fmt.failwith "Cvc5_mappings: Optimizer.pp_statistics not implemented"
 
     let get_statistics _ =
-      failwith "Cvc5_mappings: Optimizer.get_statistics not implemented!"
+      Fmt.failwith "Cvc5_mappings: Optimizer.get_statistics not implemented"
   end
 end
 

@@ -52,5 +52,4 @@ available: arch != "arm32" & arch != "x86_32"
 pin-depends: [
   ["colibri2.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#6e302cc50d82b8fb04f1b37debf3bc4dafbd3e1b"]
   ["colibrilib.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#6e302cc50d82b8fb04f1b37debf3bc4dafbd3e1b"]
-  ["cvc5.~dev" "git+https://github.com/formalsec/ocaml-cvc5#main"]
 ]
