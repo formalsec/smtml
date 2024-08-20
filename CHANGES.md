@@ -2,7 +2,16 @@
 
 ### Added
 ### Fixed
+
+- Fixes cvc5 mappigns
+
 ### Changed
+
+## v0.2.4
+
+### Changed
+
+- Bump `prelude` 0.2 -> 0.3
 
 ## v0.2.3
 
