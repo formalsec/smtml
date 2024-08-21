@@ -28,3 +28,9 @@
  (modules test_bitwuzla)
  (libraries smtml_tests)
  (build_if %{lib-available:bitwuzla-cxx}))
+
+(test
+ (name test_cvc5)
+ (modules test_cvc5)
+ (libraries smtml_tests)
+ (build_if %{lib-available:cvc5}))

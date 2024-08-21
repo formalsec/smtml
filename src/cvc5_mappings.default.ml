@@ -46,15 +46,7 @@ module Fresh_cvc5 () = struct
 
   let real r = Term.mk_real_s tm (Float.to_string r)
 
-  let cache = Hashtbl.create 100
-
-  let const symbol ty =
-    match Hashtbl.find_opt cache symbol with
-    | Some t -> t
-    | None ->
-      let t = Term.mk_const_s tm ty symbol in
-      Hashtbl.add cache symbol t;
-      t
+  let const symbol ty = Term.mk_const_s tm ty symbol
 
   let not_ t = Term.mk_term tm Kind.Not [| t |]
 
@@ -104,7 +96,11 @@ module Fresh_cvc5 () = struct
         Bytes.set bs i n;
         Bytes.to_string bs
       in
-      Int64.of_string (set (Term.get_bv t bitwidth) 0 '0')
+      let bv =
+        let bv = Term.get_bv t bitwidth in
+        if String.starts_with ~prefix:"#" bv then set bv 0 '0' else bv
+      in
+      Int64.of_string bv
 
     let to_float _t _ebits _sbits = assert false
   end
@@ -412,23 +408,17 @@ module Fresh_cvc5 () = struct
 
   (* Not supported *)
   module Optimizer = struct
-    let make _ =
-      Fmt.failwith "Cvc5_mappings: Optimizer.make not implemented"
+    let make _ = Fmt.failwith "Cvc5_mappings: Optimizer.make not implemented"
 
-    let push _ =
-      Fmt.failwith "Cvc5_mappings: Optimizer.push not implemented"
+    let push _ = Fmt.failwith "Cvc5_mappings: Optimizer.push not implemented"
 
-    let pop _ =
-      Fmt.failwith "Cvc5_mappings: Optimizer.pop not implemented"
+    let pop _ = Fmt.failwith "Cvc5_mappings: Optimizer.pop not implemented"
 
-    let add _ =
-      Fmt.failwith "Cvc5_mappings: Optimizer.add not implemented"
+    let add _ = Fmt.failwith "Cvc5_mappings: Optimizer.add not implemented"
 
-    let check _ =
-      Fmt.failwith "Cvc5_mappings: Optimizer.check not implemented"
+    let check _ = Fmt.failwith "Cvc5_mappings: Optimizer.check not implemented"
 
-    let model _ =
-      Fmt.failwith "Cvc5_mappings: Optimizer.model not implemented"
+    let model _ = Fmt.failwith "Cvc5_mappings: Optimizer.model not implemented"
 
     let maximize _ =
       Fmt.failwith "Cvc5_mappings: Optimizer.maximize not implemented"
