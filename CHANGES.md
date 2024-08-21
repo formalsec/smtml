@@ -2,10 +2,13 @@
 
 ### Added
 ### Fixed
+### Changed
+
+## v0.2.5
+
+### Fixed
 
 - Fixes cvc5 mappigns
-
-### Changed
 
 ## v0.2.4
 
