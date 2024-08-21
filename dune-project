@@ -24,13 +24,9 @@
  ; Optional solver dependencies
  ; Change here sould be mirrored in "conflicts"
  (depopts
-  (z3
-   (and
-    (>= "4.12.2")
-    (< "4.14")))
+  z3
   colibri2
-  (bitwuzla-cxx
-   (>= "0.4.0"))
+  bitwuzla-cxx
   cvc5)
  (conflicts
   (z3
