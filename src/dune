@@ -1,9 +1,4 @@
-(ocamllex
- (modules lexer))
-
-(menhir
- (modules parser)
- (flags --table))
+(include_subdirs unqualified)
 
 (library
  (name smtml)
@@ -97,22 +92,22 @@
     (progn
      (echo "let solver_name = \"Z3\"\n")
      (echo "let solver_package = \"z3\"\n")
-     (cat mappings.nop.ml)))
+     (cat %{deps})))
    (with-stdout-to
     colibri2_mappings.nop.ml
     (progn
      (echo "let solver_name = \"Colibri2\"\n")
      (echo "let solver_package = \"colibri2\"\n")
-     (cat mappings.nop.ml)))
+     (cat %{deps})))
    (with-stdout-to
     bitwuzla_mappings.nop.ml
     (progn
      (echo "let solver_name = \"Bitwuzla\"\n")
      (echo "let solver_package = \"bitwuzla-cxx\"\n")
-     (cat mappings.nop.ml)))
+     (cat %{deps})))
    (with-stdout-to
     cvc5_mappings.nop.ml
     (progn
      (echo "let solver_name = \"cvc5\"\n")
      (echo "let solver_package = solver_name\n")
-     (cat mappings.nop.ml))))))
+     (cat %{deps}))))))
