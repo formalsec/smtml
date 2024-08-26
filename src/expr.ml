@@ -204,34 +204,36 @@ module Pp = struct
     | Symbol s -> Symbol.pp fmt s
     | List v -> Fmt.pf fmt "(%a)" (Fmt.list pp) v
     | App (`Op x, v) -> Fmt.pf fmt "(%s %a)" x (Fmt.list pp) v
-    | Unop (ty, op, e) -> Fmt.pf fmt "(%a.%a %a)" Ty.pp ty pp_unop op pp e
+    | Unop (ty, op, e) ->
+      Fmt.pf fmt "@[<hov 1>(%a.%a@ %a)@]" Ty.pp ty pp_unop op pp e
     | Binop (ty, op, e1, e2) ->
-      Fmt.pf fmt "(%a.%a %a %a)" Ty.pp ty pp_binop op pp e1 pp e2
+      Fmt.pf fmt "@[<hov 1>(%a.%a@ %a@ %a)@]" Ty.pp ty pp_binop op pp e1 pp e2
     | Triop (ty, op, e1, e2, e3) ->
-      Fmt.pf fmt "(%a.%a %a %a %a)" Ty.pp ty pp_triop op pp e1 pp e2 pp e3
+      Fmt.pf fmt "@[<hov 1>(%a.%a@ %a@ %a@ %a)@]" Ty.pp ty pp_triop op pp e1 pp
+        e2 pp e3
     | Relop (ty, op, e1, e2) ->
-      Fmt.pf fmt "(%a.%a %a %a)" Ty.pp ty pp_relop op pp e1 pp e2
-    | Cvtop (ty, op, e) -> Fmt.pf fmt "(%a.%a %a)" Ty.pp ty pp_cvtop op pp e
+      Fmt.pf fmt "@[<hov 1>(%a.%a@ %a@ %a)@]" Ty.pp ty pp_relop op pp e1 pp e2
+    | Cvtop (ty, op, e) ->
+      Fmt.pf fmt "@[<hov 1>(%a.%a@ %a)@]" Ty.pp ty pp_cvtop op pp e
     | Naryop (ty, op, es) ->
       Fmt.pf fmt "(%a.%a (%a))" Ty.pp ty pp_naryop op (Fmt.list pp) es
-    | Extract (e, h, l) -> Fmt.pf fmt "(extract %a %d %d)" pp e l h
-    | Concat (e1, e2) -> Fmt.pf fmt "(++ %a %a)" pp e1 pp e2
+    | Extract (e, h, l) ->
+      Fmt.pf fmt "@[<hov 1>(extract@ %a@ %d@ %d)@]" pp e l h
+    | Concat (e1, e2) -> Fmt.pf fmt "@[<hov 1>(++@ %a@ %a)@]" pp e1 pp e2
     | App _ -> assert false
 
-  let pp_list fmt (es : t list) = Fmt.list ~sep:Fmt.sp pp fmt es
-
-  let pp_newline fmt () = Fmt.string fmt "@\n"
+  let pp_list fmt (es : t list) = Fmt.list ~sep:Fmt.semi pp fmt es
 
   let pp_smt fmt (es : t list) : unit =
     let pp_symbols fmt syms =
-      Fmt.list ~sep:pp_newline
+      Fmt.list ~sep:Fmt.semi
         (fun fmt sym ->
           let t = Symbol.type_of sym in
           Fmt.pf fmt "(let-const %a %a)" Symbol.pp sym Ty.pp t )
         fmt syms
     in
     let pp_asserts fmt es =
-      Fmt.list ~sep:pp_newline
+      Fmt.list ~sep:Fmt.semi
         (fun fmt e -> Fmt.pf fmt "(assert @[<h 2>%a@])" pp e)
         fmt es
     in
