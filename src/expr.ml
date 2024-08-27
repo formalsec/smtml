@@ -288,6 +288,8 @@ let rec binop ty (op : binop) (hte1 : t) (hte2 : t) : t =
     binop ty Rem addr hte2
   | Add, _, Ptr { base; offset } ->
     ptr base (binop (Ty_bitv 32) Add offset hte1)
+  | Sub, _, Ptr { base; offset } ->
+    binop ty Sub hte1 (binop (Ty_bitv 32) Add (value (Num (I32 base))) offset)
   | (Add | Or), Val (Num (I32 0l)), _ -> hte2
   | (And | Div | DivU | Mul | Rem | RemU), Val (Num (I32 0l)), _ -> hte1
   | (Add | Or), _, Val (Num (I32 0l)) -> hte1
