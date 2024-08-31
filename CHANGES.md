@@ -1,6 +1,9 @@
 ## Unreleased
 
 ### Added
+
+- Provide hashconsed sets of expressions in `Expr.Set`
+
 ### Fixed
 ### Changed
 
