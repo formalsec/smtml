@@ -11,9 +11,9 @@ module Make (M : Mappings_intf.S) = struct
     let x = symbol "x" Ty_int in
     let c = Int.(x >= int 0) in
     assert (Stdlib.Int.equal !Cached.solver_count 0);
-    assert_sat (Cached.check solver [ c ]);
-    assert_sat (Cached.check solver [ c ]);
-    assert_sat (Cached.check solver [ c ]);
+    assert_sat (Cached.check_set solver @@ Expr.Set.singleton c);
+    assert_sat (Cached.check_set solver @@ Expr.Set.singleton c);
+    assert_sat (Cached.check_set solver @@ Expr.Set.singleton c);
     assert (Stdlib.Int.equal !Cached.solver_count 1)
 
   let () =

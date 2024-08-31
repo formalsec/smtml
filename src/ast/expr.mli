@@ -150,6 +150,16 @@ module Bool : sig
   val ite : t -> t -> t -> t
 end
 
+module Set : sig
+  include PatriciaTree.SET with type elt = t
+
+  val to_int : t -> int
+
+  val equal : t -> t -> bool
+
+  val compare : t -> t -> int
+end
+
 module Bitv : sig
   module I8 : Constructors_intf.Infix with type elt := int and type t := t
 

@@ -45,6 +45,7 @@
   ocaml_intrinsics
   prelude
   rusage
+  patricia-tree
   yojson
   (select
    colibri2_mappings.ml
