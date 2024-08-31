@@ -44,8 +44,8 @@ let from_file filename =
       ()
   in
   match res with
-  | Error _e -> assert false
-  | Ok (Error _) -> assert false
+  | Error (`Msg e) -> Fmt.failwith "%s" e
+  | Ok (Error (`Msg e)) -> Fmt.failwith "%s" e
   | Ok (Ok v) -> v
 
 let from_string contents = parse_with_error (Lexing.from_string contents)
