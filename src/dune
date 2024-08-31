@@ -30,6 +30,7 @@
   solver
   solver_intf
   solver_dispatcher
+  std
   symbol
   statistics
   ty
