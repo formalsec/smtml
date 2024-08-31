@@ -16,6 +16,18 @@
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
 
-val from_file : Fpath.t -> Ast.script
+module Smtml : sig
+  val from_file : Fpath.t -> Ast.script
 
-val from_string : string -> Ast.script
+  (** [from_file] Parse smtml scripts from [file] *)
+  val from_string : string -> Ast.script
+end
+
+module Smtlib : sig
+  (** [from_file file] Parse smtlib compliant scripts from [file] *)
+  val from_file : Fpath.t -> Ast.script
+end
+
+(** [from_file file] Tries to parse an smtml (.smtml) or smtlib (.smt2) script
+    depending on their file extensions. *)
+val from_file : Fpath.t -> Ast.script

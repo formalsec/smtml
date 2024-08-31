@@ -1,0 +1,6 @@
+(declare-fun x () Real)
+(declare-fun y () Real)
+(assert (= y (* x x)))
+(assert (= y 4.0))
+(check-sat)
+(get-model)

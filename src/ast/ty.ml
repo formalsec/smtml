@@ -22,16 +22,16 @@ type _ cast =
   | C64 : int64 cast
 
 type t =
-  | Ty_int
-  | Ty_real
-  | Ty_bool
-  | Ty_str
-  | Ty_bitv of int
-  | Ty_fp of int
-  | Ty_list
   | Ty_app
-  | Ty_unit
+  | Ty_bitv of int
+  | Ty_bool
+  | Ty_fp of int
+  | Ty_int
+  | Ty_list
   | Ty_none
+  | Ty_real
+  | Ty_str
+  | Ty_unit
 
 type unop =
   | Neg
@@ -426,36 +426,19 @@ let pp_logic fmt : logic -> unit = function
   | UFLRA -> Fmt.string fmt "UFLRA"
   | UFNIA -> Fmt.string fmt "UFNIA"
 
-let compare t1 t2 =
-  match (t1, t2) with
-  | Ty_int, Ty_int
-  | Ty_real, Ty_real
-  | Ty_bool, Ty_bool
-  | Ty_str, Ty_str
-  | Ty_list, Ty_list
-  | Ty_app, Ty_app
-  | Ty_unit, Ty_unit
-  | Ty_none, Ty_none ->
-    0
-  | Ty_bitv n1, Ty_bitv n2 | Ty_fp n1, Ty_fp n2 -> compare n1 n2
-  | Ty_int, _ -> -1
-  | _, Ty_int -> 1
-  | Ty_real, _ -> -1
-  | _, Ty_real -> 1
-  | Ty_bool, _ -> -1
-  | _, Ty_bool -> 1
-  | Ty_str, _ -> -1
-  | _, Ty_str -> 1
-  | Ty_bitv _, _ -> -1
-  | _, Ty_bitv _ -> 1
-  | Ty_fp _, _ -> -1
-  | _, Ty_fp _ -> 1
-  | Ty_list, _ -> -1
-  | _, Ty_list -> 1
-  | Ty_app, _ -> -1
-  | _, Ty_app -> 1
-  | Ty_none, _ -> -1
-  | _, Ty_none -> 1
+let discr = function
+  | Ty_app -> 0
+  | Ty_bool -> 1
+  | Ty_int -> 2
+  | Ty_list -> 3
+  | Ty_none -> 4
+  | Ty_real -> 5
+  | Ty_str -> 6
+  | Ty_unit -> 7
+  | Ty_bitv n -> 8 + n
+  | Ty_fp n -> 9 + n
+
+let compare t1 t2 = compare (discr t1) (discr t2)
 
 let equal t1 t2 = compare t1 t2 = 0
 

@@ -22,16 +22,16 @@ type _ cast =
   | C64 : int64 cast
 
 type t =
-  | Ty_int
-  | Ty_real
-  | Ty_bool
-  | Ty_str
-  | Ty_bitv of int
-  | Ty_fp of int
-  | Ty_list
   | Ty_app
-  | Ty_unit
+  | Ty_bitv of int
+  | Ty_bool
+  | Ty_fp of int
+  | Ty_int
+  | Ty_list
   | Ty_none
+  | Ty_real
+  | Ty_str
+  | Ty_unit
 
 type unop =
   | Neg

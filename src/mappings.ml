@@ -75,13 +75,15 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty_bitv n -> M.Types.bitv n
       | Ty_fp 32 -> f32
       | Ty_fp 64 -> f64
-      | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none -> assert false
+      | (Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none) as ty ->
+        Fmt.failwith "Unsupported theory: %a@." Ty.pp ty
 
     let make_symbol (ctx : symbol_ctx) (s : Symbol.t) : symbol_ctx * M.term =
       match Smap.find_opt s ctx with
       | Some sym -> (ctx, sym)
       | None ->
-        let sym = M.const s.name (get_type s.ty) in
+        let (Simple name) = s.name in
+        let sym = M.const name (get_type s.ty) in
         (Smap.add s sym ctx, sym)
 
     module Bool_impl = struct
