@@ -1,7 +1,6 @@
 (executable
  (name main)
  (public_name smtml)
- (modules main)
  (libraries cmdliner smtml)
  (instrumentation
   (backend bisect_ppx)))

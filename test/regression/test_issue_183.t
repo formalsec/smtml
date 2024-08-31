@@ -1,5 +1,5 @@
 Test solver not installed error message:
-  $ smtml run --solver colibri2 <<EOF
+  $ smtml run --solver colibri2 - <<EOF
   > (let-const x int)
   > (assert (= x 1))
   > (check-sat)

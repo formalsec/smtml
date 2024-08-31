@@ -19,109 +19,82 @@
 open Smtml
 open Solver_dispatcher
 
-type prove_mode =
-  | Batch
-  | Cached
-  | Incremental
+let run debug solver prover_mode _print_statistics file =
+  let module Mappings =
+    (val mappings_of_solver solver : Mappings_intf.S_with_fresh)
+  in
+  Mappings.set_debug debug;
+  let module Solver =
+    ( val match prover_mode with
+          | Options.Batch -> (module Solver.Batch (Mappings))
+          | Cached -> (module Solver.Cached (Mappings))
+          | Incremental -> (module Solver.Incremental (Mappings))
+        : Solver_intf.S )
+  in
+  let module Interpret = Interpret.Make (Solver) in
+  let ast = Parse.from_file file in
+  let _ = Interpret.start ast in
+  ()
 
-let solver_conv =
-  Cmdliner.Arg.conv
-    (Solver_dispatcher.solver_type_of_string, Solver_dispatcher.pp_solver_type)
-
-let prove_mode_conv =
-  Cmdliner.Arg.enum
-    [ ("batch", Batch); ("cached", Cached); ("incremental", Incremental) ]
-
-let parse_cmdline =
-  let run debug files solver prover_mode print_statistics =
-    let module Mappings =
-      (val mappings_of_solver solver : Mappings_intf.S_with_fresh)
+let test debug solver prover_mode print_statistics files =
+  let module Mappings =
+    (val mappings_of_solver solver : Mappings_intf.S_with_fresh)
+  in
+  Mappings.set_debug debug;
+  let module Solver =
+    ( val match prover_mode with
+          | Options.Batch -> (module Solver.Batch (Mappings))
+          | Cached -> (module Solver.Cached (Mappings))
+          | Incremental -> (module Solver.Incremental (Mappings))
+        : Solver_intf.S )
+  in
+  let module Interpret = Interpret.Make (Solver) in
+  let rec test_path state path =
+    if Sys.is_directory (Fpath.to_string path) then test_dir state path
+    else
+      let ast = Parse.from_file path in
+      Some (Interpret.start ?state ast)
+  and test_dir state d =
+    let result =
+      Bos.OS.Dir.fold_contents
+        (fun path state ->
+          if Fpath.has_ext ".smtml" path then test_path state path else state )
+        state d
     in
-    Mappings.set_debug debug;
-    let module Solver =
-      ( val match prover_mode with
-            | Batch -> (module Solver.Batch (Mappings))
-            | Cached -> (module Solver.Cached (Mappings))
-            | Incremental -> (module Solver.Incremental (Mappings))
-          : Solver_intf.S )
-    in
-    let module Interpret = Interpret.Make (Solver) in
-    let state =
-      match files with
-      | [] ->
-        let ast = Parse.from_file (Fpath.v "-") in
-        Some (Interpret.start ast)
-      | _ ->
-        List.fold_left
-          (fun state filename ->
-            let ast = Parse.from_file filename in
-            Some (Interpret.start ?state ast) )
-          None files
-    in
-    if print_statistics then begin
-      let state = Option.get state in
-      let stats : Gc.stat = Gc.stat () in
-      Format.eprintf
-        "@[<v 2>(statistics @\n\
-         (major-words %f)@\n\
-         (solver-time %f)@\n\
-         (solver-calls %d)@\n\
-         @[<v 2>(solver-misc @\n\
-         %a@])@])@\n"
-        stats.major_words !Solver.solver_time !Solver.solver_count
-        Solver.pp_statistics state.solver
-    end
-  in
+    match result with Error (`Msg e) -> failwith e | Ok state -> state
+  and test_files files = List.fold_left test_path None files in
+  let state = test_files files in
+  if print_statistics then begin
+    let state = Option.get state in
+    let stats : Gc.stat = Gc.stat () in
+    Format.eprintf
+      "@[<v 2>(statistics @\n\
+       (major-words %f)@\n\
+       (solver-time %f)@\n\
+       (solver-calls %d)@\n\
+       @[<v 2>(solver-misc @\n\
+       %a@])@])@\n"
+      stats.major_words !Solver.solver_time !Solver.solver_count
+      Solver.pp_statistics state.solver
+  end
 
-  let to_smt2 debug solver filename =
-    let module Mappings =
-      (val mappings_of_solver solver : Mappings_intf.S_with_fresh)
-    in
-    Mappings.set_debug debug;
-    let ast = Parse.from_file filename in
-    let assertions =
-      List.filter_map (function Ast.Assert e -> Some e | _ -> None) ast
-    in
-    Format.printf "%a@." (Mappings.pp_smt ?status:None) assertions
+let to_smt2 debug solver filename =
+  let module Mappings =
+    (val mappings_of_solver solver : Mappings_intf.S_with_fresh)
   in
+  Mappings.set_debug debug;
+  let ast = Parse.from_file filename in
+  let assertions =
+    List.filter_map (function Ast.Assert e -> Some e | _ -> None) ast
+  in
+  Format.printf "%a@." (Mappings.pp_smt ?status:None) assertions
 
-  let open Cmdliner in
-  let path = ((fun s -> `Ok (Fpath.v s)), Fpath.pp) in
-  let file0 =
-    Arg.(
-      required
-      & pos 0 (some path) None
-      & info [] ~docv:"files" ~doc:"files to read" )
-  in
-  let files =
-    Arg.(value & pos_all path [] & info [] ~docv:"files" ~doc:"files to read")
-  in
-  let solver =
-    Arg.(
-      value & opt solver_conv Z3_solver
-      & info [ "s"; "solver" ] ~doc:"SMT solver to use" )
-  in
-  let solver_mode =
-    Arg.(
-      value & opt prove_mode_conv Batch & info [ "mode" ] ~doc:"SMT solver mode" )
-  in
-  let debug =
-    Arg.(value & flag & info [ "debug" ] ~doc:"Print debugging messages")
-  in
-  let print_statistics =
-    Arg.(value & flag & info [ "st" ] ~doc:"Print statistics")
-  in
-
-  let run_cmd =
-    Cmd.v (Cmd.info "run")
-      Term.(const run $ debug $ files $ solver $ solver_mode $ print_statistics)
-  in
-  let to_smt2 =
-    Cmd.v (Cmd.info "to-smt2") Term.(const to_smt2 $ debug $ solver $ file0)
-  in
-  Cmd.group (Cmd.info "smtml" ~version:"%%VERSION%%") [ run_cmd; to_smt2 ]
+let cli =
+  Cmdliner.Cmd.group
+    (Cmdliner.Cmd.info "smtml" ~version:"%%VERSION%%")
+    [ Options.cmd_run run; Options.cmd_test test; Options.cmd_to_smt2 to_smt2 ]
 
 let () =
-  match Cmdliner.Cmd.eval_value parse_cmdline with
-  | Error (`Parse | `Term | `Exn) -> exit 2
-  | Ok (`Ok () | `Version | `Help) -> ()
+  match Cmdliner.Cmd.eval_value cli with
+  | Error (`Exn | `Parse | `Term) -> exit 2
+  | Ok (`Help | `Ok () | `Version) -> ()
