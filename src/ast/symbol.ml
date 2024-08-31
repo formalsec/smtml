@@ -15,32 +15,72 @@
 (* You should have received a copy of the GNU General Public License       *)
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
+type name = Simple of string
+
+type namespace =
+  | Attr
+  | Sort
+  | Term
+  | Var
 
 type t =
   { ty : Ty.t
-  ; name : string
+  ; name : name
+  ; namespace : namespace
   }
 
-let ( @: ) (name : string) (ty : Ty.t) : t = { name; ty }
+let attr = Attr
 
-let compare (t1 : t) (t2 : t) : int =
-  let compare_name = String.compare t1.name t2.name in
-  if compare_name = 0 then Ty.compare t1.ty t2.ty else compare_name
+let sort = Sort
 
-let equal (s1 : t) (s2 : t) : bool =
-  Ty.equal s1.ty s2.ty && String.equal s1.name s2.name
+let term = Term
 
-let make (ty : Ty.t) (name : string) : t = name @: ty
+let var = Var
 
-let mk_symbol (ty : Ty.t) (name : string) : t = name @: ty
+let simple name = Simple name
 
-let pp (fmt : Fmt.formatter) ({ name; _ } : t) : unit = Fmt.string fmt name
+let ( @: ) (name : string) (ty : Ty.t) : t =
+  { name = simple name; namespace = var; ty }
 
-let rename (symbol : t) (name : string) : t = { symbol with name }
+let name { name; _ } = name
 
-let to_string ({ name; _ } : t) : string = name
+let namespace { namespace; _ } = namespace
 
-let to_json ({ name; ty } : t) : Yojson.Basic.t =
+let discr_namespace = function Attr -> 0 | Sort -> 1 | Term -> 2 | Var -> 3
+
+let compare_namespace a b = compare (discr_namespace a) (discr_namespace b)
+
+let compare_name (Simple a) (Simple b) = String.compare a b
+
+let compare a b =
+  let compare_name = compare_name a.name b.name in
+  if compare_name = 0 then
+    let compare_ty = Ty.compare a.ty b.ty in
+    if compare_ty = 0 then compare_namespace a.namespace b.namespace
+    else compare_ty
+  else compare_name
+
+let equal a b = phys_equal a b || compare a b = 0
+
+let make ty name = name @: ty
+
+let make3 ty name namespace = { ty; name; namespace }
+
+let mk namespace name = { ty = Ty_none; name = simple name; namespace }
+
+let indexed _ = assert false
+
+let pp_namespace fmt = function
+  | Attr -> Fmt.string fmt "attr"
+  | Sort -> Fmt.string fmt "sort"
+  | Term -> Fmt.string fmt "term"
+  | Var -> Fmt.string fmt "var"
+
+let pp fmt { name = Simple name; _ } = Fmt.string fmt name
+
+let to_string { name = Simple name; _ } = name
+
+let to_json { name = Simple name; ty; _ } =
   `Assoc [ (name, `Assoc [ ("ty", `String (Fmt.str "%a" Ty.pp ty)) ]) ]
 
-let type_of ({ ty; _ } : t) : Ty.t = ty
+let type_of { ty; _ } = ty

@@ -16,36 +16,60 @@
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
 
-open Lexer
-open Lexing
+module Smtml = struct
+  open Lexer
+  open Lexing
 
-let pp_pos fmt lexbuf =
-  let pos = lexbuf.lex_curr_p in
-  Fmt.pf fmt "%s:%d:%d" pos.pos_fname pos.pos_lnum
-    (pos.pos_cnum - pos.pos_bol + 1)
+  let pp_pos fmt lexbuf =
+    let pos = lexbuf.lex_curr_p in
+    Fmt.pf fmt "%s:%d:%d" pos.pos_fname pos.pos_lnum
+      (pos.pos_cnum - pos.pos_bol + 1)
 
-let parse_with_error lexbuf =
-  try Parser.script Lexer.token lexbuf with
-  | SyntaxError msg ->
-    Fmt.epr "%a: %s\n" pp_pos lexbuf msg;
-    []
-  | Parser.Error ->
-    Fmt.epr "%a: syntax error\n" pp_pos lexbuf;
-    exit 1
+  let parse_with_error lexbuf =
+    try Parser.script Lexer.token lexbuf with
+    | SyntaxError msg ->
+      Fmt.epr "%a: %s\n" pp_pos lexbuf msg;
+      []
+    | Parser.Error ->
+      Fmt.epr "%a: syntax error\n" pp_pos lexbuf;
+      exit 1
+
+  let from_file filename =
+    let res =
+      Bos.OS.File.with_ic filename
+        (fun chan () ->
+          let lexbuf = Lexing.from_channel chan in
+          lexbuf.lex_curr_p <-
+            { lexbuf.lex_curr_p with pos_fname = Fpath.to_string filename };
+          Ok (parse_with_error lexbuf) )
+        ()
+    in
+    match res with
+    | Error (`Msg e) -> Fmt.failwith "%s" e
+    | Ok (Error (`Msg e)) -> Fmt.failwith "%s" e
+    | Ok (Ok v) -> v
+
+  let from_string contents = parse_with_error (Lexing.from_string contents)
+end
+
+module Smtlib = struct
+  let from_file filename =
+    try
+      let _, stmts = Smtlib.parse_file (Fpath.to_string filename) in
+      stmts
+    with
+    | Dolmen.Std.Loc.Syntax_error (loc, `Regular msg) ->
+      Fmt.failwith "%a: syntax error: %t" Dolmen.Std.Loc.print_compact loc msg
+    | Dolmen.Std.Loc.Syntax_error (loc, `Advanced (x, _, _, _)) ->
+      Fmt.failwith "%a: syntax error: %s" Dolmen.Std.Loc.print_compact loc x
+end
 
 let from_file filename =
-  let res =
-    Bos.OS.File.with_ic filename
-      (fun chan () ->
-        let lexbuf = Lexing.from_channel chan in
-        lexbuf.lex_curr_p <-
-          { lexbuf.lex_curr_p with pos_fname = Fpath.to_string filename };
-        Ok (parse_with_error lexbuf) )
-      ()
-  in
-  match res with
-  | Error (`Msg e) -> Fmt.failwith "%s" e
-  | Ok (Error (`Msg e)) -> Fmt.failwith "%s" e
-  | Ok (Ok v) -> v
-
-let from_string contents = parse_with_error (Lexing.from_string contents)
+  match Fpath.split_ext filename with
+  | _, ".smtml" -> Smtml.from_file filename
+  | _, ".smt2" -> Smtlib.from_file filename
+  | fname, ext -> (
+    (* FIXME: I don't like this *)
+    match Fpath.to_string fname with
+    | "-" -> Smtml.from_file filename
+    | _ -> Fmt.failwith "Unsupported script type with extension '%s'" ext )

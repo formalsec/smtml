@@ -37,19 +37,17 @@ module Make (Solver : Solver_intf.S) = struct
     | Assert e ->
       Solver.add solver [ e ];
       state
-    | Check_sat ->
-      ( match Solver.check solver [] with
+    | Check_sat assumptions ->
+      ( match Solver.check solver assumptions with
       | `Sat -> Fmt.pr "sat@."
       | `Unsat -> Fmt.pr "unsat@."
       | `Unknown -> Fmt.pr "unknown@." );
       state
-    | Push ->
-      Solver.push solver;
+    | Declare_const _x -> state
+    | Echo x ->
+      Fmt.pr "%a" Fmt.string x;
       state
-    | Pop n ->
-      Solver.pop solver n;
-      state
-    | Let_const _x -> state
+    | Exit -> { state with stmts = [] }
     | Get_model ->
       assert (
         (function `Sat -> true | `Unsat | `Unknown -> false)
@@ -57,10 +55,19 @@ module Make (Solver : Solver_intf.S) = struct
       let model = Solver.model solver in
       Fmt.pr "%a@." (Fmt.option (Model.pp ~no_values:false)) model;
       state
+    | Push _n ->
+      Solver.push solver;
+      state
+    | Pop n ->
+      Solver.pop solver n;
+      state
     | Set_logic logic ->
       let solver = Solver.create ~logic () in
       Solver.push solver;
       { state with solver }
+    | Get_assertions | Get_assignment | Reset | Reset_assertions | Get_info _
+    | Get_option _ | Get_value _ | Set_info _ | Set_option _ ->
+      Fmt.failwith "eval: TODO evaluation of command"
 
   let rec loop (state : exec_state) : exec_state =
     match state.stmts with

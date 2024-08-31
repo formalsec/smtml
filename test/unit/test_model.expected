@@ -1,8 +1,8 @@
 {
   "model": {
-    "y": { "ty": "real", "value": 2.0 },
-    "x": { "ty": "int", "value": 1 },
+    "u": { "ty": "str", "value": "abc" },
     "z": { "ty": "bool", "value": true },
-    "u": { "ty": "str", "value": "abc" }
+    "y": { "ty": "real", "value": 2.0 },
+    "x": { "ty": "int", "value": 1 }
   }
 }

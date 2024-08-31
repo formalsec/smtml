@@ -16,12 +16,33 @@
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
 
+type name = Simple of string
+
+type namespace =
+  | Attr
+  | Sort
+  | Term
+  | Var
+
 type t =
   { ty : Ty.t
-  ; name : string
+  ; name : name
+  ; namespace : namespace
   }
 
+val attr : namespace
+
+val sort : namespace
+
+val term : namespace
+
+val var : namespace
+
 val ( @: ) : string -> Ty.t -> t
+
+val name : t -> name
+
+val namespace : t -> namespace
 
 val compare : t -> t -> int
 
@@ -29,11 +50,15 @@ val equal : t -> t -> Bool.t
 
 val make : Ty.t -> string -> t
 
-val mk_symbol : Ty.t -> string -> t [@@deprecated "Please use 'make' instead"]
+val make3 : Ty.t -> name -> namespace -> t
+
+val mk : namespace -> string -> t
+
+val indexed : namespace -> string -> string list -> t
+
+val pp_namespace : Fmt.formatter -> namespace -> unit
 
 val pp : Fmt.formatter -> t -> unit
-
-val rename : t -> string -> t
 
 val to_string : t -> string
 

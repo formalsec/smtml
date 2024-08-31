@@ -61,11 +61,11 @@ let stmt :=
   | LPAREN; LET_CONST; x = SYMBOL; t = TYPE; RPAREN;
     {
       add_bind x t;
-      Ast.Let_const (Symbol.make t x)
+      Ast.Declare_const { id = (Symbol.make t x); sort = (Symbol.make t x) }
     }
   | LPAREN; ASSERT; ~ = s_expr; RPAREN; <Ast.Assert>
-  | LPAREN; CHECK_SAT; RPAREN; { Ast.Check_sat}
-  | LPAREN; PUSH; RPAREN; { Ast.Push }
+  | LPAREN; CHECK_SAT; RPAREN; { Ast.Check_sat [] }
+  | LPAREN; PUSH; RPAREN; { Ast.Push 1 }
   | LPAREN; POP; n = NUM; RPAREN; { Ast.Pop n }
   | LPAREN; GET_MODEL; RPAREN; { Ast.Get_model }
   | LPAREN; SET_LOGIC; ~ = LOGIC; RPAREN; <Ast.Set_logic>

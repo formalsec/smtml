@@ -9,6 +9,7 @@
   ;axioms
   cache
   cache_intf
+  compile
   constructors_intf
   colibri2_mappings
   cvc5_mappings
@@ -27,10 +28,12 @@
   parser
   params
   parse
+  rewrite
   solver
   solver_intf
   solver_dispatcher
   syntax
+  smtlib
   symbol
   statistics
   ty
@@ -41,6 +44,7 @@
  (flags
   (:standard -open Prelude))
  (libraries
+  dolmen
   hc
   menhirLib
   ocaml_intrinsics

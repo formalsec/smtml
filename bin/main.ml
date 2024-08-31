@@ -32,7 +32,7 @@ let run debug solver prover_mode _print_statistics file =
         : Solver_intf.S )
   in
   let module Interpret = Interpret.Make (Solver) in
-  let ast = Parse.from_file file in
+  let ast = Compile.until_rewrite file in
   let _ = Interpret.start ast in
   ()
 
@@ -52,7 +52,7 @@ let test debug solver prover_mode print_statistics files =
   let rec test_path state path =
     if Sys.is_directory (Fpath.to_string path) then test_dir state path
     else
-      let ast = Parse.from_file path in
+      let ast = Compile.until_rewrite path in
       Some (Interpret.start ?state ast)
   and test_dir state d =
     let result =
@@ -78,6 +78,7 @@ let test debug solver prover_mode print_statistics files =
       Solver.pp_statistics state.solver
   end
 
+(* TODO: Remove once dolmen is integrated *)
 let to_smt2 debug solver filename =
   let module Mappings =
     (val mappings_of_solver solver : Mappings_intf.S_with_fresh)
