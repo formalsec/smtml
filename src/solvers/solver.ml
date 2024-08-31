@@ -45,6 +45,8 @@ module Base (M : Mappings_intf.S) = struct
 
   let add (solver : t) (es : Expr.t list) : unit = M.Solver.add solver es
 
+  let add_set s es = add s @@ Expr.Set.to_list es
+
   let get_assertions (_solver : t) : Expr.t list = assert false
 
   let get_statistics (solver : t) : Statistics.t =
@@ -55,6 +57,8 @@ module Base (M : Mappings_intf.S) = struct
     Utils.run_and_time_call
       ~use:(fun time -> solver_time := !solver_time +. time)
       (fun () -> M.Solver.check solver ~assumptions:es)
+
+  let check_set solver es = check solver @@ Expr.Set.to_list es
 
   let get_value (solver : M.solver) (e : Expr.t) : Expr.t =
     match M.Solver.model solver with
@@ -109,12 +113,16 @@ module Make_batch (Mappings : Mappings_intf.S) = struct
 
   let add (s : t) (es : Expr.t list) : unit = s.top <- es @ s.top
 
+  let add_set s es = s.top <- Expr.Set.to_list es @ s.top
+
   let get_assertions (s : t) : Expr.t list = s.top [@@inline]
 
   let get_statistics (s : t) : Statistics.t = get_statistics s.solver
 
   let check (s : t) (es : Expr.t list) : satisfiability =
     check s.solver (es @ s.top)
+
+  let check_set s es = check s @@ Expr.Set.to_list es
 
   let get_value (solver : t) (e : Expr.t) : Expr.t = get_value solver.solver e
 
@@ -127,21 +135,17 @@ end
 (* TODO: Our base solver can be incrmental itself? *)
 module Batch (M : Mappings_intf.S) : Solver_intf.S = Make_batch (M)
 
-module Cached (M : Mappings_intf.S) : sig
-  include Solver_intf.S
-
-  module Cache : Cache_intf.S
-end = struct
+module Cached (M : Mappings_intf.S) = struct
   include Make_batch (M)
   module Cache = Cache.Strong
 
   let cache = Cache.create 256
 
-  let check s es =
+  let check_set s es =
     match Cache.find_opt cache es with
     | Some res -> res
     | None ->
-      let result = check s es in
+      let result = check_set s es in
       Cache.add cache es result;
       result
 end

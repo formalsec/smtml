@@ -96,11 +96,19 @@ end
 
 module Hc = Hc.Make [@inlined hint] (Expr)
 
-let equal (hte1 : t) (hte2 : t) = Int.equal hte1.tag hte2.tag
+let equal (hte1 : t) (hte2 : t) = Int.equal hte1.tag hte2.tag [@@inline]
 
-let hash (hte : t) = hte.tag
+let hash (hte : t) = hte.tag [@@inline]
 
-let make (e : expr) = Hc.hashcons e
+module Key = struct
+  type nonrec t = t
+
+  let to_int hte = hash hte
+end
+
+module Set = PatriciaTree.MakeHashconsedSet (Key) ()
+
+let make (e : expr) = Hc.hashcons e [@@inline]
 
 let ( @: ) e _ = make e
 

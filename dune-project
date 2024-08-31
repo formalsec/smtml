@@ -55,7 +55,10 @@
     :build
     (>= "20220210")))
   rusage
-  (yojson (>= "1.6.0"))
+  (patricia-tree
+   (>= "0.10.0"))
+  (yojson
+   (>= "1.6.0"))
   (odoc
    :with-doc)
   (bisect_ppx

@@ -20,10 +20,10 @@ include Cache_intf
 
 module Strong : S = struct
   include Hashtbl.Make (struct
-    type t = Expr.t list
+    type t = Expr.Set.t
 
-    let equal es1 es2 = List.equal Expr.equal es1 es2
+    let equal s1 s2 = Expr.Set.equal s1 s2
 
-    let hash es = List.fold_left (fun acc e -> acc lxor Expr.hash e) 0 es
+    let hash s = Expr.Set.to_int s
   end)
 end

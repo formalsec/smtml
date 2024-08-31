@@ -17,7 +17,7 @@
 (***************************************************************************)
 
 module type S = sig
-  include Hashtbl.S with type key = Expr.t list
+  include Hashtbl.S with type key = Expr.Set.t
 end
 
 module type Intf = sig

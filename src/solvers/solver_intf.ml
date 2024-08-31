@@ -61,6 +61,9 @@ module type S = sig
   (** Assert one or multiple constraints into the solver. *)
   val add : t -> Expr.t list -> unit
 
+  (** Same as [add] but receives and Expr.Set.t *)
+  val add_set : t -> Expr.Set.t -> unit
+
   (** The set of assertions in the solver. *)
   val get_assertions : t -> Expr.t list
   [@@deprecated "Please use 'get_statistics' instead"]
@@ -68,10 +71,11 @@ module type S = sig
   val get_statistics : t -> Statistics.t
 
   (** [check solver es] checks the satisfiability of the assertions in the
-      solver using the assumptions in [es].
-
-      Raises [Unknown] if the SMT solver returns unknown. *)
+      solver using the assumptions in [es]. *)
   val check : t -> Expr.t list -> satisfiability
+
+  (** Same as [check] but receives an Expr.Set.t *)
+  val check_set : t -> Expr.Set.t -> satisfiability
 
   (** [get_value solver e] get an expression denoting the model value of a given
       expression.
