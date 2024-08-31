@@ -1,0 +1,3 @@
+[submodule "bench/data"]
+	path = bench/data
+	url = https://github.com/formalsec/smtml_bench.git
