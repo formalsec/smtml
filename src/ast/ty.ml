@@ -31,6 +31,7 @@ type t =
   | Ty_list
   | Ty_app
   | Ty_unit
+  | Ty_none
 
 type unop =
   | Neg
@@ -395,6 +396,7 @@ let pp fmt = function
   | Ty_list -> Fmt.string fmt "list"
   | Ty_app -> Fmt.string fmt "app"
   | Ty_unit -> Fmt.string fmt "unit"
+  | Ty_none -> Fmt.string fmt "none"
 
 let pp_logic fmt : logic -> unit = function
   | AUFLIA -> Fmt.string fmt "AUFLIA"
@@ -432,7 +434,8 @@ let compare t1 t2 =
   | Ty_str, Ty_str
   | Ty_list, Ty_list
   | Ty_app, Ty_app
-  | Ty_unit, Ty_unit ->
+  | Ty_unit, Ty_unit
+  | Ty_none, Ty_none ->
     0
   | Ty_bitv n1, Ty_bitv n2 | Ty_fp n1, Ty_fp n2 -> compare n1 n2
   | Ty_int, _ -> -1
@@ -451,6 +454,8 @@ let compare t1 t2 =
   | _, Ty_list -> 1
   | Ty_app, _ -> -1
   | _, Ty_app -> 1
+  | Ty_none, _ -> -1
+  | _, Ty_none -> 1
 
 let equal t1 t2 = compare t1 t2 = 0
 
@@ -460,4 +465,4 @@ let size (ty : t) : int =
   match ty with
   | Ty_bitv n | Ty_fp n -> n / 8
   | Ty_int | Ty_bool -> 4
-  | Ty_real | Ty_str | Ty_list | Ty_app | Ty_unit -> assert false
+  | Ty_real | Ty_str | Ty_list | Ty_app | Ty_unit | Ty_none -> assert false
