@@ -26,10 +26,15 @@ type t =
   | Num of Num.t
   | List of t list
   | App : [> `Op of string ] * t list -> t
+  | Nothing
 
 val compare : t -> t -> int
 
 val equal : t -> t -> bool
+
+val map : t -> (t -> t) -> t
+
+val ( let+ ) : t -> (t -> t) -> t
 
 val pp : Fmt.formatter -> t -> unit
 

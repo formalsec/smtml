@@ -31,6 +31,7 @@ type t =
   | Ty_list
   | Ty_app
   | Ty_unit
+  | Ty_none
 
 type unop =
   | Neg
