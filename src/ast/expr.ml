@@ -374,7 +374,26 @@ let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
     ->
     let base = Eval.binop (Ty_bitv 32) Add (Num (I32 base)) o in
     value (if Eval.relop ty op base n then True else False)
+  | op, List l1, List l2 -> relop_list op l1 l2
   | _, _, _ -> relop' ty op hte1 hte2
+
+and relop_list op l1 l2 =
+  match (op, l1, l2) with
+  | Eq, [], [] -> value True
+  | Eq, _, [] | Eq, [], _ -> value False
+  | Eq, l1, l2 ->
+    if not (List.compare_lengths l1 l2 = 0) then value False
+    else
+      List.fold_left2
+        (fun acc a b ->
+          binop Ty_bool And acc
+          @@
+          match (ty a, ty b) with
+          | Ty_real, Ty_real -> relop Ty_real Eq a b
+          | _ -> relop Ty_bool Eq a b )
+        (value True) l1 l2
+  | Ne, _, _ -> unop Ty_bool Not @@ relop_list Eq l1 l2
+  | (Lt | LtU | Gt | GtU | Le | LeU | Ge | GeU), _, _ -> assert false
 
 let cvtop' (ty : Ty.t) (op : cvtop) (hte : t) : t = make (Cvtop (ty, op, hte))
 [@@inline]
