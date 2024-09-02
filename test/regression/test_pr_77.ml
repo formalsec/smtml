@@ -15,7 +15,7 @@ let () =
   assert (Expr.equal nan0 nan1);
   let assert_ = Expr.relop (Ty_fp 32) Eq nan0 nan1 in
   (* Evaluation functions do not. *)
-  assert (Expr.equal (Expr.simplify assert_) (Expr.value False))
+  assert (Expr.equal assert_ (Expr.value False))
 
 let () =
   let open Expr in
@@ -25,4 +25,4 @@ let () =
   assert (Expr.equal nan0 nan1);
   let assert_ = Expr.relop Ty_real Eq nan0 nan1 in
   (* Evaluation functions do not. *)
-  assert (Expr.equal (Expr.simplify assert_) (Expr.value False))
+  assert (Expr.equal assert_ (Expr.value False))
