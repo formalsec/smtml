@@ -205,15 +205,14 @@ let negate_relop (hte : t) : (t, string) Result.t =
   Result.map make e
 
 module Pp = struct
-  let comma fmt () = Fmt.pf fmt ",@ "
-
   let rec pp fmt (hte : t) =
     match view hte with
     | Val v -> Value.pp fmt v
     | Ptr { base; offset } -> Fmt.pf fmt "(Ptr (i32 %ld) %a)" base pp offset
     | Symbol s -> Symbol.pp fmt s
-    | List v -> Fmt.pf fmt "[%a]" (Fmt.list ~sep:comma pp) v
-    | App (`Op x, v) -> Fmt.pf fmt "(%s %a)" x (Fmt.list ~sep:comma pp) v
+    | List v -> Fmt.pf fmt "@[<hov 1>[%a]@]" (Fmt.list ~sep:Fmt.comma pp) v
+    | App (`Op x, v) ->
+      Fmt.pf fmt "@[<hov 1>(%s@ %a)@]" x (Fmt.list ~sep:Fmt.comma pp) v
     | Unop (ty, op, e) ->
       Fmt.pf fmt "@[<hov 1>(%a.%a@ %a)@]" Ty.pp ty pp_unop op pp e
     | Binop (ty, op, e1, e2) ->
@@ -226,14 +225,15 @@ module Pp = struct
     | Cvtop (ty, op, e) ->
       Fmt.pf fmt "@[<hov 1>(%a.%a@ %a)@]" Ty.pp ty pp_cvtop op pp e
     | Naryop (ty, op, es) ->
-      Fmt.pf fmt "(%a.%a (%a))" Ty.pp ty pp_naryop op (Fmt.list ~sep:comma pp)
+      Fmt.pf fmt "@[<hov 1>(%a.%a@ (%a))@]" Ty.pp ty pp_naryop op
+        (Fmt.list ~sep:Fmt.comma pp)
         es
     | Extract (e, h, l) ->
       Fmt.pf fmt "@[<hov 1>(extract@ %a@ %d@ %d)@]" pp e l h
     | Concat (e1, e2) -> Fmt.pf fmt "@[<hov 1>(++@ %a@ %a)@]" pp e1 pp e2
     | App _ -> assert false
 
-  let pp_list fmt (es : t list) = Fmt.list ~sep:Fmt.semi pp fmt es
+  let pp_list fmt (es : t list) = Fmt.hovbox (Fmt.list ~sep:Fmt.comma pp) fmt es
 
   let pp_smt fmt (es : t list) : unit =
     let pp_symbols fmt syms =
