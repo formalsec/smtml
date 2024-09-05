@@ -76,12 +76,9 @@ let rec pp (fmt : Fmt.formatter) (v : t) : unit =
   | Real x -> Fmt.pf fmt "%F" x
   | Num x -> Num.pp fmt x
   | Str x -> Fmt.pf fmt "%S" x
-  | List l ->
-    Fmt.pf fmt "[%a]" (Fmt.list ~sep:(fun fmt () -> Fmt.string fmt ", ") pp) l
+  | List l -> (Fmt.hovbox ~indent:1 (Fmt.list ~sep:Fmt.comma pp)) fmt l
   | App (`Op op, vs) ->
-    Fmt.pf fmt "%s(%a)" op
-      (Fmt.list ~sep:(fun fmt () -> Fmt.string fmt ", ") pp)
-      vs
+    Fmt.pf fmt "@[<hov 1>%s(%a)@]" op (Fmt.list ~sep:Fmt.comma pp) vs
   | Nothing -> Fmt.string fmt "none"
   | App _ -> assert false
 
