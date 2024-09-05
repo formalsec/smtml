@@ -342,12 +342,6 @@ let relop' (ty : Ty.t) (op : relop) (hte1 : t) (hte2 : t) : t =
 
 let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
   match (op, view hte1, view hte2) with
-  | op, Val (App (`Op s1, _)), Val (App (`Op s2, _)) ->
-    if String.equal s1 s2 then
-      value (if Ty.relop_equal Eq op then True else False)
-    else relop' ty op hte1 hte2
-  | Eq, Val (App _), Val _ | Eq, Val _, Val (App _) -> value False
-  | Ne, Val (App _), Val _ | Ne, Val _, Val (App _) -> value True
   | (Ne, Val (Real v), Symbol _ | Ne, Symbol _, Val (Real v))
     when Float.is_nan v || Float.is_infinite v ->
     value True
