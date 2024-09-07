@@ -342,13 +342,13 @@ let relop' (ty : Ty.t) (op : relop) (hte1 : t) (hte2 : t) : t =
 
 let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
   match (op, view hte1, view hte2) with
-  | (Ne, Val (Real v), Symbol _ | Ne, Symbol _, Val (Real v))
-    when Float.is_nan v || Float.is_infinite v ->
-    value True
-  | (_, Val (Real v), Symbol _ | _, Symbol _, Val (Real v))
-    when Float.is_nan v || Float.is_infinite v ->
-    value False
   | op, Val v1, Val v2 -> value (if Eval.relop ty op v1 v2 then True else False)
+  | Ne, Val (Real v), _ | Ne, _, Val (Real v) ->
+    if Float.is_nan v || Float.is_infinite v then value True
+    else relop' ty op hte1 hte2
+  | _, Val (Real v), _ | _, _, Val (Real v) ->
+    if Float.is_nan v || Float.is_infinite v then value False
+    else relop' ty op hte1 hte2
   | Eq, _, Val Nothing | Eq, Val Nothing, _ -> value False
   | Ne, _, Val Nothing | Ne, Val Nothing, _ -> value True
   | Eq, _, Val (App (`Op "symbol", [ Str "undefined" ]))
