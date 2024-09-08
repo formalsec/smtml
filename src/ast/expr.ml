@@ -351,11 +351,11 @@ let rec relop ty (op : relop) (hte1 : t) (hte2 : t) : t =
     else relop' ty op hte1 hte2
   | Eq, _, Val Nothing | Eq, Val Nothing, _ -> value False
   | Ne, _, Val Nothing | Ne, Val Nothing, _ -> value True
-  | Eq, _, Val (App (`Op "symbol", [ Str "undefined" ]))
-  | Eq, Val (App (`Op "symbol", [ Str "undefined" ])), _ ->
+  | Eq, _, Val (App (`Op "symbol", [ Str _ ]))
+  | Eq, Val (App (`Op "symbol", [ Str _ ])), _ ->
     value False
-  | Ne, _, Val (App (`Op "symbol", [ Str "undefined" ]))
-  | Ne, Val (App (`Op "symbol", [ Str "undefined" ])), _ ->
+  | Ne, _, Val (App (`Op "symbol", [ Str _ ]))
+  | Ne, Val (App (`Op "symbol", [ Str _ ])), _ ->
     value True
   | Eq, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
     if Int32.equal b1 b2 then relop Ty_bool Eq os1 os2 else value False
