@@ -126,7 +126,7 @@ let rec ty (hte : t) : Ty.t =
   | Ptr _ -> Ty_bitv 32
   | Symbol x -> Symbol.type_of x
   | List _ -> Ty_list
-  | App _ -> assert false
+  | App _ -> Ty_app
   | Unop (ty, _, _) -> ty
   | Binop (ty, _, _, _) -> ty
   | Triop (ty, _, _, _, _) -> ty
