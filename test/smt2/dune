@@ -2,10 +2,12 @@
  (enabled_if %{lib-available:z3})
  (deps
   %{bin:smtml}
-  test_empty.smt2
-  test_core_true.smt2
-  test_core_const.smt2
-  test_core_binary.smt2
   test_core_all.smt2
+  test_core_binary.smt2
+  test_core_const.smt2
+  test_core_true.smt2
+  test_empty.smt2
   test_lia.smt2
-  test_lra.smt2))
+  test_lra.smt2
+  test_string_all.smt2
+  test_string_hard.smt2))

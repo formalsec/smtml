@@ -15,6 +15,7 @@ module Term = struct
       | "Int" -> Expr.symbol { id with ty = Ty_int }
       | "Real" -> Expr.symbol { id with ty = Ty_real }
       | "Bool" -> Expr.symbol { id with ty = Ty_bool }
+      | "String" -> Expr.symbol { id with ty = Ty_str }
       | _ -> Fmt.failwith "Could not parse sort: %a" Symbol.pp id )
     | Term, Simple name -> (
       match name with
@@ -66,6 +67,21 @@ module Term = struct
       | "<=", [ a; b ] -> Expr.relop Ty_none Le a b
       | "to_real", [ a ] -> Expr.cvtop Ty_real Reinterpret_int a
       | "to_int", [ a ] -> Expr.cvtop Ty_int Reinterpret_float a
+      | "str.len", [ a ] -> Expr.unop Ty_str Length a
+      | "str.at", [ a; b ] -> Expr.binop Ty_str At a b
+      | "str.prefixof", [ a; b ] -> Expr.binop Ty_str String_prefix a b
+      | "str.suffixof", [ a; b ] -> Expr.binop Ty_str String_suffix a b
+      | "str.contains", [ a; b ] -> Expr.binop Ty_str String_contains a b
+      | "str.substr", [ a; b; c ] -> Expr.triop Ty_str String_extract a b c
+      | "str.indexof", [ a; b; c ] -> Expr.triop Ty_str String_index a b c
+      | "str.replace", [ a; b; c ] -> Expr.triop Ty_str String_replace a b c
+      | "str.++", n -> Expr.naryop Ty_str Concat n
+      | "str.<", [ a; b ] -> Expr.relop Ty_str Lt a b
+      | "str.<=", [ a; b ] -> Expr.relop Ty_str Le a b
+      | "str.to_code", [ a ] -> Expr.cvtop Ty_str String_to_code a
+      | "str.from_code", [ a ] -> Expr.cvtop Ty_str String_from_code a
+      | "str.to_int", [ a ] -> Expr.cvtop Ty_str String_to_int a
+      | "str.from_int", [ a ] -> Expr.cvtop Ty_str String_from_int a
       | _ -> Fmt.failwith "%acould not parse term app: %s" pp_loc loc name )
     | Symbol id ->
       Fmt.failwith "%acould not parse app: %a" pp_loc loc Symbol.pp id

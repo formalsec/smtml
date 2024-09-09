@@ -35,3 +35,9 @@ Test Real parsing:
   (model
     (x 2.)
     (y 4.))
+
+Test String parsing:
+  $ smtml run test_string_all.smt2
+  sat
+  (model
+    (x "abcd"))
