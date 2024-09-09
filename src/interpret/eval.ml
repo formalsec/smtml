@@ -120,7 +120,8 @@ module Int = struct
   let cvtop (op : cvtop) (v : Value.t) : Value.t =
     match op with
     | OfBool -> to_value (of_bool v)
-    | Reinterpret_int -> Real (Float.of_int (of_value 1 (`Cvtop op) v))
+    | Reinterpret_float ->
+      Int (Int.of_float (match v with Real v -> v | _ -> assert false))
     | ToString -> Str (string_of_int (of_value 1 (`Cvtop op) v))
     | _ -> Fmt.failwith {|cvtop: Unsupported int operator "%a"|} Ty.pp_cvtop op
 end
