@@ -274,6 +274,7 @@ let unop (ty : Ty.t) (op : unop) (hte : t) : t =
   | _, Val v -> value (Eval.unop ty op v)
   | Not, Unop (_, Not, hte') -> hte'
   | Neg, Unop (_, Neg, hte') -> hte'
+  | Trim, Cvtop (Ty_real, ToString, _) -> hte
   | Head, List (hd :: _) -> hd
   | Tail, List (_ :: tl) -> make (List tl)
   | Reverse, List es -> make (List (List.rev es))
@@ -401,8 +402,9 @@ let cvtop' (ty : Ty.t) (op : cvtop) (hte : t) : t = make (Cvtop (ty, op, hte))
 [@@inline]
 
 let cvtop ty (op : cvtop) (hte : t) : t =
-  match view hte with
-  | Val v -> value (Eval.cvtop ty op v)
+  match (op, view hte) with
+  | _, Val v -> value (Eval.cvtop ty op v)
+  | String_to_float, Cvtop (Ty_real, ToString, real) -> real
   | _ -> cvtop' ty op hte
 
 let naryop' (ty : Ty.t) (op : naryop) (es : t list) : t =
