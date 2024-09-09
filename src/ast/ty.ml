@@ -258,6 +258,7 @@ let naryop_equal op1 op2 =
   | (Logand | Logor | Concat), _ -> false
 
 type logic =
+  | ALL
   | AUFLIA
   | AUFLIRA
   | AUFNIRA
@@ -398,7 +399,8 @@ let pp fmt = function
   | Ty_unit -> Fmt.string fmt "unit"
   | Ty_none -> Fmt.string fmt "none"
 
-let pp_logic fmt : logic -> unit = function
+let pp_logic fmt = function
+  | ALL -> Fmt.string fmt "ALL"
   | AUFLIA -> Fmt.string fmt "AUFLIA"
   | AUFLIRA -> Fmt.string fmt "AUFLIRA"
   | AUFNIRA -> Fmt.string fmt "AUFNIRA"

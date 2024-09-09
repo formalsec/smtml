@@ -163,9 +163,9 @@ module Statement = struct
   let set_option ?loc:_ term = Set_option term
 
   let set_logic ?loc:_ _logic =
-    (* TODO: Ty.logic_of_string *)
+    (* FIXME: TODO Ty.logic_of_string *)
     (* Set_logic (Ty.logic_of_string logic) *)
-    assert false
+    Set_logic ALL
 end
 
 include Dolmen.Smtlib2.Script.Latest.Make (Loc) (Symbol) (Term) (Statement)

@@ -134,6 +134,7 @@ type naryop =
   | Concat
 
 type logic =
+  | ALL
   | AUFLIA
   | AUFLIRA
   | AUFNIRA
