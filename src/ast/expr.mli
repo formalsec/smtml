@@ -27,7 +27,7 @@ and expr =
       }
   | Symbol of Symbol.t
   | List of t list
-  | App : [> `Op of string ] * t list -> expr
+  | App of Symbol.t * t list
   | Unop of Ty.t * Ty.unop * t
   | Binop of Ty.t * Ty.binop * t * t
   | Triop of Ty.t * Ty.triop * t * t * t
@@ -70,6 +70,8 @@ val value : Value.t -> t
 val ptr : int32 -> t -> t
 
 val symbol : Symbol.t -> t
+
+val app: Symbol.t -> t list -> t
 
 (** Smart unop constructor, applies simplifications at constructor level *)
 val unop : Ty.t -> Ty.unop -> t -> t
