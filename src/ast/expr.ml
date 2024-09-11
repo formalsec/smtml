@@ -28,7 +28,7 @@ and expr =
       }
   | Symbol of Symbol.t
   | List of t list
-  | App : [> `Op of string ] * t list -> expr
+  | App of Symbol.t * t list
   | Unop of Ty.t * unop * t
   | Binop of Ty.t * binop * t * t
   | Triop of Ty.t * triop * t * t * t
@@ -52,7 +52,7 @@ module Expr = struct
       Int32.equal b1 b2 && phys_equal o1 o2
     | Symbol s1, Symbol s2 -> Symbol.equal s1 s2
     | List l1, List l2 -> list_eq l1 l2
-    | App (`Op x1, l1), App (`Op x2, l2) -> String.equal x1 x2 && list_eq l1 l2
+    | App (s1, l1), App (s2, l2) -> Symbol.equal s1 s2 && list_eq l1 l2
     | Unop (t1, op1, e1), Unop (t2, op2, e2) ->
       Ty.equal t1 t2 && Ty.unop_equal op1 op2 && phys_equal e1 e2
     | Binop (t1, op1, e1, e3), Binop (t2, op2, e2, e4) ->
@@ -211,8 +211,10 @@ module Pp = struct
     | Ptr { base; offset } -> Fmt.pf fmt "(Ptr (i32 %ld) %a)" base pp offset
     | Symbol s -> Symbol.pp fmt s
     | List v -> Fmt.pf fmt "@[<hov 1>[%a]@]" (Fmt.list ~sep:Fmt.comma pp) v
-    | App (`Op x, v) ->
-      Fmt.pf fmt "@[<hov 1>(%s@ %a)@]" x (Fmt.list ~sep:Fmt.comma pp) v
+    | App (s, v) ->
+      Fmt.pf fmt "@[<hov 1>(%a@ %a)@]" Symbol.pp s
+        (Fmt.list ~sep:Fmt.comma pp)
+        v
     | Unop (ty, op, e) ->
       Fmt.pf fmt "@[<hov 1>(%a.%a@ %a)@]" Ty.pp ty pp_unop op pp e
     | Binop (ty, op, e1, e2) ->
@@ -231,7 +233,6 @@ module Pp = struct
     | Extract (e, h, l) ->
       Fmt.pf fmt "@[<hov 1>(extract@ %a@ %d@ %d)@]" pp e l h
     | Concat (e1, e2) -> Fmt.pf fmt "@[<hov 1>(++@ %a@ %a)@]" pp e1 pp e2
-    | App _ -> assert false
 
   let pp_list fmt (es : t list) = Fmt.hovbox (Fmt.list ~sep:Fmt.comma pp) fmt es
 
@@ -265,6 +266,8 @@ let to_string e = Fmt.str "%a" pp e
 let value (v : Value.t) : t = make (Val v) [@@inline]
 
 let ptr base offset = make (Ptr { base; offset })
+
+let app symbol args = make (App (symbol, args))
 
 let unop' (ty : Ty.t) (op : unop) (hte : t) : t = make (Unop (ty, op, hte))
 [@@inline]
