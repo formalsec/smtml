@@ -22,8 +22,7 @@ module Term = struct
       | "true" -> Expr.value True
       | "false" -> Expr.value False
       | _ -> Expr.symbol id )
-    | Attr, _ ->
-      Fmt.failwith "%acould not parse attr: %a" pp_loc loc Symbol.pp id
+    | Attr, Simple _ -> Expr.symbol id
     | Var, _ -> Fmt.failwith "%acould not parse var: %a" pp_loc loc Symbol.pp id
 
   let str ?loc:_ (x : string) = Expr.value (Str x)
@@ -83,6 +82,8 @@ module Term = struct
       | "str.to_int", [ a ] -> Expr.cvtop Ty_str String_to_int a
       | "str.from_int", [ a ] -> Expr.cvtop Ty_str String_from_int a
       | _ -> Fmt.failwith "%acould not parse term app: %s" pp_loc loc name )
+    | Symbol ({ name = Simple _; namespace = Attr; _ } as attr) ->
+      Expr.app attr args
     | Symbol id ->
       Fmt.failwith "%acould not parse app: %a" pp_loc loc Symbol.pp id
     | _ ->
