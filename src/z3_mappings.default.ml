@@ -495,6 +495,32 @@ module M = struct
       let pp_statistics fmt opt =
         pp_statistics fmt @@ Optimize.get_statistics opt
     end
+
+    module Smtlib = struct
+      let pp ?name ?logic ?status fmt =
+        let name = Option.value name ~default:"" in
+        let logic =
+          Fmt.str "%a"
+            (Fmt.option ~none:(fun fmt () -> Fmt.string fmt "ALL") Ty.pp_logic)
+            logic
+        in
+        let status =
+          match Option.value status ~default:`Unknown with
+          | `Sat -> "sat"
+          | `Unsat -> "unsat"
+          | `Unknown -> "unknown"
+        in
+        function
+        | [] -> ()
+        | [ x ] ->
+          Fmt.pf fmt "%s"
+            (Z3.SMT.benchmark_to_smtstring ctx name logic status "" [] x)
+        | hd :: tl ->
+          (* Prints formulas in correct order? *)
+          let tl = List.rev tl in
+          Fmt.pf fmt "%s"
+            (Z3.SMT.benchmark_to_smtstring ctx name logic status "" tl hd)
+    end
   end
 
   let is_available = true

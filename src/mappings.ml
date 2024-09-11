@@ -634,9 +634,6 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           (ctx, e :: es) )
         (ctx, []) es
 
-    (* TODO: pp_smt *)
-    let pp_smt ?status:_ _ _ = assert false
-
     let value_of_term model ty term =
       let v = M.Model.eval ~completion:true model term |> Option.get in
       match ty with
@@ -692,6 +689,13 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       m
 
     let set_debug _ = ()
+
+    module Smtlib = struct
+      let pp ?name ?logic ?status fmt htes =
+        (* FIXME: I don't know if encoding with the empty map is ok :\ *)
+        let _, terms = encode_exprs Smap.empty htes in
+        M.Smtlib.pp ?name ?logic ?status fmt terms
+    end
 
     module Solver = struct
       let make ?params ?logic () =

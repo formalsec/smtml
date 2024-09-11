@@ -882,8 +882,6 @@ module Fresh = struct
 
     let encode_expr e = encore_expr_aux e
 
-    let pp_smt ?status:_ _ _ = ()
-
     let satisfiability s = function
       | `Sat d ->
         s.state <- `Sat d;
@@ -893,6 +891,11 @@ module Fresh = struct
         `Unknown
       | `UnknownUnsat -> `Unknown
       | `Unsat -> `Unsat
+
+    module Smtlib = struct
+      let pp ?name:_ ?logic:_ ?status:_ _fmt _ =
+        Fmt.failwith "Colibri2_mappings: Smtlib.pp not implemented"
+    end
 
     module Solver = struct
       let mk_scheduler () =

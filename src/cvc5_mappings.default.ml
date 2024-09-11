@@ -435,6 +435,11 @@ module Fresh_cvc5 () = struct
     let get_statistics _ =
       Fmt.failwith "Cvc5_mappings: Optimizer.get_statistics not implemented"
   end
+
+  module Smtlib = struct
+    let pp ?name:_ ?logic:_ ?status:_ _fmt _ =
+      Fmt.failwith "Cvc5_mappings: Smtlib.pp not implemented"
+  end
 end
 
 module Cvc5_with_make : Mappings_intf.M_with_make = struct
