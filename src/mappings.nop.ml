@@ -368,6 +368,10 @@ module Nop = struct
 
       let pp_statistics _ = die ()
     end
+
+    module Smtlib = struct
+      let pp ?name:_ ?logic:_ ?status:_  _fmt _ = die ()
+    end
   end
 
   let is_available = false

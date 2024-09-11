@@ -88,7 +88,10 @@ let to_smt2 debug solver filename =
   let assertions =
     List.filter_map (function Ast.Assert e -> Some e | _ -> None) ast
   in
-  Format.printf "%a@." (Mappings.pp_smt ?status:None) assertions
+  let name = Fpath.to_string @@ Fpath.base filename in
+  Format.printf "%a"
+    (Mappings.Smtlib.pp ~name ?logic:None ?status:None)
+    assertions
 
 let cli =
   Cmdliner.Cmd.group

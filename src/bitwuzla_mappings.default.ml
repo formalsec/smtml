@@ -435,6 +435,11 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     let pp_statistics _ =
       Fmt.failwith "Bitwuzla_mappings: Optimizer.pp_statistics not implemented"
   end
+
+  module Smtlib = struct
+    let pp ?name:_ ?logic:_ ?status:_ _fmt _ =
+      Fmt.failwith "Bitwuzla_mappings: Smtlib.pp not implemented"
+  end
 end
 
 include (

@@ -374,6 +374,16 @@ module type M = sig
 
     val pp_statistics : Fmt.formatter -> optimizer -> unit
   end
+
+  module Smtlib : sig
+    val pp :
+         ?name:string
+      -> ?logic:Ty.logic
+      -> ?status:satisfiability
+      -> Fmt.formatter
+      -> term list
+      -> unit
+  end
 end
 
 module type M_with_make = sig
@@ -397,9 +407,17 @@ module type S = sig
 
   val values_of_model : ?symbols:Symbol.t list -> model -> Model.t
 
-  val pp_smt : ?status:bool -> Fmt.formatter -> Expr.t list -> unit
-
   val set_debug : bool -> unit
+
+  module Smtlib : sig
+    val pp :
+         ?name:string
+      -> ?logic:Ty.logic
+      -> ?status:satisfiability
+      -> Fmt.formatter
+      -> Expr.t list
+      -> unit
+  end
 
   module Solver : sig
     val make : ?params:Params.t -> ?logic:Ty.logic -> unit -> solver
