@@ -82,7 +82,9 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       match Smap.find_opt s ctx with
       | Some sym -> (ctx, sym)
       | None ->
-        let (Simple name) = s.name in
+        let name =
+          match s.name with Simple name -> name | _ -> assert false
+        in
         let sym = M.const name (get_type s.ty) in
         (Smap.add s sym ctx, sym)
 

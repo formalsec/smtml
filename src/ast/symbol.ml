@@ -15,7 +15,12 @@
 (* You should have received a copy of the GNU General Public License       *)
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
-type name = Simple of string
+type name =
+  | Simple of string
+  | Indexed of
+      { basename : string
+      ; indices : string list
+      }
 
 type namespace =
   | Attr
@@ -37,10 +42,14 @@ let term = Term
 
 let var = Var
 
-let simple name = Simple name
+module Name = struct
+  let simple name = Simple name
+
+  let indexed basename indices = Indexed { basename; indices }
+end
 
 let ( @: ) (name : string) (ty : Ty.t) : t =
-  { name = simple name; namespace = var; ty }
+  { name = Name.simple name; namespace = var; ty }
 
 let name { name; _ } = name
 
@@ -50,7 +59,16 @@ let discr_namespace = function Attr -> 0 | Sort -> 1 | Term -> 2 | Var -> 3
 
 let compare_namespace a b = compare (discr_namespace a) (discr_namespace b)
 
-let compare_name (Simple a) (Simple b) = String.compare a b
+let compare_name a b =
+  match (a, b) with
+  | Simple a, Simple b -> String.compare a b
+  | ( Indexed { basename = base1; indices = indices1 }
+    , Indexed { basename = base2; indices = indices2 } ) ->
+    let compare_base = String.compare base1 base2 in
+    if compare_base = 0 then List.compare String.compare indices1 indices2
+    else compare_base
+  | Simple _, _ -> -1
+  | Indexed _, _ -> 1
 
 let compare a b =
   let compare_name = compare_name a.name b.name in
@@ -66,9 +84,10 @@ let make ty name = name @: ty
 
 let make3 ty name namespace = { ty; name; namespace }
 
-let mk namespace name = { ty = Ty_none; name = simple name; namespace }
+let mk namespace name = { ty = Ty_none; name = Name.simple name; namespace }
 
-let indexed _ = assert false
+let indexed namespace basename indices =
+  { ty = Ty_none; name = Name.indexed basename indices; namespace }
 
 let pp_namespace fmt = function
   | Attr -> Fmt.string fmt "attr"
@@ -76,11 +95,19 @@ let pp_namespace fmt = function
   | Term -> Fmt.string fmt "term"
   | Var -> Fmt.string fmt "var"
 
-let pp fmt { name = Simple name; _ } = Fmt.string fmt name
+let pp_name fmt = function
+  | Simple name -> Fmt.string fmt name
+  | Indexed { basename; indices } ->
+    Fmt.pf fmt "(%s@ %a)" basename (Fmt.list ~sep:Fmt.sp Fmt.string) indices
 
-let to_string { name = Simple name; _ } = name
+let pp fmt { name; _ } = pp_name fmt name
 
-let to_json { name = Simple name; ty; _ } =
-  `Assoc [ (name, `Assoc [ ("ty", `String (Fmt.str "%a" Ty.pp ty)) ]) ]
+let to_string { name; _ } = Fmt.str "%a" pp_name name
+
+let to_json { name; ty; _ } =
+  `Assoc
+    [ ( Fmt.str "%a" pp_name name
+      , `Assoc [ ("ty", `String (Fmt.str "%a" Ty.pp ty)) ] )
+    ]
 
 let type_of { ty; _ } = ty
