@@ -16,7 +16,12 @@
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
 
-type name = Simple of string
+type name =
+  | Simple of string
+  | Indexed of
+      { basename : string
+      ; indices : string list
+      }
 
 type namespace =
   | Attr

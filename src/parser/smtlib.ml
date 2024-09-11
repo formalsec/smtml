@@ -17,12 +17,23 @@ module Term = struct
       | "Bool" -> Expr.symbol { id with ty = Ty_bool }
       | "String" -> Expr.symbol { id with ty = Ty_str }
       | _ -> Fmt.failwith "Could not parse sort: %a" Symbol.pp id )
+    | Sort, Indexed { basename; indices } -> (
+      match (basename, indices) with
+      | "BitVec", [ n ] -> (
+        match int_of_string n with
+        | Some n -> Expr.symbol { id with ty = Ty_bitv n }
+        | None -> Fmt.failwith "Invalid bitvector size" )
+      | _ ->
+        Fmt.pr "(%a %a)@." Fmt.string basename (Fmt.list Fmt.string) indices;
+        assert false )
     | Term, Simple name -> (
       match name with
       | "true" -> Expr.value True
       | "false" -> Expr.value False
       | _ -> Expr.symbol id )
+    | Term, Indexed _ -> assert false
     | Attr, Simple _ -> Expr.symbol id
+    | Attr, Indexed _ -> assert false
     | Var, _ -> Fmt.failwith "%acould not parse var: %a" pp_loc loc Symbol.pp id
 
   let str ?loc:_ (x : string) = Expr.value (Str x)

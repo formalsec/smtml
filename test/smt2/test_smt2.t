@@ -41,3 +41,7 @@ Test String parsing:
   sat
   (model
     (x "abcd"))
+
+Test BitVector parsing:
+  $ smtml run test_bitv_simple.smt2
+  sat
