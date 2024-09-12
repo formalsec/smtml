@@ -24,14 +24,26 @@ module Term = struct
         | Some n -> Expr.symbol { id with ty = Ty_bitv n }
         | None -> Fmt.failwith "Invalid bitvector size" )
       | _ ->
-        Fmt.pr "(%a %a)@." Fmt.string basename (Fmt.list Fmt.string) indices;
-        assert false )
+        Fmt.failwith "%acould not parse indexed sort:%a %a@." pp_loc loc
+          Fmt.string basename
+          (Fmt.parens (Fmt.list ~sep:Fmt.sp Fmt.string))
+          indices )
     | Term, Simple name -> (
       match name with
       | "true" -> Expr.value True
       | "false" -> Expr.value False
       | _ -> Expr.symbol id )
-    | Term, Indexed _ -> assert false
+    | Term, Indexed { basename = base; indices } -> (
+      match String.(sub base 0 2, sub base 2 (length base - 2), indices) with
+      | "bv", str, [ "8" ] ->
+        Expr.value (Num (I8 (Option.get (int_of_string str))))
+      | "bv", str, [ "32" ] -> Expr.value (Num (I32 (Int32.of_string str)))
+      | "bv", str, [ "64" ] -> Expr.value (Num (I64 (Int64.of_string str)))
+      | _ ->
+        Fmt.failwith "%acould not parse indexed term: %a %a" pp_loc loc
+          Fmt.string base
+          (Fmt.parens (Fmt.list ~sep:Fmt.sp Fmt.string))
+          indices )
     | Attr, Simple _ -> Expr.symbol id
     | Attr, Indexed _ -> assert false
     | Var, _ -> Fmt.failwith "%acould not parse var: %a" pp_loc loc Symbol.pp id
@@ -52,7 +64,14 @@ module Term = struct
 
   let binary ?loc:_ (_ : string) = assert false
 
-  let colon ?loc:_ (_ : t) (_ : t) : t = assert false
+  let colon ?loc (symbol : t) (term : t) : t =
+    match Expr.view symbol with
+    | Symbol s ->
+      (* Hack: var bindings are 1 argument lambdas *)
+      Expr.app s [ term ]
+    | _ ->
+      Fmt.failwith "%acould not parse colon: %a %a" pp_loc loc Expr.pp symbol
+        Expr.pp term
 
   let apply ?loc (id : t) (args : t list) : t =
     match Expr.view id with
@@ -92,6 +111,17 @@ module Term = struct
       | "str.from_code", [ a ] -> Expr.cvtop Ty_str String_from_code a
       | "str.to_int", [ a ] -> Expr.cvtop Ty_str String_to_int a
       | "str.from_int", [ a ] -> Expr.cvtop Ty_str String_from_int a
+      | "bvnot", [ a ] -> Expr.unop Ty_none Not a
+      | "bvneg", [ a ] -> Expr.unop Ty_none Neg a
+      | "bvand", [ a; b ] -> Expr.binop Ty_none And a b
+      | "bvor", [ a; b ] -> Expr.binop Ty_none Or a b
+      | "bvadd", [ a; b ] -> Expr.binop Ty_none Add a b
+      | "bvmul", [ a; b ] -> Expr.binop Ty_none Mul a b
+      | "bvudiv", [ a; b ] -> Expr.binop Ty_none DivU a b
+      | "bvurem", [ a; b ] -> Expr.binop Ty_none RemU a b
+      | "bvshl", [ a; b ] -> Expr.binop Ty_none Shl a b
+      | "bvlshr", [ a; b ] -> Expr.binop Ty_none ShrL a b
+      | "bvult", [ a; b ] -> Expr.relop Ty_none LtU a b
       | _ -> Fmt.failwith "%acould not parse term app: %s" pp_loc loc name )
     | Symbol ({ name = Simple _; namespace = Attr; _ } as attr) ->
       Expr.app attr args
