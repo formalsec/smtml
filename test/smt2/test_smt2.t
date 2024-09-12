@@ -43,5 +43,8 @@ Test String parsing:
     (x "abcd"))
 
 Test BitVector parsing:
-  $ smtml run test_bitv_simple.smt2
+  $ smtml run test_bitv_sort.smt2
+  $ smtml run test_bitv_const.smt2
+  sat
+  $ smtml run test_bitv_funs.smt2
   sat
