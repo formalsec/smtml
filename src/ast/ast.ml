@@ -49,15 +49,23 @@ let pp fmt (instr : t) =
     Fmt.pf fmt "(check-sat-assuming@ (%a))"
       (Fmt.list ~sep:Fmt.sp Expr.pp)
       assumptuions
-  | Push n -> Fmt.pf fmt "(push %d)" n
-  | Pop n -> Fmt.pf fmt "(pop %d)" n
   | Declare_const { id; sort } ->
     Fmt.pf fmt "(declare-const %a %a)" Symbol.pp id Symbol.pp sort
-  | Get_model -> Fmt.string fmt "(get-model)"
-  | Set_logic logic -> Fmt.pf fmt "(set-logic %a)" Ty.pp_logic logic
+  | Echo line -> Fmt.pf fmt "(echo %S)" line
   | Exit -> Fmt.string fmt "(exit)"
-  | Get_assertions | Get_assignment | Reset | Reset_assertions | Echo _
-  | Get_info _ | Get_option _ | Get_value _ | Set_info _ | Set_option _ ->
-    Fmt.failwith "pp: TODO printing of unused cases"
+  | Get_assertions -> Fmt.string fmt "(get-assertions)"
+  | Get_assignment -> Fmt.string fmt "(get-assignment)"
+  | Get_info info -> Fmt.pf fmt "(get-info %a)" Fmt.string info
+  | Get_option opt -> Fmt.pf fmt "(get-option %a)" Fmt.string opt
+  | Get_model -> Fmt.string fmt "(get-model)"
+  | Get_value htes ->
+    Fmt.pf fmt "(get-value %a)" (Fmt.parens (Fmt.list ~sep:Fmt.sp Expr.pp)) htes
+  | Pop n -> Fmt.pf fmt "(pop %d)" n
+  | Push n -> Fmt.pf fmt "(push %d)" n
+  | Reset -> Fmt.string fmt "(reset)"
+  | Reset_assertions -> Fmt.string fmt "(reset-assertions)"
+  | Set_info info -> Fmt.pf fmt "(set-info %a)" Expr.pp info
+  | Set_logic logic -> Fmt.pf fmt "(set-logic %a)" Ty.pp_logic logic
+  | Set_option opt -> Fmt.pf fmt "(set-option %a)" Expr.pp opt
 
 let to_string (instr : t) : string = Fmt.str "%a" pp instr
