@@ -98,7 +98,7 @@ let pp_namespace fmt = function
 let pp_name fmt = function
   | Simple name -> Fmt.string fmt name
   | Indexed { basename; indices } ->
-    Fmt.pf fmt "(%s@ %a)" basename (Fmt.list ~sep:Fmt.sp Fmt.string) indices
+    Fmt.pf fmt "(%s %a)" basename (Fmt.list ~sep:Fmt.sp Fmt.string) indices
 
 let pp fmt { name; _ } = pp_name fmt name
 
