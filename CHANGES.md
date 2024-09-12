@@ -2,6 +2,8 @@
 
 ### Added
 
+- Use `Dolmen` to parse smt2 benchmarks
+- Add `Binder` expression to model: `Forall`, `Exists`, and `Let_in`
 - Provide hashconsed sets of expressions in `Expr.Set`
 
 ### Fixed
