@@ -18,6 +18,11 @@
 
 include Interpret_intf
 
+(* TODO: Add proper logs *)
+let debug_interpreter = false
+
+let debug fmt k = if debug_interpreter then k (Fmt.epr fmt)
+
 module Make (Solver : Solver_intf.S) = struct
   open Ast
 
@@ -65,8 +70,11 @@ module Make (Solver : Solver_intf.S) = struct
       let solver = Solver.create ~logic () in
       Solver.push solver;
       { state with solver }
+    | Set_info attr ->
+      debug "Ignoring (set-info %a)@." (fun k -> k Expr.pp attr);
+      state
     | Get_assertions | Get_assignment | Reset | Reset_assertions | Get_info _
-    | Get_option _ | Get_value _ | Set_info _ | Set_option _ ->
+    | Get_option _ | Get_value _ | Set_option _ ->
       Fmt.failwith "eval: TODO evaluation of command"
 
   let rec loop (state : exec_state) : exec_state =

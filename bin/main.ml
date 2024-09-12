@@ -19,46 +19,40 @@
 open Smtml
 open Solver_dispatcher
 
-let run debug solver prover_mode _print_statistics file =
+let get_solver debug solver prover_mode =
   let module Mappings =
     (val mappings_of_solver solver : Mappings_intf.S_with_fresh)
   in
   Mappings.set_debug debug;
-  let module Solver =
-    ( val match prover_mode with
-          | Options.Batch -> (module Solver.Batch (Mappings))
-          | Cached -> (module Solver.Cached (Mappings))
-          | Incremental -> (module Solver.Incremental (Mappings))
-        : Solver_intf.S )
-  in
+  match prover_mode with
+  | Options.Batch -> (module Solver.Batch (Mappings) : Solver_intf.S)
+  | Cached -> (module Solver.Cached (Mappings))
+  | Incremental -> (module Solver.Incremental (Mappings))
+
+let run debug solver prover_mode _print_statistics file =
+  let module Solver = (val get_solver debug solver prover_mode) in
   let module Interpret = Interpret.Make (Solver) in
   let ast = Compile.until_rewrite file in
-  let _ = Interpret.start ast in
+  let _ : Interpret.exec_state = Interpret.start ast in
   ()
 
 let test debug solver prover_mode print_statistics files =
-  let module Mappings =
-    (val mappings_of_solver solver : Mappings_intf.S_with_fresh)
-  in
-  Mappings.set_debug debug;
-  let module Solver =
-    ( val match prover_mode with
-          | Options.Batch -> (module Solver.Batch (Mappings))
-          | Cached -> (module Solver.Cached (Mappings))
-          | Incremental -> (module Solver.Incremental (Mappings))
-        : Solver_intf.S )
-  in
+  let module Solver = (val get_solver debug solver prover_mode) in
   let module Interpret = Interpret.Make (Solver) in
+  (* TODO: Add proper logs *)
+  let debug fmt k = if debug then k (Fmt.epr fmt) in
   let rec test_path state path =
     if Sys.is_directory (Fpath.to_string path) then test_dir state path
-    else
+    else begin
+      debug "File %a...@." (fun k -> k Fpath.pp path);
       let ast = Compile.until_rewrite path in
       Some (Interpret.start ?state ast)
+    end
   and test_dir state d =
     let result =
       Bos.OS.Dir.fold_contents
         (fun path state ->
-          if Fpath.has_ext ".smtml" path then test_path state path else state )
+          if Fpath.has_ext ".smt2" path then test_path state path else state )
         state d
     in
     match result with Error (`Msg e) -> failwith e | Ok state -> state
