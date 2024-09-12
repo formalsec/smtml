@@ -77,51 +77,52 @@ module Term = struct
     match Expr.view id with
     | Symbol { namespace = Term; name = Simple name; _ } -> (
       match (name, args) with
-      | "-", [ a ] -> Expr.unop Ty_none Neg a
-      | "not", [ a ] -> Expr.unop Ty_bool Not a
-      | "and", [ a; b ] -> Expr.binop Ty_bool And a b
-      | "or", [ a; b ] -> Expr.binop Ty_bool Or a b
-      | "xor", [ a; b ] -> Expr.binop Ty_bool Xor a b
-      | "+", [ a; b ] -> Expr.binop Ty_none Add a b
-      | "-", [ a; b ] -> Expr.binop Ty_none Sub a b
-      | "*", [ a; b ] -> Expr.binop Ty_none Mul a b
-      | "/", [ a; b ] -> Expr.binop Ty_none Div a b
-      | "mod", [ a; b ] -> Expr.binop Ty_none Rem a b
+      | "-", [ a ] -> Expr.unop' Ty_none Neg a
+      | "not", [ a ] -> Expr.unop' Ty_bool Not a
+      | "and", [ a; b ] -> Expr.binop' Ty_bool And a b
+      | "or", [ a; b ] -> Expr.binop' Ty_bool Or a b
+      | "xor", [ a; b ] -> Expr.binop' Ty_bool Xor a b
+      | "+", [ a; b ] -> Expr.binop' Ty_none Add a b
+      | "-", [ a; b ] -> Expr.binop' Ty_none Sub a b
+      | "*", [ a; b ] -> Expr.binop' Ty_none Mul a b
+      | "/", [ a; b ] -> Expr.binop' Ty_none Div a b
+      | "mod", [ a; b ] -> Expr.binop' Ty_none Rem a b
       | "ite", [ a; b; c ] -> Expr.triop Ty_bool Ite a b c
-      | "=", [ a; b ] -> Expr.relop Ty_bool Eq a b
-      | "distinct", [ a; b ] -> Expr.relop Ty_bool Ne a b
-      | ">", [ a; b ] -> Expr.relop Ty_none Gt a b
-      | ">=", [ a; b ] -> Expr.relop Ty_none Ge a b
-      | "<", [ a; b ] -> Expr.relop Ty_none Lt a b
-      | "<=", [ a; b ] -> Expr.relop Ty_none Le a b
-      | "to_real", [ a ] -> Expr.cvtop Ty_real Reinterpret_int a
-      | "to_int", [ a ] -> Expr.cvtop Ty_int Reinterpret_float a
-      | "str.len", [ a ] -> Expr.unop Ty_str Length a
-      | "str.at", [ a; b ] -> Expr.binop Ty_str At a b
-      | "str.prefixof", [ a; b ] -> Expr.binop Ty_str String_prefix a b
-      | "str.suffixof", [ a; b ] -> Expr.binop Ty_str String_suffix a b
-      | "str.contains", [ a; b ] -> Expr.binop Ty_str String_contains a b
+      | "=", [ a; b ] -> Expr.relop' Ty_bool Eq a b
+      | "distinct", [ a; b ] -> Expr.relop' Ty_bool Ne a b
+      | ">", [ a; b ] -> Expr.relop' Ty_none Gt a b
+      | ">=", [ a; b ] -> Expr.relop' Ty_none Ge a b
+      | "<", [ a; b ] -> Expr.relop' Ty_none Lt a b
+      | "<=", [ a; b ] -> Expr.relop' Ty_none Le a b
+      | "to_real", [ a ] -> Expr.cvtop' Ty_real Reinterpret_int a
+      | "to_int", [ a ] -> Expr.cvtop' Ty_int Reinterpret_float a
+      | "str.len", [ a ] -> Expr.unop' Ty_str Length a
+      | "str.at", [ a; b ] -> Expr.binop' Ty_str At a b
+      | "str.prefixof", [ a; b ] -> Expr.binop' Ty_str String_prefix a b
+      | "str.suffixof", [ a; b ] -> Expr.binop' Ty_str String_suffix a b
+      | "str.contains", [ a; b ] -> Expr.binop' Ty_str String_contains a b
       | "str.substr", [ a; b; c ] -> Expr.triop Ty_str String_extract a b c
       | "str.indexof", [ a; b; c ] -> Expr.triop Ty_str String_index a b c
       | "str.replace", [ a; b; c ] -> Expr.triop Ty_str String_replace a b c
-      | "str.++", n -> Expr.naryop Ty_str Concat n
-      | "str.<", [ a; b ] -> Expr.relop Ty_str Lt a b
-      | "str.<=", [ a; b ] -> Expr.relop Ty_str Le a b
-      | "str.to_code", [ a ] -> Expr.cvtop Ty_str String_to_code a
-      | "str.from_code", [ a ] -> Expr.cvtop Ty_str String_from_code a
-      | "str.to_int", [ a ] -> Expr.cvtop Ty_str String_to_int a
-      | "str.from_int", [ a ] -> Expr.cvtop Ty_str String_from_int a
-      | "bvnot", [ a ] -> Expr.unop Ty_none Not a
-      | "bvneg", [ a ] -> Expr.unop Ty_none Neg a
-      | "bvand", [ a; b ] -> Expr.binop Ty_none And a b
-      | "bvor", [ a; b ] -> Expr.binop Ty_none Or a b
-      | "bvadd", [ a; b ] -> Expr.binop Ty_none Add a b
-      | "bvmul", [ a; b ] -> Expr.binop Ty_none Mul a b
-      | "bvudiv", [ a; b ] -> Expr.binop Ty_none DivU a b
-      | "bvurem", [ a; b ] -> Expr.binop Ty_none RemU a b
-      | "bvshl", [ a; b ] -> Expr.binop Ty_none Shl a b
-      | "bvlshr", [ a; b ] -> Expr.binop Ty_none ShrL a b
-      | "bvult", [ a; b ] -> Expr.relop Ty_none LtU a b
+      | "str.++", n -> Expr.naryop' Ty_str Concat n
+      | "str.<", [ a; b ] -> Expr.relop' Ty_str Lt a b
+      | "str.<=", [ a; b ] -> Expr.relop' Ty_str Le a b
+      | "str.to_code", [ a ] -> Expr.cvtop' Ty_str String_to_code a
+      | "str.from_code", [ a ] -> Expr.cvtop' Ty_str String_from_code a
+      | "str.to_int", [ a ] -> Expr.cvtop' Ty_str String_to_int a
+      | "str.from_int", [ a ] -> Expr.cvtop' Ty_str String_from_int a
+      | "bvnot", [ a ] -> Expr.unop' Ty_none Not a
+      | "bvneg", [ a ] -> Expr.unop' Ty_none Neg a
+      | "bvand", [ a; b ] -> Expr.binop' Ty_none And a b
+      | "bvor", [ a; b ] -> Expr.binop' Ty_none Or a b
+      | "bvadd", [ a; b ] -> Expr.binop' Ty_none Add a b
+      | "bvmul", [ a; b ] -> Expr.binop' Ty_none Mul a b
+      | "bvudiv", [ a; b ] -> Expr.binop' Ty_none DivU a b
+      | "bvurem", [ a; b ] -> Expr.binop' Ty_none RemU a b
+      | "bvshl", [ a; b ] -> Expr.binop' Ty_none Shl a b
+      | "bvlshr", [ a; b ] -> Expr.binop' Ty_none ShrL a b
+      | "bvslt", [ a; b ] -> Expr.relop' Ty_none Lt a b
+      | "bvult", [ a; b ] -> Expr.relop' Ty_none LtU a b
       | _ -> Fmt.failwith "%acould not parse term app: %s" pp_loc loc name )
     | Symbol ({ name = Simple _; namespace = Attr; _ } as attr) ->
       Expr.app attr args
