@@ -131,7 +131,7 @@ module Term = struct
       (* Ids can only be symbols. Any other expr here is super wrong *)
       assert false
 
-  let letand ?loc:_ = assert false
+  let letand ?loc:_ (vars : t list) (expr : t) : t = Expr.let_in vars expr
 
   let forall ?loc:_ = assert false
 

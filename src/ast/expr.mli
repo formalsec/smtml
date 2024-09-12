@@ -16,6 +16,12 @@
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
 
+(* Dolmen's binders *)
+type binder =
+  | Forall
+  | Exists
+  | Let_in
+
 (** Term definitions of the abstract syntax *)
 type t = expr Hc.hash_consed
 
@@ -36,6 +42,7 @@ and expr =
   | Naryop of Ty.t * Ty.naryop * t list
   | Extract of t * int * int
   | Concat of t * t
+  | Binder of binder * t list * t
 
 val equal : t -> t -> bool
 
@@ -71,7 +78,9 @@ val ptr : int32 -> t -> t
 
 val symbol : Symbol.t -> t
 
-val app: Symbol.t -> t list -> t
+val app : Symbol.t -> t list -> t
+
+val let_in : t list -> t -> t
 
 (** Smart unop constructor, applies simplifications at constructor level *)
 val unop : Ty.t -> Ty.unop -> t -> t
