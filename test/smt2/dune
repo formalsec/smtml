@@ -2,7 +2,9 @@
  (enabled_if %{lib-available:z3})
  (deps
   %{bin:smtml}
-  test_bitv_simple.smt2
+  test_bitv_const.smt2
+  test_bitv_sort.smt2
+  test_bitv_funs.smt2
   test_core_all.smt2
   test_core_binary.smt2
   test_core_const.smt2
