@@ -4,10 +4,13 @@
     {e declare-const}.
 
     2. Propagate the correct theory encoding for [Unop], [Binop], [Relop], and
-    [Triop]. *)
+    [Triop].
 
-module Type_map = Map.Make (Symbol)
+    3. Inlines [Let_in] binders into a single big expr *)
 
+module Symb_map = Map.Make (Symbol)
+
+(* TODO: Add proper logs *)
 let debug = false
 
 let debug fmt k = if debug then k (Fmt.epr fmt)
@@ -23,13 +26,19 @@ let rewrite_ty unknown_ty tys =
   | Ty.Ty_none, _ -> assert false
   | ty, _ -> ty
 
+  (** Inlines [Let_in] bindings into a single expr *)
+let rewrite_let_in _expr_map hte =
+  debug "rewrite_let_: %a@." (fun k -> k Expr.pp hte);
+  assert false
+
+(** Propagates types in [type_map] or inlines [Let_in] binders *)
 let rec rewrite_expr type_map hte =
   debug "rewrite_expr: %a@." (fun k -> k Expr.pp hte);
   match Expr.view hte with
   | Val _ -> hte
   | Ptr { base; offset } -> Expr.ptr base (rewrite_expr type_map offset)
   | Symbol sym -> (
-    match Type_map.find sym type_map with
+    match Symb_map.find sym type_map with
     | exception Not_found -> Fmt.failwith "Undefined symbol: %a" Symbol.pp sym
     | ty -> Expr.symbol { sym with ty } )
   | List htes -> Expr.make (List (List.map (rewrite_expr type_map) htes))
@@ -70,7 +79,14 @@ let rec rewrite_expr type_map hte =
     let hte1 = rewrite_expr type_map hte1 in
     let hte2 = rewrite_expr type_map hte2 in
     Expr.make (Concat (hte1, hte2))
+  | Binder (Let_in, _, _) ->
+    (* First, we match on the outer let_in and rewrite it as a single expr *)
+    let hte = rewrite_let_in Symb_map.empty hte in
+    (* Then, we rewrite the types of the expr *)
+    rewrite_expr type_map hte
+  | Binder (_, _, _) -> assert false
 
+(** Acccumulates types of symbols in [type_map] and calls rewrite_expr *)
 let rewrite_cmd type_map cmd =
   debug " rewrite_cmd: %a@." (fun k -> k Ast.pp cmd);
   match cmd with
@@ -80,7 +96,7 @@ let rewrite_cmd type_map cmd =
   | Check_sat htes ->
     let htes = List.map (rewrite_expr type_map) htes in
     (type_map, Check_sat htes)
-  | Declare_const { id; sort } as cmd -> (Type_map.add id sort.ty type_map, cmd)
+  | Declare_const { id; sort } as cmd -> (Symb_map.add id sort.ty type_map, cmd)
   | Get_value htes ->
     let htes = List.map (rewrite_expr type_map) htes in
     (type_map, Get_value htes)
@@ -92,6 +108,6 @@ let rewrite script =
       (fun (type_map, cmds) cmd ->
         let type_map, new_cmd = rewrite_cmd type_map cmd in
         (type_map, new_cmd :: cmds) )
-      (Type_map.empty, []) script
+      (Symb_map.empty, []) script
   in
   List.rev cmds

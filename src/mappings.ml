@@ -627,7 +627,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         let ctx, e1 = encode_expr ctx e1 in
         let ctx, e2 = encode_expr ctx e2 in
         (ctx, M.Bitv.concat e1 e2)
-      | List _ | App _ -> assert false
+      | List _ | App _ | Binder _ -> assert false
 
     let encode_exprs ctx (es : Expr.t list) : symbol_ctx * M.term list =
       List.fold_left

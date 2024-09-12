@@ -18,6 +18,11 @@
 
 open Ty
 
+type binder =
+  | Forall
+  | Exists
+  | Let_in
+
 type t = expr Hc.hash_consed
 
 and expr =
@@ -37,6 +42,12 @@ and expr =
   | Naryop of Ty.t * naryop * t list
   | Extract of t * int * int
   | Concat of t * t
+  | Binder of binder * t list * t
+
+let equal_binder a b =
+  match (a, b) with
+  | Forall, Forall | Exists, Exists | Let_in, Let_in -> true
+  | (Forall | Exists | Let_in), _ -> false
 
 module Expr = struct
   type t = expr
@@ -71,8 +82,10 @@ module Expr = struct
     | Extract (e1, h1, l1), Extract (e2, h2, l2) ->
       phys_equal e1 e2 && h1 = h2 && l1 = l2
     | Concat (e1, e3), Concat (e2, e4) -> phys_equal e1 e2 && phys_equal e3 e4
+    | Binder (binder1, vars1, e1), Binder (binder2, vars2, e2) ->
+      equal_binder binder1 binder2 && list_eq vars1 vars2 && phys_equal e1 e2
     | ( ( Val _ | Ptr _ | Symbol _ | List _ | App _ | Unop _ | Binop _ | Triop _
-        | Relop _ | Cvtop _ | Naryop _ | Extract _ | Concat _ )
+        | Relop _ | Cvtop _ | Naryop _ | Extract _ | Concat _ | Binder _ )
       , _ ) ->
       false
 
@@ -92,6 +105,7 @@ module Expr = struct
     | Naryop (ty, op, es) -> h (ty, op, es)
     | Extract (e, hi, lo) -> h (e.tag, hi, lo)
     | Concat (e1, e2) -> h (e1.tag, e2.tag)
+    | Binder (b, vars, e) -> h (b, vars, e.tag)
 end
 
 module Hc = Hc.Make [@inlined hint] (Expr)
@@ -139,6 +153,7 @@ let rec ty (hte : t) : Ty.t =
     | Ty_bitv n1, Ty_bitv n2 -> Ty_bitv (n1 + n2)
     | t1, t2 ->
       Fmt.failwith "Invalid concat of (%a) with (%a)" Ty.pp t1 Ty.pp t2 )
+  | Binder (_, _, e) -> ty e
 
 let rec is_symbolic (v : t) : bool =
   match view v with
@@ -156,6 +171,7 @@ let rec is_symbolic (v : t) : bool =
   | Naryop (_, _, vs) -> List.exists is_symbolic vs
   | Extract (e, _, _) -> is_symbolic e
   | Concat (e1, e2) -> is_symbolic e1 || is_symbolic e2
+  | Binder (_, _, e) -> is_symbolic e
 
 let get_symbols (hte : t list) =
   let tbl = Hashtbl.create 64 in
@@ -183,6 +199,9 @@ let get_symbols (hte : t list) =
     | Concat (e1, e2) ->
       symbols e1;
       symbols e2
+    | Binder (_, vars, e) ->
+      List.iter symbols vars;
+      symbols e
   in
   List.iter symbols hte;
   Hashtbl.fold (fun k () acc -> k :: acc) tbl []
@@ -205,11 +224,16 @@ let negate_relop (hte : t) : (t, string) Result.t =
   Result.map make e
 
 module Pp = struct
+  let pp_binder fmt = function
+    | Forall -> Fmt.string fmt "forall"
+    | Exists -> Fmt.string fmt "exists"
+    | Let_in -> Fmt.string fmt "let"
+
   let rec pp fmt (hte : t) =
     match view hte with
     | Val v -> Value.pp fmt v
     | Ptr { base; offset } -> Fmt.pf fmt "(Ptr (i32 %ld) %a)" base pp offset
-    | Symbol s -> Symbol.pp fmt s
+    | Symbol s -> Fmt.pf fmt "@[<hov 1>%a@]" Symbol.pp s
     | List v -> Fmt.pf fmt "@[<hov 1>[%a]@]" (Fmt.list ~sep:Fmt.comma pp) v
     | App (s, v) ->
       Fmt.pf fmt "@[<hov 1>(%a@ %a)@]" Symbol.pp s
@@ -233,6 +257,9 @@ module Pp = struct
     | Extract (e, h, l) ->
       Fmt.pf fmt "@[<hov 1>(extract@ %a@ %d@ %d)@]" pp e l h
     | Concat (e1, e2) -> Fmt.pf fmt "@[<hov 1>(++@ %a@ %a)@]" pp e1 pp e2
+    | Binder (b, vars, e) ->
+      Fmt.pf fmt "@[<hov 1>(%a@ (%a)@ %a)@]" pp_binder b
+        (Fmt.list ~sep:Fmt.sp pp) vars pp e
 
   let pp_list fmt (es : t list) = Fmt.hovbox (Fmt.list ~sep:Fmt.comma pp) fmt es
 
@@ -268,6 +295,8 @@ let value (v : Value.t) : t = make (Val v) [@@inline]
 let ptr base offset = make (Ptr { base; offset })
 
 let app symbol args = make (App (symbol, args))
+
+let let_in vars expr = make (Binder (Let_in, vars, expr))
 
 let unop' (ty : Ty.t) (op : unop) (hte : t) : t = make (Unop (ty, op, hte))
 [@@inline]
@@ -516,6 +545,9 @@ let rec simplify_expr ?(rm_extract = true) (hte : t) : t =
     let msb = simplify_expr ~rm_extract:false e1 in
     let lsb = simplify_expr ~rm_extract:false e2 in
     concat msb lsb
+  | Binder _ ->
+    (* Not simplifying anything atm *)
+    hte
 
 let simplify (hte : t) : t =
   let rec loop x =

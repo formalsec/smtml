@@ -791,7 +791,7 @@ module Fresh = struct
           let e1' = aux e1
           and e2' = aux e2 in
           DTerm.Bitv.concat e1' e2'
-        | List _ | App _ -> assert false
+        | List _ | App _ | Binder _ -> assert false
         (* | Quantifier (t, vars, body, patterns) -> (
            let body' = aux body in
            let encode_pattern (p : t list) =
