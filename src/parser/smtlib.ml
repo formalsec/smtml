@@ -115,6 +115,7 @@ module Term = struct
       | "bvor", [ a; b ] -> Expr.binop' Ty_none Or a b
       | "bvxor", [ a; b ] -> Expr.binop' Ty_none Xor a b
       | "bvadd", [ a; b ] -> Expr.binop' Ty_none Add a b
+      | "bvsub", [ a; b ] -> Expr.binop' Ty_none Sub a b
       | "bvmul", [ a; b ] -> Expr.binop' Ty_none Mul a b
       | "bvudiv", [ a; b ] -> Expr.binop' Ty_none DivU a b
       | "bvurem", [ a; b ] -> Expr.binop' Ty_none RemU a b
