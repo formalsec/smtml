@@ -21,6 +21,7 @@ let rewrite_ty unknown_ty tys =
   match (unknown_ty, tys) with
   | Ty.Ty_none, [ ty ] -> ty
   | Ty.Ty_none, [ ty1; ty2 ] ->
+    debug "  rewrite_ty: %a %a@." (fun k -> k Ty.pp ty1 Ty.pp ty2);
     assert (Ty.equal ty1 ty2);
     ty1
   | Ty.Ty_none, _ -> assert false
@@ -47,39 +48,40 @@ let rec rewrite_expr (type_map, expr_map) hte =
   | Unop (ty, op, hte) ->
     let hte = rewrite_expr (type_map, expr_map) hte in
     let ty = rewrite_ty ty [ Expr.ty hte ] in
-    Expr.make (Unop (ty, op, hte))
+    Expr.unop ty op hte
   | Binop (ty, op, hte1, hte2) ->
     let hte1 = rewrite_expr (type_map, expr_map) hte1 in
     let hte2 = rewrite_expr (type_map, expr_map) hte2 in
     let ty = rewrite_ty ty [ Expr.ty hte1; Expr.ty hte2 ] in
-    Expr.make (Binop (ty, op, hte1, hte2))
+    Expr.binop ty op hte1 hte2
   | Triop (ty, op, hte1, hte2, hte3) ->
     let hte1 = rewrite_expr (type_map, expr_map) hte1 in
     let hte2 = rewrite_expr (type_map, expr_map) hte2 in
     let hte3 = rewrite_expr (type_map, expr_map) hte3 in
-    Expr.make (Triop (ty, op, hte1, hte2, hte3))
+    Expr.triop ty op hte1 hte2 hte3
   | Relop (ty, ((Eq | Ne) as op), hte1, hte2) ->
     let hte1 = rewrite_expr (type_map, expr_map) hte1 in
     let hte2 = rewrite_expr (type_map, expr_map) hte2 in
-    Expr.make (Relop (ty, op, hte1, hte2))
+    Expr.relop ty op hte1 hte2
   | Relop (ty, op, hte1, hte2) ->
     let hte1 = rewrite_expr (type_map, expr_map) hte1 in
     let hte2 = rewrite_expr (type_map, expr_map) hte2 in
     let ty = rewrite_ty ty [ Expr.ty hte1; Expr.ty hte2 ] in
-    Expr.make (Relop (ty, op, hte1, hte2))
+    Expr.relop ty op hte1 hte2
   | Cvtop (ty, op, hte) ->
     let hte = rewrite_expr (type_map, expr_map) hte in
-    Expr.make (Cvtop (ty, op, hte))
+    let ty = rewrite_ty ty [ Expr.ty hte ] in
+    Expr.cvtop ty op hte
   | Naryop (ty, op, htes) ->
     let htes = List.map (rewrite_expr (type_map, expr_map)) htes in
     Expr.make (Naryop (ty, op, htes))
   | Extract (hte, h, l) ->
     let hte = rewrite_expr (type_map, expr_map) hte in
-    Expr.make (Extract (hte, h, l))
+    Expr.extract hte ~high:h ~low:l
   | Concat (hte1, hte2) ->
     let hte1 = rewrite_expr (type_map, expr_map) hte1 in
     let hte2 = rewrite_expr (type_map, expr_map) hte2 in
-    Expr.make (Concat (hte1, hte2))
+    Expr.concat hte1 hte2
   | Binder (Let_in, vars, e) ->
     (* Then, we rewrite the types of the expr *)
     let expr_map =
