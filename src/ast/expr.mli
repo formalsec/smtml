@@ -54,6 +54,7 @@ val ( @: ) : expr -> Ty.t -> t [@@deprecated "Please use 'make' instead"]
 
 val view : t -> expr
 
+(** The return type of an expression *)
 val ty : t -> Ty.t
 
 val mk_symbol : Symbol.t -> t
