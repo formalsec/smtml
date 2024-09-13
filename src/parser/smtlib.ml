@@ -37,13 +37,11 @@ module Term = struct
       match String.(sub base 0 2, sub base 2 (length base - 2), indices) with
       | "bv", str, [ "8" ] ->
         Expr.value (Num (I8 (Option.get (int_of_string str))))
-      | "bv", str, [ "32" ] -> Expr.value (Num (I32 (Int32.of_string str)))
+      | "bv", str, [ "32" ] ->
+        let int = Option.get (int_of_string str) in
+        Expr.value (Num (I32 (Int32.of_int (int land 0xffffffff))))
       | "bv", str, [ "64" ] -> Expr.value (Num (I64 (Int64.of_string str)))
-      | _ ->
-        Fmt.failwith "%acould not parse indexed term: %a %a" pp_loc loc
-          Fmt.string base
-          (Fmt.parens (Fmt.list ~sep:Fmt.sp Fmt.string))
-          indices )
+      | _ -> Expr.symbol id )
     | Attr, Simple _ -> Expr.symbol id
     | Attr, Indexed _ -> assert false
     | Var, _ -> Fmt.failwith "%acould not parse var: %a" pp_loc loc Symbol.pp id
@@ -115,17 +113,37 @@ module Term = struct
       | "bvneg", [ a ] -> Expr.unop' Ty_none Neg a
       | "bvand", [ a; b ] -> Expr.binop' Ty_none And a b
       | "bvor", [ a; b ] -> Expr.binop' Ty_none Or a b
+      | "bvxor", [ a; b ] -> Expr.binop' Ty_none Xor a b
       | "bvadd", [ a; b ] -> Expr.binop' Ty_none Add a b
       | "bvmul", [ a; b ] -> Expr.binop' Ty_none Mul a b
       | "bvudiv", [ a; b ] -> Expr.binop' Ty_none DivU a b
       | "bvurem", [ a; b ] -> Expr.binop' Ty_none RemU a b
       | "bvshl", [ a; b ] -> Expr.binop' Ty_none Shl a b
       | "bvlshr", [ a; b ] -> Expr.binop' Ty_none ShrL a b
+      | "bvashr", [ a; b ] -> Expr.binop' Ty_none ShrA a b
       | "bvslt", [ a; b ] -> Expr.relop' Ty_none Lt a b
       | "bvult", [ a; b ] -> Expr.relop' Ty_none LtU a b
+      | "bvsle", [ a; b ] -> Expr.relop' Ty_none Le a b
+      | "bvule", [ a; b ] -> Expr.relop' Ty_none LeU a b
+      | "bvsgt", [ a; b ] -> Expr.relop' Ty_none Gt a b
+      | "bvugt", [ a; b ] -> Expr.relop' Ty_none GtU a b
+      | "bvsge", [ a; b ] -> Expr.relop' Ty_none Ge a b
+      | "bvuge", [ a; b ] -> Expr.relop' Ty_none GeU a b
+      | "concat", [ a; b ] -> Expr.concat' a b
       | _ -> Fmt.failwith "%acould not parse term app: %s" pp_loc loc name )
     | Symbol ({ name = Simple _; namespace = Attr; _ } as attr) ->
       Expr.app attr args
+    | Symbol { name = Indexed { basename; indices }; _ } -> (
+      match (basename, indices, args) with
+      | "extract", [ h; l ], [ a ] ->
+        let high = ((Option.get @@ int_of_string h) + 1) / 8 in
+        let low = (Option.get @@ int_of_string l) / 8 in
+        Expr.extract' a ~high ~low
+      | "zero_extend", [ bits ], [ a ] ->
+        let bits = Option.get @@ int_of_string bits in
+        Expr.cvtop' Ty_none (Zero_extend bits) a
+      | _ ->
+        Fmt.failwith "%acould not parse indexed app: %a" pp_loc loc Expr.pp id )
     | Symbol id ->
       Fmt.failwith "%acould not parse app: %a" pp_loc loc Symbol.pp id
     | _ ->

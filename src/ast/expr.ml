@@ -145,6 +145,7 @@ let rec ty (hte : t) : Ty.t =
   | Binop (ty, _, _, _) -> ty
   | Triop (ty, _, _, _, _) -> ty
   | Relop (ty, _, _, _) -> ty
+  | Cvtop (Ty_bitv n, (Zero_extend m | Sign_extend m), _) -> Ty_bitv (n + m)
   | Cvtop (ty, _, _) -> ty
   | Naryop (ty, _, _) -> ty
   | Extract (_, h, l) -> Ty_bitv ((h - l) * 8)

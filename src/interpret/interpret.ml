@@ -40,9 +40,11 @@ module Make (Solver : Solver_intf.S) = struct
     let { solver; _ } = state in
     match stmt with
     | Assert e ->
+      debug "assert: %a@." (fun k -> k Expr.pp e);
       Solver.add solver [ e ];
       state
     | Check_sat assumptions ->
+      debug "check-sat: %a@." (fun k -> k Expr.pp_list assumptions);
       ( match Solver.check solver assumptions with
       | `Sat -> Fmt.pr "sat@."
       | `Unsat -> Fmt.pr "unsat@."
@@ -83,6 +85,7 @@ module Make (Solver : Solver_intf.S) = struct
     | stmt :: stmts -> loop (eval stmt { state with stmts })
 
   let start ?state (stmts : Ast.script) : exec_state =
+    debug "interepreting ...@." (fun k -> k);
     let st =
       match state with
       | None -> init_state stmts
