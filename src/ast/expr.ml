@@ -134,6 +134,7 @@ let mk_symbol s = make (Symbol s)
 
 let is_num (e : t) = match view e with Val (Num _) -> true | _ -> false
 
+(** The return type of an expression *)
 let rec ty (hte : t) : Ty.t =
   match view hte with
   | Val x -> Value.type_of x
@@ -143,6 +144,11 @@ let rec ty (hte : t) : Ty.t =
   | App _ -> Ty_app
   | Unop (ty, _, _) -> ty
   | Binop (ty, _, _, _) -> ty
+  | Triop (_, Ite, _, hte1, hte2) ->
+    let ty1 = ty hte1 in
+    let ty2 = ty hte2 in
+    assert (Ty.equal ty1 ty2);
+    ty1
   | Triop (ty, _, _, _, _) -> ty
   | Relop (ty, _, _, _) -> ty
   | Cvtop (Ty_bitv n, (Zero_extend m | Sign_extend m), _) -> Ty_bitv (n + m)
