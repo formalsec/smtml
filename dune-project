@@ -66,4 +66,16 @@
   (bisect_ppx
    (and
     :with-test
-    (>= "2.5.0")))))
+    (>= "2.5.0")))
+  (benchpress
+   (and
+    :with-test
+    (= "dev")))
+  (cohttp
+   :with-test)
+  (cohttp-lwt-unix
+   :with-test)
+  (lwt
+   :with-test)
+  (tls-lwt
+   :with-test)))
