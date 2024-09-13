@@ -1,0 +1,3 @@
+(executable
+ (name runner)
+ (libraries bos cohttp cohttp-lwt-unix cmdliner lwt yojson str))
