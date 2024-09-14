@@ -20,8 +20,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Setup OCaml 4.14
         uses: ocaml/setup-ocaml@v3
@@ -37,10 +35,12 @@ jobs:
         run: |
           opam install -y . --deps-only --with-doc --with-test
           opam install z3
-          opam exec -- dune build @install @doc
+          opam exec -- dune build @install
+          opam exec -- dune install
           BISECT_FILE=`pwd`/bisect opam exec -- dune runtest --force --instrument-with bisect_ppx
           opam exec -- bisect-ppx-report html -o _build/default/_doc/_html/coverage
           opam exec -- bisect-ppx-report send-to Coveralls
+          opam exec -- dune build @doc
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
 
