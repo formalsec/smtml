@@ -29,7 +29,7 @@
   (synopsis "Run smtml on directories provided on the command line")
   (action
     (run_provers
-      (provers (smtml z3))
+      (provers (smtml-z3 z3))
       (timeout 30)
       (dirs ()))))
 
