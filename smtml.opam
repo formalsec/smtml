@@ -29,6 +29,7 @@ depends: [
   "cohttp-lwt-unix" {with-test}
   "lwt" {with-test}
   "tls-lwt" {with-test}
+  "mdx" {with-test}
 ]
 depopts: ["z3" "colibri2" "bitwuzla-cxx" "cvc5"]
 conflicts: [

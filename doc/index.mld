@@ -15,9 +15,45 @@ for Z3 encoding. The simplest approach to creating a solver in the Smtml
 is outlined below:
 
 {@ocaml[
-module Z3 = Smtml.Solver.Z3_incremental
+# #use "topfind"
+- : unit = ()
+Findlib has been successfully loaded. Additional directives:
+  #require "package";;      to load a package
+  #list;;                   to list the available packages
+  #camlp4o;;                to load camlp4 (standard syntax)
+  #camlp4r;;                to load camlp4 (revised syntax)
+  #predicates "p,q,...";;   to set these predicates
+  Topfind.reset();;         to force that packages will be reloaded
+  #thread;;                 to enable threads
 
-let solver : Z3.t = Z3.create ()
+- : unit = ()
+# #require "smtml"
+# #install_printer Smtml.Expr.pp
+# module Z3 = Smtml.Solver.Batch (Smtml.Z3_mappings)
+module Z3 :
+  sig
+    type t = Smtml.Solver.Batch(Smtml.Z3_mappings).t
+    type solver = Smtml.Solver.Batch(Smtml.Z3_mappings).solver
+    val solver_time : float ref
+    val solver_count : int ref
+    val pp_statistics : Format.formatter -> t -> unit
+    val create : ?params:Smtml.Params.t -> ?logic:Smtml.Ty.logic -> unit -> t
+    val interrupt : t -> unit
+    val clone : t -> t
+    val push : t -> unit
+    val pop : t -> int -> unit
+    val reset : t -> unit
+    val add : t -> Smtml.Expr.t list -> unit
+    val add_set : t -> Smtml.Expr.Set.t -> unit
+    val get_assertions : t -> Smtml.Expr.t list
+    val get_statistics : t -> Smtml.Statistics.t
+    val check : t -> Smtml.Expr.t list -> Smtml.Solver_intf.satisfiability
+    val check_set : t -> Smtml.Expr.Set.t -> Smtml.Solver_intf.satisfiability
+    val get_value : t -> Smtml.Expr.t -> Smtml.Expr.t
+    val model : ?symbols:Smtml.Symbol.t list -> t -> Smtml.Model.t option
+  end
+# let solver = Z3.create ()
+val solver : Z3.t = <abstr>
 ]}
 
 For a comprehensive understanding of the solver functions and modes, refer to the
@@ -37,28 +73,25 @@ As an illustration, consider the creation of the logical formula equivalent to
 [not (not x) = x]:
 
 {@ocaml[
-open Smtml
-open Ty
-open Expr
-
-(* Creating a symbol *)
-let x = mk_symbol Symbol.("x" @: Ty_bool)
-
-(* Creating unary operations *)
-let not_x : Expr.t = unop Ty_bool Not x
-let not_not_x : Expr.t = unop Ty_bool Not not_x
-
-(* Creating the equality *)
-let expr : Expr.t = relop Ty_bool Eq not_not_x x
+# open Smtml
+# let x = Expr.symbol (Symbol.make Ty_bool "x")
+val x : Expr.t = x
+# let not_x = Expr.unop Ty_bool Not x
+val not_x : Expr.t = (bool.not x)
+# let not_not_x = Expr.unop Ty_bool Not not_x
+val not_not_x : Expr.t = x
+# let expr : Expr.t = Expr.relop Ty_bool Eq not_not_x x
+val expr : Expr.t = (bool.eq x x)
 ]}
 
 Once our proposition is encoded in the abstract grammar, it can be passed to
 the solver for verification:
 
 {@ocaml[
-let () =
-  Z3.add solver [ expr ];
-  assert (Z3.check solver [])
+# Z3.add solver [ expr ]
+- : unit = ()
+# assert (match Z3.check solver [] with `Sat -> true | _ -> false)
+- : unit = ()
 ]}
 
 {1 Retreiving Values from the Solver}
@@ -75,11 +108,10 @@ Encoding facilitates this process through two essential functions:
 To illustrate, let's consider retrieving the value of [x] from our previous example:
 
 {@ocaml[
-let () =
-  Z3.add solver [ expr ];
-  assert (Z3.check solver []);
-  let v = Z3.get_value solver x in
-  Format.printf "x = %a@." Expr.pp v
+# assert (match Z3.check solver [] with `Sat -> true | _ -> false)
+- : unit = ()
+# Z3.get_value solver x
+- : Expr.t = false
 ]}
 
 In this snippet, we add our constraint to the solver, ensure its satisfiability,
