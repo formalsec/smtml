@@ -37,10 +37,10 @@ module type S = sig
       [?params] is of type {!type:Params.t} and is used to modify/set parameters
       inside the solver.
 
-      [?logic] is of type {!type:Ty.logic} and is used to set the
-      theory of the assertions used. When knowing what the underlying theory is
-      going to be, setting this parameter can help the SMT solver be more
-      performant. The default logic is {e unknown_theory}. *)
+      [?logic] is of type {!type:Ty.logic} and is used to set the theory of the
+      assertions used. When knowing what the underlying theory is going to be,
+      setting this parameter can help the SMT solver be more performant. The
+      default logic is {e unknown_theory}. *)
   val create : ?params:Params.t -> ?logic:Ty.logic -> unit -> t
 
   (** Interrupt solver. *)
