@@ -370,7 +370,7 @@ module Nop = struct
     end
 
     module Smtlib = struct
-      let pp ?name:_ ?logic:_ ?status:_  _fmt _ = die ()
+      let pp ?name:_ ?logic:_ ?status:_ _fmt _ = die ()
     end
   end
 

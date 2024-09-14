@@ -19,7 +19,10 @@
 type t =
   | Assert of Expr.t
   | Check_sat of Expr.t list
-  | Declare_const of { id : Symbol.t; sort : Symbol.t }
+  | Declare_const of
+      { id : Symbol.t
+      ; sort : Symbol.t
+      }
   | Echo of string
   | Exit
   | Get_assertions
