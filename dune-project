@@ -2,6 +2,8 @@
 
 (using menhir 2.1)
 
+(using mdx 0.2)
+
 (name smtml)
 
 (generate_opam_files true)
@@ -78,4 +80,6 @@
   (lwt
    :with-test)
   (tls-lwt
+   :with-test)
+  (mdx
    :with-test)))
