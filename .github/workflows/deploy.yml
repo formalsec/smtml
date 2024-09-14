@@ -31,16 +31,19 @@ jobs:
         id: pages
         uses: actions/configure-pages@v5
 
-      - name: Install and Build
+      - name: Install dependencies
         run: |
           opam install -y . --deps-only --with-doc --with-test
           opam install z3
-          opam exec -- dune build @install
-          opam exec -- dune install
+
+      - name: Build
+        run: opam exec -- dune build @doc
+
+      - name: Coverage report
+        run: |
           BISECT_FILE=`pwd`/bisect opam exec -- dune runtest --force --instrument-with bisect_ppx
           opam exec -- bisect-ppx-report html -o _build/default/_doc/_html/coverage
           opam exec -- bisect-ppx-report send-to Coveralls
-          opam exec -- dune build @doc
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
 
