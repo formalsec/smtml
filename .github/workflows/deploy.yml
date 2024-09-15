@@ -31,12 +31,10 @@ jobs:
         id: pages
         uses: actions/configure-pages@v5
 
-      - name: Install dependencies
-        run: |
-          opam install -y . --deps-only --with-doc --with-test
-          opam install z3
+      - name: Install smtml
+        run: opam install -y . z3 --with-doc --with-test
 
-      - name: Build
+      - name: Build doc
         run: opam exec -- dune build @doc
 
       - name: Coverage report
