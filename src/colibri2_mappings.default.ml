@@ -542,34 +542,23 @@ module Fresh = struct
 
       let encode_cvtop sz op e =
         let op' =
-          match sz with
-          | 32 -> (
-            match op with
-            | Sign_extend n -> DTerm.Bitv.sign_extend n
-            | Zero_extend n -> DTerm.Bitv.zero_extend n
-            | WrapI64 -> assert false
-            | TruncSF32 | TruncSF64 ->
-              DTerm.Float.to_sbv 32 DTerm.Float.roundTowardZero
-            | TruncUF32 | TruncUF64 ->
-              DTerm.Float.to_ubv 32 DTerm.Float.roundTowardZero
-            | Reinterpret_float -> DTerm.Float.ieee_format_to_fp 8 24
-            | ToBool -> encode_relop Ne (encode_val C32 0l)
-            | OfBool ->
-              fun e -> DTerm.ite e (encode_val C32 1l) (encode_val C32 0l)
-            | _ -> assert false )
-          | 64 -> (
-            match op with
-            | Sign_extend n -> DTerm.Bitv.sign_extend n
-            | Zero_extend n -> DTerm.Bitv.zero_extend n
-            | TruncSF32 | TruncSF64 ->
-              DTerm.Float.to_sbv 64 DTerm.Float.roundTowardZero
-            | TruncUF32 | TruncUF64 ->
-              DTerm.Float.to_ubv 64 DTerm.Float.roundTowardZero
-            | Reinterpret_float -> DTerm.Float.ieee_format_to_fp 11 51
-            | ToBool -> encode_relop Ne (encode_val C64 0L)
-            | OfBool ->
-              fun e -> DTerm.ite e (encode_val C64 1L) (encode_val C64 0L)
-            | _ -> assert false )
+          match op with
+          | Sign_extend n -> DTerm.Bitv.sign_extend n
+          | Zero_extend n -> DTerm.Bitv.zero_extend n
+          | WrapI64 -> assert false
+          | TruncSF32 | TruncSF64 ->
+            DTerm.Float.to_sbv sz DTerm.Float.roundTowardZero
+          | TruncUF32 | TruncUF64 ->
+            DTerm.Float.to_ubv sz DTerm.Float.roundTowardZero
+          | Reinterpret_float when sz = 32 -> DTerm.Float.ieee_format_to_fp 8 24
+          | Reinterpret_float when sz = 64 ->
+            DTerm.Float.ieee_format_to_fp 11 53
+          | ToBool when sz = 32 -> encode_relop Ne (encode_val C32 0l)
+          | OfBool when sz = 32 ->
+            fun e -> DTerm.ite e (encode_val C32 1l) (encode_val C32 0l)
+          | ToBool when sz = 64 -> encode_relop Ne (encode_val C64 0L)
+          | OfBool when sz = 64 ->
+            fun e -> DTerm.ite e (encode_val C64 1L) (encode_val C64 0L)
           | _ -> assert false
         in
         op' e
