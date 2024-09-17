@@ -97,7 +97,7 @@ type binop =
   | Rotl
   | Rotr
   | At
-  | List_append_last
+  | List_cons
   | List_append
   (* String *)
   | String_prefix
@@ -126,7 +126,7 @@ let binop_equal o1 o2 =
   | Rotl, Rotl
   | Rotr, Rotr
   | At, At
-  | List_append_last, List_append_last
+  | List_cons, List_cons
   | List_append, List_append
   | String_prefix, String_prefix
   | String_suffix, String_suffix
@@ -134,7 +134,7 @@ let binop_equal o1 o2 =
   | String_last_index, String_last_index ->
     true
   | ( ( Add | Sub | Mul | Div | DivU | Rem | RemU | Shl | ShrA | ShrL | And | Or
-      | Xor | Pow | Min | Max | Rotl | Rotr | At | List_append_last
+      | Xor | Pow | Min | Max | Rotl | Rotr | At | List_cons
       | List_append | String_prefix | String_suffix | String_contains
       | String_last_index )
     , _ ) ->
@@ -326,7 +326,7 @@ let pp_binop fmt (op : binop) =
   | Rotl -> Fmt.string fmt "rotl"
   | Rotr -> Fmt.string fmt "rotr"
   | At -> Fmt.string fmt "at"
-  | List_append_last -> Fmt.string fmt "append_last"
+  | List_cons-> Fmt.string fmt "cons"
   | List_append -> Fmt.string fmt "append"
   | String_prefix -> Fmt.string fmt "prefixof"
   | String_suffix -> Fmt.string fmt "suffixof"
