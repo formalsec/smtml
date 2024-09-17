@@ -41,7 +41,7 @@
  (depends
   dune
   (dolmen
-   (< "0.10"))
+   (= "0.10"))
   (ocaml
    (>= "4.14.0"))
   (prelude
