@@ -1,6 +1,5 @@
 available: arch != "arm32" & arch != "x86_32"
 pin-depends: [
   ["colibri2.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#1feba887bbb7980f27bbcec8137eb908caa8f0ce"]
-  ["colibrilib.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#1feba887bbb7980f27bbcec8137eb908caa8f0ce"]
   ["benchpress.dev" "git+https://github.com/filipeom/benchpress.git#50355de32835b12f1b065a4700f493bc3d8c5342"]
 ]
