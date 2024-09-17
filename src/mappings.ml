@@ -240,6 +240,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         match op with
         | Eq -> M.eq e1 e2
         | Ne -> M.distinct [ e1; e2 ]
+        | Lt -> M.String.lt e1 e2
+        | Le -> M.String.le e1 e2
         | _ ->
           Fmt.failwith {|String: Unsupported relop operator "%a"|} Ty.pp_relop
             op

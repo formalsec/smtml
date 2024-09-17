@@ -1,4 +1,5 @@
 (declare-fun x () String)
+(declare-fun y () String)
 (assert (= 4 (str.len x)))
 (assert (str.prefixof "ab" x))
 (assert (str.suffixof "cd" x))
@@ -10,5 +11,9 @@
 (assert (= "a" (str.from_code (str.to_code (str.at x 0)))))
 (assert (= 42 (str.to_int "42")))
 (assert (= "42" (str.from_int (str.to_int "42"))))
+(assert
+  (let ((?x1 (str.< y "abc")))
+  (let ((?x2 (not (str.< y "a"))))
+  (and ?x1 ?x2))))
 (check-sat)
 (get-model)

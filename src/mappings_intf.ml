@@ -168,6 +168,10 @@ module type M = sig
 
     val is_suffix : term -> suffix:term -> term
 
+    val lt : term -> term -> term
+
+    val le : term -> term -> term
+
     val sub : term -> pos:term -> len:term -> term
 
     val index_of : term -> sub:term -> pos:term -> term

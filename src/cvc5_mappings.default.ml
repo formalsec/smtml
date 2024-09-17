@@ -182,6 +182,12 @@ module Fresh_cvc5 () = struct
     let is_suffix t1 ~suffix =
       Term.mk_term tm Kind.String_suffix [| t1; suffix |]
 
+    let lt _ =
+      Fmt.failwith "Cvc5_mappings: String.lt not implemented"
+
+    let le _ =
+      Fmt.failwith "Cvc5_mappings: String.le not implemented"
+
     let sub s ~pos ~len = Term.mk_term tm Kind.String_substr [| s; pos; len |]
 
     let index_of t1 ~sub ~pos =

@@ -163,6 +163,10 @@ module Nop = struct
 
       let is_suffix _ ~suffix:_ = assert false
 
+      let lt _ = assert false
+
+      let le _ = assert false
+
       let sub _ ~pos:_ ~len:_ = assert false
 
       let index_of _ ~sub:_ ~pos:_ = assert false

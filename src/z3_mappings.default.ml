@@ -225,6 +225,10 @@ module M = struct
 
       let is_suffix e1 ~suffix = Seq.mk_seq_suffix ctx e1 suffix
 
+      let lt a b = Seq.mk_str_lt ctx a b
+
+      let le a b = Seq.mk_str_le ctx a b
+
       let contains e1 ~sub = Seq.mk_seq_contains ctx e1 sub
 
       let sub str ~pos ~len = Seq.mk_seq_extract ctx str pos len

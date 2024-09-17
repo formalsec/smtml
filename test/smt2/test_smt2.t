@@ -40,7 +40,8 @@ Test String parsing:
   $ smtml run test_string_all.smt2
   sat
   (model
-    (x "abcd"))
+    (x "abcd")
+    (y "a"))
 
 Test BitVector parsing:
   $ smtml run test_bitv_sort.smt2
