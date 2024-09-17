@@ -361,8 +361,12 @@ let rec binop ty (op : binop) (hte1 : t) (hte2 : t) : t =
     let v = value (Eval.binop ty Mul v1 v2) in
     binop' ty Mul v x
   | At, List es, Val (Int n) -> List.nth es n
-  | List_append_last, List es, _ -> make (List (es @ [ hte2 ]))
-  | List_append, List es, _ -> make (List (hte2 :: es))
+  | List_cons, _, List es -> make (List (hte1 :: es))
+  | List_append, List _, (List [] | Val (List [])) -> hte1
+  | List_append, (List [] | Val (List [])), List _ -> hte2
+  | List_append, List l0, Val (List l1) -> make (List (l0 @ List.map value l1))
+  | List_append, Val (List l0), List l1 -> make (List (List.map value l0 @ l1))
+  | List_append, List l0, List l1 -> make (List (l0 @ l1))
   | _ -> binop' ty op hte1 hte2
 
 let triop' (ty : Ty.t) (op : triop) (e1 : t) (e2 : t) (e3 : t) : t =

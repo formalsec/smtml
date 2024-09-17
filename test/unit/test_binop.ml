@@ -60,14 +60,15 @@ let () =
 let () =
   let clist = list [ Int 0; Int 1; Int 2 ] in
   assert (binop Ty_list At clist (int 0) = int 0);
-  assert (binop Ty_list List_append_last (list [ Int 0; Int 1 ]) (int 2) = clist);
-  assert (binop Ty_list List_append (list [ Int 1; Int 2 ]) (int 0) = clist);
+  assert (binop Ty_list List_cons (int 0) (list [ Int 1; Int 2 ]) = clist);
+  assert (
+    binop Ty_list List_append (list [ Int 0; Int 1 ]) (list [ Int 2 ]) = clist );
   let slist2 = make (List [ int 0; int 1 ]) in
   let slist3 = make (List [ int 0; int 1; int 2 ]) in
   assert (binop Ty_list At slist3 (int 0) = int 0);
-  assert (binop Ty_list List_append_last slist2 (int 2) = slist3);
+  assert (binop Ty_list List_append slist2 (list [ Int 2 ]) = slist3);
   assert (
-    binop Ty_list List_append (make (List [ int 1; int 2 ])) (int 0) = slist3 )
+    binop Ty_list List_cons (int 0) (make (List [ int 1; int 2 ])) = slist3 )
 
 (* i32 *)
 let () =

@@ -401,8 +401,8 @@ module Lst = struct
       let i = Int.of_value 2 op' v2 in
       try List.nth lst i
       with Failure _ | Invalid_argument _ -> raise IndexOutOfBounds )
-    | List_append_last -> List (of_value 1 op' v1 @ [ v2 ])
-    | List_append -> List (v2 :: of_value 2 op' v1)
+    | List_cons -> List (v1 :: of_value 1 op' v2)
+    | List_append -> List (of_value 1 op' v1 @ of_value 2 op' v2)
     | _ -> Fmt.failwith {|binop: Unsupported list operator "%a"|} Ty.pp_binop op
 
   let triop (op : triop) (v1 : Value.t) (v2 : Value.t) (v3 : Value.t) : Value.t

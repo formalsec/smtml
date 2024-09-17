@@ -73,7 +73,7 @@ type binop =
   | Rotl
   | Rotr
   | At
-  | List_append_last
+  | List_cons
   | List_append
   (* String *)
   | String_prefix (* (str.prefixof String String Bool) *)
