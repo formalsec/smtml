@@ -230,4 +230,10 @@ module Statement = struct
     Set_logic ALL
 end
 
-include Dolmen.Smtlib2.Script.Latest.Make (Loc) (Symbol) (Term) (Statement)
+module Extension = struct
+  let statement _ = None
+end
+
+include
+  Dolmen.Smtlib2.Script.Latest.Make (Loc) (Symbol) (Term) (Statement)
+    (Extension)
