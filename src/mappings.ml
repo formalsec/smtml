@@ -120,6 +120,14 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           Fmt.failwith {|Bool: Unsupported Z3 relop operator "%a"|} Ty.pp_relop
             op
 
+      (* let naryop op l =
+         match op with
+         | Logand -> M.logand l
+         | Logor -> M.logor l
+         | _ ->
+           Fmt.failwith {|Bool: Unsupported Z3 naryop operator "%a"|} Ty.pp_naryop
+           op *)
+
       let cvtop _op _e = assert false
     end
 
@@ -584,6 +592,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
     let naryop = function
       | Ty.Ty_str -> String_impl.naryop
+      (* | Ty.Ty_bool -> Bool_impl.naryop *)
       | ty -> Fmt.failwith "Naryop for type \"%a\" not implemented" Ty.pp ty
 
     let rec encode_expr ctx (hte : Expr.t) : symbol_ctx * M.term =

@@ -49,3 +49,7 @@ Test BitVector parsing:
   sat
   $ smtml run test_bitv_funs.smt2
   sat
+
+Test FloatingPoint parsing:
+  $ smtml run test_fp.smt2
+  unsat
