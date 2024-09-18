@@ -64,6 +64,10 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
   let or_ t1 t2 = mk_term2 Kind.Or t1 t2
 
+  let logand ts = mk_term Kind.And (Array.of_list ts)
+
+  let logor ts = mk_term Kind.Or (Array.of_list ts)
+
   let xor t1 t2 = mk_term2 Kind.Xor t1 t2
 
   let eq t1 t2 = mk_term2 Kind.Equal t1 t2
