@@ -52,4 +52,4 @@ Test BitVector parsing:
 
 Test FloatingPoint parsing:
   $ smtml run test_fp.smt2
-  unsat
+  sat
