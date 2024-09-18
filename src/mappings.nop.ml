@@ -50,6 +50,10 @@ module Nop = struct
 
     let or_ _ = assert false
 
+    let logand _ = assert false
+
+    let logor _ = assert false
+
     let xor _ = assert false
 
     let eq _ = assert false
