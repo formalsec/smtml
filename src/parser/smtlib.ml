@@ -164,7 +164,7 @@ module Term = struct
         match (Expr.view s, Expr.view e, Expr.view m) with
         | Val (Str s'), Val (Str e'), Val (Str m') -> (
           match (String.length s', String.length e', String.length m') with
-          | 3, 10, 26 -> Expr.value (Num (F32 (combine_to_int32 s' e' m')))
+          | 3, 10, 25 -> Expr.value (Num (F32 (combine_to_int32 s' e' m')))
           | 3, 13, 54 -> Expr.value (Num (F64 (combine_to_int64 s' e' m')))
           | _ -> Fmt.failwith "%afp size not supported" pp_loc loc )
         | _ ->
