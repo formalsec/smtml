@@ -55,6 +55,10 @@ module type M = sig
 
   val or_ : term -> term -> term
 
+  val logand : term list -> term
+
+  val logor : term list -> term
+
   val xor : term -> term -> term
 
   val eq : term -> term -> term
