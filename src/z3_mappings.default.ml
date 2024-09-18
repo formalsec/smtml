@@ -59,6 +59,10 @@ module M = struct
 
     let or_ e1 e2 = Boolean.mk_or ctx [ e1; e2 ]
 
+    let logand es = Boolean.mk_and ctx es
+
+    let logor es = Boolean.mk_or ctx es
+
     let xor e1 e2 = Boolean.mk_xor ctx e1 e2
 
     let eq e1 e2 = Boolean.mk_eq ctx e1 e2

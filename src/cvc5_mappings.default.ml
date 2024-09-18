@@ -54,6 +54,10 @@ module Fresh_cvc5 () = struct
 
   let or_ t1 t2 = Term.mk_term tm Kind.Or [| t1; t2 |]
 
+  let logand ts = Term.mk_term tm Kind.And (Array.of_list ts)
+
+  let logor ts = Term.mk_term tm Kind.Or (Array.of_list ts)
+
   let xor t1 t2 = Term.mk_term tm Kind.Xor [| t1; t2 |]
 
   let eq t1 t2 = Term.mk_term tm Kind.Equal [| t1; t2 |]
@@ -182,11 +186,9 @@ module Fresh_cvc5 () = struct
     let is_suffix t1 ~suffix =
       Term.mk_term tm Kind.String_suffix [| t1; suffix |]
 
-    let lt _ =
-      Fmt.failwith "Cvc5_mappings: String.lt not implemented"
+    let lt _ = Fmt.failwith "Cvc5_mappings: String.lt not implemented"
 
-    let le _ =
-      Fmt.failwith "Cvc5_mappings: String.le not implemented"
+    let le _ = Fmt.failwith "Cvc5_mappings: String.le not implemented"
 
     let sub s ~pos ~len = Term.mk_term tm Kind.String_substr [| s; pos; len |]
 
