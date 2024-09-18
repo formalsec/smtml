@@ -16,6 +16,8 @@ module Term = struct
       | "Real" -> Expr.symbol { id with ty = Ty_real }
       | "Bool" -> Expr.symbol { id with ty = Ty_bool }
       | "String" -> Expr.symbol { id with ty = Ty_str }
+      | "Float32" -> Expr.symbol { id with ty = Ty_fp 32 }
+      | "Float64" -> Expr.symbol { id with ty = Ty_fp 64 }
       | _ -> Fmt.failwith "Could not parse sort: %a" Symbol.pp id )
     | Sort, Indexed { basename; indices } -> (
       match (basename, indices) with
@@ -23,6 +25,10 @@ module Term = struct
         match int_of_string n with
         | Some n -> Expr.symbol { id with ty = Ty_bitv n }
         | None -> Fmt.failwith "Invalid bitvector size" )
+      | "FloatingPoint", [ e; s ] -> (
+        match (int_of_string e, int_of_string s) with
+        | Some e, Some s -> Expr.symbol { id with ty = Ty_fp (e + s) }
+        | _ -> Fmt.failwith "Invalid floating point size" )
       | _ ->
         Fmt.failwith "%acould not parse indexed sort:%a %a@." pp_loc loc
           Fmt.string basename
@@ -60,7 +66,14 @@ module Term = struct
 
   let hexa ?loc:_ (_ : string) = assert false
 
-  let binary ?loc:_ (_ : string) = assert false
+  let binary ?loc:_ (b : string) =
+    let set (s : string) (i : int) (n : char) =
+      let bs = Bytes.of_string s in
+      Bytes.set bs i n;
+      Bytes.to_string bs
+    in
+    let bv = set b 0 '0' in
+    Expr.value (Str bv)
 
   let colon ?loc (symbol : t) (term : t) : t =
     match Expr.view symbol with
@@ -70,6 +83,22 @@ module Term = struct
     | _ ->
       Fmt.failwith "%acould not parse colon: %a %a" pp_loc loc Expr.pp symbol
         Expr.pp term
+
+  let combine_to_int64 sign_bit exponent_bit mantissa_bit =
+    let sign = Int64.of_string sign_bit in
+    let exponent = Int64.of_string exponent_bit in
+    let mantissa = Int64.of_string mantissa_bit in
+    let sign_shifted = Int64.shift_left sign 63 in
+    let exponent_shifted = Int64.shift_left exponent 52 in
+    Int64.logor sign_shifted (Int64.logor exponent_shifted mantissa)
+
+  let combine_to_int32 sign_bit exponent_bit mantissa_bit =
+    let sign = Int32.of_string sign_bit in
+    let exponent = Int32.of_string exponent_bit in
+    let mantissa = Int32.of_string mantissa_bit in
+    let sign_shifted = Int32.shift_left sign 31 in
+    let exponent_shifted = Int32.shift_left exponent 23 in
+    Int32.logor sign_shifted (Int32.logor exponent_shifted mantissa)
 
   let apply ?loc (id : t) (args : t list) : t =
     match Expr.view id with
@@ -131,6 +160,71 @@ module Term = struct
       | "bvsge", [ a; b ] -> Expr.relop' Ty_none Ge a b
       | "bvuge", [ a; b ] -> Expr.relop' Ty_none GeU a b
       | "concat", [ a; b ] -> Expr.concat' a b
+      | "fp", [ s; e; m ] -> (
+        match (Expr.view s, Expr.view e, Expr.view m) with
+        | Val (Str s'), Val (Str e'), Val (Str m') -> (
+          match (String.length s', String.length e', String.length m') with
+          | 3, 10, 26 -> Expr.value (Num (F32 (combine_to_int32 s' e' m')))
+          | 3, 13, 54 -> Expr.value (Num (F64 (combine_to_int64 s' e' m')))
+          | _ -> Fmt.failwith "%afp size not supported" pp_loc loc )
+        | _ ->
+          Fmt.failwith "%acould not parse fp: %a %a %a" pp_loc loc Expr.pp s
+            Expr.pp e Expr.pp m )
+      | "fp.abs", [ a ] -> Expr.unop' Ty_none Abs a
+      | "fp.neg", [ a ] -> Expr.unop' Ty_none Neg a
+      | ( "fp.add"
+        , [ { node = Symbol { name = Simple "roundNearestTiesToEven"; _ }; _ }
+          ; a
+          ; b
+          ] ) ->
+        Expr.binop' Ty_none Add a b
+      | ( "fp.sub"
+        , [ { node = Symbol { name = Simple "roundNearestTiesToEven"; _ }; _ }
+          ; a
+          ; b
+          ] ) ->
+        Expr.binop' Ty_none Sub a b
+      | ( "fp.mul"
+        , [ { node = Symbol { name = Simple "roundNearestTiesToEven"; _ }; _ }
+          ; a
+          ; b
+          ] ) ->
+        Expr.binop' Ty_none Mul a b
+      | ( "fp.div"
+        , [ { node = Symbol { name = Simple "roundNearestTiesToEven"; _ }; _ }
+          ; a
+          ; b
+          ] ) ->
+        Expr.binop' Ty_none Div a b
+      | ( "fp.sqrt"
+        , [ { node = Symbol { name = Simple "roundNearestTiesToEven"; _ }; _ }
+          ; a
+          ] ) ->
+        Expr.unop' Ty_none Sqrt a
+      | "fp.rem", [ a; b ] -> Expr.binop' Ty_none Rem a b
+      | ( "fp.roundToIntegral"
+        , [ { node = Symbol { name = Simple "roundNearestTiesToEven"; _ }; _ }
+          ; a
+          ] ) ->
+        Expr.unop' Ty_none Nearest a
+      | ( "fp.roundToIntegral"
+        , [ { node = Symbol { name = Simple "roundTowardPositive"; _ }; _ }; a ]
+        ) ->
+        Expr.unop' Ty_none Ceil a
+      | ( "fp.roundToIntegral"
+        , [ { node = Symbol { name = Simple "roundTowardNegative"; _ }; _ }; a ]
+        ) ->
+        Expr.unop' Ty_none Floor a
+      | ( "fp.roundToIntegral"
+        , [ { node = Symbol { name = Simple "roundTowardZero"; _ }; _ }; a ] )
+        ->
+        Expr.unop' Ty_none Trunc a
+      | "fp.min", [ a; b ] -> Expr.binop' Ty_none Min a b
+      | "fp.max", [ a; b ] -> Expr.binop' Ty_none Max a b
+      | "fp.leq", [ a; b ] -> Expr.relop' Ty_bool Le a b
+      | "fp.lt", [ a; b ] -> Expr.relop' Ty_bool Lt a b
+      | "fp.geq", [ a; b ] -> Expr.relop' Ty_bool Ge a b
+      | "fp.gt", [ a; b ] -> Expr.relop' Ty_bool Gt a b
       | _ -> Fmt.failwith "%acould not parse term app: %s" pp_loc loc name )
     | Symbol ({ name = Simple _; namespace = Attr; _ } as attr) ->
       Expr.app attr args
