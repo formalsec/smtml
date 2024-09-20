@@ -160,16 +160,18 @@ module Term = struct
       | "bvsge", [ a; b ] -> Expr.relop' Ty_none Ge a b
       | "bvuge", [ a; b ] -> Expr.relop' Ty_none GeU a b
       | "concat", [ a; b ] -> Expr.concat' a b
-      | "fp", [ s; e; m ] -> (
-        match (Expr.view s, Expr.view e, Expr.view m) with
-        | Val (Str s'), Val (Str e'), Val (Str m') -> (
-          match (String.length s', String.length e', String.length m') with
-          | 3, 10, 25 -> Expr.value (Num (F32 (combine_to_int32 s' e' m')))
-          | 3, 13, 54 -> Expr.value (Num (F64 (combine_to_int64 s' e' m')))
+      | "fp", [ s; eb; i ] -> (
+        match (Expr.view s, Expr.view eb, Expr.view i) with
+        | Val (Str sign), Val (Str eb), Val (Str i) -> (
+          match (String.length sign, String.length eb, String.length i) with
+          (* 32 bit float -> sign = 1, eb = 8, i = 24 - 1 = 23  *)
+          | 3, 10, 25 -> Expr.value (Num (F32 (combine_to_int32 sign eb i)))
+          (* 64 bit float -> sign = 1, eb = 11, i = 53 - 1 = 52  *)
+          | 3, 13, 54 -> Expr.value (Num (F64 (combine_to_int64 sign eb i)))
           | _ -> Fmt.failwith "%afp size not supported" pp_loc loc )
         | _ ->
           Fmt.failwith "%acould not parse fp: %a %a %a" pp_loc loc Expr.pp s
-            Expr.pp e Expr.pp m )
+            Expr.pp eb Expr.pp i )
       | "fp.abs", [ a ] -> Expr.unop' Ty_none Abs a
       | "fp.neg", [ a ] -> Expr.unop' Ty_none Neg a
       | ( "fp.add"
