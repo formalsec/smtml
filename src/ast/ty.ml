@@ -134,9 +134,8 @@ let binop_equal o1 o2 =
   | String_last_index, String_last_index ->
     true
   | ( ( Add | Sub | Mul | Div | DivU | Rem | RemU | Shl | ShrA | ShrL | And | Or
-      | Xor | Pow | Min | Max | Rotl | Rotr | At | List_cons
-      | List_append | String_prefix | String_suffix | String_contains
-      | String_last_index )
+      | Xor | Pow | Min | Max | Rotl | Rotr | At | List_cons | List_append
+      | String_prefix | String_suffix | String_contains | String_last_index )
     , _ ) ->
     false
 
@@ -326,7 +325,7 @@ let pp_binop fmt (op : binop) =
   | Rotl -> Fmt.string fmt "rotl"
   | Rotr -> Fmt.string fmt "rotr"
   | At -> Fmt.string fmt "at"
-  | List_cons-> Fmt.string fmt "cons"
+  | List_cons -> Fmt.string fmt "cons"
   | List_append -> Fmt.string fmt "append"
   | String_prefix -> Fmt.string fmt "prefixof"
   | String_suffix -> Fmt.string fmt "suffixof"
@@ -427,6 +426,37 @@ let pp_logic fmt = function
   | QF_UFNRA -> Fmt.string fmt "QF_UFNRA"
   | UFLRA -> Fmt.string fmt "UFLRA"
   | UFNIA -> Fmt.string fmt "UFNIA"
+
+let logic_of_string logic =
+  match String.map Char.lowercase_ascii logic with
+  | "ALL" -> Ok ALL
+  | "AUFLIA" -> Ok AUFLIA
+  | "AUFLIRA" -> Ok AUFLIRA
+  | "AUFNIRA" -> Ok AUFNIRA
+  | "LIA" -> Ok LIA
+  | "LRA" -> Ok LRA
+  | "QF_ABV" -> Ok QF_ABV
+  | "QF_AUFBV" -> Ok QF_AUFBV
+  | "QF_AUFLIA" -> Ok QF_AUFLIA
+  | "QF_AX" -> Ok QF_AX
+  | "QF_BV" -> Ok QF_BV
+  | "QF_BVFP" -> Ok QF_BVFP
+  | "QF_IDL" -> Ok QF_IDL
+  | "QF_LIA" -> Ok QF_LIA
+  | "QF_LRA" -> Ok QF_LRA
+  | "QF_NIA" -> Ok QF_NIA
+  | "QF_NRA" -> Ok QF_NRA
+  | "QF_RDL" -> Ok QF_RDL
+  | "QF_S" -> Ok QF_S
+  | "QF_UF" -> Ok QF_UF
+  | "QF_UFBV" -> Ok QF_UFBV
+  | "QF_UFIDL" -> Ok QF_UFIDL
+  | "QF_UFLIA" -> Ok QF_UFLIA
+  | "QF_UFLRA" -> Ok QF_UFLRA
+  | "QF_UFNRA" -> Ok QF_UFNRA
+  | "UFLRA" -> Ok UFLRA
+  | "UFNIA" -> Ok UFNIA
+  | _ -> Error (`Msg (Fmt.str "unknown logic %s" logic))
 
 let discr = function
   | Ty_app -> 0

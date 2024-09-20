@@ -162,22 +162,6 @@ type logic =
   | UFLRA
   | UFNIA
 
-val pp_unop : Fmt.formatter -> unop -> unit
-
-val pp_binop : Fmt.formatter -> binop -> unit
-
-val pp_triop : Fmt.formatter -> triop -> unit
-
-val pp_relop : Fmt.formatter -> relop -> unit
-
-val pp_cvtop : Fmt.formatter -> cvtop -> unit
-
-val pp_naryop : Fmt.formatter -> naryop -> unit
-
-val pp : Fmt.formatter -> t -> unit
-
-val pp_logic : Fmt.formatter -> logic -> unit
-
 val compare : t -> t -> int
 
 val unop_equal : unop -> unop -> bool
@@ -193,6 +177,24 @@ val cvtop_equal : cvtop -> cvtop -> bool
 val naryop_equal : naryop -> naryop -> bool
 
 val equal : t -> t -> bool
+
+val logic_of_string : string -> (logic, [> `Msg of string]) result
+
+val pp_unop : Fmt.formatter -> unop -> unit
+
+val pp_binop : Fmt.formatter -> binop -> unit
+
+val pp_triop : Fmt.formatter -> triop -> unit
+
+val pp_relop : Fmt.formatter -> relop -> unit
+
+val pp_cvtop : Fmt.formatter -> cvtop -> unit
+
+val pp_naryop : Fmt.formatter -> naryop -> unit
+
+val pp : Fmt.formatter -> t -> unit
+
+val pp_logic : Fmt.formatter -> logic -> unit
 
 val string_of_type : t -> string
 
