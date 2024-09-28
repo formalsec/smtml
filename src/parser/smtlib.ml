@@ -107,9 +107,13 @@ module Term = struct
       | "-", [ a ] -> Expr.unop' Ty_none Neg a
       | "not", [ a ] -> Expr.unop' Ty_bool Not a
       | "and", [ a; b ] -> Expr.binop' Ty_bool And a b
+      | "and", ts -> Expr.naryop' Ty_bool Logand ts
       | "or", [ a; b ] -> Expr.binop' Ty_bool Or a b
+      | "or", ts -> Expr.naryop' Ty_bool Logor ts
       | "xor", [ a; b ] -> Expr.binop' Ty_bool Xor a b
       | "+", [ a; b ] -> Expr.binop' Ty_none Add a b
+      | "+", hd :: tl ->
+        List.fold_left (fun acc hd -> Expr.binop' Ty_none Add acc hd) hd tl
       | "-", [ a; b ] -> Expr.binop' Ty_none Sub a b
       | "*", [ a; b ] -> Expr.binop' Ty_none Mul a b
       | "/", [ a; b ] -> Expr.binop' Ty_none Div a b
