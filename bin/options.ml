@@ -38,6 +38,10 @@ let debug =
   let doc = "Print debugging messages" in
   Arg.(value & flag & info [ "debug" ] ~doc)
 
+let dry =
+  let doc = "Dry run on tests" in
+  Arg.(value & flag & info [ "dry" ] ~doc)
+
 let print_statistics =
   let doc = "Print statistics" in
   Arg.(value & flag & info [ "st" ] ~doc)
@@ -55,7 +59,8 @@ let cmd_test main =
   in
   let info = Cmd.info "test" ~doc in
   Cmd.v info
-    Term.(const main $ debug $ solver $ solver_mode $ print_statistics $ files)
+    Term.(
+      const main $ debug $ solver $ solver_mode $ print_statistics $ dry $ files )
 
 let cmd_to_smt2 main =
   let doc = "Convert .smtml into .smt2" in
