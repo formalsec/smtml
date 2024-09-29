@@ -1,6 +1,8 @@
 open Dolmen
 module Loc = Std.Loc
 
+let custom_sorts = Hashtbl.create 10
+
 let pp_loc fmt = function
   | None -> ()
   | Some loc -> Fmt.pf fmt "%a: " Loc.print_compact loc
@@ -18,7 +20,10 @@ module Term = struct
       | "String" -> Expr.symbol { id with ty = Ty_str }
       | "Float32" -> Expr.symbol { id with ty = Ty_fp 32 }
       | "Float64" -> Expr.symbol { id with ty = Ty_fp 64 }
-      | _ -> Fmt.failwith "Could not parse sort: %a" Symbol.pp id )
+      | _ ->
+        ( try Expr.symbol { id with ty = Hashtbl.find custom_sorts name }
+          with Not_found ->
+            Fmt.failwith "%acould not find sort: %a" pp_loc loc Symbol.pp id ) )        
     | Sort, Indexed { basename; indices } -> (
       match (basename, indices) with
       | "BitVec", [ n ] -> (
@@ -231,6 +236,7 @@ module Term = struct
       | "fp.lt", [ a; b ] -> Expr.relop' Ty_bool Lt a b
       | "fp.geq", [ a; b ] -> Expr.relop' Ty_bool Ge a b
       | "fp.gt", [ a; b ] -> Expr.relop' Ty_bool Gt a b
+      | "fp.eq", [ a; b ] -> Expr.relop' Ty_bool Eq a b
       | _ -> Fmt.failwith "%acould not parse term app: %s" pp_loc loc name )
     | Symbol ({ name = Simple _; namespace = Attr; _ } as attr) ->
       Expr.app attr args
@@ -281,7 +287,12 @@ module Statement = struct
 
   let type_decl ?loc:_ = assert false
 
-  let type_def ?loc:_ = assert false
+  let type_def ?loc:_ id _is t =
+    let name = (match Symbol.name id with
+      | Simple name -> name
+      | _ -> assert false) in
+    Hashtbl.add custom_sorts name (Expr.ty t);
+    Echo ""
 
   let datatypes ?loc:_ = assert false
 
