@@ -36,17 +36,29 @@ let run debug solver prover_mode _print_statistics file =
   let _ : Interpret.exec_state = Interpret.start ast in
   ()
 
-let test debug solver prover_mode print_statistics files =
+let test debug solver prover_mode print_statistics dry files =
   let module Solver = (val get_solver debug solver prover_mode) in
   let module Interpret = Interpret.Make (Solver) in
   (* TODO: Add proper logs *)
   let debug fmt k = if debug then k (Fmt.epr fmt) in
+  let exception_log = ref [] in
   let rec test_path state path =
     if Sys.is_directory (Fpath.to_string path) then test_dir state path
     else begin
       debug "File %a...@." (fun k -> k Fpath.pp path);
-      let ast = Compile.until_rewrite path in
-      Some (Interpret.start ?state ast)
+      try
+        let ast = Compile.until_rewrite path in
+        if dry then begin
+          state
+        end
+        else begin
+          Some (Interpret.start ?state ast)
+        end
+      with exn ->
+        let exn_msg = Printexc.to_string exn in
+        exception_log := (path, exn_msg) :: !exception_log;
+        debug "Error processing file %a@." (fun k -> k Fpath.pp path);
+        state
     end
   and test_dir state d =
     let result =
@@ -58,6 +70,17 @@ let test debug solver prover_mode print_statistics files =
     match result with Error (`Msg e) -> failwith e | Ok state -> state
   and test_files files = List.fold_left test_path None files in
   let state = test_files files in
+  let write_exception_log () =
+    let oc = open_out "exceptions.log" in
+    List.iter
+      (fun (path, exn_msg) ->
+        Printf.fprintf oc "File: %s\nError: %s\n\n" (Fpath.to_string path)
+          exn_msg )
+      (List.rev !exception_log);
+    close_out oc
+  in
+
+  if dry then begin write_exception_log () end;
   if print_statistics then begin
     let state = Option.get state in
     let stats : Gc.stat = Gc.stat () in
