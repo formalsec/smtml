@@ -284,12 +284,35 @@ module Fresh_cvc5 () = struct
       let rtz = Term.mk_rm tm RoundingMode.Rtz
     end
 
+    let extract_sign_i32 i32 = (Int32.to_int @@ Int32.shift_right_logical i32 31) land 1
+
+    let extract_exponent_i32 i32 = Int32.logand (Int32.shift_right_logical i32 23) 0xFFl
+
+    let extract_significand_i32 i32 = Int32.logand i32 0x7FFFFFl
+
+    let v32 (i : int32) es eb =
+      let sign = Term.mk_bv_s tm 1 (string_of_int @@ extract_sign_i32 i) 10 in
+      let exp = Term.mk_bv_s tm es (Int32.to_string @@ extract_exponent_i32 i) 10 in
+      let sig_ = Term.mk_bv_s tm (eb - 1) (Int32.to_string @@ extract_significand_i32 i) 10 in
+      Term.mk_fp_from_terms tm sign exp sig_
+
+    let extract_sign_i64 i64 = (Int64.to_int @@ Int64.shift_right_logical i64 63) land 1
+
+    let extract_exponent_i64 i64 = Int64.logand (Int64.shift_right_logical i64 52) 0x7FFL
+
+    let extract_significand_i64 i64 = Int64.logand i64 0xFFFFFFFFFFFFFL
+
+    let v64 (i : int64) es eb =
+      let sign = Term.mk_bv_s tm 1 (string_of_int @@ extract_sign_i64 i) 10 in
+      let exp = Term.mk_bv_s tm es (Int64.to_string @@ extract_exponent_i64 i) 10 in
+      let sig_ = Term.mk_bv_s tm (eb - 1) (Int64.to_string @@ extract_significand_i64 i) 10 in
+      Term.mk_fp_from_terms tm sign exp sig_
+
     let v f es eb =
-      match Float.is_nan f with
-      | true -> Term.mk_fp_nan tm es eb
-      | _ ->
-        let bt = Term.mk_bv tm (es + eb) (Int64.of_float f) in
-        Term.mk_fp tm es eb bt
+      match es + eb with
+      | 32 -> v32 (Int32.bits_of_float f) es eb
+      | 64 -> v64 (Int64.bits_of_float f) es eb
+      | _ -> Fmt.failwith "Cvc5_mappings: Unsupported floating-point size"
 
     let neg t = Term.mk_term tm Kind.Floatingpoint_neg [| t |]
 
