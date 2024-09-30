@@ -164,6 +164,8 @@ module type M = sig
 
     val of_int : term -> term
 
+    val to_re : term -> term
+
     val at : term -> pos:term -> term
 
     val concat : term list -> term
@@ -174,6 +176,8 @@ module type M = sig
 
     val is_suffix : term -> suffix:term -> term
 
+    val in_re : term -> term -> term
+
     val lt : term -> term -> term
 
     val le : term -> term -> term
@@ -183,6 +187,18 @@ module type M = sig
     val index_of : term -> sub:term -> pos:term -> term
 
     val replace : term -> pattern:term -> with_:term -> term
+  end
+
+  module Re : sig
+    val star : term -> term
+
+    val range : term -> term -> term
+
+    val loop : term -> int -> int -> term
+
+    val union : term list -> term
+
+    val concat : term list -> term
   end
 
   module Bitv : sig

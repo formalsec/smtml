@@ -32,6 +32,7 @@ type t =
   | Ty_real
   | Ty_str
   | Ty_unit
+  | Ty_regexp
 
 type unop =
   | Neg
@@ -52,6 +53,9 @@ type unop =
   | Length
   (* String *)
   | Trim (* uninterpreted *)
+  (* Regexp *)
+  | Regexp_star
+  | Regexp_loop of (int * int)
 
 type binop =
   | Add
@@ -80,6 +84,9 @@ type binop =
   | String_suffix (* (str.suffixof String String Bool) *)
   | String_contains (* (str.contains String String Bool) *)
   | String_last_index
+  | String_in_re
+  (* Regexp *)
+  | Regexp_range
 
 type relop =
   | Eq
@@ -127,11 +134,13 @@ type cvtop =
   | String_to_int (* (str.to_int String Int) *)
   | String_from_int (* (str.from_int Int String) *)
   | String_to_float
+  | String_to_re
 
 type naryop =
   | Logand
   | Logor
   | Concat
+  | Regexp_union
 
 type logic =
   | ALL

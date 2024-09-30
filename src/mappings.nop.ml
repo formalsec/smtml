@@ -159,6 +159,8 @@ module Nop = struct
 
       let of_int _ = assert false
 
+      let to_re _ = assert false
+
       let at _ = assert false
 
       let concat _ = assert false
@@ -169,6 +171,8 @@ module Nop = struct
 
       let is_suffix _ ~suffix:_ = assert false
 
+      let in_re _ = assert false
+
       let lt _ = assert false
 
       let le _ = assert false
@@ -178,6 +182,18 @@ module Nop = struct
       let index_of _ ~sub:_ ~pos:_ = assert false
 
       let replace _ ~pattern:_ ~with_:_ = assert false
+    end
+
+    module Re = struct
+      let star _ = assert false
+
+      let range _ = assert false
+
+      let loop _ = assert false
+
+      let union _ = assert false
+
+      let concat _ = assert false
     end
 
     module Bitv = struct
