@@ -32,6 +32,7 @@ type t =
   | Ty_real
   | Ty_str
   | Ty_unit
+  | Ty_regexp
 
 type unop =
   | Neg
@@ -52,6 +53,9 @@ type unop =
   | Length
   (* String *)
   | Trim
+  (* RegExp *)
+  | Regexp_star
+  | Regexp_loop of (int * int)
 
 let unop_equal o1 o2 =
   match (o1, o2) with
@@ -70,10 +74,13 @@ let unop_equal o1 o2 =
   | Tail, Tail
   | Reverse, Reverse
   | Length, Length
-  | Trim, Trim ->
+  | Trim, Trim
+  | Regexp_star, Regexp_star
+  | Regexp_loop _, Regexp_loop _ ->
     true
   | ( ( Neg | Not | Clz | Ctz | Abs | Sqrt | Is_nan | Ceil | Floor | Trunc
-      | Nearest | Head | Tail | Reverse | Length | Trim )
+      | Nearest | Head | Tail | Reverse | Length | Trim | Regexp_star
+      | Regexp_loop _ )
     , _ ) ->
     false
 
@@ -104,6 +111,9 @@ type binop =
   | String_suffix
   | String_contains
   | String_last_index
+  | String_in_re
+  (* Regexp *)
+  | Regexp_range
 
 let binop_equal o1 o2 =
   match (o1, o2) with
@@ -131,11 +141,14 @@ let binop_equal o1 o2 =
   | String_prefix, String_prefix
   | String_suffix, String_suffix
   | String_contains, String_contains
-  | String_last_index, String_last_index ->
+  | String_last_index, String_last_index
+  | String_in_re, String_in_re
+  | Regexp_range, Regexp_range ->
     true
   | ( ( Add | Sub | Mul | Div | DivU | Rem | RemU | Shl | ShrA | ShrL | And | Or
       | Xor | Pow | Min | Max | Rotl | Rotr | At | List_cons | List_append
-      | String_prefix | String_suffix | String_contains | String_last_index )
+      | String_prefix | String_suffix | String_contains | String_last_index
+      | String_in_re | Regexp_range )
     , _ ) ->
     false
 
@@ -211,6 +224,7 @@ type cvtop =
   | String_to_int
   | String_from_int
   | String_to_float
+  | String_to_re
 
 let cvtop_equal op1 op2 =
   match (op1, op2) with
@@ -235,14 +249,16 @@ let cvtop_equal op1 op2 =
   | String_from_code, String_from_code
   | String_to_int, String_to_int
   | String_from_int, String_from_int
-  | String_to_float, String_to_float ->
+  | String_to_float, String_to_float
+  | String_to_re, String_to_re ->
     true
   | Sign_extend x1, Sign_extend x2 | Zero_extend x1, Zero_extend x2 -> x1 = x2
   | ( ( ToString | OfString | ToBool | OfBool | Reinterpret_int
       | Reinterpret_float | DemoteF64 | PromoteF32 | ConvertSI32 | ConvertUI32
       | ConvertSI64 | ConvertUI64 | TruncSF32 | TruncUF32 | TruncSF64
       | TruncUF64 | WrapI64 | Sign_extend _ | Zero_extend _ | String_to_code
-      | String_from_code | String_to_int | String_from_int | String_to_float )
+      | String_from_code | String_to_int | String_from_int | String_to_float
+      | String_to_re )
     , _ ) ->
     false
 
@@ -250,11 +266,14 @@ type naryop =
   | Logand
   | Logor
   | Concat
+  | Regexp_union
 
 let naryop_equal op1 op2 =
   match (op1, op2) with
-  | Logand, Logand | Logor, Logor | Concat, Concat -> true
-  | (Logand | Logor | Concat), _ -> false
+  | Logand, Logand | Logor, Logor | Concat, Concat | Regexp_union, Regexp_union
+    ->
+    true
+  | (Logand | Logor | Concat | Regexp_union), _ -> false
 
 type logic =
   | ALL
@@ -303,6 +322,8 @@ let pp_unop fmt (op : unop) =
   | Reverse -> Fmt.string fmt "reverse"
   | Length -> Fmt.string fmt "length"
   | Trim -> Fmt.string fmt "trim"
+  | Regexp_star -> Fmt.string fmt "*"
+  | Regexp_loop _ -> Fmt.string fmt "loop"
 
 let pp_binop fmt (op : binop) =
   match op with
@@ -331,6 +352,8 @@ let pp_binop fmt (op : binop) =
   | String_suffix -> Fmt.string fmt "suffixof"
   | String_contains -> Fmt.string fmt "contains"
   | String_last_index -> Fmt.string fmt "last_indexof"
+  | String_in_re -> Fmt.string fmt "in_re"
+  | Regexp_range -> Fmt.string fmt "range"
 
 let pp_triop fmt (op : triop) =
   match op with
@@ -379,12 +402,14 @@ let pp_cvtop fmt (op : cvtop) =
   | String_to_int -> Fmt.string fmt "to_int"
   | String_from_int -> Fmt.string fmt "from_int"
   | String_to_float -> Fmt.string fmt "to_float"
+  | String_to_re -> Fmt.string fmt "to_re"
 
 let pp_naryop fmt (op : naryop) =
   match op with
   | Logand -> Fmt.string fmt "and"
   | Logor -> Fmt.string fmt "or"
   | Concat -> Fmt.string fmt "++"
+  | Regexp_union -> Fmt.string fmt "union"
 
 let pp fmt = function
   | Ty_int -> Fmt.string fmt "int"
@@ -397,6 +422,7 @@ let pp fmt = function
   | Ty_app -> Fmt.string fmt "app"
   | Ty_unit -> Fmt.string fmt "unit"
   | Ty_none -> Fmt.string fmt "none"
+  | Ty_regexp -> Fmt.string fmt "regexp"
 
 let pp_logic fmt = function
   | ALL -> Fmt.string fmt "ALL"
@@ -467,8 +493,9 @@ let discr = function
   | Ty_real -> 5
   | Ty_str -> 6
   | Ty_unit -> 7
-  | Ty_bitv n -> 8 + n
-  | Ty_fp n -> 9 + n
+  | Ty_regexp -> 8
+  | Ty_bitv n -> 9 + n
+  | Ty_fp n -> 10 + n
 
 let compare t1 t2 = compare (discr t1) (discr t2)
 
@@ -480,4 +507,5 @@ let size (ty : t) : int =
   match ty with
   | Ty_bitv n | Ty_fp n -> n / 8
   | Ty_int | Ty_bool -> 4
-  | Ty_real | Ty_str | Ty_list | Ty_app | Ty_unit | Ty_none -> assert false
+  | Ty_real | Ty_str | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp ->
+    assert false

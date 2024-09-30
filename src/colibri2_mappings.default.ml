@@ -182,7 +182,8 @@ module Fresh = struct
       | Ty_bitv 64 -> DTy.bitv 64
       | Ty_fp 32 -> float32_ty
       | Ty_fp 64 -> float64_ty
-      | Ty_fp _ | Ty_bitv _ | Ty_list | Ty_app | Ty_unit | Ty_none ->
+      | Ty_fp _ | Ty_bitv _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp
+        ->
         assert false
 
     let tty_to_etype (ty : DTerm.ty) : Ty.t =
@@ -677,7 +678,7 @@ module Fresh = struct
       | Ty.Ty_str -> Str.encode_unop
       | Ty.Ty_bitv _ -> Bv.encode_unop
       | Ty.Ty_fp _ -> Fp.encode_unop
-      | (Ty.Ty_list | Ty_app | Ty_unit | Ty_none) as op ->
+      | (Ty.Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp) as op ->
         Fmt.failwith
           "Colibri2_mappings: Trying to code unsupported op of type %a" Ty.pp op
 
@@ -688,7 +689,7 @@ module Fresh = struct
       | Ty.Ty_str -> Str.encode_binop
       | Ty.Ty_bitv _ -> Bv.encode_binop
       | Ty.Ty_fp _ -> Fp.encode_binop
-      | (Ty.Ty_list | Ty_app | Ty_unit | Ty_none) as op ->
+      | (Ty.Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp) as op ->
         Fmt.failwith
           "Colibri2_mappings: Trying to code unsupported op of type %a" Ty.pp op
 
@@ -699,7 +700,7 @@ module Fresh = struct
       | Ty.Ty_str -> Str.encode_triop
       | Ty.Ty_bitv _ -> Bv.encode_triop
       | Ty.Ty_fp _ -> Fp.encode_triop
-      | (Ty.Ty_list | Ty_app | Ty_unit | Ty_none) as op ->
+      | (Ty.Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp) as op ->
         Fmt.failwith
           "Colibri2_mappings: Trying to code unsupported op of type %a" Ty.pp op
 
@@ -710,7 +711,7 @@ module Fresh = struct
       | Ty.Ty_str -> Str.encode_relop
       | Ty.Ty_bitv _ -> Bv.encode_relop
       | Ty.Ty_fp _ -> Fp.encode_relop
-      | (Ty.Ty_list | Ty_app | Ty_unit | Ty_none) as op ->
+      | (Ty.Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp) as op ->
         Fmt.failwith
           "Colibri2_mappings: Trying to code unsupported op of type %a" Ty.pp op
 
@@ -721,7 +722,7 @@ module Fresh = struct
       | Ty.Ty_str -> Str.encode_cvtop
       | Ty.Ty_bitv sz -> Bv.encode_cvtop sz
       | Ty.Ty_fp sz -> Fp.encode_cvtop sz
-      | (Ty.Ty_list | Ty_app | Ty_unit | Ty_none) as op ->
+      | (Ty.Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp) as op ->
         Fmt.failwith
           "Colibri2_mappings: Trying to code unsupported op of type %a" Ty.pp op
 
@@ -1061,7 +1062,7 @@ module Fresh = struct
                | 64 ->
                  F64 (Int64.bits_of_float (Farith.F.to_float Farith.Mode.NE a))
                | _ -> assert false ) ) )
-      | Ty_str | Ty_list | Ty_app | Ty_unit | Ty_none ->
+      | Ty_str | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp ->
         Fmt.failwith
           "Colibri2_mappings2: Unsuppoted model generation of type %a" Ty.pp ty
 

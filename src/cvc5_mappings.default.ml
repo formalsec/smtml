@@ -174,6 +174,10 @@ module Fresh_cvc5 () = struct
 
     let of_int t = Term.mk_term tm Kind.String_from_int [| t |]
 
+    let to_re t = Term.mk_term tm Kind.String_to_regexp [| t |]
+
+    let in_re t1 t2 = Term.mk_term tm Kind.String_in_regexp [| t1; t2 |]
+
     let at t ~pos =
       let one = Term.mk_int tm 1 in
       Term.mk_term tm Kind.String_substr [| t; pos; one |]
@@ -199,6 +203,23 @@ module Fresh_cvc5 () = struct
 
     let replace t1 ~pattern ~with_ =
       Term.mk_term tm Kind.String_replace [| t1; pattern; with_ |]
+  end
+
+  module Re = struct
+    let star t = Term.mk_term tm Kind.Regexp_star [| t |]
+
+    let range t1 t2 = Term.mk_term tm Kind.Regexp_range [| t1; t2 |]
+
+    let loop t i1 i2 =
+      let op = Op.mk_op tm Kind.Regexp_loop [| i1; i2 |] in
+      Term.mk_term_op tm op [| t |]
+
+    let union ts = Term.mk_term tm Kind.Regexp_union (Array.of_list ts)
+
+    let concat ts =
+      match ts with
+      | [ _; _ ] -> Term.mk_term tm Kind.Regexp_concat (Array.of_list ts)
+      | _ -> Fmt.failwith "Cvc5_mappings: Re.concat is a binary op"
   end
 
   module Bitv = struct
@@ -284,28 +305,44 @@ module Fresh_cvc5 () = struct
       let rtz = Term.mk_rm tm RoundingMode.Rtz
     end
 
-    let extract_sign_i32 i32 = (Int32.to_int @@ Int32.shift_right_logical i32 31) land 1
+    let extract_sign_i32 i32 =
+      (Int32.to_int @@ Int32.shift_right_logical i32 31) land 1
 
-    let extract_exponent_i32 i32 = Int32.logand (Int32.shift_right_logical i32 23) 0xFFl
+    let extract_exponent_i32 i32 =
+      Int32.logand (Int32.shift_right_logical i32 23) 0xFFl
 
     let extract_significand_i32 i32 = Int32.logand i32 0x7FFFFFl
 
     let v32 (i : int32) es eb =
       let sign = Term.mk_bv_s tm 1 (string_of_int @@ extract_sign_i32 i) 10 in
-      let exp = Term.mk_bv_s tm es (Int32.to_string @@ extract_exponent_i32 i) 10 in
-      let sig_ = Term.mk_bv_s tm (eb - 1) (Int32.to_string @@ extract_significand_i32 i) 10 in
+      let exp =
+        Term.mk_bv_s tm es (Int32.to_string @@ extract_exponent_i32 i) 10
+      in
+      let sig_ =
+        Term.mk_bv_s tm (eb - 1)
+          (Int32.to_string @@ extract_significand_i32 i)
+          10
+      in
       Term.mk_fp_from_terms tm sign exp sig_
 
-    let extract_sign_i64 i64 = (Int64.to_int @@ Int64.shift_right_logical i64 63) land 1
+    let extract_sign_i64 i64 =
+      (Int64.to_int @@ Int64.shift_right_logical i64 63) land 1
 
-    let extract_exponent_i64 i64 = Int64.logand (Int64.shift_right_logical i64 52) 0x7FFL
+    let extract_exponent_i64 i64 =
+      Int64.logand (Int64.shift_right_logical i64 52) 0x7FFL
 
     let extract_significand_i64 i64 = Int64.logand i64 0xFFFFFFFFFFFFFL
 
     let v64 (i : int64) es eb =
       let sign = Term.mk_bv_s tm 1 (string_of_int @@ extract_sign_i64 i) 10 in
-      let exp = Term.mk_bv_s tm es (Int64.to_string @@ extract_exponent_i64 i) 10 in
-      let sig_ = Term.mk_bv_s tm (eb - 1) (Int64.to_string @@ extract_significand_i64 i) 10 in
+      let exp =
+        Term.mk_bv_s tm es (Int64.to_string @@ extract_exponent_i64 i) 10
+      in
+      let sig_ =
+        Term.mk_bv_s tm (eb - 1)
+          (Int64.to_string @@ extract_significand_i64 i)
+          10
+      in
       Term.mk_fp_from_terms tm sign exp sig_
 
     let v f es eb =

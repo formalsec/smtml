@@ -219,6 +219,10 @@ module M = struct
 
       let of_int e = Z3.Seq.mk_int_to_str ctx e
 
+      let to_re e = Z3.Seq.mk_seq_to_re ctx e
+
+      let in_re e1 e2 = Z3.Seq.mk_seq_in_re ctx e1 e2
+
       let at str ~pos = Z3.Seq.mk_seq_at ctx str pos
 
       let concat es = Z3.Seq.mk_seq_concat ctx es
@@ -239,6 +243,18 @@ module M = struct
 
       let replace e1 ~pattern ~with_ =
         Z3.Seq.mk_seq_replace ctx e1 pattern with_
+    end
+
+    module Re = struct
+      let star e = Z3.Seq.mk_re_star ctx e
+
+      let range e1 e2 = Z3.Seq.mk_re_range ctx e1 e2
+
+      let loop e i1 i2 = Z3.Seq.mk_re_loop ctx e i1 i2
+
+      let union es = Z3.Seq.mk_re_union ctx es
+
+      let concat es = Z3.Seq.mk_re_concat ctx es
     end
 
     module Bitv = struct

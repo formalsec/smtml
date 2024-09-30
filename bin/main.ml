@@ -78,7 +78,10 @@ let test debug solver prover_mode print_statistics dry files =
     let oc = open_out "exceptions.log" in
     let total = !total_tests in
     let exceptions = !exception_count in
-    let percentage = if total = 0 then 0.0 else (float_of_int exceptions /. float_of_int total) *. 100.0 in
+    let percentage =
+      if total = 0 then 0.0
+      else float_of_int exceptions /. float_of_int total *. 100.0
+    in
     Printf.fprintf oc "Total tests: %d\n" total;
     Printf.fprintf oc "Exceptions: %d\n" exceptions;
     Printf.fprintf oc "Exception percentage: %.2f%%\n\n" percentage;
@@ -90,7 +93,9 @@ let test debug solver prover_mode print_statistics dry files =
     close_out oc
   in
 
-  if dry then begin write_exception_log () end;
+  if dry then begin
+    write_exception_log ()
+  end;
   if print_statistics then begin
     let state = Option.get state in
     let stats : Gc.stat = Gc.stat () in

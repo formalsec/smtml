@@ -20,10 +20,10 @@ module Term = struct
       | "String" -> Expr.symbol { id with ty = Ty_str }
       | "Float32" -> Expr.symbol { id with ty = Ty_fp 32 }
       | "Float64" -> Expr.symbol { id with ty = Ty_fp 64 }
-      | _ ->
-        ( try Expr.symbol { id with ty = Hashtbl.find custom_sorts name }
-          with Not_found ->
-            Fmt.failwith "%acould not find sort: %a" pp_loc loc Symbol.pp id ) )        
+      | _ -> (
+        try Expr.symbol { id with ty = Hashtbl.find custom_sorts name }
+        with Not_found ->
+          Fmt.failwith "%acould not find sort: %a" pp_loc loc Symbol.pp id ) )
     | Sort, Indexed { basename; indices } -> (
       match (basename, indices) with
       | "BitVec", [ n ] -> (
@@ -137,6 +137,7 @@ module Term = struct
       | "str.prefixof", [ a; b ] -> Expr.binop' Ty_str String_prefix a b
       | "str.suffixof", [ a; b ] -> Expr.binop' Ty_str String_suffix a b
       | "str.contains", [ a; b ] -> Expr.binop' Ty_str String_contains a b
+      | "str.in_re", [ a; b ] -> Expr.binop' Ty_str String_in_re a b
       | "str.substr", [ a; b; c ] -> Expr.triop Ty_str String_extract a b c
       | "str.indexof", [ a; b; c ] -> Expr.triop Ty_str String_index a b c
       | "str.replace", [ a; b; c ] -> Expr.triop Ty_str String_replace a b c
@@ -147,6 +148,11 @@ module Term = struct
       | "str.from_code", [ a ] -> Expr.cvtop' Ty_str String_from_code a
       | "str.to_int", [ a ] -> Expr.cvtop' Ty_str String_to_int a
       | "str.from_int", [ a ] -> Expr.cvtop' Ty_str String_from_int a
+      | "str.to_re", [ a ] -> Expr.cvtop' Ty_str String_to_re a
+      | "re.star", [ a ] -> Expr.unop' Ty_regexp Regexp_star a
+      | "re.range", [ a; b ] -> Expr.binop' Ty_regexp Regexp_range a b
+      | "re.union", n -> Expr.naryop' Ty_regexp Regexp_union n
+      | "re.++", n -> Expr.naryop' Ty_regexp Concat n
       | "bvnot", [ a ] -> Expr.unop' Ty_none Not a
       | "bvneg", [ a ] -> Expr.unop' Ty_none Neg a
       | "bvand", [ a; b ] -> Expr.binop' Ty_none And a b
@@ -249,6 +255,10 @@ module Term = struct
       | "zero_extend", [ bits ], [ a ] ->
         let bits = Option.get @@ int_of_string bits in
         Expr.cvtop' Ty_none (Zero_extend bits) a
+      | "re.loop", [ i1; i2 ], [ a ] ->
+        let i1 = Option.get @@ int_of_string i1 in
+        let i2 = Option.get @@ int_of_string i2 in
+        Expr.unop' Ty_regexp (Regexp_loop (i1, i2)) a
       | _ ->
         Fmt.failwith "%acould not parse indexed app: %a" pp_loc loc Expr.pp id )
     | Symbol id ->
@@ -288,9 +298,9 @@ module Statement = struct
   let type_decl ?loc:_ = assert false
 
   let type_def ?loc:_ id _is t =
-    let name = (match Symbol.name id with
-      | Simple name -> name
-      | _ -> assert false) in
+    let name =
+      match Symbol.name id with Simple name -> name | _ -> assert false
+    in
     Hashtbl.replace custom_sorts name (Expr.ty t);
     Echo ""
 

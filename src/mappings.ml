@@ -75,7 +75,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty_bitv n -> M.Types.bitv n
       | Ty_fp 32 -> f32
       | Ty_fp 64 -> f64
-      | (Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none) as ty ->
+      | (Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp) as ty ->
         Fmt.failwith "Unsupported theory: %a@." Ty.pp ty
 
     let make_symbol (ctx : symbol_ctx) (s : Symbol.t) : symbol_ctx * M.term =
@@ -233,6 +233,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | String_contains -> M.String.contains e1 ~sub:e2
         | String_prefix -> M.String.is_prefix e1 ~prefix:e2
         | String_suffix -> M.String.is_suffix e1 ~suffix:e2
+        | String_in_re -> M.String.in_re e1 e2
         | _ ->
           Fmt.failwith {|String: Unsupported binop operator "%a"|} Ty.pp_binop
             op
@@ -261,6 +262,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | String_from_code -> M.String.of_code
         | String_to_int -> M.String.to_int
         | String_from_int -> M.String.of_int
+        | String_to_re -> M.String.to_re
         | op ->
           Fmt.failwith {|String: Unsupported cvtop operator "%a"|} Ty.pp_cvtop
             op
@@ -270,6 +272,45 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Concat -> M.String.concat es
         | _ ->
           Fmt.failwith {|String: Unsupported naryop operator "%a"|} Ty.pp_naryop
+            op
+    end
+
+    module Regexp_impl = struct
+      let unop op e =
+        match op with
+        | Regexp_star -> M.Re.star e
+        | Regexp_loop (i1, i2) -> M.Re.loop e i1 i2
+        | op ->
+          Fmt.failwith {|Regexp: Unsupported unop operator "%a"|} Ty.pp_unop op
+
+      let binop op e1 e2 =
+        match op with
+        | Regexp_range -> M.Re.range e1 e2
+        | op ->
+          Fmt.failwith {|Regexp: Unsupported binop operator "%a"|} Ty.pp_binop
+            op
+
+      let _triop _ = function
+        | op ->
+          Fmt.failwith {|Regexp: Unsupported triop operator "%a"|} Ty.pp_triop
+            op
+
+      let _relop _ _ = function
+        | op ->
+          Fmt.failwith {|Regexp: Unsupported relop operator "%a"|} Ty.pp_relop
+            op
+
+      let _cvtop = function
+        | op ->
+          Fmt.failwith {|Regexp: Unsupported cvtop operator "%a"|} Ty.pp_cvtop
+            op
+
+      let naryop op es =
+        match op with
+        | Concat -> M.Re.concat es
+        | Regexp_union -> M.Re.union es
+        | op ->
+          Fmt.failwith {|Regexp: Unsupported naryop operator "%a"|} Ty.pp_naryop
             op
     end
 
@@ -526,13 +567,14 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Num (I64 x) -> I64.v x
       | Num (F32 x) -> Float32_impl.v x
       | Num (F64 x) -> Float64_impl.v x
-      | List _ | App _ | Unit | Nothing -> assert false
+      | List _ | App _ | Unit | Nothing | Regexp _ -> assert false
 
     let unop = function
       | Ty.Ty_int -> Int_impl.unop
       | Ty.Ty_real -> Real_impl.unop
       | Ty.Ty_bool -> Bool_impl.unop
       | Ty.Ty_str -> String_impl.unop
+      | Ty.Ty_regexp -> Regexp_impl.unop
       | Ty.Ty_bitv 8 -> I8.unop
       | Ty.Ty_bitv 32 -> I32.unop
       | Ty.Ty_bitv 64 -> I64.unop
@@ -546,6 +588,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty.Ty_real -> Real_impl.binop
       | Ty.Ty_bool -> Bool_impl.binop
       | Ty.Ty_str -> String_impl.binop
+      | Ty.Ty_regexp -> Regexp_impl.binop
       | Ty.Ty_bitv 8 -> I8.binop
       | Ty.Ty_bitv 32 -> I32.binop
       | Ty.Ty_bitv 64 -> I64.binop
@@ -563,7 +606,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty.Ty_bitv 64 -> I64.triop
       | Ty.Ty_fp 32 -> Float32_impl.triop
       | Ty.Ty_fp 64 -> Float64_impl.triop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none ->
+      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none
+      | Ty_regexp ->
         assert false
 
     let relop = function
@@ -576,7 +620,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty.Ty_bitv 64 -> I64.relop
       | Ty.Ty_fp 32 -> Float32_impl.relop
       | Ty.Ty_fp 64 -> Float64_impl.relop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none ->
+      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none
+      | Ty_regexp ->
         assert false
 
     let cvtop = function
@@ -589,12 +634,14 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty.Ty_bitv 64 -> I64.cvtop
       | Ty.Ty_fp 32 -> Float32_impl.cvtop
       | Ty.Ty_fp 64 -> Float64_impl.cvtop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none ->
+      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none
+      | Ty_regexp ->
         assert false
 
     let naryop = function
       | Ty.Ty_str -> String_impl.naryop
       | Ty.Ty_bool -> Bool_impl.naryop
+      | Ty.Ty_regexp -> Regexp_impl.naryop
       | ty -> Fmt.failwith "Naryop for type \"%a\" not implemented" Ty.pp ty
 
     let rec encode_expr ctx (hte : Expr.t) : symbol_ctx * M.term =
@@ -679,7 +726,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty_fp 64 ->
         let float = M.Interp.to_float v 11 53 in
         Value.Num (F64 (Int64.bits_of_float float))
-      | Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none ->
+      | Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp
+        ->
         assert false
 
     let value ({ model = m; ctx } : model) (c : Expr.t) : Value.t =
