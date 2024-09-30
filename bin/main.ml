@@ -42,11 +42,14 @@ let test debug solver prover_mode print_statistics dry files =
   (* TODO: Add proper logs *)
   let debug fmt k = if debug then k (Fmt.epr fmt) in
   let exception_log = ref [] in
+  let total_tests = ref 0 in
+  let exception_count = ref 0 in
   let rec test_path state path =
     if Sys.is_directory (Fpath.to_string path) then test_dir state path
     else begin
       debug "File %a...@." (fun k -> k Fpath.pp path);
       try
+        incr total_tests;
         let ast = Compile.until_rewrite path in
         if dry then begin
           state
@@ -55,6 +58,7 @@ let test debug solver prover_mode print_statistics dry files =
           Some (Interpret.start ?state ast)
         end
       with exn ->
+        incr exception_count;
         let exn_msg = Printexc.to_string exn in
         exception_log := (path, exn_msg) :: !exception_log;
         debug "Error processing file %a@." (fun k -> k Fpath.pp path);
@@ -72,6 +76,12 @@ let test debug solver prover_mode print_statistics dry files =
   let state = test_files files in
   let write_exception_log () =
     let oc = open_out "exceptions.log" in
+    let total = !total_tests in
+    let exceptions = !exception_count in
+    let percentage = if total = 0 then 0.0 else (float_of_int exceptions /. float_of_int total) *. 100.0 in
+    Printf.fprintf oc "Total tests: %d\n" total;
+    Printf.fprintf oc "Exceptions: %d\n" exceptions;
+    Printf.fprintf oc "Exception percentage: %.2f%%\n\n" percentage;
     List.iter
       (fun (path, exn_msg) ->
         Printf.fprintf oc "File: %s\nError: %s\n\n" (Fpath.to_string path)
