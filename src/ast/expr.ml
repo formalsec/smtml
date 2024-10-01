@@ -308,6 +308,7 @@ let unop' (ty : Ty.t) (op : unop) (hte : t) : t = make (Unop (ty, op, hte))
 
 let unop (ty : Ty.t) (op : unop) (hte : t) : t =
   match (op, view hte) with
+  | ( Regexp_loop _ | Regexp_star ), _ -> unop' ty op hte
   | _, Val v -> value (Eval.unop ty op v)
   | Not, Unop (_, Not, hte') -> hte'
   | Neg, Unop (_, Neg, hte') -> hte'
@@ -324,6 +325,7 @@ let binop' (ty : Ty.t) (op : binop) (hte1 : t) (hte2 : t) : t =
 
 let rec binop ty (op : binop) (hte1 : t) (hte2 : t) : t =
   match (op, view hte1, view hte2) with
+  | ( String_in_re | Regexp_range ), _, _ -> binop' ty op hte1 hte2
   | op, Val v1, Val v2 -> value (Eval.binop ty op v1 v2)
   | Sub, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
     if Int32.equal b1 b2 then binop ty Sub os1 os2 else binop' ty op hte1 hte2
@@ -444,6 +446,7 @@ let cvtop' (ty : Ty.t) (op : cvtop) (hte : t) : t = make (Cvtop (ty, op, hte))
 
 let cvtop ty (op : cvtop) (hte : t) : t =
   match (op, view hte) with
+  | ( String_to_re ), _ -> cvtop' ty op hte
   | _, Val v -> value (Eval.cvtop ty op v)
   | String_to_float, Cvtop (Ty_real, ToString, real) -> real
   | _ -> cvtop' ty op hte

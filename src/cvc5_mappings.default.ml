@@ -216,10 +216,7 @@ module Fresh_cvc5 () = struct
 
     let union ts = Term.mk_term tm Kind.Regexp_union (Array.of_list ts)
 
-    let concat ts =
-      match ts with
-      | [ _; _ ] -> Term.mk_term tm Kind.Regexp_concat (Array.of_list ts)
-      | _ -> Fmt.failwith "Cvc5_mappings: Re.concat is a binary op"
+    let concat ts = Term.mk_term tm Kind.Regexp_concat (Array.of_list ts)
   end
 
   module Bitv = struct
