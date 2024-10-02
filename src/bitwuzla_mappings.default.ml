@@ -228,6 +228,20 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
       Fmt.failwith "Bitwuzla_mappings: String.replace not implemented"
   end
 
+  module Re = struct
+    
+    let star _ = Fmt.failwith "Bitwuzla_mappings: Re.star not implemented" 
+
+    let range _ = Fmt.failwith "Bitwuzla_mappings: Re.range not implemented"
+
+    let loop _ = Fmt.failwith "Bitwuzla_mappings: Re.loop not implemented"
+
+    let union _ = Fmt.failwith "Bitwuzla_mappings: Re.union not implemented"
+
+    let concat _ = Fmt.failwith "Bitwuzla_mappings: Re.concat not implemented"
+
+  end
+
   module Bitv = struct
     let v str bitwidth = mk_bv_value (Types.bitv bitwidth) str 10
 
