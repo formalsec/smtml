@@ -57,8 +57,6 @@ val view : t -> expr
 (** The return type of an expression *)
 val ty : t -> Ty.t
 
-val mk_symbol : Symbol.t -> t
-
 val is_symbolic : t -> bool
 
 val get_symbols : t list -> Symbol.t list

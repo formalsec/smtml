@@ -692,7 +692,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Some symbols ->
         List.iter
           (fun sym ->
-            let v = value model0 (Expr.mk_symbol sym) in
+            let v = value model0 (Expr.symbol sym) in
             Hashtbl.replace m sym v )
           symbols
       | None ->

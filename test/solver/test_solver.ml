@@ -20,7 +20,7 @@ module Make (M : Mappings_intf.S) = struct
     let open Infix in
     let solver = Solver.create ~logic:LIA () in
     let symbol_x = Symbol.("x" @: Ty_int) in
-    let x = Expr.mk_symbol symbol_x in
+    let x = Expr.symbol symbol_x in
     assert_sat (Solver.check solver []);
 
     Solver.push solver;

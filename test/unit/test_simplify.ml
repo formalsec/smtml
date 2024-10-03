@@ -24,7 +24,7 @@ let () =
 
 (* Test simplify of left- and righ- associative operators *)
 let () =
-  let x = mk_symbol (Symbol.make Ty_int "x") in
+  let x = symbol (Symbol.make Ty_int "x") in
   let v i = value (Int i) in
   assert (
     let binary = binop' Ty_int Add x (v 10) in

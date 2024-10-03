@@ -130,8 +130,6 @@ let view (hte : t) : expr = hte.node [@@inline]
 
 let symbol s = make (Symbol s)
 
-let mk_symbol s = make (Symbol s)
-
 let is_num (e : t) = match view e with Val (Num _) -> true | _ -> false
 
 (** The return type of an expression *)
@@ -627,7 +625,7 @@ end) =
 struct
   let v i = value (Num (T.num i))
 
-  let sym x = mk_symbol Symbol.(x @: T.ty)
+  let sym x = symbol Symbol.(x @: T.ty)
 
   let ( ~- ) e = unop T.ty Neg e
 
