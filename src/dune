@@ -1,6 +1,12 @@
 (include_subdirs unqualified)
 
 (library
+ (name smtml_prelude)
+ (public_name smtml.prelude)
+ (modules smtml_prelude)
+ (libraries prelude))
+
+(library
  (name smtml)
  (public_name smtml)
  (modules
@@ -32,7 +38,6 @@
   solver
   solver_intf
   solver_dispatcher
-  syntax
   smtlib
   symbol
   statistics
@@ -42,13 +47,13 @@
   z3_mappings)
  (private_modules lexer parser)
  (flags
-  (:standard -open Prelude))
+  (:standard -open Smtml_prelude))
  (libraries
   dolmen
   hc
   menhirLib
   ocaml_intrinsics
-  prelude
+  smtml.prelude
   rusage
   patricia-tree
   yojson
