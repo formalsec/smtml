@@ -1,3 +1,5 @@
+include Prelude
+
 module Option = struct
   include Option
 
