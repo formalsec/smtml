@@ -107,3 +107,7 @@ To illustrate, let's consider retrieving the value of [x] from our previous exam
 In this snippet, we add our constraint to the solver, ensure its satisfiability,
 and then retrieve the value of [x]. The retrieved value is subsequently formatted
 for display using the Format module.
+
+{1 More Examples}
+
+More examples can be found {{!examples}here}.

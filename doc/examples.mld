@@ -1,0 +1,195 @@
+{0 Examples}
+
+This section provides some examples on how to use {!Smtml} to solve problems.
+
+{1 Product Mix}
+
+This example is the third project from the first semester of 23/24 of the
+curricular unit Analysis and Synthesis of Algorithms (ASA) from the computer
+science course at Instituto Superior Técnico.
+
+The following problem statement is the translated version of the Portuguese
+original.
+
+The goal of the example is to use linear programming to solve a maximization
+objective.
+
+{2 Problem Description}
+
+Professor Natalino Caracol has been hired by the company UbiquityInc in
+Rovaniemi, Lapland, to develop a program that estimates the maximum profit
+achievable through the production and sale of toys during Christmas.
+
+The company produces a set of $n$ wooden toys {m \{x_1, \ldots, x_n\}} daily,
+where each toy {m x_i} has a profit {m l_i}. In addition to a maximum production
+limit for each toy due to assembly line constraints, the company is restricted
+to a maximum total quantity of toys that can be produced per day due to
+constraints in the boreal forest. Additionally, this Christmas, the company
+has decided to not only sell each toy individually but also special packages
+containing three distinct toys, whose profit is greater than the sum of the
+individual profits of the toys it comprises.
+
+The objective is to advise Rüdolf, CEO of UbiquityInc, on the maximum daily
+profit obtainable. UbiquityInc will subsequently handle the distribution problem.
+
+{2 Input}
+
+The input file contains information about the {m n} products, their profit, and
+the production capacity of each, as follows:
+
+{@sh file=examples/in/teste01.in[
+5 2 150
+50 27
+30 33
+45 30
+40 37
+35 35
+1 3 5 130
+2 3 4 130
+]}
+
+- A line containing three integers: {m t} indicating the number of different toys that can be produced, {m p} indicating the number of special packages, and {m max} indicating the maximum number of toys that can be produced per day.
+- A list of {m n} lines, where each line contains two integers {m l_i} and {m c_i}, indicating the profit and production capacity of toy {m i}.
+- A list of {m p} lines, where each line contains four integers {m i}, {m j}, {m k}, and {m l_{ijk}}, indicating the profit {m l_{ijk}} of the special package {m \{i, j, k\}}, and the names of the products {m i}, {m j}, and {m k} that constitute it.
+
+Any integers in a line are separated by exactly one space, with no other
+characters except the end of the line.
+
+{2 Output}
+
+The program should write to the output an integer corresponding to the maximum
+profit that Rüdolf can obtain daily.
+
+{2 Solution}
+
+The code solution is transcribed below:
+
+{@ocaml file=examples/product_mix.ml[
+open Smtml
+module Z3 = Optimizer.Z3
+
+let read_int () = Scanf.scanf " %d" (fun x -> x)
+
+let int x = Expr.value (Int x)
+
+let symbol x = Expr.symbol Symbol.(x @: Ty_int)
+
+let ( = ) i1 i2 = Expr.relop Ty_bool Eq i1 i2
+
+let ( >= ) i1 i2 = Expr.relop Ty_int Ge i1 i2
+
+let ( <= ) i1 i2 = Expr.relop Ty_int Le i1 i2
+
+let ( + ) i1 i2 = Expr.binop Ty_int Add i1 i2
+
+let ( * ) i1 i2 = Expr.binop Ty_int Mul i1 i2
+
+let ( && ) b1 b2 = Expr.binop Ty_bool And b1 b2
+
+let sum (lst : Expr.t list) : Expr.t = List.fold_left ( + ) (int 0) lst
+
+type toy =
+  { var : Expr.t
+  ; profit : Expr.t
+  ; prod_capacity : Expr.t
+  ; mutable in_packs : Expr.t list
+  }
+
+type pack =
+  { var : Expr.t
+  ; profit : Expr.t
+  }
+
+let toy (i : int) : toy =
+  let var = symbol ("t" ^ string_of_int i) in
+  let profit = int (read_int ()) in
+  let prod_capacity = int (read_int ()) in
+  { var; profit; prod_capacity; in_packs = [] }
+
+let pack (toys : toy list) (i : int) =
+  let var = symbol ("p" ^ string_of_int i) in
+  let add_toy_in_pack i =
+    let toy = List.nth toys i in
+    toy.in_packs <- var :: toy.in_packs
+  in
+  add_toy_in_pack (read_int () - 1);
+  add_toy_in_pack (read_int () - 1);
+  add_toy_in_pack (read_int () - 1);
+  let profit = int (read_int ()) in
+  { var; profit }
+
+let solve (toys : toy list) (packs : pack list) (daily_max : int) =
+  let opt = Z3.create () in
+
+  (* C0: Constrain capacity of each toy and pack *)
+  (* Pack quantity is non-zero *)
+  let zero = int 0 in
+  let pack_quantity = List.map (fun (p : pack) -> p.var >= zero) packs in
+  (* Toy quantity is non-zero and does not exceed prod_capacity *)
+  let toy_quantity =
+    List.map
+      (fun (t : toy) ->
+        t.var >= zero && t.var + sum t.in_packs <= t.prod_capacity )
+      toys
+  in
+  Z3.add opt (pack_quantity @ toy_quantity);
+
+  (* C1: Constrain maximum daily production capacity *)
+  let cap =
+    sum (List.map (fun (t : toy) -> t.var) toys)
+    + sum (List.map (fun (p : pack) -> p.var * int 3) packs)
+    <= int daily_max
+  in
+  Z3.add opt [ cap ];
+
+  (* Objective: maximum profit *)
+  let profit = symbol "profit" in
+  let objective =
+    sum (List.map (fun (t : toy) -> t.var * t.profit) toys)
+    + sum (List.map (fun (p : pack) -> p.var * p.profit) packs)
+    = profit
+  in
+  Z3.add opt [ objective ];
+
+  (* Maximise *)
+  match Z3.maximize opt profit with
+  | Some v -> Format.printf "%a@." Value.pp v
+  | None -> Format.printf "Unfeasible@."
+
+let () =
+  let num_toys : int = read_int () in
+  let num_packs : int = read_int () in
+  let max_daily_toys : int = read_int () in
+  let toys : toy list = List.init num_toys toy in
+  let packs : pack list = List.init num_packs (pack toys) in
+  solve toys packs max_daily_toys
+]}
+
+Expected results for testing inputs:
+
+{@sh[
+$ ./examples/product_mix.exe < ./examples/in/teste01.in
+6440
+$ ./examples/product_mix.exe < ./examples/in/teste02.in
+750
+$ ./examples/product_mix.exe < ./examples/in/teste03.in
+50
+$ ./examples/product_mix.exe < ./examples/in/teste04.in
+60
+$ ./examples/product_mix.exe < ./examples/in/teste05.in
+56
+$ ./examples/product_mix.exe < ./examples/in/teste06.in
+55
+$ ./examples/product_mix.exe < ./examples/in/teste07.in
+40
+$ ./examples/product_mix.exe < ./examples/in/teste08.in
+60
+$ ./examples/product_mix.exe < ./examples/in/teste09.in
+95
+$ ./examples/product_mix.exe < ./examples/in/teste10.in
+215
+$ ./examples/product_mix.exe < ./examples/in/teste11.in
+4204
+$ ./examples/product_mix.exe < ./examples/in/teste12.in
+0
+]}

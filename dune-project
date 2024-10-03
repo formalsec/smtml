@@ -65,6 +65,8 @@
    (>= "1.6.0"))
   (odoc
    :with-doc)
+  (sherlodoc
+   :with-doc)
   (bisect_ppx
    (and
     :with-test
