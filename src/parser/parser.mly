@@ -71,7 +71,7 @@ let stmt :=
   | LPAREN; SET_LOGIC; ~ = LOGIC; RPAREN; <Ast.Set_logic>
 
 let s_expr :=
-  | x = SYMBOL; { mk_symbol @@ Symbol.make (get_bind x) x }
+  | x = SYMBOL; { Expr.symbol (Symbol.make (get_bind x) x) }
   | c = spec_constant; { make (Val c) }
   | LPAREN; op = paren_op; RPAREN; { make op }
 
