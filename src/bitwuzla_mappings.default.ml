@@ -211,11 +211,9 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     let is_suffix _ ~suffix:_ =
       Fmt.failwith "Bitwuzla_mappings: String.is_suffix not implemented"
 
-    let lt _ =
-      Fmt.failwith "Bitwuzla_mappings: String.lt not implemented"
+    let lt _ = Fmt.failwith "Bitwuzla_mappings: String.lt not implemented"
 
-    let le _ =
-      Fmt.failwith "Bitwuzla_mappings: String.le not implemented"
+    let le _ = Fmt.failwith "Bitwuzla_mappings: String.le not implemented"
 
     let sub _ ~pos:_ ~len:_ =
       Fmt.failwith "Bitwuzla_mappings: String.sub not implemented"
