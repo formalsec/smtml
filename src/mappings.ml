@@ -79,14 +79,16 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         Fmt.failwith "Unsupported theory: %a@." Ty.pp ty
 
     let make_symbol (ctx : symbol_ctx) (s : Symbol.t) : symbol_ctx * M.term =
-      match Smap.find_opt s ctx with
-      | Some sym -> (ctx, sym)
-      | None ->
-        let name =
-          match s.name with Simple name -> name | _ -> assert false
-        in
+      let name = match s.name with Simple name -> name | _ -> assert false in
+      if M.caches_consts then
         let sym = M.const name (get_type s.ty) in
         (Smap.add s sym ctx, sym)
+      else
+        match Smap.find_opt s ctx with
+        | Some sym -> (ctx, sym)
+        | None ->
+          let sym = M.const name (get_type s.ty) in
+          (Smap.add s sym ctx, sym)
 
     module Bool_impl = struct
       let true_ = M.true_

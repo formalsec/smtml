@@ -39,6 +39,8 @@ module type M = sig
 
   type func_decl
 
+  val caches_consts : bool
+
   val true_ : term
 
   val false_ : term
