@@ -178,7 +178,7 @@ val naryop_equal : naryop -> naryop -> bool
 
 val equal : t -> t -> bool
 
-val logic_of_string : string -> (logic, [> `Msg of string]) result
+val logic_of_string : string -> (logic, [> `Msg of string ]) result
 
 val pp_unop : Fmt.formatter -> unop -> unit
 
