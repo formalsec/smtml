@@ -34,6 +34,8 @@ module Nop = struct
 
     type func_decl = unit
 
+    let caches_consts = false
+
     let true_ = ()
 
     let false_ = ()

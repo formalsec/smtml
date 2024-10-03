@@ -36,6 +36,8 @@ module Fresh_cvc5 () = struct
 
   type func_decl = unit
 
+  let caches_consts = false
+
   let tm = TermManager.mk_tm ()
 
   let true_ = Term.mk_true tm

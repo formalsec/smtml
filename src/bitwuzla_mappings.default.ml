@@ -18,6 +18,7 @@
 
 include Mappings_intf
 
+(* Hack: this was a hack to try and run bitwuzla in Owi *)
 let leak =
   let leaky_list = ref [] in
   let mutex = Mutex.create () in
@@ -47,6 +48,8 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
   (* Not supported *)
   type func_decl = unit
+
+  let caches_consts = false
 
   let true_ = mk_true ()
 
