@@ -16,6 +16,8 @@
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
 
+exception Syntax_error of string
+
 module Smtml = struct
   open Lexer
   open Lexing
@@ -28,11 +30,9 @@ module Smtml = struct
   let parse_with_error lexbuf =
     try Parser.script Lexer.token lexbuf with
     | SyntaxError msg ->
-      Fmt.epr "%a: %s\n" pp_pos lexbuf msg;
-      []
+      raise (Syntax_error (Fmt.str "%a: %s" pp_pos lexbuf msg))
     | Parser.Error ->
-      Fmt.epr "%a: syntax error\n" pp_pos lexbuf;
-      exit 1
+      raise (Syntax_error (Fmt.str "%a: syntax error" pp_pos lexbuf))
 
   let from_file filename =
     let res =
@@ -41,13 +41,10 @@ module Smtml = struct
           let lexbuf = Lexing.from_channel chan in
           lexbuf.lex_curr_p <-
             { lexbuf.lex_curr_p with pos_fname = Fpath.to_string filename };
-          Ok (parse_with_error lexbuf) )
+          parse_with_error lexbuf )
         ()
     in
-    match res with
-    | Error (`Msg e) -> Fmt.failwith "%s" e
-    | Ok (Error (`Msg e)) -> Fmt.failwith "%s" e
-    | Ok (Ok v) -> v
+    match res with Error (`Msg e) -> Fmt.failwith "%s" e | Ok v -> v
 
   let from_string contents = parse_with_error (Lexing.from_string contents)
 end
@@ -59,9 +56,15 @@ module Smtlib = struct
       Lazy.force st
     with
     | Dolmen.Std.Loc.Syntax_error (loc, `Regular msg) ->
-      Fmt.failwith "%a: syntax error: %t" Dolmen.Std.Loc.print_compact loc msg
+      raise
+        (Syntax_error
+           (Fmt.str "%a: syntax error: %t" Dolmen.Std.Loc.print_compact loc msg)
+        )
     | Dolmen.Std.Loc.Syntax_error (loc, `Advanced (x, _, _, _)) ->
-      Fmt.failwith "%a: syntax error: %s" Dolmen.Std.Loc.print_compact loc x
+      raise
+        (Syntax_error
+           (Fmt.str "%a: syntax error: %s" Dolmen.Std.Loc.print_compact loc x)
+        )
 end
 
 let from_file filename =

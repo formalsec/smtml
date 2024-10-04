@@ -16,6 +16,8 @@
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
 
+exception Syntax_error of string
+
 module Smtml : sig
   val from_file : Fpath.t -> Ast.script
 
