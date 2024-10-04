@@ -25,7 +25,6 @@ type t =
   | Int of int
   | Real of float
   | Str of string
-  | Regexp of string
   | Num of Num.t
   | List of t list
   | App : [> `Op of string ] * t list -> t
@@ -38,14 +37,14 @@ let rec compare (v1 : t) (v2 : t) : int =
   | True, False -> 1
   | Int x1, Int x2 -> Int.compare x1 x2
   | Real x1, Real x2 -> Float.compare x1 x2
-  | Str x1, Str x2 | Regexp x1, Regexp x2 -> String.compare x1 x2
+  | Str x1, Str x2 -> String.compare x1 x2
   | Num x1, Num x2 -> Num.compare x1 x2
   | List l1, List l2 -> List.compare compare l1 l2
   | App (`Op op1, vs1), App (`Op op2, vs2) ->
     let c = String.compare op1 op2 in
     if c = 0 then List.compare compare vs1 vs2 else c
   | ( ( True | False | Unit | Int _ | Real _ | Str _ | Num _ | List _ | App _
-      | Nothing | Regexp _ )
+      | Nothing )
     , _ ) ->
     assert false
 
@@ -54,13 +53,13 @@ let rec equal (v1 : t) (v2 : t) : bool =
   | True, True | False, False | Unit, Unit | Nothing, Nothing -> true
   | Int x1, Int x2 -> Int.equal x1 x2
   | Real x1, Real x2 -> Float.equal x1 x2
-  | Str x1, Str x2 | Regexp x1, Regexp x2 -> String.equal x1 x2
+  | Str x1, Str x2 -> String.equal x1 x2
   | Num x1, Num x2 -> Num.equal x1 x2
   | List l1, List l2 -> List.equal equal l1 l2
   | App (`Op op1, vs1), App (`Op op2, vs2) ->
     String.equal op1 op2 && List.equal equal vs1 vs2
   | ( ( True | False | Unit | Int _ | Real _ | Str _ | Num _ | List _ | App _
-      | Nothing | Regexp _ )
+      | Nothing )
     , _ ) ->
     false
 
@@ -77,7 +76,6 @@ let rec pp (fmt : Fmt.formatter) (v : t) : unit =
   | Real x -> Fmt.pf fmt "%F" x
   | Num x -> Num.pp fmt x
   | Str x -> Fmt.pf fmt "%S" x
-  | Regexp x -> Fmt.pf fmt "%S" x
   | List l -> (Fmt.hovbox ~indent:1 (Fmt.list ~sep:Fmt.comma pp)) fmt l
   | App (`Op op, vs) ->
     Fmt.pf fmt "@[<hov 1>%s(%a)@]" op (Fmt.list ~sep:Fmt.comma pp) vs
@@ -94,7 +92,6 @@ let rec to_json (v : t) : Yojson.Basic.t =
   | Int int -> `Int int
   | Real real -> `Float real
   | Str str -> `String str
-  | Regexp str -> `String str
   | Num n -> Num.to_json n
   | List l -> `List (List.map to_json l)
   | Nothing -> `Null
@@ -107,7 +104,6 @@ let type_of (v : t) : Ty.t =
   | Int _ -> Ty_int
   | Real _ -> Ty_real
   | Str _ -> Ty_str
-  | Regexp _ -> Ty_regexp
   | Num n -> Num.type_of n
   | List _ -> Ty_list
   | App _ -> Ty_app

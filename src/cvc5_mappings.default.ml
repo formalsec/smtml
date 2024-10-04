@@ -208,6 +208,12 @@ module Fresh_cvc5 () = struct
   module Re = struct
     let star t = Term.mk_term tm Kind.Regexp_star [| t |]
 
+    let plus t = Term.mk_term tm Kind.Regexp_plus [| t |]
+
+    let opt t = Term.mk_term tm Kind.Regexp_opt [| t |]
+
+    let comp t = Term.mk_term tm Kind.Regexp_complement [| t |]
+
     let range t1 t2 = Term.mk_term tm Kind.Regexp_range [| t1; t2 |]
 
     let loop t i1 i2 =

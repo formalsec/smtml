@@ -187,6 +187,12 @@ module Nop = struct
     module Re = struct
       let star _ = assert false
 
+      let plus _ = assert false
+
+      let opt _ = assert false
+
+      let comp _ = assert false
+
       let range _ = assert false
 
       let loop _ = assert false

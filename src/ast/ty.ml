@@ -56,6 +56,9 @@ type unop =
   (* RegExp *)
   | Regexp_star
   | Regexp_loop of (int * int)
+  | Regexp_plus
+  | Regexp_opt
+  | Regexp_comp
 
 let unop_equal o1 o2 =
   match (o1, o2) with
@@ -76,11 +79,14 @@ let unop_equal o1 o2 =
   | Length, Length
   | Trim, Trim
   | Regexp_star, Regexp_star
-  | Regexp_loop _, Regexp_loop _ ->
+  | Regexp_loop _, Regexp_loop _
+  | Regexp_plus, Regexp_plus
+  | Regexp_opt, Regexp_opt
+  | Regexp_comp, Regexp_comp ->
     true
   | ( ( Neg | Not | Clz | Ctz | Abs | Sqrt | Is_nan | Ceil | Floor | Trunc
       | Nearest | Head | Tail | Reverse | Length | Trim | Regexp_star
-      | Regexp_loop _ )
+      | Regexp_loop _ | Regexp_plus | Regexp_opt | Regexp_comp )
     , _ ) ->
     false
 
@@ -324,6 +330,9 @@ let pp_unop fmt (op : unop) =
   | Trim -> Fmt.string fmt "trim"
   | Regexp_star -> Fmt.string fmt "*"
   | Regexp_loop _ -> Fmt.string fmt "loop"
+  | Regexp_plus -> Fmt.string fmt "+"
+  | Regexp_opt -> Fmt.string fmt "opt"
+  | Regexp_comp -> Fmt.string fmt "comp"
 
 let pp_binop fmt (op : binop) =
   match op with

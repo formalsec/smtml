@@ -149,7 +149,10 @@ module Term = struct
       | "str.to_int", [ a ] -> Expr.cvtop' Ty_str String_to_int a
       | "str.from_int", [ a ] -> Expr.cvtop' Ty_str String_from_int a
       | "str.to_re", [ a ] -> Expr.cvtop' Ty_str String_to_re a
-      | "re.star", [ a ] -> Expr.unop' Ty_regexp Regexp_star a
+      | "re.*", [ a ] -> Expr.unop' Ty_regexp Regexp_star a
+      | "re.+", [ a ] -> Expr.unop' Ty_regexp Regexp_plus a
+      | "re.opt", [ a ] -> Expr.unop' Ty_regexp Regexp_opt a
+      | "re.comp", [ a ] -> Expr.unop' Ty_regexp Regexp_comp a
       | "re.range", [ a; b ] -> Expr.binop' Ty_regexp Regexp_range a b
       | "re.union", n -> Expr.naryop' Ty_regexp Regexp_union n
       | "re.++", n -> Expr.naryop' Ty_regexp Concat n

@@ -229,8 +229,13 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
   end
 
   module Re = struct
-    
-    let star _ = Fmt.failwith "Bitwuzla_mappings: Re.star not implemented" 
+    let star _ = Fmt.failwith "Bitwuzla_mappings: Re.star not implemented"
+
+    let plus _ = Fmt.failwith "Bitwuzla_mappings: Re.plus not implemented"
+
+    let opt _ = Fmt.failwith "Bitwuzla_mappings: Re.opt not implemented"
+
+    let comp _ = Fmt.failwith "Bitwuzla_mappings: Re.comp not implemented"
 
     let range _ = Fmt.failwith "Bitwuzla_mappings: Re.range not implemented"
 
@@ -239,7 +244,6 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     let union _ = Fmt.failwith "Bitwuzla_mappings: Re.union not implemented"
 
     let concat _ = Fmt.failwith "Bitwuzla_mappings: Re.concat not implemented"
-
   end
 
   module Bitv = struct
