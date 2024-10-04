@@ -63,10 +63,12 @@ module Make (Solver : Solver_intf.S) = struct
     | Pop n ->
       Solver.pop solver n;
       state
-    | Set_logic logic ->
-      let solver = Solver.create ~logic () in
-      Solver.push solver;
-      { state with solver }
+    | Set_logic _logic ->
+      state
+      (* FIXME: Ignoring logic for now *)
+      (* let solver = Solver.create ~logic () in *)
+      (* Solver.push solver; *)
+      (* { state with solver } *)
     | Set_info attr ->
       Log.debug (fun k -> k "Unsupported: (set-info %a)" Expr.pp attr);
       state
