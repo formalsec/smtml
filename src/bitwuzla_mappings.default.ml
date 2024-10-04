@@ -200,6 +200,10 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     let of_int _ =
       Fmt.failwith "Bitwuzla_mappings: String.of_int not implemented"
 
+    let to_re _ = Fmt.failwith "Bitwuzla_mappings: String.to_re not implemented"
+
+    let in_re _ = Fmt.failwith "Bitwuzla_mappings: String.in_re not implemented"
+
     let at _ = Fmt.failwith "Bitwuzla_mappings: String.at not implemented"
 
     let concat _ =
@@ -321,9 +325,57 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
       let rtz = mk_rm_value RoundingMode.Rtz
     end
 
-    let v real ebits sbits =
-      let real_s = string_of_float real in
-      mk_fp_value_from_real (Types.float ebits sbits) Rounding_mode.rne real_s
+    let extract_sign_i32 i32 =
+      (Int32.to_int @@ Int32.shift_right_logical i32 31) land 1
+
+    let extract_exponent_i32 i32 =
+      Int32.logand (Int32.shift_right_logical i32 23) 0xFFl
+
+    let extract_significand_i32 i32 = Int32.logand i32 0x7FFFFFl
+
+    let v32 (i : int32) es eb =
+      let sort_sign = mk_bv_sort 1 in
+      let sign =
+        mk_bv_value sort_sign (string_of_int @@ extract_sign_i32 i) 10
+      in
+      let sort_exp = mk_bv_sort es in
+      let exp =
+        mk_bv_value sort_exp (Int32.to_string @@ extract_exponent_i32 i) 10
+      in
+      let sort_sig_ = mk_bv_sort (eb - 1) in
+      let sig_ =
+        mk_bv_value sort_sig_ (Int32.to_string @@ extract_significand_i32 i) 10
+      in
+      mk_fp_value sign exp sig_
+
+    let extract_sign_i64 i64 =
+      (Int64.to_int @@ Int64.shift_right_logical i64 63) land 1
+
+    let extract_exponent_i64 i64 =
+      Int64.logand (Int64.shift_right_logical i64 52) 0x7FFL
+
+    let extract_significand_i64 i64 = Int64.logand i64 0xFFFFFFFFFFFFFL
+
+    let v64 (i : int64) es eb =
+      let sort_sign = mk_bv_sort 1 in
+      let sign =
+        mk_bv_value sort_sign (string_of_int @@ extract_sign_i64 i) 10
+      in
+      let sort_exp = mk_bv_sort es in
+      let exp =
+        mk_bv_value sort_exp (Int64.to_string @@ extract_exponent_i64 i) 10
+      in
+      let sort_sig_ = mk_bv_sort (eb - 1) in
+      let sig_ =
+        mk_bv_value sort_sig_ (Int64.to_string @@ extract_significand_i64 i) 10
+      in
+      mk_fp_value sign exp sig_
+
+    let v f es eb =
+      match es + eb with
+      | 32 -> v32 (Int32.bits_of_float f) es eb
+      | 64 -> v64 (Int64.bits_of_float f) es eb
+      | _ -> Fmt.failwith "Bitwuzla_mappings: Unsupported floating-point size"
 
     let neg t = mk_term1 Kind.Fp_neg t
 
