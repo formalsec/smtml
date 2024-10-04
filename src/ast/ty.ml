@@ -463,7 +463,7 @@ let pp_logic fmt = function
   | UFNIA -> Fmt.string fmt "UFNIA"
 
 let logic_of_string logic =
-  match String.map Char.lowercase_ascii logic with
+  match logic with
   | "ALL" -> Ok ALL
   | "AUFLIA" -> Ok AUFLIA
   | "AUFLIRA" -> Ok AUFLIRA
