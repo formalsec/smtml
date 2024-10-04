@@ -36,7 +36,7 @@ val num_of_bool : bool -> t
 
 val set_default_printer : printer -> unit
 
-val pp : Fmt.formatter -> t -> unit
+val pp : t Fmt.t
 
 val to_string : t -> string
 

@@ -36,7 +36,7 @@ val map : t -> (t -> t) -> t
 
 val ( let+ ) : t -> (t -> t) -> t
 
-val pp : Fmt.formatter -> t -> unit
+val pp : t Fmt.t
 
 val to_string : t -> string
 

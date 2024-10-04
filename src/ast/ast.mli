@@ -41,6 +41,6 @@ type t =
 
 type script = t list
 
-val pp : Fmt.formatter -> t -> unit
+val pp : t Fmt.t
 
 val to_string : t -> string

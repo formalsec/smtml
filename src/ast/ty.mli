@@ -192,21 +192,21 @@ val equal : t -> t -> bool
 
 val logic_of_string : string -> (logic, [> `Msg of string ]) result
 
-val pp_unop : Fmt.formatter -> unop -> unit
+val pp_unop : unop Fmt.t
 
-val pp_binop : Fmt.formatter -> binop -> unit
+val pp_binop : binop Fmt.t
 
-val pp_triop : Fmt.formatter -> triop -> unit
+val pp_triop : triop Fmt.t
 
-val pp_relop : Fmt.formatter -> relop -> unit
+val pp_relop : relop Fmt.t
 
-val pp_cvtop : Fmt.formatter -> cvtop -> unit
+val pp_cvtop : cvtop Fmt.t
 
-val pp_naryop : Fmt.formatter -> naryop -> unit
+val pp_naryop : naryop Fmt.t
 
-val pp : Fmt.formatter -> t -> unit
+val pp : t Fmt.t
 
-val pp_logic : Fmt.formatter -> logic -> unit
+val pp_logic : logic Fmt.t
 
 val string_of_type : t -> string
 

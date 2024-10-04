@@ -43,7 +43,7 @@ let pp_bindings fmt ?(no_values = false) model =
         Fmt.pf fmt "(%a %a)" Symbol.pp key Ty.pp t )
     fmt (get_bindings model)
 
-let pp fmt ?(no_values = false) model =
+let pp ?(no_values = false) fmt model =
   Fmt.pf fmt "(model@\n  @[<v>%a@])" (pp_bindings ~no_values) model
 
 let to_string (model : t) : string = Fmt.str "%a" (pp ~no_values:false) model
