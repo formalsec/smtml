@@ -192,6 +192,12 @@ module type M = sig
   module Re : sig
     val star : term -> term
 
+    val plus : term -> term
+
+    val opt : term -> term
+
+    val comp : term -> term
+
     val range : term -> term -> term
 
     val loop : term -> int -> int -> term

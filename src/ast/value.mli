@@ -23,7 +23,6 @@ type t =
   | Int of int
   | Real of float
   | Str of string
-  | Regexp of string
   | Num of Num.t
   | List of t list
   | App : [> `Op of string ] * t list -> t

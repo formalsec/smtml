@@ -279,6 +279,9 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       let unop op e =
         match op with
         | Regexp_star -> M.Re.star e
+        | Regexp_plus -> M.Re.plus e
+        | Regexp_opt -> M.Re.opt e
+        | Regexp_comp -> M.Re.comp e
         | Regexp_loop (i1, i2) -> M.Re.loop e i1 i2
         | op ->
           Fmt.failwith {|Regexp: Unsupported unop operator "%a"|} Ty.pp_unop op
@@ -567,7 +570,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Num (I64 x) -> I64.v x
       | Num (F32 x) -> Float32_impl.v x
       | Num (F64 x) -> Float64_impl.v x
-      | List _ | App _ | Unit | Nothing | Regexp _ -> assert false
+      | List _ | App _ | Unit | Nothing -> assert false
 
     let unop = function
       | Ty.Ty_int -> Int_impl.unop

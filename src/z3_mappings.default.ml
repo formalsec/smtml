@@ -248,6 +248,12 @@ module M = struct
     module Re = struct
       let star e = Z3.Seq.mk_re_star ctx e
 
+      let plus e = Z3.Seq.mk_re_plus ctx e
+
+      let opt e = Z3.Seq.mk_re_option ctx e
+
+      let comp e = Z3.Seq.mk_re_complement ctx e
+
       let range e1 e2 = Z3.Seq.mk_re_range ctx e1 e2
 
       let loop e i1 i2 = Z3.Seq.mk_re_loop ctx e i1 i2

@@ -56,6 +56,9 @@ type unop =
   (* Regexp *)
   | Regexp_star
   | Regexp_loop of (int * int)
+  | Regexp_plus
+  | Regexp_opt
+  | Regexp_comp
 
 type binop =
   | Add
