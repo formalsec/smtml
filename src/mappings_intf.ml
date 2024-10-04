@@ -380,7 +380,7 @@ module type M = sig
 
     val get_statistics : solver -> Statistics.t
 
-    val pp_statistics : Fmt.formatter -> solver -> unit
+    val pp_statistics : solver Fmt.t
   end
 
   module Optimizer : sig
@@ -404,7 +404,7 @@ module type M = sig
 
     val get_statistics : optimizer -> Statistics.t
 
-    val pp_statistics : Fmt.formatter -> optimizer -> unit
+    val pp_statistics : optimizer Fmt.t
   end
 
   module Smtlib : sig
@@ -412,9 +412,7 @@ module type M = sig
          ?name:string
       -> ?logic:Ty.logic
       -> ?status:satisfiability
-      -> Fmt.formatter
-      -> term list
-      -> unit
+      -> term list Fmt.t
   end
 end
 
@@ -446,9 +444,7 @@ module type S = sig
          ?name:string
       -> ?logic:Ty.logic
       -> ?status:satisfiability
-      -> Fmt.formatter
-      -> Expr.t list
-      -> unit
+      -> Expr.t list Fmt.t
   end
 
   module Solver : sig

@@ -67,8 +67,7 @@ let map v f = match v with Nothing -> Nothing | _ -> f v
 
 let ( let+ ) = map
 
-let rec pp (fmt : Fmt.formatter) (v : t) : unit =
-  match v with
+let rec pp fmt = function
   | True -> Fmt.string fmt "true"
   | False -> Fmt.string fmt "false"
   | Unit -> Fmt.string fmt "unit"

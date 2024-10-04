@@ -63,11 +63,11 @@ val get_symbols : t list -> Symbol.t list
 
 val negate_relop : t -> (t, string) Result.t
 
-val pp : Fmt.formatter -> t -> unit
+val pp : t Fmt.t
 
-val pp_smt : Fmt.formatter -> t list -> unit
+val pp_smt : t list Fmt.t
 
-val pp_list : Fmt.formatter -> t list -> unit
+val pp_list : t list Fmt.t
 
 val to_string : t -> string
 

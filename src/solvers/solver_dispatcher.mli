@@ -16,4 +16,4 @@ val mappings_of_solver : solver_type -> (module Mappings.S_with_fresh)
 
 val solver_type_of_string : string -> (solver_type, [> `Msg of string ]) result
 
-val pp_solver_type : Fmt.formatter -> solver_type -> unit
+val pp_solver_type : solver_type Fmt.t

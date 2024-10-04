@@ -30,7 +30,7 @@ module type S = sig
   val solver_count : int ref
 
   (** Print solver statistics. *)
-  val pp_statistics : Fmt.formatter -> t -> unit
+  val pp_statistics : t Fmt.t
 
   (** [create ?params ?logic ()] creates a new solver.
 

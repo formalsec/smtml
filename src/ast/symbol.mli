@@ -61,9 +61,9 @@ val mk : namespace -> string -> t
 
 val indexed : namespace -> string -> string list -> t
 
-val pp_namespace : Fmt.formatter -> namespace -> unit
+val pp_namespace : namespace Fmt.t
 
-val pp : Fmt.formatter -> t -> unit
+val pp : t Fmt.t
 
 val to_string : t -> string
 

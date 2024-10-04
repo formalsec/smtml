@@ -26,7 +26,7 @@ module Z3 :
     type solver = Smtml.Solver.Batch(Smtml.Z3_mappings).solver
     val solver_time : float ref
     val solver_count : int ref
-    val pp_statistics : Format.formatter -> t -> unit
+    val pp_statistics : t Smtml_prelude.Fmt.t
     val create : ?params:Smtml.Params.t -> ?logic:Smtml.Ty.logic -> unit -> t
     val interrupt : t -> unit
     val clone : t -> t
