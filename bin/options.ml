@@ -44,25 +44,16 @@ let dry =
 
 let print_statistics =
   let doc = "Print statistics" in
-  Arg.(value & flag & info [ "st" ] ~doc)
+  Arg.(value & flag & info [ "print-statistics" ] ~doc)
 
-let cmd_run main =
-  let doc = "Run one script" in
+let cmd_run f =
+  let doc = "Runs one or more scripts using. Also supports directory inputs" in
   let info = Cmd.info "run" ~doc in
   Cmd.v info
-    Term.(const main $ debug $ solver $ solver_mode $ print_statistics $ file0)
-
-let cmd_test main =
-  let doc =
-    "Tests one or more scripts using the intermediate state. Also supports \
-     directory inputs"
-  in
-  let info = Cmd.info "test" ~doc in
-  Cmd.v info
     Term.(
-      const main $ debug $ solver $ solver_mode $ print_statistics $ dry $ files )
+      const f $ debug $ solver $ solver_mode $ dry $ print_statistics $ files )
 
-let cmd_to_smt2 main =
+let cmd_to_smt2 f =
   let doc = "Convert .smtml into .smt2" in
   let info = Cmd.info "to-smt2" ~doc in
-  Cmd.v info Term.(const main $ debug $ solver $ file0)
+  Cmd.v info Term.(const f $ debug $ solver $ file0)

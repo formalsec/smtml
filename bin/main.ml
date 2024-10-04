@@ -20,95 +20,97 @@ open Smtml
 open Solver_dispatcher
 
 let get_solver debug solver prover_mode =
-  let module Mappings =
-    (val mappings_of_solver solver : Mappings_intf.S_with_fresh)
+  let module Mappings = (val mappings_of_solver solver : Mappings.S_with_fresh)
   in
   Mappings.set_debug debug;
   match prover_mode with
-  | Options.Batch -> (module Solver.Batch (Mappings) : Solver_intf.S)
+  | Options.Batch -> (module Solver.Batch (Mappings) : Solver.S)
   | Cached -> (module Solver.Cached (Mappings))
   | Incremental -> (module Solver.Incremental (Mappings))
 
-let run debug solver prover_mode _print_statistics file =
+let run debug solver prover_mode dry print_statistics files =
+  if debug then Logs.Src.set_level Log.src (Some Logs.Debug);
+  Logs.set_reporter @@ Logs.format_reporter ();
   let module Solver = (val get_solver debug solver prover_mode) in
   let module Interpret = Interpret.Make (Solver) in
-  let ast = Compile.until_rewrite file in
-  let _ : Interpret.exec_state = Interpret.start ast in
-  ()
-
-let test debug solver prover_mode print_statistics dry files =
-  let module Solver = (val get_solver debug solver prover_mode) in
-  let module Interpret = Interpret.Make (Solver) in
-  (* TODO: Add proper logs *)
-  let debug fmt k = if debug then k (Fmt.epr fmt) in
-  let exception_log = ref [] in
   let total_tests = ref 0 in
+  let total_t = ref 0. in
+  let exception_log = ref [] in
   let exception_count = ref 0 in
-  let rec test_path state path =
-    if Sys.is_directory (Fpath.to_string path) then test_dir state path
-    else begin
-      debug "File %a...@." (fun k -> k Fpath.pp path);
-      try
-        incr total_tests;
-        let ast = Compile.until_rewrite path in
-        if dry then begin
-          state
-        end
-        else begin
-          Some (Interpret.start ?state ast)
-        end
-      with exn ->
-        incr exception_count;
-        let exn_msg = Printexc.to_string exn in
-        exception_log := (path, exn_msg) :: !exception_log;
-        debug "Error processing file %a@." (fun k -> k Fpath.pp path);
-        state
-    end
-  and test_dir state d =
+  let run_file state file =
+    Log.debug (fun k -> k "File %a..." Fpath.pp file);
+    incr total_tests;
+    let start_t = Unix.gettimeofday () in
+    Fun.protect ~finally:(fun () ->
+        if print_statistics then (
+          let exec_t = Unix.gettimeofday () -. start_t in
+          total_t := !total_t +. exec_t;
+          Log.app (fun m -> m "Run %a in %.06f" Fpath.pp file exec_t) ) )
+    @@ fun () ->
+    let ast =
+      try Ok (Compile.until_rewrite file)
+      with Parse.Syntax_error err -> Error (`Parsing_error (file, err))
+    in
+    match ast with
+    | Ok _ when dry -> state
+    | Ok ast -> Some (Interpret.start ?state ast)
+    | Error (`Parsing_error err) ->
+      Log.err (fun k -> k "Error while parsing %a" Fpath.pp file);
+      incr exception_count;
+      exception_log := err :: !exception_log;
+      state
+  in
+  let run_dir prev_state d =
     let result =
-      Bos.OS.Dir.fold_contents
+      Bos.OS.Dir.fold_contents ~traverse:`Any
         (fun path state ->
-          if Fpath.has_ext ".smt2" path then test_path state path else state )
-        state d
+          if Fpath.has_ext ".smt2" path then run_file state path else state )
+        prev_state d
     in
     match result with Error (`Msg e) -> failwith e | Ok state -> state
-  and test_files files = List.fold_left test_path None files in
-  let state = test_files files in
-  let write_exception_log () =
-    let oc = open_out "exceptions.log" in
-    let total = !total_tests in
-    let exceptions = !exception_count in
-    let percentage =
-      if total = 0 then 0.0
-      else float_of_int exceptions /. float_of_int total *. 100.0
-    in
-    Printf.fprintf oc "Total tests: %d\n" total;
-    Printf.fprintf oc "Exceptions: %d\n" exceptions;
-    Printf.fprintf oc "Exception percentage: %.2f%%\n\n" percentage;
-    List.iter
-      (fun (path, exn_msg) ->
-        Printf.fprintf oc "File: %s\nError: %s\n\n" (Fpath.to_string path)
-          exn_msg )
-      (List.rev !exception_log);
-    close_out oc
   in
-
-  if dry then begin
-    write_exception_log ()
-  end;
-  if print_statistics then begin
-    let state = Option.get state in
-    let stats : Gc.stat = Gc.stat () in
-    Format.eprintf
-      "@[<v 2>(statistics @\n\
-       (major-words %f)@\n\
-       (solver-time %f)@\n\
-       (solver-calls %d)@\n\
-       @[<v 2>(solver-misc @\n\
-       %a@])@])@\n"
-      stats.major_words !Solver.solver_time !Solver.solver_count
-      Solver.pp_statistics state.solver
-  end
+  let run_path prev_state path =
+    match Fpath.to_string path with
+    | "-" -> run_file prev_state path
+    | _ -> (
+      match Bos.OS.Path.exists path with
+      | Ok false ->
+        Log.warn (fun k -> k "%a: No such file or directory" Fpath.pp path);
+        prev_state
+      | Ok true ->
+        if Sys.is_directory (Fpath.to_string path) then run_dir prev_state path
+        else run_file prev_state path
+      | Error (`Msg err) ->
+        Log.err (fun k -> k "%s" err);
+        prev_state )
+  in
+  let _ = List.fold_left run_path None files in
+  if print_statistics then Log.app (fun k -> k "total time: %.06f" !total_t);
+  let write_exception_log = function
+    | [] -> Ok ()
+    | exns ->
+      let total = !total_tests in
+      let exceptions = !exception_count in
+      assert (total > 0);
+      let percentage = float exceptions /. float total *. 100.0 in
+      let log_fpath = Fpath.v "exceptions.log" in
+      Bos.OS.File.writef log_fpath
+        "Total tests: %d@\n\
+         Exceptions: %d@\n\
+         Exception percentage: %.2f%%@\n\
+         @\n\
+         %a"
+        total exceptions percentage
+        (Fmt.list
+           ~sep:(fun fmt () -> Fmt.pf fmt "@\n@\n")
+           (fun fmt (path, err) ->
+             Fmt.pf fmt "File: %a@\nError: %s" Fpath.pp path err ) )
+        exns
+  in
+  match write_exception_log !exception_log with
+  | Error (`Msg err) ->
+    Log.warn (fun k -> k "Could not write excptions log: %s" err)
+  | Ok () -> ()
 
 (* TODO: Remove once dolmen is integrated *)
 let to_smt2 debug solver filename =
@@ -128,7 +130,7 @@ let to_smt2 debug solver filename =
 let cli =
   Cmdliner.Cmd.group
     (Cmdliner.Cmd.info "smtml" ~version:"%%VERSION%%")
-    [ Options.cmd_run run; Options.cmd_test test; Options.cmd_to_smt2 to_smt2 ]
+    [ Options.cmd_run run; Options.cmd_to_smt2 to_smt2 ]
 
 let () =
   match Cmdliner.Cmd.eval_value cli with
