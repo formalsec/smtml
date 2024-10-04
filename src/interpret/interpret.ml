@@ -18,11 +18,6 @@
 
 include Interpret_intf
 
-(* TODO: Add proper logs *)
-let debug_interpreter = false
-
-let debug fmt k = if debug_interpreter then k (Fmt.epr fmt)
-
 module Make (Solver : Solver_intf.S) = struct
   open Ast
 
@@ -40,11 +35,11 @@ module Make (Solver : Solver_intf.S) = struct
     let { solver; _ } = state in
     match stmt with
     | Assert e ->
-      debug "assert: %a@." (fun k -> k Expr.pp e);
+      Log.debug (fun k -> k "assert: %a" Expr.pp e);
       Solver.add solver [ e ];
       state
     | Check_sat assumptions ->
-      debug "check-sat: %a@." (fun k -> k Expr.pp_list assumptions);
+      Log.debug (fun k -> k "check-sat: %a" Expr.pp_list assumptions);
       ( match Solver.check solver assumptions with
       | `Sat -> Fmt.pr "sat@."
       | `Unsat -> Fmt.pr "unsat@."
@@ -73,11 +68,12 @@ module Make (Solver : Solver_intf.S) = struct
       Solver.push solver;
       { state with solver }
     | Set_info attr ->
-      debug "Ignoring (set-info %a)@." (fun k -> k Expr.pp attr);
+      Log.debug (fun k -> k "Unsupported: (set-info %a)" Expr.pp attr);
       state
     | Get_assertions | Get_assignment | Reset | Reset_assertions | Get_info _
     | Get_option _ | Get_value _ | Set_option _ ->
-      Fmt.failwith "eval: TODO evaluation of command"
+      Log.debug (fun k -> k "Unsupported: %a" Ast.pp stmt);
+      state
 
   let rec loop (state : exec_state) : exec_state =
     match state.stmts with
@@ -85,7 +81,7 @@ module Make (Solver : Solver_intf.S) = struct
     | stmt :: stmts -> loop (eval stmt { state with stmts })
 
   let start ?state (stmts : Ast.script) : exec_state =
-    debug "interepreting ...@." (fun k -> k);
+    Log.debug (fun k -> k "Starting interpreter...");
     let st =
       match state with
       | None -> init_state stmts
