@@ -7,8 +7,8 @@ module Map = Map.Make (String)
 
 type t = entry Map.t
 
-let combine e1 e2 =
-  match (e1, e2) with
+let sum_entries entry1 entry2 =
+  match (entry1, entry2) with
   | `Int i1, `Int i2 -> `Int (i1 + i2)
   | `Float f1, `Float f2 -> `Float (f1 +. f2)
   | _ -> Fmt.failwith "Statistics: entry type mismatch"
@@ -17,7 +17,7 @@ let merge s1 s2 =
   Map.merge
     (fun _ left right ->
       match (left, right) with
-      | Some v1, Some v2 -> Some (combine v1 v2)
+      | Some left, Some right -> Some (sum_entries left right)
       | (Some _ as v), None | None, (Some _ as v) -> v
       | None, None -> None )
     s1 s2
@@ -26,12 +26,8 @@ let pp_entry fmt = function
   | `Int i -> Fmt.int fmt i
   | `Float f -> Fmt.float fmt f
 
-let pp fmt m =
-  let iter f v = Map.iter (fun a b -> f (a, b)) v in
-  let pp_v fmt (k, v) = Fmt.pf fmt "(%s, %a)" k pp_entry v in
-  let is_first = ref true in
-  let pp_v v =
-    if !is_first then is_first := false else Fmt.string fmt "@\n";
-    pp_v fmt v
-  in
-  iter pp_v m
+let pp =
+  Fmt.iter
+    ~sep:(fun fmt () -> Fmt.pf fmt "@;")
+    (fun f m -> Map.iter (fun a b -> f (a, b)) m)
+    (Fmt.pair ~sep:Fmt.comma Fmt.string pp_entry)
