@@ -1,9 +1,6 @@
 Test parsing a nonexistent file:
   $ smtml run idontexist.smt2
-  smtml: internal error, uncaught exception:
-         Sys_error("idontexist.smt2: No such file or directory")
-         
-  [2]
+  smtml: [WARNING] idontexist.smt2: No such file or directory
 
 Test parsing an empty file:
   $ smtml run test_empty.smt2
