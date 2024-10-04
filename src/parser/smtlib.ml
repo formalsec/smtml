@@ -350,7 +350,7 @@ module Statement = struct
 
   let set_logic ?loc logic =
     let logic =
-      Logs.on_error ~level:Logs.Warning
+      Log.on_error ~level:Logs.Debug
         ~pp:(fun fmt (`Msg err) -> Fmt.pf fmt "%a%s. Using: ALL" pp_loc loc err)
         ~use:(fun _ -> Ty.ALL)
         (Ty.logic_of_string logic)
