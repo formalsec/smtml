@@ -73,15 +73,19 @@
     (>= "2.5.0")))
   (benchpress
    (and
-    :with-test
+    :with-dev-setup
     (= "dev")))
   (cohttp
-   :with-test)
+   :with-dev-setup)
   (cohttp-lwt-unix
-   :with-test)
+   :with-dev-setup)
   (lwt
-   :with-test)
+   :with-dev-setup)
   (tls-lwt
-   :with-test)
+   :with-dev-setup)
   (mdx
-   :with-test)))
+   :with-test)
+  (owl
+   :with-dev-setup)
+  (core_unix
+   :with-dev-setup)))
