@@ -31,3 +31,5 @@ nix/profiles/
 # dkml desktop CI
 /msys64
 /.ci
+
+res-*

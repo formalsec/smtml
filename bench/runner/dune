@@ -1,3 +1,17 @@
 (executable
  (name runner)
- (libraries bos cohttp cohttp-lwt-unix cmdliner lwt yojson str))
+ (libraries
+  bos
+  cohttp
+  cohttp-lwt-unix
+  core_unix
+  cmdliner
+  dune-glob
+  owl
+  lwt
+  yojson
+  str
+  smtml
+  smtml.prelude)
+ (flags
+  (:standard -open Smtml_prelude)))
