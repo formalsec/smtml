@@ -1,3 +1,6 @@
-[submodule "bench/data"]
-	path = bench/data
-	url = https://github.com/formalsec/smtml_bench.git
+[submodule "bench/collections-c"]
+	path = bench/collections-c
+	url = https://github.com/formalsec/smt-collections-c.git
+[submodule "bench/smt-comp"]
+	path = bench/smt-comp
+	url = https://github.com/formalsec/smt-comp.git
