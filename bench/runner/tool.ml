@@ -43,7 +43,7 @@ let is_available = function
     Smtml.Solver_dispatcher.is_available Colibri2_solver
   | Smtml { name = Z3; _ } -> Smtml.Solver_dispatcher.is_available Z3_solver
 
-let cmd prover files =
+let cmd ?from_file prover files =
   match prover with
   | Z3 -> ("z3", "z3" :: files)
   | Smtml { name; st } ->
@@ -51,7 +51,10 @@ let cmd prover files =
     , let args =
         "--mode" :: "incremental" :: "--solver"
         :: Fmt.str "%a" pp_prover_name name
-        :: files
+        ::
+        ( match from_file with
+        | None -> files
+        | Some file -> "--from-file" :: [ file ] )
       in
       "smtml" :: "run" :: (if st then "--print-statistics" :: args else args) )
 
@@ -68,10 +71,10 @@ let with_ic fd f =
   let ic = Unix.in_channel_of_descr fd in
   Fun.protect ~finally:(fun () -> In_channel.close ic) (fun () -> f ic)
 
-let fork_and_run ?timeout prover file =
+let fork_and_run ?timeout ?from_file prover file =
   let stdout_read, stdout_write = Unix.pipe ~close_on_exec:false () in
   let stderr_read, stderr_write = Unix.pipe ~close_on_exec:false () in
-  let prog, argv = cmd prover file in
+  let prog, argv = cmd ?from_file prover file in
   let pid =
     Unix.fork_exec ~prog ~argv () ~preexec_fn:(fun () ->
         Unix.close stdout_read;

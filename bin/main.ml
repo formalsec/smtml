@@ -28,7 +28,23 @@ let get_solver debug solver prover_mode =
   | Cached -> (module Solver.Cached (Mappings))
   | Incremental -> (module Solver.Incremental (Mappings))
 
-let run debug solver prover_mode dry print_statistics files =
+(* FIXME: this function has a sad name *)
+let parse_file filename =
+  let open Smtml_prelude.Result in
+  let+ lines = Bos.OS.File.read_lines filename in
+  (* FIXME: this can be improved *)
+  let files =
+    List.fold_left
+      (fun acc line ->
+        let line = String.trim line in
+        (* Assume '#' at the start of a line is a comment *)
+        if String.starts_with ~prefix:"#" line then acc else Fpath.v line :: acc
+        )
+      [] lines
+  in
+  List.rev files
+
+let run debug solver prover_mode dry print_statistics from_file files =
   if debug then Logs.Src.set_level Log.src (Some Logs.Debug);
   Logs.set_reporter @@ Logs.format_reporter ();
   let module Solver = (val get_solver debug solver prover_mode) in
@@ -84,7 +100,16 @@ let run debug solver prover_mode dry print_statistics files =
         Log.err (fun k -> k "%s" err);
         prev_state )
   in
-  let _ = List.fold_left run_path None files in
+  let _ =
+    match from_file with
+    | None -> List.fold_left run_path None files
+    | Some file -> (
+      match parse_file file with
+      | Error (`Msg err) ->
+        Log.err (fun k -> k "%s" err);
+        None
+      | Ok files -> List.fold_left run_file None files )
+  in
   if print_statistics then Log.app (fun k -> k "total time: %.06f" !total_t);
   let write_exception_log = function
     | [] -> Ok ()

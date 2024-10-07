@@ -63,7 +63,7 @@ let write_data_frame started_at results_dir (prover, df) =
   let csv_path = Fpath.(results_dir / csv_file) in
   Owl_dataframe.to_csv ~sep:',' df (Fpath.to_string csv_path)
 
-let main _hook provers dirs =
+let main _hook provers from_file dirs =
   let open Result in
   let now = Core_unix.(localtime @@ gettimeofday ()) in
   let started_at = Core_unix.strftime now "%Y%m%dT%H%M%S" in
@@ -76,7 +76,7 @@ let main _hook provers dirs =
     List.map
       (fun p ->
         let ((status, stdout, _stderr, _) as result) =
-          Tool.fork_and_run p dirs
+          Tool.fork_and_run ?from_file p dirs
         in
         Fmt.pr "@[<v 2>Run %a@;Exited: %a@;Stdout:@; %a@]@." Tool.pp_prover p
           pp_exit_status status Fmt.string (String.escaped stdout);

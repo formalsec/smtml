@@ -14,13 +14,16 @@ let cli =
   let dirs = Arg.(value & pos_all fpath_dir [] & info [] ~docv:"PATH") in
   let provers = Arg.(value & opt_all prover_conv [] & info [ "p"; "prover" ]) in
   let timeout = Arg.(value & opt (some int) None & info [ "timeout" ]) in
+  let from_file =
+    Arg.(value & opt (some file) None & info [ "F"; "from-file" ])
+  in
   let single_query =
     let info = Cmd.info "single-query" in
     Cmd.v info Term.(const Single_query.main $ hook $ provers $ timeout $ dirs)
   in
   let multi_query =
     let info = Cmd.info "multi-query" in
-    Cmd.v info Term.(const Multi_query.main $ hook $ provers $ dirs)
+    Cmd.v info Term.(const Multi_query.main $ hook $ provers $ from_file $ dirs)
   in
   let info = Cmd.info "runner" in
   Cmd.group info [ single_query; multi_query ]

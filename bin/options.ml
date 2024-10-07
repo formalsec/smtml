@@ -14,7 +14,15 @@ let prove_mode_conv =
   Cmdliner.Arg.enum
     [ ("batch", Batch); ("cached", Cached); ("incremental", Incremental) ]
 
-let path = ((fun s -> `Ok (Fpath.v s)), Fpath.pp)
+let path =
+  let parser, _ = Cmdliner.Arg.file in
+  ( (fun file ->
+      if String.equal "-" file then `Ok (Fpath.v file)
+      else
+        match parser file with
+        | `Ok file -> `Ok (Fpath.v file)
+        | `Error _ as err -> err )
+  , Fpath.pp )
 
 let file0 =
   let doc = "Input file" in
@@ -46,12 +54,20 @@ let print_statistics =
   let doc = "Print statistics" in
   Arg.(value & flag & info [ "print-statistics" ] ~doc)
 
+let from_file =
+  let doc =
+    "File containing a list of files to run. This argument discards any \
+     positional arguments provided."
+  in
+  Arg.(value & opt (some path) None & info [ "F"; "from-file" ] ~doc ~docv:"VAL")
+
 let cmd_run f =
   let doc = "Runs one or more scripts using. Also supports directory inputs" in
   let info = Cmd.info "run" ~doc in
   Cmd.v info
     Term.(
-      const f $ debug $ solver $ solver_mode $ dry $ print_statistics $ files )
+      const f $ debug $ solver $ solver_mode $ dry $ print_statistics
+      $ from_file $ files )
 
 let cmd_to_smt2 f =
   let doc = "Convert .smtml into .smt2" in

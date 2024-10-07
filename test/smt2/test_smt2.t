@@ -1,6 +1,9 @@
 Test parsing a nonexistent file:
   $ smtml run idontexist.smt2
-  smtml: [WARNING] idontexist.smt2: No such file or directory
+  smtml: FILES… arguments: no 'idontexist.smt2' file or directory
+  Usage: smtml run [OPTION]… [FILES]…
+  Try 'smtml run --help' or 'smtml --help' for more information.
+  [2]
 
 Test parsing an empty file:
   $ smtml run test_empty.smt2
@@ -50,3 +53,32 @@ Test BitVector parsing:
 Test FloatingPoint parsing:
   $ smtml run test_fp.smt2
   sat
+
+Tests smt2 with the --from-file argument:
+  $ cat <<EOF > test.list
+  > test_empty.smt2
+  > test_core_all.smt2
+  > test_lia.smt2
+  > test_lra.smt2
+  > test_fp.smt2
+  > test_string_all.smt2
+  > EOF
+  $ smtml run --from-file test.list
+  sat
+  sat
+  (model
+    (w false)
+    (x true)
+    (y true)
+    (z true))
+  sat
+  sat
+  sat
+  (model
+    (x -2.)
+    (y 4.))
+  sat
+  sat
+  (model
+    (x "abcd")
+    (y "a"))
