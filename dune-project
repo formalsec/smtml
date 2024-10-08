@@ -79,6 +79,8 @@
    :with-dev-setup)
   (cohttp-lwt-unix
    :with-dev-setup)
+  (dune-glob
+   :with-dev-setup)
   (lwt
    :with-dev-setup)
   (tls-lwt
