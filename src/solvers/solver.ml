@@ -54,9 +54,9 @@ module Base (M : Mappings_intf.S) = struct
 
   let check (solver : M.solver) (es : Expr.t list) : satisfiability =
     incr solver_count;
-    Utils.run_and_time_call
-      ~use:(fun time -> solver_time := !solver_time +. time)
-      (fun () -> M.Solver.check solver ~assumptions:es)
+    Utils.run_and_time_call ~use:(fun time ->
+        solver_time := !solver_time +. time )
+    @@ fun () -> M.Solver.check solver ~assumptions:es
 
   let check_set solver es = check solver @@ Expr.Set.to_list es
 

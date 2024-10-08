@@ -33,7 +33,7 @@ Test Real parsing:
   $ smtml run test_lra.smt2
   sat
   (model
-    (x 2.)
+    (x -2.)
     (y 4.))
 
 Test String parsing:
@@ -75,7 +75,7 @@ Tests smt2 with the --from-file argument:
   sat
   sat
   (model
-    (x -2.)
+    (x 2.)
     (y 4.))
   sat
   sat

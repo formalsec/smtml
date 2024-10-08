@@ -17,7 +17,7 @@ Test boolean parsing:
   $ smtml run test_lra.smtml
   sat
   (model
-    (x 2.)
+    (x -2.)
     (y 4.))
 
  Test fp parsing:

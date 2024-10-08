@@ -38,7 +38,7 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
   type model = Solver.t
 
-  type solver = Solver.t
+  type solver = { mutable solver : Solver.t }
 
   (* Not supported *)
   type handle = unit
@@ -449,26 +449,34 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
       options
 
     let make ?params ?logic:_ () =
-      Bitwuzla_cxx.Options.default () |> update_options params |> Solver.create
+      { solver =
+          Bitwuzla_cxx.Options.default ()
+          |> update_options params |> Solver.create
+      }
 
     let clone _solver = Fmt.failwith "Bitwuzla_mappings: clone not implemented"
 
-    let push solver = Solver.push solver 1
+    let push { solver } = Solver.push solver 1
 
-    let pop solver n = Solver.pop solver n
+    let pop { solver } n = Solver.pop solver n
 
-    let reset _ = Fmt.failwith "Bitwuzla_mappings: reset not implemented"
+    let reset solver =
+      Log.debug (fun k ->
+          k "Bitwuzla_mappings: reset not supported. Creating a new solver" );
+      (* make () *)
+      let { solver = solver' } = make () in
+      solver.solver <- solver'
 
-    let add solver ts = List.iter (Solver.assert_formula solver) ts
+    let add { solver } ts = List.iter (Solver.assert_formula solver) ts
 
-    let check solver ~assumptions =
+    let check { solver } ~assumptions =
       let assumptions = Array.of_list assumptions in
       match Solver.check_sat ~assumptions solver with
       | Result.Sat -> `Sat
       | Result.Unsat -> `Unsat
       | Result.Unknown -> `Unknown
 
-    let model solver = Some solver
+    let model { solver } = Some solver
 
     let add_simplifier solver =
       (* does nothing *)
@@ -481,7 +489,7 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     let get_statistics _ =
       Fmt.failwith "Bitwuzla_mappings: Solver.get_statistics not implemented"
 
-    let pp_statistics fmt solver = Solver.pp_statistics fmt solver
+    let pp_statistics fmt { solver } = Solver.pp_statistics fmt solver
   end
 
   module Optimizer = struct

@@ -16,6 +16,7 @@
 (assert (f32.is_nan x))
 (check-sat)
 (pop 1)
+(push)
 (assert (f32.eq x (f32 0.504)))
 (assert (f32.eq z (f32.ceil x)))
 (assert (f32.eq w (f32.floor x)))

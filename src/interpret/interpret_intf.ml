@@ -17,9 +17,9 @@
 (***************************************************************************)
 
 type 'a state =
-  { stmts : Ast.script
-  ; smap : (string, Ty.t) Hashtbl.t
-  ; solver : 'a
+  { solver : 'a
+  ; stack : Expr.Set.t Stack.t
+  ; mutable top : Expr.Set.t
   }
 
 module type S = sig

@@ -25,72 +25,79 @@ module Make (Solver : Solver_intf.S) = struct
 
   type exec_state = solver state
 
-  let init_state stmts =
+  let init_state () =
     let params = Params.(default () $ (Model, true)) in
     let solver = Solver.create ~params () in
-    Solver.push solver;
-    { stmts; smap = Hashtbl.create 16; solver }
+    { solver; stack = Stack.create (); top = Expr.Set.empty }
 
-  let eval stmt (state : exec_state) : exec_state =
-    let { solver; _ } = state in
-    match stmt with
+  let exec_cmd (st : exec_state) cmd : unit =
+    match cmd with
     | Assert e ->
       Log.debug (fun k -> k "assert: %a" Expr.pp e);
-      Solver.add solver [ e ];
-      state
-    | Check_sat assumptions ->
+      st.top <- Expr.Set.add e st.top
+    | Check_sat assumptions -> (
       Log.debug (fun k -> k "check-sat: %a" Expr.pp_list assumptions);
-      ( match Solver.check solver assumptions with
+      let assertions = Expr.Set.(union (of_list assumptions) st.top) in
+      match Solver.check_set st.solver assertions with
       | `Sat -> Fmt.pr "sat@."
       | `Unsat -> Fmt.pr "unsat@."
-      | `Unknown -> Fmt.pr "unknown@." );
-      state
-    | Declare_const _x -> state
-    | Echo x ->
-      Fmt.pr "%a" Fmt.string x;
-      state
-    | Exit -> { state with stmts = [] }
+      | `Unknown -> Fmt.pr "unknown@." )
+    | Declare_const _x -> ()
+    | Echo x -> Fmt.pr "%a" Fmt.string x
     | Get_model ->
       assert (
         (function `Sat -> true | `Unsat | `Unknown -> false)
-          (Solver.check solver []) );
-      let model = Solver.model solver in
-      Fmt.pr "%a@." (Fmt.option (Model.pp ~no_values:false)) model;
-      state
-    | Push _n ->
-      Solver.push solver;
-      state
+          (Solver.check_set st.solver st.top) );
+      let model = Solver.model st.solver in
+      Fmt.pr "%a@." (Fmt.option (Model.pp ~no_values:false)) model
+    | Push n ->
+      assert (n >= 0);
+      let rec loop n =
+        if n <= 0 then ()
+        else (
+          Solver.push st.solver;
+          Stack.push st.top st.stack;
+          loop (n - 1) )
+      in
+      loop n
     | Pop n ->
-      Solver.pop solver n;
-      state
+      assert (n <= Stack.length st.stack);
+      let rec loop n =
+        if n <= 0 then ()
+        else (
+          Solver.pop st.solver 1;
+          st.top <- Stack.pop st.stack;
+          loop (n - 1) )
+      in
+      loop n
     | Set_logic _logic ->
-      state
       (* FIXME: Ignoring logic for now *)
       (* let solver = Solver.create ~logic () in *)
       (* Solver.push solver; *)
       (* { state with solver } *)
+      ()
     | Set_info attr ->
-      Log.debug (fun k -> k "Unsupported: (set-info %a)" Expr.pp attr);
-      state
+      Log.debug (fun k -> k "Unsupported: (set-info %a)" Expr.pp attr)
     | Get_assertions | Get_assignment | Reset | Reset_assertions | Get_info _
     | Get_option _ | Get_value _ | Set_option _ ->
-      Log.debug (fun k -> k "Unsupported: %a" Ast.pp stmt);
-      state
+      Log.debug (fun k -> k "Unsupported: %a" Ast.pp cmd)
+    | Exit -> assert false
 
-  let rec loop (state : exec_state) : exec_state =
-    match state.stmts with
-    | [] -> state
-    | stmt :: stmts -> loop (eval stmt { state with stmts })
+  let rec loop (state : exec_state) script : exec_state =
+    match script with
+    | [] | Exit :: _ -> state
+    | cmd :: cmds ->
+      exec_cmd state cmd;
+      loop state cmds
 
-  let start ?state (stmts : Ast.script) : exec_state =
+  let start ?state (script : Ast.script) : exec_state =
     Log.debug (fun k -> k "Starting interpreter...");
     let st =
       match state with
-      | None -> init_state stmts
+      | None -> init_state ()
       | Some st ->
-        Solver.pop st.solver 1;
-        Solver.push st.solver;
-        { st with stmts }
+        Stack.clear st.stack;
+        { st with top = Expr.Set.empty }
     in
-    loop st
+    loop st script
 end
