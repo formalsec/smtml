@@ -53,6 +53,7 @@
   (:standard -open Smtml_prelude))
  (libraries
   dolmen
+  dolmen_type
   hc
   menhirLib
   ocaml_intrinsics
