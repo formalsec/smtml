@@ -3,6 +3,7 @@ type solver_type =
   | Bitwuzla_solver
   | Colibri2_solver
   | Cvc5_solver
+  | Altergo_solver
 
 val is_available : solver_type -> bool
 

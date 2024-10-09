@@ -128,54 +128,6 @@ module Fresh = struct
             term_app1 env s string_to_f64
           | _ -> `Not_found )
 
-    (* let add_default_axioms env =
-       (* string_to_alpha (alpha_to_string x) = x
-          alpha_to_string (string_to_alpha x) = x *)
-       let add_string_axiom =
-         let convert ~subst env =
-           Colibri2_theories_quantifiers.Subst.convert ~subst_new:subst env
-         in
-         let mk_eq env subst t1 t2 =
-           let n1 = convert ~subst env t1 in
-           let n2 = convert ~subst env t2 in
-           Egraph.register env n1;
-           Egraph.register env n2;
-           let eq = Colibri2_theories_bool.Equality.equality env [ n1; n2 ] in
-           Egraph.register env eq;
-           Colibri2_theories_bool.Boolean.set_true env eq
-         in
-         fun env to_string of_string ty ->
-           let x_str = DTerm.Var.mk "x_str" string_ty in
-           let xt_str = DTerm.of_var x_str in
-           let term_str =
-             DTerm.apply_cst to_string []
-               [ DTerm.apply_cst of_string [] [ xt_str ] ]
-           in
-           let x = DTerm.Var.mk "x" ty in
-           let xt = DTerm.of_var x in
-           let term =
-             DTerm.apply_cst of_string [] [ DTerm.apply_cst to_string [] [ xt ] ]
-           in
-           let pattern_1 =
-             Colibri2_theories_quantifiers.Pattern.of_term_exn term_str
-           in
-           let pattern_2 =
-             Colibri2_theories_quantifiers.Pattern.of_term_exn term
-           in
-           let run_1 env subst = mk_eq env subst xt_str term_str in
-           let run_2 env subst = mk_eq env subst xt term in
-           Colibri2_theories_quantifiers.InvertedPath.add_callback env pattern_1
-             run_1;
-           Colibri2_theories_quantifiers.InvertedPath.add_callback env pattern_2
-             run_2
-       in
-       add_string_axiom env int_to_string string_to_int DTy.int;
-       add_string_axiom env real_to_string string_to_real DTy.real;
-       add_string_axiom env f32_to_string string_to_f32 float32_ty;
-       add_string_axiom env f64_to_string string_to_f64 float64_ty *)
-
-    let encode_expr e = encode_expr_aux e
-
     let satisfiability s = function
       | `Sat d ->
         s.state <- `Sat d;
@@ -253,7 +205,7 @@ module Fresh = struct
         Scheduler.add_assertion s.scheduler (fun d ->
             let es' =
               List.map
-                (encode_expr_aux ~record_sym:(fun c ->
+                (encode_expr ~record_sym:(fun c ->
                      s.decls <- ConstSet.add c s.decls ) )
                 es
             in
@@ -369,11 +321,6 @@ module Fresh = struct
       | Ty_str | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp ->
         Fmt.failwith
           "Colibri2_mappings2: Unsuppoted model generation of type %a" Ty.pp ty
-
-    (* let value_of_const ((d, _l) : model) (e : Expr.t) : Value.t option =
-       let e' = encode_expr_aux e in
-       let v = Colibri2_core.Interp.interp d e' in
-       c2value_to_value e.ty v *)
 
     let value (e, _) (c : Expr.t) : Value.t =
       let c2v = Interp.interp e (encode_expr c) in
