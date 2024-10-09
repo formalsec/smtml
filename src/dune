@@ -19,6 +19,7 @@
   constructors_intf
   colibri2_mappings
   cvc5_mappings
+  dolmenexpr_to_expr
   eval
   expr
   interpret
