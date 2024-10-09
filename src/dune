@@ -61,6 +61,7 @@
   rusage
   patricia-tree
   yojson
+  zarith
   (select
    colibri2_mappings.ml
    from
