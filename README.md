@@ -63,8 +63,8 @@ bisect-ppx-report html    # Detailed Report in _coverage/index.html
 | [Z3] | Yes |
 | [Colibri2] | Yes |
 | [Bitwuzla] | Yes |
+| [Alt-Ergo] | Yes |
 | [cvc5] | Ongoing |
-| [Alt-Ergo] | Planned |
 | [Minisat] | Planned |
 
 ## About
