@@ -11,6 +11,7 @@
  (public_name smtml)
  (modules
   ast
+  altergo_mappings
   bitwuzla_mappings
   ;axioms
   cache
@@ -86,7 +87,12 @@
    cvc5_mappings.ml
    from
    (cvc5 -> cvc5_mappings.default.ml)
-   (-> cvc5_mappings.nop.ml)))
+   (-> cvc5_mappings.nop.ml))
+  (select
+   altergo_mappings.ml
+   from
+   (alt-ergo-lib dolmen_model -> altergo_mappings.default.ml)
+   (-> altergo_mappings.nop.ml)))
  (instrumentation
   (backend bisect_ppx --exclusions src/bisect.exclude)
   (deps bisect.exclude)))
@@ -96,7 +102,8 @@
   colibri2_mappings.nop.ml
   bitwuzla_mappings.nop.ml
   cvc5_mappings.nop.ml
-  z3_mappings.nop.ml)
+  z3_mappings.nop.ml
+  altergo_mappings.nop.ml)
  (deps mappings.nop.ml)
  (action
   (progn
@@ -110,7 +117,7 @@
     colibri2_mappings.nop.ml
     (progn
      (echo "let solver_name = \"Colibri2\"\n")
-     (echo "let solver_package = \"colibri2\"\n")
+     (echo "let solver_package = \"colibri2 colibrilib\"\n")
      (cat %{deps})))
    (with-stdout-to
     bitwuzla_mappings.nop.ml
@@ -123,4 +130,10 @@
     (progn
      (echo "let solver_name = \"cvc5\"\n")
      (echo "let solver_package = solver_name\n")
+     (cat %{deps})))
+   (with-stdout-to
+    altergo_mappings.nop.ml
+    (progn
+     (echo "let solver_name = \"alt-ergo\"\n")
+     (echo "let solver_package = \"alt-ergo dolmen_model\"\n")
      (cat %{deps}))))))

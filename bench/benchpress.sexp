@@ -19,6 +19,13 @@
   (unsat "unsat")
   (unknown "unknown"))
 
+(prover
+  (name smtml-alt-ergo)
+  (cmd "smtml run --mode incremental --solver alt-ergo $file")
+  (sat "^sat")
+  (unsat "unsat")
+  (unknown "unknown"))
+
 (dir
   (path $cur_dir)
   (pattern ".*.smt2")

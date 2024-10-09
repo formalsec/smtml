@@ -21,7 +21,7 @@
  (name test_colibri2)
  (modules test_colibri2)
  (libraries smtml_tests)
- (build_if %{lib-available:colibri2.core}))
+ (build_if (and %{lib-available:colibri2} %{lib-available:colibrilib})))
 
 (test
  (name test_bitwuzla)
@@ -34,3 +34,9 @@
  (modules test_cvc5)
  (libraries smtml_tests)
  (build_if %{lib-available:cvc5}))
+
+(test
+ (name test_altergo)
+ (modules test_altergo)
+ (libraries smtml_tests)
+ (build_if (and %{lib-available:alt-ergo-lib} %{lib-available:dolmen_model})))

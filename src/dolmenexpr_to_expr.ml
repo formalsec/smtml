@@ -634,70 +634,48 @@ let encode_cvtop (ty : Ty.t) =
   | (Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp) as op ->
     Fmt.failwith "Trying to encode unsupported op of type %a" Ty.pp op
 
-(*let symbol_to_var v =
-  DExpr.Term.Var.mk (Symbol.to_string v) (tty_of_etype (Symbol.type_of v))*)
-
-(* let encode_unviversal_quantifier (vars_list : Symbol.t list) (body : expr)
-     (_patterns : expr list) : expr =
-     (* TODO: support triggers *)
-     let vars = List.map symbol_to_var vars_list in
-     DTerm.all ([], vars) body
-
-   let encore_existential_quantifier (vars_list : Symbol.t list) (body : expr)
-     (_patterns : expr list) : expr =
-     (* TODO: support triggers *)
-     let vars = List.map symbol_to_var vars_list in
-     DTerm.ex ([], vars) body
-*)
-let encode_expr_aux ?(record_sym = fun _ -> ()) (e : Expr.t) : expr =
-  let open Expr in
-  let rec aux (hte : t) =
-    match view hte with
-    | Val v -> encode_val v
+let encode_expr_acc ?(record_sym = fun acc _ -> acc) acc e =
+  let rec aux acc (e : Expr.t) =
+    match Expr.view e with
+    | Val v -> (acc, encode_val v)
     | Ptr { base; offset } ->
       let base' = encode_val (Num (I32 base)) in
-      let offset' = aux offset in
-      DTerm.Bitv.add base' offset'
+      let acc, offset' = aux acc offset in
+      (acc, DTerm.Bitv.add base' offset')
     | Symbol s ->
       let cst = tcst_of_symbol s in
-      record_sym cst;
-      DTerm.of_cst cst
+      let acc = record_sym acc cst in
+      (acc, DTerm.of_cst cst)
     | Unop (ty, op, e) ->
-      let e' = aux e in
-      encode_unop ty op e'
+      let acc, e' = aux acc e in
+      (acc, encode_unop ty op e')
     | Binop (ty, op, e1, e2) ->
-      let e1' = aux e1 in
-      let e2' = aux e2 in
-      encode_binop ty op e1' e2'
+      let acc, e1' = aux acc e1 in
+      let acc, e2' = aux acc e2 in
+      (acc, encode_binop ty op e1' e2')
     | Triop (ty, op, e1, e2, e3) ->
-      let e1' = aux e1
-      and e2' = aux e2
-      and e3' = aux e3 in
-      encode_triop ty op e1' e2' e3'
+      let acc, e1' = aux acc e1 in
+      let acc, e2' = aux acc e2 in
+      let acc, e3' = aux acc e3 in
+      (acc, encode_triop ty op e1' e2' e3')
     | Relop (ty, op, e1, e2) ->
-      let e1' = aux e1
-      and e2' = aux e2 in
-      encode_relop ty op e1' e2'
+      let acc, e1' = aux acc e1 in
+      let acc, e2' = aux acc e2 in
+      (acc, encode_relop ty op e1' e2')
     | Cvtop (ty, op, e) ->
-      let e' = aux e in
-      encode_cvtop ty op e'
+      let acc, e' = aux acc e in
+      (acc, encode_cvtop ty op e')
     | Extract (e, h, l) ->
-      let e' = aux e in
-      DTerm.Bitv.extract ((h * 8) - 1) (l * 8) e'
+      let acc, e' = aux acc e in
+      (acc, DTerm.Bitv.extract ((h * 8) - 1) (l * 8) e')
     | Concat (e1, e2) ->
-      let e1' = aux e1
-      and e2' = aux e2 in
-      DTerm.Bitv.concat e1' e2'
+      let acc, e1' = aux acc e1 in
+      let acc, e2' = aux acc e2 in
+      (acc, DTerm.Bitv.concat e1' e2')
     | Naryop _ | List _ | App _ | Binder _ ->
-      Fmt.failwith {|Unsupported expr %a|} Expr.pp hte
-    (* | Quantifier (t, vars, body, patterns) -> (
-       let body' = aux body in
-       let encode_pattern (p : t list) =
-         DTerm.multi_trigger (List.map aux p)
-       in
-       let patterns' = List.map encode_pattern patterns in
-       match t with
-       | Forall -> encode_unviversal_quantifier vars body' patterns'
-       | Exists -> encore_existential_quantifier vars body' patterns' ) *)
+      Fmt.failwith {|Unsupported expr %a|} Expr.pp e
   in
-  aux e
+  aux acc e
+
+let encode_expr ?(record_sym = fun _ -> ()) e =
+  snd (encode_expr_acc ~record_sym:(fun () -> record_sym) () e)
