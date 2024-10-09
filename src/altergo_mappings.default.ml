@@ -38,7 +38,7 @@ module ConstMap = Map.Make (struct
   let compare = DStd.Expr.Term.Const.compare
 end)
 
-(* TODO: make it an option? *)
+(* TODO: make it possible to choose through an option? *)
 let () = AEL.Options.set_interpretation ILast
 
 let dummy_file = DStd.Loc.mk_file "dummy_file"
@@ -54,7 +54,8 @@ let mk_dstmt decl =
 
 module Fresh = struct
   module Make () = struct
-    (* TODO: experiment with other sat solvers? *)
+    (* TODO: experiment with other sat solvers? Make it possible to choose
+       different sat solvers from command line? *)
     module Sat = AEL.Satml_frontend.Make (AEL.Theory.Main_Default)
     module FE = Frontend.Make (Sat)
 
@@ -262,6 +263,8 @@ module Fresh = struct
       | C c when AEL.ModelMap.M.cardinal c = 1 -> (
         match AEL.ModelMap.M.min_binding c with [], e -> e | _ -> assert false )
       | C c ->
+        (* Currently, there are no uninterpred functions in the tests/benchs,
+           therefore this is ok, but it should be fixed in the future *)
         Fmt.failwith "Altergo_mappings: no value for %a (%a)" AEL.Id.pp hs
           (fun fmt m ->
             AEL.ModelMap.M.iter
