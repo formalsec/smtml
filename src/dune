@@ -119,7 +119,7 @@
     colibri2_mappings.nop.ml
     (progn
      (echo "let solver_name = \"Colibri2\"\n")
-     (echo "let solver_package = \"colibri2 colibrilib\"\n")
+     (echo "let solver_package = solver_name\n")
      (cat %{deps})))
    (with-stdout-to
     bitwuzla_mappings.nop.ml
