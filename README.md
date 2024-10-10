@@ -4,8 +4,8 @@ Smt.ml is a Multi Back-end Front-end for SMT Solvers in OCaml. The primary
 objective of Smt.ml is to facilitate the effortless transition between
 different SMT solvers during program analysis, as certain SMT solvers may prove
 more efficient at handling specific logics and formulas. Presently, Smt.ml
-offers support for [Z3], [Colibri2], and [Bitwuzla], and ongoing efforts are directed
-towards incorporating support for [cvc5] and [Alt-Ergo].
+offers support for [Z3], [Colibri2], [Bitwuzla], and [Alt-Ergo], and ongoing
+efforts are directed towards incorporating support for [cvc5].
 
 ## Installation
 
