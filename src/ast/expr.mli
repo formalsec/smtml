@@ -44,15 +44,15 @@ and expr =
   | Concat of t * t
   | Binder of binder * t list * t
 
-val equal : t -> t -> bool
+val make : expr -> t
+
+val view : t -> expr
 
 val hash : t -> int
 
-val make : expr -> t
+val equal : t -> t -> bool
 
-val ( @: ) : expr -> Ty.t -> t [@@deprecated "Please use 'make' instead"]
-
-val view : t -> expr
+val compare : t -> t -> int
 
 (** The return type of an expression *)
 val ty : t -> Ty.t
