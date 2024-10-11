@@ -57,9 +57,9 @@
   hc
   menhirLib
   ocaml_intrinsics
-  smtml.prelude
-  rusage
   patricia-tree
+  rusage
+  smtml.prelude
   yojson
   zarith
   (select

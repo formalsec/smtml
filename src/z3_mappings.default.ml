@@ -441,6 +441,10 @@ module M = struct
     let set_params (params : Params.t) =
       Z3.set_global_param "smt.ematching"
         (string_of_bool @@ Params.get params Ematching);
+      Z3.set_global_param "parallel.enable"
+        (string_of_bool @@ Params.get params Parallel);
+      Z3.set_global_param "parallel.threads.max"
+        (string_of_int @@ Params.get params Num_threads);
       Z3.Params.update_param_value ctx "timeout"
         (string_of_int @@ Params.get params Timeout);
       Z3.Params.update_param_value ctx "model"
