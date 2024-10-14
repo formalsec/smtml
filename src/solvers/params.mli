@@ -16,6 +16,8 @@
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
 
+type t
+
 type _ param =
   | Timeout : int param
     (** Specifies a timeout in miliseconds for each [check] call *)
@@ -26,7 +28,7 @@ type _ param =
   | Num_threads : int param
     (** Speficied the maximum number of threads to use in parallel mode *)
 
-type t
+type param' = P : 'a param * 'a -> param'
 
 val default_value : 'a param -> 'a
 
@@ -43,3 +45,5 @@ val opt : t -> 'a param -> 'a option -> t
 
 (** [get params p] fetches the current value for parameter [p] *)
 val get : t -> 'a param -> 'a
+
+val to_list : t -> param' list

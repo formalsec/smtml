@@ -431,14 +431,19 @@ module Fresh_cvc5 () = struct
   end
 
   module Solver = struct
+    let set_param (type a) slv (param : a Params.param) (v : a) : unit =
+      match param with
+      | Timeout -> Solver.set_option slv "tlimit" (string_of_int v)
+      | Model -> Solver.set_option slv "produce-models" (string_of_bool v)
+      | Unsat_core ->
+        Solver.set_option slv "produce-unsat-cores" (string_of_bool v)
+      | Ematching -> Solver.set_option slv "e-matching" (string_of_bool v)
+      | Parallel | Num_threads -> ()
+
     let set_params slv params =
-      Solver.set_option slv "e-matching"
-        (string_of_bool @@ Params.get params Ematching);
-      Solver.set_option slv "tlimit" (string_of_int @@ Params.get params Timeout);
-      Solver.set_option slv "produce-models"
-        (string_of_bool @@ Params.get params Model);
-      Solver.set_option slv "produce-unsat-cores"
-        (string_of_bool @@ Params.get params Unsat_core)
+      List.iter
+        (fun (Params.P (p, v)) -> set_param slv p v)
+        (Params.to_list params)
 
     let make ?params ?logic () =
       let logic = Option.map (fun l -> Fmt.str "%a" Ty.pp_logic l) logic in
