@@ -438,19 +438,19 @@ module M = struct
       in
       List.fold_left add_entry Statistics.Map.empty statistics
 
+    let set_param (type a) (param : a Params.param) (v : a) : unit =
+      match param with
+      | Timeout -> Z3.Params.update_param_value ctx "timeout" (string_of_int v)
+      | Model -> Z3.Params.update_param_value ctx "model" (string_of_bool v)
+      | Unsat_core ->
+        Z3.Params.update_param_value ctx "unsat_core" (string_of_bool v)
+      | Ematching -> Z3.set_global_param "smt.ematching" (string_of_bool v)
+      | Parallel -> Z3.set_global_param "parallel.enable" (string_of_bool v)
+      | Num_threads ->
+        Z3.set_global_param "parallel.threads.max" (string_of_int v)
+
     let set_params (params : Params.t) =
-      Z3.set_global_param "smt.ematching"
-        (string_of_bool @@ Params.get params Ematching);
-      Z3.set_global_param "parallel.enable"
-        (string_of_bool @@ Params.get params Parallel);
-      Z3.set_global_param "parallel.threads.max"
-        (string_of_int @@ Params.get params Num_threads);
-      Z3.Params.update_param_value ctx "timeout"
-        (string_of_int @@ Params.get params Timeout);
-      Z3.Params.update_param_value ctx "model"
-        (string_of_bool @@ Params.get params Model);
-      Z3.Params.update_param_value ctx "unsat_core"
-        (string_of_bool @@ Params.get params Unsat_core)
+      List.iter (fun (Params.P (p, v)) -> set_param p v) (Params.to_list params)
 
     module Solver = struct
       (* TODO: parameters *)

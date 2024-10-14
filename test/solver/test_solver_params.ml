@@ -12,8 +12,10 @@ module Make (M : Mappings_intf.S) = struct
 
   let () =
     let params =
-      default () $ (Timeout, 900) $ (Unsat_core, true) $ (Model, false)
-      $ (Ematching, false)
+      default () $ (Timeout, 900) $ (Model, false) $ (Unsat_core, true)
+      $ (Ematching, false) $ (Parallel, true) $ (Num_threads, 1)
     in
-    ignore (Solver.create ~params ())
+    assert (Params.get params Unsat_core);
+    let _ : Solver.t = Solver.create ~params () in
+    ()
 end

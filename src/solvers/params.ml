@@ -24,14 +24,29 @@ type _ param =
   | Parallel : bool param
   | Num_threads : int param
 
-type t =
-  { timeout : int
-  ; model : bool
-  ; unsat_core : bool
-  ; ematching : bool
-  ; parallel : bool
-  ; num_threads : int
-  }
+let discr : type a. a param -> int = function
+  | Timeout -> 0
+  | Model -> 1
+  | Unsat_core -> 2
+  | Ematching -> 3
+  | Parallel -> 4
+  | Num_threads -> 5
+
+module Key = struct
+  type t = K : 'a param -> t
+
+  let v v = K v
+
+  let compare (K a) (K b) = compare (discr a) (discr b)
+end
+
+module Pmap = Map.Make (Key)
+
+type param' = P : 'a param * 'a -> param'
+
+let p k v = P (k, v)
+
+type t = param' Pmap.t
 
 let default_timeout = 2147483647
 
@@ -43,7 +58,6 @@ let default_ematching = true
 
 let default_parallel = false
 
-(* FIXME: Will this be problematic if only (Parallel, true) is specified? *)
 let default_num_threads = 1
 
 let default_value (type a) (param : a param) : a =
@@ -56,22 +70,14 @@ let default_value (type a) (param : a param) : a =
   | Num_threads -> default_num_threads
 
 let default () =
-  { timeout = default_timeout
-  ; model = default_model
-  ; unsat_core = default_unsat_core
-  ; ematching = default_ematching
-  ; parallel = default_parallel
-  ; num_threads = default_num_threads
-  }
+  Pmap.empty
+  |> Pmap.add (Key.v Timeout) (p Timeout default_timeout)
+  |> Pmap.add (Key.v Model) (p Model default_model)
+  |> Pmap.add (Key.v Unsat_core) (p Unsat_core default_unsat_core)
+  |> Pmap.add (Key.v Ematching) (p Ematching default_ematching)
 
 let set (type a) (params : t) (param : a param) (value : a) : t =
-  match param with
-  | Timeout -> { params with timeout = value }
-  | Model -> { params with model = value }
-  | Unsat_core -> { params with unsat_core = value }
-  | Ematching -> { params with ematching = value }
-  | Parallel -> { params with parallel = value }
-  | Num_threads -> { params with num_threads = value }
+  Pmap.add (Key.v param) (p param value) params
 
 let opt (type a) (params : t) (param : a param) (opt_value : a option) : t =
   Option.fold ~none:params ~some:(set params param) opt_value
@@ -80,10 +86,14 @@ let ( $ ) (type a) (params : t) ((param, value) : a param * a) : t =
   set params param value
 
 let get (type a) (params : t) (param : a param) : a =
-  match param with
-  | Timeout -> params.timeout
-  | Model -> params.model
-  | Unsat_core -> params.unsat_core
-  | Ematching -> params.ematching
-  | Parallel -> params.parallel
-  | Num_threads -> params.num_threads
+  match (param, Pmap.find (Key.v param) params) with
+  | Timeout, P (Timeout, v) -> v
+  | Model, P (Model, v) -> v
+  | Unsat_core, P (Unsat_core, v) -> v
+  | Ematching, P (Ematching, v) -> v
+  | Parallel, P (Parallel, v) -> v
+  | Num_threads, P (Num_threads, v) -> v
+  | (Timeout | Model | Unsat_core | Ematching | Parallel | Num_threads), _ ->
+    assert false
+
+let to_list params = List.map snd @@ Pmap.bindings params
