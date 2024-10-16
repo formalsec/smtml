@@ -11,7 +11,14 @@
 (source
  (github formalsec/smtml))
 
-(authors "Filipe Marques <filipe.s.marques@tecnico.ulisboa.pt>")
+(authors
+ "João Pereira <joaomhmpereira@tecnico.ulisboa.pt>"
+ "Filipe Marques <filipe.s.marques@tecnico.ulisboa.pt>"
+ "Hichem Rami Ait El Hara <hra@ocamlpro.com>"
+ "Léo Andrès <contact@ndrs.fr>"
+ "Arthur Carcano <arthur.carcano@ocamlpro.com>"
+ "Pierre Chambart <pierre.chambart@ocamlpro.com>"
+ "José Fragoso Santos <jose.fragoso@tecnico.ulisboa.pt>")
 
 (maintainers "Filipe Marques <filipe.s.marques@tecnico.ulisboa.pt>")
 
