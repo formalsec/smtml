@@ -3,7 +3,15 @@ opam-version: "2.0"
 synopsis: "A Front-end library for SMT solvers in OCaml"
 description: "A Multi Back-end Front-end for SMT Solvers in OCaml."
 maintainer: ["Filipe Marques <filipe.s.marques@tecnico.ulisboa.pt>"]
-authors: ["Filipe Marques <filipe.s.marques@tecnico.ulisboa.pt>"]
+authors: [
+  "João Pereira <joaomhmpereira@tecnico.ulisboa.pt>"
+  "Filipe Marques <filipe.s.marques@tecnico.ulisboa.pt>"
+  "Hichem Rami Ait El Hara <hra@ocamlpro.com>"
+  "Léo Andrès <contact@ndrs.fr>"
+  "Arthur Carcano <arthur.carcano@ocamlpro.com>"
+  "Pierre Chambart <pierre.chambart@ocamlpro.com>"
+  "José Fragoso Santos <jose.fragoso@tecnico.ulisboa.pt>"
+]
 license: "MIT"
 homepage: "https://github.com/formalsec/smtml"
 doc: "https://formalsec.github.io/smtml/smtml/index.html"
