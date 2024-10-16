@@ -1,3 +1,7 @@
+(* SPDX-License-Identifier: MIT *)
+(* Copyright (C) 2023-2024 formalsec *)
+(* Written by the Smtml programmers *)
+
 type solver_type =
   | Z3_solver
   | Bitwuzla_solver

@@ -4,7 +4,7 @@ synopsis: "A Front-end library for SMT solvers in OCaml"
 description: "A Multi Back-end Front-end for SMT Solvers in OCaml."
 maintainer: ["Filipe Marques <filipe.s.marques@tecnico.ulisboa.pt>"]
 authors: ["Filipe Marques <filipe.s.marques@tecnico.ulisboa.pt>"]
-license: "GPL-3.0-only"
+license: "MIT"
 homepage: "https://github.com/formalsec/smtml"
 doc: "https://formalsec.github.io/smtml/smtml/index.html"
 bug-reports: "https://github.com/formalsec/smtml/issues"

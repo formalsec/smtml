@@ -1,3 +1,7 @@
+(* SPDX-License-Identifier: MIT *)
+(* Copyright (C) 2023-2024 formalsec *)
+(* Written by the Smtml programmers *)
+
 (* TODO: put this in some other more appropriate module? *)
 type solver_type =
   | Z3_solver
