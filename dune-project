@@ -17,7 +17,7 @@
 
 (documentation "https://formalsec.github.io/smtml/smtml/index.html")
 
-(license "GPL-3.0-only")
+(license "MIT")
 
 (package
  (name smtml)

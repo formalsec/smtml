@@ -1,3 +1,7 @@
+(* SPDX-License-Identifier: MIT *)
+(* Copyright (C) 2023-2024 formalsec *)
+(* Written by the Smtml programmers *)
+
 open Dolmen
 module Loc = Std.Loc
 

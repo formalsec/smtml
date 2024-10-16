@@ -1,3 +1,7 @@
+(* SPDX-License-Identifier: MIT *)
+(* Copyright (C) 2023-2024 formalsec *)
+(* Written by the Smtml programmers *)
+
 (** Module that performs two 'important' rewritings:
 
     1. Replace symbols' [Ty_none] with the correct type specified in
