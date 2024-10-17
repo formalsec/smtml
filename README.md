@@ -58,14 +58,14 @@ bisect-ppx-report html    # Detailed Report in _coverage/index.html
 
 ## Supported Solvers
 
-| Solver | Status |
-|--------|--------|
-| [Z3] | Yes |
-| [Colibri2] | Yes |
-| [Bitwuzla] | Yes |
-| [Alt-Ergo] | Yes |
-| [cvc5] | Ongoing |
-| [Minisat] | Planned |
+| Solver     | Status  | Opam Package |
+|------------|---------|--------------|
+| [Z3]       | Yes     | [z3](https://opam.ocaml.org/packages/z3/) |
+| [Colibri2] | Yes     | [colibri2](https://opam.ocaml.org/packages/colibri2/) |
+| [Bitwuzla] | Yes     | [bitwuzla-cxx](https://opam.ocaml.org/packages/bitwuzla-cxx/) |
+| [Alt-Ergo] | Yes     | [alt-ergo](https://opam.ocaml.org/packages/alt-ergo/) |
+| [cvc5]     | Ongoing | [cvc5](https://opam.ocaml.org/packages/cvc5/) |
+| [Minisat]  | Planned | [minisat](https://opam.ocaml.org/packages/minisat/) |
 
 ## About
 
