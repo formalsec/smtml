@@ -59,13 +59,19 @@ bisect-ppx-report html    # Detailed Report in _coverage/index.html
 ## Supported Solvers
 
 | Solver     | Status  | Opam Package |
-|------------|---------|--------------|
-| [Z3]       | Yes     | [z3](https://opam.ocaml.org/packages/z3/) |
-| [Colibri2] | Yes     | [colibri2](https://opam.ocaml.org/packages/colibri2/) |
-| [Bitwuzla] | Yes     | [bitwuzla-cxx](https://opam.ocaml.org/packages/bitwuzla-cxx/) |
-| [Alt-Ergo] | Yes     | [alt-ergo](https://opam.ocaml.org/packages/alt-ergo/) |
-| [cvc5]     | Ongoing | [cvc5](https://opam.ocaml.org/packages/cvc5/) |
-| [Minisat]  | Planned | [minisat](https://opam.ocaml.org/packages/minisat/) |
+|------------|:-------:|--------------|
+| [Z3]       | ☑️ | [z3](https://opam.ocaml.org/packages/z3/) |
+| [Colibri2] | ☑️ | [colibri2](https://opam.ocaml.org/packages/colibri2/) |
+| [Bitwuzla] | ☑️ | [bitwuzla-cxx](https://opam.ocaml.org/packages/bitwuzla-cxx/) |
+| [Alt-Ergo] | ☑️ | [alt-ergo](https://opam.ocaml.org/packages/alt-ergo/) |
+| [cvc5]     | 🔄 | [cvc5](https://opam.ocaml.org/packages/cvc5/) |
+| [Minisat]  | 📆 | [minisat](https://opam.ocaml.org/packages/minisat/) |
+
+#### Legend
+
+- ☑️ Solver is currently supported
+- 🔄 Ongoing work to support solver
+- 📆 Planned to support in the future
 
 ## About
 
