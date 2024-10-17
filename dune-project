@@ -33,53 +33,59 @@
  ; Optional solver dependencies
  ; Change here sould be mirrored in "conflicts"
  (depopts
-  z3
-  colibri2
+  alt-ergo-lib
   bitwuzla-cxx
-  cvc5)
+  colibri2
+  cvc5
+  z3)
  (conflicts
+  (bitwuzla-cxx
+   (< "0.4.0"))
   (z3
    (or
     (< "4.12.2")
-    (>= "4.14")))
-   (bitwuzla-cxx
-    (< "0.4.0"))
- )
+    (>= "4.14"))))
  (depends
+  (cmdliner
+   (>= "1.2.0"))
   dune
   (dolmen
    (= "0.10"))
   (dolmen_type
    (= "0.10"))
-  (ocaml
-   (>= "4.14.0"))
-  (prelude
-   (>= "0.3"))
-  ocaml_intrinsics
+  (dolmen_model
+   (= "0.10"))
   (fmt
    (>= "0.8.7"))
-  (cmdliner
-   (>= "1.2.0"))
-  (zarith
-   (>= "1.5"))
-  (hc (>= "0.3"))
+  (hc
+   (>= "0.3"))
   (menhir
    (and
     :build
     (>= "20220210")))
-  rusage
+  (ocaml
+   (>= "4.14.0"))
+  ocaml_intrinsics
   (patricia-tree
    (>= "0.10.0"))
+  (prelude
+   (>= "0.3"))
+  rusage
   (yojson
    (>= "1.6.0"))
+  (zarith
+   (>= "1.5"))
+  ;; Doc dependencies
   (odoc
    :with-doc)
   (sherlodoc
    :with-doc)
+  ;; Test dependencies
   (bisect_ppx
    (and
     :with-test
     (>= "2.5.0")))
+  ;; Dev dependencies
   (benchpress
    (and
     :with-dev-setup
@@ -88,13 +94,13 @@
    :with-dev-setup)
   (cohttp-lwt-unix
    :with-dev-setup)
-  (lwt
+  (core_unix
    :with-dev-setup)
-  (tls-lwt
+  (lwt
    :with-dev-setup)
   (mdx
    :with-test)
   (owl
    :with-dev-setup)
-  (core_unix
+  (tls-lwt
    :with-dev-setup)))
