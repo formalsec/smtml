@@ -17,36 +17,37 @@ homepage: "https://github.com/formalsec/smtml"
 doc: "https://formalsec.github.io/smtml/smtml/index.html"
 bug-reports: "https://github.com/formalsec/smtml/issues"
 depends: [
+  "cmdliner" {>= "1.2.0"}
   "dune" {>= "3.10"}
   "dolmen" {= "0.10"}
   "dolmen_type" {= "0.10"}
-  "ocaml" {>= "4.14.0"}
-  "prelude" {>= "0.3"}
-  "ocaml_intrinsics"
+  "dolmen_model" {= "0.10"}
   "fmt" {>= "0.8.7"}
-  "cmdliner" {>= "1.2.0"}
-  "zarith" {>= "1.5"}
   "hc" {>= "0.3"}
   "menhir" {build & >= "20220210"}
-  "rusage"
+  "ocaml" {>= "4.14.0"}
+  "ocaml_intrinsics"
   "patricia-tree" {>= "0.10.0"}
+  "prelude" {>= "0.3"}
+  "rusage"
   "yojson" {>= "1.6.0"}
+  "zarith" {>= "1.5"}
   "odoc" {with-doc}
   "sherlodoc" {with-doc}
   "bisect_ppx" {with-test & >= "2.5.0"}
   "benchpress" {with-dev-setup & = "dev"}
   "cohttp" {with-dev-setup}
   "cohttp-lwt-unix" {with-dev-setup}
+  "core_unix" {with-dev-setup}
   "lwt" {with-dev-setup}
-  "tls-lwt" {with-dev-setup}
   "mdx" {with-test}
   "owl" {with-dev-setup}
-  "core_unix" {with-dev-setup}
+  "tls-lwt" {with-dev-setup}
 ]
-depopts: ["z3" "colibri2" "bitwuzla-cxx" "cvc5"]
+depopts: ["alt-ergo-lib" "bitwuzla-cxx" "colibri2" "cvc5" "z3"]
 conflicts: [
-  "z3" {< "4.12.2" | >= "4.14"}
   "bitwuzla-cxx" {< "0.4.0"}
+  "z3" {< "4.12.2" | >= "4.14"}
 ]
 build: [
   ["dune" "subst"] {dev}
