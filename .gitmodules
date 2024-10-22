@@ -4,3 +4,6 @@
 [submodule "bench/smt-comp"]
 	path = bench/smt-comp
 	url = https://github.com/formalsec/smt-comp.git
+[submodule "bench/smt-testcomp23"]
+	path = bench/smt-testcomp23
+	url = https://github.com/formalsec/smt-testcomp23.git
