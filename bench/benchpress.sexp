@@ -61,6 +61,11 @@
   (unsat "unsat")
   (unknown "unknown"))
 
+(dir
+   (path "./")
+   (pattern ".*.smt2")
+   (expect (run smtlib-read-status)))
+
 (task
   (name local-test)
   (synopsis "Run smtml on directories provided on the command line")

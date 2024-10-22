@@ -16,11 +16,13 @@ def print_success(msg):
 def print_info(msg):
   print(f"\033[94m{msg}\033[0m")
 
-def run_benchpress(directory_to_benchmark):
+def run_benchpress(directory_to_benchmark, config_file, prover, threads=6, timeout=30):
   try:
     print_info(f"Running benchpress on directory: {directory_to_benchmark}")
-    subprocess.run(['benchpress', directory_to_benchmark], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    command = ['benchpress', 'run', '-c', config_file, 'j', str(threads), '-t', str(timeout), '-p', prover, directory_to_benchmark]
+    subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print_success("Benchpress completed successfully.")
+    return True
   except subprocess.CalledProcessError as e:
     print_error(f"Error running benchpress: {e.stderr.decode()}")
 
@@ -48,9 +50,9 @@ def to_csv(sqlite_file, output_csv_dir, output_csv_name, table_name="prover_res"
       writer.writerows(rows)
   conn.close()
 
-def automate_benchpress(directory_to_benchmark, output_csv_dir, output_csv_name="benchpress_output"):
+def automate_benchpress(directory_to_benchmark, output_csv_dir, output_csv_name, config, prover):
   benchpress_data_dir = "/home/smtml/.local/share/benchpress"
-  if run_benchpress(directory_to_benchmark):
+  if run_benchpress(directory_to_benchmark, config, prover):
     try:
       sqlite_file = get_latest_sqlite_file(benchpress_data_dir)
       if not os.path.exists(output_csv_dir):
@@ -65,5 +67,9 @@ if __name__ == "__main__":
   parser.add_argument("--dir", type=str, help="The directory to benchmark.")
   parser.add_argument("--output-dir", type=str, help="The directory to store the CSV files.")
   parser.add_argument("--output-filename", type=str, default="benchpress_output", help="The name of the CSV file.")
+  parser.add_argument("--config", type=str, default="/home/smtml/smtml/bench/benchpress.sexp", help="The name of the CSV file.")
+  parser.add_argument("--prover", type=str, help="The solver to be used.")
+  parser.add_argument("-j", type=int, help="Number of threads to use.")
+  parser.add_argument("-t", type=int, help="Timeout (in seconds).")
   args = parser.parse_args()
-  automate_benchpress(args.directory_to_benchmark, args.output_csv_dir, args.output_csv_name)
+  automate_benchpress(args.dir, args.output_dir, args.output_filename, args.config, args.prover)
