@@ -24,7 +24,8 @@ RUN apt-get update && apt-get install -y \
     libsqlite3-dev
 
 RUN echo "/usr/local/bin" | bash -c "sh <(curl -fsSL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)" \
-    pip install --break-system-packages --upgrade pip setuptools
+    pip install --break-system-packages --upgrade pip setuptools \
+    pip install --upgrade -r bench/requirements.txt
 
 RUN useradd -m -s /bin/bash smtml \
     && echo "smtml ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
