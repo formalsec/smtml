@@ -19,7 +19,9 @@ RUN apt-get update && apt-get install -y \
     libgsl-dev \
     liblapacke-dev \
     libopenblas-dev \
-    libgsl-dev
+    libgsl-dev \
+    gnuplot-x11 \
+    libsqlite3-dev
 
 RUN echo "/usr/local/bin" | bash -c "sh <(curl -fsSL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)" \
     pip install --break-system-packages --upgrade pip setuptools
@@ -28,33 +30,25 @@ RUN useradd -m -s /bin/bash smtml \
     && echo "smtml ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 USER smtml
-WORKDIR ${BASE}
+COPY --chown=smtml:smtml . ${BASE}/smtml
+WORKDIR ${BASE}/smtml
 
 RUN opam init --disable-sandboxing --shell-setup -y \
+    && opam update \
     && opam switch create -y z3-bitwuzla 5.2.0 \
     && eval $(opam env --switch=z3-bitwuzla) \
-    && opam update \
-    && opam install -y dune zarith prelude cmdliner yojson rusage lwt cohttp-lwt-unix core_unix lwt owl \
-    && echo "eval \$(opam env --switch=z3-bitwuzla)" >> ~/.bash_profile
+    && opam install -y . --deps-only --with-test --with-dev-setup \
+    && opam install -y z3 bitwuzla-cxx dune-glob \
+    && dune build && dune install
 
 RUN opam switch create -y cvc5 5.2.0 \
     && eval $(opam env --switch=cvc5) \
-    && opam update \
-    && opam install -y dune \
-    && echo "eval \$(opam env --switch=cvc5)" >> ~/.bash_profile
+    && opam install -y . --deps-only --with-test --with-dev-setup \
+    && opam install -y --confirm-level=unsafe-yes cvc5 dune-glob \
+    && dune build && dune install
 
 RUN opam switch create -y colibri2 5.2.0 \
     && eval $(opam env --switch=colibri2) \
-    && opam update \
-    && opam install -y dune \
-    && echo "eval \$(opam env --switch=colibri2)" >> ~/.bash_profile
-
-RUN git clone https://github.com/formalsec/smtml.git ${BASE}/smtml
-
-WORKDIR ${BASE}/smtml
-
-RUN eval $(opam env --switch=z3-bitwuzla) \
-    && sudo apt update \
-    && opam install -y . --deps-only --confirm-level=unsafe-yes \
-    && dune build \
-    && dune install
+    && opam install -y . --deps-only --with-test --with-dev-setup \
+    && opam install -y --confirm-level=unsafe-yes colibri2 dune-glob \
+    && dune build && dune install
