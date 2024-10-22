@@ -20,16 +20,46 @@
   (unknown "unknown"))
 
 (prover
+  (name smtml-cvc5)
+  (cmd "smtml run --mode incremental --solver cvc5 $file")
+  (sat "^sat")
+  (unsat "unsat")
+  (unknown "unknown"))
+
+(prover
   (name smtml-alt-ergo)
   (cmd "smtml run --mode incremental --solver alt-ergo $file")
   (sat "^sat")
   (unsat "unsat")
   (unknown "unknown"))
 
-(dir
-  (path $cur_dir)
-  (pattern ".*.smt2")
-  (expect (run smtlib-read-status)))
+(prover
+  (name z3)
+  (cmd "z3 $file")
+  (sat "^sat")
+  (unsat "unsat")
+  (unknown "unknown"))
+
+(prover
+  (name bitwuzla)
+  (cmd "bitwuzla $file")
+  (sat "^sat")
+  (unsat "unsat")
+  (unknown "unknown"))
+
+(prover
+  (name colibri2)
+  (cmd "colibri2 $file")
+  (sat "^sat")
+  (unsat "unsat")
+  (unknown "unknown"))
+
+(prover
+  (name cvc5)
+  (cmd "cvc5 $file")
+  (sat "^sat")
+  (unsat "unsat")
+  (unknown "unknown"))
 
 (task
   (name local-test)
@@ -39,12 +69,3 @@
       (provers (smtml-z3 z3))
       (timeout 30)
       (dirs ()))))
-
-(task
-  (name collections-c)
-  (synopsis "Run smtml on collections-c benchmarks")
-  (action
-    (run_provers
-      (provers (z3 smtml-z3 smtml-bitwuzla smtml-colibri2))
-      (timeout 30)
-      (dirs ($cur_dir/data/collections-c)))))
