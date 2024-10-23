@@ -16,18 +16,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: false
+          fetch-depth: 0
 
-      - name: Remove git submodules
+      - name: Do not recurse submodules
         run: |
-          git rm --cached ./bench/smt-comp
-          git rm --cached ./bench/smt-testcomp23
-          rm -rf ./bench/smt-comp
-          rm -rf ./bench/smt-testcomp23
-          rm -rf .git/modules/bench/smt-comp
-          rm -rf .git/modules/bench/smt-testcomp23
-          rm .gitmodules || true
-          git add -u
-          git commit -m "Remove submodules"
+          git config --global submodule.active ''
+          git config --global submodule.recurse false
 
       - name: Setup OCaml 4.14
         uses: ocaml/setup-ocaml@v3
