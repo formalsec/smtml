@@ -46,7 +46,7 @@ jobs:
         run: df -h
 
       - name: Install dependencies
-        run: opam install -y . --deps-only --with-test
+        run: opam install -vvv -y ./smtml.opam --deps-only --with-test
 
       - name: df after install
         run: df -h

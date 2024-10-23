@@ -25,7 +25,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          opam install -y . --deps-only --with-test
+          opam install -vvv -y ./smtml.opam --deps-only --with-test
           opam install z3
 
       - name: Build
