@@ -16,6 +16,14 @@ def print_success(msg):
 def print_info(msg):
   print(f"\033[94m{msg}\033[0m")
 
+def concat_dfs(files, output_file):
+  dfs = []
+  for file in files:
+    df = pd.read_csv(file)
+    dfs.append(df)
+  result = pd.concat(dfs)
+  result.to_csv(output_file, index=False)
+
 ############################################################################################################
 #                                           Single-query                                                   #
 ############################################################################################################
@@ -647,48 +655,93 @@ if __name__ == '__main__':
   parser.add_argument('--multi', action='store_true', help='Generate plots for single-query results')
   parser.add_argument('--single', action='store_true', help='Generate plots for single-query results')
   parser.add_argument('--testcomp', action='store_true', help='Generate plots for Test-Comp 2023 benchmarks')
+  parser.add_argument('--QF-FP', action='store_true', help='Run QF_FP benchmarks')
+  parser.add_argument('--QF-LIA', action='store_true', help='Run QF_LIA benchmarks')
+  parser.add_argument('--QF-BV', action='store_true', help='Run QF_BV benchmarks')
+  parser.add_argument('--QF-S', action='store_true', help='Run QF_S benchmarks')
+  parser.add_argument('--QF-SLIA', action='store_true', help='Run QF_SLIA benchmarks')
+  parser.add_argument('--array-examples', action='store_true', help='Run array-examples benchmarks')
+  parser.add_argument('--array-industry-pattern', action='store_true', help='Run array-industry-pattern benchmarks')
+  parser.add_argument('--eca-rers20218', action='store_true', help='Run eca-rers20218 benchmarks')
+  parser.add_argument('--concat', action='store_true', help='Concatenate the results')
+  parser.add_argument('--files', nargs='+', help='List of input files')
   args = parser.parse_args()
 
   if not args.output:
     print_error("Output file name not provided.")
     print("Use --output to specify the output file name.")
     sys.exit(1)
-  
+
+  if args.concat:
+    print_info("Concatenating the results")
+    concat_dfs(args.files, args.output)
+    print_success("Results concatenated successfully.")
+    sys.exit(0)
+
   if args.single:
-    print_info("Generating plots for single-query results")
-    print_info("Generating plots for QF_FP")
-    plot_QF_FP_single('benchmarks/QF_FP.csv', f'{args.output}_QF_FP')
-    print_info("Generating plots for QF_LIA")
-    plot_QF_LIA_single('benchmarks/QF_LIA.csv', f'{args.output}_QF_LIA')
-    print_info("Generating plots for QF_BV")
-    plot_QF_BV_single('benchmarks/QF_BV.csv', f'{args.output}_QF_BV')
-    print_info("Generating plots for QF_S")
-    plot_QF_S_single('benchmarks/QF_S.csv', f'{args.output}_QF_S')
-    print_info("Generating plots for QF_SLIA")
-    plot_QF_SLIA_single('benchmarks/QF_SLIA.csv', f'{args.output}_QF_SLIA')
-    print_success("All plots generated successfully")
+    if args.QF_FP:
+      print_info("Generating plots for QF_FP")
+      plot_QF_FP_single(args.files[0], args.output)
+      print_success(f"Plot generated successfully. Saved to {args.output}.pdf")
+    elif args.QF_LIA:
+      print_info("Generating plots for QF_LIA")
+      plot_QF_LIA_single(args.files[0], args.output)
+      print_success(f"Plot generated successfully. Saved to {args.output}.pdf")
+    elif args.QF_BV:
+      print_info("Generating plots for QF_BV")
+      plot_QF_BV_single(args.files[0], args.output)
+      print_success(f"Plot generated successfully. Saved to {args.output}.pdf")
+    elif args.QF_S:
+      print_info("Generating plots for QF_S")
+      plot_QF_S_single(args.files[0], args.output)
+      print_success(f"Plot generated successfully. Saved to {args.output}.pdf")
+    elif args.QF_SLIA:
+      print_info("Generating plots for QF_SLIA")
+      plot_QF_SLIA_single(args.files[0], args.output)
+      print_success(f"Plot generated successfully. Saved to {args.output}.pdf")
+    else:
+      print_error("No benchmark selected.")
+      sys.exit(1)
   elif args.multi:
-    print_info("Generating plots for multi-query results")
-    print_info("Generating plots for QF_FP")
-    plot_QF_FP_multi('benchmarks/QF_FP_multi.csv', 'benchmarks/QF_FP.csv', 'benchmarks/QF_FP_bitwuzla.csv', 'benchmarks/bitwuzla_QF_FP.csv', f'{args.output}_QF_FP')
-    print_info("Generating plots for QF_LIA")
-    plot_QF_LIA_multi('benchmarks/QF_LIA_multi.csv', 'benchmarks/QF_LIA.csv', f'{args.output}_QF_LIA')
-    print_info("Generating plots for QF_BV")
-    plot_QF_BV_multi('benchmarks/QF_BV_multi.csv', 'benchmarks/QF_BV.csv', f'{args.output}_QF_BV')
-    print_info("Generating plots for QF_S")
-    plot_QF_S_multi('benchmarks/QF_S_multi.csv', 'benchmarks/QF_S.csv', f'{args.output}_QF_S')
-    print_info("Generating plots for QF_SLIA")
-    plot_QF_SLIA_multi('benchmarks/QF_SLIA_multi.csv', 'benchmarks/QF_SLIA.csv', f'{args.output}_QF_SLIA')
-    print_success("All plots generated successfully")
+    if args.QF_FP:
+      print_info("Generating plots for QF_FP")
+      plot_QF_FP_multi(args.files[0], args.files[1], args.files[2], args.files[3], args.output)
+      print_success(f"Plot generated successfully. Saved to {args.output}.pdf")
+    elif args.QF_LIA:
+      print_info("Generating plots for QF_LIA")
+      plot_QF_LIA_multi(args.files[0], args.files[1], args.output)
+      print_success(f"Plot generated successfully. Saved to {args.output}.pdf")
+    elif args.QF_BV:
+      print_info("Generating plots for QF_BV")
+      plot_QF_BV_multi(args.files[0], args.files[1], args.files[2], args.files[3], args.output)
+      print_success(f"Plot generated successfully. Saved to {args.output}.pdf")
+    elif args.QF_S:
+      print_info("Generating plots for QF_S")
+      plot_QF_S_multi(args.files[0], args.files[1], args.output)
+      print_success(f"Plot generated successfully. Saved to {args.output}.pdf")
+    elif args.QF_SLIA:
+      print_info("Generating plots for QF_SLIA")
+      plot_QF_SLIA_multi(args.files[0], args.files[1], args.output)
+      print_success(f"Plot generated successfully. Saved to {args.output}.pdf")
+    else:
+      print_error("No benchmark selected.")
+      sys.exit(1)
   elif args.testcomp:
-    print_info("Generating plots for Test-Comp 2023 benchmarks")
-    print_info("Generating plots for array-examples category")
-    plot_multi_testcomp_array('benchmarks/testcomp2023_array.csv', 'benchmarks/array-examples.csv', 'benchmarks/array-examples_smtml.csv', f'{args.output}_array')
-    print_info("Generating plots for array-industry-pattern category")
-    plot_multi_testcomp_array_industry('benchmarks/testcomp2023_array_industry.csv', 'benchmarks/array-industry-pattern.csv', 'benchmarks/array-industry-pattern_smtml.csv', f'{args.output}_array_industry')
-    print_info("Generating plots for eca-rers20218 category")
-    plot_multi_testcomp_eca('benchmarks/testcomp2023_eca.csv', 'benchmarks/eca-rers20218.csv', 'benchmarks/eca-rers20218_smtml.csv', f'{args.output}_eca')
-    print_success("All plots generated successfully")
+    if args.array_examples:
+      print_info("Generating plots for array-examples category")
+      plot_multi_testcomp_array('benchmarks/testcomp2023_array.csv', 'benchmarks/array-examples.csv', 'benchmarks/array-examples_smtml.csv', f'{args.output}_array')
+      print_success(f"Plot generated successfully. Saved to {args.output}.pdf")
+    elif args.array_industry_pattern:
+      print_info("Generating plots for array-industry-pattern category")
+      plot_multi_testcomp_array_industry('benchmarks/testcomp2023_array_industry.csv', 'benchmarks/array-industry-pattern.csv', 'benchmarks/array-industry-pattern_smtml.csv', f'{args.output}_array_industry')
+      print_success(f"Plot generated successfully. Saved to {args.output}.pdf")
+    elif args.eca_rers20218:
+      print_info("Generating plots for eca-rers20218 category")
+      plot_multi_testcomp_eca('benchmarks/testcomp2023_eca.csv', 'benchmarks/eca-rers20218.csv', 'benchmarks/eca-rers20218_smtml.csv', f'{args.output}_eca')
+      print_success(f"Plot generated successfully. Saved to {args.output}.pdf")
+    else:
+      print_error("No category selected.")
+      sys.exit(1)
   else:
     print_error("No option selected.")
     print("Use --single to generate plots for single-query results")
