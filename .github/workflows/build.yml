@@ -33,6 +33,9 @@ jobs:
       - name: df after checkout
         run: df -h
 
+      - name: Remove bench
+        run: rm -rf bench/
+
       - name: Setup OCaml ${{ matrix.ocaml-compiler }}
         uses: ocaml/setup-ocaml@v3
         with:
