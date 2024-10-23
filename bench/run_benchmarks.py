@@ -50,7 +50,7 @@ def to_csv(sqlite_file, output_csv_dir, output_csv_name, table_name="prover_res"
       writer.writerows(rows)
   conn.close()
 
-def automate_benchpress(directory_to_benchmark, output_csv_dir, output_csv_name, config, prover):
+def automate_benchpress_single(directory_to_benchmark, output_csv_dir, output_csv_name, config, prover):
   benchpress_data_dir = "/home/smtml/.local/share/benchpress"
   if run_benchpress(directory_to_benchmark, config, prover):
     try:
@@ -62,6 +62,9 @@ def automate_benchpress(directory_to_benchmark, output_csv_dir, output_csv_name,
     except Exception as e:
       print_error(f"Error during SQLite to CSV process: {e}")
 
+def automate_multi_query():
+  pass
+
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="Automate benchpress and convert the output to CSV.")
   parser.add_argument("--dir", type=str, help="The directory to benchmark.")
@@ -69,7 +72,15 @@ if __name__ == "__main__":
   parser.add_argument("--output-filename", type=str, default="benchpress_output", help="The name of the CSV file.")
   parser.add_argument("--config", type=str, default="/home/smtml/smtml/bench/benchpress.sexp", help="The name of the CSV file.")
   parser.add_argument("--prover", type=str, help="The solver to be used.")
+  parser.add_argument("--single", action="store_true", help="Run single-query mode.")
+  parser.add_argument("--multi", action="store_true", help="Run multi-query mode.")
   parser.add_argument("-j", type=int, help="Number of threads to use.")
   parser.add_argument("-t", type=int, help="Timeout (in seconds).")
   args = parser.parse_args()
-  automate_benchpress(args.dir, args.output_dir, args.output_filename, args.config, args.prover)
+  
+  if args.single:
+    automate_benchpress_single(args.dir, args.output_dir, args.output_filename, args.config, args.prover)
+  elif args.multi:
+    automate_multi_query()
+  else:
+    print_error("Please specify --single or --multi.")
