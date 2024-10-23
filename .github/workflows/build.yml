@@ -24,8 +24,14 @@ jobs:
       # allow opam depext to yes package manager prompts
       OPAMCONFIRMLEVEL: unsafe-yes
     steps:
+      - name: df before checkout
+        run: df -h
+
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: df after checkout
+        run: df -h
 
       - name: Setup OCaml ${{ matrix.ocaml-compiler }}
         uses: ocaml/setup-ocaml@v3
@@ -33,8 +39,14 @@ jobs:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
           dune-cache: true
 
+      - name: df after setup
+        run: df -h
+
       - name: Install dependencies
         run: opam install -y . --deps-only --with-test
+
+      - name: df after install
+        run: df -h
 
       - name: Build
         run: opam exec -- dune build @install
