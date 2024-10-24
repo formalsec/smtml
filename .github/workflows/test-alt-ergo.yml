@@ -1,15 +1,12 @@
 name: Test Alt-Ergo
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
-    branches:
-      - main
+    types: [ labeled ]
 
 jobs:
   test-alt-ergo:
+    if: contains(github.event.pull_request.labels.*.name, 'alt-ergo')
     runs-on: ubuntu-latest
     env:
       OPAMCONFIRMLEVEL: unsafe-yes

@@ -1,15 +1,12 @@
 name: Test Bitwuzla
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
-    branches:
-      - main
+    types: [ labeled ]
 
 jobs:
   test-bitwuzla:
+    if: contains(github.event.pull_request.labels.*.name, 'bitwuzla')
     runs-on: ubuntu-latest
     env:
       OPAMCONFIRMLEVEL: unsafe-yes
