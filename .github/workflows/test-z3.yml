@@ -17,6 +17,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+        # Removes ·git to prevent opam from checking out submodueles
+      - name: Remove .git
+        run: rm -rf .git
+
       - name: Setup OCaml 4.14
         uses: ocaml/setup-ocaml@v3
         with:
