@@ -653,7 +653,7 @@ module Fresh = struct
         let e = encode_expr e in
         let es' = List.map (fun e' -> encode_val (Str e')) (Expr.StringSet.elements es) in 
         encode_stringop ty op e es'
-      | _ -> assert false
+      | _ -> Format.eprintf "e (%a) = %a@." Ty.pp (Expr.ty hte)Expr.pp hte; assert false
 
     let set_params (params : Params.t) =
       let module P = Z3.Params in
@@ -757,7 +757,9 @@ module Fresh = struct
 
     let recover_z3_num (n : Z3.Expr.expr) : float option =
       if Z3.Expr.is_numeral n then
-        Some (float_of_string (Z3.Arithmetic.Real.to_decimal_string n 16))
+        let x = (Z3.Arithmetic.Real.to_decimal_string n 16) in 
+        Format.eprintf "Float_of_string v = %s@." x;
+        Some (float_of_string x)
       else None
 
     let recover_z3_int (n : Z3.Expr.expr) : int option =

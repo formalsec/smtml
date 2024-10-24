@@ -9,5 +9,6 @@
   test_cvtop
   test_naryop
   test_model
-  test_statistics)
+  test_statistics
+  test_ecmasl)
  (libraries smtml yojson))
