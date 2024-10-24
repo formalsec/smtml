@@ -20,10 +20,10 @@ jobs:
           submodules: false
           fetch-depth: 0
 
-      - name: Do not recurse submodules
-        run: |
-          git config --global submodule.active ''
-          git config --global submodule.recurse false
+      - name: Remove .git
+        run: rm -rf .git
+          # git config --global submodule.active ''
+          # git config --global submodule.recurse false
 
       - name: Setup OCaml 4.14
         uses: ocaml/setup-ocaml@v3
