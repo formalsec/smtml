@@ -1,15 +1,12 @@
 name: Test cvc5
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
-    branches:
-      - main
+    types: [ labeled ]
 
 jobs:
   test-cvc5:
+    if: contains(github.event.pull_request.labels.*.name, 'cvc5')
     runs-on: ubuntu-latest
     env:
       OPAMJOBS: 4
