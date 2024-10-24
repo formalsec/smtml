@@ -21,11 +21,29 @@ RUN apt-get update && apt-get install -y \
     libopenblas-dev \
     libgsl-dev \
     gnuplot-x11 \
-    libsqlite3-dev
+    libsparsehash-dev \
+    libsqlite3-dev \
+    cmake \
+    python3.12-venv \ 
+    meson
+
+RUN git clone https://github.com/cvc5/cvc5.git \
+    && cd cvc5 \
+    && git checkout cvc5-1.2.0 \
+    && ./configure.sh --auto-download && cd build \
+    && make -j 6 && make install \
+    && cd ../.. && rm -rf cvc5
 
 RUN echo "/usr/local/bin" | bash -c "sh <(curl -fsSL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)" \
     pip install --break-system-packages --upgrade pip setuptools \
     pip install --upgrade -r bench/requirements.txt
+
+RUN git clone https://github.com/bitwuzla/bitwuzla.git \
+    && cd bitwuzla \
+    && git checkout 0.5.0 \
+    && ./configure.py && cd build \
+    && ninja install \
+    && cd ../.. && rm -rf bitwuzla
 
 RUN useradd -m -s /bin/bash smtml \
     && echo "smtml ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers

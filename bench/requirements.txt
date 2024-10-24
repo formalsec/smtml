@@ -3,3 +3,5 @@ seaborn==0.13.2
 argparse==1.4.0
 SciencePlots==2.2.1
 pandas==2.2.2
+ninja==1.11.1
+meson==1.6.0
