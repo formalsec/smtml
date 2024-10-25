@@ -5,7 +5,7 @@ opam sw z3-bitwuzla
 eval $(opam env)
 #### QF_FP ####
 python3 run_benchmarks.py --single --dir smt-comp/smtlib/non-incremental/QF_FP --output-dir csvs_single --output-filename QF_FP_z3 --prover smtml-z3
-python3 run_benchmarks.py --single --dir smt-comp/smtlib/non-incremental/QF_FP --output-dir csvs_singe --output-filename QF_FP_bitwuzla --prover smtml-bitwuzla
+python3 run_benchmarks.py --single --dir smt-comp/smtlib/non-incremental/QF_FP --output-dir csvs_single --output-filename QF_FP_bitwuzla --prover smtml-bitwuzla
 python3 run_benchmarks.py --single --dir smt-comp/smtlib/non-incremental/QF_FP --output-dir csvs_single --output-filename QF_FP_z3_solver --prover z3
 python3 run_benchmarks.py --single --dir smt-comp/smtlib/non-incremental/QF_FP --output-dir csvs_single --output-filename QF_FP_bitwuzla_solver --prover bitwuzla
 #### QF_LIA ####
