@@ -68,6 +68,7 @@ def plot_QF_FP_single(file, output_file):
   bitwuzla_sorted['problems_solved'] = range(1, len(bitwuzla_sorted) + 1)
 
   plt.style.use(['science','ieee'])
+  plt.style.use(['no-latex'])
   plt.figure(figsize=(6, 6))
   plt.plot(z3_solver_sorted['cumulative_runtime'], z3_solver_sorted['problems_solved'], label='Z3', color='#8CB369', linewidth=2, linestyle=':')
   plt.plot(z3_smtml_sorted['cumulative_runtime'], z3_smtml_sorted['problems_solved'], label='Smt.ml - Z3', color='#8CB369', linewidth=2, linestyle='-')
@@ -114,6 +115,7 @@ def plot_QF_S_single(file, output_file):
   smtml_cvc5_sorted['problems_solved'] = range(1, len(smtml_cvc5_sorted) + 1)
 
   plt.style.use(['science','ieee'])
+  plt.style.use(['no-latex'])
   plt.figure(figsize=(6, 6))
   plt.plot(z3_sorted['cumulative_runtime'], z3_sorted['problems_solved'], label='Z3', color='#8CB369', linewidth=2, linestyle=':')
   plt.plot(smtml_z3_sorted['cumulative_runtime'], smtml_z3_sorted['problems_solved'], label='Smt.ml - Z3', color='#8CB369', linewidth=2, linestyle='-')
@@ -156,6 +158,7 @@ def plot_QF_SLIA_single(file, output_file):
   smtml_cvc5_sorted['problems_solved'] = range(1, len(smtml_cvc5_sorted) + 1)
 
   plt.style.use(['science','ieee'])
+  plt.style.use(['no-latex'])
   plt.figure(figsize=(6, 6))
   plt.plot(z3_sorted['cumulative_runtime'], z3_sorted['problems_solved'], label='Z3', color='#8CB369', linewidth=2, linestyle=':')
   plt.plot(smtml_z3_sorted['cumulative_runtime'], smtml_z3_sorted['problems_solved'], label='Smt.ml - Z3', color='#8CB369', linewidth=2, linestyle='-')
@@ -221,6 +224,7 @@ def plot_QF_BV_single(file, output_file):
   smtml_colibri2_sorted['problems_solved'] = range(1, len(smtml_colibri2_sorted) + 1)
 
   plt.style.use(['science','ieee'])
+  plt.style.use(['no-latex'])
   plt.figure(figsize=(6, 6))
   plt.plot(z3_sorted['cumulative_runtime'], z3_sorted['problems_solved'], label='Z3', color='#8CB369', linewidth=2, linestyle=':')
   plt.plot(smtml_z3_sorted['cumulative_runtime'], smtml_z3_sorted['problems_solved'], label='Smt.ml - Z3', color='#8CB369', linewidth=2, linestyle='-')
@@ -275,6 +279,7 @@ def plot_QF_LIA_single(file, output_file):
   smtml_colibri2_sorted['problems_solved'] = range(1, len(smtml_colibri2_sorted) + 1)
 
   plt.style.use(['science','ieee'])
+  plt.style.use(['no-latex'])
   plt.figure(figsize=(6, 6))
   plt.plot(z3_sorted['cumulative_runtime'], z3_sorted['problems_solved'], label='Z3', color='#8CB369', linewidth=2, linestyle=':')
   plt.plot(smtml_z3_sorted['cumulative_runtime'], smtml_z3_sorted['problems_solved'], label='Smt.ml - Z3', color='#8CB369', linewidth=2, linestyle='-')
@@ -332,6 +337,7 @@ def plot_QF_FP_multi(file_multi_z3, file_single_z3, file_multi_bt, file_single_b
   bt_single_sorted['problems_solved'] = range(1, len(bt_single_sorted) + 1)
 
   plt.style.use(['science','ieee'])
+  plt.style.use(['no-latex'])
   plt.figure(figsize=(6, 6))
   plt.plot(z3_single_sorted['cumulative_runtime'], z3_single_sorted['problems_solved'], label='Z3', color='#8CB369', linewidth=2, linestyle=':')
   plt.plot(z3_multi_sorted['cumulative_runtime'], z3_multi_sorted['problems_solved'], label='Smt.ml - Z3 (multi-query)', color='#8CB369', linewidth=2, linestyle='-')
@@ -383,6 +389,7 @@ def plot_QF_BV_multi(file_multi_z3, file_single_z3, file_multi_bt, file_single_b
   bt_single_sorted['problems_solved'] = range(1, len(bt_single_sorted) + 1)
 
   plt.style.use(['science','ieee'])
+  plt.style.use(['no-latex'])
   plt.figure(figsize=(6, 6))
   plt.plot(z3_single_sorted['cumulative_runtime'], z3_single_sorted['problems_solved'], label='Z3', color='#8CB369', linewidth=2, linestyle=':')
   plt.plot(z3_multi_sorted['cumulative_runtime'], z3_multi_sorted['problems_solved'], label='Smt.ml - Z3 (multi-query)', color='#8CB369', linewidth=2, linestyle='-')
@@ -421,6 +428,7 @@ def plot_QF_LIA_multi(file_multi, file_single, output_file):
   z3_single_sorted['problems_solved'] = range(1, len(z3_single_sorted) + 1)
 
   plt.style.use(['science','ieee'])
+  plt.style.use(['no-latex'])
   plt.figure(figsize=(6, 6))
   plt.plot(z3_single_sorted['cumulative_runtime'], z3_single_sorted['problems_solved'], label='Z3', color='#8CB369', linewidth=2, linestyle=':')
   plt.plot(z3_multi_sorted['cumulative_runtime'], z3_multi_sorted['problems_solved'], label='Smt.ml - Z3 (multi-query)', color='#8CB369', linewidth=2, linestyle='-')
@@ -457,6 +465,7 @@ def plot_QF_S_multi(file_multi, file_single, output_file):
   z3_single_sorted['problems_solved'] = range(1, len(z3_single_sorted) + 1)
 
   plt.style.use(['science','ieee'])
+  plt.style.use(['no-latex'])
   plt.figure(figsize=(6, 6))
   plt.plot(z3_single_sorted['cumulative_runtime'], z3_single_sorted['problems_solved'], label='Z3', color='#8CB369', linewidth=2, linestyle=':')
   plt.plot(z3_multi_sorted['cumulative_runtime'], z3_multi_sorted['problems_solved'], label='Smt.ml - Z3 (multi-query)', color='#8CB369', linewidth=2, linestyle='-')
@@ -493,6 +502,7 @@ def plot_QF_SLIA_multi(file_multi, file_single, output_file):
   z3_single_sorted['problems_solved'] = range(1, len(z3_single_sorted) + 1)
 
   plt.style.use(['science','ieee'])
+  plt.style.use(['no-latex'])
   plt.figure(figsize=(6, 6))
   plt.plot(z3_single_sorted['cumulative_runtime'], z3_single_sorted['problems_solved'], label='Z3', color='#8CB369', linewidth=2, linestyle=':')
   plt.plot(z3_multi_sorted['cumulative_runtime'], z3_multi_sorted['problems_solved'], label='Smt.ml - Z3 (multi-query)', color='#8CB369', linewidth=2, linestyle='-')
@@ -541,6 +551,7 @@ def plot_multi_testcomp_array(file_multi, file_single_solver, file_single_smtml,
   z3_single_smtml_sorted['problems_solved'] = range(1, len(z3_single_smtml_sorted) + 1)
 
   plt.style.use(['science','ieee'])
+  plt.style.use(['no-latex'])
   plt.figure(figsize=(6, 6))
   plt.plot(z3_single_sorted['cumulative_runtime'], z3_single_sorted['problems_solved'], label='Z3', color='#8CB369', linewidth=2, linestyle=':')
   plt.plot(z3_multi_sorted['cumulative_runtime'], z3_multi_sorted['problems_solved'], label='Smt.ml - Z3 (multi-query)', color='#3A7133', linewidth=2, linestyle='-')
@@ -587,6 +598,7 @@ def plot_multi_testcomp_array_industry(file_multi, file_single_solver, file_sing
   z3_single_smtml_sorted['problems_solved'] = range(1, len(z3_single_smtml_sorted) + 1)
 
   plt.style.use(['science','ieee'])
+  plt.style.use(['no-latex'])
   plt.figure(figsize=(6, 6))
   plt.plot(z3_single_sorted['cumulative_runtime'], z3_single_sorted['problems_solved'], label='Z3', color='#8CB369', linewidth=2, linestyle=':')
   plt.plot(z3_multi_sorted['cumulative_runtime'], z3_multi_sorted['problems_solved'], label='Smt.ml - Z3 (multi-query)', color='#3A7133', linewidth=2, linestyle='-')
@@ -632,6 +644,7 @@ def plot_multi_testcomp_eca(file_multi, file_single_solver, file_single_smtml, o
   z3_single_smtml_sorted['problems_solved'] = range(1, len(z3_single_smtml_sorted) + 1)
 
   plt.style.use(['science','ieee'])
+  plt.style.use(['no-latex'])
   plt.figure(figsize=(6, 6))
   plt.plot(z3_single_sorted['cumulative_runtime'], z3_single_sorted['problems_solved'], label='Z3', color='#8CB369', linewidth=2, linestyle=':')
   plt.plot(z3_multi_sorted['cumulative_runtime'], z3_multi_sorted['problems_solved'], label='Smt.ml - Z3 (multi-query)', color='#3A7133', linewidth=2, linestyle='-')
