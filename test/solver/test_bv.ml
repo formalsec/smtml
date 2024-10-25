@@ -11,7 +11,7 @@ module Make (M : Mappings_intf.S) = struct
 
   let () =
     let solver = Solver.create ~params ~logic:QF_BVFP () in
-    let x = Expr.symbol @@ Symbol.make (Ty_bitv 8) "x" in
+    let x = Expr.symbol @@ Symbol.make (Ty_bitv 8) "h" in
     Solver.add solver I8.[ x > v 0; x < v 2 ];
     assert_sat (Solver.check solver []);
     let val_x = Solver.get_value solver x in
