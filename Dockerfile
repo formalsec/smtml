@@ -36,7 +36,7 @@ RUN git clone https://github.com/cvc5/cvc5.git \
 
 RUN echo "/usr/local/bin" | bash -c "sh <(curl -fsSL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)" \
     pip install --break-system-packages --upgrade pip setuptools \
-    pip install --upgrade -r bench/requirements.txt
+    pip install --break-system-packages --upgrade -r bench/requirements.txt
 
 RUN git clone https://github.com/bitwuzla/bitwuzla.git \
     && cd bitwuzla \
@@ -71,3 +71,7 @@ RUN opam switch create -y colibri2 5.2.0 \
     && opam install -y . --deps-only --with-test --with-dev-setup \
     && opam install -y --confirm-level=unsafe-yes colibri2 dune-glob \
     && dune build && dune install
+
+RUN chmod +x bench/eq2.sh \
+    && chmod +x bench/eq3.sh \
+    && chmod +x bench/testcomp.sh \
