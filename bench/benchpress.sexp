@@ -67,10 +67,19 @@
    (expect (run smtlib-read-status)))
 
 (task
-  (name local-test)
-  (synopsis "Run smtml on directories provided on the command line")
+  (name early-light-review)
+  (synopsis "Runs smtml and solvers in a directory of collection-c")
   (action
     (run_provers
-      (provers (smtml-z3 z3))
+      (provers ())
+      (timeout 30)
+      (dirs ($cur_dir/collections-c/treeset_test_iterRemove)))))
+
+(task
+  (name eq1)
+  (synopsis "Evaluation Question 1")
+  (action
+    (run_provers
+      (provers ())
       (timeout 30)
       (dirs ()))))
