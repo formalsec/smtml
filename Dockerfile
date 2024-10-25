@@ -7,6 +7,7 @@ ENV BASE=/home/smtml \
 SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update && apt-get install -y \
+    wget \
     curl \
     git \
     sudo \
@@ -24,15 +25,12 @@ RUN apt-get update && apt-get install -y \
     libsparsehash-dev \
     libsqlite3-dev \
     cmake \
-    python3.12-venv \ 
+    python3.12-venv \
     meson
 
-RUN git clone https://github.com/cvc5/cvc5.git \
-    && cd cvc5 \
-    && git checkout cvc5-1.2.0 \
-    && ./configure.sh --auto-download && cd build \
-    && make -j 6 && make install \
-    && cd ../.. && rm -rf cvc5
+RUN cd /tmp && wget https://github.com/cvc5/cvc5/releases/download/cvc5-1.2.0/cvc5-Linux-x86_64-static.zip \
+    && unzip cvc5-Linux-x86_64-static.zip \
+    && cp ./cvc5-Linux-x86_64-static/bin/cvc5 /usr/local/bin
 
 RUN echo "/usr/local/bin" | bash -c "sh <(curl -fsSL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)" \
     pip install --break-system-packages --upgrade pip setuptools \
@@ -74,4 +72,4 @@ RUN opam switch create -y colibri2 5.2.0 \
 
 RUN chmod +x bench/eq2.sh \
     && chmod +x bench/eq3.sh \
-    && chmod +x bench/testcomp.sh \
+    && chmod +x bench/testcomp.sh
