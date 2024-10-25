@@ -1,14 +1,18 @@
 ## Unreleased
 
 ### Added
+### Fixed
+### Changed
 
+## v0.3.0
+
+### Added
+
+- Add Dockerfile to built smtml using docker
 - Add `Alt-Ergo` mappings
 - Use `Dolmen` to parse smt2 benchmarks
 - Add `Binder` expression to model: `Forall`, `Exists`, and `Let_in`
 - Provide hashconsed sets of expressions in `Expr.Set`
-
-### Fixed
-### Changed
 
 ## v0.2.5
 
