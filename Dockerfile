@@ -70,6 +70,7 @@ RUN opam switch create -y colibri2 5.2.0 \
     && opam install -y --confirm-level=unsafe-yes colibri2 dune-glob \
     && dune build && dune install
 
-RUN chmod +x bench/eq2.sh \
+RUN chmod +x bench/eq1.sh \
+    && chmod +x bench/eq2.sh \
     && chmod +x bench/eq3.sh \
     && chmod +x bench/testcomp.sh
