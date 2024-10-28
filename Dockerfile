@@ -33,8 +33,7 @@ RUN cd /tmp && wget https://github.com/cvc5/cvc5/releases/download/cvc5-1.2.0/cv
     && cp ./cvc5-Linux-x86_64-static/bin/cvc5 /usr/local/bin
 
 RUN echo "/usr/local/bin" | bash -c "sh <(curl -fsSL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)" \
-    pip install --break-system-packages --upgrade pip setuptools \
-    pip install --break-system-packages --upgrade -r bench/requirements.txt
+    pip install --break-system-packages --upgrade pip setuptools
 
 RUN git clone https://github.com/bitwuzla/bitwuzla.git \
     && cd bitwuzla \
@@ -47,8 +46,12 @@ RUN useradd -m -s /bin/bash smtml \
     && echo "smtml ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 USER smtml
+
 COPY --chown=smtml:smtml . ${BASE}/smtml
+
 WORKDIR ${BASE}/smtml
+
+RUN pip install --break-system-packages --upgrade -r bench/requirements.txt
 
 RUN opam init --disable-sandboxing --shell-setup -y \
     && opam update \
