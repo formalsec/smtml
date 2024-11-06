@@ -133,7 +133,8 @@ let rec ty (hte : t) : Ty.t =
     ty1
   | Triop (ty, _, _, _, _) -> ty
   | Relop (ty, _, _, _) -> ty
-  | Cvtop (Ty_bitv n, (Zero_extend m | Sign_extend m), _) -> Ty_bitv (n + m)
+  | Cvtop (_, (Zero_extend m | Sign_extend m), hte) -> (
+    match ty hte with Ty_bitv n -> Ty_bitv (n + m) | _ -> assert false )
   | Cvtop (ty, _, _) -> ty
   | Naryop (ty, _, _) -> ty
   | Extract (_, h, l) -> Ty_bitv ((h - l) * 8)
