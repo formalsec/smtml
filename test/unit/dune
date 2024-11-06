@@ -5,6 +5,7 @@
   test_unop
   test_binop
   test_triop
+  test_ty
   test_relop
   test_cvtop
   test_naryop
