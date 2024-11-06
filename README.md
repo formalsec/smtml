@@ -11,15 +11,14 @@ efforts are directed towards incorporating support for [cvc5].
 
 ### OPAM
 
-- Install [opam](https://opam.ocaml.org/doc/Install.html).
-- Bootstrap the OCaml compiler:
+Install [opam](https://opam.ocaml.org/doc/Install.html) and bootstrap the OCaml compiler:
 
 ```sh
 opam init
-opam switch create 5.1.0 5.1.0
+opam switch create 5.1.1 5.1.1
 ```
 
-- And, then install encoding:
+Then install encoding:
 
 ```sh
 opam install smtml
@@ -27,22 +26,22 @@ opam install smtml
 
 ### Build from source
 
-- Install the library dependencies:
+Clone the repo and install the dependencies:
 
 ```sh
 git clone https://github.com/formalsec/smtml.git
 cd smtml
-opam install . --deps-only
+opam install . --deps-only --with-test
 ```
 
-- Build and test:
+Build and test:
 
 ```sh
-dune build
+dune build @install
 dune runtest
 ```
 
-- Install `smtml` on your path by running:
+Install `smtml` on your path by running:
 
 ```sh
 dune install
@@ -64,7 +63,7 @@ bisect-ppx-report html    # Detailed Report in _coverage/index.html
 | [Colibri2] | ☑️ | [colibri2](https://opam.ocaml.org/packages/colibri2/) |
 | [Bitwuzla] | ☑️ | [bitwuzla-cxx](https://opam.ocaml.org/packages/bitwuzla-cxx/) |
 | [Alt-Ergo] | ☑️ | [alt-ergo](https://opam.ocaml.org/packages/alt-ergo/) |
-| [cvc5]     | 🔄 | [cvc5](https://opam.ocaml.org/packages/cvc5/) |
+| [cvc5]     | ☑️ | [cvc5](https://opam.ocaml.org/packages/cvc5/) |
 | [Minisat]  | 📆 | [minisat](https://opam.ocaml.org/packages/minisat/) |
 
 #### Legend
