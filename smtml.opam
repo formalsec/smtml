@@ -46,7 +46,7 @@ depends: [
 ]
 depopts: ["alt-ergo-lib" "bitwuzla-cxx" "colibri2" "cvc5" "z3"]
 conflicts: [
-  "bitwuzla-cxx" {< "0.4.0"}
+  "bitwuzla-cxx" {< "0.6.0"}
   "z3" {< "4.12.2" | >= "4.14"}
 ]
 build: [
