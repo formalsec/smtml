@@ -1,7 +1,12 @@
 ## Unreleased
 
 ### Added
+
 ### Fixed
+
+- Fixes incorrect type calculation of bitv `*_extend` ops
+- Bumps bitwuzla 0.4.0 -> 0.6.0 to fix segmentation faults
+
 ### Changed
 
 ## v0.3.0
