@@ -4,15 +4,6 @@
 
 include Mappings_intf
 
-(* Hack: this was a hack to try and run bitwuzla in Owi *)
-let leak =
-  let leaky_list = ref [] in
-  let mutex = Mutex.create () in
-  fun module_ ->
-    Mutex.lock mutex;
-    leaky_list := module_ :: !leaky_list;
-    Mutex.unlock mutex
-
 module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
   open B
 
@@ -511,13 +502,7 @@ end
 
 include (
   Mappings.Make (struct
-    module Make () = struct
-      let bitwuzla = (module Bitwuzla_cxx.Make () : Bitwuzla_cxx.S)
-
-      let () = leak bitwuzla
-
-      include Fresh_bitwuzla ((val bitwuzla))
-    end
+    module Make () = Fresh_bitwuzla (Bitwuzla_cxx.Make ())
 
     let is_available = true
 
