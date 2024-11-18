@@ -49,6 +49,8 @@
   (cmdliner
    (>= "1.2.0"))
   dune
+  (dune-glob
+   :with-test)
   (dolmen
    (= "0.10"))
   (dolmen_type
