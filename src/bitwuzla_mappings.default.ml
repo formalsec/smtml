@@ -18,13 +18,13 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
   type solver = Solver.t
 
   (* Not supported *)
-  type handle = unit
+  type handle = [ `Handle ]
 
   (* Not supported *)
-  type optimizer = unit
+  type optimizer = [ `Optimizer ]
 
   (* Not supported *)
-  type func_decl = unit
+  type func_decl = [ `Func_decl ]
 
   let caches_consts = false
 
@@ -408,9 +408,9 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
   end
 
   module Func = struct
-    let make _ _ _ = ()
+    let make _ _ _ = `Func_decl
 
-    let apply () _ = false_
+    let apply `Func_decl _ = false_
   end
 
   module Model = struct
