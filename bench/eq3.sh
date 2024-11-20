@@ -8,7 +8,7 @@ eval $(opam env)
 if [ -e "csvs_single/QF_FP_z3_solver.csv" ]; then
   : # do nothing
 else
-  python3 run_benchmarks.py --dir smt-comp/smtlib/non-incremental/QF_FP --output-dir csvs_single --output-filename QF_FP_z3_solver --prover z3
+  python3 run_benchmarks.py --single --dir smt-comp/smtlib/non-incremental/QF_FP --output-dir csvs_single --output-filename QF_FP_z3_solver --prover z3
 fi
 
 python3 run_benchmarks.py --multi -F QF_FP_paths.list --output-dir csvs_multi --output-filename QF_FP_z3 --prover smtml-z3
@@ -17,7 +17,7 @@ python3 run_benchmarks.py --multi -F QF_FP_paths.list --output-dir csvs_multi --
 if [ -e "csvs_single/QF_FP_bitwuzla_solver.csv" ]; then
   : # do nothing
 else
-  python3 run_benchmarks.py --dir smt-comp/smtlib/non-incremental/QF_FP --output-dir csvs_single --output-filename QF_FP_bitwuzla_solver --prover bitwuzla
+  python3 run_benchmarks.py --single --dir smt-comp/smtlib/non-incremental/QF_FP --output-dir csvs_single --output-filename QF_FP_bitwuzla_solver --prover bitwuzla
 fi
 
 python3 run_benchmarks.py --multi -F QF_FP_paths.list --output-dir csvs_multi --output-filename QF_FP_bitwuzla_solver --prover bitwuzla
@@ -27,7 +27,7 @@ python3 run_benchmarks.py --multi -F QF_FP_paths.list --output-dir csvs_multi --
 if [ -e "csvs_single/QF_LIA_z3_solver.csv" ]; then
   : # do nothing
 else
-  python3 run_benchmarks.py --dir smt-comp/smtlib/non-incremental/QF_LIA --output-dir csvs_single --output-filename QF_LIA_z3_solver --prover z3
+  python3 run_benchmarks.py --single --dir smt-comp/smtlib/non-incremental/QF_LIA --output-dir csvs_single --output-filename QF_LIA_z3_solver --prover z3
 fi
 
 python3 run_benchmarks.py --multi -F QF_LIA_paths.list --output-dir csvs_multi --output-filename QF_LIA_z3 --prover smtml-z3
@@ -37,7 +37,7 @@ python3 run_benchmarks.py --multi -F QF_LIA_paths.list --output-dir csvs_multi -
 if [ -e "csvs_single/QF_BV_z3_solver.csv" ]; then
   : # do nothing
 else
-  python3 run_benchmarks.py --dir smt-comp/smtlib/non-incremental/QF_BV --output-dir csvs_single --output-filename QF_BV_z3_solver --prover z3
+  python3 run_benchmarks.py --single --dir smt-comp/smtlib/non-incremental/QF_BV --output-dir csvs_single --output-filename QF_BV_z3_solver --prover z3
 fi
 
 python3 run_benchmarks.py --multi -F QF_BV_paths.list --output-dir csvs_multi --output-filename QF_BV_z3 --prover smtml-z3
@@ -46,7 +46,7 @@ python3 run_benchmarks.py --multi -F QF_BV_paths.list --output-dir csvs_multi --
 if [ -e "csvs_single/QF_BV_bitwuzla_solver.csv" ]; then
   : # do nothing
 else
-  python3 run_benchmarks.py --dir smt-comp/smtlib/non-incremental/QF_BV --output-dir csvs_single --output-filename QF_BV_bitwuzla_solver --prover bitwuzla
+  python3 run_benchmarks.py --single --dir smt-comp/smtlib/non-incremental/QF_BV --output-dir csvs_single --output-filename QF_BV_bitwuzla_solver --prover bitwuzla
 fi
 
 python3 run_benchmarks.py --multi -F QF_BV_paths.list --output-dir csvs_multi --output-filename QF_BV_bitwuzla_solver --prover bitwuzla
@@ -56,7 +56,7 @@ python3 run_benchmarks.py --multi -F QF_BV_paths.list --output-dir csvs_multi --
 if [ -e "csvs_single/QF_S_z3_solver.csv" ]; then
   : # do nothing
 else
-  python3 run_benchmarks.py --dir smt-comp/smtlib/non-incremental/QF_S --output-dir csvs_single --output-filename QF_S_z3_solver --prover z3
+  python3 run_benchmarks.py --single --dir smt-comp/smtlib/non-incremental/QF_S --output-dir csvs_single --output-filename QF_S_z3_solver --prover z3
 fi
 
 python3 run_benchmarks.py --multi -F QF_S_paths.list --output-dir csvs_multi --output-filename QF_S_z3 --prover smtml-z3
@@ -66,7 +66,7 @@ python3 run_benchmarks.py --multi -F QF_S_paths.list --output-dir csvs_multi --o
 if [ -e "csvs_single/QF_SLIA_z3_solver.csv" ]; then
   : # do nothing
 else
-  python3 run_benchmarks.py --dir smt-comp/smtlib/non-incremental/QF_SLIA --output-dir csvs_single --output-filename QF_SLIA_z3_solver --prover z3
+  python3 run_benchmarks.py --single --dir smt-comp/smtlib/non-incremental/QF_SLIA --output-dir csvs_single --output-filename QF_SLIA_z3_solver --prover z3
 fi
 
 python3 run_benchmarks.py --multi -F QF_SLIA_paths.list --output-dir csvs_multi --output-filename QF_SLIA_z3 --prover smtml-z3
