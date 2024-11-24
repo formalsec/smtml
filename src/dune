@@ -59,6 +59,7 @@
   ocaml_intrinsics
   patricia-tree
   rusage
+  scfg
   smtml.prelude
   yojson
   zarith

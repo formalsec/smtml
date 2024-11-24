@@ -48,3 +48,98 @@ let to_json (model : t) : Yojson.t =
   in
   let model :> Yojson.t = Hashtbl.fold add_assignment model (`Assoc []) in
   `Assoc [ ("model", model) ]
+
+let to_json_string model =
+  let model = to_json model in
+  Fmt.str "%a" Yojson.pp model
+
+let to_scfg model =
+  let open Scfg.Types in
+  let children =
+    let bindings = get_bindings model in
+    List.map
+      (fun (symbol, value) ->
+        let p0 = Symbol.to_string symbol in
+        let p1 = Symbol.type_of symbol |> Ty.string_of_type in
+        let p2 = Value.to_string value in
+        let params = [ p0; p1; p2 ] in
+        { name = "symbol"; params; children = [] } )
+      bindings
+  in
+  [ { name = "model"; params = []; children } ]
+
+let to_scfg_string model =
+  let model = to_scfg model in
+  Fmt.str "%a" Scfg.Pp.config model
+
+let to_smtlib _model = assert false
+
+let to_smtlib_string model =
+  let _model = to_smtlib model in
+  assert false
+
+module Parse = struct
+  module Json = struct
+    let from_string _s = assert false
+
+    let from_channel _chan = assert false
+
+    let from_file _file = assert false
+  end
+
+  module Scfg = struct
+    let ( let* ) = Result.bind
+
+    let from_scfg v =
+      match Scfg.Query.get_dir "model" v with
+      | None ->
+        Error "can not find the directive `model` while parsing the scfg config"
+      | Some model ->
+        let symbols = Scfg.Query.get_dirs "symbol" model.children in
+        let tbl = Hashtbl.create 16 in
+        let* () =
+          List.fold_left
+            (fun acc symbol ->
+              let* () = acc in
+              let* name = Scfg.Query.get_param 0 symbol in
+              let* ty = Scfg.Query.get_param 1 symbol in
+              let* ty = Ty.of_string ty in
+              let* value = Scfg.Query.get_param 2 symbol in
+              let* value =
+                (* TODO: expose a Value.of_string : ty -> s -> Value.t instead ? *)
+                match ty with
+                | Ty_bitv _n -> begin
+                  match int_of_string value with
+                  | None -> Error "invalid symbol value, expected integer"
+                  | Some n -> Ok (Value.Int n)
+                end
+                | _ -> assert false
+              in
+              let key = Symbol.make ty name in
+              Hashtbl.add tbl key value;
+              Ok () )
+            (Ok ()) symbols
+        in
+        Ok tbl
+
+    let from_string s =
+      let* model = Scfg.Parse.from_string s in
+      from_scfg model
+
+    let from_channel chan =
+      let* model = Scfg.Parse.from_channel chan in
+      from_scfg model
+
+    let from_file file =
+      let* model = Scfg.Parse.from_file (Fpath.to_string file) in
+      from_scfg model
+  end
+
+  module Smtlib = struct
+    let from_string _s = assert false
+
+    let from_channel _chan = assert false
+
+    let from_file _file = assert false
+  end
+end

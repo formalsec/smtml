@@ -419,6 +419,35 @@ let pp fmt = function
   | Ty_none -> Fmt.string fmt "none"
   | Ty_regexp -> Fmt.string fmt "regexp"
 
+let of_string = function
+  | "int" -> Ok Ty_int
+  | "real" -> Ok Ty_real
+  | "bool" -> Ok Ty_bool
+  | "str" -> Ok Ty_str
+  | "list" -> Ok Ty_list
+  | "app" -> Ok Ty_app
+  | "unit" -> Ok Ty_unit
+  | "none" -> Ok Ty_none
+  | "regexp" -> Ok Ty_regexp
+  | s ->
+    if String.starts_with ~prefix:"i" s then begin
+      let s = String.sub s 1 (String.length s - 1) in
+      match int_of_string s with
+      | None -> Error (Fmt.str "can not parse type %s" s)
+      | Some n when n < 0 ->
+        Error (Fmt.str "size of bitvectors must be a positive integer")
+      | Some n -> Ok (Ty_bitv n)
+    end
+    else if String.starts_with ~prefix:"f" s then begin
+      let s = String.sub s 1 (String.length s - 1) in
+      match int_of_string s with
+      | None -> Error (Fmt.str "can not parse type %s" s)
+      | Some n when n < 0 ->
+        Error (Fmt.str "size of fp must be a positive integer")
+      | Some n -> Ok (Ty_fp n)
+    end
+    else Error (Fmt.str "can not parse type %s" s)
+
 let pp_logic fmt = function
   | ALL -> Fmt.string fmt "ALL"
   | AUFLIA -> Fmt.string fmt "AUFLIA"
