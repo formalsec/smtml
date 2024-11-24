@@ -32,7 +32,7 @@ def get_latest_sqlite_file(benchpress_data_dir):
   files = [f for f in os.listdir(benchpress_data_dir) if f.endswith('.sqlite')]
   if not files:
     raise FileNotFoundError("No .sqlite files found in benchpress data directory.")
-  
+
   latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(benchpress_data_dir, x)))
   return os.path.join(benchpress_data_dir, latest_file)
 
@@ -65,13 +65,13 @@ def automate_benchpress_single(directory_to_benchmark, output_csv_dir, output_cs
       print_error(f"Error during SQLite to CSV process: {e}")
 
 def get_latest_n_csvs(n):
-  result = subprocess.run(['ls', '-d', os.path.join('/home/smtml/smtml/bench', 'res-multi-query-*')], 
+  result = subprocess.run(['ls', '-d', os.path.join('/home/smtml/smtml/bench', 'res-multi-query-*')],
                             stdout=subprocess.PIPE, text=True, shell=True)
   query_dirs = result.stdout.splitlines()
   query_dirs = query_dirs[-n:]
   csv_files = []
   for query_dir in query_dirs:
-        csv_file = glob(os.path.join(query_dir, '*.csv'))
+        csv_file = glob.glob(os.path.join(query_dir, '*.csv'))
         if csv_file:
             csv_files.append(csv_file[0])
   return csv_files

@@ -127,6 +127,8 @@ fi
 
 $dry_value && exit 0
 
+mkdir csvs_multi
+
 opam sw z3-bitwuzla
 eval $(opam env)
 
@@ -147,7 +149,7 @@ else
   python3 run_benchmarks.py --single --dir $QF_FP_DIR --output-dir csvs_single --output-filename QF_FP_bitwuzla_solver --prover bitwuzla
 fi
 
-python3 run_benchmarks.py --multi -F $QF_FP_LIST --output-dir csvs_multi --output-filename QF_FP_bitwuzla_solver --prover bitwuzla
+python3 run_benchmarks.py --multi -F $QF_FP_LIST --output-dir csvs_multi --output-filename QF_FP_bitwuzla --prover smtml-bitwuzla
 
 #### QF_LIA ####
 ## Z3 ##
@@ -176,7 +178,7 @@ else
   python3 run_benchmarks.py --single --dir $QF_BV_DIR --output-dir csvs_single --output-filename QF_BV_bitwuzla_solver --prover bitwuzla
 fi
 
-python3 run_benchmarks.py --multi -F $QF_BV_LIST --output-dir csvs_multi --output-filename QF_BV_bitwuzla_solver --prover bitwuzla
+python3 run_benchmarks.py --multi -F $QF_BV_LIST --output-dir csvs_multi --output-filename QF_BV_bitwuzla --prover smtml-bitwuzla
 
 #### QF_S ####
 ## Z3 ##
