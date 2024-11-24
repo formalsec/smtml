@@ -10,7 +10,7 @@ solver usage, with notable improvements for batched solver interactions.
 
 ## Getting the Artifact
 
-You can download the artifact through [Zenodo](https://zenodo.org/records/13959671/files/smtml_0.3.tar.gz?download=1).
+You can download the artifact through [Zenodo](https://zenodo.org/records/14104822).
 
 ## Tested platforms
 
@@ -29,7 +29,7 @@ modification, and distribution.
 
 ## MD5 Hash of the Artifact
 
-8edce799971395168bdf728c9a136399
+46c6e43adf9bd5d9a922b3b7db307d12
 
 ## Building and Running the Docker Image
 
@@ -191,10 +191,14 @@ $ git submodule update --remote -- smt-comp/
 ```
 
 2. Run the `eq1.sh` script. Note that, this script can take up multiple
-hours to complete.
+hours to complete. Therefore, to avoid running the entire dataset specify
+a number of benchmark to run with the `-n` flag. This will run the benchmarks
+quicker, but only provide an aproximation of the papers results.
 
 ```sh
 $ ./eq1.sh
+# Or, to just run 20 benchmarks to finish quickly
+$ ./eq1.sh -n 20
 ```
 
 The script will generate the results in directory `eq1`, which
@@ -237,10 +241,14 @@ $ git submodule update --remote -- smt-comp/
 ```
 
 2. Run the `eq2.sh` script. Note that, this script can take up multiple
-hours to complete.
+hours to complete. Therefore, to avoid running the entire dataset specify
+a number of benchmark to run with the `-n` flag. This will run the benchmarks
+quicker, but only provide an aproximation of the papers results.
 
 ```sh
 $ ./eq2.sh
+# Or, to just run 20 benchmarks to finish quickly
+$ ./eq2.sh -n 20
 ```
 
 The script will generate the following files:
@@ -315,10 +323,14 @@ $ git submodule update --remote -- smt-testcomp23/
 ```
 
 2. Run the `testcomp.sh` script. Note that, this script can take up multiple
-hours to complete.
+hours to complete. Therefore, to avoid running the entire dataset specify
+a number of benchmark to run with the `-n` flag. This will run the benchmarks
+quicker, but only provide an aproximation of the papers results.
 
 ```sh
 $ ./testcomp.sh
+# Or, to just run 20 benchmarks to finish quickly
+$ ./testcomp.sh -n 20
 ```
 
 The script will generate the following files:

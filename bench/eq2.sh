@@ -100,7 +100,7 @@ python3 run_benchmarks.py --single --dir $QF_LIA_DIR --output-dir csvs_single --
 python3 run_benchmarks.py --single --dir $QF_BV_DIR --output-dir csvs_single --output-filename QF_BV_z3 --prover smtml-z3
 python3 run_benchmarks.py --single --dir $QF_BV_DIR --output-dir csvs_single --output-filename QF_BV_bitwuzla --prover smtml-bitwuzla
 python3 run_benchmarks.py --single --dir $QF_BV_DIR --output-dir csvs_single --output-filename QF_BV_z3_solver --prover z3
-python3 run_benchmarks.py --single --dir $QF_BV_DIR --output-dir csvs_single --output-filename QF_BV_bitwuzla --prover smtml-bitwuzla
+python3 run_benchmarks.py --single --dir $QF_BV_DIR --output-dir csvs_single --output-filename QF_BV_bitwuzla_solver --prover bitwuzla
 #### QF_S ####
 python3 run_benchmarks.py --single --dir $QF_S_DIR --output-dir csvs_single --output-filename QF_S_z3 --prover smtml-z3
 python3 run_benchmarks.py --single --dir $QF_S_DIR --output-dir csvs_single --output-filename QF_S_z3_solver --prover z3
