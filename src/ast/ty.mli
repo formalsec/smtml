@@ -196,4 +196,6 @@ val pp_logic : logic Fmt.t
 
 val string_of_type : t -> string
 
+val of_string : string -> (t, string) Result.t
+
 val size : t -> int
