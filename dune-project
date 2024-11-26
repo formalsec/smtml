@@ -73,6 +73,7 @@
   (prelude
    (>= "0.3"))
   rusage
+  scfg
   (yojson
    (>= "1.6.0"))
   (zarith
