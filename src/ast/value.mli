@@ -14,6 +14,8 @@ type t =
   | App : [> `Op of string ] * t list -> t
   | Nothing
 
+val type_of : t -> Ty.t
+
 val compare : t -> t -> int
 
 val equal : t -> t -> bool
@@ -26,6 +28,6 @@ val pp : t Fmt.t
 
 val to_string : t -> string
 
-val to_json : t -> Yojson.Basic.t
+val of_string : Ty.t -> string -> (t, string) result
 
-val type_of : t -> Ty.t
+val to_json : t -> Yojson.Basic.t
