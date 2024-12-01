@@ -16,6 +16,18 @@ type t =
   | App : [> `Op of string ] * t list -> t
   | Nothing
 
+let type_of (v : t) : Ty.t =
+  match v with
+  | True | False -> Ty_bool
+  | Unit -> Ty_unit
+  | Int _ -> Ty_int
+  | Real _ -> Ty_real
+  | Str _ -> Ty_str
+  | Num n -> Num.type_of n
+  | List _ -> Ty_list
+  | App _ -> Ty_app
+  | Nothing -> Ty_none
+
 let rec compare (v1 : t) (v2 : t) : int =
   match (v1, v2) with
   | True, True | False, False | Unit, Unit | Nothing, Nothing -> 0
@@ -69,6 +81,29 @@ let rec pp fmt = function
 
 let to_string (v : t) : string = Fmt.str "%a" pp v
 
+let of_string (cast : Ty.t) v =
+  let open Result in
+  match cast with
+  | Ty_bitv _ | Ty_fp _ ->
+    let+ n = Num.of_string cast v in
+    Num n
+  | Ty_bool -> (
+    match v with
+    | "true" -> Ok True
+    | "false" -> Ok False
+    | _ -> Error "invalid value, expected boolean" )
+  | Ty_int -> (
+    match int_of_string v with
+    | None -> Error "invalid value, expected integer"
+    | Some n -> Ok (Int n) )
+  | Ty_real -> (
+    match float_of_string v with
+    | None -> Error "invalid value, expected real"
+    | Some n -> Ok (Real n) )
+  | Ty_str -> Ok (Str v)
+  | Ty_app | Ty_list | Ty_none | Ty_unit | Ty_regexp ->
+    Error (Fmt.str "unsupported parsing values of type %a" Ty.pp cast)
+
 let rec to_json (v : t) : Yojson.Basic.t =
   match v with
   | True -> `Bool true
@@ -81,15 +116,3 @@ let rec to_json (v : t) : Yojson.Basic.t =
   | List l -> `List (List.map to_json l)
   | Nothing -> `Null
   | App _ -> assert false
-
-let type_of (v : t) : Ty.t =
-  match v with
-  | True | False -> Ty_bool
-  | Unit -> Ty_unit
-  | Int _ -> Ty_int
-  | Real _ -> Ty_real
-  | Str _ -> Ty_str
-  | Num n -> Num.type_of n
-  | List _ -> Ty_list
-  | App _ -> Ty_app
-  | Nothing -> Ty_none

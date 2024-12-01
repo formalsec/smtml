@@ -49,6 +49,17 @@ let to_json (model : t) : Yojson.t =
   let model :> Yojson.t = Hashtbl.fold add_assignment model (`Assoc []) in
   `Assoc [ ("model", model) ]
 
+(** {b Example}: Model in the json format:
+
+    {@json[
+      {
+        "model" : {
+          "x_0" : { "ty" : "int", "value" : 42 },
+          "x_1" : { "ty" : "bool", "value" : true },
+          "x_2" : { "ty" : "f32", "value" : 42.42 }
+        }
+      }
+    ]} *)
 let to_json_string model =
   let model = to_json model in
   Fmt.str "%a" Yojson.pp model
@@ -68,18 +79,30 @@ let to_scfg model =
   in
   [ { name = "model"; params = []; children } ]
 
+(** {b Example}: Model in the scfg format:
+
+    {@scfg[
+      model {
+        symbol x_0 int 42
+        symbol x_1 bool true
+        symbol x_2 f32 42.42
+      }
+    ]} *)
 let to_scfg_string model =
   let model = to_scfg model in
   Fmt.str "%a" Scfg.Pp.config model
 
 let to_smtlib _model = assert false
 
+(** {b Example}: TODO *)
 let to_smtlib_string model =
   let _model = to_smtlib model in
   assert false
 
 module Parse = struct
   module Json = struct
+
+
     let from_string _s = assert false
 
     let from_channel _chan = assert false
@@ -88,7 +111,7 @@ module Parse = struct
   end
 
   module Scfg = struct
-    let ( let* ) = Result.bind
+    open Result
 
     let from_scfg v =
       match Scfg.Query.get_dir "model" v with
@@ -98,27 +121,16 @@ module Parse = struct
         let symbols = Scfg.Query.get_dirs "symbol" model.children in
         let tbl = Hashtbl.create 16 in
         let* () =
-          List.fold_left
-            (fun acc symbol ->
-              let* () = acc in
+          Result.list_iter
+            (fun symbol ->
               let* name = Scfg.Query.get_param 0 symbol in
               let* ty = Scfg.Query.get_param 1 symbol in
               let* ty = Ty.of_string ty in
               let* value = Scfg.Query.get_param 2 symbol in
-              let* value =
-                (* TODO: expose a Value.of_string : ty -> s -> Value.t instead ? *)
-                match ty with
-                | Ty_bitv _n -> begin
-                  match int_of_string value with
-                  | None -> Error "invalid symbol value, expected integer"
-                  | Some n -> Ok (Value.Int n)
-                end
-                | _ -> assert false
-              in
+              let+ value = Value.of_string ty value in
               let key = Symbol.make ty name in
-              Hashtbl.add tbl key value;
-              Ok () )
-            (Ok ()) symbols
+              Hashtbl.add tbl key value )
+            symbols
         in
         Ok tbl
 
