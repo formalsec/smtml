@@ -18,6 +18,23 @@ let () =
 
 (* Parsing *)
 
+(* json *)
+let () =
+  let open Result in
+  let model_str =
+    {|
+      {
+        "model" : {
+          "x_0" : { "ty" : "int", "value" : 42 },
+          "x_1" : { "ty" : "bool", "value" : true },
+          "x_2" : { "ty" : "f32", "value" : 42.42 }
+        }
+      }
+    |}
+  in
+  let model = Model.Parse.Json.from_string model_str in
+  assert (match model with Ok _ -> true | _ -> false)
+
 (* scfg *)
 let () =
   let open Result in
