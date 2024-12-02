@@ -4,6 +4,16 @@
 ### Fixed
 ### Changed
 
+## v0.4.1
+
+### Added
+
+- Added `no_value` argument to `Model.to_scfg` and `Model.to_scfg_string`
+
+### Fixed
+
+- Don't print types of `Num` values in models
+
 ## v0.4.0
 
 ### Added
