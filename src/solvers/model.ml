@@ -23,10 +23,10 @@ let pp_bindings fmt ?(no_values = false) model =
   Fmt.list
     ~sep:(fun fmt () -> Fmt.pf fmt "@\n")
     (fun fmt (key, data) ->
-      if not no_values then Fmt.pf fmt "(%a %a)" Symbol.pp key Value.pp data
-      else
-        let t = Symbol.type_of key in
-        Fmt.pf fmt "(%a %a)" Symbol.pp key Ty.pp t )
+      let t = Symbol.type_of key in
+      if not no_values then
+        Fmt.pf fmt "(%a %a %a)" Symbol.pp key Ty.pp t Value.pp data
+      else Fmt.pf fmt "(%a %a)" Symbol.pp key Ty.pp t )
     fmt (get_bindings model)
 
 let pp ?(no_values = false) fmt model =
