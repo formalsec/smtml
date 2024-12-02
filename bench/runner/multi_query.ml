@@ -78,8 +78,9 @@ let main _hook provers from_file dirs =
         let ((status, stdout, stderr, _) as result) =
           Tool.fork_and_run ?from_file p dirs
         in
-        Fmt.pr "@[<v 2>Run %a@;Exited: %a@;Stdout:@; %a@;Stderr:@; %a@]@." Tool.pp_prover p
-          pp_exit_status status Fmt.string (String.escaped stdout) Fmt.string (String.escaped stderr);
+        Fmt.pr "@[<v 2>Run %a@;Exited: %a@;Stdout:@; %a@;Stderr:@; %a@]@."
+          Tool.pp_prover p pp_exit_status status Fmt.string
+          (String.escaped stdout) Fmt.string (String.escaped stderr);
         (p, result) )
       provers
   in

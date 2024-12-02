@@ -26,6 +26,8 @@ val set_default_printer : printer -> unit
 
 val pp : t Fmt.t
 
+val pp_no_type : t Fmt.t
+
 val to_string : t -> string
 
 val of_string : Ty.t -> string -> (t, string) result

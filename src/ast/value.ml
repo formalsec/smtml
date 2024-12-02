@@ -71,7 +71,7 @@ let rec pp fmt = function
   | Unit -> Fmt.string fmt "unit"
   | Int x -> Fmt.int fmt x
   | Real x -> Fmt.pf fmt "%F" x
-  | Num x -> Num.pp fmt x
+  | Num x -> Num.pp_no_type fmt x
   | Str x -> Fmt.pf fmt "%S" x
   | List l -> (Fmt.hovbox ~indent:1 (Fmt.list ~sep:Fmt.comma pp)) fmt l
   | App (`Op op, vs) ->
