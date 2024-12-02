@@ -22,9 +22,9 @@ val to_json : t -> Yojson.t
 
 val to_json_string : t -> string
 
-val to_scfg : t -> Scfg.Types.config
+val to_scfg : no_value:bool -> t -> Scfg.Types.config
 
-val to_scfg_string : t -> string
+val to_scfg_string : no_value:bool -> t -> string
 
 (* TODO:
    val to_smtlib : t -> ?
