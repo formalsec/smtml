@@ -64,7 +64,7 @@ let to_json_string model =
   let model = to_json model in
   Fmt.str "%a" Yojson.pp model
 
-let to_scfg model =
+let to_scfg ~no_value model =
   let open Scfg.Types in
   let children =
     let bindings = get_bindings model in
@@ -72,8 +72,12 @@ let to_scfg model =
       (fun (symbol, value) ->
         let p0 = Symbol.to_string symbol in
         let p1 = Symbol.type_of symbol |> Ty.string_of_type in
-        let p2 = Value.to_string value in
-        let params = [ p0; p1; p2 ] in
+        let params =
+          if no_value then [ p0; p1 ]
+          else
+            let p2 = Value.to_string value in
+            [ p0; p1; p2 ]
+        in
         { name = "symbol"; params; children = [] } )
       bindings
   in
@@ -88,8 +92,8 @@ let to_scfg model =
         symbol x_2 f32 42.42
       }
     ]} *)
-let to_scfg_string model =
-  let model = to_scfg model in
+let to_scfg_string ~no_value model =
+  let model = to_scfg ~no_value model in
   Fmt.str "%a" Scfg.Pp.config model
 
 let to_smtlib _model = assert false
