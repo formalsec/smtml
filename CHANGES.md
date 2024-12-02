@@ -4,6 +4,12 @@
 ### Fixed
 ### Changed
 
+## v0.4.0
+
+### Added
+
+- Model parsing for the `json` and `scfg` formats
+
 ## v0.3.1
 
 ### Fixed
