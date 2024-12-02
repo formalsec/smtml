@@ -19,10 +19,10 @@ Test Bool parsing:
   sat
   sat
   (model
-    (w false)
-    (x true)
-    (y true)
-    (z true))
+    (w bool false)
+    (x bool true)
+    (y bool true)
+    (z bool true))
 
 Test Int parsing:
   $ smtml run test_lia.smt2
@@ -33,15 +33,15 @@ Test Real parsing:
   $ smtml run test_lra.smt2
   sat
   (model
-    (x 2.)
-    (y 4.))
+    (x real 2.)
+    (y real 4.))
 
 Test String parsing:
   $ smtml run test_string_all.smt2
   sat
   (model
-    (x "abcd")
-    (y "a"))
+    (x str "abcd")
+    (y str "a"))
 
 Test BitVector parsing:
   $ smtml run test_bitv_sort.smt2
@@ -67,18 +67,18 @@ Tests smt2 with the --from-file argument:
   sat
   sat
   (model
-    (w false)
-    (x true)
-    (y true)
-    (z true))
+    (w bool false)
+    (x bool true)
+    (y bool true)
+    (z bool true))
   sat
   sat
   sat
   (model
-    (x -2.)
-    (y 4.))
+    (x real -2.)
+    (y real 4.))
   sat
   sat
   (model
-    (x "abcd")
-    (y "a"))
+    (x str "abcd")
+    (y str "a"))
