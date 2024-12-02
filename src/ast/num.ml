@@ -60,6 +60,13 @@ let pp_hex fmt (n : t) =
   | F32 f -> Fmt.pf fmt "(fp 0x%08lx)" f
   | F64 f -> Fmt.pf fmt "(fp 0x%016Lx)" f
 
+let pp_no_type fmt = function
+  | I8 i -> Fmt.pf fmt "%d" i
+  | I32 i -> Fmt.pf fmt "%ld" i
+  | I64 i -> Fmt.pf fmt "%Ld" i
+  | F32 f -> Fmt.pf fmt "%F" (Int32.float_of_bits f)
+  | F64 f -> Fmt.pf fmt "%F" (Int64.float_of_bits f)
+
 let printer = ref pp_num
 
 let set_default_printer = function
