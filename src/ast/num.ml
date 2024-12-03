@@ -88,11 +88,11 @@ let of_string (cast : Ty.t) value =
   | Ty_fp 32 -> (
     match float_of_string value with
     | None -> Error "invalid value, expected float"
-    | Some n -> Ok (I32 (Int32.bits_of_float n)) )
+    | Some n -> Ok (F32 (Int32.bits_of_float n)) )
   | Ty_fp 64 -> (
     match float_of_string value with
     | None -> Error "invalid value, expected float"
-    | Some n -> Ok (I64 (Int64.bits_of_float n)) )
+    | Some n -> Ok (F64 (Int64.bits_of_float n)) )
   | _ -> Error "invalid value, expected num"
 
 let to_json (n : t) : Yojson.Basic.t = `String (to_string n)
