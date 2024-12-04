@@ -42,8 +42,7 @@ let make_data_frames results =
       let provers, benchmark, rtime =
         List.fold_left
           (fun (prover_acc, bench_acc, rtime_acc) (prover, benchmark, rtime) ->
-            (prover :: prover_acc, benchmark :: bench_acc, rtime :: rtime_acc)
-            )
+            (prover :: prover_acc, benchmark :: bench_acc, rtime :: rtime_acc) )
           ([], [], []) prover_results
       in
       let df =

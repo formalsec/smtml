@@ -77,11 +77,11 @@ let fork_and_run ?timeout ?from_file prover file =
   let prog, argv = cmd ?from_file prover file in
   let pid =
     Unix.fork_exec ~prog ~argv () ~preexec_fn:(fun () ->
-        Unix.close stdout_read;
-        Unix.close stderr_read;
-        dup2 ~src:stdout_write ~dst:Unix.stdout;
-        dup2 ~src:stderr_write ~dst:Unix.stderr;
-        Option.iter limit_cpu timeout )
+      Unix.close stdout_read;
+      Unix.close stderr_read;
+      dup2 ~src:stdout_write ~dst:Unix.stdout;
+      dup2 ~src:stderr_write ~dst:Unix.stderr;
+      Option.iter limit_cpu timeout )
   in
   Unix.close stdout_write;
   Unix.close stderr_write;

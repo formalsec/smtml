@@ -92,26 +92,24 @@ module Fresh = struct
              (fun a -> DExpr.Term.apply_cst f [ a.DExpr.term_ty ] [ a ]) )
       in
       Colibri2_core.Expr.add_builtins (fun env s ->
-          match s with
-          | Dolmen_loop.Typer.T.Id { ns = Term; name = Simple "StringToInt" } ->
-            term_app1 env s string_to_int
-          | Dolmen_loop.Typer.T.Id { ns = Term; name = Simple "RealToString" }
-            ->
-            term_app1 env s real_to_string
-          | Dolmen_loop.Typer.T.Id { ns = Term; name = Simple "StringToReal" }
-            ->
-            term_app1 env s string_to_real
-          | Dolmen_loop.Typer.T.Id { ns = Term; name = Simple "TrimString" } ->
-            term_app1 env s trim_string
-          | Dolmen_loop.Typer.T.Id { ns = Term; name = Simple "F32ToString" } ->
-            term_app1 env s f32_to_string
-          | Dolmen_loop.Typer.T.Id { ns = Term; name = Simple "StringToF32" } ->
-            term_app1 env s string_to_f32
-          | Dolmen_loop.Typer.T.Id { ns = Term; name = Simple "F64ToString" } ->
-            term_app1 env s f64_to_string
-          | Dolmen_loop.Typer.T.Id { ns = Term; name = Simple "StringToF64" } ->
-            term_app1 env s string_to_f64
-          | _ -> `Not_found )
+        match s with
+        | Dolmen_loop.Typer.T.Id { ns = Term; name = Simple "StringToInt" } ->
+          term_app1 env s string_to_int
+        | Dolmen_loop.Typer.T.Id { ns = Term; name = Simple "RealToString" } ->
+          term_app1 env s real_to_string
+        | Dolmen_loop.Typer.T.Id { ns = Term; name = Simple "StringToReal" } ->
+          term_app1 env s string_to_real
+        | Dolmen_loop.Typer.T.Id { ns = Term; name = Simple "TrimString" } ->
+          term_app1 env s trim_string
+        | Dolmen_loop.Typer.T.Id { ns = Term; name = Simple "F32ToString" } ->
+          term_app1 env s f32_to_string
+        | Dolmen_loop.Typer.T.Id { ns = Term; name = Simple "StringToF32" } ->
+          term_app1 env s string_to_f32
+        | Dolmen_loop.Typer.T.Id { ns = Term; name = Simple "F64ToString" } ->
+          term_app1 env s f64_to_string
+        | Dolmen_loop.Typer.T.Id { ns = Term; name = Simple "StringToF64" } ->
+          term_app1 env s string_to_f64
+        | _ -> `Not_found )
 
     let satisfiability s = function
       | `Sat d ->
@@ -188,13 +186,13 @@ module Fresh = struct
 
       let add s es =
         Scheduler.add_assertion s.scheduler (fun d ->
-            let es' =
-              List.map
-                (encode_expr ~record_sym:(fun c ->
-                     s.decls <- ConstSet.add c s.decls ) )
-                es
-            in
-            List.iter (fun e -> new_assertion d e) es' )
+          let es' =
+            List.map
+              (encode_expr ~record_sym:(fun c ->
+                 s.decls <- ConstSet.add c s.decls ) )
+              es
+          in
+          List.iter (fun e -> new_assertion d e) es' )
 
       let check s ~assumptions =
         match assumptions with

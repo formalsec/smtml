@@ -31,9 +31,9 @@ module Result = struct
       | [] -> k (Ok [])
       | hd :: tl ->
         list_map_cps f tl (fun rest ->
-            let* rest in
-            let* hd' = f hd in
-            k (Ok (hd' :: rest)) )
+          let* rest in
+          let* hd' = f hd in
+          k (Ok (hd' :: rest)) )
     in
     list_map_cps f v Fun.id
 
@@ -43,9 +43,9 @@ module Result = struct
       | [] -> k (Ok [])
       | hd :: tl ->
         list_filter_map_cps f tl (fun rest ->
-            let* rest in
-            let* v = f hd in
-            k (Ok (match v with None -> rest | Some v -> v :: rest)) )
+          let* rest in
+          let* v = f hd in
+          k (Ok (match v with None -> rest | Some v -> v :: rest)) )
     in
     list_filter_map_cps f v Fun.id
 end
