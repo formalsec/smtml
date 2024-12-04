@@ -36,7 +36,7 @@ let summarize results =
         ( prover
         , List.fold_left
             (fun (total, sat, unsat, unknown, time)
-               (_, _, stdout, _, rtime, _rusage) ->
+                 (_, _, stdout, _, rtime, _rusage) ->
               let sat, unsat, unknown =
                 match parse_status stdout with
                 | `Sat -> (succ sat, unsat, unknown)
@@ -50,7 +50,7 @@ let summarize results =
   let solver, total, sat, unsat, unknwon, rtime =
     List.fold_left
       (fun (solver, total, sat, unsat, unknown, rtime)
-         (prover, (p_total, p_sat, p_unsat, p_unknown, p_rtime)) ->
+           (prover, (p_total, p_sat, p_unsat, p_unknown, p_rtime)) ->
         ( Tool.prover_to_string prover :: solver
         , p_total :: total
         , p_sat :: sat
@@ -84,7 +84,8 @@ let make_data_frames results =
                , rtime_acc
                , utime_acc
                , stime_acc
-               , maxrss_acc ) (_status, benchmark, stdout, stderr, rtime, rusage) ->
+               , maxrss_acc )
+               (_status, benchmark, stdout, stderr, rtime, rusage) ->
             ( Tool.prover_to_string prover :: prover_acc
             , Fmt.str "%a" Fpath.pp benchmark :: bench_acc
             , Fmt.str "%a" pp_status (parse_status stdout) :: res_acc

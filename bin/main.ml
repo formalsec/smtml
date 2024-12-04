@@ -38,8 +38,7 @@ let parse_file filename =
       (fun acc line ->
         let line = String.trim line in
         (* Assume '#' at the start of a line is a comment *)
-        if String.starts_with ~prefix:"#" line then acc else Fpath.v line :: acc
-        )
+        if String.starts_with ~prefix:"#" line then acc else Fpath.v line :: acc )
       [] lines
   in
   List.rev files
@@ -58,10 +57,10 @@ let run debug solver prover_mode dry print_statistics from_file files =
     incr total_tests;
     let start_t = Unix.gettimeofday () in
     Fun.protect ~finally:(fun () ->
-        if print_statistics then (
-          let exec_t = Unix.gettimeofday () -. start_t in
-          total_t := !total_t +. exec_t;
-          Log.app (fun m -> m "Run %a in %.06f" Fpath.pp file exec_t) ) )
+      if print_statistics then (
+        let exec_t = Unix.gettimeofday () -. start_t in
+        total_t := !total_t +. exec_t;
+        Log.app (fun m -> m "Run %a in %.06f" Fpath.pp file exec_t) ) )
     @@ fun () ->
     let ast =
       try Ok (Compile.until_rewrite file)
