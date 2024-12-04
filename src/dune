@@ -40,6 +40,8 @@
   rewrite
   solver
   solver_intf
+  solver_mode
+  solver_type
   solver_dispatcher
   smtlib
   symbol
@@ -52,6 +54,7 @@
  (flags
   (:standard -open Smtml_prelude))
  (libraries
+  cmdliner
   dolmen
   dolmen_type
   hc
