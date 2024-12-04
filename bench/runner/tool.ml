@@ -34,14 +34,14 @@ let pp_prover fmt = function
 
 let prover_to_string = Fmt.str "%a" pp_prover
 
-let is_available = function
-  | Z3 -> Smtml.Solver_dispatcher.is_available Z3_solver
-  | Smtml { name = Bitwuzla; _ } ->
-    Smtml.Solver_dispatcher.is_available Bitwuzla_solver
-  | Smtml { name = Cvc5; _ } -> Smtml.Solver_dispatcher.is_available Cvc5_solver
-  | Smtml { name = Colibri2; _ } ->
-    Smtml.Solver_dispatcher.is_available Colibri2_solver
-  | Smtml { name = Z3; _ } -> Smtml.Solver_dispatcher.is_available Z3_solver
+let is_available =
+  let open Smtml in
+  function
+  | Z3 -> Solver_type.is_available Z3_solver
+  | Smtml { name = Bitwuzla; _ } -> Solver_type.is_available Bitwuzla_solver
+  | Smtml { name = Cvc5; _ } -> Solver_type.is_available Cvc5_solver
+  | Smtml { name = Colibri2; _ } -> Solver_type.is_available Colibri2_solver
+  | Smtml { name = Z3; _ } -> Solver_type.is_available Z3_solver
 
 let cmd ?from_file prover files =
   match prover with

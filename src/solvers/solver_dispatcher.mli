@@ -2,23 +2,13 @@
 (* Copyright (C) 2023-2024 formalsec *)
 (* Written by the Smtml programmers *)
 
-type solver_type =
-  | Z3_solver
-  | Bitwuzla_solver
-  | Colibri2_solver
-  | Cvc5_solver
-  | Altergo_solver
-
-val is_available : solver_type -> bool
+(** Will be deprecated in favour of Solver_type *)
+val is_available : Solver_type.t -> bool
 
 (** List of all available solvers. Can be empty if no solver installed. *)
-val available_solvers : solver_type list
+val available : Solver_type.t list
 
 (** Returns first available solver or errors when none exist *)
 val solver : ((module Mappings.S_with_fresh), [> `Msg of string ]) result
 
-val mappings_of_solver : solver_type -> (module Mappings.S_with_fresh)
-
-val solver_type_of_string : string -> (solver_type, [> `Msg of string ]) result
-
-val pp_solver_type : solver_type Fmt.t
+val mappings_of_solver : Solver_type.t -> (module Mappings.S_with_fresh)

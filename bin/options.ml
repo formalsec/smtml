@@ -1,20 +1,7 @@
 open Smtml
 open Cmdliner
 
-type prove_mode =
-  | Batch
-  | Cached
-  | Incremental
-
-let solver_conv =
-  Cmdliner.Arg.conv
-    (Solver_dispatcher.solver_type_of_string, Solver_dispatcher.pp_solver_type)
-
-let prove_mode_conv =
-  Cmdliner.Arg.enum
-    [ ("batch", Batch); ("cached", Cached); ("incremental", Incremental) ]
-
-let path =
+let fpath =
   let parser, _ = Cmdliner.Arg.file in
   ( (fun file ->
       if String.equal "-" file then `Ok (Fpath.v file)
@@ -24,23 +11,23 @@ let path =
         | `Error _ as err -> err )
   , Fpath.pp )
 
-let file0 =
+let filename =
   let doc = "Input file" in
   let docv = "FILE" in
-  Arg.(required & pos 0 (some path) None & info [] ~doc ~docv)
+  Arg.(required & pos 0 (some fpath) None & info [] ~doc ~docv)
 
-let files =
+let filenames =
   let doc = "Input files" in
   let docv = "FILES" in
-  Arg.(value & pos_all path [] & info [] ~docv ~doc)
+  Arg.(value & pos_all fpath [] & info [] ~docv ~doc)
 
-let solver =
+let solver_type =
   let doc = "SMT solver to use" in
-  Arg.(value & opt solver_conv Z3_solver & info [ "s"; "solver" ] ~doc)
+  Arg.(value & opt Solver_type.conv Z3_solver & info [ "s"; "solver" ] ~doc)
 
 let solver_mode =
   let doc = "SMT solver mode" in
-  Arg.(value & opt prove_mode_conv Batch & info [ "mode" ] ~doc)
+  Arg.(value & opt Solver_mode.conv Batch & info [ "mode" ] ~doc)
 
 let debug =
   let doc = "Print debugging messages" in
@@ -59,17 +46,32 @@ let from_file =
     "File containing a list of files to run. This argument discards any \
      positional arguments provided."
   in
-  Arg.(value & opt (some path) None & info [ "F"; "from-file" ] ~doc ~docv:"VAL")
+  Arg.(
+    value & opt (some fpath) None & info [ "F"; "from-file" ] ~doc ~docv:"VAL" )
 
-let cmd_run f =
+let info_run =
   let doc = "Runs one or more scripts using. Also supports directory inputs" in
-  let info = Cmd.info "run" ~doc in
-  Cmd.v info
-    Term.(
-      const f $ debug $ solver $ solver_mode $ dry $ print_statistics
-      $ from_file $ files )
+  Cmd.info "run" ~doc
 
-let cmd_to_smt2 f =
+let cmd_run =
+  let open Term.Syntax in
+  let+ debug
+  and+ dry
+  and+ print_statistics
+  and+ solver_type
+  and+ solver_mode
+  and+ from_file
+  and+ filenames in
+  Cmd_run.run ~debug ~dry ~print_statistics ~solver_type ~solver_mode ~from_file
+    ~filenames
+
+let info_to_smt2 =
   let doc = "Convert .smtml into .smt2" in
-  let info = Cmd.info "to-smt2" ~doc in
-  Cmd.v info Term.(const f $ debug $ solver $ file0)
+  Cmd.info "to-smt2" ~doc
+
+let cmd_to_smt2 =
+  let open Term.Syntax in
+  let+ debug
+  and+ solver_type
+  and+ filename in
+  Cmd_to_smt2.run ~debug ~solver_type ~filename
