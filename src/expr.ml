@@ -2,11 +2,6 @@
 (* Copyright (C) 2023-2024 formalsec *)
 (* Written by the Smtml programmers *)
 
-type binder =
-  | Forall
-  | Exists
-  | Let_in
-
 type t = expr Hc.hash_consed
 
 and expr =
@@ -18,20 +13,15 @@ and expr =
   | Symbol of Symbol.t
   | List of t list
   | App of Symbol.t * t list
-  | Unop of Ty.t * Ty.unop * t
-  | Binop of Ty.t * Ty.binop * t * t
-  | Triop of Ty.t * Ty.triop * t * t * t
-  | Relop of Ty.t * Ty.relop * t * t
-  | Cvtop of Ty.t * Ty.cvtop * t
-  | Naryop of Ty.t * Ty.naryop * t list
+  | Unop of Ty.t * Ty.Unop.t * t
+  | Binop of Ty.t * Ty.Binop.t * t * t
+  | Triop of Ty.t * Ty.Triop.t * t * t * t
+  | Relop of Ty.t * Ty.Relop.t * t * t
+  | Cvtop of Ty.t * Ty.Cvtop.t * t
+  | Naryop of Ty.t * Ty.Naryop.t * t list
   | Extract of t * int * int
   | Concat of t * t
-  | Binder of binder * t list * t
-
-let equal_binder a b =
-  match (a, b) with
-  | Forall, Forall | Exists, Exists | Let_in, Let_in -> true
-  | (Forall | Exists | Let_in), _ -> false
+  | Binder of Binder.t * t list * t
 
 module Expr = struct
   type t = expr
@@ -49,25 +39,25 @@ module Expr = struct
     | List l1, List l2 -> list_eq l1 l2
     | App (s1, l1), App (s2, l2) -> Symbol.equal s1 s2 && list_eq l1 l2
     | Unop (t1, op1, e1), Unop (t2, op2, e2) ->
-      Ty.equal t1 t2 && Ty.unop_equal op1 op2 && phys_equal e1 e2
+      Ty.equal t1 t2 && Ty.Unop.equal op1 op2 && phys_equal e1 e2
     | Binop (t1, op1, e1, e3), Binop (t2, op2, e2, e4) ->
-      Ty.equal t1 t2 && Ty.binop_equal op1 op2 && phys_equal e1 e2
+      Ty.equal t1 t2 && Ty.Binop.equal op1 op2 && phys_equal e1 e2
       && phys_equal e3 e4
     | Relop (t1, op1, e1, e3), Relop (t2, op2, e2, e4) ->
-      Ty.equal t1 t2 && Ty.relop_equal op1 op2 && phys_equal e1 e2
+      Ty.equal t1 t2 && Ty.Relop.equal op1 op2 && phys_equal e1 e2
       && phys_equal e3 e4
     | Triop (t1, op1, e1, e3, e5), Triop (t2, op2, e2, e4, e6) ->
-      Ty.equal t1 t2 && Ty.triop_equal op1 op2 && phys_equal e1 e2
+      Ty.equal t1 t2 && Ty.Triop.equal op1 op2 && phys_equal e1 e2
       && phys_equal e3 e4 && phys_equal e5 e6
     | Cvtop (t1, op1, e1), Cvtop (t2, op2, e2) ->
-      Ty.equal t1 t2 && Ty.cvtop_equal op1 op2 && phys_equal e1 e2
+      Ty.equal t1 t2 && Ty.Cvtop.equal op1 op2 && phys_equal e1 e2
     | Naryop (t1, op1, l1), Naryop (t2, op2, l2) ->
-      Ty.equal t1 t2 && Ty.naryop_equal op1 op2 && list_eq l1 l2
+      Ty.equal t1 t2 && Ty.Naryop.equal op1 op2 && list_eq l1 l2
     | Extract (e1, h1, l1), Extract (e2, h2, l2) ->
       phys_equal e1 e2 && h1 = h2 && l1 = l2
     | Concat (e1, e3), Concat (e2, e4) -> phys_equal e1 e2 && phys_equal e3 e4
     | Binder (binder1, vars1, e1), Binder (binder2, vars2, e2) ->
-      equal_binder binder1 binder2 && list_eq vars1 vars2 && phys_equal e1 e2
+      Binder.equal binder1 binder2 && list_eq vars1 vars2 && phys_equal e1 e2
     | ( ( Val _ | Ptr _ | Symbol _ | List _ | App _ | Unop _ | Binop _ | Triop _
         | Relop _ | Cvtop _ | Naryop _ | Extract _ | Concat _ | Binder _ )
       , _ ) ->
@@ -214,11 +204,6 @@ let negate_relop (hte : t) : (t, string) Result.t =
   Result.map make e
 
 module Pp = struct
-  let pp_binder fmt = function
-    | Forall -> Fmt.string fmt "forall"
-    | Exists -> Fmt.string fmt "exists"
-    | Let_in -> Fmt.string fmt "let"
-
   let rec pp fmt (hte : t) =
     match view hte with
     | Val v -> Value.pp fmt v
@@ -230,27 +215,27 @@ module Pp = struct
         (Fmt.list ~sep:Fmt.comma pp)
         v
     | Unop (ty, op, e) ->
-      Fmt.pf fmt "@[<hov 1>(%a.%a@ %a)@]" Ty.pp ty Ty.pp_unop op pp e
+      Fmt.pf fmt "@[<hov 1>(%a.%a@ %a)@]" Ty.pp ty Ty.Unop.pp op pp e
     | Binop (ty, op, e1, e2) ->
-      Fmt.pf fmt "@[<hov 1>(%a.%a@ %a@ %a)@]" Ty.pp ty Ty.pp_binop op pp e1 pp
+      Fmt.pf fmt "@[<hov 1>(%a.%a@ %a@ %a)@]" Ty.pp ty Ty.Binop.pp op pp e1 pp
         e2
     | Triop (ty, op, e1, e2, e3) ->
-      Fmt.pf fmt "@[<hov 1>(%a.%a@ %a@ %a@ %a)@]" Ty.pp ty Ty.pp_triop op pp e1
+      Fmt.pf fmt "@[<hov 1>(%a.%a@ %a@ %a@ %a)@]" Ty.pp ty Ty.Triop.pp op pp e1
         pp e2 pp e3
     | Relop (ty, op, e1, e2) ->
-      Fmt.pf fmt "@[<hov 1>(%a.%a@ %a@ %a)@]" Ty.pp ty Ty.pp_relop op pp e1 pp
+      Fmt.pf fmt "@[<hov 1>(%a.%a@ %a@ %a)@]" Ty.pp ty Ty.Relop.pp op pp e1 pp
         e2
     | Cvtop (ty, op, e) ->
-      Fmt.pf fmt "@[<hov 1>(%a.%a@ %a)@]" Ty.pp ty Ty.pp_cvtop op pp e
+      Fmt.pf fmt "@[<hov 1>(%a.%a@ %a)@]" Ty.pp ty Ty.Cvtop.pp op pp e
     | Naryop (ty, op, es) ->
-      Fmt.pf fmt "@[<hov 1>(%a.%a@ (%a))@]" Ty.pp ty Ty.pp_naryop op
+      Fmt.pf fmt "@[<hov 1>(%a.%a@ (%a))@]" Ty.pp ty Ty.Naryop.pp op
         (Fmt.list ~sep:Fmt.comma pp)
         es
     | Extract (e, h, l) ->
       Fmt.pf fmt "@[<hov 1>(extract@ %a@ %d@ %d)@]" pp e l h
     | Concat (e1, e2) -> Fmt.pf fmt "@[<hov 1>(++@ %a@ %a)@]" pp e1 pp e2
     | Binder (b, vars, e) ->
-      Fmt.pf fmt "@[<hov 1>(%a@ (%a)@ %a)@]" pp_binder b
+      Fmt.pf fmt "@[<hov 1>(%a@ (%a)@ %a)@]" Binder.pp b
         (Fmt.list ~sep:Fmt.sp pp) vars pp e
 
   let pp_list fmt (es : t list) = Fmt.hovbox (Fmt.list ~sep:Fmt.comma pp) fmt es
@@ -294,7 +279,7 @@ let unop' ty op hte = make (Unop (ty, op, hte)) [@@inline]
 
 let unop ty op hte =
   match (op, view hte) with
-  | Ty.(Regexp_loop _ | Regexp_star), _ -> unop' ty op hte
+  | Ty.Unop.(Regexp_loop _ | Regexp_star), _ -> unop' ty op hte
   | _, Val v -> value (Eval.unop ty op v)
   | Not, Unop (_, Not, hte') -> hte'
   | Neg, Unop (_, Neg, hte') -> hte'
@@ -309,7 +294,7 @@ let binop' ty op hte1 hte2 = make (Binop (ty, op, hte1, hte2)) [@@inline]
 
 let rec binop ty op hte1 hte2 =
   match (op, view hte1, view hte2) with
-  | Ty.(String_in_re | Regexp_range), _, _ -> binop' ty op hte1 hte2
+  | Ty.Binop.(String_in_re | Regexp_range), _, _ -> binop' ty op hte1 hte2
   | op, Val v1, Val v2 -> value (Eval.binop ty op v1 v2)
   | Sub, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
     if Int32.equal b1 b2 then binop ty Sub os1 os2 else binop' ty op hte1 hte2
@@ -357,7 +342,7 @@ let triop' ty op e1 e2 e3 = make (Triop (ty, op, e1, e2, e3)) [@@inline]
 
 let triop ty op e1 e2 e3 =
   match (op, view e1, view e2, view e3) with
-  | Ty.Ite, Val True, _, _ -> e2
+  | Ty.Triop.Ite, Val True, _, _ -> e2
   | Ite, Val False, _, _ -> e3
   | op, Val v1, Val v2, Val v3 -> value (Eval.triop ty op v1 v2 v3)
   | _ -> triop' ty op e1 e2 e3
@@ -367,7 +352,7 @@ let relop' ty op hte1 hte2 = make (Relop (ty, op, hte1, hte2)) [@@inline]
 let rec relop ty op hte1 hte2 =
   match (op, view hte1, view hte2) with
   | op, Val v1, Val v2 -> value (if Eval.relop ty op v1 v2 then True else False)
-  | Ty.Ne, Val (Real v), _ | Ne, _, Val (Real v) ->
+  | Ty.Relop.Ne, Val (Real v), _ | Ne, _, Val (Real v) ->
     if Float.is_nan v || Float.is_infinite v then value True
     else relop' ty op hte1 hte2
   | _, Val (Real v), _ | _, _, Val (Real v) ->
@@ -425,7 +410,7 @@ let cvtop' ty op hte = make (Cvtop (ty, op, hte)) [@@inline]
 
 let cvtop ty op hte =
   match (op, view hte) with
-  | Ty.String_to_re, _ -> cvtop' ty op hte
+  | Ty.Cvtop.String_to_re, _ -> cvtop' ty op hte
   | _, Val v -> value (Eval.cvtop ty op v)
   | String_to_float, Cvtop (Ty_real, ToString, real) -> real
   | _ -> cvtop' ty op hte

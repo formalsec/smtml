@@ -19,6 +19,7 @@
   ast
   ;axioms
   bitwuzla_mappings
+  binder
   cache
   cache_intf
   colibri2_mappings

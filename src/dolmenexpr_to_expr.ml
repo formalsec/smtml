@@ -138,15 +138,7 @@ let tcst_to_symbol (c : DExpr.term_cst) : Symbol.t =
 
 type expr = DTerm.t
 
-module I :
-  Op_intf.S
-    with type v := int
-     and type t := expr
-     and type unop := Ty.unop
-     and type binop := Ty.binop
-     and type relop := Ty.relop
-     and type cvtop := Ty.cvtop
-     and type triop := Ty.triop = struct
+module I = struct
   open Ty
 
   let encode_val i = DTerm.Int.mk (Int.to_string i)
@@ -154,15 +146,15 @@ module I :
   let encode_unop op e =
     let op' =
       match op with
-      | Neg -> DTerm.Int.minus
-      | _ -> Fmt.failwith {|Int: Unsupported unop operator "%a"|} Ty.pp_unop op
+      | Unop.Neg -> DTerm.Int.minus
+      | _ -> Fmt.failwith {|Int: Unsupported unop operator "%a"|} Unop.pp op
     in
     op' e
 
   let encode_binop op e1 e2 =
     let op' =
       match op with
-      | Add -> DTerm.Int.add
+      | Binop.Add -> DTerm.Int.add
       | Sub -> DTerm.Int.sub
       | Mul -> DTerm.Int.mul
       | Div -> DTerm.Int.div
@@ -172,47 +164,38 @@ module I :
         (* DTerm.apply_cst
            Colibri2_theories_LRA.RealValue.Builtin.colibri_pow_int_int []
            [ e1; e2 ] *)
-      | _ -> Fmt.failwith "{|Unsupported binop operation %a|}" Ty.pp_binop op
+      | _ -> Fmt.failwith "{|Unsupported binop operation %a|}" Binop.pp op
     in
     op' e1 e2
 
   let encode_relop op e1 e2 =
     let op' =
       match op with
-      | Eq -> DTerm.eq
+      | Relop.Eq -> DTerm.eq
       | Ne -> DTerm.neq
       | Lt -> DTerm.Int.lt
       | Gt -> DTerm.Int.gt
       | Le -> DTerm.Int.le
       | Ge -> DTerm.Int.ge
-      | _ ->
-        Fmt.failwith {|Arith: Unsupported relop operator "%a"|} Ty.pp_relop op
+      | _ -> Fmt.failwith {|Arith: Unsupported relop operator "%a"|} Relop.pp op
     in
     op' e1 e2
 
   let encode_cvtop op e =
     let op' =
       match op with
-      | ToString -> fun v -> DTerm.apply_cst Builtin.int_to_string [] [ v ]
+      | Cvtop.ToString ->
+        fun v -> DTerm.apply_cst Builtin.int_to_string [] [ v ]
       | OfString -> fun v -> DTerm.apply_cst Builtin.string_to_int [] [ v ]
-      | _ ->
-        Fmt.failwith {|Int: Unsupported cvtop operator "%a"|} Ty.pp_cvtop op
+      | _ -> Fmt.failwith {|Int: Unsupported cvtop operator "%a"|} Cvtop.pp op
     in
     op' e
 
   let encode_triop op _ _ _ =
-    Fmt.failwith {|Arith: Unsupported triop operator "%a"|} Ty.pp_triop op
+    Fmt.failwith {|Arith: Unsupported triop operator "%a"|} Triop.pp op
 end
 
-module Real :
-  Op_intf.S
-    with type v := float
-     and type t := expr
-     and type unop := Ty.unop
-     and type binop := Ty.binop
-     and type relop := Ty.relop
-     and type cvtop := Ty.cvtop
-     and type triop := Ty.triop = struct
+module Real = struct
   open Ty
 
   let encode_val f = DTerm.Real.mk (Float.to_string f)
@@ -220,7 +203,7 @@ module Real :
   let encode_unop op e =
     let op' =
       match op with
-      | Neg -> DTerm.Real.minus
+      | Unop.Neg -> DTerm.Real.minus
       | Abs -> assert false
       | Sqrt -> assert false
       | Ceil ->
@@ -229,52 +212,50 @@ module Real :
            [] [ e ] *)
       | Floor -> DTerm.Real.floor
       | Nearest | Is_nan | _ ->
-        Fmt.failwith {|Real: Unsupported cvtop operator "%a"|} Ty.pp_unop op
+        Fmt.failwith {|Real: Unsupported cvtop operator "%a"|} Unop.pp op
     in
     op' e
 
   let encode_binop op e1 e2 =
     let op' =
       match op with
-      | Add -> DTerm.Real.add
+      | Binop.Add -> DTerm.Real.add
       | Sub -> DTerm.Real.sub
       | Mul -> DTerm.Real.mul
       | Div -> DTerm.Real.div
       | Min -> fun e1 e2 -> DTerm.ite (DTerm.Real.le e1 e2) e1 e2
       | Max -> fun e1 e2 -> DTerm.ite (DTerm.Real.le e1 e2) e2 e1
-      | _ ->
-        Fmt.failwith {|Real: Unsupported binop operator "%a"|} Ty.pp_binop op
+      | _ -> Fmt.failwith {|Real: Unsupported binop operator "%a"|} Binop.pp op
     in
     op' e1 e2
 
   let encode_relop op e1 e2 =
     let op' =
       match op with
-      | Eq -> DTerm.eq
+      | Relop.Eq -> DTerm.eq
       | Ne -> DTerm.neq
       | Lt -> DTerm.Real.lt
       | Gt -> DTerm.Real.gt
       | Le -> DTerm.Real.le
       | Ge -> DTerm.Real.ge
-      | _ ->
-        Fmt.failwith {|Arith: Unsupported relop operator "%a"|} Ty.pp_relop op
+      | _ -> Fmt.failwith {|Arith: Unsupported relop operator "%a"|} Relop.pp op
     in
     op' e1 e2
 
   let encode_cvtop op e =
     let op' =
       match op with
-      | ToString -> fun v -> DTerm.apply_cst Builtin.real_to_string [] [ v ]
+      | Cvtop.ToString ->
+        fun v -> DTerm.apply_cst Builtin.real_to_string [] [ v ]
       | OfString -> fun v -> DTerm.apply_cst Builtin.string_to_real [] [ v ]
       | ConvertUI32 -> fun t -> DTerm.apply_cst Builtin.real_to_uint32 [] [ t ]
       | Reinterpret_int -> DTerm.Int.to_real
-      | _ ->
-        Fmt.failwith {|Real: Unsupported cvtop operator "%a"|} Ty.pp_cvtop op
+      | _ -> Fmt.failwith {|Real: Unsupported cvtop operator "%a"|} Cvtop.pp op
     in
     op' e
 
   let encode_triop op _ _ _ =
-    Fmt.failwith {|Arith: Unsupported triop operator "%a"|} Ty.pp_triop op
+    Fmt.failwith {|Arith: Unsupported triop operator "%a"|} Triop.pp op
 end
 
 module Boolean = struct
@@ -283,41 +264,38 @@ module Boolean = struct
   let encode_unop op e =
     let op' =
       match op with
-      | Not -> DTerm.neg
-      | _ -> Fmt.failwith {|Bool: Unsupported unop operator "%a"|} Ty.pp_unop op
+      | Unop.Not -> DTerm.neg
+      | _ -> Fmt.failwith {|Bool: Unsupported unop operator "%a"|} Unop.pp op
     in
     op' e
 
   let encode_binop op e1 e2 =
     let op' =
       match op with
-      | And -> fun a b -> DTerm._and [ a; b ]
+      | Binop.And -> fun a b -> DTerm._and [ a; b ]
       | Or -> fun a b -> DTerm._or [ a; b ]
       | Xor -> DTerm.xor
-      | _ ->
-        Fmt.failwith {|Bool: Unsupported binop operator "%a"|} Ty.pp_binop op
+      | _ -> Fmt.failwith {|Bool: Unsupported binop operator "%a"|} Binop.pp op
     in
     op' e1 e2
 
   let encode_relop op e1 e2 =
     let op' =
       match op with
-      | Eq -> DTerm.eq
+      | Relop.Eq -> DTerm.eq
       | Ne -> DTerm.neq
-      | _ ->
-        Fmt.failwith {|Bool: Unsupported relop operator "%a"|} Ty.pp_relop op
+      | _ -> Fmt.failwith {|Bool: Unsupported relop operator "%a"|} Relop.pp op
     in
     op' e1 e2
 
   let encode_cvtop op _ =
-    Fmt.failwith {|Bool: Unsupported cvtop operator "%a"|} Ty.pp_cvtop op
+    Fmt.failwith {|Bool: Unsupported cvtop operator "%a"|} Cvtop.pp op
 
   let encode_triop op e1 e2 e3 =
     let op' =
       match op with
-      | Ite -> DTerm.ite
-      | _ ->
-        Fmt.failwith {|Bool: Unsupported triop operator "%a"|} Ty.pp_triop op
+      | Triop.Ite -> DTerm.ite
+      | _ -> Fmt.failwith {|Bool: Unsupported triop operator "%a"|} Triop.pp op
     in
     op' e1 e2 e3
 end
@@ -326,26 +304,25 @@ module Str = struct
   open Ty
 
   let encode_unop op _ =
-    Fmt.failwith {|Str: Unsupported unop operator "%a"|} Ty.pp_unop op
+    Fmt.failwith {|Str: Unsupported unop operator "%a"|} Unop.pp op
 
   let encode_binop op _ _ =
-    Fmt.failwith {|Str: Unsupported binop operator "%a"|} Ty.pp_binop op
+    Fmt.failwith {|Str: Unsupported binop operator "%a"|} Binop.pp op
 
   let encode_relop op =
     let op' =
       match op with
-      | Eq -> DTerm.eq
+      | Relop.Eq -> DTerm.eq
       | Ne -> DTerm.neq
-      | _ ->
-        Fmt.failwith {|Str: Unsupported relop operator "%a"|} Ty.pp_relop op
+      | _ -> Fmt.failwith {|Str: Unsupported relop operator "%a"|} Relop.pp op
     in
     op'
 
   let encode_triop op _ _ _ =
-    Fmt.failwith {|Str: Unsupported triop operator "%a"|} Ty.pp_triop op
+    Fmt.failwith {|Str: Unsupported triop operator "%a"|} Triop.pp op
 
   let encode_cvtop op _ =
-    Fmt.failwith {|Str: Unsupported cvtop operator "%a"|} Ty.pp_cvtop op
+    Fmt.failwith {|Str: Unsupported cvtop operator "%a"|} Cvtop.pp op
 end
 
 module Bv = struct
@@ -383,16 +360,16 @@ module Bv = struct
   let encode_unop op e =
     let op' =
       match op with
-      | Not -> DTerm.Bitv.not
+      | Unop.Not -> DTerm.Bitv.not
       | Neg -> DTerm.Bitv.neg
-      | _ -> Fmt.failwith {|Bv: Unsupported unary operator "%a"|} Ty.pp_unop op
+      | _ -> Fmt.failwith {|Bv: UNsupported unary operator "%a"|} Unop.pp op
     in
     op' e
 
   let encode_binop op e1 e2 =
     let op' =
       match op with
-      | Add -> DTerm.Bitv.add
+      | Binop.Add -> DTerm.Bitv.add
       | Sub -> DTerm.Bitv.sub
       | Mul -> DTerm.Bitv.mul
       | Div -> DTerm.Bitv.sdiv
@@ -405,18 +382,17 @@ module Bv = struct
       | Shl -> DTerm.Bitv.shl
       | Rem -> DTerm.Bitv.srem
       | RemU -> DTerm.Bitv.urem
-      | _ ->
-        Fmt.failwith {|Bv: Unsupported binary operator "%a"|} Ty.pp_binop op
+      | _ -> Fmt.failwith {|Bv: Unsupported binary operator "%a"|} Binop.pp op
     in
     op' e1 e2
 
   let encode_triop op _ =
-    Fmt.failwith {|Bv: Unsupported triop operator "%a"|} Ty.pp_triop op
+    Fmt.failwith {|Bv: Unsupported triop operator "%a"|} Triop.pp op
 
   let encode_relop op e1 e2 =
     let op' =
       match op with
-      | Eq -> DTerm.eq
+      | Relop.Eq -> DTerm.eq
       | Ne -> DTerm.neq
       | Lt -> DTerm.Bitv.slt
       | LtU -> DTerm.Bitv.ult
@@ -432,7 +408,7 @@ module Bv = struct
   let encode_cvtop sz op e =
     let op' =
       match op with
-      | Sign_extend n -> DTerm.Bitv.sign_extend n
+      | Cvtop.Sign_extend n -> DTerm.Bitv.sign_extend n
       | Zero_extend n -> DTerm.Bitv.zero_extend n
       | (TruncSF32 | TruncSF64) when sz = 32 ->
         DTerm.Float.to_sbv 32 DTerm.Float.roundTowardZero
@@ -450,8 +426,7 @@ module Bv = struct
         fun e -> DTerm.ite e (encode_val C32 1l) (encode_val C32 0l)
       | OfBool when sz = 64 ->
         fun e -> DTerm.ite e (encode_val C64 1L) (encode_val C64 0L)
-      | _ ->
-        Fmt.failwith {|Bv: Unsupported bv(32) operator "%a"|} Ty.pp_cvtop op
+      | _ -> Fmt.failwith {|Bv: Unsupported bv(32) operator "%a"|} Cvtop.pp op
     in
     op' e
 end
@@ -468,7 +443,7 @@ module Fp = struct
   let encode_unop op e =
     let op' =
       match op with
-      | Neg -> DTerm.Float.neg
+      | Unop.Neg -> DTerm.Float.neg
       | Abs -> DTerm.Float.abs
       | Sqrt -> DTerm.Float.sqrt DTerm.Float.roundNearestTiesToEven
       | Is_nan -> DTerm.Float.isNaN
@@ -477,37 +452,37 @@ module Fp = struct
       | Trunc -> DTerm.Float.roundToIntegral DTerm.Float.roundTowardZero
       | Nearest ->
         DTerm.Float.roundToIntegral DTerm.Float.roundNearestTiesToEven
-      | _ -> Fmt.failwith {|Fp: Unsupported unary operator "%a"|} Ty.pp_unop op
+      | _ -> Fmt.failwith {|Fp: Unsupported unary operator "%a"|} Unop.pp op
     in
     op' e
 
   let encode_binop op e1 e2 =
     let op' =
       match op with
-      | Add -> DTerm.Float.add DTerm.Float.roundNearestTiesToEven
+      | Binop.Add -> DTerm.Float.add DTerm.Float.roundNearestTiesToEven
       | Sub -> DTerm.Float.sub DTerm.Float.roundNearestTiesToEven
       | Mul -> DTerm.Float.mul DTerm.Float.roundNearestTiesToEven
       | Div -> DTerm.Float.div DTerm.Float.roundNearestTiesToEven
       | Min -> DTerm.Float.min
       | Max -> DTerm.Float.max
       | Rem -> DTerm.Float.rem
-      | _ -> Fmt.failwith {|Fp: Unsupported binop operator "%a"|} Ty.pp_binop op
+      | _ -> Fmt.failwith {|Fp: Unsupported binop operator "%a"|} Binop.pp op
     in
     op' e1 e2
 
   let encode_triop op _ =
-    Fmt.failwith {|Fp: Unsupported triop operator "%a"|} Ty.pp_triop op
+    Fmt.failwith {|Fp: Unsupported triop operator "%a"|} Triop.pp op
 
   let encode_relop op e1 e2 =
     let op' =
       match op with
-      | Eq -> DTerm.Float.eq
+      | Relop.Eq -> DTerm.Float.eq
       | Ne -> fun e1 e2 -> DTerm.Float.eq e1 e2 |> DTerm.neg
       | Lt -> DTerm.Float.lt
       | Le -> DTerm.Float.leq
       | Gt -> DTerm.Float.gt
       | Ge -> DTerm.Float.geq
-      | _ -> Fmt.failwith {|Fp: Unsupported relop operator "%a"|} Ty.pp_relop op
+      | _ -> Fmt.failwith {|Fp: Unsupported relop operator "%a"|} Relop.pp op
     in
     op' e1 e2
 
@@ -516,7 +491,8 @@ module Fp = struct
       match sz with
       | 32 -> (
         match op with
-        | DemoteF64 -> DTerm.Float.to_fp 8 24 DTerm.Float.roundNearestTiesToEven
+        | Cvtop.DemoteF64 ->
+          DTerm.Float.to_fp 8 24 DTerm.Float.roundNearestTiesToEven
         | ConvertSI32 | ConvertSI64 ->
           DTerm.Float.sbv_to_fp 8 24 DTerm.Float.roundNearestTiesToEven
         | ConvertUI32 | ConvertUI64 ->
@@ -524,8 +500,8 @@ module Fp = struct
         | Reinterpret_int -> DTerm.Float.ieee_format_to_fp 8 24
         | ToString -> fun v -> DTerm.apply_cst Builtin.f32_to_string [] [ v ]
         | OfString -> fun v -> DTerm.apply_cst Builtin.string_to_f32 [] [ v ]
-        | _ ->
-          Fmt.failwith {|Fp: Unsupported fp(32) operator "%a"|} Ty.pp_cvtop op )
+        | _ -> Fmt.failwith {|Fp: Unsupported fp(32) operator "%a"|} Cvtop.pp op
+        )
       | 64 -> (
         match op with
         | PromoteF32 ->
@@ -537,9 +513,9 @@ module Fp = struct
         | Reinterpret_int -> DTerm.Float.ieee_format_to_fp 11 53
         | ToString -> fun v -> DTerm.apply_cst Builtin.f64_to_string [] [ v ]
         | OfString -> fun v -> DTerm.apply_cst Builtin.string_to_f64 [] [ v ]
-        | _ ->
-          Fmt.failwith {|Fp: Unsupported fp(64) operator "%a"|} Ty.pp_cvtop op )
-      | _ -> Fmt.failwith {|Fp: Unsupported operator "%a"|} Ty.pp_cvtop op
+        | _ -> Fmt.failwith {|Fp: Unsupported fp(64) operator "%a"|} Cvtop.pp op
+        )
+      | _ -> Fmt.failwith {|Fp: Unsupported operator "%a"|} Cvtop.pp op
     in
     op' e
 end
