@@ -2,15 +2,13 @@
 (* Copyright (C) 2023-2024 formalsec *)
 (* Written by the Smtml programmers *)
 
-open Ty
-
 type op_type =
-  [ `Unop of Ty.unop
-  | `Binop of Ty.binop
-  | `Relop of Ty.relop
-  | `Triop of Ty.triop
-  | `Cvtop of Ty.cvtop
-  | `Naryop of Ty.naryop
+  [ `Unop of Ty.Unop.t
+  | `Binop of Ty.Binop.t
+  | `Relop of Ty.Relop.t
+  | `Triop of Ty.Triop.t
+  | `Cvtop of Ty.Cvtop.t
+  | `Naryop of Ty.Naryop.t
   ]
 
 exception DivideByZero
@@ -25,14 +23,14 @@ exception
     ; op : op_type
     }
 
-val unop : Ty.t -> unop -> Value.t -> Value.t
+val unop : Ty.t -> Ty.Unop.t -> Value.t -> Value.t
 
-val binop : Ty.t -> binop -> Value.t -> Value.t -> Value.t
+val binop : Ty.t -> Ty.Binop.t -> Value.t -> Value.t -> Value.t
 
-val triop : Ty.t -> triop -> Value.t -> Value.t -> Value.t -> Value.t
+val triop : Ty.t -> Ty.Triop.t -> Value.t -> Value.t -> Value.t -> Value.t
 
-val relop : Ty.t -> relop -> Value.t -> Value.t -> bool
+val relop : Ty.t -> Ty.Relop.t -> Value.t -> Value.t -> bool
 
-val cvtop : Ty.t -> cvtop -> Value.t -> Value.t
+val cvtop : Ty.t -> Ty.Cvtop.t -> Value.t -> Value.t
 
-val naryop : Ty.t -> naryop -> Value.t list -> Value.t
+val naryop : Ty.t -> Ty.Naryop.t -> Value.t list -> Value.t

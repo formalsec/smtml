@@ -51,15 +51,15 @@ type expr = DExpr.term
 
 val encode_val : Value.t -> expr
 
-val encode_unop : Ty.t -> Ty.unop -> expr -> expr
+val encode_unop : Ty.t -> Ty.Unop.t -> expr -> expr
 
-val encode_binop : Ty.t -> Ty.binop -> expr -> expr -> expr
+val encode_binop : Ty.t -> Ty.Binop.t -> expr -> expr -> expr
 
-val encode_triop : Ty.t -> Ty.triop -> expr -> expr -> expr -> expr
+val encode_triop : Ty.t -> Ty.Triop.t -> expr -> expr -> expr -> expr
 
-val encode_relop : Ty.t -> Ty.relop -> expr -> expr -> expr
+val encode_relop : Ty.t -> Ty.Relop.t -> expr -> expr -> expr
 
-val encode_cvtop : Ty.t -> Ty.cvtop -> expr -> expr
+val encode_cvtop : Ty.t -> Ty.Cvtop.t -> expr -> expr
 
 val encode_expr_acc :
   ?record_sym:('a -> DTerm.Const.t -> 'a) -> 'a -> Expr.t -> 'a * expr

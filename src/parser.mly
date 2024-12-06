@@ -29,12 +29,12 @@ let get_bind x = Hashtbl.find varmap x
 %token <bool> BOOL
 %token <string> STR
 %token <string> SYMBOL
-%token <Ty.t * Ty.unop> UNARY
-%token <Ty.t * Ty.binop> BINARY
-%token <Ty.t * Ty.triop> TERNARY
-%token <Ty.t * Ty.relop> RELOP
-%token <Ty.t * Ty.cvtop> CVTOP
-%token <Ty.t * Ty.naryop> NARY
+%token <Ty.t * Ty.Unop.t> UNARY
+%token <Ty.t * Ty.Binop.t> BINARY
+%token <Ty.t * Ty.Triop.t> TERNARY
+%token <Ty.t * Ty.Relop.t> RELOP
+%token <Ty.t * Ty.Cvtop.t> CVTOP
+%token <Ty.t * Ty.Naryop.t> NARY
 %token <Ty.t> TYPE
 %token <Logic.t> LOGIC
 
