@@ -22,7 +22,7 @@ type t =
   | Reset
   | Reset_assertions
   | Set_info of Expr.t
-  | Set_logic of Ty.logic
+  | Set_logic of Logic.t
   | Set_option of Expr.t
 
 type script = t list

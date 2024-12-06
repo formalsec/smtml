@@ -22,7 +22,7 @@ type t =
   | Reset
   | Reset_assertions
   | Set_info of Expr.t
-  | Set_logic of Ty.logic
+  | Set_logic of Logic.t
   | Set_option of Expr.t
 
 type script = t list
@@ -51,7 +51,7 @@ let pp fmt (instr : t) =
   | Reset -> Fmt.string fmt "(reset)"
   | Reset_assertions -> Fmt.string fmt "(reset-assertions)"
   | Set_info info -> Fmt.pf fmt "(set-info %a)" Expr.pp info
-  | Set_logic logic -> Fmt.pf fmt "(set-logic %a)" Ty.pp_logic logic
+  | Set_logic logic -> Fmt.pf fmt "(set-logic %a)" Logic.pp logic
   | Set_option opt -> Fmt.pf fmt "(set-option %a)" Expr.pp opt
 
 let to_string (instr : t) : string = Fmt.str "%a" pp instr

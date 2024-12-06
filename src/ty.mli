@@ -131,35 +131,6 @@ type naryop =
   | Concat
   | Regexp_union
 
-type logic =
-  | ALL
-  | AUFLIA
-  | AUFLIRA
-  | AUFNIRA
-  | LIA
-  | LRA
-  | QF_ABV
-  | QF_AUFBV
-  | QF_AUFLIA
-  | QF_AX
-  | QF_BV
-  | QF_BVFP
-  | QF_IDL
-  | QF_LIA
-  | QF_LRA
-  | QF_NIA
-  | QF_NRA
-  | QF_RDL
-  | QF_S
-  | QF_UF
-  | QF_UFBV
-  | QF_UFIDL
-  | QF_UFLIA
-  | QF_UFLRA
-  | QF_UFNRA
-  | UFLRA
-  | UFNIA
-
 val compare : t -> t -> int
 
 val unop_equal : unop -> unop -> bool
@@ -176,8 +147,6 @@ val naryop_equal : naryop -> naryop -> bool
 
 val equal : t -> t -> bool
 
-val logic_of_string : string -> (logic, [> `Msg of string ]) result
-
 val pp_unop : unop Fmt.t
 
 val pp_binop : binop Fmt.t
@@ -191,8 +160,6 @@ val pp_cvtop : cvtop Fmt.t
 val pp_naryop : naryop Fmt.t
 
 val pp : t Fmt.t
-
-val pp_logic : logic Fmt.t
 
 val string_of_type : t -> string
 

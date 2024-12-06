@@ -444,7 +444,7 @@ module M = struct
         Option.iter set_params params;
         let logic =
           Option.map
-            (fun l -> Fmt.kstr (Z3.Symbol.mk_string ctx) "%a" Ty.pp_logic l)
+            (fun l -> Fmt.kstr (Z3.Symbol.mk_string ctx) "%a" Logic.pp l)
             logic
         in
         Z3.Solver.mk_solver ctx logic
@@ -521,7 +521,7 @@ module M = struct
         let name = Option.value name ~default:"" in
         let logic =
           Fmt.str "%a"
-            (Fmt.option ~none:(fun fmt () -> Fmt.string fmt "ALL") Ty.pp_logic)
+            (Fmt.option ~none:(fun fmt () -> Fmt.string fmt "ALL") Logic.pp)
             logic
         in
         let status =

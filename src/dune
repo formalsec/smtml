@@ -1,24 +1,29 @@
-(include_subdirs unqualified)
-
 (library
  (name smtml_prelude)
  (public_name smtml.prelude)
  (modules smtml_prelude)
  (libraries prelude))
 
+(ocamllex
+ (modules lexer))
+
+(menhir
+ (modules parser)
+ (flags --table))
+
 (library
  (name smtml)
  (public_name smtml)
  (modules
-  ast
   altergo_mappings
-  bitwuzla_mappings
+  ast
   ;axioms
+  bitwuzla_mappings
   cache
   cache_intf
+  colibri2_mappings
   compile
   constructors_intf
-  colibri2_mappings
   cvc5_mappings
   dolmenexpr_to_expr
   eval
@@ -27,6 +32,7 @@
   interpret_intf
   lexer
   log
+  logic
   mappings
   mappings_intf
   model
@@ -34,18 +40,18 @@
   op_intf
   optimizer
   optimizer_intf
-  parser
   params
   parse
+  parser
   rewrite
+  smtlib
   solver
+  solver_dispatcher
   solver_intf
   solver_mode
   solver_type
-  solver_dispatcher
-  smtlib
-  symbol
   statistics
+  symbol
   ty
   utils
   value

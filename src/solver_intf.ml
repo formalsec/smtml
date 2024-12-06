@@ -27,7 +27,7 @@ module type S = sig
       assertions used. When knowing what the underlying theory is going to be,
       setting this parameter can help the SMT solver be more performant. The
       default logic is {e unknown_theory}. *)
-  val create : ?params:Params.t -> ?logic:Ty.logic -> unit -> t
+  val create : ?params:Params.t -> ?logic:Logic.t -> unit -> t
 
   (** Interrupt solver. *)
   val interrupt : t -> unit
