@@ -356,8 +356,8 @@ module Statement = struct
     let logic =
       Log.on_error ~level:Logs.Debug
         ~pp:(fun fmt (`Msg err) -> Fmt.pf fmt "%a%s. Using: ALL" pp_loc loc err)
-        ~use:(fun _ -> Ty.ALL)
-        (Ty.logic_of_string logic)
+        ~use:(fun _ -> Logic.ALL)
+        (Logic.of_string logic)
     in
     Set_logic logic
 end

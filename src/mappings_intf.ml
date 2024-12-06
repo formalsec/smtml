@@ -344,7 +344,7 @@ module type M = sig
   end
 
   module Solver : sig
-    val make : ?params:Params.t -> ?logic:Ty.logic -> unit -> solver
+    val make : ?params:Params.t -> ?logic:Logic.t -> unit -> solver
 
     val clone : solver -> solver
 
@@ -396,7 +396,7 @@ module type M = sig
   module Smtlib : sig
     val pp :
          ?name:string
-      -> ?logic:Ty.logic
+      -> ?logic:Logic.t
       -> ?status:satisfiability
       -> term list Fmt.t
   end
@@ -428,13 +428,13 @@ module type S = sig
   module Smtlib : sig
     val pp :
          ?name:string
-      -> ?logic:Ty.logic
+      -> ?logic:Logic.t
       -> ?status:satisfiability
       -> Expr.t list Fmt.t
   end
 
   module Solver : sig
-    val make : ?params:Params.t -> ?logic:Ty.logic -> unit -> solver
+    val make : ?params:Params.t -> ?logic:Logic.t -> unit -> solver
 
     val add_simplifier : solver -> solver
 

@@ -36,7 +36,7 @@ let get_bind x = Hashtbl.find varmap x
 %token <Ty.t * Ty.cvtop> CVTOP
 %token <Ty.t * Ty.naryop> NARY
 %token <Ty.t> TYPE
-%token <Ty.logic> LOGIC
+%token <Logic.t> LOGIC
 
 %start <Ast.t list> script
 %%
