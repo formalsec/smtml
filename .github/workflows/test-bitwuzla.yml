@@ -6,7 +6,7 @@ on:
 
 jobs:
   test-bitwuzla:
-    if: contains(github.event.pull_request.labels.*.name, 'bitwuzla')
+    if: github.event.label.name == 'bitwuzla'
     runs-on: ubuntu-latest
     env:
       OPAMCONFIRMLEVEL: unsafe-yes
