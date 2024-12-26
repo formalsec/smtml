@@ -452,4 +452,3 @@ module Naryop = struct
     | Concat -> Fmt.string fmt "++"
     | Regexp_union -> Fmt.string fmt "union"
 end
-

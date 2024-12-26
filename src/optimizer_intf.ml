@@ -17,7 +17,7 @@ module type S = sig
 
   val protect : t -> (unit -> 'a) -> 'a
 
-  val check : t -> Mappings_intf.satisfiability
+  val check : t -> [ `Sat | `Unsat | `Unknown ]
 
   val model : t -> Model.t option
 
@@ -29,8 +29,6 @@ module type S = sig
 end
 
 module type Intf = sig
-  type nonrec satisfiability = satisfiability
-
   module type S = S
 
   module Make (_ : Mappings_intf.S) : S

@@ -58,10 +58,10 @@ module type S = sig
 
   (** [check solver es] checks the satisfiability of the assertions in the
       solver using the assumptions in [es]. *)
-  val check : t -> Expr.t list -> satisfiability
+  val check : t -> Expr.t list -> [ `Sat | `Unsat | `Unknown ]
 
   (** Same as [check] but receives an Expr.Set.t *)
-  val check_set : t -> Expr.Set.t -> satisfiability
+  val check_set : t -> Expr.Set.t -> [ `Sat | `Unsat | `Unknown ]
 
   (** [get_value solver e] get an expression denoting the model value of a given
       expression.
@@ -77,8 +77,6 @@ module type S = sig
 end
 
 module type Intf = sig
-  type nonrec satisfiability = satisfiability
-
   module type S = S
 
   (** The Encoding module defines two types of solvers: {!module:Batch} and
