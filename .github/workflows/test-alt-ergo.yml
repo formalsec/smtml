@@ -6,7 +6,7 @@ on:
 
 jobs:
   test-alt-ergo:
-    if: contains(github.event.pull_request.labels.*.name, 'alt-ergo')
+    if: github.event.label.name == 'alt-ergo'
     runs-on: ubuntu-latest
     env:
       OPAMCONFIRMLEVEL: unsafe-yes

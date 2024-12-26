@@ -6,7 +6,7 @@ on:
 
 jobs:
   test-cvc5:
-    if: contains(github.event.pull_request.labels.*.name, 'cvc5')
+    if: github.event.label.name == 'cvc5'
     runs-on: ubuntu-latest
     env:
       OPAMJOBS: 4

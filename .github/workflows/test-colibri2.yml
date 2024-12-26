@@ -6,7 +6,7 @@ on:
 
 jobs:
   test-colibri2:
-    if: contains(github.event.pull_request.labels.*.name, 'colibri2')
+    if: github.event.label.name == 'colibri2'
     runs-on: ubuntu-latest
     env:
       OPAMCONFIRMLEVEL: unsafe-yes
