@@ -2,12 +2,6 @@
 (* Copyright (C) 2023-2024 formalsec *)
 (* Written by the Smtml programmers *)
 
-type satisfiability =
-  [ `Sat
-  | `Unsat
-  | `Unknown
-  ]
-
 module type M = sig
   type ty
 
@@ -356,7 +350,7 @@ module type M = sig
 
     val add : solver -> term list -> unit
 
-    val check : solver -> assumptions:term list -> satisfiability
+    val check : solver -> assumptions:term list -> [ `Sat | `Unsat | `Unknown ]
 
     val model : solver -> model option
 
@@ -378,7 +372,7 @@ module type M = sig
 
     val add : optimizer -> term list -> unit
 
-    val check : optimizer -> satisfiability
+    val check : optimizer -> [ `Sat | `Unsat | `Unknown ]
 
     val model : optimizer -> model option
 
@@ -397,7 +391,7 @@ module type M = sig
     val pp :
          ?name:string
       -> ?logic:Logic.t
-      -> ?status:satisfiability
+      -> ?status:[ `Sat | `Unsat | `Unknown ]
       -> term list Fmt.t
   end
 end
@@ -429,7 +423,7 @@ module type S = sig
     val pp :
          ?name:string
       -> ?logic:Logic.t
-      -> ?status:satisfiability
+      -> ?status:[ `Sat | `Unsat | `Unknown ]
       -> Expr.t list Fmt.t
   end
 
@@ -448,7 +442,8 @@ module type S = sig
 
     val add : solver -> Expr.t list -> unit
 
-    val check : solver -> assumptions:Expr.t list -> satisfiability
+    val check :
+      solver -> assumptions:Expr.t list -> [ `Sat | `Unsat | `Unknown ]
 
     val model : solver -> model option
 
@@ -466,7 +461,7 @@ module type S = sig
 
     val add : optimize -> Expr.t list -> unit
 
-    val check : optimize -> satisfiability
+    val check : optimize -> [ `Sat | `Unsat | `Unknown ]
 
     val model : optimize -> model option
 

@@ -126,7 +126,7 @@ module Fresh = struct
       let add_decls sym_decls cmds =
         ConstMap.fold (fun _ d acc -> d :: acc) sym_decls cmds
 
-      let check s ~assumptions : Mappings_intf.satisfiability =
+      let check s ~assumptions =
         let syms, cmds = mk_cmds s.syms s.cmds assumptions in
         let cmds = add_decls syms (List.rev cmds) in
         let ftdn_env = FE.init_env s.used_context in

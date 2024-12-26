@@ -38,7 +38,7 @@ module Base (M : Mappings_intf.S) = struct
   let get_statistics (solver : t) : Statistics.t =
     M.Solver.get_statistics solver
 
-  let check (solver : M.solver) (es : Expr.t list) : satisfiability =
+  let check (solver : M.solver) (es : Expr.t list) =
     incr solver_count;
     Utils.run_and_time_call
       ~use:(fun time -> solver_time := !solver_time +. time)
@@ -105,8 +105,7 @@ module Batch (Mappings : Mappings.S) = struct
 
   let get_statistics (s : t) : Statistics.t = get_statistics s.solver
 
-  let check (s : t) (es : Expr.t list) : satisfiability =
-    check s.solver (es @ s.top)
+  let check (s : t) (es : Expr.t list) = check s.solver (es @ s.top)
 
   let check_set s es = check s @@ Expr.Set.to_list es
 
@@ -179,8 +178,7 @@ module Cached (Mappings : Mappings.S) = struct
       Cache.add cache es result;
       result
 
-  let check (s : t) (es : Expr.t list) : satisfiability =
-    check_set s (Expr.Set.of_list es)
+  let check (s : t) (es : Expr.t list) = check_set s (Expr.Set.of_list es)
 
   let get_value (solver : t) (e : Expr.t) : Expr.t = get_value solver.solver e
 

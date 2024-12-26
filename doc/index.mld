@@ -37,8 +37,8 @@ module Z3 :
     val add_set : t -> Smtml.Expr.Set.t -> unit
     val get_assertions : t -> Smtml.Expr.t list
     val get_statistics : t -> Smtml.Statistics.t
-    val check : t -> Smtml.Expr.t list -> Smtml.Solver_intf.satisfiability
-    val check_set : t -> Smtml.Expr.Set.t -> Smtml.Solver_intf.satisfiability
+    val check : t -> Smtml.Expr.t list -> [ `Sat | `Unknown | `Unsat ]
+    val check_set : t -> Smtml.Expr.Set.t -> [ `Sat | `Unknown | `Unsat ]
     val get_value : t -> Smtml.Expr.t -> Smtml.Expr.t
     val model : ?symbols:Smtml.Symbol.t list -> t -> Smtml.Model.t option
   end
