@@ -1,6 +1,3 @@
 [submodule "bench/datasets/collections-c"]
 	path = bench/datasets/collections-c
 	url = https://github.com/formalsec/smt-collections-c.git
-[submodule "bench/datasets/smt-testcomp23"]
-	path = bench/datasets/smt-testcomp23
-	url = https://github.com/formalsec/smt-testcomp23.git
