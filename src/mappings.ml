@@ -672,7 +672,11 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         (ctx, []) es
 
     let value_of_term model ty term =
-      let v = M.Model.eval ~completion:true model term |> Option.get in
+      let v =
+        match M.Model.eval ~completion:true model term with
+        | None -> assert false
+        | Some v -> v
+      in
       match ty with
       | Ty_int -> Value.Int (M.Interp.to_int v)
       | Ty_real -> Value.Real (M.Interp.to_real v)
@@ -745,13 +749,16 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         { solver = M.Solver.clone solver; ctx = Stack.copy ctx; last_ctx }
 
       let push { solver; ctx; _ } =
-        let top = Stack.top ctx in
-        Stack.push top ctx;
-        M.Solver.push solver
+        match Stack.top_opt ctx with
+        | None -> assert false
+        | Some top ->
+          Stack.push top ctx;
+          M.Solver.push solver
 
       let pop { solver; ctx; _ } n =
-        let _ = Stack.pop ctx in
-        M.Solver.pop solver n
+        match Stack.pop_opt ctx with
+        | None -> assert false
+        | Some _ -> M.Solver.pop solver n
 
       let reset (s : solver) =
         Stack.clear s.ctx;
@@ -760,16 +767,20 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         M.Solver.reset s.solver
 
       let add (s : solver) (exprs : Expr.t list) =
-        let ctx = Stack.pop s.ctx in
-        let ctx, exprs = encode_exprs ctx exprs in
-        Stack.push ctx s.ctx;
-        M.Solver.add s.solver exprs
+        match Stack.pop_opt s.ctx with
+        | None -> assert false
+        | Some ctx ->
+          let ctx, exprs = encode_exprs ctx exprs in
+          Stack.push ctx s.ctx;
+          M.Solver.add s.solver exprs
 
       let check (s : solver) ~assumptions =
-        let ctx = Stack.top s.ctx in
-        let ctx, assumptions = encode_exprs ctx assumptions in
-        s.last_ctx <- Some ctx;
-        M.Solver.check s.solver ~assumptions
+        match Stack.top_opt s.ctx with
+        | None -> assert false
+        | Some ctx ->
+          let ctx, assumptions = encode_exprs ctx assumptions in
+          s.last_ctx <- Some ctx;
+          M.Solver.check s.solver ~assumptions
 
       let model { solver; last_ctx; _ } =
         match last_ctx with
@@ -797,28 +808,36 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       let pop { opt; _ } = M.Optimizer.pop opt
 
       let add (o : optimize) exprs =
-        let ctx = Stack.pop o.ctx in
-        let ctx, exprs = encode_exprs ctx exprs in
-        Stack.push ctx o.ctx;
-        M.Optimizer.add o.opt exprs
+        match Stack.pop_opt o.ctx with
+        | None -> assert false
+        | Some ctx ->
+          let ctx, exprs = encode_exprs ctx exprs in
+          Stack.push ctx o.ctx;
+          M.Optimizer.add o.opt exprs
 
       let check { opt; _ } = M.Optimizer.check opt
 
       let model { opt; ctx } =
-        let ctx = Stack.top ctx in
-        M.Optimizer.model opt |> Option.map (fun m -> { model = m; ctx })
+        match Stack.top_opt ctx with
+        | None -> assert false
+        | Some ctx ->
+          M.Optimizer.model opt |> Option.map (fun m -> { model = m; ctx })
 
       let maximize (o : optimize) (expr : Expr.t) =
-        let ctx = Stack.pop o.ctx in
-        let ctx, expr = encode_expr ctx expr in
-        Stack.push ctx o.ctx;
-        M.Optimizer.maximize o.opt expr
+        match Stack.pop_opt o.ctx with
+        | None -> assert false
+        | Some ctx ->
+          let ctx, expr = encode_expr ctx expr in
+          Stack.push ctx o.ctx;
+          M.Optimizer.maximize o.opt expr
 
       let minimize (o : optimize) (expr : Expr.t) =
-        let ctx = Stack.pop o.ctx in
-        let ctx, expr = encode_expr ctx expr in
-        Stack.push ctx o.ctx;
-        M.Optimizer.minimize o.opt expr
+        match Stack.pop_opt o.ctx with
+        | None -> assert false
+        | Some ctx ->
+          let ctx, expr = encode_expr ctx expr in
+          Stack.push ctx o.ctx;
+          M.Optimizer.minimize o.opt expr
 
       let interrupt _ = M.Optimizer.interrupt ()
 

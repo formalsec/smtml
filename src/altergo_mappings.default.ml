@@ -118,10 +118,13 @@ module Fresh = struct
       let add s el =
         match el with
         | [] -> ()
-        | _ ->
+        | _ -> (
           let syms, cmds = mk_cmds s.syms s.cmds el in
-          s.cmds <- List.tl cmds;
-          s.syms <- syms
+          match cmds with
+          | [] -> assert false
+          | _hd :: tl ->
+            s.cmds <- tl;
+            s.syms <- syms )
 
       let add_decls sym_decls cmds =
         ConstMap.fold (fun _ d acc -> d :: acc) sym_decls cmds

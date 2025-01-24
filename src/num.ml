@@ -80,19 +80,19 @@ let to_string (n : t) : string = Fmt.str "%a" pp n
 let of_string (cast : Ty.t) value =
   match cast with
   | Ty_bitv 8 -> (
-    match int_of_string value with
-    | None -> Error "invalid value, expected 8-bit bitv"
+    match int_of_string_opt value with
+    | None -> Fmt.error_msg "invalid value %s, expected 8-bit bitv" value
     | Some n -> Ok (I8 n) )
   | Ty_bitv 32 -> Ok (I32 (Int32.of_string value))
   | Ty_bitv 64 -> Ok (I64 (Int64.of_string value))
   | Ty_fp 32 -> (
-    match float_of_string value with
-    | None -> Error "invalid value, expected float"
+    match float_of_string_opt value with
+    | None -> Fmt.error_msg "invalid value %s, expected float" value
     | Some n -> Ok (F32 (Int32.bits_of_float n)) )
   | Ty_fp 64 -> (
-    match float_of_string value with
-    | None -> Error "invalid value, expected float"
+    match float_of_string_opt value with
+    | None -> Fmt.error_msg "invalid value %s, expected float" value
     | Some n -> Ok (F64 (Int64.bits_of_float n)) )
-  | _ -> Error "invalid value, expected num"
+  | _ -> Fmt.error_msg "invalid value, expected num"
 
 let to_json (n : t) : Yojson.Basic.t = `String (to_string n)

@@ -25,17 +25,18 @@ module Term = struct
       | "Float32" -> Expr.symbol { id with ty = Ty_fp 32 }
       | "Float64" -> Expr.symbol { id with ty = Ty_fp 64 }
       | _ -> (
-        try Expr.symbol { id with ty = Hashtbl.find custom_sorts name }
-        with Not_found ->
-          Fmt.failwith "%acould not find sort: %a" pp_loc loc Symbol.pp id ) )
+        match Hashtbl.find_opt custom_sorts name with
+        | None ->
+          Fmt.failwith "%acould not find sort: %a" pp_loc loc Symbol.pp id
+        | Some ty -> Expr.symbol { id with ty } ) )
     | Sort, Indexed { basename; indices } -> (
       match (basename, indices) with
       | "BitVec", [ n ] -> (
-        match int_of_string n with
+        match int_of_string_opt n with
         | Some n -> Expr.symbol { id with ty = Ty_bitv n }
         | None -> Fmt.failwith "Invalid bitvector size" )
       | "FloatingPoint", [ e; s ] -> (
-        match (int_of_string e, int_of_string s) with
+        match (int_of_string_opt e, int_of_string_opt s) with
         | Some e, Some s -> Expr.symbol { id with ty = Ty_fp (e + s) }
         | _ -> Fmt.failwith "Invalid floating point size" )
       | _ ->
@@ -50,11 +51,16 @@ module Term = struct
       | _ -> Expr.symbol id )
     | Term, Indexed { basename = base; indices } -> (
       match String.(sub base 0 2, sub base 2 (length base - 2), indices) with
-      | "bv", str, [ "8" ] ->
-        Expr.value (Num (I8 (Option.get (int_of_string str))))
-      | "bv", str, [ "32" ] ->
-        let int = Option.get (int_of_string str) in
-        Expr.value (Num (I32 (Int32.of_int (int land 0xffffffff))))
+      | "bv", str, [ "8" ] -> begin
+        match int_of_string_opt str with
+        | None -> assert false
+        | Some n -> Expr.value (Num (I8 n))
+      end
+      | "bv", str, [ "32" ] -> begin
+        match int_of_string_opt str with
+        | None -> assert false
+        | Some n -> Expr.value (Num (I32 (Int32.of_int (n land 0xffffffff))))
+      end
       | "bv", str, [ "64" ] -> Expr.value (Num (I64 (Int64.of_string str)))
       | _ -> Expr.symbol id )
     | Attr, Simple _ -> Expr.symbol id
@@ -64,12 +70,12 @@ module Term = struct
   let str ?loc:_ (x : string) = Expr.value (Str x)
 
   let int ?loc (x : string) =
-    match int_of_string x with
+    match int_of_string_opt x with
     | Some x -> Expr.value (Int x)
     | None -> Fmt.failwith "%aInvalid int" pp_loc loc
 
   let real ?loc (x : string) =
-    match float_of_string x with
+    match float_of_string_opt x with
     | Some x -> Expr.value (Real x)
     | None -> Fmt.failwith "%aInvalid real" pp_loc loc
 
@@ -256,15 +262,31 @@ module Term = struct
     | Symbol { name = Indexed { basename; indices }; _ } -> (
       match (basename, indices, args) with
       | "extract", [ h; l ], [ a ] ->
-        let high = ((Option.get @@ int_of_string h) + 1) / 8 in
-        let low = (Option.get @@ int_of_string l) / 8 in
+        let high =
+          match int_of_string_opt h with
+          | None -> assert false
+          | Some h -> (h + 1) / 8
+        in
+        let low =
+          match int_of_string_opt l with
+          | None -> assert false
+          | Some l -> l / 8
+        in
         Expr.extract' a ~high ~low
       | "zero_extend", [ bits ], [ a ] ->
-        let bits = Option.get @@ int_of_string bits in
+        let bits =
+          match int_of_string_opt bits with
+          | None -> assert false
+          | Some bits -> bits
+        in
         Expr.cvtop' Ty_none (Zero_extend bits) a
       | "re.loop", [ i1; i2 ], [ a ] ->
-        let i1 = Option.get @@ int_of_string i1 in
-        let i2 = Option.get @@ int_of_string i2 in
+        let i1 =
+          match int_of_string_opt i1 with None -> assert false | Some i1 -> i1
+        in
+        let i2 =
+          match int_of_string_opt i2 with None -> assert false | Some i2 -> i2
+        in
         Expr.unop' Ty_regexp (Regexp_loop (i1, i2)) a
       | _ ->
         Fmt.failwith "%acould not parse indexed app: %a" pp_loc loc Expr.pp id )

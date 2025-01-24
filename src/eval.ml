@@ -179,10 +179,14 @@ module Real = struct
     | ToString -> Str (Float.to_string (of_value 1 op' v))
     | OfString ->
       let v = match v with Str v -> v | _ -> raise_notrace (Value Ty_str) in
-      to_value (Float.of_string v)
+      begin
+        match Float.of_string_opt v with
+        | None -> assert false
+        | Some v -> to_value v
+      end
     | Reinterpret_int ->
       let v = match v with Int v -> v | _ -> raise_notrace (Value Ty_int) in
-      to_value (Float.of_int v)
+      to_value (float_of_int v)
     | Reinterpret_float -> Int (Float.to_int (of_value 1 op' v))
     | _ -> Fmt.failwith {|cvtop: Unsupported real operator "%a"|} Ty.Cvtop.pp op
 end
@@ -353,14 +357,18 @@ module Str = struct
     | String_to_int ->
       let s = of_value 1 op' v in
       let i =
-        match int_of_string s with None -> raise ParseNumError | Some i -> i
+        match int_of_string_opt s with
+        | None -> raise ParseNumError
+        | Some i -> i
       in
       Int.to_value i
     | String_from_int -> to_value (string_of_int (Int.of_value 1 op' v))
     | String_to_float ->
       let s = of_value 1 op' v in
       let f =
-        match float_of_string s with None -> raise ParseNumError | Some f -> f
+        match float_of_string_opt s with
+        | None -> raise ParseNumError
+        | Some f -> f
       in
       Real.to_value f
     | _ -> Fmt.failwith {|cvtop: Unsupported str operator "%a"|} Ty.Cvtop.pp op
@@ -383,8 +391,10 @@ module Lst = struct
   let unop (op : Ty.Unop.t) (v : Value.t) : Value.t =
     let lst = of_value 1 (`Unop op) v in
     match op with
-    | Head -> List.hd lst
-    | Tail -> List (List.tl lst)
+    | Head -> begin match lst with hd :: _tl -> hd | [] -> assert false end
+    | Tail -> begin
+      match lst with _hd :: tl -> List tl | [] -> assert false
+    end
     | Length -> Int.to_value (List.length lst)
     | Reverse -> List (List.rev lst)
     | _ -> Fmt.failwith {|unop: Unsupported list operator "%a"|} Ty.Unop.pp op
@@ -392,11 +402,15 @@ module Lst = struct
   let binop (op : Ty.Binop.t) v1 v2 =
     let op' = `Binop op in
     match op with
-    | At -> (
+    | At ->
       let lst = of_value 1 op' v1 in
       let i = Int.of_value 2 op' v2 in
-      try List.nth lst i
-      with Failure _ | Invalid_argument _ -> raise IndexOutOfBounds )
+      begin
+        (* TODO: change datastructure? *)
+        match List.nth_opt lst i with
+        | None -> raise IndexOutOfBounds
+        | Some v -> v
+      end
     | List_cons -> List (v1 :: of_value 1 op' v2)
     | List_append -> List (of_value 1 op' v1 @ of_value 2 op' v2)
     | _ -> Fmt.failwith {|binop: Unsupported list operator "%a"|} Ty.Binop.pp op

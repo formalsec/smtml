@@ -10,7 +10,7 @@ open Expr
 let varmap = Hashtbl.create 512
 
 let add_bind x t = Hashtbl.replace varmap x t
-let get_bind x = Hashtbl.find varmap x
+let get_bind x = Hashtbl.find_opt varmap x
 
 %}
 %token PTR
@@ -57,7 +57,11 @@ let stmt :=
   | LPAREN; SET_LOGIC; ~ = LOGIC; RPAREN; <Ast.Set_logic>
 
 let s_expr :=
-  | x = SYMBOL; { Expr.symbol (Symbol.make (get_bind x) x) }
+  | x = SYMBOL; {
+    match get_bind x with
+    | None -> assert false
+    | Some v -> Expr.symbol (Symbol.make v x)
+  }
   | c = spec_constant; { make (Val c) }
   | LPAREN; op = paren_op; RPAREN; { make op }
 

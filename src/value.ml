@@ -91,18 +91,18 @@ let of_string (cast : Ty.t) v =
     match v with
     | "true" -> Ok True
     | "false" -> Ok False
-    | _ -> Error "invalid value, expected boolean" )
+    | _ -> Fmt.error_msg "invalid value %s, expected boolean" v )
   | Ty_int -> (
-    match int_of_string v with
-    | None -> Error "invalid value, expected integer"
+    match int_of_string_opt v with
+    | None -> Fmt.error_msg "invalid value %s, expected integer" v
     | Some n -> Ok (Int n) )
   | Ty_real -> (
-    match float_of_string v with
-    | None -> Error "invalid value, expected real"
+    match float_of_string_opt v with
+    | None -> Fmt.error_msg "invalid value %s, expected real" v
     | Some n -> Ok (Real n) )
   | Ty_str -> Ok (Str v)
   | Ty_app | Ty_list | Ty_none | Ty_unit | Ty_regexp ->
-    Error (Fmt.str "unsupported parsing values of type %a" Ty.pp cast)
+    Fmt.error_msg "unsupported parsing values of type %a" Ty.pp cast
 
 let rec to_json (v : t) : Yojson.Basic.t =
   match v with

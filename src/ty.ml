@@ -65,21 +65,21 @@ let of_string = function
   | s ->
     if String.starts_with ~prefix:"i" s then begin
       let s = String.sub s 1 (String.length s - 1) in
-      match int_of_string s with
-      | None -> Error (Fmt.str "can not parse type %s" s)
+      match int_of_string_opt s with
+      | None -> Fmt.error_msg "can not parse type %s" s
       | Some n when n < 0 ->
-        Error (Fmt.str "size of bitvectors must be a positive integer")
+        Fmt.error_msg "size of bitvectors must be a positive integer"
       | Some n -> Ok (Ty_bitv n)
     end
     else if String.starts_with ~prefix:"f" s then begin
       let s = String.sub s 1 (String.length s - 1) in
-      match int_of_string s with
-      | None -> Error (Fmt.str "can not parse type %s" s)
+      match int_of_string_opt s with
+      | None -> Fmt.error_msg "can not parse type %s" s
       | Some n when n < 0 ->
-        Error (Fmt.str "size of fp must be a positive integer")
+        Fmt.error_msg "size of fp must be a positive integer"
       | Some n -> Ok (Ty_fp n)
     end
-    else Error (Fmt.str "can not parse type %s" s)
+    else Fmt.error_msg "can not parse type %s" s
 
 let size (ty : t) : int =
   match ty with

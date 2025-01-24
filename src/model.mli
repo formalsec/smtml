@@ -33,29 +33,29 @@ val to_smtlib_string : t -> string
 
 module Parse : sig
   module Json : sig
-    val from_string : string -> (t, string) Result.t
+    val from_string : string -> (t, [> `Msg of string ]) Result.t
 
-    val from_channel : in_channel -> (t, string) Result.t
+    val from_channel : in_channel -> (t, [> `Msg of string ]) Result.t
 
-    val from_file : Fpath.t -> (t, string) Result.t
+    val from_file : Fpath.t -> (t, [> `Msg of string ]) Result.t
   end
 
   module Scfg : sig
-    val from_string : string -> (t, string) Result.t
+    val from_string : string -> (t, [> `Msg of string ]) Result.t
 
-    val from_channel : in_channel -> (t, string) Result.t
+    val from_channel : in_channel -> (t, [> `Msg of string ]) Result.t
 
-    val from_file : Fpath.t -> (t, string) Result.t
+    val from_file : Fpath.t -> (t, [> `Msg of string ]) Result.t
   end
 
   module Smtlib : sig
-    val from_string : string -> (t, string) Result.t
+    val from_string : string -> (t, [> `Msg of string ]) Result.t
     [@@alert unsafe "not implemented"]
 
-    val from_channel : in_channel -> (t, string) Result.t
+    val from_channel : in_channel -> (t, [> `Msg of string ]) Result.t
     [@@alert unsafe "not implemented"]
 
-    val from_file : Fpath.t -> (t, string) Result.t
+    val from_file : Fpath.t -> (t, [> `Msg of string ]) Result.t
     [@@alert unsafe "not implemented"]
   end
 end

@@ -247,12 +247,12 @@ rule token = parse
 
   | "nan" { DEC Float.nan }
   | numeral as s {
-    match int_of_string s with
+    match int_of_string_opt s with
     | Some i -> NUM i
     | None -> assert false
   }
   | decimal as s {
-    match float_of_string s with
+    match float_of_string_opt s with
     | Some f -> DEC f
     | None -> assert false
   }
@@ -261,7 +261,11 @@ rule token = parse
   | binary { Fmt.failwith "TODO: Lexer(binary)" }
   | '"' { string (Buffer.create 17) lexbuf }
 
-  | symbol as x { try Hashtbl.find keywords x with Not_found -> SYMBOL x }
+  | symbol as x {
+    match Hashtbl.find_opt keywords x with
+    | None -> SYMBOL x
+    | Some k -> k
+  }
 
   | ';' { comment lexbuf }
   | white { token lexbuf }

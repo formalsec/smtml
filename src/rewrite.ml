@@ -39,12 +39,12 @@ let rec rewrite_expr (type_map, expr_map) hte =
   | Ptr { base; offset } ->
     Expr.ptr base (rewrite_expr (type_map, expr_map) offset)
   | Symbol sym -> (
-    match Symb_map.find sym type_map with
-    | exception Not_found -> (
-      match Symb_map.find sym expr_map with
-      | exception Not_found -> Fmt.failwith "Undefined symbol: %a" Symbol.pp sym
-      | expr -> expr )
-    | ty -> Expr.symbol { sym with ty } )
+    match Symb_map.find_opt sym type_map with
+    | None -> (
+      match Symb_map.find_opt sym expr_map with
+      | None -> Fmt.failwith "Undefined symbol: %a" Symbol.pp sym
+      | Some expr -> expr )
+    | Some ty -> Expr.symbol { sym with ty } )
   | List htes ->
     Expr.make (List (List.map (rewrite_expr (type_map, expr_map)) htes))
   | App (op, htes) ->

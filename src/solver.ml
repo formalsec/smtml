@@ -88,8 +88,11 @@ module Batch (Mappings : Mappings.S) = struct
     if lvl <= 0 then ()
     else begin
       Mappings.Solver.pop s.solver 1;
-      s.top <- Stack.pop s.stack;
-      pop s (lvl - 1)
+      match Stack.pop_opt s.stack with
+      | None -> assert false
+      | Some v ->
+        s.top <- v;
+        pop s (lvl - 1)
     end
 
   let reset (s : t) =
@@ -151,8 +154,11 @@ module Cached (Mappings : Mappings.S) = struct
     if lvl <= 0 then ()
     else begin
       Mappings.Solver.pop s.solver 1;
-      s.top <- Stack.pop s.stack;
-      pop s (lvl - 1)
+      match Stack.pop_opt s.stack with
+      | None -> assert false
+      | Some v ->
+        s.top <- v;
+        pop s (lvl - 1)
     end
 
   let reset (s : t) =

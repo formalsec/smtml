@@ -147,7 +147,8 @@ module Parse = struct
     let from_scfg v =
       match Scfg.Query.get_dir "model" v with
       | None ->
-        Error "can not find the directive `model` while parsing the scfg config"
+        Fmt.error_msg
+          "can not find the directive `model` while parsing the scfg config"
       | Some model ->
         let symbols = Scfg.Query.get_dirs "symbol" model.children in
         let tbl = Hashtbl.create 16 in
@@ -174,7 +175,7 @@ module Parse = struct
       from_scfg model
 
     let from_file file =
-      let* model = Scfg.Parse.from_file (Fpath.to_string file) in
+      let* model = Scfg.Parse.from_file file in
       from_scfg model
   end
 
