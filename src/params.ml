@@ -72,13 +72,14 @@ let ( $ ) (type a) (params : t) ((param, value) : a param * a) : t =
   set params param value
 
 let get (type a) (params : t) (param : a param) : a =
-  match (param, Pmap.find (Key.v param) params) with
-  | Timeout, P (Timeout, v) -> v
-  | Model, P (Model, v) -> v
-  | Unsat_core, P (Unsat_core, v) -> v
-  | Ematching, P (Ematching, v) -> v
-  | Parallel, P (Parallel, v) -> v
-  | Num_threads, P (Num_threads, v) -> v
+  match (param, Pmap.find_opt (Key.v param) params) with
+  | _, None -> assert false
+  | Timeout, Some (P (Timeout, v)) -> v
+  | Model, Some (P (Model, v)) -> v
+  | Unsat_core, Some (P (Unsat_core, v)) -> v
+  | Ematching, Some (P (Ematching, v)) -> v
+  | Parallel, Some (P (Parallel, v)) -> v
+  | Num_threads, Some (P (Num_threads, v)) -> v
   | (Timeout | Model | Unsat_core | Ematching | Parallel | Num_threads), _ ->
     assert false
 

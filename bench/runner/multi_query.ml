@@ -11,7 +11,9 @@ let parse_stdout =
       (fun group ->
         let benchmark = Dune_re.Group.get group 1 in
         let rtime = Dune_re.Group.get group 2 in
-        (benchmark, Float.of_string rtime) )
+        match Float.of_string_opt rtime with
+        | None -> assert false
+        | Some rtime -> (benchmark, rtime) )
       matches
 
 let parse_results (prover, (_status, stdout, _stderr, _rusage)) =

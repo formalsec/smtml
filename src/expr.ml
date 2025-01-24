@@ -329,7 +329,11 @@ let rec binop ty op hte1 hte2 =
   | Mul, Val v1, Binop (ty, Mul, x, { node = Val v2; _ }) ->
     let v = value (Eval.binop ty Mul v1 v2) in
     binop' ty Mul v x
-  | At, List es, Val (Int n) -> List.nth es n
+  | At, List es, Val (Int n) ->
+    (* TODO: use another datastructure? *)
+    begin
+      match List.nth_opt es n with None -> assert false | Some v -> v
+    end
   | List_cons, _, List es -> make (List (hte1 :: es))
   | List_append, List _, (List [] | Val (List [])) -> hte1
   | List_append, (List [] | Val (List [])), List _ -> hte2

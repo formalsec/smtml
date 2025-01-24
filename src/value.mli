@@ -28,6 +28,6 @@ val pp : t Fmt.t
 
 val to_string : t -> string
 
-val of_string : Ty.t -> string -> (t, string) result
+val of_string : Ty.t -> string -> (t, [> `Msg of string ]) result
 
 val to_json : t -> Yojson.Basic.t
