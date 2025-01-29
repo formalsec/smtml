@@ -53,29 +53,42 @@ module Int = struct
   let unop (op : Ty.Unop.t) (v : Value.t) : Value.t =
     let f =
       match op with
-      | Neg -> ( ~- )
-      | Abs -> abs
+      | Neg -> Int.neg
+      | Not -> Int.lognot
+      | Abs -> Int.abs
       | _ -> Fmt.failwith {|unop: Unsupported int operator "%a"|} Ty.Unop.pp op
     in
     to_value (f (of_value 1 (`Unop op) v))
 
+  let exp_by_squaring x n =
+    let rec exp_by_squaring2 y x n =
+      if n < 0 then exp_by_squaring2 y (1 / x) ~-n
+      else if n = 0 then y
+      else if n mod 2 = 0 then exp_by_squaring2 y (x * x) (n / 2)
+      else begin
+        assert (n mod 2 = 1);
+        exp_by_squaring2 (x * y) (x * y) ((n - 1) / 2)
+      end
+    in
+    exp_by_squaring2 1 x n
+
   let binop (op : Ty.Binop.t) (v1 : Value.t) (v2 : Value.t) : Value.t =
     let f =
       match op with
-      | Add -> ( + )
-      | Sub -> ( - )
-      | Mul -> ( * )
-      | Div -> ( / )
-      | Rem -> ( mod )
-      | Pow -> fun x y -> int_of_float (float_of_int x ** float_of_int y)
-      | Min -> min
-      | Max -> max
-      | And -> ( land )
-      | Or -> ( lor )
-      | Xor -> ( lxor )
-      | Shl -> ( lsl )
-      | ShrL -> ( lsr )
-      | ShrA -> ( asr )
+      | Add -> Int.add
+      | Sub -> Int.sub
+      | Mul -> Int.mul
+      | Div -> Int.div
+      | Rem -> Int.rem
+      | Pow -> exp_by_squaring
+      | Min -> Int.min
+      | Max -> Int.max
+      | And -> Int.logand
+      | Or -> Int.logor
+      | Xor -> Int.logxor
+      | Shl -> Int.shift_left
+      | ShrL -> Int.shift_right_logical
+      | ShrA -> Int.shift_right
       | _ ->
         Fmt.failwith {|binop: Unsupported int operator "%a"|} Ty.Binop.pp op
     in
