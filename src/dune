@@ -61,10 +61,12 @@
  (flags
   (:standard -open Smtml_prelude))
  (libraries
+  bos
   cmdliner
   dolmen
   dolmen_type
   hc
+  fpath
   menhirLib
   ocaml_intrinsics
   patricia-tree
