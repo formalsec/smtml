@@ -71,7 +71,7 @@
   (patricia-tree
    (>= "0.10.0"))
   (prelude
-   (>= "0.3"))
+   (<= "0.3"))
   rusage
   scfg
   (yojson
