@@ -4,6 +4,10 @@
 ### Fixed
 ### Changed
 
+## v0.5.0
+
+### Changed
+
 - Removes `satisfiability` type
 
 ## v0.4.1
