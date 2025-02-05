@@ -73,10 +73,10 @@
   (patricia-tree
    (>= "0.10.0"))
   (prelude
-   (>= "0.4"))
+   (>= "0.5"))
   rusage
   (scfg
-   (>= "0.4"))
+   (>= "0.5"))
   (yojson
    (>= "1.6.0"))
   (zarith
