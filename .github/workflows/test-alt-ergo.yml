@@ -3,6 +3,7 @@ name: Test Alt-Ergo
 on:
   pull_request:
     types: [ labeled ]
+  workflow_dispatch:
 
 jobs:
   test-alt-ergo:
