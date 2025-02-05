@@ -31,9 +31,9 @@ depends: [
   "ocaml" {>= "4.14.0"}
   "ocaml_intrinsics"
   "patricia-tree" {>= "0.10.0"}
-  "prelude" {>= "0.4"}
+  "prelude" {>= "0.5"}
   "rusage"
-  "scfg" {>= "0.4"}
+  "scfg" {>= "0.5"}
   "yojson" {>= "1.6.0"}
   "zarith" {>= "1.5"}
   "odoc" {with-doc}
