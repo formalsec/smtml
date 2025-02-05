@@ -3,6 +3,7 @@ name: Test Colibri2
 on:
   pull_request:
     types: [ labeled ]
+  workflow_dispatch:
 
 jobs:
   test-colibri2:
