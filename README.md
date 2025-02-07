@@ -1,11 +1,10 @@
 # Smt.ml [![Build badge](https://github.com/formalsec/smtml/actions/workflows/build.yml/badge.svg)](https://github.com/formalsec/smtml/actions) [![Coverage Status](https://coveralls.io/repos/github/formalsec/smtml/badge.svg)](https://coveralls.io/github/formalsec/smtml) [![MIT](https://img.shields.io/github/license/formalsec/smtml)](LICENSE) ![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos-lightgrey)
 
-Smt.ml is a Multi Back-end Front-end for SMT Solvers in OCaml. The primary
-objective of Smt.ml is to facilitate the effortless transition between
-different SMT solvers during program analysis, as certain SMT solvers may prove
-more efficient at handling specific logics and formulas. Presently, Smt.ml
-offers support for [Z3], [Colibri2], [Bitwuzla], and [Alt-Ergo], and ongoing
-efforts are directed towards incorporating support for [cvc5].
+Smt.ml is an SMT solver frontend for OCaml that simplifies integration
+with various solvers through a consistent interface. Its parametric
+encoding facilitates the easy addition of new solver backends, while
+optimisations like formula simplification, result caching, and detailed
+error feedback enhance performance and usability.
 
 ## Installation
 
