@@ -28,8 +28,8 @@
 
 (package
  (name smtml)
- (synopsis "A Front-end library for SMT solvers in OCaml")
- (description "A Multi Back-end Front-end for SMT Solvers in OCaml.")
+ (synopsis "An SMT solver frontend for OCaml.")
+ (description "Smt.ml is an SMT solver frontend for OCaml that simplifies integration with various solvers through a consistent interface. Its parametric encoding facilitates the easy addition of new solver backends, while optimisations like formula simplification, result caching, and detailed error feedback enhance performance and usability.")
  ; Optional solver dependencies
  ; Change here sould be mirrored in "conflicts"
  (depopts
