@@ -50,8 +50,6 @@
   (cmdliner
    (>= "1.2.0"))
   dune
-  (dune-glob
-   :with-test)
   (dolmen
    (= "0.10"))
   (dolmen_type
@@ -101,6 +99,8 @@
   (cohttp-lwt-unix
    :with-dev-setup)
   (core_unix
+   :with-dev-setup)
+  (dune-glob
    :with-dev-setup)
   (lwt
    :with-dev-setup)
