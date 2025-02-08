@@ -431,6 +431,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       val sb : int
 
+      val zero : unit -> M.term
+
       val v : elt -> M.term
       (* TODO: *)
       (* val to_string : Z3.FuncDecl.func_decl *)
@@ -451,8 +453,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Floor -> Float.round_to_integral ~rm:Float.Rounding_mode.rtn e
         | Trunc -> Float.round_to_integral ~rm:Float.Rounding_mode.rtz e
         | Nearest -> Float.round_to_integral ~rm:Float.Rounding_mode.rne e
-        | _ ->
-          Fmt.failwith {|Fp: Unsupported Z3 unary operator "%a"|} Unop.pp op
+        | _ -> Fmt.failwith {|Fp: Unsupported unary operator "%a"|} Unop.pp op
 
       let binop op e1 e2 =
         match op with
@@ -463,11 +464,13 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Min -> Float.min e1 e2
         | Max -> Float.max e1 e2
         | Rem -> Float.rem e1 e2
-        | _ ->
-          Fmt.failwith {|Fp: Unsupported Z3 binop operator "%a"|} Binop.pp op
+        | Copysign ->
+          let abs_float = Float.abs e1 in
+          M.ite (Float.ge e2 (F.zero ())) abs_float (Float.neg abs_float)
+        | _ -> Fmt.failwith {|Fp: Unsupported binop operator "%a"|} Binop.pp op
 
       let triop op _ =
-        Fmt.failwith {|Fp: Unsupported Z3 triop operator "%a"|} Triop.pp op
+        Fmt.failwith {|Fp: Unsupported triop operator "%a"|} Triop.pp op
 
       let relop op e1 e2 =
         match op with
@@ -477,8 +480,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Le -> Float.le e1 e2
         | Gt -> Float.gt e1 e2
         | Ge -> Float.ge e1 e2
-        | _ ->
-          Fmt.failwith {|Fp: Unsupported Z3 relop operator "%a"|} Relop.pp op
+        | _ -> Fmt.failwith {|Fp: Unsupported relop operator "%a"|} Relop.pp op
 
       let cvtop op e =
         match op with
@@ -495,8 +497,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | OfString ->
           (* TODO: FuncDecl.apply of_string [ e ] *)
           assert false
-        | _ ->
-          Fmt.failwith {|Fp: Unsupported Z3 cvtop operator "%a"|} Cvtop.pp op
+        | _ -> Fmt.failwith {|Fp: Unsupported cvtop operator "%a"|} Cvtop.pp op
     end
 
     module Float32_impl = Float_impl (struct
@@ -507,6 +508,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       let sb = 24
 
       let v f = M.Float.v (Int32.float_of_bits f) eb sb
+
+      let zero () = v (Int32.bits_of_float 0.0)
 
       (* TODO: *)
       (* let to_string = *)
@@ -523,6 +526,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       let sb = 53
 
       let v f = M.Float.v (Int64.float_of_bits f) eb sb
+
+      let zero () = v (Int64.bits_of_float 0.0)
 
       (* TODO: *)
       (* let to_string = *)

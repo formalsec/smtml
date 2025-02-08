@@ -19,6 +19,10 @@ let int32 x = value (Num (I32 x))
 
 let int64 x = value (Num (I64 x))
 
+let float32 x = value (Num (F32 (Int32.bits_of_float x)))
+
+let float64 x = value (Num (F64 (Int64.bits_of_float x)))
+
 let list x = value (List x)
 
 (* int *)
@@ -104,6 +108,22 @@ let () =
   assert (binop (Ty_bitv 64) ShrA (int64 4L) (int64 2L) = int64 1L);
   assert (binop (Ty_bitv 64) Rotl (int64 Int64.min_int) (int64 2L) = int64 2L);
   assert (binop (Ty_bitv 64) Rotr (int64 2L) (int64 2L) = int64 Int64.min_int)
+
+(* f32 *)
+let () =
+  let ty = Ty_fp 32 in
+  assert (binop ty Copysign (float32 (-4.2)) (float32 2.0) = float32 4.2);
+  assert (binop ty Copysign (float32 4.2) (float32 (-2.0)) = float32 (-4.2));
+  assert (binop ty Copysign (float32 4.2) (float32 2.0) = float32 4.2);
+  assert (binop ty Copysign (float32 (-4.2)) (float32 (-2.0)) = float32 (-4.2))
+
+(* f64 *)
+let () =
+  let ty = Ty_fp 64 in
+  assert (binop ty Copysign (float64 (-4.2)) (float64 2.0) = float64 4.2);
+  assert (binop ty Copysign (float64 4.2) (float64 (-2.0)) = float64 (-4.2));
+  assert (binop ty Copysign (float64 4.2) (float64 2.0) = float64 4.2);
+  assert (binop ty Copysign (float64 (-4.2)) (float64 (-2.0)) = float64 (-4.2))
 
 (* ptr *)
 let () =

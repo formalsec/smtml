@@ -82,6 +82,7 @@ module Binop : sig
     | Pow
     | Min
     | Max
+    | Copysign
     | Rotl
     | Rotr
     | At
