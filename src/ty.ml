@@ -187,6 +187,7 @@ module Binop = struct
     | Pow
     | Min
     | Max
+    | Copysign
     | Rotl
     | Rotr
     | At
@@ -219,6 +220,7 @@ module Binop = struct
     | Pow, Pow
     | Min, Min
     | Max, Max
+    | Copysign, Copysign
     | Rotl, Rotl
     | Rotr, Rotr
     | At, At
@@ -232,7 +234,7 @@ module Binop = struct
     | Regexp_range, Regexp_range ->
       true
     | ( ( Add | Sub | Mul | Div | DivU | Rem | RemU | Shl | ShrA | ShrL | And
-        | Or | Xor | Pow | Min | Max | Rotl | Rotr | At | List_cons
+        | Or | Xor | Pow | Min | Max | Copysign | Rotl | Rotr | At | List_cons
         | List_append | String_prefix | String_suffix | String_contains
         | String_last_index | String_in_re | Regexp_range )
       , _ ) ->
@@ -255,6 +257,7 @@ module Binop = struct
     | Pow -> Fmt.string fmt "pow"
     | Min -> Fmt.string fmt "min"
     | Max -> Fmt.string fmt "max"
+    | Copysign -> Fmt.string fmt "copysign"
     | Rotl -> Fmt.string fmt "rotl"
     | Rotr -> Fmt.string fmt "rotr"
     | At -> Fmt.string fmt "at"

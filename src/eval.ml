@@ -681,6 +681,7 @@ module F32 = struct
       | Rem -> Float.rem
       | Min -> Float.min
       | Max -> Float.max
+      | Copysign -> Float.copy_sign
       | _ ->
         Fmt.failwith {|binop: Unsupported f32 operator "%a"|} Ty.Binop.pp op
     in
@@ -743,6 +744,7 @@ module F64 = struct
       | Rem -> Float.rem
       | Min -> Float.min
       | Max -> Float.max
+      | Copysign -> Float.copy_sign
       | _ ->
         Fmt.failwith {|binop: Unsupported f32 operator "%a"|} Ty.Binop.pp op
     in
