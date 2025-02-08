@@ -23,6 +23,28 @@ Then install encoding:
 opam install smtml
 ```
 
+### Installing a Solver
+
+Smt.ml uses optional dependencies (known as `depopts` in opam) to integrate
+with different SMT solvers. By default, Smt.ml installs without a solver, but
+you can enable support for a specific solver by installing it with opam.
+For example, to install smtml with Z3:
+
+```sh
+opam install smtml z3
+```
+
+Alternatively, if you've already installed Smt.ml through opam, you can simply
+install the solver of your choice and opam will recompile smtml for you.
+For example, to install Z3 after installing smtml:
+
+```sh
+opam install z3
+```
+
+See the [Supported Solvers](#supported-solvers) section below for a complete
+list of available solvers.
+
 ### Build from source
 
 Clone the repo and install the dependencies:
