@@ -28,23 +28,36 @@ let type_of (v : t) : Ty.t =
   | App _ -> Ty_app
   | Nothing -> Ty_none
 
-let rec compare (v1 : t) (v2 : t) : int =
-  match (v1, v2) with
+let discr = function
+  | True -> 0
+  | False -> 1
+  | Unit -> 2
+  | Int _ -> 3
+  | Real _ -> 4
+  | Str _ -> 5
+  | Num _ -> 6
+  | List _ -> 7
+  | App _ -> 8
+  | Nothing -> 9
+
+let rec compare (a : t) (b : t) : int =
+  match (a, b) with
   | True, True | False, False | Unit, Unit | Nothing, Nothing -> 0
   | False, True -> -1
   | True, False -> 1
-  | Int x1, Int x2 -> Int.compare x1 x2
-  | Real x1, Real x2 -> Float.compare x1 x2
-  | Str x1, Str x2 -> String.compare x1 x2
-  | Num x1, Num x2 -> Num.compare x1 x2
-  | List l1, List l2 -> List.compare compare l1 l2
+  | Int a, Int b -> Int.compare a b
+  | Real a, Real b -> Float.compare a b
+  | Str a, Str b -> String.compare a b
+  | Num a, Num b -> Num.compare a b
+  | List a, List b -> List.compare compare a b
   | App (`Op op1, vs1), App (`Op op2, vs2) ->
     let c = String.compare op1 op2 in
     if c = 0 then List.compare compare vs1 vs2 else c
   | ( ( True | False | Unit | Int _ | Real _ | Str _ | Num _ | List _ | App _
       | Nothing )
     , _ ) ->
-    assert false
+    (* TODO: I don't know if this is always semantically correct *)
+    Int.compare (discr a) (discr b)
 
 let rec equal (v1 : t) (v2 : t) : bool =
   match (v1, v2) with
