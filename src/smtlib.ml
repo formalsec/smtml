@@ -5,6 +5,7 @@
 open Dolmen
 module Loc = Std.Loc
 
+(* FIXME: Dangerous global reference *)
 let custom_sorts = Hashtbl.create 10
 
 let pp_loc fmt = function
@@ -296,11 +297,11 @@ module Term = struct
       (* Ids can only be symbols. Any other expr here is super wrong *)
       assert false
 
-  let letand ?loc:_ (vars : t list) (expr : t) : t = Expr.let_in vars expr
+  let letand ?loc:_ (vars : t list) (body : t) : t = Expr.let_in vars body
 
-  let forall ?loc:_ = assert false
+  let forall ?loc:_ (vars : t list) (body : t) : t = Expr.forall vars body
 
-  let exists ?loc:_ = assert false
+  let exists ?loc:_ (vars : t list) (body : t) : t = Expr.exists vars body
 
   let match_ ?loc:_ = assert false
 

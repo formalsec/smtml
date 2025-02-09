@@ -54,6 +54,10 @@ module Fresh_cvc5 () = struct
 
   let ite cond t1 t2 = Term.mk_term tm Kind.Ite [| cond; t1; t2 |]
 
+  let forall _ = Fmt.failwith "Cvc5_mappings: forall not implemented"
+
+  let exists _ = Fmt.failwith "Cvc5_mappings: exists not implemented"
+
   module Types = struct
     let int = Sort.mk_int_sort tm
 

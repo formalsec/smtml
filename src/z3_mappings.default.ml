@@ -54,6 +54,14 @@ module M = struct
 
     let ite cond e1 e2 = Z3.Boolean.mk_ite ctx cond e1 e2
 
+    let forall vars body =
+      Z3.Quantifier.mk_forall_const ctx vars body None [] [] None None
+      |> Z3.Quantifier.expr_of_quantifier
+
+    let exists vars body =
+      Z3.Quantifier.mk_exists_const ctx vars body None [] [] None None
+      |> Z3.Quantifier.expr_of_quantifier
+
     module Types = struct
       let int = Z3.Arithmetic.Integer.mk_sort ctx
 
@@ -72,11 +80,11 @@ module M = struct
       let to_ety sort =
         match Z3.Sort.get_sort_kind sort with
         | Z3enums.INT_SORT -> Ty.Ty_int
-        | Z3enums.REAL_SORT -> Ty.Ty_real
-        | Z3enums.BOOL_SORT -> Ty.Ty_bool
-        | Z3enums.SEQ_SORT -> Ty.Ty_str
-        | Z3enums.BV_SORT -> Ty.Ty_bitv (Z3.BitVector.get_size sort)
-        | Z3enums.FLOATING_POINT_SORT ->
+        | REAL_SORT -> Ty.Ty_real
+        | BOOL_SORT -> Ty.Ty_bool
+        | SEQ_SORT -> Ty.Ty_str
+        | BV_SORT -> Ty.Ty_bitv (Z3.BitVector.get_size sort)
+        | FLOATING_POINT_SORT ->
           let ebits = Z3.FloatingPoint.get_ebits ctx sort in
           let sbits = Z3.FloatingPoint.get_sbits ctx sort in
           Ty.Ty_fp (ebits + sbits)
@@ -91,8 +99,8 @@ module M = struct
       let to_bool interp =
         match Z3.Boolean.get_bool_value interp with
         | Z3enums.L_TRUE -> true
-        | Z3enums.L_FALSE -> false
-        | Z3enums.L_UNDEF ->
+        | L_FALSE -> false
+        | L_UNDEF ->
           Fmt.failwith "Z3_mappings2: to_bool: something went terribly wrong!"
 
       let to_string interp = Z3.Seq.get_string ctx interp

@@ -49,6 +49,10 @@ module type M = sig
 
   val ite : term -> term -> term -> term
 
+  val forall : term list -> term -> term
+
+  val exists : term list -> term -> term
+
   module Types : sig
     val int : ty
 

@@ -50,6 +50,10 @@ module Nop = struct
 
     let ite _ = assert false
 
+    let forall _ _ = assert false
+
+    let exists _ _ = assert false
+
     module Types = struct
       let int = ()
 

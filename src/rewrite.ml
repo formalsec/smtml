@@ -101,7 +101,18 @@ let rec rewrite_expr (type_map, expr_map) hte =
         expr_map vars
     in
     rewrite_expr (type_map, expr_map) e
-  | Binder (_, _, _) -> assert false
+  | Binder (((Forall | Exists) as quantifier), vars, e) ->
+    let type_map, vars =
+      List.fold_left
+        (fun (map, vars) e ->
+          match Expr.view e with
+          | App (sym, [ e ]) ->
+            let ty = Expr.ty e in
+            (Symb_map.add sym ty map, Expr.symbol { sym with ty } :: vars)
+          | _ -> assert false )
+        (type_map, []) vars
+    in
+    Expr.make (Binder (quantifier, vars, rewrite_expr (type_map, expr_map) e))
 
 (** Acccumulates types of symbols in [type_map] and calls rewrite_expr *)
 let rewrite_cmd type_map cmd =
