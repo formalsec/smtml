@@ -96,11 +96,11 @@ end
 
 module Set = PatriciaTree.MakeHashconsedSet (Key) ()
 
-let make (e : expr) = Hc.hashcons e [@@inline]
+let[@inline] make e = Hc.hashcons e
 
-let view (hte : t) : expr = hte.node [@@inline]
+let[@inline] view (hte : t) = hte.node
 
-let compare (hte1 : t) (hte2 : t) = compare hte1.tag hte2.tag [@@inline]
+let[@inline] compare (hte1 : t) (hte2 : t) = compare hte1.tag hte2.tag
 
 let symbol s = make (Symbol s)
 
@@ -273,7 +273,13 @@ let ptr base offset = make (Ptr { base; offset })
 
 let app symbol args = make (App (symbol, args))
 
-let let_in vars expr = make (Binder (Let_in, vars, expr))
+let[@inline] binder bt vars expr = make (Binder (bt, vars, expr))
+
+let let_in vars body = binder Let_in vars body
+
+let forall vars body = binder Forall vars body
+
+let exists vars body = binder Exists vars body
 
 let unop' ty op hte = make (Unop (ty, op, hte)) [@@inline]
 

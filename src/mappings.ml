@@ -667,9 +667,18 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         let ctx, e1 = encode_expr ctx e1 in
         let ctx, e2 = encode_expr ctx e2 in
         (ctx, M.Bitv.concat e1 e2)
-      | List _ | App _ | Binder _ -> assert false
+      | Binder (Forall, vars, body) ->
+        let ctx, vars = encode_exprs ctx vars in
+        let ctx, body = encode_expr ctx body in
+        (ctx, M.forall vars body)
+      | Binder (Exists, vars, body) ->
+        let ctx, vars = encode_exprs ctx vars in
+        let ctx, body = encode_expr ctx body in
+        (ctx, M.exists vars body)
+      | List _ | App _ | Binder _ ->
+        Fmt.failwith "Cannot encode expression: %a" Expr.pp hte
 
-    let encode_exprs ctx (es : Expr.t list) : symbol_ctx * M.term list =
+    and encode_exprs ctx (es : Expr.t list) : symbol_ctx * M.term list =
       List.fold_left
         (fun (ctx, es) e ->
           let ctx, e = encode_expr ctx e in

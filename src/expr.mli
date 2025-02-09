@@ -61,6 +61,10 @@ val app : Symbol.t -> t list -> t
 
 val let_in : t list -> t -> t
 
+val forall : t list -> t -> t
+
+val exists : t list -> t -> t
+
 (** Smart unop constructor, applies simplifications at constructor level *)
 val unop : Ty.t -> Ty.Unop.t -> t -> t
 

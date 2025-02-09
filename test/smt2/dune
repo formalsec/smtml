@@ -10,6 +10,8 @@
   test_core_const.smt2
   test_core_true.smt2
   test_empty.smt2
+  test_exists.smt2
+  test_forall.smt2
   test_fp.smt2
   test_lia.smt2
   test_lra.smt2

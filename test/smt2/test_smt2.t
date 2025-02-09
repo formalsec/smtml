@@ -82,3 +82,9 @@ Tests smt2 with the --from-file argument:
   (model
     (x str "abcd")
     (y str "a"))
+
+Test Forall and Exists parsing:
+  $ smtml run test_forall.smt2
+  sat
+  $ smtml run test_exists.smt2
+  sat

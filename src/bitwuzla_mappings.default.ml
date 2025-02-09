@@ -56,6 +56,10 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
   let ite cond t1 t2 = mk_term3 Kind.Ite cond t1 t2
 
+  let forall _ = Fmt.failwith "Bitwuzla_mappings: forall not implemented"
+
+  let exists _ = Fmt.failwith "Bitwuzla_mappings: exists not implemented"
+
   module Types = struct
     let int = Obj.magic 0xdeadc0de
 
