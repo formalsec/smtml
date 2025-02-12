@@ -84,7 +84,7 @@ end
 
 module Hc = Hc.Make [@inlined hint] (Expr)
 
-let equal (hte1 : t) (hte2 : t) = Int.equal hte1.tag hte2.tag [@@inline]
+let equal (hte1 : t) (hte2 : t) = phys_equal hte1 hte2 [@@inline]
 
 let hash (hte : t) = hte.tag [@@inline]
 
@@ -533,12 +533,30 @@ let rec simplify_expr ?(rm_extract = true) (hte : t) : t =
     (* Not simplifying anything atm *)
     hte
 
-let simplify (hte : t) : t =
-  let rec loop x =
-    let simpl_x = simplify_expr x in
-    if equal x simpl_x then simpl_x else loop simpl_x
-  in
-  loop hte
+module Cache = Hashtbl.Make (struct
+  type nonrec t = t
+
+  let hash = hash
+
+  let equal = equal
+end)
+
+let simplify =
+  (* TODO: it may make sense to share the cache with simplify_expr ? *)
+  let cache = Cache.create 512 in
+  fun e ->
+    match Cache.find_opt cache e with
+    | Some simplified -> simplified
+    | None ->
+      let rec loop x =
+        let x' = simplify_expr x in
+        if equal x x' then begin
+          Cache.add cache e x';
+          x'
+        end
+        else loop x'
+      in
+      loop e
 
 module Bool = struct
   open Ty
