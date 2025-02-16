@@ -498,7 +498,9 @@ let concat (msb : t) (lsb : t) : t =
 let rec simplify_expr ?(rm_extract = true) (hte : t) : t =
   match view hte with
   | Val _ | Symbol _ -> hte
-  | Ptr { base; offset } -> ptr base (simplify_expr offset)
+  | Ptr { base; offset } ->
+      (* FIXME: *)
+      binop (Ty_bitv 32) Add (value (Num (I32 base))) offset
   | List es -> make @@ List (List.map simplify_expr es)
   | App (x, es) -> make @@ App (x, List.map simplify_expr es)
   | Unop (ty, op, e) ->

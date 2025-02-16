@@ -1,9 +1,3 @@
-(library
- (name smtml_prelude)
- (public_name smtml.prelude)
- (modules smtml_prelude)
- (libraries prelude))
-
 (ocamllex
  (modules lexer))
 
