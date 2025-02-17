@@ -104,7 +104,7 @@ let[@inline] compare (hte1 : t) (hte2 : t) = compare hte1.tag hte2.tag
 
 let symbol s = make (Symbol s)
 
-let is_num (e : t) = match view e with Val (Num _) -> true | _ -> false
+let is_bv (e : t) = match view e with Val (Bitv _) -> true | _ -> false
 
 (** The return type of an expression *)
 let rec ty (hte : t) : Ty.t =
@@ -187,21 +187,21 @@ let get_symbols (hte : t list) =
   Hashtbl.fold (fun k () acc -> k :: acc) tbl []
 
 let negate_relop (hte : t) : (t, string) Result.t =
-  let e =
-    match view hte with
-    | Relop (ty, Eq, e1, e2) -> Ok (Relop (ty, Ne, e1, e2))
-    | Relop (ty, Ne, e1, e2) -> Ok (Relop (ty, Eq, e1, e2))
-    | Relop (ty, Lt, e1, e2) -> Ok (Relop (ty, Ge, e1, e2))
-    | Relop (ty, LtU, e1, e2) -> Ok (Relop (ty, GeU, e1, e2))
-    | Relop (ty, Le, e1, e2) -> Ok (Relop (ty, Gt, e1, e2))
-    | Relop (ty, LeU, e1, e2) -> Ok (Relop (ty, GtU, e1, e2))
-    | Relop (ty, Gt, e1, e2) -> Ok (Relop (ty, Le, e1, e2))
-    | Relop (ty, GtU, e1, e2) -> Ok (Relop (ty, LeU, e1, e2))
-    | Relop (ty, Ge, e1, e2) -> Ok (Relop (ty, Lt, e1, e2))
-    | Relop (ty, GeU, e1, e2) -> Ok (Relop (ty, LtU, e1, e2))
-    | _ -> Error "negate_relop: not a relop."
+  let negate = function
+    | Ty.Relop.Eq -> Ty.Relop.Ne
+    | Ne -> Eq
+    | Lt -> Ge
+    | LtU -> GeU
+    | Le -> Gt
+    | LeU -> GtU
+    | Gt -> Le
+    | GtU -> LeU
+    | Ge -> Lt
+    | GeU -> LtU
   in
-  Result.map make e
+  match view hte with
+  | Relop (ty, op, e1, e2) -> Ok (make (Relop (ty, negate op, e1, e2)))
+  | _ -> Error "negate_relop: not a relop."
 
 module Pp = struct
   let rec pp fmt (hte : t) =
@@ -309,17 +309,21 @@ let rec binop ty op hte1 hte2 =
   | Sub, Ptr { base; offset }, _ ->
     ptr base (binop (Ty_bitv 32) Sub offset hte2)
   | Rem, Ptr { base; offset }, _ ->
-    let rhs = value (Num (I32 base)) in
+    let rhs = value (Bitv (Bitvector.make (Z.of_int32 base) 32)) in
     let addr = binop (Ty_bitv 32) Add rhs offset in
     binop ty Rem addr hte2
   | Add, _, Ptr { base; offset } ->
     ptr base (binop (Ty_bitv 32) Add offset hte1)
   | Sub, _, Ptr { base; offset } ->
-    binop ty Sub hte1 (binop (Ty_bitv 32) Add (value (Num (I32 base))) offset)
-  | (Add | Or), Val (Num (I32 0l)), _ -> hte2
-  | (And | Div | DivU | Mul | Rem | RemU), Val (Num (I32 0l)), _ -> hte1
-  | (Add | Or), _, Val (Num (I32 0l)) -> hte1
-  | (And | Mul), _, Val (Num (I32 0l)) -> hte2
+    let base = value (Bitv (Bitvector.make (Z.of_int32 base) 32)) in
+    binop ty Sub hte1 (binop (Ty_bitv 32) Add base offset)
+  | (Add | Or), Val (Bitv bv), _ when Z.equal (Bitvector.view bv) Z.zero -> hte2
+  | (And | Div | DivU | Mul | Rem | RemU), Val (Bitv bv), _
+    when Z.equal (Bitvector.view bv) Z.zero ->
+    hte1
+  | (Add | Or), _, Val (Bitv bv) when Z.equal (Bitvector.view bv) Z.zero -> hte1
+  | (And | Mul), _, Val (Bitv bv) when Z.equal (Bitvector.view bv) Z.zero ->
+    hte2
   | Add, Binop (ty, Add, x, { node = Val v1; _ }), Val v2 ->
     let v = value (Eval.binop ty Add v1 v2) in
     binop' ty Add x v
@@ -385,15 +389,18 @@ let rec relop ty op hte1 hte2 =
     , Ptr { base = b2; offset = os2 } ) ->
     if Int32.equal b1 b2 then relop ty op os1 os2
     else
-      value
-        (if Eval.relop ty op (Num (I32 b1)) (Num (I32 b2)) then True else False)
-  | op, Val (Num _ as n), Ptr { base; offset = { node = Val (Num _ as o); _ } }
+      let b1 = Bitvector.make (Z.of_int32 b1) 32 in
+      let b2 = Bitvector.make (Z.of_int32 b2) 32 in
+      value (if Eval.relop ty op (Bitv b1) (Bitv b2) then True else False)
+  | op, Val (Bitv _ as n), Ptr { base; offset = { node = Val (Bitv _ as o); _ } }
     ->
-    let base = Eval.binop (Ty_bitv 32) Add (Num (I32 base)) o in
+    let base = Bitvector.make (Z.of_int32 base) 32 in
+    let base = Eval.binop (Ty_bitv 32) Add (Bitv base) o in
     value (if Eval.relop ty op n base then True else False)
-  | op, Ptr { base; offset = { node = Val (Num _ as o); _ } }, Val (Num _ as n)
+  | op, Ptr { base; offset = { node = Val (Bitv _ as o); _ } }, Val (Bitv _ as n)
     ->
-    let base = Eval.binop (Ty_bitv 32) Add (Num (I32 base)) o in
+    let base = Bitvector.make (Z.of_int32 base) 32 in
+    let base = Eval.binop (Ty_bitv 32) Add (Bitv base) o in
     value (if Eval.relop ty op base n then True else False)
   | op, List l1, List l2 -> relop_list op l1 l2
   | _, _, _ -> relop' ty op hte1 hte2
@@ -436,71 +443,36 @@ let naryop ty op es =
     value (Eval.naryop ty op vs)
   else naryop' ty op es
 
-let nland64 (x : int64) (n : int) =
-  let rec loop x' n' acc =
-    if n' = 0 then Int64.logand x' acc
-    else loop x' (n' - 1) Int64.(logor (shift_left acc 8) 0xffL)
-  in
-  loop x n 0L
-
-let nland32 (x : int32) (n : int) =
-  let rec loop x' n' acc =
-    if n' = 0 then Int32.logand x' acc
-    else loop x' (n' - 1) Int32.(logor (shift_left acc 8) 0xffl)
-  in
-  loop x n 0l
-
 let extract' (hte : t) ~(high : int) ~(low : int) : t =
   make (Extract (hte, high, low))
 [@@inline]
 
 let extract (hte : t) ~(high : int) ~(low : int) : t =
   match view hte with
-  | Val (Num (I64 x)) ->
-    let x' = nland64 (Int64.shift_right x (low * 8)) (high - low) in
-    value (Num (I64 x'))
+  | Val (Bitv bv) -> value (Bitv (Bitvector.extract bv ~high ~low))
+  (* Any other value cannot be extracted! *)
+  (* | Val _ -> assert false *)
   | _ -> if high - low = Ty.size (ty hte) then hte else extract' hte ~high ~low
 
 let concat' (msb : t) (lsb : t) : t = make (Concat (msb, lsb)) [@@inline]
 
 let concat (msb : t) (lsb : t) : t =
   match (view msb, view lsb) with
-  | ( Extract ({ node = Val (Num (I64 x2)); _ }, h2, l2)
-    , Extract ({ node = Val (Num (I64 x1)); _ }, h1, l1) ) ->
-    let d1 = h1 - l1 in
-    let d2 = h2 - l2 in
-    let x1' = nland64 (Int64.shift_right x1 (l1 * 8)) d1 in
-    let x2' = nland64 (Int64.shift_right x2 (l2 * 8)) d2 in
-    let x = Int64.(logor (shift_left x2' (d1 * 8)) x1') in
-    extract' (value (Num (I64 x))) ~high:(d1 + d2) ~low:0
-  | ( Extract ({ node = Val (Num (I32 x2)); _ }, h2, l2)
-    , Extract ({ node = Val (Num (I32 x1)); _ }, h1, l1) ) ->
-    let d1 = h1 - l1 in
-    let d2 = h2 - l2 in
-    let x1' = nland32 (Int32.shift_right x1 (l1 * 8)) d1 in
-    let x2' = nland32 (Int32.shift_right x2 (l2 * 8)) d2 in
-    let x = Int32.(logor (shift_left x2' (d1 * 8)) x1') in
-    extract' (value (Num (I32 x))) ~high:(d1 + d2) ~low:0
+  | Val (Bitv a), Val (Bitv b) -> value (Bitv (Bitvector.concat a b))
   | Extract (s1, h, m1), Extract (s2, m2, l) when equal s1 s2 && m1 = m2 ->
     extract' s1 ~high:h ~low:l
-  | ( Extract ({ node = Val (Num (I64 x2)); _ }, h2, l2)
-    , Concat
-        ({ node = Extract ({ node = Val (Num (I64 x1)); _ }, h1, l1); _ }, se) )
-    when not (is_num se) ->
-    let d1 = h1 - l1 in
-    let d2 = h2 - l2 in
-    let x1' = nland64 (Int64.shift_right x1 (l1 * 8)) d1 in
-    let x2' = nland64 (Int64.shift_right x2 (l2 * 8)) d2 in
-    let x = Int64.(logor (shift_left x2' (d1 * 8)) x1') in
-    concat' (extract' (value (Num (I64 x))) ~high:(d1 + d2) ~low:0) se
+  | Val (Bitv a), Concat ({ node = Val (Bitv b); _ }, se) when not (is_bv se) ->
+    let bv = value (Bitv (Bitvector.concat a b)) in
+    concat' bv se
   | _ -> concat' msb lsb
 
 let rec simplify_expr ?(rm_extract = true) (hte : t) : t =
   match view hte with
   | Val _ | Symbol _ -> hte
   | Ptr { base; offset } ->
-      (* FIXME: *)
-      binop (Ty_bitv 32) Add (value (Num (I32 base))) offset
+    (* FIXME: *)
+    let base = Bitvector.make (Z.of_int32 base) 32 in
+    binop (Ty_bitv 32) Add (value (Bitv base)) offset
   | List es -> make @@ List (List.map simplify_expr es)
   | App (x, es) -> make @@ App (x, List.map simplify_expr es)
   | Unop (ty, op, e) ->
@@ -610,95 +582,4 @@ module Bool = struct
     | _ -> binop Ty_bool Or b1 b2
 
   let ite c r1 r2 = triop Ty_bool Ite c r1 r2
-end
-
-module Make (T : sig
-  type elt
-
-  val ty : Ty.t
-
-  val num : elt -> Num.t
-end) =
-struct
-  open Ty
-
-  let v i = value (Num (T.num i))
-
-  let sym x = symbol Symbol.(x @: T.ty)
-
-  let ( ~- ) e = unop T.ty Neg e
-
-  let ( = ) e1 e2 = relop Ty_bool Eq e1 e2
-
-  let ( != ) e1 e2 = relop Ty_bool Ne e1 e2
-
-  let ( > ) e1 e2 = relop T.ty Gt e1 e2
-
-  let ( >= ) e1 e2 = relop T.ty Ge e1 e2
-
-  let ( < ) e1 e2 = relop T.ty Lt e1 e2
-
-  let ( <= ) e1 e2 = relop T.ty Le e1 e2
-end
-
-module Bitv = struct
-  open Ty
-
-  module I8 = Make (struct
-    type elt = int
-
-    let ty = Ty_bitv 8
-
-    let num i = Num.I8 i
-  end)
-
-  module I32 = Make (struct
-    type elt = int32
-
-    let ty = Ty_bitv 32
-
-    let num i = Num.I32 i
-  end)
-
-  module I64 = Make (struct
-    type elt = int64
-
-    let ty = Ty_bitv 64
-
-    let num i = Num.I64 i
-  end)
-end
-
-module Fpa = struct
-  open Ty
-
-  module F32 = struct
-    include Make (struct
-      type elt = float
-
-      let ty = Ty_fp 32
-
-      let num f = Num.F32 (Int32.bits_of_float f)
-    end)
-
-    (* Redeclare equality due to incorrect theory annotation *)
-    let ( = ) e1 e2 = relop (Ty_fp 32) Eq e1 e2
-
-    let ( != ) e1 e2 = relop (Ty_fp 32) Ne e1 e2
-  end
-
-  module F64 = struct
-    include Make (struct
-      type elt = float
-
-      let ty = Ty_fp 64
-
-      let num f = Num.F64 (Int64.bits_of_float f)
-    end)
-
-    (* Redeclare equality due to incorrect theory annotation *)
-    let ( = ) e1 e2 = relop (Ty_fp 64) Eq e1 e2
-
-    let ( != ) e1 e2 = relop (Ty_fp 64) Ne e1 e2
-  end
 end

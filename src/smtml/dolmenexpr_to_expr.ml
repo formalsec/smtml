@@ -328,34 +328,37 @@ end
 module Bv = struct
   open Ty
 
-  let encode_val (type a) (cast : a Ty.cast) (i : a) =
-    match cast with
-    | C8 ->
-      let n = if i >= 0 then i else i land ((1 lsl 8) - 1) in
-      (* necessary to have the same behaviour as Z3 *)
-      DTerm.Bitv.mk
-        (Dolmen_type.Misc.Bitv.parse_decimal
-           (String.cat "bv" (Int.to_string n))
-           8 )
-    | C32 ->
-      let iint = Int32.to_int i in
-      let n = if iint >= 0 then iint else iint land ((1 lsl 32) - 1) in
-      (* necessary to have the same behaviour as Z3 *)
-      DTerm.Bitv.mk
-        (Dolmen_type.Misc.Bitv.parse_decimal
-           (String.cat "bv" (Int.to_string n))
-           32 )
-    | C64 ->
-      let n =
-        if Int64.compare i Int64.zero >= 0 then Z.of_int64 i
-        else Z.logand (Z.of_int64 i) (Z.sub (Z.( lsl ) Z.one 64) Z.one)
-      in
-
-      (* necessary to have the same behaviour as Z3 *)
-      DTerm.Bitv.mk
-        (Dolmen_type.Misc.Bitv.parse_decimal
-           (String.cat "bv" (Z.to_string n))
-           64 )
+  let encode_val bv =
+    DTerm.Bitv.mk
+      (Dolmen_type.Misc.Bitv.parse_decimal
+         (String.cat "bv" (Z.to_string (Bitvector.view bv)))
+         (Bitvector.numbits bv) )
+  (* match cast with *)
+  (* | C8 -> *)
+  (*   let n = if i >= 0 then i else i land ((1 lsl 8) - 1) in *)
+  (*   (1* necessary to have the same behaviour as Z3 *1) *)
+  (*   DTerm.Bitv.mk *)
+  (*     (Dolmen_type.Misc.Bitv.parse_decimal *)
+  (*        (String.cat "bv" (Int.to_string n)) *)
+  (*        8 ) *)
+  (* | C32 -> *)
+  (*   let iint = Int32.to_int i in *)
+  (*   let n = if iint >= 0 then iint else iint land ((1 lsl 32) - 1) in *)
+  (*   (1* necessary to have the same behaviour as Z3 *1) *)
+  (*   DTerm.Bitv.mk *)
+  (*     (Dolmen_type.Misc.Bitv.parse_decimal *)
+  (*        (String.cat "bv" (Int.to_string n)) *)
+  (*        32 ) *)
+  (* | C64 -> *)
+  (*   let n = *)
+  (*     if Int64.compare i Int64.zero >= 0 then Z.of_int64 i *)
+  (*     else Z.logand (Z.of_int64 i) (Z.sub (Z.( lsl ) Z.one 64) Z.one) *)
+  (*   in *)
+  (*   (1* necessary to have the same behaviour as Z3 *1) *)
+  (*   DTerm.Bitv.mk *)
+  (*     (Dolmen_type.Misc.Bitv.parse_decimal *)
+  (*        (String.cat "bv" (Z.to_string n)) *)
+  (*        64 ) *)
 
   let encode_unop op e =
     let op' =
@@ -420,12 +423,13 @@ module Bv = struct
         DTerm.Float.to_ubv 64 DTerm.Float.roundTowardZero
       | Reinterpret_float when sz = 32 -> DTerm.Float.ieee_format_to_fp 8 24
       | Reinterpret_float when sz = 64 -> DTerm.Float.ieee_format_to_fp 11 53
-      | ToBool when sz = 32 -> encode_relop Ne (encode_val C32 0l)
-      | ToBool when sz = 64 -> encode_relop Ne (encode_val C64 0L)
-      | OfBool when sz = 32 ->
-        fun e -> DTerm.ite e (encode_val C32 1l) (encode_val C32 0l)
-      | OfBool when sz = 64 ->
-        fun e -> DTerm.ite e (encode_val C64 1L) (encode_val C64 0L)
+      | ToBool ->
+        let zero = Bitvector.make Z.zero sz in
+        encode_relop Ne (encode_val zero)
+      | OfBool ->
+        let zero = Bitvector.make Z.zero sz in
+        let one = Bitvector.make Z.one sz in
+        fun e -> DTerm.ite e (encode_val one) (encode_val zero)
       | _ -> Fmt.failwith {|Bv: Unsupported bv(32) operator "%a"|} Cvtop.pp op
     in
     op' e
@@ -437,8 +441,12 @@ module Fp = struct
   let encode_val (type a) (sz : a Ty.cast) (f : a) =
     match sz with
     | C8 -> Fmt.failwith "Unable to create FP numeral using 8 bits"
-    | C32 -> DTerm.Float.ieee_format_to_fp 8 24 (Bv.encode_val C32 f)
-    | C64 -> DTerm.Float.ieee_format_to_fp 11 53 (Bv.encode_val C64 f)
+    | C32 ->
+      let bv = Bitvector.make (Z.of_int32 f) 32 in
+      DTerm.Float.ieee_format_to_fp 8 24 (Bv.encode_val bv)
+    | C64 ->
+      let bv = Bitvector.make (Z.of_int64 f) 64 in
+      DTerm.Float.ieee_format_to_fp 11 53 (Bv.encode_val bv)
 
   let encode_unop op e =
     let op' =
@@ -526,9 +534,7 @@ let encode_val : Value.t -> expr = function
   | Int v -> I.encode_val v
   | Real v -> Real.encode_val v
   | Str _ -> assert false
-  | Num (I8 x) -> Bv.encode_val C8 x
-  | Num (I32 x) -> Bv.encode_val C32 x
-  | Num (I64 x) -> Bv.encode_val C64 x
+  | Bitv bv -> Bv.encode_val bv
   | Num (F32 x) -> Fp.encode_val C32 x
   | Num (F64 x) -> Fp.encode_val C64 x
   | v -> Fmt.failwith {|Unsupported value "%a"|} Value.pp v
@@ -593,7 +599,7 @@ let encode_expr_acc ?(record_sym = fun acc _ -> acc) acc e =
     match Expr.view e with
     | Val v -> (acc, encode_val v)
     | Ptr { base; offset } ->
-      let base' = encode_val (Num (I32 base)) in
+      let base' = encode_val (Bitv (Bitvector.make (Z.of_int32 base) 32)) in
       let acc, offset' = aux acc offset in
       (acc, DTerm.Bitv.add base' offset')
     | Symbol s ->

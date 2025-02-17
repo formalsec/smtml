@@ -542,9 +542,12 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Int v -> Int_impl.v v
       | Real v -> Real_impl.v v
       | Str v -> String_impl.v v
-      | Num (I8 x) -> I8.v x
-      | Num (I32 x) -> I32.v x
-      | Num (I64 x) -> I64.v x
+      (* | Num (I8 x) -> I8.v x *)
+      (* | Num (I32 x) -> I32.v x *)
+      (* | Num (I64 x) -> I64.v x *)
+      | Bitv bv ->
+        let m = Bitvector.numbits bv in
+        M.Bitv.v (Z.to_string (Bitvector.view bv)) m
       | Num (F32 x) -> Float32_impl.v x
       | Num (F64 x) -> Float64_impl.v x
       | List _ | App _ | Unit | Nothing -> assert false
@@ -628,7 +631,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       match Expr.view hte with
       | Val value -> (ctx, v value)
       | Ptr { base; offset } ->
-        let base' = v (Num (I32 base)) in
+        let base' = v (Bitv (Bitvector.make (Z.of_int32 base) 32)) in
         let ctx, offset' = encode_expr ctx offset in
         (ctx, I32.binop Add base' offset')
       | Symbol sym -> make_symbol ctx sym
@@ -704,23 +707,16 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         else (
           assert (Int64.equal b 0L);
           Value.False )
-      | Ty_bitv 8 ->
-        let i8 = M.Interp.to_bitv v 8 in
-        Value.Num (I8 (Int64.to_int i8))
-      | Ty_bitv 32 ->
-        let i32 = M.Interp.to_bitv v 32 in
-        Value.Num (I32 (Int64.to_int32 i32))
-      | Ty_bitv 64 ->
-        let i64 = M.Interp.to_bitv v 64 in
-        Value.Num (I64 i64)
+      | Ty_bitv n ->
+        let i = M.Interp.to_bitv v n in
+        Value.Bitv (Bitvector.make (Z.of_int64 i) n)
       | Ty_fp 32 ->
         let float = M.Interp.to_float v 8 24 in
         Value.Num (F32 (Int32.bits_of_float float))
       | Ty_fp 64 ->
         let float = M.Interp.to_float v 11 53 in
         Value.Num (F64 (Int64.bits_of_float float))
-      | Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp
-        ->
+      | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp ->
         assert false
 
     let value ({ model = m; ctx } : model) (c : Expr.t) : Value.t =

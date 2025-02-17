@@ -35,15 +35,15 @@ let clz bv =
     if i >= bv.width || Z.testbit bv.value (bv.width - 1 - i) then i
     else count_zeros (i + 1)
   in
-  count_zeros 0
+  make (Z.of_int @@ count_zeros 0) bv.width
 
 let ctz bv =
   let rec count_zeros i =
     if i >= bv.width || Z.testbit bv.value i then i else count_zeros (i + 1)
   in
-  count_zeros 0
+  make (Z.of_int @@ count_zeros 0) bv.width
 
-let popcnt bv = Z.popcount bv.value
+let popcnt bv = make (Z.of_int @@ Z.popcount bv.value) bv.width
 
 (* Binop *)
 let add a b =
@@ -104,14 +104,14 @@ let rem_u a b =
   make (Z.rem a.value b.value) a.width
 
 let rotate_left bv n =
-  let n = n mod bv.width in
+  let n = Z.to_int n.value mod bv.width in
   let left_part = Z.shift_left bv.value n in
   let right_part = Z.shift_right bv.value (bv.width - n) in
   let rotated = Z.logor left_part right_part in
   make rotated bv.width
 
 let rotate_right bv n =
-  let n = n mod bv.width in
+  let n = Z.to_int n.value mod bv.width in
   let right_part = Z.shift_right bv.value n in
   let left_part = Z.shift_left bv.value (bv.width - n) in
   let rotated = Z.logor left_part right_part in

@@ -12,6 +12,7 @@ type t =
   | Real of float
   | Str of string
   | Num of Num.t
+  | Bitv of Bitvector.t
   | List of t list
   | App : [> `Op of string ] * t list -> t
   | Nothing
@@ -24,6 +25,7 @@ let type_of (v : t) : Ty.t =
   | Real _ -> Ty_real
   | Str _ -> Ty_str
   | Num n -> Num.type_of n
+  | Bitv bv -> Ty_bitv (Bitvector.numbits bv)
   | List _ -> Ty_list
   | App _ -> Ty_app
   | Nothing -> Ty_none
@@ -36,9 +38,10 @@ let discr = function
   | Real _ -> 4
   | Str _ -> 5
   | Num _ -> 6
-  | List _ -> 7
-  | App _ -> 8
-  | Nothing -> 9
+  | Bitv _ -> 7
+  | List _ -> 8
+  | App _ -> 9
+  | Nothing -> 10
 
 let rec compare (a : t) (b : t) : int =
   match (a, b) with
@@ -49,12 +52,13 @@ let rec compare (a : t) (b : t) : int =
   | Real a, Real b -> Float.compare a b
   | Str a, Str b -> String.compare a b
   | Num a, Num b -> Num.compare a b
+  | Bitv a, Bitv b -> Bitvector.compare a b
   | List a, List b -> List.compare compare a b
   | App (`Op op1, vs1), App (`Op op2, vs2) ->
     let c = String.compare op1 op2 in
     if c = 0 then List.compare compare vs1 vs2 else c
-  | ( ( True | False | Unit | Int _ | Real _ | Str _ | Num _ | List _ | App _
-      | Nothing )
+  | ( ( True | False | Unit | Int _ | Real _ | Str _ | Num _ | Bitv _ | List _
+      | App _ | Nothing )
     , _ ) ->
     (* TODO: I don't know if this is always semantically correct *)
     Int.compare (discr a) (discr b)
@@ -62,15 +66,16 @@ let rec compare (a : t) (b : t) : int =
 let rec equal (v1 : t) (v2 : t) : bool =
   match (v1, v2) with
   | True, True | False, False | Unit, Unit | Nothing, Nothing -> true
-  | Int x1, Int x2 -> Int.equal x1 x2
-  | Real x1, Real x2 -> Float.equal x1 x2
-  | Str x1, Str x2 -> String.equal x1 x2
-  | Num x1, Num x2 -> Num.equal x1 x2
+  | Int a, Int b -> Int.equal a b
+  | Real a, Real b -> Float.equal a b
+  | Str a, Str b -> String.equal a b
+  | Num a, Num b -> Num.equal a b
+  | Bitv a, Bitv b -> Bitvector.equal a b
   | List l1, List l2 -> List.equal equal l1 l2
   | App (`Op op1, vs1), App (`Op op2, vs2) ->
     String.equal op1 op2 && List.equal equal vs1 vs2
-  | ( ( True | False | Unit | Int _ | Real _ | Str _ | Num _ | List _ | App _
-      | Nothing )
+  | ( ( True | False | Unit | Int _ | Real _ | Str _ | Num _ | Bitv _ | List _
+      | App _ | Nothing )
     , _ ) ->
     false
 
@@ -85,6 +90,7 @@ let rec pp fmt = function
   | Int x -> Fmt.int fmt x
   | Real x -> Fmt.pf fmt "%F" x
   | Num x -> Num.pp_no_type fmt x
+  | Bitv x -> Bitvector.pp fmt x
   | Str x -> Fmt.pf fmt "%S" x
   | List l -> (Fmt.hovbox ~indent:1 (Fmt.list ~sep:Fmt.comma pp)) fmt l
   | App (`Op op, vs) ->
@@ -126,6 +132,7 @@ let rec to_json (v : t) : Yojson.Basic.t =
   | Real real -> `Float real
   | Str str -> `String str
   | Num n -> Num.to_json n
+  | Bitv bv -> `String (Fmt.str "%a" Bitvector.pp bv)
   | List l -> `List (List.map to_json l)
   | Nothing -> `Null
   | App _ -> assert false

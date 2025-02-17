@@ -16,11 +16,11 @@ val neg : t -> t
 
 val lognot : t -> t
 
-val clz : t -> int
+val clz : t -> t
 
-val ctz : t -> int
+val ctz : t -> t
 
-val popcnt : t -> int
+val popcnt : t -> t
 
 val add : t -> t -> t
 
@@ -48,9 +48,9 @@ val rem : t -> t -> t
 
 val rem_u : t -> t -> t
 
-val rotate_left : t -> int -> t
+val rotate_left : t -> t -> t
 
-val rotate_right : t -> int -> t
+val rotate_right : t -> t -> t
 
 val lt : t -> t -> bool
 

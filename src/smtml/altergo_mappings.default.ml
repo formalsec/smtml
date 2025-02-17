@@ -210,9 +210,7 @@ module Fresh = struct
       | { f = False; _ } -> False
       | { f = Int z; _ } -> Int (Z.to_int z)
       | { f = Real q; _ } -> Real (Q.to_float q)
-      | { f = Bitv (8, z); _ } -> Num (I8 (Z.to_int z))
-      | { f = Bitv (32, z); _ } -> Num (I32 (Z.to_int32 z))
-      | { f = Bitv (64, z); _ } -> Num (I64 (Z.to_int64 z))
+      | { f = Bitv (n, z); _ } -> Bitv (Bitvector.make z n)
       | _ ->
         Fmt.failwith "Altergo_mappings: ae_expr_to_value(%a)" AEL.Expr.print e
 
@@ -238,9 +236,7 @@ module Fresh = struct
           | Some q -> Real (Q.to_float q)
           | None -> (
             match (DM.Value.extract ~ops:DM.Bitv.ops v, ty) with
-            | Some z, Ty_bitv 8 -> Num (I8 (Z.to_int z))
-            | Some z, Ty_bitv 32 -> Num (I32 (Z.to_int32 z))
-            | Some z, Ty_bitv 64 -> Num (I64 (Z.to_int64 z))
+            | Some z, Ty_bitv n -> Bitv (Bitvector.make z n)
             | _ ->
               Fmt.failwith "Altergo_mappings: dvalue_to_value(%a)"
                 DM.Value.print v ) ) )

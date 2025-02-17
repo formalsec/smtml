@@ -10,6 +10,7 @@ type t =
   | Real of float
   | Str of string
   | Num of Num.t
+  | Bitv of Bitvector.t
   | List of t list
   | App : [> `Op of string ] * t list -> t
   | Nothing
