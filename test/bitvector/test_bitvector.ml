@@ -61,8 +61,9 @@ let test_comparisons () =
 
 let test_rotate () =
   let bv = make (z 0b1101) 4 in
-  assert (view (rotate_left bv 1) = z 0b1011);
-  assert (view (rotate_right bv 1) = z 0b1110)
+  let one = make (z 1) 4 in
+  assert (view (rotate_left bv one) = z 0b1011);
+  assert (view (rotate_right bv one) = z 0b1110)
 
 let test_extensions () =
   let bv = make (z 0b1010) 4 in
