@@ -1,0 +1,148 @@
+(ocamllex
+ (modules lexer))
+
+(menhir
+ (modules parser)
+ (flags --table))
+
+(library
+ (name smtml)
+ (public_name smtml)
+ (modules
+  altergo_mappings
+  ast
+  ;axioms
+  bitwuzla_mappings
+  binder
+  cache
+  cache_intf
+  colibri2_mappings
+  compile
+  cvc5_mappings
+  dolmenexpr_to_expr
+  eval
+  expr
+  interpret
+  interpret_intf
+  lexer
+  log
+  logic
+  mappings
+  mappings_intf
+  model
+  num
+  op_intf
+  optimizer
+  optimizer_intf
+  params
+  parse
+  parser
+  rewrite
+  smtlib
+  solver
+  solver_dispatcher
+  solver_intf
+  solver_mode
+  solver_type
+  statistics
+  symbol
+  ty
+  utils
+  value
+  z3_mappings)
+ (private_modules lexer parser)
+ (flags
+  (:standard -open Smtml_prelude))
+ (libraries
+  bitvector
+  bos
+  cmdliner
+  dolmen
+  dolmen_type
+  hc
+  fpath
+  menhirLib
+  ocaml_intrinsics
+  patricia-tree
+  rusage
+  scfg
+  smtml.prelude
+  yojson
+  zarith
+  (select
+   colibri2_mappings.ml
+   from
+   (colibri2.core
+    colibri2.solver
+    colibri2.theories.bool
+    colibri2.theories.quantifiers
+    colibri2.theories.LRA
+    colibri2.theories.LRA.stages.stage2
+    colibri2.theories.fp
+    ->
+    colibri2_mappings.default.ml)
+   (-> colibri2_mappings.nop.ml))
+  (select
+   bitwuzla_mappings.ml
+   from
+   (threads bitwuzla-cxx -> bitwuzla_mappings.default.ml)
+   (-> bitwuzla_mappings.nop.ml))
+  (select
+   z3_mappings.ml
+   from
+   (z3 -> z3_mappings.default.ml)
+   (-> z3_mappings.nop.ml))
+  (select
+   cvc5_mappings.ml
+   from
+   (cvc5 -> cvc5_mappings.default.ml)
+   (-> cvc5_mappings.nop.ml))
+  (select
+   altergo_mappings.ml
+   from
+   (alt-ergo-lib dolmen_model -> altergo_mappings.default.ml)
+   (-> altergo_mappings.nop.ml)))
+ (instrumentation
+  (backend bisect_ppx --exclusions src/bisect.exclude)
+  (deps bisect.exclude)))
+
+(rule
+ (targets
+  colibri2_mappings.nop.ml
+  bitwuzla_mappings.nop.ml
+  cvc5_mappings.nop.ml
+  z3_mappings.nop.ml
+  altergo_mappings.nop.ml)
+ (deps mappings.nop.ml)
+ (action
+  (progn
+   (with-stdout-to
+    z3_mappings.nop.ml
+    (progn
+     (echo "let solver_name = \"Z3\"\n")
+     (echo "let solver_package = \"z3\"\n")
+     (cat %{deps})))
+   (with-stdout-to
+    colibri2_mappings.nop.ml
+    (progn
+     (echo "let solver_name = \"Colibri2\"\n")
+     (echo "let solver_package = \"colibri2\"\n")
+     (cat %{deps})))
+   (with-stdout-to
+    bitwuzla_mappings.nop.ml
+    (progn
+     (echo "let solver_name = \"Bitwuzla\"\n")
+     (echo "let solver_package = \"bitwuzla-cxx\"\n")
+     (cat %{deps})))
+   (with-stdout-to
+    cvc5_mappings.nop.ml
+    (progn
+     (echo "let solver_name = \"cvc5\"\n")
+     (echo "let solver_package = solver_name\n")
+     (cat %{deps})))
+   (with-stdout-to
+    altergo_mappings.nop.ml
+    (progn
+     (echo "let solver_name = \"alt-ergo\"\n")
+     (echo "let solver_package = \"alt-ergo dolmen_model\"\n")
+     (cat %{deps}))))))

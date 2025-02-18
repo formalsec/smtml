@@ -27,6 +27,15 @@
 (license "MIT")
 
 (package
+ (name bitvector)
+ (synopsis "Another Arbitrary-Width Bitvectors using the Zarith Library")
+ (description "Arbitrary-Width Bitvectors using the Zarith Library")
+ (depends
+  (ocaml
+   (>= "4.14.0"))
+  zarith))
+
+(package
  (name smtml)
  (synopsis "An SMT solver frontend for OCaml")
  (description "Smt.ml is an SMT solver frontend for OCaml that simplifies \

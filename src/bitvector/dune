@@ -1,0 +1,6 @@
+(library
+ (wrapped false)
+ (name bitvector)
+ (public_name bitvector)
+ (modules bitvector)
+ (libraries zarith))

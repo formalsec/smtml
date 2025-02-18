@@ -1,10 +1,11 @@
 open Smtml
 
+(* TODO: Move this some place else? *)
 module Make (M : Mappings_intf.S) = struct
-  open Test_harness
+  open Smtml_test.Test_harness
   module Optimizer = Optimizer.Make (M)
 
-  let () =
+  let test () =
     let open Infix in
     let opt = Optimizer.create () in
     let x = symbol "x" Ty_int in

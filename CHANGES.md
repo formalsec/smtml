@@ -1,13 +1,26 @@
 ## Unreleased
 
 ### Added
-### Fixed
+
+- Add Bitvector library
+- optimize Expr.equal, cache Expr.simplify (@zapashcanon)
+- Add floating-point operator `Copysign` (Closes #185)
+- Add sign extension to operators with unsigned counter parts (Closes #207)
+
 ### Changed
+
+- Use bitvector library for bitvectors instead of `Num (IXX _)`
+
+### Fixed
+
+- Bring back forall and exists quantifiers (Closes #200)
+- Fixes `Value.compare` (Closes #210)
 
 ## v0.5.0
 
 ### Changed
 
+- Bump `prelude` 0.3 -> 0.5
 - Removes `satisfiability` type
 
 ## v0.4.1

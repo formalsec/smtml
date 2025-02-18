@@ -1,43 +1,37 @@
 (library
- (name smtml_tests)
+ (name smtml_test_solver)
  (modules
-  test_bv
-  test_fp
-  test_harness
-  test_solver_params
   test_solver
-  test_lia
-  test_lra
   test_optimizer)
- (libraries smtml))
+ (libraries smtml smtml_test))
 
 (test
- (name test_z3)
- (modules test_z3)
- (libraries smtml smtml_tests)
+ (name test_solver_z3)
+ (modules test_solver_z3)
+ (libraries smtml smtml_test_solver)
  (build_if %{lib-available:z3}))
 
 (test
- (name test_colibri2)
- (modules test_colibri2)
- (libraries smtml_tests)
+ (name test_solver_colibri2)
+ (modules test_solver_colibri2)
+ (libraries smtml_test smtml_test_solver)
  (build_if %{lib-available:colibri2.core}))
 
 (test
- (name test_bitwuzla)
- (modules test_bitwuzla)
- (libraries smtml_tests)
+ (name test_solver_bitwuzla)
+ (modules test_solver_bitwuzla)
+ (libraries smtml_test smtml_test_solver)
  (build_if %{lib-available:bitwuzla-cxx}))
 
 (test
- (name test_cvc5)
- (modules test_cvc5)
- (libraries smtml_tests)
+ (name test_solver_cvc5)
+ (modules test_solver_cvc5)
+ (libraries smtml_test smtml_test_solver)
  (build_if %{lib-available:cvc5}))
 
 (test
- (name test_altergo)
- (modules test_altergo)
- (libraries smtml_tests)
+ (name test_solver_altergo)
+ (modules test_solver_altergo)
+ (libraries smtml_test smtml_test_solver)
  (build_if
   (and %{lib-available:alt-ergo-lib} %{lib-available:dolmen_model})))
