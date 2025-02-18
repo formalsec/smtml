@@ -71,8 +71,8 @@ build: [
 dev-repo: "git+https://github.com/formalsec/smtml.git"
 available: arch != "arm32" & arch != "x86_32"
 pin-depends: [
-  ["colibri2.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#1feba887bbb7980f27bbcec8137eb908caa8f0ce"]
-  ["colibrilib.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#1feba887bbb7980f27bbcec8137eb908caa8f0ce"]
+  ["colibri2.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#e15e6fc52b1f4e9a015b630a1f377d203ed9ec5b"]
+  ["colibrilib.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#e15e6fc52b1f4e9a015b630a1f377d203ed9ec5b"]
   ["alt-ergo-lib.2.6.0" "git+https://github.com/OCamlPro/alt-ergo.git#7ee96296a5de9588a4d585b3b8abec35f4755425"]
   ["cvc5.dev" "git+https://github.com/formalsec/ocaml-cvc5.git#b7aade52d49a19d646036d7e6aac09039c3e95cf"]
   ["benchpress.dev" "git+https://github.com/sneeuwballen/benchpress.git#7f44cdd9f0511afcce2c9ad3c04cc9b72919bcff"]
