@@ -1,6 +1,9 @@
 ## Unreleased
 
 ### Added
+
+- Add `Expr.Set.hash` as an alias to `Expr.Set.to_int`
+
 ### Fixed
 ### Changed
 
