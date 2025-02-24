@@ -147,6 +147,8 @@ end
 module Set : sig
   include PatriciaTree.SET with type elt = t
 
+  val hash : t -> int
+
   val to_int : t -> int
 
   val equal : t -> t -> bool

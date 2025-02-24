@@ -94,7 +94,11 @@ module Key = struct
   let to_int hte = hash hte
 end
 
-module Set = PatriciaTree.MakeHashconsedSet (Key) ()
+module Set = struct
+  include PatriciaTree.MakeHashconsedSet (Key) ()
+
+  let hash = to_int
+end
 
 let[@inline] make e = Hc.hashcons e
 
