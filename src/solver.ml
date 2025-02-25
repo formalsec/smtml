@@ -120,76 +120,86 @@ module Batch (Mappings : Mappings.S) = struct
   let interrupt { solver; _ } = interrupt solver
 end
 
-module Cached (Mappings : Mappings.S) = struct
-  include Base (Mappings)
-  module Cache = Cache.Strong
+module Cached (Mappings_ : Mappings.S) = struct
+  module Make (Mappings : Mappings.S) = struct
+    include Base (Mappings)
 
-  let cache = Cache.create 256
+    type solver = Mappings.solver
 
-  type solver = Mappings.solver
+    type t =
+      { solver : solver
+      ; mutable top : Expr.Set.t
+      ; stack : Expr.Set.t Stack.t
+      }
 
-  type t =
-    { solver : solver
-    ; mutable top : Expr.Set.t
-    ; stack : Expr.Set.t Stack.t
-    }
+    module Cache = Cache.Strong
 
-  let pp_statistics fmt s = pp_statistics fmt s.solver
+    let cache = Cache.create 256
 
-  let create ?params ?logic () =
-    { solver = create ?params ?logic ()
-    ; top = Expr.Set.empty
-    ; stack = Stack.create ()
-    }
+    let cache_hits () = Cache.hits cache
 
-  let clone ({ solver; top; stack } : t) : t =
-    { solver = clone solver; top; stack = Stack.copy stack }
+    let cache_misses () = Cache.misses cache
 
-  let push ({ top; stack; solver } : t) : unit =
-    Mappings.Solver.push solver;
-    Stack.push top stack
+    let pp_statistics fmt s = pp_statistics fmt s.solver
 
-  let rec pop (s : t) (lvl : int) : unit =
-    assert (lvl <= Stack.length s.stack);
-    if lvl <= 0 then ()
-    else begin
-      Mappings.Solver.pop s.solver 1;
-      match Stack.pop_opt s.stack with
-      | None -> assert false
-      | Some v ->
-        s.top <- v;
-        pop s (lvl - 1)
-    end
+    let create ?params ?logic () =
+      { solver = create ?params ?logic ()
+      ; top = Expr.Set.empty
+      ; stack = Stack.create ()
+      }
 
-  let reset (s : t) =
-    Mappings.Solver.reset s.solver;
-    Stack.clear s.stack;
-    s.top <- Expr.Set.empty
+    let clone ({ solver; top; stack } : t) : t =
+      { solver = clone solver; top; stack = Stack.copy stack }
 
-  let add (s : t) (es : Expr.t list) : unit =
-    s.top <- Expr.Set.(union (of_list es) s.top)
+    let push ({ top; stack; solver } : t) : unit =
+      Mappings.Solver.push solver;
+      Stack.push top stack
 
-  let add_set s es = s.top <- Expr.Set.union es s.top
+    let rec pop (s : t) (lvl : int) : unit =
+      assert (lvl <= Stack.length s.stack);
+      if lvl <= 0 then ()
+      else begin
+        Mappings.Solver.pop s.solver 1;
+        match Stack.pop_opt s.stack with
+        | None -> assert false
+        | Some v ->
+          s.top <- v;
+          pop s (lvl - 1)
+      end
 
-  let get_assertions (s : t) : Expr.t list = Expr.Set.to_list s.top [@@inline]
+    let reset (s : t) =
+      Mappings.Solver.reset s.solver;
+      Stack.clear s.stack;
+      s.top <- Expr.Set.empty
 
-  let get_statistics (s : t) : Statistics.t = get_statistics s.solver
+    let add (s : t) (es : Expr.t list) : unit =
+      s.top <- Expr.Set.(union (of_list es) s.top)
 
-  let check_set s es =
-    let assert_ = Expr.Set.union es s.top in
-    match Cache.find_opt cache assert_ with
-    | Some res -> res
-    | None ->
-      let result = check_set s.solver assert_ in
-      Cache.add cache es result;
-      result
+    let add_set s es = s.top <- Expr.Set.union es s.top
 
-  let check (s : t) (es : Expr.t list) = check_set s (Expr.Set.of_list es)
+    let get_assertions (s : t) : Expr.t list = Expr.Set.to_list s.top [@@inline]
 
-  let get_value (solver : t) (e : Expr.t) : Expr.t = get_value solver.solver e
+    let get_statistics (s : t) : Statistics.t = get_statistics s.solver
 
-  let model ?(symbols : Symbol.t list option) (s : t) : Model.t option =
-    model ?symbols s.solver
+    let check_set s es =
+      let assert_ = Expr.Set.union es s.top in
+      match Cache.find_opt cache assert_ with
+      | Some res -> res
+      | None ->
+        let result = check_set s.solver assert_ in
+        Cache.add cache es result;
+        result
 
-  let interrupt { solver; _ } = interrupt solver
+    let check (s : t) (es : Expr.t list) = check_set s (Expr.Set.of_list es)
+
+    let get_value (solver : t) (e : Expr.t) : Expr.t = get_value solver.solver e
+
+    let model ?(symbols : Symbol.t list option) (s : t) : Model.t option =
+      model ?symbols s.solver
+
+    let interrupt { solver; _ } = interrupt solver
+  end
+
+  module Fresh () = Make (Mappings_)
+  include Make (Mappings_)
 end

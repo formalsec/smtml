@@ -35,8 +35,8 @@ module type S = sig
         parameters inside the solver.
       - [?logic] is of type {!type:Logic.t} and is used to set the theory of the
         assertions used. When the underlying theory is known, setting this
-        parameter can improve solver performance. The default logic is
-        {e ALL}. *)
+        parameter can improve solver performance. The default logic is {e ALL}.
+  *)
   val create : ?params:Params.t -> ?logic:Logic.t -> unit -> t
 
   (** [interrupt solver] interrupts the current solver operation. *)
@@ -120,8 +120,12 @@ module type Intf = sig
     (** Include the core solver interface. *)
     include S
 
-    (** The cache module for managing cached queries. *)
-    module Cache : Cache_intf.S
+    (** [cache_hits ()] Returns the number of hits that have already occurred in
+        the cache *)
+    val cache_hits : unit -> int
+
+    (** [cache_misses ()] Same as [cache_hits] but for misses *)
+    val cache_misses : unit -> int
   end
 
   (** {1 Incremental Mode}

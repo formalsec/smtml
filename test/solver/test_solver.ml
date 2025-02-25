@@ -6,15 +6,15 @@ module Make (M : Mappings_intf.S) = struct
   module Solver = Solver.Incremental (M)
 
   let () =
-    let open Infix in
     let solver = Cached.create ~logic:LIA () in
-    let x = symbol "x" Ty_int in
-    let c = Int.(x >= int 0) in
-    assert (Stdlib.Int.equal !Cached.solver_count 0);
+    let x = Infix.symbol "x" Ty_int in
+    let c = Infix.(Int.(x >= int 0)) in
+    assert (Cached.cache_hits () = 0);
     assert_sat (Cached.check_set solver @@ Expr.Set.singleton c);
     assert_sat (Cached.check_set solver @@ Expr.Set.singleton c);
     assert_sat (Cached.check_set solver @@ Expr.Set.singleton c);
-    assert (Stdlib.Int.equal !Cached.solver_count 1)
+    assert (Cached.cache_misses () = 1);
+    assert (Cached.cache_hits () = 2)
 
   let () =
     let open Infix in
