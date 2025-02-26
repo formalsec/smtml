@@ -1,21 +1,36 @@
 (* SPDX-License-Identifier: MIT *)
-(* Copyright (C) 2023-2024 formalsec *)
+(* Copyright (C) 2023-2025 formalsec *)
 (* Written by the Smtml programmers *)
 
+(** SMT Script Parsing Module. This module provides functionality for parsing
+    Smt.ml and SMT-LIB scripts from files or strings. It supports both custom
+    Smt.ml syntax and the standard SMT-LIB format. *)
+
+(** {1 Exceptions} *)
+
+(** Exception raised when a syntax error occurs during parsing. *)
 exception Syntax_error of string
 
+(** {1 Smt.ml Parsing} *)
+
 module Smtml : sig
+  (** [from_file file] parses an SMT-ML script from the given [file]. *)
   val from_file : Fpath.t -> Ast.script
 
-  (** [from_file] Parse smtml scripts from [file] *)
+  (** [from_string s] parses an SMT-ML script from the given string [s]. *)
   val from_string : string -> Ast.script
 end
 
+(** {1 SMT-LIB Parsing} *)
+
 module Smtlib : sig
-  (** [from_file file] Parse smtlib compliant scripts from [file] *)
+  (** [from_file file] parses an SMT-LIB compliant script from the given [file].
+  *)
   val from_file : Fpath.t -> Ast.script
 end
 
-(** [from_file file] Tries to parse an smtml (.smtml) or smtlib (.smt2) script
-    depending on their file extensions. *)
+(** {1 Generic Parsing} *)
+
+(** [from_file file] attempts to parse an SMT-ML (.smtml) or SMT-LIB (.smt2)
+    script based on the file extension of [file]. *)
 val from_file : Fpath.t -> Ast.script
