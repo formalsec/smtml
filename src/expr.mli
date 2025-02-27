@@ -107,11 +107,15 @@ val extract : t -> high:int -> low:int -> t
 (** Dumb extract constructor, no simplifications *)
 val extract' : t -> high:int -> low:int -> t
 
+val extract2 : t -> int -> t
+
 (** Smart concat constructor, applies simplifications at constructor level *)
 val concat : t -> t -> t
 
 (** Dumb concat constructor, no simplifications *)
 val concat' : t -> t -> t
+
+val concat3 : msb:t -> lsb:t -> int -> t
 
 (** Applies expression simplifications until a fixpoint *)
 val simplify : t -> t

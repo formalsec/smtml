@@ -459,11 +459,28 @@ let extract' (hte : t) ~(high : int) ~(low : int) : t =
 [@@inline]
 
 let extract (hte : t) ~(high : int) ~(low : int) : t =
-  match view hte with
-  | Val (Num (I64 x)) ->
+  match (view hte, high, low) with
+  | Val (Num (I64 x)), high, low ->
     let x' = nland64 (Int64.shift_right x (low * 8)) (high - low) in
     value (Num (I64 x'))
+  | Concat (_, e), 4, 0 when Ty.size (ty e) = 4 -> e
+  | Concat (e, _), 8, 4 when Ty.size (ty e) = 4 -> e
   | _ -> if high - low = Ty.size (ty hte) then hte else extract' hte ~high ~low
+
+let extract2 (hte : t) (pos : int) : t =
+  match view hte with
+  | Val (Num (I32 i)) ->
+    let i' = Int32.(to_int @@ logand 0xffl @@ shift_right i (pos * 8)) in
+    value (Num (I8 i'))
+  | Val (Num (I64 i)) ->
+    let i' = Int64.(to_int @@ logand 0xffL @@ shift_right i (pos * 8)) in
+    value (Num (I8 i'))
+  | Cvtop
+      ( _
+      , (Zero_extend 24 | Sign_extend 24)
+      , ({ node = Symbol { ty = Ty_bitv 8; _ }; _ } as sym) ) ->
+    sym
+  | _ -> make (Extract (hte, pos + 1, pos))
 
 let concat' (msb : t) (lsb : t) : t = make (Concat (msb, lsb)) [@@inline]
 
@@ -498,6 +515,35 @@ let concat (msb : t) (lsb : t) : t =
     let x = Int64.(logor (shift_left x2' (d1 * 8)) x1') in
     concat' (extract' (value (Num (I64 x))) ~high:(d1 + d2) ~low:0) se
   | _ -> concat' msb lsb
+
+(* TODO: don't rebuild so many values it generates unecessary hc lookups *)
+let merge_extracts (e1, h, m1) (e2, m2, l) =
+  let ty = ty e1 in
+  if m1 = m2 && equal e1 e2 then
+    if h - l = Ty.size ty then e1 else make (Extract (e1, h, l))
+  else make (Concat (make (Extract (e1, h, m1)), make (Extract (e2, m2, l))))
+
+let concat3 ~msb ~lsb offset =
+  assert (offset > 0 && offset <= 8);
+  match (view msb, view lsb) with
+  | Val (Num (I8 i1)), Val (Num (I8 i2)) ->
+    value (Num (I32 Int32.(logor (shift_left (of_int i1) 8) (of_int i2))))
+  | Val (Num (I8 i1)), Val (Num (I32 i2)) ->
+    let offset = offset * 8 in
+    if offset < 32 then
+      value (Num (I32 Int32.(logor (shift_left (of_int i1) offset) i2)))
+    else
+      let i1' = Int64.of_int i1 in
+      let i2' = Int64.of_int32 i2 in
+      value (Num (I64 Int64.(logor (shift_left i1' offset) i2')))
+  | Val (Num (I8 i1)), Val (Num (I64 i2)) ->
+    let offset = offset * 8 in
+    value (Num (I64 Int64.(logor (shift_left (of_int i1) offset) i2)))
+  | Extract (e1, h, m1), Extract (e2, m2, l) ->
+    merge_extracts (e1, h, m1) (e2, m2, l)
+  | Extract (e1, h, m1), Concat ({ node = Extract (e2, m2, l); _ }, e3) ->
+    make (Concat (merge_extracts (e1, h, m1) (e2, m2, l), e3))
+  | _ -> make (Concat (msb, lsb))
 
 let rec simplify_expr ?(rm_extract = true) (hte : t) : t =
   match view hte with
