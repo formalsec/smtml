@@ -458,11 +458,20 @@ let extract' (hte : t) ~(high : int) ~(low : int) : t =
   make (Extract (hte, high, low))
 [@@inline]
 
-let extract (hte : t) ~(high : int) ~(low : int) : t =
+let rec extract (hte : t) ~(high : int) ~(low : int) : t =
   match view hte with
   | Val (Num (I64 x)) ->
     let x' = nland64 (Int64.shift_right x (low * 8)) (high - low) in
     value (Num (I64 x'))
+  | Cvtop (ty, Ty.Cvtop.Zero_extend n, x) when (Ty.size ty * 8) - n >= 8 * high
+    ->
+    extract x ~high ~low
+  | Concat (_l, r) when Ty.size (ty r) >= high -> extract r ~high ~low
+  | Concat (l, r) when Ty.size (ty r) <= low ->
+    let size_r = Ty.size (ty r) in
+    let high = high - size_r in
+    let low = low - size_r in
+    extract l ~high ~low
   | _ -> if high - low = Ty.size (ty hte) then hte else extract' hte ~high ~low
 
 let concat' (msb : t) (lsb : t) : t = make (Concat (msb, lsb)) [@@inline]
