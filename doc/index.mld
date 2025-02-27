@@ -1,25 +1,34 @@
-{0 Smtml}
+{0 Smtml - SMT Solving in OCaml}
 
-The full API can be {{:Smtml/index.html} found here}.
-Coverage {{:https://formalsec.github.io/smtml/coverage/index.html} here}
+{{:Smtml/index.html} Full API Documentation} |
+{{:https://formalsec.github.io/smtml/coverage/} Test Coverage} |
+{{:https://github.com/formalsec/smtml} GitHub Repository}
 
-{e Smt.ml} is a free and open-source OCaml SMT constraint abstraction layer
-that serves as an abstracted constraint-solving wrapper, currently utilising
-Z3 as its backend solver. However, future plans for Smt.ml include support
-for other solvers in its backend, such as Yices and cvc5.
+[Smtml] is an OCaml SMT solver abstraction layer providing:
 
-{1 Creating Solvers}
++ Multi-backend support (currently Z3, Colibri2, Alt-Ergo, Bitwuzla, and cvc5)
++ Type-safe expression construction
++ Flexible solver interaction modes
++ Model extraction capabilities
 
-To begin creating solvers, utilize the modules provided in {!module:Smtml.Solver}
-for Z3 encoding. The simplest approach to creating a solver in the Smtml
-is outlined below:
+{1:start Getting Started}
 
+Install via OPAM:
+{@sh skip[
+opam install smtml
+]}
+
+Basic usage in OCaml toplevel:
 {@ocaml[
-# #use "topfind"
+# #use "topfind";;
 ...
-# #require "smtml"
-# #install_printer Smtml.Expr.pp
-# module Z3 = Smtml.Solver.Batch (Smtml.Z3_mappings)
+# #require "smtml";;
+# #install_printer Smtml.Expr.pp;;
+# let pp_model = Smtml.Model.pp ~no_values:false;;
+val pp_model : Smtml.Model.t Fmt.t = <fun>
+# #install_printer pp_model;;
+# #install_printer Smtml.Statistics.pp;;
+# module Z3 = Smtml.Solver.Batch (Smtml.Z3_mappings);;
 module Z3 :
   sig
     type t = Smtml.Solver.Batch(Smtml.Z3_mappings).t
@@ -42,72 +51,122 @@ module Z3 :
     val get_value : t -> Smtml.Expr.t -> Smtml.Expr.t
     val model : ?symbols:Smtml.Symbol.t list -> t -> Smtml.Model.t option
   end
-# let solver = Z3.create ()
+# let solver = Z3.create ();;
 val solver : Z3.t = <abstr>
 ]}
 
-For a comprehensive understanding of the solver functions and modes, refer to the
-documentation {{:Smtml/Solver/index.html} found here}.
+{1:solvers Creating Solvers}
 
-{1 Creating Expressions}
+Smtml provides different solver modes through functors:
 
-To provide constraints to the solver, it is necessary to first construct
-expressions of type {!type:Smtml.Expr.t}. These expressions consist of two
-key components: an arbitrary grammar expression of type {!type:Smtml.Expr.expr}
-for building logical expressions, and a theory annotation of type {!type:Smtml.Ty.t}
-that informs the SMT solver about the theory in which to encode our expressions.
-The combination of these two components is achieved using the constructors
-[unop], [binop], [relop], etc.
+- {!module:Smtml.Solver.Batch} for one-shot solving
+- {!module:Smtml.Solver.Incremental} for incremental solving
 
-As an illustration, consider the creation of the logical formula equivalent to
-[not (not x) = x]:
+Create a Z3-based batch solver with custom parameters:
 
 {@ocaml[
-# open Smtml
-# let x = Expr.symbol (Symbol.make Ty_bool "x")
+# let params = Smtml.Params.(default () $ (Timeout, 5000));;
+val params : Smtml.Params.t = <abstr>
+# let solver = Z3.create ~params ~logic:Smtml.Logic.QF_BV ();;
+val solver : Z3.t = <abstr>
+]}
+
+{2:solver_ops Solver Operations}
+
+Key operations (see {!module:Smtml.Solver_intf}):
+- {!val:Smtml.Solver_intf.S.push}/ {!val:Smtml.Solver_intf.S.pop} for context management
+- {!val:Smtml.Solver_intf.S.add} for adding constraints
+- {!val:Smtml.Solver_intf.S.check} for satisfiability checks
+- {!val:Smtml.Solver_intf.S.get_value} for model extraction
+
+{1:expressions Building Expressions}
+
+Construct type-safe SMT expressions using:
+
+- {!module:Smtml.Symbol} for creating variables
+- {!module:Smtml.Expr} combinators
+- {!module:Smtml.Ty} for type annotations
+
+Example: Bitvector arithmetic
+{@ocaml[
+# open Smtml;;
+# let x = Expr.symbol (Symbol.make (Ty_bitv 8) "x");;
 val x : Expr.t = x
-# let not_x = Expr.unop Ty_bool Not x
-val not_x : Expr.t = (bool.not x)
-# let not_not_x = Expr.unop Ty_bool Not not_x
-val not_not_x : Expr.t = x
-# let expr : Expr.t = Expr.relop Ty_bool Eq not_not_x x
-val expr : Expr.t = (bool.eq x x)
+# let y = Expr.symbol (Symbol.make (Ty_bitv 8) "y");;
+val y : Expr.t = y
+# let sum = Expr.binop (Ty_bitv 8) Add x y;;
+val sum : Expr.t = (i8.add x y)
+# let cond = Expr.relop Ty_bool Eq sum (Expr.value (Num (I8 42)));;
+val cond : Expr.t = (bool.eq (i8.add x y) 42)
 ]}
 
-Once our proposition is encoded in the abstract grammar, it can be passed to
-the solver for verification:
+{1:checking Checking Satisfiability}
 
+Add constraints and check satisfiability:
 {@ocaml[
-# Z3.add solver [ expr ]
+# Z3.add solver [ cond ];;
 - : unit = ()
-# assert (match Z3.check solver [] with `Sat -> true | _ -> false)
-- : unit = ()
+# match Z3.check solver [] with
+  | `Sat -> "Satisfiable"
+  | `Unsat -> "Unsatisfiable"
+  | `Unknown -> "Unknown";;
+- : string = "Satisfiable"
 ]}
 
-{1 Retreiving Values from the Solver}
+{1:models Working with Models}
 
-In many cases, the ability to swiftly retrieve concrete values or sets of values
-from a set of satisfiable constraints proves to be immensely beneficial. The
-Encoding facilitates this process through two essential functions:
-
-+ {!val:Smtml.Solver_intf.S.get_value} allows the retrieval of a single value
-  from the solver.
-+ {!val:Smtml.Solver_intf.S.model} enables the retrieval of all possible assignments
-  within our constraints.
-
-To illustrate, let's consider retrieving the value of [x] from our previous example:
-
+Extract values from satisfiable constraints:
 {@ocaml[
-# assert (match Z3.check solver [] with `Sat -> true | _ -> false)
-- : unit = ()
-# Z3.get_value solver x
-- : Expr.t = false
+# let model = Z3.model solver |> Option.get;;
+val model : Model.t = (model
+    (x i8 9)
+    (y i8 33))
+# let x_val =
+  let x = Symbol.make (Ty_bitv 8) "x" in
+  Model.evaluate model x;;
+val x_val : Value.t option = Some (Smtml.Value.Num (Smtml.Num.I8 9))
 ]}
 
-In this snippet, we add our constraint to the solver, ensure its satisfiability,
-and then retrieve the value of [x]. The retrieved value is subsequently formatted
-for display using the Format module.
+{1:advanced Advanced Features}
+
+{2:params Solver Parameters}
+
+Customize solver behavior using parameters:
+{@ocaml[
+let params = Smtml.Params.(
+  default ()
+  $ (Timeout, 1000)
+  $ (Model, true)
+  $ (Unsat_core, false)
+);;
+]}
+
+{2:statistics Solver Statistics}
+
+Track solver performance:
+{@ocaml non-deterministic[
+# Z3.get_statistics solver
+- : Statistics.t =
+((max memory 16.9)
+ (memory 16.9)
+ (num allocs 7625)
+ (rlimit count 362)
+ (sat backjumps 2)
+ (sat conflicts 2)
+ (sat decisions 15)
+ (sat mk clause 2ary 57)
+ (sat mk clause nary 98)
+ (sat mk var 53)
+ (sat propagations 2ary 28)
+ (sat propagations nary 30))
+]}
 
 {1 More Examples}
 
-More examples can be found {{!examples}here}.
+Explore comprehensive usage scenarios:
+- {{!examples}Optimizer} - Using optimizers
+
+{1:contrib Contributing}
+
+Smtml is open source! Report issues and contribute at:
+{{:https://github.com/formalsec/smtml/issues} GitHub Repository}

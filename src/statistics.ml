@@ -31,7 +31,9 @@ let pp_entry fmt = function
   | `Float f -> Fmt.float fmt f
 
 let pp =
-  Fmt.iter
-    ~sep:(fun fmt () -> Fmt.pf fmt "@;")
-    (fun f m -> Map.iter (fun a b -> f (a, b)) m)
-    (Fmt.pair ~sep:Fmt.comma Fmt.string pp_entry)
+  Fmt.vbox ~indent:1
+    (Fmt.parens
+       (Fmt.iter
+          ~sep:(fun fmt () -> Fmt.pf fmt "@\n")
+          (fun f m -> Map.iter (fun a b -> f (a, b)) m)
+          (Fmt.parens (Fmt.pair ~sep:Fmt.sp Fmt.string pp_entry)) ) )
