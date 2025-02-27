@@ -3,8 +3,8 @@
 (* Written by the Smtml programmers *)
 
 let run_and_time_call ~use f =
-  let start = (Rusage.get Self).utime in
+  let start = Unix.gettimeofday () in
   let result = f () in
-  let stop = (Rusage.get Self).utime in
+  let stop = Unix.gettimeofday () in
   use (stop -. start);
   result
