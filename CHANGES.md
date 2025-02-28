@@ -2,6 +2,7 @@
 
 ### Added
 
+- Add `cache_hits` and `cache_misses` functions to cached solver
 - Add `Expr.Set.hash` as an alias to `Expr.Set.to_int`
 
 ### Fixed
