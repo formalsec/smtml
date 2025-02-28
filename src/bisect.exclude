@@ -1,3 +1,4 @@
-file "src/colibri2_mappings.ml"
+file "src/altergo_mappings.ml"
 file "src/bitwuzla_mappings.ml"
+file "src/colibri2_mappings.ml"
 file "src/cvc5_mappings.ml"
