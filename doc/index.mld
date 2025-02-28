@@ -20,8 +20,6 @@ opam install smtml
 
 Basic usage in OCaml toplevel:
 {@ocaml[
-# #use "topfind";;
-...
 # #require "smtml";;
 # #install_printer Smtml.Expr.pp;;
 # let pp_model = Smtml.Model.pp ~no_values:false;;
@@ -90,13 +88,11 @@ Construct type-safe SMT expressions using:
 Example: Bitvector arithmetic
 {@ocaml[
 # open Smtml;;
-# let x = Expr.symbol (Symbol.make (Ty_bitv 8) "x");;
-val x : Expr.t = x
-# let y = Expr.symbol (Symbol.make (Ty_bitv 8) "y");;
-val y : Expr.t = y
-# let sum = Expr.binop (Ty_bitv 8) Add x y;;
-val sum : Expr.t = (i8.add x y)
-# let cond = Expr.relop Ty_bool Eq sum (Expr.value (Num (I8 42)));;
+# let cond =
+  let x = Expr.symbol (Symbol.make (Ty_bitv 8) "x") in
+  let y = Expr.symbol (Symbol.make (Ty_bitv 8) "y") in
+  let sum = Expr.binop (Ty_bitv 8) Add x y in
+  Expr.relop Ty_bool Eq sum (Expr.value (Num (I8 42)));;
 val cond : Expr.t = (bool.eq (i8.add x y) 42)
 ]}
 
