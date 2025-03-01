@@ -19,10 +19,10 @@ jobs:
       - name: Remove .git
         run: rm -rf .git
 
-      - name: Setup OCaml 4.14
+      - name: Setup OCaml 5.3
         uses: ocaml/setup-ocaml@v3
         with:
-          ocaml-compiler: "4.14"
+          ocaml-compiler: "5.3"
           dune-cache: false
 
       - name: Install dependencies
