@@ -7,11 +7,6 @@ let files_to_run d =
   | Ok results -> results
   | Error (`Msg err) -> Fmt.failwith "%s" err
 
-let pp_exit_status fmt = function
-  | Ok () -> Fmt.pf fmt "Exited 0"
-  | Error (`Exit_non_zero n) -> Fmt.pf fmt "Exited %d" n
-  | Error (`Signal s) -> Fmt.pf fmt "Signal %s" (Core.Signal.to_string s)
-
 let parse_status =
   let re = Dune_re.(compile @@ Perl.re {|^(sat|unsat|unknown)|}) in
   fun stdout ->
@@ -92,9 +87,9 @@ let make_data_frames results =
             , String.escaped stdout :: stdout_acc
             , String.escaped stderr :: stderr_acc
             , rtime :: rtime_acc
-            , rusage.Core_unix.Resource_usage.utime :: utime_acc
-            , rusage.Core_unix.Resource_usage.stime :: stime_acc
-            , rusage.Core_unix.Resource_usage.maxrss :: maxrss_acc ) )
+            , rusage.ExtUnix.Specific.ru_utime :: utime_acc
+            , rusage.ExtUnix.Specific.ru_stime :: stime_acc
+            , rusage.ExtUnix.Specific.ru_maxrss :: maxrss_acc ) )
           ([], [], [], [], [], [], [], [], [])
           prover_results
       in
@@ -133,8 +128,8 @@ let write_data_frame started_at results_dir (prover, df) =
 
 let main hook provers timeout dirs =
   let open Result in
-  let now = Core_unix.(localtime @@ gettimeofday ()) in
-  let started_at = Core_unix.strftime now "%Y%m%dT%H%M%S" in
+  let now = Unix.(localtime @@ gettimeofday ()) in
+  let started_at = ExtUnix.Specific.strftime "%Y%m%dT%H%M%S" now in
   assert (List.for_all Tool.is_available provers);
   let files = List.concat_map files_to_run dirs in
   let provers_str = List.map Tool.prover_to_string provers in
@@ -142,14 +137,14 @@ let main hook provers timeout dirs =
   let run_provers ?timeout provers benchmark =
     List.map
       (fun prover ->
-        let start = Core_unix.gettimeofday () in
+        let start = Unix.gettimeofday () in
         let status, stdout, stderr, rusage =
           Tool.fork_and_run ?timeout prover [ Fpath.to_string benchmark ]
         in
-        let rtime = Core_unix.gettimeofday () -. start in
+        let rtime = Unix.gettimeofday () -. start in
         let prover = Fmt.str "%a" Tool.pp_prover prover in
         Fmt.pr "@[<v 2>%-*s: %a@;Exited: %a@;Result: %s@;Time  : %0.03f@]@."
-          w_prover prover Fpath.pp benchmark pp_exit_status status
+          w_prover prover Fpath.pp benchmark Util.pp_exit_status status
           (String.trim stdout) rtime;
         (status, benchmark, stdout, stderr, rtime, rusage) )
       provers

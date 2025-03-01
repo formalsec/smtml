@@ -1,8 +1,3 @@
-let pp_exit_status fmt = function
-  | Ok () -> Fmt.pf fmt "Exited 0"
-  | Error (`Exit_non_zero n) -> Fmt.pf fmt "Exited %d" n
-  | Error (`Signal s) -> Fmt.pf fmt "Signal %s" (Core.Signal.to_string s)
-
 let parse_stdout =
   let re = Dune_re.(compile @@ Perl.re {|Run\s(.*?)\sin\s([0-9.]+)|}) in
   fun stdout ->
@@ -66,8 +61,8 @@ let write_data_frame started_at results_dir (prover, df) =
 
 let main _hook provers from_file dirs =
   let open Result in
-  let now = Core_unix.(localtime @@ gettimeofday ()) in
-  let started_at = Core_unix.strftime now "%Y%m%dT%H%M%S" in
+  let now = Unix.(localtime @@ gettimeofday ()) in
+  let started_at = ExtUnix.Specific.strftime "%Y%m%dT%H%M%S" now in
   assert (List.for_all Tool.is_available provers);
   List.iter
     (fun (p : Tool.prover) -> match p with Z3 -> () | Smtml p -> p.st <- true)
@@ -80,7 +75,7 @@ let main _hook provers from_file dirs =
           Tool.fork_and_run ?from_file p dirs
         in
         Fmt.pr "@[<v 2>Run %a@;Exited: %a@;Stdout:@; %a@;Stderr:@; %a@]@."
-          Tool.pp_prover p pp_exit_status status Fmt.string
+          Tool.pp_prover p Util.pp_exit_status status Fmt.string
           (String.escaped stdout) Fmt.string (String.escaped stderr);
         (p, result) )
       provers

@@ -5,4 +5,5 @@ pin-depends: [
   ["alt-ergo-lib.2.6.0" "git+https://github.com/OCamlPro/alt-ergo.git#7ee96296a5de9588a4d585b3b8abec35f4755425"]
   ["cvc5.dev" "git+https://github.com/formalsec/ocaml-cvc5.git#b7aade52d49a19d646036d7e6aac09039c3e95cf"]
   ["benchpress.dev" "git+https://github.com/sneeuwballen/benchpress.git#7f44cdd9f0511afcce2c9ad3c04cc9b72919bcff"]
+  ["extunix.0.4.3" "git+https://github.com/filipeom/extunix.git#ff54e8cc7ec9cdc7171861d74d85f326dbcec62e"]
 ]
