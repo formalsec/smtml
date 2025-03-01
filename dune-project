@@ -103,7 +103,7 @@
    :with-dev-setup)
   (cohttp-lwt-unix
    :with-dev-setup)
-  (core_unix
+  (extunix
    :with-dev-setup)
   (dune-glob
    :with-dev-setup)

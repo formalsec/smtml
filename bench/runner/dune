@@ -4,8 +4,8 @@
   bos
   cohttp
   cohttp-lwt-unix
-  core_unix
   cmdliner
+  extunix
   dune-glob
   owl
   lwt
