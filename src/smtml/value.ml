@@ -62,10 +62,10 @@ let rec compare (a : t) (b : t) : int =
 let rec equal (v1 : t) (v2 : t) : bool =
   match (v1, v2) with
   | True, True | False, False | Unit, Unit | Nothing, Nothing -> true
-  | Int x1, Int x2 -> Int.equal x1 x2
-  | Real x1, Real x2 -> Float.equal x1 x2
-  | Str x1, Str x2 -> String.equal x1 x2
-  | Num x1, Num x2 -> Num.equal x1 x2
+  | Int a, Int b -> Int.equal a b
+  | Real a, Real b -> Float.equal a b
+  | Str a, Str b -> String.equal a b
+  | Num a, Num b -> Num.equal a b
   | List l1, List l2 -> List.equal equal l1 l2
   | App (`Op op1, vs1), App (`Op op2, vs2) ->
     String.equal op1 op2 && List.equal equal vs1 vs2

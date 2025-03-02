@@ -350,7 +350,6 @@ module Bv = struct
         if Int64.compare i Int64.zero >= 0 then Z.of_int64 i
         else Z.logand (Z.of_int64 i) (Z.sub (Z.( lsl ) Z.one 64) Z.one)
       in
-
       (* necessary to have the same behaviour as Z3 *)
       DTerm.Bitv.mk
         (Dolmen_type.Misc.Bitv.parse_decimal
