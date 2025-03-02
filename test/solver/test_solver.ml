@@ -1,11 +1,31 @@
 open Smtml
 
 module Make (M : Mappings_intf.S) = struct
-  open Test_harness
+  open Smtml_test.Test_harness
   module Cached = Solver.Cached (M)
   module Solver = Solver.Incremental (M)
 
-  let () =
+  let test_default_params () =
+    assert (Params.default_value Timeout = Int32.(to_int max_int));
+    assert (Params.default_value Model = true);
+    assert (Params.default_value Unsat_core = false);
+    assert (Params.default_value Ematching = true)
+
+  let test_solver_params () =
+    let params =
+      Params.(
+        default () $ (Timeout, 900) $ (Model, false) $ (Unsat_core, true)
+        $ (Ematching, false) $ (Parallel, true) $ (Num_threads, 1) )
+    in
+    assert (Params.get params Unsat_core);
+    let _ : Solver.t = Solver.create ~params () in
+    ()
+
+  let test_params () =
+    test_default_params ();
+    test_solver_params ()
+
+  let test_cached_solver () =
     let solver = Cached.create ~logic:LIA () in
     let x = Infix.symbol "x" Ty_int in
     let c = Infix.(Int.(x >= int 0)) in
@@ -16,32 +36,28 @@ module Make (M : Mappings_intf.S) = struct
     assert (Cached.cache_misses () = 1);
     assert (Cached.cache_hits () = 2)
 
-  let () =
+  let test () =
     let open Infix in
     let solver = Solver.create ~logic:LIA () in
     let symbol_x = Symbol.("x" @: Ty_int) in
     let x = Expr.symbol symbol_x in
-    assert_sat (Solver.check solver []);
+    assert_sat ~f:"test" (Solver.check solver []);
 
     Solver.push solver;
     Solver.add solver Int.[ x >= int 0 ];
     assert_sat (Solver.check solver []);
-    assert (
-      let v = Solver.get_value solver x in
-      Expr.equal v (int 0) );
+    assert_equal (Solver.get_value solver x) (int 0);
     Solver.pop solver 1;
 
     Solver.push solver;
     Solver.add solver [ x = int 3 ];
-    assert_sat (Solver.check solver []);
-    assert (
-      let v = Solver.get_value solver Int.(x * x) in
-      Expr.equal v (int 9) );
+    assert_sat ~f:"test" (Solver.check solver []);
+    assert_equal (Solver.get_value solver Int.(x * x)) (int 9);
     Solver.pop solver 1;
 
     Solver.push solver;
     Solver.add solver Int.[ x >= int 0 || x < int 0 ];
-    assert_sat (Solver.check solver []);
+    assert_sat ~f:"test" (Solver.check solver []);
     (* necessary, otherwise the solver doesn't know x and can't produce a model
        for it *)
     let model = Solver.model ~symbols:[ symbol_x ] solver in
@@ -53,5 +69,117 @@ module Make (M : Mappings_intf.S) = struct
     assert_sat (Solver.check solver []);
     let model = Solver.model solver in
     let val_x = Option.bind model (fun m -> Model.evaluate m symbol_x) in
-    assert (Stdlib.(Some (Value.Int 5) = val_x))
+    assert (match val_x with Some v -> Value.equal v (Int 5) | None -> false)
+
+  let test_lia () =
+    let open Infix in
+    let solver = Solver.create ~logic:QF_LIA () in
+    let a = symbol "a" Ty_int in
+    Solver.add solver Int.[ a + int 1 = int 2 => ((a * int 2) + int 2 = int 4) ];
+    assert_sat ~f:"test_lia" (Solver.check solver [])
+
+  let test_lra () =
+    let solver = Solver.create () in
+    assert_sat ~f:"test_lra"
+      (let x = Expr.symbol Symbol.("x" @: Ty_real) in
+       let y = Expr.symbol Symbol.("y" @: Ty_real) in
+       let c0 = Expr.relop Ty_bool Eq x y in
+       let c1 =
+         Expr.relop Ty_bool Eq
+           (Expr.cvtop Ty_real ToString x)
+           (Expr.cvtop Ty_real ToString y)
+       in
+       Solver.check solver [ c0; c1 ] )
+
+  let test_bv_8 () =
+    let open Infix in
+    let solver = Solver.create ~params:(Params.default ()) ~logic:QF_BVFP () in
+    let ty = Ty.Ty_bitv 8 in
+    let x = symbol "h" ty in
+    Solver.add solver
+      [ Expr.relop ty Gt x (int8 0); Expr.relop ty Lt x (int8 2) ];
+    assert_sat ~f:"test_bv_8" (Solver.check solver []);
+    assert_equal (Solver.get_value solver x) (int8 1)
+
+  let test_bv_32 () =
+    let open Infix in
+    let solver = Solver.create ~params:(Params.default ()) ~logic:QF_BVFP () in
+    let ty = Ty.Ty_bitv 32 in
+    let x = symbol "x" ty in
+    let y = symbol "y" ty in
+    let z = symbol "z" ty in
+    let w = symbol "w" ty in
+    Solver.add solver
+      [ Expr.relop ty Gt x (int32 0l) && Expr.relop ty Lt w (int32 5l)
+      ; Expr.relop ty Lt x y && Expr.relop ty Lt y z && Expr.relop ty Lt z w
+      ];
+    assert_sat ~f:"test_bv_32" (Solver.check solver []);
+    match Solver.model solver with
+    | None -> assert false
+    | Some m -> Model.pp Format.std_formatter ~no_values:false m
+
+  let test_bv () =
+    test_bv_8 ();
+    test_bv_32 ()
+
+  let test_fp_get_value32 () =
+    let open Infix in
+    let solver = Solver.create ~logic:QF_BVFP () in
+    let ty = Ty.Ty_fp 32 in
+    let x = symbol "x" ty in
+    let const = float32 50.0 in
+    Solver.add solver [ Expr.relop ty Eq x const ];
+    assert_sat ~f:"test_fp_get_value32" (Solver.check solver []);
+    assert_equal (Solver.get_value solver x) const
+
+  let test_fp_get_value64 () =
+    let open Infix in
+    let solver = Solver.create ~logic:QF_BVFP () in
+    let ty = Ty.Ty_fp 64 in
+    let x = symbol "x" ty in
+    let const = float64 50.0 in
+    Solver.add solver [ Expr.relop ty Eq x const ];
+    assert_sat ~f:"test_fp_get_value64" (Solver.check solver []);
+    assert_equal (Solver.get_value solver x) const
+
+  let test_fp_sqrt () =
+    let open Infix in
+    let solver = Solver.create ~logic:QF_BVFP () in
+    let ty = Ty.Ty_fp 32 in
+    let x = symbol "x" ty in
+    Solver.add solver [ Expr.relop ty Eq x (float32 4.0) ];
+    Solver.add solver [ Expr.relop ty Eq (Expr.unop ty Sqrt x) (float32 2.0) ];
+    assert_sat ~f:"test_fp_sqrt" (Solver.check solver []);
+    assert_equal (Solver.get_value solver x) (float32 4.0)
+
+  let test_fp_copysign32 () =
+    let open Infix in
+    let solver = Solver.create ~logic:QF_BVFP () in
+    let ty = Ty.Ty_fp 32 in
+    let x = symbol "x" ty in
+    let y = symbol "y" ty in
+    Solver.add solver
+      [ Expr.relop ty Gt x (float32 0.0) && Expr.relop ty Lt y (float32 0.0)
+      ; Expr.relop ty Lt (Expr.binop ty Copysign x y) (float32 0.0)
+      ];
+    assert_sat ~f:"test_copysign32" (Solver.check solver [])
+
+  let test_fp_copysign64 () =
+    let open Infix in
+    let solver = Solver.create ~logic:QF_BVFP () in
+    let ty = Ty.Ty_fp 64 in
+    let x = symbol "x" ty in
+    let y = symbol "y" ty in
+    Solver.add solver
+      [ Expr.relop ty Gt x (float64 0.0) && Expr.relop ty Lt y (float64 0.0)
+      ; Expr.relop ty Lt (Expr.binop ty Copysign x y) (float64 0.0)
+      ];
+    assert_sat ~f:"test_copysign64" (Solver.check solver [])
+
+  let test_fp () =
+    test_fp_get_value32 ();
+    test_fp_get_value64 ();
+    test_fp_sqrt ();
+    test_fp_copysign32 ();
+    test_fp_copysign64 ()
 end
