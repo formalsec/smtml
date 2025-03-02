@@ -105,8 +105,8 @@ val app : Symbol.t -> t list -> t
     bindings and body. *)
 val let_in : t list -> t -> t
 
-(** [forall bindings body] constructs a universal quantification expression
-    with the given bindings and body. *)
+(** [forall bindings body] constructs a universal quantification expression with
+    the given bindings and body. *)
 val forall : t list -> t -> t
 
 (** [exists bindings body] constructs an existential quantification expression
@@ -169,7 +169,8 @@ val triop' : Ty.t -> Ty.Triop.t -> t -> t -> t -> t
     simplification. *)
 val relop' : Ty.t -> Ty.Relop.t -> t -> t -> t
 
-(** [cvtop' ty op expr] applies a conversion operation without simplification. *)
+(** [cvtop' ty op expr] applies a conversion operation without simplification.
+*)
 val cvtop' : Ty.t -> Ty.Cvtop.t -> t -> t
 
 (** [naryop' ty op exprs] applies an N-ary operation without simplification. *)
@@ -178,7 +179,8 @@ val naryop' : Ty.t -> Ty.Naryop.t -> t list -> t
 (** [extract' expr ~high ~low] extracts a bit range without simplification. *)
 val extract' : t -> high:int -> low:int -> t
 
-(** [concat' expr1 expr2] concatenates two expressions without simplification. *)
+(** [concat' expr1 expr2] concatenates two expressions without simplification.
+*)
 val concat' : t -> t -> t
 
 (** {1 Expression Simplification} *)

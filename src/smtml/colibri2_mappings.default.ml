@@ -274,7 +274,9 @@ module Fresh = struct
         with
         | Some a when A.is_integer a -> Some (Value.Int (A.to_int a))
         | Some a when A.is_real a ->
-          Some (Value.Real (Float.of_string (A.to_string a)))
+          Option.map
+            (fun f -> Value.Real f)
+            (Float.of_string_opt (A.to_string a))
         | Some _ | None -> None )
       | Ty_bitv n -> (
         match

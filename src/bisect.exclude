@@ -1,4 +1,4 @@
-file "src/altergo_mappings.ml"
-file "src/bitwuzla_mappings.ml"
-file "src/colibri2_mappings.ml"
-file "src/cvc5_mappings.ml"
+file "src/smtml/altergo_mappings.ml"
+file "src/smtml/bitwuzla_mappings.ml"
+file "src/smtml/colibri2_mappings.ml"
+file "src/smtml/cvc5_mappings.ml"
