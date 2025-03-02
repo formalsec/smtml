@@ -1,7 +1,6 @@
 open Smtml
 
-(* Test Model.to_json *)
-let () =
+let test_to_json () =
   let x = Symbol.make Ty_int "x" in
   let y = Symbol.make Ty_real "y" in
   let z = Symbol.make Ty_bool "z" in
@@ -16,10 +15,9 @@ let () =
   let model_to_json = Model.to_json model in
   Format.printf "%a@." (Yojson.pretty_print ~std:true) model_to_json
 
-(* Parsing *)
+let test_serialization () = test_to_json ()
 
-(* json *)
-let () =
+let test_of_json () =
   let open Result in
   let model_str =
     {|
@@ -35,8 +33,7 @@ let () =
   let model = Model.Parse.Json.from_string model_str in
   assert (match model with Ok _ -> true | _ -> false)
 
-(* scfg *)
-let () =
+let test_of_scfg () =
   let open Result in
   let model_str =
     {|
@@ -49,3 +46,11 @@ let () =
   in
   let model = Model.Parse.Scfg.from_string model_str in
   assert (match model with Ok _ -> true | _ -> false)
+
+let test_deserialization () =
+  test_of_json ();
+  test_of_scfg ()
+
+let () =
+  test_serialization ();
+  test_deserialization ()
