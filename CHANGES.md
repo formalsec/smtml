@@ -2,16 +2,25 @@
 
 ### Added
 
+- Add Bitvector library
 - Add `cache_hits` and `cache_misses` functions to cached solver
 - Add `Expr.Set.hash` as an alias to `Expr.Set.to_int`
+- optimize Expr.equal, cache Expr.simplify (@zapashcanon)
+- Add floating-point operator `Copysign` (Closes #185)
+- Add sign extension to operators with unsigned counter parts (Closes #207)
+
+### Changed
 
 ### Fixed
-### Changed
+
+- Bring back forall and exists quantifiers (Closes #200)
+- Fixes `Value.compare` (Closes #210)
 
 ## v0.5.0
 
 ### Changed
 
+- Bump `prelude` 0.3 -> 0.5
 - Removes `satisfiability` type
 
 ## v0.4.1
