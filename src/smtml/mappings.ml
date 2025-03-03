@@ -659,6 +659,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
               (ctx, e :: es) )
             (ctx, []) es
         in
+        (* This is needed so arguments don't end up out of order in the operator *)
+        let es = List.rev es in
         (ctx, naryop ty op es)
       | Extract (e, h, l) ->
         let ctx, e = encode_expr ctx e in
