@@ -94,12 +94,6 @@ module Key = struct
   let to_int hte = hash hte
 end
 
-module Set = struct
-  include PatriciaTree.MakeHashconsedSet (Key) ()
-
-  let hash = to_int
-end
-
 let[@inline] make e = Hc.hashcons e
 
 let[@inline] view (hte : t) = hte.node
@@ -206,6 +200,45 @@ let negate_relop (hte : t) : (t, string) Result.t =
     | _ -> Error "negate_relop: not a relop."
   in
   Result.map make e
+
+module Set = struct
+  include PatriciaTree.MakeHashconsedSet (Key) ()
+
+  let hash = to_int
+
+  let get_symbols (set : t) =
+    let tbl = Hashtbl.create 64 in
+    let rec symbols hte =
+      match view hte with
+      | Val _ -> ()
+      | Ptr { offset; _ } -> symbols offset
+      | Symbol s -> Hashtbl.replace tbl s ()
+      | List es -> List.iter symbols es
+      | App (_, es) -> List.iter symbols es
+      | Unop (_, _, e1) -> symbols e1
+      | Binop (_, _, e1, e2) ->
+        symbols e1;
+        symbols e2
+      | Triop (_, _, e1, e2, e3) ->
+        symbols e1;
+        symbols e2;
+        symbols e3
+      | Relop (_, _, e1, e2) ->
+        symbols e1;
+        symbols e2
+      | Cvtop (_, _, e) -> symbols e
+      | Naryop (_, _, es) -> List.iter symbols es
+      | Extract (e, _, _) -> symbols e
+      | Concat (e1, e2) ->
+        symbols e1;
+        symbols e2
+      | Binder (_, vars, e) ->
+        List.iter symbols vars;
+        symbols e
+    in
+    iter symbols set;
+    Hashtbl.fold (fun k () acc -> k :: acc) tbl []
+end
 
 module Pp = struct
   let rec pp fmt (hte : t) =

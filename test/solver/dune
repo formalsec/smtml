@@ -1,8 +1,6 @@
 (library
  (name smtml_test_solver)
- (modules
-  test_solver
-  test_optimizer)
+ (modules test_solver test_optimizer)
  (libraries smtml smtml_test))
 
 (test
