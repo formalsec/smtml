@@ -248,6 +248,10 @@ module Set : sig
 
   (** [compare set1 set2] compares two sets lexicographically. *)
   val compare : t -> t -> int
+
+  (** [get_symbols exprs] extracts all symbolic variables from a list of
+      expressions. *)
+  val get_symbols : t -> Symbol.t list
 end
 
 (** {1 Bitvectors} *)
