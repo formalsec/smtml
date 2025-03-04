@@ -55,6 +55,16 @@ module Base (M : Mappings_intf.S) = struct
   let model ?(symbols : Symbol.t list option) (s : M.solver) : Model.t option =
     let+ model = M.Solver.model s in
     M.values_of_model ?symbols model
+
+  let get_sat_model ?symbols s set =
+    match check_set s set with
+    | `Sat -> (
+      match model ?symbols s with
+      | Some model -> `Model model
+      | None ->
+        (* Should never happen *)
+        assert false )
+    | (`Unsat | `Unknown) as no_model -> no_model
 end
 
 module Incremental (M : Mappings_intf.S) : Solver_intf.S =
@@ -107,6 +117,10 @@ module Batch (Mappings : Mappings.S) = struct
   let get_assertions (s : t) : Expr.t list = s.top [@@inline]
 
   let get_statistics (s : t) : Statistics.t = get_statistics s.solver
+
+  let get_sat_model ?symbols s set =
+    let assert_ = Expr.Set.union set (Expr.Set.of_list s.top) in
+    get_sat_model ?symbols s.solver assert_
 
   let check (s : t) (es : Expr.t list) = check s.solver (es @ s.top)
 
@@ -180,6 +194,10 @@ module Cached (Mappings_ : Mappings.S) = struct
     let get_assertions (s : t) : Expr.t list = Expr.Set.to_list s.top [@@inline]
 
     let get_statistics (s : t) : Statistics.t = get_statistics s.solver
+
+    let get_sat_model ?symbols s set =
+      let assert_ = Expr.Set.union set s.top in
+      get_sat_model ?symbols s.solver assert_
 
     let check_set s es =
       let assert_ = Expr.Set.union es s.top in

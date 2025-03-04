@@ -89,8 +89,28 @@ module type S = sig
   (** [model ?symbols solver] retrieves the model of the last [check] query. If
       [?symbols] is provided, only the values of the specified symbols are
       included. Returns [None] if [check] was not invoked before or its result
-      was not [`Sat]. *)
+      was not [`Sat].
+
+      @warning Not compatible with cached solver mode - use {!get_sat_model} instead
+      @see 'get_sat_model' For cached solver-compatible alternative *)
   val model : ?symbols:Symbol.t list -> t -> Model.t option
+
+  (** Compute and retrieve a model for specific constraints.
+
+      [get_sat_model ?symbols solver exprs] performs:
+        1. [check_set] with [exprs] constraints
+        2. Returns model if result is [`Sat]
+
+      Filters output using [?symbols] when provided. Designed for cached
+      solvers.
+
+      @see {!model} For non-cached solvers when you have already performed
+      your own [check]/[check_set] and want to retrieve the results *)
+  val get_sat_model :
+       ?symbols:Symbol.t list
+    -> t
+    -> Expr.Set.t
+    -> [ `Model of Model.t | `Unsat | `Unknown ]
 end
 
 (** The [Intf] module type defines the interface for creating and working with
