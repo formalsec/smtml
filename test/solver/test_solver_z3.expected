@@ -1,4 +1,6 @@
 (model
+  (x int 0))
+(model
   (w i32 4)
   (x i32 1)
   (y i32 2)

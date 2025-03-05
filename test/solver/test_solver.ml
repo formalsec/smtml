@@ -25,7 +25,7 @@ module Make (M : Mappings_intf.S) = struct
     test_default_params ();
     test_solver_params ()
 
-  let test_cached_solver () =
+  let test_cache_hits () =
     let solver = Cached.create ~logic:LIA () in
     let x = Infix.symbol "x" Ty_int in
     let c = Infix.(Int.(x >= int 0)) in
@@ -35,6 +35,19 @@ module Make (M : Mappings_intf.S) = struct
     assert_sat (Cached.check_set solver @@ Expr.Set.singleton c);
     assert (Cached.cache_misses () = 1);
     assert (Cached.cache_hits () = 2)
+
+  let test_cache_get_model () =
+    let open Infix in
+    let solver = Cached.create ~logic:LIA () in
+    let x = symbol "x" Ty_int in
+    let set = Expr.Set.of_list Int.[ x >= int 0; x < int 10 ] in
+    match Cached.get_sat_model solver set with
+    | `Model m -> Fmt.pr "%a@." (Model.pp ~no_values:false) m
+    | `Unsat | `Unknown -> assert false
+
+  let test_cached () =
+    test_cache_hits ();
+    test_cache_get_model ()
 
   let test () =
     let open Infix in
