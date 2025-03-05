@@ -1,15 +1,19 @@
 ## Unreleased
 
 ### Added
+### Changed
+### Fixed
 
-- Add Bitvector library
+## v0.6.0
+
+### Added
+
+- Add `get_sat_model` function to fetch models from path conditions
 - Add `cache_hits` and `cache_misses` functions to cached solver
 - Add `Expr.Set.hash` as an alias to `Expr.Set.to_int`
 - optimize Expr.equal, cache Expr.simplify (@zapashcanon)
 - Add floating-point operator `Copysign` (Closes #185)
 - Add sign extension to operators with unsigned counter parts (Closes #207)
-
-### Changed
 
 ### Fixed
 
