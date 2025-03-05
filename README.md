@@ -119,6 +119,9 @@ module Z3 :
     val check_set : t -> Expr.Set.t -> [ `Sat | `Unknown | `Unsat ]
     val get_value : t -> Expr.t -> Expr.t
     val model : ?symbols:Symbol.t list -> t -> Model.t option
+    val get_sat_model :
+      ?symbols:Symbol.t list ->
+      t -> Expr.Set.t -> [ `Model of Model.t | `Unknown | `Unsat ]
   end
 # let solver = Z3.create ();;
 val solver : Z3.t = <abstr>
