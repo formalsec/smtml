@@ -48,6 +48,10 @@ module Z3 :
     val check_set : t -> Smtml.Expr.Set.t -> [ `Sat | `Unknown | `Unsat ]
     val get_value : t -> Smtml.Expr.t -> Smtml.Expr.t
     val model : ?symbols:Smtml.Symbol.t list -> t -> Smtml.Model.t option
+    val get_sat_model :
+      ?symbols:Smtml.Symbol.t list ->
+      t ->
+      Smtml.Expr.Set.t -> [ `Model of Smtml.Model.t | `Unknown | `Unsat ]
   end
 # let solver = Z3.create ();;
 val solver : Z3.t = <abstr>
