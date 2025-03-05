@@ -144,6 +144,7 @@ module Cached (Mappings_ : Mappings.S) = struct
       { solver : solver
       ; mutable top : Expr.Set.t
       ; stack : Expr.Set.t Stack.t
+      ; mutable last_check : Expr.Set.t option
       }
 
     module Cache = Cache.Strong
@@ -160,12 +161,13 @@ module Cached (Mappings_ : Mappings.S) = struct
       { solver = create ?params ?logic ()
       ; top = Expr.Set.empty
       ; stack = Stack.create ()
+      ; last_check = None
       }
 
-    let clone ({ solver; top; stack } : t) : t =
-      { solver = clone solver; top; stack = Stack.copy stack }
+    let clone ({ solver; top; stack; last_check } : t) : t =
+      { solver = clone solver; top; stack = Stack.copy stack; last_check }
 
-    let push ({ top; stack; solver } : t) : unit =
+    let push ({ top; stack; solver; _ } : t) : unit =
       Mappings.Solver.push solver;
       Stack.push top stack
 
@@ -199,8 +201,17 @@ module Cached (Mappings_ : Mappings.S) = struct
       let assert_ = Expr.Set.union set s.top in
       get_sat_model ?symbols s.solver assert_
 
+    let model ?(symbols : Symbol.t list option) (s : t) : Model.t option =
+      let open Option in
+      let* last_check = s.last_check in
+      (* We need to explicitly check_set because we don't want a cached reseponse *)
+      match check_set s.solver last_check with
+      | `Sat -> model ?symbols s.solver
+      | `Unsat | `Unknown -> None
+
     let check_set s es =
       let assert_ = Expr.Set.union es s.top in
+      s.last_check <- Some assert_;
       match Cache.find_opt cache assert_ with
       | Some res -> res
       | None ->
@@ -211,9 +222,6 @@ module Cached (Mappings_ : Mappings.S) = struct
     let check (s : t) (es : Expr.t list) = check_set s (Expr.Set.of_list es)
 
     let get_value (solver : t) (e : Expr.t) : Expr.t = get_value solver.solver e
-
-    let model ?(symbols : Symbol.t list option) (s : t) : Model.t option =
-      model ?symbols s.solver
 
     let interrupt { solver; _ } = interrupt solver
   end
