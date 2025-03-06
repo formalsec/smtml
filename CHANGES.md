@@ -4,6 +4,12 @@
 ### Changed
 ### Fixed
 
+## v0.6.1
+
+### Fixed
+
+- Fixes model parsing in the JSON format.
+
 ## v0.6.0
 
 ### Added
