@@ -62,7 +62,7 @@ let to_json (model : t) : Yojson.t =
     ]} *)
 let to_json_string model =
   let model = to_json model in
-  Fmt.str "%a" Yojson.pp model
+  Fmt.str "%a" (Yojson.pretty_print ~std:true) model
 
 let to_scfg ~no_value model =
   let open Scfg.Types in
