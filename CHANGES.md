@@ -6,6 +6,10 @@
 
 ## v0.6.1
 
+### Changed
+
+- Removed alt-ergo-lib pin and disabled model generation for the alt-ergo solver
+
 ### Fixed
 
 - Fixes model parsing in the JSON format.
