@@ -12,6 +12,7 @@
   altergo_mappings
   ast
   ;axioms
+  bitvector
   bitwuzla_mappings
   binder
   cache
