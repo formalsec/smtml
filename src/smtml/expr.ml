@@ -392,6 +392,10 @@ let triop ty op e1 e2 e3 =
   | Ty.Triop.Ite, Val True, _, _ -> e2
   | Ite, Val False, _, _ -> e3
   | op, Val v1, Val v2, Val v3 -> value (Eval.triop ty op v1 v2 v3)
+  | Ite, _, Triop (_, Ite, c2, r1, r2), Triop (_, Ite, _, _, _) ->
+    let else_ = triop' ty Ite e1 r2 e3 in
+    let cond = binop Ty_bool And e1 c2 in
+    triop' ty Ite cond r1 else_
   | _ -> triop' ty op e1 e2 e3
 
 let relop' ty op hte1 hte2 = make (Relop (ty, op, hte1, hte2)) [@@inline]
