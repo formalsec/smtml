@@ -50,6 +50,11 @@ module Int = struct
     of_arg (function Int i -> i | _ -> raise_notrace (Value Ty_int)) n v op
   [@@inline]
 
+  let str_value (n : int) (op : op_type) (v : Value.t) : string =
+    of_arg
+      (function Str str -> str | _ -> raise_notrace (Value Ty_str))
+      n v op
+
   let unop (op : Ty.Unop.t) (v : Value.t) : Value.t =
     let f =
       match op with
@@ -120,6 +125,12 @@ module Int = struct
     | Reinterpret_float ->
       Int (Int.of_float (match v with Real v -> v | _ -> assert false))
     | ToString -> Str (string_of_int (of_value 1 (`Cvtop op) v))
+    | OfString -> begin
+      let s = str_value 1 (`Cvtop op) v in
+      match int_of_string_opt s with
+      | None -> raise ParseNumError
+      | Some i -> Int i
+    end
     | _ -> Fmt.failwith {|cvtop: Unsupported int operator "%a"|} Ty.Cvtop.pp op
 end
 
