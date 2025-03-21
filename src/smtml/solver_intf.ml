@@ -91,7 +91,7 @@ module type S = sig
       included. Returns [None] if [check] was not invoked before or its result
       was not [`Sat].
 
-      @warning Not compatible with cached solver mode - use {!get_sat_model} instead
+      Not compatible with cached solver mode - use {!get_sat_model} instead
       @see 'get_sat_model' For cached solver-compatible alternative *)
   val model : ?symbols:Symbol.t list -> t -> Model.t option
 
@@ -104,7 +104,7 @@ module type S = sig
       Filters output using [?symbols] when provided. Designed for cached
       solvers.
 
-      @see {!model} For non-cached solvers when you have already performed
+      @see 'model' For non-cached solvers when you have already performed
       your own [check]/[check_set] and want to retrieve the results *)
   val get_sat_model :
        ?symbols:Symbol.t list

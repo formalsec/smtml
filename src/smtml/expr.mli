@@ -235,7 +235,160 @@ end
 (** {1 Set Module} *)
 
 module Set : sig
-  include PatriciaTree.SET with type elt = t
+  (** The type of elements of the set *)
+  type elt = t
+
+  (** Alias for the type of elements, for cross-compatibility with maps *)
+  type key = elt
+
+  (** The set type *)
+  type t
+
+  (** {1 Basic functions} *)
+
+  (** The empty set *)
+  val empty : t
+
+  (** [is_empty st] is [true] if [st] contains no elements, [false] otherwise *)
+  val is_empty : t -> bool
+
+  (** [mem elt set] is [true] if [elt] is contained in [set], O(log(n))
+      complexity. *)
+  val mem : elt -> t -> bool
+
+  (** [add elt set] adds element [elt] to the [set]. Preserves physical equality
+      if [elt] was already present. O(log(n)) complexity. *)
+  val add : elt -> t -> t
+
+  (** [singleton elt] returns a set containing a single element: [elt] *)
+  val singleton : elt -> t
+
+  (** [cardinal set] is the size of the set (number of elements), O(n)
+      complexity. *)
+  val cardinal : t -> int
+
+  (** [is_singleton set] is [Some (Any elt)] if [set] is [singleton elt] and
+      [None] otherwise. *)
+  val is_singleton : t -> elt option
+
+  (** [remove elt set] returns a set containing all elements of [set] except
+      [elt]. Returns a value physically equal to [set] if [elt] is not present.
+  *)
+  val remove : elt -> t -> t
+
+  (** The minimal element (according to the unsigned order on {!to_int}) if non
+      empty. raises Not_found *)
+  val unsigned_min_elt : t -> elt
+
+  (** The maximal element (according to the unsigned order on {!to_int}) if non
+      empty. raises Not_found *)
+  val unsigned_max_elt : t -> elt
+
+  (** [pop_unsigned_minimum s] is [Some (elt, s')] where
+      [elt = unsigned_min_elt s] and [s' = remove elt s] if [s] is non empty.
+      Uses the unsigned order on {!to_int}. *)
+  val pop_unsigned_minimum : t -> (elt * t) option
+
+  (** [pop_unsigned_maximum s] is [Some (elt, s')] where
+      [elt = unsigned_max_elt s] and [s' = remove elt s] if [s] is non empty.
+      Uses the unsigned order on {!to_int}. *)
+  val pop_unsigned_maximum : t -> (elt * t) option
+
+  (** {1 Iterators} *)
+
+  (** [iter f set] calls [f] on all elements of [set], in the unsigned order of
+      {!to_int}. *)
+  val iter : (elt -> unit) -> t -> unit
+
+  (** [filter f set] is the subset of [set] that only contains the elements that
+      satisfy [f]. [f] is called in the unsigned order of {!to_int}. *)
+  val filter : (elt -> bool) -> t -> t
+
+  (** [for_all f set] is [true] if [f] is [true] on all elements of [set].
+      Short-circuits on first [false]. [f] is called in the unsigned order of
+      {!to_int}. *)
+  val for_all : (elt -> bool) -> t -> bool
+
+  (** [fold f set acc] returns [f elt_n (... (f elt_1 acc) ...)], where
+      [elt_1, ..., elt_n] are the elements of [set], in increasing unsigned
+      order of {!to_int} *)
+  val fold : (elt -> 'acc -> 'acc) -> t -> 'acc -> 'acc
+
+  (** [split elt set] returns [s_lt, present, s_gt] where [s_lt] contains all
+      elements of [set] smaller than [elt], [s_gt] all those greater than [elt],
+      and [present] is [true] if [elt] is in [set]. Uses the unsigned order on
+      {!to_int}.*)
+  val split : elt -> t -> t * bool * t
+
+  (** Pretty prints the set, [pp_sep] is called once between each element, it
+      defaults to
+      {{:https://v2.ocaml.org/api/Format.html#VALpp_print_cut}[Format.pp_print_cut]}
+  *)
+  val pretty :
+       ?pp_sep:(Format.formatter -> unit -> unit)
+    -> (Format.formatter -> elt -> unit)
+    -> Format.formatter
+    -> t
+    -> unit
+
+  (** {1 Functions on pairs of sets} *)
+
+  (** [union a b] is the set union of [a] and [b], i.e. the set containing all
+      elements that are either in [a] or [b]. *)
+  val union : t -> t -> t
+
+  (** [inter a b] is the set intersection of [a] and [b], i.e. the set
+      containing all elements that are in both [a] or [b]. *)
+  val inter : t -> t -> t
+
+  (** [disjoint a b] is [true] if [a] and [b] have no elements in common. *)
+  val disjoint : t -> t -> bool
+
+  (** [subset a b] is [true] if all elements of [a] are also in [b]. *)
+  val subset : t -> t -> bool
+
+  (** [diff s1 s2] is the set of all elements of [s1] that aren't in [s2].
+      @since v0.11.0 *)
+  val diff : t -> t -> t
+
+  (** [min_elt_inter s1 s2] is {!unsigned_min_elt} of {{!inter}[inter s1 s2]},
+      but faster as it does not require computing the whole intersection.
+      Returns [None] when the intersection is empty.
+
+      @since v0.11.0 *)
+  val min_elt_inter : t -> t -> elt option
+
+  (** [max_elt_inter s1 s2] is {!unsigned_max_elt} of {{!inter}[inter s1 s2]},
+      but faster as it does not require computing the whole intersection.
+      Returns [None] when the intersection is empty.
+
+      @since v0.11.0 *)
+  val max_elt_inter : t -> t -> elt option
+
+  (** {1 Conversion functions} *)
+
+  (** [to_seq st] iterates the whole set, in increasing unsigned order of
+      {!to_int} *)
+  val to_seq : t -> elt Seq.t
+
+  (** [to_rev_seq st] iterates the whole set, in decreasing unsigned order of
+      {!to_int} *)
+  val to_rev_seq : t -> elt Seq.t
+
+  (** [add_seq s st] adds all elements of the sequence [s] to [st] in order. *)
+  val add_seq : elt Seq.t -> t -> t
+
+  (** [of_seq s] creates a new set from the elements of [s]. *)
+  val of_seq : elt Seq.t -> t
+
+  (** [of_list l] creates a new set from the elements of [l]. *)
+  val of_list : elt list -> t
+
+  (** [to_list s] returns the elements of [s] as a list, in increasing unsigned
+      order of {!to_int} *)
+  val to_list : t -> elt list
+
+  (** {1 Smtml Specific} *)
 
   (** [hash set] computes the hash of a set. *)
   val hash : t -> int
