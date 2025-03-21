@@ -1,11 +1,13 @@
 let prover_conv = Cmdliner.Arg.conv (Tool.prover_of_string, Tool.pp_prover)
 
 let fpath_dir =
-  let dir_parser, _ = Cmdliner.Arg.dir in
+  let open Cmdliner in
+  let dir_parser = Arg.(conv_parser dir) in
+  Arg.conv
   ( (fun str ->
       match dir_parser str with
-      | `Ok dir -> `Ok (Fpath.v dir)
-      | `Error _ as err -> err )
+      | Ok dir -> Ok (Fpath.v dir)
+      | Error _ as err -> err )
   , Fpath.pp )
 
 let cli =
