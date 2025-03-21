@@ -102,7 +102,7 @@
    (alt-ergo-lib dolmen_model -> altergo_mappings.default.ml)
    (-> altergo_mappings.nop.ml)))
  (instrumentation
-  (backend bisect_ppx --exclusions src/bisect.exclude)
+  (backend bisect_ppx --exclusions src/smtml/bisect.exclude)
   (deps bisect.exclude)))
 
 (rule
