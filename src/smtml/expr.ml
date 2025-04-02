@@ -475,7 +475,17 @@ let naryop ty op es =
       List.map (fun e -> match view e with Val v -> v | _ -> assert false) es
     in
     value (Eval.naryop ty op vs)
-  else naryop' ty op es
+  else
+    match (ty, op, List.map view es) with
+    | ( Ty_str
+      , Concat
+      , [ Naryop (Ty_str, Concat, l1); Naryop (Ty_str, Concat, l2) ] ) ->
+      naryop' Ty_str Concat (l1 @ l2)
+    | Ty_str, Concat, [ Naryop (Ty_str, Concat, htes); hte ] ->
+      naryop' Ty_str Concat (htes @ [ make hte ])
+    | Ty_str, Concat, [ hte; Naryop (Ty_str, Concat, htes) ] ->
+      naryop' Ty_str Concat (make hte :: htes)
+    | _ -> naryop' ty op es
 
 let nland64 (x : int64) (n : int) =
   let rec loop x' n' acc =
