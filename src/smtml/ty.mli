@@ -212,6 +212,10 @@ module Cvtop : sig
     | TruncUF32  (** Truncate unsigned 32-bit float. *)
     | TruncSF64  (** Truncate signed 64-bit float. *)
     | TruncUF64  (** Truncate unsigned 64-bit float. *)
+    | Trunc_sat_f32_s
+    | Trunc_sat_f32_u
+    | Trunc_sat_f64_s
+    | Trunc_sat_f64_u
     | WrapI64  (** Wrap 64-bit integer. *)
     | Sign_extend of int  (** Sign-extend to a specified bit width. *)
     | Zero_extend of int  (** Zero-extend to a specified bit width. *)
