@@ -821,6 +821,38 @@ module I32CvtOp = struct
       then raise Integer_overflow
       else Int32.of_float xf
 
+  let trunc_sat_f32_s x =
+    if Int32.Infix.(x <> x) then 0l
+    else
+      let xf = F32.to_float x in
+      if Float.Infix.(xf < Int32.(to_float min_int)) then Int32.min_int
+      else if Float.Infix.(xf >= -.Int32.(to_float min_int)) then Int32.max_int
+      else Int32.of_float xf
+
+  let trunc_sat_f32_u x =
+    if Int32.Infix.(x <> x) then 0l
+    else
+      let xf = F32.to_float x in
+      if Float.Infix.(xf <= -1.0) then 0l
+      else if Float.Infix.(xf >= -.Int32.(to_float min_int) *. 2.0) then -1l
+      else Int32.of_float xf
+
+  let trunc_sat_f64_s x =
+    if Int64.Infix.(x <> x) then 0l
+    else
+      let xf = F64.to_float x in
+      if Float.Infix.(xf < Int64.(to_float min_int)) then Int32.min_int
+      else if Float.Infix.(xf >= -.Int64.(to_float min_int)) then Int32.max_int
+      else Int32.of_float xf
+
+  let trunc_sat_f64_u x =
+    if Int64.Infix.(x <> x) then 0l
+    else
+      let xf = F64.to_float x in
+      if Float.Infix.(xf <= -1.0) then 0l
+      else if Float.Infix.(xf >= -.Int64.(to_float min_int) *. 2.0) then -1l
+      else Int32.of_float xf
+
   let cvtop op v =
     let op' = `Cvtop op in
     match op with
@@ -829,6 +861,10 @@ module I32CvtOp = struct
     | TruncUF32 -> I32.to_value (trunc_f32_u (F32.of_value 1 op' v))
     | TruncSF64 -> I32.to_value (trunc_f64_s (F64.of_value 1 op' v))
     | TruncUF64 -> I32.to_value (trunc_f64_u (F64.of_value 1 op' v))
+    | Trunc_sat_f32_s -> I32.to_value (trunc_sat_f32_s (F32.of_value 1 op' v))
+    | Trunc_sat_f32_u -> I32.to_value (trunc_sat_f32_u (F32.of_value 1 op' v))
+    | Trunc_sat_f64_s -> I32.to_value (trunc_sat_f64_s (F64.of_value 1 op' v))
+    | Trunc_sat_f64_u -> I32.to_value (trunc_sat_f64_u (F64.of_value 1 op' v))
     | Reinterpret_float -> I32.to_value (F32.of_value 1 op' v)
     | Sign_extend n -> I32.to_value (extend_s n (I32.of_value 1 op' v))
     | Zero_extend _n -> I32.to_value (I32.of_value 1 op' v)
@@ -885,6 +921,42 @@ module I64CvtOp = struct
         Int64.(logxor (of_float (xf -. 0x1p63)) min_int)
       else Int64.of_float xf
 
+  let trunc_sat_f32_s (x : int32) =
+    if Int32.Infix.(x <> x) then 0L
+    else
+      let xf = F32.to_float x in
+      if Float.Infix.(xf < Int64.(to_float min_int)) then Int64.min_int
+      else if Float.Infix.(xf >= -.Int64.(to_float min_int)) then Int64.max_int
+      else Int64.of_float xf
+
+  let trunc_sat_f32_u (x : int32) =
+    if Int32.Infix.(x <> x) then 0L
+    else
+      let xf = F32.to_float x in
+      if Float.Infix.(xf <= -1.0) then 0L
+      else if Float.Infix.(xf >= -.Int64.(to_float min_int) *. 2.0) then -1L
+      else if Float.Infix.(xf >= -.Int64.(to_float min_int)) then
+        Int64.(logxor (of_float (xf -. 0x1p63)) min_int)
+      else Int64.of_float xf
+
+  let trunc_sat_f64_s (x : int64) =
+    if Int64.Infix.(x <> x) then 0L
+    else
+      let xf = F64.to_float x in
+      if Float.Infix.(xf < Int64.(to_float min_int)) then Int64.min_int
+      else if Float.Infix.(xf >= -.Int64.(to_float min_int)) then Int64.max_int
+      else Int64.of_float xf
+
+  let trunc_sat_f64_u (x : int64) =
+    if Int64.Infix.(x <> x) then 0L
+    else
+      let xf = F64.to_float x in
+      if Float.Infix.(xf <= -1.0) then 0L
+      else if Float.Infix.(xf >= -.Int64.(to_float min_int) *. 2.0) then -1L
+      else if Float.Infix.(xf >= -.Int64.(to_float min_int)) then
+        Int64.(logxor (of_float (xf -. 0x1p63)) min_int)
+      else Int64.of_float xf
+
   let cvtop (op : Ty.Cvtop.t) (v : Value.t) : Value.t =
     let op' = `Cvtop op in
     match op with
@@ -894,6 +966,10 @@ module I64CvtOp = struct
     | TruncUF32 -> I64.to_value (trunc_f32_u (F32.of_value 1 op' v))
     | TruncSF64 -> I64.to_value (trunc_f64_s (F64.of_value 1 op' v))
     | TruncUF64 -> I64.to_value (trunc_f64_u (F64.of_value 1 op' v))
+    | Trunc_sat_f32_s -> I64.to_value (trunc_sat_f32_s (F32.of_value 1 op' v))
+    | Trunc_sat_f32_u -> I64.to_value (trunc_sat_f32_u (F32.of_value 1 op' v))
+    | Trunc_sat_f64_s -> I64.to_value (trunc_sat_f64_s (F64.of_value 1 op' v))
+    | Trunc_sat_f64_u -> I64.to_value (trunc_sat_f64_u (F64.of_value 1 op' v))
     | Reinterpret_float -> I64.to_value (F64.of_value 1 op' v)
     | WrapI64 ->
       raise

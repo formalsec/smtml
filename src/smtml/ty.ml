@@ -358,6 +358,10 @@ module Cvtop = struct
     | TruncUF32
     | TruncSF64
     | TruncUF64
+    | Trunc_sat_f32_s
+    | Trunc_sat_f32_u
+    | Trunc_sat_f64_s
+    | Trunc_sat_f64_u
     | WrapI64
     | Sign_extend of int
     | Zero_extend of int
@@ -387,6 +391,10 @@ module Cvtop = struct
     | TruncUF32, TruncUF32
     | TruncSF64, TruncSF64
     | TruncUF64, TruncUF64
+    | Trunc_sat_f32_s, Trunc_sat_f32_s
+    | Trunc_sat_f32_u, Trunc_sat_f32_u
+    | Trunc_sat_f64_s, Trunc_sat_f64_s
+    | Trunc_sat_f64_u, Trunc_sat_f64_u
     | WrapI64, WrapI64
     | String_to_code, String_to_code
     | String_from_code, String_from_code
@@ -399,9 +407,10 @@ module Cvtop = struct
     | ( ( ToString | OfString | ToBool | OfBool | Reinterpret_int
         | Reinterpret_float | DemoteF64 | PromoteF32 | ConvertSI32 | ConvertUI32
         | ConvertSI64 | ConvertUI64 | TruncSF32 | TruncUF32 | TruncSF64
-        | TruncUF64 | WrapI64 | Sign_extend _ | Zero_extend _ | String_to_code
-        | String_from_code | String_to_int | String_from_int | String_to_float
-        | String_to_re )
+        | TruncUF64 | Trunc_sat_f32_s | Trunc_sat_f32_u | Trunc_sat_f64_s
+        | Trunc_sat_f64_u | WrapI64 | Sign_extend _ | Zero_extend _
+        | String_to_code | String_from_code | String_to_int | String_from_int
+        | String_to_float | String_to_re )
       , _ ) ->
       false
 
@@ -422,6 +431,10 @@ module Cvtop = struct
     | TruncUF32 -> Fmt.string fmt "trunc_f32_u"
     | TruncSF64 -> Fmt.string fmt "trunc_f64_s"
     | TruncUF64 -> Fmt.string fmt "trunc_f64_u"
+    | Trunc_sat_f32_s -> Fmt.string fmt "trunc_sat_f32_s"
+    | Trunc_sat_f32_u -> Fmt.string fmt "trunc_sat_f32_u"
+    | Trunc_sat_f64_s -> Fmt.string fmt "trunc_sat_f64_s"
+    | Trunc_sat_f64_u -> Fmt.string fmt "trunc_sat_f64_u"
     | WrapI64 -> Fmt.string fmt "wrap_i64"
     | Sign_extend sz -> Fmt.pf fmt "extend_i%d_s" sz
     | Zero_extend sz -> Fmt.pf fmt "extend_i%d_u" sz
