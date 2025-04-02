@@ -20,6 +20,7 @@ type op_type =
 
 exception Value of Ty.t
 
+(* FIXME: use snake case instead *)
 exception
   TypeError of
     { index : int
@@ -28,14 +29,17 @@ exception
     ; op : op_type
     }
 
+(* FIXME: use snake case instead *)
 exception DivideByZero
 
-exception ConversionToInteger
+exception Conversion_to_integer
 
-exception IntegerOverflow
+exception Integer_overflow
 
+(* FIXME: use snake case instead *)
 exception IndexOutOfBounds
 
+(* FIXME: use snake case instead *)
 exception ParseNumError
 
 let of_arg f n v op =
@@ -782,39 +786,39 @@ module I32CvtOp = struct
     Int32.(shift_right (shift_left x shift) shift)
 
   let trunc_f32_s (x : int32) =
-    if Int32.Infix.(x <> x) then raise ConversionToInteger
+    if Int32.Infix.(x <> x) then raise Conversion_to_integer
     else
       let xf = F32.to_float x in
       if
         Float.Infix.(
           xf >= -.Int32.(to_float min_int) || xf < Int32.(to_float min_int) )
-      then raise IntegerOverflow
+      then raise Integer_overflow
       else Int32.of_float xf
 
   let trunc_f32_u (x : int32) =
-    if Int32.Infix.(x <> x) then raise ConversionToInteger
+    if Int32.Infix.(x <> x) then raise Conversion_to_integer
     else
       let xf = F32.to_float x in
       if Float.Infix.(xf >= -.Int32.(to_float min_int) *. 2.0 || xf <= -1.0)
-      then raise IntegerOverflow
+      then raise Integer_overflow
       else Int32.of_float xf
 
   let trunc_f64_s (x : int64) =
-    if Int64.Infix.(x <> x) then raise ConversionToInteger
+    if Int64.Infix.(x <> x) then raise Conversion_to_integer
     else
       let xf = F64.to_float x in
       if
         Float.Infix.(
           xf >= -.Int64.(to_float min_int) || xf < Int64.(to_float min_int) )
-      then raise IntegerOverflow
+      then raise Integer_overflow
       else Int32.of_float xf
 
   let trunc_f64_u (x : int64) =
-    if Int64.Infix.(x <> x) then raise ConversionToInteger
+    if Int64.Infix.(x <> x) then raise Conversion_to_integer
     else
       let xf = F64.to_float x in
       if Float.Infix.(xf >= -.Int64.(to_float min_int) *. 2.0 || xf <= -1.0)
-      then raise IntegerOverflow
+      then raise Integer_overflow
       else Int32.of_float xf
 
   let cvtop op v =
@@ -842,41 +846,41 @@ module I64CvtOp = struct
     Int64.(logand (of_int32 x) 0x0000_0000_ffff_ffffL)
 
   let trunc_f32_s (x : int32) =
-    if Int32.Infix.(x <> x) then raise ConversionToInteger
+    if Int32.Infix.(x <> x) then raise Conversion_to_integer
     else
       let xf = F32.to_float x in
       if
         Float.Infix.(
           xf >= -.Int64.(to_float min_int) || xf < Int64.(to_float min_int) )
-      then raise IntegerOverflow
+      then raise Integer_overflow
       else Int64.of_float xf
 
   let trunc_f32_u (x : int32) =
-    if Int32.Infix.(x <> x) then raise ConversionToInteger
+    if Int32.Infix.(x <> x) then raise Conversion_to_integer
     else
       let xf = F32.to_float x in
       if Float.Infix.(xf >= -.Int64.(to_float min_int) *. 2.0 || xf <= -1.0)
-      then raise IntegerOverflow
+      then raise Integer_overflow
       else if Float.Infix.(xf >= -.Int64.(to_float min_int)) then
         Int64.(logxor (of_float (xf -. 0x1p63)) min_int)
       else Int64.of_float xf
 
   let trunc_f64_s (x : int64) =
-    if Int64.Infix.(x <> x) then raise ConversionToInteger
+    if Int64.Infix.(x <> x) then raise Conversion_to_integer
     else
       let xf = F64.to_float x in
       if
         Float.Infix.(
           xf >= -.Int64.(to_float min_int) || xf < Int64.(to_float min_int) )
-      then raise IntegerOverflow
+      then raise Integer_overflow
       else Int64.of_float xf
 
   let trunc_f64_u (x : int64) =
-    if Int64.Infix.(x <> x) then raise ConversionToInteger
+    if Int64.Infix.(x <> x) then raise Conversion_to_integer
     else
       let xf = F64.to_float x in
       if Float.Infix.(xf >= -.Int64.(to_float min_int) *. 2.0 || xf <= -1.0)
-      then raise IntegerOverflow
+      then raise Integer_overflow
       else if Float.Infix.(xf >= -.Int64.(to_float min_int)) then
         Int64.(logxor (of_float (xf -. 0x1p63)) min_int)
       else Int64.of_float xf

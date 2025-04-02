@@ -23,6 +23,11 @@ type op_type =
 
 (** Exception raised when a division by zero occurs during evaluation. *)
 exception DivideByZero
+(* FIXME: use snake case instead *)
+
+exception Conversion_to_integer
+
+exception Integer_overflow
 
 (** Exception raised when an invalid value is encountered during evaluation. *)
 exception Value of Ty.t
@@ -35,6 +40,7 @@ exception
     ; ty : Ty.t  (** The expected type. *)
     ; op : op_type  (** The operation that led to the error. *)
     }
+(* FIXME: use snake case instead *)
 
 (** {1 Evaluation Functions} *)
 
