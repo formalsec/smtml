@@ -74,7 +74,7 @@
    (>= "4.14.0"))
   ocaml_intrinsics
   (patricia-tree
-   (>= "0.10.0"))
+   (>= "0.11.0"))
   (prelude
    (>= "0.5"))
   rusage
