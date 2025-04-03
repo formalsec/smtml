@@ -4,6 +4,13 @@
 ### Changed
 ### Fixed
 
+## v0.6.2
+
+### Added
+
+- Add missing `trunc_sat_f{32|64}_{u|s}` operations
+- Expose `Integer_overflow` and `Conversion_to_integer` exceptions in `Eval
+
 ## v0.6.1
 
 ### Changed
