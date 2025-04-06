@@ -66,6 +66,7 @@ module Unop : sig
     | Not  (** Logical NOT. *)
     | Clz  (** Count leading zeros. *)
     | Ctz  (** Count trailing zeros. *)
+    | Popcnt  (** Count bits set to 1. *)
     (* Float operations *)
     | Abs  (** Absolute value. *)
     | Sqrt  (** Square root. *)

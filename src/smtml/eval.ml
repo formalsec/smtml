@@ -504,6 +504,8 @@ module I32 = struct
     let n = Ocaml_intrinsics.Int32.count_trailing_zeros n in
     Int32.of_int n
 
+  let popcnt _n = assert false
+
   let unop (op : Ty.Unop.t) (v : Value.t) : Value.t =
     let f =
       match op with
@@ -511,6 +513,7 @@ module I32 = struct
       | Not -> Int32.lognot
       | Clz -> clz
       | Ctz -> ctz
+      | Popcnt -> popcnt
       | _ -> Fmt.failwith {|unop: Unsupported i32 operator "%a"|} Ty.Unop.pp op
     in
     to_value (f (of_value 1 (`Unop op) v))
@@ -604,6 +607,8 @@ module I64 = struct
     let n = Ocaml_intrinsics.Int64.count_trailing_zeros n in
     Int64.of_int n
 
+  let popcnt _n = assert false
+
   let unop (op : Ty.Unop.t) (v : Value.t) : Value.t =
     let f =
       match op with
@@ -611,6 +616,7 @@ module I64 = struct
       | Not -> Int64.lognot
       | Clz -> clz
       | Ctz -> ctz
+      | Popcnt -> popcnt
       | _ -> Fmt.failwith {|unop: Unsupported i64 operator "%a"|} Ty.Unop.pp op
     in
     to_value (f (of_value 1 (`Unop op) v))
