@@ -4,11 +4,11 @@ let fpath_dir =
   let open Cmdliner in
   let dir_parser = Arg.(conv_parser dir) in
   Arg.conv
-  ( (fun str ->
-      match dir_parser str with
-      | Ok dir -> Ok (Fpath.v dir)
-      | Error _ as err -> err )
-  , Fpath.pp )
+    ( (fun str ->
+        match dir_parser str with
+        | Ok dir -> Ok (Fpath.v dir)
+        | Error _ as err -> err )
+    , Fpath.pp )
 
 let cli =
   let open Cmdliner in
