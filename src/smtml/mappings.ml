@@ -333,9 +333,12 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         in
         ite (eq n zero) (v @@ Ixx.of_int bitwidth) (loop 0 bitwidth)
 
+      let popcnt _n = assert false
+
       let unop = function
         | Unop.Clz -> clz
         | Ctz -> ctz
+        | Popcnt -> popcnt
         | Neg -> Bitv.neg
         | Not -> Bitv.lognot
         | op ->

@@ -94,6 +94,7 @@ module Unop = struct
     | Not
     | Clz
     | Ctz
+    | Popcnt
     (* Float *)
     | Abs
     | Sqrt
@@ -120,6 +121,7 @@ module Unop = struct
     | Neg, Neg
     | Not, Not
     | Clz, Clz
+    | Popcnt, Popcnt
     | Ctz, Ctz
     | Abs, Abs
     | Sqrt, Sqrt
@@ -139,8 +141,8 @@ module Unop = struct
     | Regexp_opt, Regexp_opt
     | Regexp_comp, Regexp_comp ->
       true
-    | ( ( Neg | Not | Clz | Ctz | Abs | Sqrt | Is_nan | Ceil | Floor | Trunc
-        | Nearest | Head | Tail | Reverse | Length | Trim | Regexp_star
+    | ( ( Neg | Not | Clz | Popcnt | Ctz | Abs | Sqrt | Is_nan | Ceil | Floor
+        | Trunc | Nearest | Head | Tail | Reverse | Length | Trim | Regexp_star
         | Regexp_loop _ | Regexp_plus | Regexp_opt | Regexp_comp )
       , _ ) ->
       false
@@ -150,6 +152,7 @@ module Unop = struct
     | Not -> Fmt.string fmt "not"
     | Clz -> Fmt.string fmt "clz"
     | Ctz -> Fmt.string fmt "ctz"
+    | Popcnt -> Fmt.string fmt "popcnt"
     | Abs -> Fmt.string fmt "abs"
     | Sqrt -> Fmt.string fmt "sqrt"
     | Is_nan -> Fmt.string fmt "is_nan"

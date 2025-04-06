@@ -97,15 +97,15 @@ module type S = sig
 
   (** Compute and retrieve a model for specific constraints.
 
-      [get_sat_model ?symbols solver exprs] performs:
-        1. [check_set] with [exprs] constraints
-        2. Returns model if result is [`Sat]
+      [get_sat_model ?symbols solver exprs] performs: 1. [check_set] with
+      [exprs] constraints 2. Returns model if result is [`Sat]
 
       Filters output using [?symbols] when provided. Designed for cached
       solvers.
 
-      @see 'model' For non-cached solvers when you have already performed
-      your own [check]/[check_set] and want to retrieve the results *)
+      @see 'model'
+        For non-cached solvers when you have already performed your own
+        [check]/[check_set] and want to retrieve the results *)
   val get_sat_model :
        ?symbols:Symbol.t list
     -> t
