@@ -5,13 +5,13 @@ let fpath =
   let open Cmdliner in
   let parser = Arg.(conv_parser file) in
   Arg.conv
-  ( (fun file ->
-      if String.equal "-" file then Ok (Fpath.v file)
-      else
-        match parser file with
-        | Ok file -> Ok (Fpath.v file)
-        | Error _ as err -> err )
-  , Fpath.pp )
+    ( (fun file ->
+        if String.equal "-" file then Ok (Fpath.v file)
+        else
+          match parser file with
+          | Ok file -> Ok (Fpath.v file)
+          | Error _ as err -> err )
+    , Fpath.pp )
 
 let filename =
   let doc = "Input file" in
