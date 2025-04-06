@@ -333,7 +333,22 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         in
         ite (eq n zero) (v @@ Ixx.of_int bitwidth) (loop 0 bitwidth)
 
-      let popcnt _n = assert false
+      let popcnt n =
+        let rec loop (next : int) (count : int) =
+          if Prelude.Int.equal next bitwidth then v @@ Ixx.of_int count
+          else
+            let is_current_bit_set =
+              (* We shift the original number so that the current bit to test is on the right. *)
+              let shifted = Bitv.lshr n (v @@ Ixx.of_int next) in
+              (* We compute the remainder of the shifted number *)
+              let remainder = Bitv.rem_u shifted (v @@ Ixx.of_int 2) in
+              (* We test if the remainder is 0 or 1 *)
+              eq (v @@ Ixx.of_int 1) remainder
+            in
+            let next = succ next in
+            ite is_current_bit_set (loop next (succ count)) (loop next count)
+        in
+        loop 0 0
 
       let unop = function
         | Unop.Clz -> clz
