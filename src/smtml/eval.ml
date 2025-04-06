@@ -504,7 +504,9 @@ module I32 = struct
     let n = Ocaml_intrinsics.Int32.count_trailing_zeros n in
     Int32.of_int n
 
-  let popcnt _n = assert false
+  let popcnt n =
+    let n = Ocaml_intrinsics.Int32.count_set_bits n in
+    Int32.of_int n
 
   let unop (op : Ty.Unop.t) (v : Value.t) : Value.t =
     let f =
@@ -607,7 +609,9 @@ module I64 = struct
     let n = Ocaml_intrinsics.Int64.count_trailing_zeros n in
     Int64.of_int n
 
-  let popcnt _n = assert false
+  let popcnt n =
+    let n = Ocaml_intrinsics.Int64.count_set_bits n in
+    Int64.of_int n
 
   let unop (op : Ty.Unop.t) (v : Value.t) : Value.t =
     let f =
