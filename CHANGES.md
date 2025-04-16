@@ -8,6 +8,7 @@
 
 ### Added
 
+- Add a message to concrete eval's `TypeError` (closes #321)
 - Add `popcnt` implementation (@zapashcanon)
 
 ## v0.6.2

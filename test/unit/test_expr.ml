@@ -11,7 +11,7 @@ let pp_op fmt = function
 
 let with_type_error f =
   try f ()
-  with Eval.TypeError { index; value; ty; op } ->
+  with Eval.TypeError { index; value; ty; op; _ } ->
     Fmt.failwith
       "type error: operator %a.%a argument %d got unexpected value %a" Ty.pp ty
       pp_op op index Value.pp value
