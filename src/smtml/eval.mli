@@ -39,6 +39,7 @@ exception
     ; value : Value.t  (** The actual value that caused the error. *)
     ; ty : Ty.t  (** The expected type. *)
     ; op : op_type  (** The operation that led to the error. *)
+    ; msg : string
     }
 (* FIXME: use snake case instead *)
 

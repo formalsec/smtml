@@ -18,6 +18,14 @@ type op_type =
   | `Naryop of Ty.Naryop.t
   ]
 
+let pp_op_type fmt = function
+  | `Unop op -> Fmt.pf fmt "unop '%a'" Ty.Unop.pp op
+  | `Binop op -> Fmt.pf fmt "binop '%a'" Ty.Binop.pp op
+  | `Relop op -> Fmt.pf fmt "relop '%a'" Ty.Relop.pp op
+  | `Triop op -> Fmt.pf fmt "triop '%a'" Ty.Triop.pp op
+  | `Cvtop op -> Fmt.pf fmt "cvtop '%a'" Ty.Cvtop.pp op
+  | `Naryop op -> Fmt.pf fmt "naryop '%a'" Ty.Naryop.pp op
+
 exception Value of Ty.t
 
 (* FIXME: use snake case instead *)
@@ -27,6 +35,7 @@ exception
     ; value : Value.t
     ; ty : Ty.t
     ; op : op_type
+    ; msg : string
     }
 
 (* FIXME: use snake case instead *)
@@ -42,22 +51,30 @@ exception IndexOutOfBounds
 (* FIXME: use snake case instead *)
 exception ParseNumError
 
-let of_arg f n v op =
+let of_arg f n v op msg =
   try f v
-  with Value t -> raise (TypeError { index = n; value = v; ty = t; op })
+  with Value t -> raise (TypeError { index = n; value = v; ty = t; op; msg })
 [@@inline]
+
+let err_str n op ty_expected ty_actual =
+  Fmt.str "Argument %d of %a expected type %a but got %a instead." n pp_op_type
+    op Ty.pp ty_expected Ty.pp ty_actual
 
 module Int = struct
   let to_value (i : int) : Value.t = Int i [@@inline]
 
   let of_value (n : int) (op : op_type) (v : Value.t) : int =
-    of_arg (function Int i -> i | _ -> raise_notrace (Value Ty_int)) n v op
+    of_arg
+      (function Int i -> i | _ -> raise_notrace (Value Ty_int))
+      n v op
+      (err_str n op Ty_int (Value.type_of v))
   [@@inline]
 
   let str_value (n : int) (op : op_type) (v : Value.t) : string =
     of_arg
       (function Str str -> str | _ -> raise_notrace (Value Ty_str))
       n v op
+      (err_str n op Ty_str (Value.type_of v))
 
   let unop (op : Ty.Unop.t) (v : Value.t) : Value.t =
     let f =
@@ -142,7 +159,10 @@ module Real = struct
   let to_value (v : float) : Value.t = Real v [@@inline]
 
   let of_value (n : int) (op : op_type) (v : Value.t) : float =
-    of_arg (function Real v -> v | _ -> raise_notrace (Value Ty_int)) n v op
+    of_arg
+      (function Real v -> v | _ -> raise_notrace (Value Ty_int))
+      n v op
+      (err_str n op Ty_real (Value.type_of v))
   [@@inline]
 
   let unop (op : Ty.Unop.t) (v : Value.t) : Value.t =
@@ -214,6 +234,7 @@ module Bool = struct
       (function
         | True -> true | False -> false | _ -> raise_notrace (Value Ty_bool) )
       n v op
+      (err_str n op Ty_bool (Value.type_of v))
   [@@inline]
 
   let unop (op : Ty.Unop.t) v =
@@ -275,6 +296,7 @@ module Str = struct
     of_arg
       (function Str str -> str | _ -> raise_notrace (Value Ty_str))
       n v op
+      (err_str n op Ty_str (Value.type_of v))
   [@@inline]
 
   let replace s t t' =
@@ -401,6 +423,7 @@ module Lst = struct
     of_arg
       (function List lst -> lst | _ -> raise_notrace (Value Ty_list))
       n v op
+      (err_str n op Ty_list (Value.type_of v))
   [@@inline]
 
   let unop (op : Ty.Unop.t) (v : Value.t) : Value.t =
@@ -461,6 +484,7 @@ module I32 = struct
     of_arg
       (function Num (I32 i) -> i | _ -> raise_notrace (Value (Ty_bitv 32)))
       n v op
+      (err_str n op (Ty_bitv 32) (Value.type_of v))
   [@@inline]
 
   let cmp_u x op y = op Int32.(add x min_int) Int32.(add y min_int) [@@inline]
@@ -566,6 +590,7 @@ module I64 = struct
     of_arg
       (function Num (I64 i) -> i | _ -> raise_notrace (Value (Ty_bitv 64)))
       n v op
+      (err_str n op (Ty_bitv 64) (Value.type_of v))
   [@@inline]
 
   let cmp_u x op y = op Int64.(add x min_int) Int64.(add y min_int) [@@inline]
@@ -677,6 +702,7 @@ module F32 = struct
     of_arg
       (function Num (F32 f) -> f | _ -> raise_notrace (Value (Ty_fp 32)))
       i v op
+      (err_str i op (Ty_fp 32) (Value.type_of v))
   [@@inline]
 
   let of_value' (i : int) (op : op_type) (v : Value.t) : float =
@@ -740,6 +766,7 @@ module F64 = struct
     of_arg
       (function Num (F64 f) -> f | _ -> raise_notrace (Value (Ty_fp 64)))
       i v op
+      (err_str i op (Ty_fp 64) (Value.type_of v))
   [@@inline]
 
   let of_value' (i : int) (op : op_type) (v : Value.t) : float =
@@ -984,7 +1011,12 @@ module I64CvtOp = struct
     | WrapI64 ->
       raise
         (TypeError
-           { index = 1; value = v; ty = Ty_bitv 64; op = `Cvtop WrapI64 } )
+           { index = 1
+           ; value = v
+           ; ty = Ty_bitv 64
+           ; op = `Cvtop WrapI64
+           ; msg = "Cannot wrapI64 on an I64"
+           } )
     | ToBool | OfBool | _ ->
       Fmt.failwith {|cvtop: Unsupported i64 operator "%a"|} Ty.Cvtop.pp op
 end
@@ -1043,7 +1075,12 @@ module F32CvtOp = struct
     | PromoteF32 ->
       raise
         (TypeError
-           { index = 1; value = v; ty = Ty_fp 32; op = `Cvtop PromoteF32 } )
+           { index = 1
+           ; value = v
+           ; ty = Ty_fp 32
+           ; op = `Cvtop PromoteF32
+           ; msg = "F64 must promote a F32"
+           } )
     | ToString | OfString | _ ->
       Fmt.failwith {|cvtop: Unsupported f32 operator "%a"|} Ty.Cvtop.pp op
 end
@@ -1102,7 +1139,12 @@ module F64CvtOp = struct
     | DemoteF64 ->
       raise
         (TypeError
-           { index = 1; value = v; ty = Ty_bitv 64; op = `Cvtop DemoteF64 } )
+           { index = 1
+           ; value = v
+           ; ty = Ty_bitv 64
+           ; op = `Cvtop DemoteF64
+           ; msg = "F32 must demote a F64"
+           } )
     | ToString | OfString | _ ->
       Fmt.failwith {|cvtop: Unsupported f64 operator "%a"|} Ty.Cvtop.pp op
 end
