@@ -4,6 +4,12 @@
 ### Changed
 ### Fixed
 
+## v0.6.3
+
+### Added
+
+- Add `popcnt` implementation (@zapashcanon)
+
 ## v0.6.2
 
 ### Added
