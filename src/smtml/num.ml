@@ -79,6 +79,11 @@ let to_string (n : t) : string = Fmt.str "%a" pp n
 
 let of_string (cast : Ty.t) value =
   match cast with
+  | Ty_bitv 1 -> (
+    match value with
+    | "true" -> Ok (I32 1l)
+    | "false" -> Ok (I32 0l)
+    | _ -> Fmt.error_msg "invalid value %s, expected 1-bit bitv" value )
   | Ty_bitv 8 -> (
     match int_of_string_opt value with
     | None -> Fmt.error_msg "invalid value %s, expected 8-bit bitv" value
