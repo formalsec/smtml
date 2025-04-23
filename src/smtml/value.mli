@@ -18,6 +18,7 @@ type t =
   | Real of float  (** Real number value. *)
   | Str of string  (** String value. *)
   | Num of Num.t  (** Numeric value. *)
+  | Bitv of Bitvector.t  (** Bitvector value. *)
   | List of t list  (** List of values. *)
   | App : [> `Op of string ] * t list -> t
     (** Application of an operator to a list of values. *)
