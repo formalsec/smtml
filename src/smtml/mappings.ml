@@ -563,7 +563,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Num (I64 x) -> I64.v x
       | Num (F32 x) -> Float32_impl.v x
       | Num (F64 x) -> Float64_impl.v x
-      | Bitv _bv -> (* TODO *) assert false
+      | Bitv bv -> M.Bitv.v (Bitvector.to_string bv) (Bitvector.numbits bv)
       | List _ | App _ | Unit | Nothing -> assert false
 
     let unop = function

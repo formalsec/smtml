@@ -1,6 +1,8 @@
 type t
 
 val make : Z.t -> int -> t
+val of_int32 : Int32.t -> t
+val of_int64 : Int64.t -> t
 
 val view : t -> Z.t
 
@@ -77,3 +79,5 @@ val zero_extend : int -> t -> t
 val sign_extend : int -> t -> t
 
 val to_json : t -> Yojson.Basic.t
+
+val to_string : t -> string

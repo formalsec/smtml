@@ -9,6 +9,10 @@ let make v m =
   let masked_value = Z.logand v (mask m) in
   { value = masked_value; width = m }
 
+let of_int32 v = make (Z.of_int32 v) 32
+
+let of_int64 v = make (Z.of_int64 v) 64
+
 let view { value; _ } = value
 
 let numbits { width; _ } = width
@@ -168,3 +172,5 @@ let sign_extend width bv =
 let to_json _bv =
   (* TODO *)
   assert false
+
+let to_string bv = Fmt.str "%a" pp bv
