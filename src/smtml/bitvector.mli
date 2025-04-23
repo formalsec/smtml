@@ -75,3 +75,5 @@ val extract : t -> high:int -> low:int -> t
 val zero_extend : int -> t -> t
 
 val sign_extend : int -> t -> t
+
+val to_json : t -> Yojson.Basic.t

@@ -164,3 +164,7 @@ let sign_extend width bv =
   in
   let extended = Z.logor bv.value sign_mask in
   make extended new_width
+
+let to_json _bv =
+  (* TODO *)
+  assert false
