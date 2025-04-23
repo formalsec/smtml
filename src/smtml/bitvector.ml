@@ -9,15 +9,35 @@ let make v m =
   let masked_value = Z.logand v (mask m) in
   { value = masked_value; width = m }
 
+let of_int8 v =
+  (* TODO: add a check on v to make sure it is not too big ? *)
+  make (Z.of_int v) 8
+
 let of_int32 v = make (Z.of_int32 v) 32
 
 let of_int64 v = make (Z.of_int64 v) 64
+
+let to_int32 v =
+  if v.width <= 32 then Z.to_int32 v.value
+  else
+    Fmt.failwith "call to Smtml.Bitvector.to_int32 on a bitvector of size %d"
+      v.width
+
+let to_int64 v =
+  if v.width <= 64 then Z.to_int64 v.value
+  else
+    Fmt.failwith "call to Smtml.Bitvector.to_int32 on a bitvector of size %d"
+      v.width
 
 let view { value; _ } = value
 
 let numbits { width; _ } = width
 
 let equal a b = Z.equal a.value b.value && a.width = b.width
+
+let eqz v = Z.equal Z.zero v.value
+
+let eq_one v = Z.equal Z.one v.value
 
 let compare a b = Z.compare a.value b.value
 

@@ -1,10 +1,18 @@
 type t
 
 val make : Z.t -> int -> t
+
+val of_int8 : int -> t
+
 val of_int32 : Int32.t -> t
+
 val of_int64 : Int64.t -> t
 
 val view : t -> Z.t
+
+val to_int32 : t -> Int32.t
+
+val to_int64 : t -> Int64.t
 
 val numbits : t -> int
 
@@ -69,6 +77,10 @@ val le_u : t -> t -> bool
 val ge : t -> t -> bool
 
 val ge_u : t -> t -> bool
+
+val eqz : t -> bool
+
+val eq_one : t -> bool
 
 val concat : t -> t -> t
 
