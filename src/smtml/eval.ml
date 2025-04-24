@@ -1149,29 +1149,93 @@ module F64CvtOp = struct
       Fmt.failwith {|cvtop: Unsupported f64 operator "%a"|} Ty.Cvtop.pp op
 end
 
+module Bitv = struct
+  let to_value bv : Value.t = Bitv bv [@@inline]
+
+  let of_value (n : int) (op : op_type) (v : Value.t) : Bitvector.t =
+    let todo = Ty.Ty_bitv 32 in
+    of_arg
+      (function Bitv bv -> bv | _ -> raise_notrace (Value todo))
+      n v op
+      (err_str n op todo (Value.type_of v))
+
+  let unop op bv =
+    let bv = of_value 1 (`Unop op) bv in
+    to_value
+    @@
+    match op with
+    | Ty.Unop.Neg -> Bitvector.neg bv
+    | Not -> Bitvector.lognot bv
+    | Clz -> Bitvector.clz bv
+    | Ctz -> Bitvector.ctz bv
+    | Popcnt -> Bitvector.ctz bv
+    | _ ->
+      Fmt.failwith {|unop: Unsupported bitvectore operator "%a"|} Ty.Unop.pp op
+
+  let binop op bv1 bv2 =
+    let bv1 = of_value 1 (`Binop op) bv1 in
+    let bv2 = of_value 2 (`Binop op) bv2 in
+    to_value
+    @@
+    match op with
+    | Ty.Binop.Add -> Bitvector.add bv1 bv2
+    | Sub -> Bitvector.sub bv1 bv2
+    | Mul -> Bitvector.mul bv1 bv2
+    | Div -> Bitvector.div bv1 bv2
+    | DivU -> Bitvector.div_u bv1 bv2
+    | Rem -> Bitvector.rem bv1 bv2
+    | RemU -> Bitvector.rem_u bv1 bv2
+    | And -> Bitvector.logand bv1 bv2
+    | Or -> Bitvector.logor bv1 bv2
+    | Xor -> Bitvector.logxor bv1 bv2
+    | Shl -> Bitvector.shl bv1 bv2
+    | ShrL -> Bitvector.lshr bv1 bv2
+    | ShrA -> Bitvector.ashr bv1 bv2
+    | Rotl -> Bitvector.rotate_left bv1 bv2
+    | Rotr -> Bitvector.rotate_right bv1 bv2
+    | _ ->
+      Fmt.failwith {|binop: unsupported bitvector operator "%a"|} Ty.Binop.pp op
+
+  let relop op bv1 bv2 =
+    let bv1 = of_value 1 (`Relop op) bv1 in
+    let bv2 = of_value 2 (`Relop op) bv2 in
+    match op with
+    | Ty.Relop.Lt -> Bitvector.lt bv1 bv2
+    | LtU -> Bitvector.lt_u bv1 bv2
+    | Le -> Bitvector.le bv1 bv2
+    | LeU -> Bitvector.le_u bv1 bv2
+    | Gt -> Bitvector.gt bv1 bv2
+    | GtU -> Bitvector.gt_u bv1 bv2
+    | Ge -> Bitvector.ge bv1 bv2
+    | GeU -> Bitvector.ge_u bv1 bv2
+    | Eq -> Bitvector.equal bv1 bv2
+    | Ne -> not @@ Bitvector.equal bv1 bv2
+
+  let cvtop _ = assert false
+end
+
 (* Dispatch *)
 
-let op int real bool str lst i32 i64 f32 f64 ty op =
+let op int real bool str lst _i32 _i64 f32 f64 bv ty op =
   match ty with
   | Ty.Ty_int -> int op
   | Ty_real -> real op
   | Ty_bool -> bool op
   | Ty_str -> str op
   | Ty_list -> lst op
-  | Ty_bitv 32 -> i32 op
-  | Ty_bitv 64 -> i64 op
   | Ty_fp 32 -> f32 op
   | Ty_fp 64 -> f64 op
-  | Ty_bitv _ | Ty_fp _ | Ty_app | Ty_unit | Ty_none | Ty_regexp -> assert false
+  | Ty_bitv _ -> bv op
+  | Ty_fp _ | Ty_app | Ty_unit | Ty_none | Ty_regexp -> assert false
 [@@inline]
 
 let unop =
   op Int.unop Real.unop Bool.unop Str.unop Lst.unop I32.unop I64.unop F32.unop
-    F64.unop
+    F64.unop Bitv.unop
 
 let binop =
   op Int.binop Real.binop Bool.binop Str.binop Lst.binop I32.binop I64.binop
-    F32.binop F64.binop
+    F32.binop F64.binop Bitv.binop
 
 let triop = function
   | Ty.Ty_bool -> Bool.triop
@@ -1188,6 +1252,7 @@ let relop = function
   | Ty_bitv 64 -> I64.relop
   | Ty_fp 32 -> F32.relop
   | Ty_fp 64 -> F64.relop
+  | Ty_bitv _ -> Bitv.relop
   | _ -> assert false
 
 let cvtop = function
@@ -1199,6 +1264,7 @@ let cvtop = function
   | Ty_bitv 64 -> I64CvtOp.cvtop
   | Ty_fp 32 -> F32CvtOp.cvtop
   | Ty_fp 64 -> F64CvtOp.cvtop
+  | Ty_bitv _ -> Bitv.cvtop
   | _ -> assert false
 
 let naryop = function
