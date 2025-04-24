@@ -4,6 +4,8 @@
 ### Changed
 ### Fixed
 
+- Fix cvc5 mappings use of outdated smtml API functions
+
 ## v0.6.3
 
 ### Added
