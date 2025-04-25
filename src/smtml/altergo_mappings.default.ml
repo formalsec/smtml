@@ -24,7 +24,7 @@ module ConstMap = Map.Make (struct
 end)
 
 (* TODO: make it possible to choose through an option? *)
-let () = AEL.Options.set_interpretation ILast
+let () = AEL.Options.set_produce_models true
 
 let dummy_file = DStd.Loc.mk_file "dummy_file"
 
@@ -73,10 +73,10 @@ module Fresh = struct
       let clone _ = Fmt.failwith "Altergo_mappings: clone is not implemented"
 
       let push s =
-        s.cmds <- C.{ st_decl = C.Push 1; st_loc = AEL.Loc.dummy } :: s.cmds
+        s.cmds <- C.{ st_decl = C.Push 1; st_loc = Dolmen.Std.Loc.dummy } :: s.cmds
 
       let pop s n =
-        s.cmds <- C.{ st_decl = C.Pop n; st_loc = AEL.Loc.dummy } :: s.cmds
+        s.cmds <- C.{ st_decl = C.Pop n; st_loc = Dolmen.Std.Loc.dummy } :: s.cmds
 
       let reset s = s.cmds <- []
 
@@ -101,7 +101,7 @@ module Fresh = struct
             if ConstMap.mem c sym_acc then sym_acc
             else
               let mk_res =
-                AEL.D_cnf.make dummy_file []
+                AEL.Translate.make dummy_file []
                   (mk_dstmt (`Decls [ `Term_decl c ]))
               in
               match mk_res with
@@ -112,7 +112,7 @@ module Fresh = struct
       let mk_cmds sym_acc e_acc el =
         let new_syms, stl = exprl_stmtl el in
         let sym_acc = mk_decls new_syms sym_acc in
-        let mk_res = AEL.D_cnf.make dummy_file e_acc stl in
+        let mk_res = AEL.Translate.make dummy_file e_acc stl in
         (sym_acc, mk_res)
 
       let add s el =
@@ -193,18 +193,18 @@ module Fresh = struct
       | Tbitv n -> Ty_bitv n
       | _ -> assert false
 
-    let _sym_to_aeid Symbol.{ ty; name; _ } : AEL.Id.typed =
+    let sym_to_aeid Symbol.{ ty; name; _ } : AEL.Id.typed =
       match name with
       | Simple s ->
         let name = AEL.Hstring.make s in
         (name, [], ty_to_aety ty)
       | Indexed _ -> assert false
 
-    let _aeid_to_sym ((hs, tyl, ty) : AEL.Id.typed) =
+    let aeid_to_sym ((hs, tyl, ty) : AEL.Id.typed) =
       assert (match tyl with [] -> true | _ -> false);
       Symbol.make (aety_to_ty ty) (AEL.Hstring.view hs)
 
-    let _ae_expr_to_value e : Value.t =
+    let ae_expr_to_value e : Value.t =
       match AEL.Expr.term_view e with
       | { f = True; _ } -> True
       | { f = False; _ } -> False
@@ -214,7 +214,7 @@ module Fresh = struct
       | _ ->
         Fmt.failwith "Altergo_mappings: ae_expr_to_value(%a)" AEL.Expr.print e
 
-    let _ae_expr_to_dvalue e : DM.Value.t =
+    let ae_expr_to_dvalue e : DM.Value.t =
       match AEL.Expr.term_view e with
       | { f = True; _ } -> DM.Bool.mk true
       | { f = False; _ } -> DM.Bool.mk false
@@ -224,7 +224,7 @@ module Fresh = struct
       | _ ->
         Fmt.failwith "Altergo_mappings: ae_expr_to_dvalue(%a)" AEL.Expr.print e
 
-    let _dvalue_to_value (ty : Ty.t) (v : DM.Value.t) : Value.t =
+    let dvalue_to_value (ty : Ty.t) (v : DM.Value.t) : Value.t =
       match DM.Value.extract ~ops:DM.Bool.ops v with
       | Some true -> True
       | Some false -> False
@@ -241,83 +241,78 @@ module Fresh = struct
               Fmt.failwith "Altergo_mappings: dvalue_to_value(%a)"
                 DM.Value.print v ) ) )
 
-    let _cgraph_to_value _hs _g =
-      (* match (g : AEL.ModelMap.graph) with *)
-      (* | Free e -> e *)
-      (* | C c when AEL.ModelMap.M.cardinal c = 1 -> ( *)
-      (*   match AEL.ModelMap.M.min_binding c with [], e -> e | _ -> assert false ) *)
-      (* | C c -> *)
-      (*   (1* Currently, there are no uninterpred functions in the tests/benchs, *)
-      (*      therefore this is ok, but it should be fixed in the future *1) *)
-      (*   Fmt.failwith "Altergo_mappings: no value for %a (%a)" AEL.Id.pp hs *)
-      (*     (fun fmt m -> *)
-      (*       AEL.ModelMap.M.iter *)
-      (*         (fun k v -> *)
-      (*           Fmt.pf fmt "[%a] -> %a; " *)
-      (*             (Fmt.list ~sep:Fmt.comma AEL.Expr.print) *)
-      (*             k AEL.Expr.print v ) *)
-      (*         m ) *)
-      (*     c *)
-      assert false (* This function should never be reached *)
+    let cgraph_to_value hs g =
+      match (g : AEL.ModelMap.graph) with
+      | Free e -> e
+      | C c when AEL.ModelMap.M.cardinal c = 1 -> (
+        match AEL.ModelMap.M.min_binding c with [], e -> e | _ -> assert false )
+      | C c ->
+        (* Currently, there are no uninterpred functions in the tests/benchs,
+           therefore this is ok, but it should be fixed in the future *)
+        Fmt.failwith "Altergo_mappings: no value for %a (%a)" AEL.Id.pp hs
+          (fun fmt m ->
+            AEL.ModelMap.M.iter
+              (fun k v ->
+                Fmt.pf fmt "[%a] -> %a; "
+                  (Fmt.list ~sep:Fmt.comma AEL.Expr.print)
+                  k AEL.Expr.print v )
+              m )
+          c
 
-    let value (Model ((module Sat), _m) : model) (_e : Expr.t) : Value.t =
-      (* match Sat.get_model m with *)
-      (* | None -> Fmt.failwith "Altergo_mappings: no value for (%a)" Expr.pp e *)
-      (* | Some AEL.Models.{ model; _ } -> *)
-      (*   let m = *)
-      (*     AEL.ModelMap.fold *)
-      (*       (fun ((hs, _, _) as id) g acc -> *)
-      (*         let e = cgraph_to_value hs g in *)
-      (*         let tcst = Dolmenexpr_to_expr.tcst_of_symbol (aeid_to_sym id) in *)
-      (*         DM.Model.Cst.add tcst (ae_expr_to_dvalue e) acc ) *)
-      (*       model DM.Model.empty *)
-      (*   in *)
-      (*   let env = *)
-      (*     DM.Env.mk m *)
-      (*       ~builtins: *)
-      (*         (DM.Eval.builtins *)
-      (*            [ DM.Core.builtins *)
-      (*            ; DM.Bool.builtins *)
-      (*            ; DM.Int.builtins *)
-      (*            ; DM.Rat.builtins *)
-      (*            ; DM.Real.builtins *)
-      (*            ; DM.Bitv.builtins *)
-      (*              (1* ; Array.builtins *)
-      (*                 ; Fp.builtins *1) *)
-      (*            ] ) *)
-      (*   in *)
-      (*   let v = DM.Eval.eval env (encode_expr e) in *)
-      (*   dvalue_to_value (Expr.ty e) v *)
-      Fmt.failwith
-        "Altergo_mappings: model generation is currently unsupported!"
+    let value (Model ((module Sat), m) : model) (e : Expr.t) : Value.t =
+      match Sat.get_model m with
+      | None -> Fmt.failwith "Altergo_mappings: no value for (%a)" Expr.pp e
+      | Some AEL.Models.{ model; _ } ->
+        let m =
+          AEL.ModelMap.fold
+            (fun ((hs, _, _) as id) g acc ->
+              let e = cgraph_to_value hs g in
+              let tcst = Dolmenexpr_to_expr.tcst_of_symbol (aeid_to_sym id) in
+              DM.Model.Cst.add tcst (ae_expr_to_dvalue e) acc )
+            model DM.Model.empty
+        in
+        let env =
+          DM.Env.mk m
+            ~builtins:
+              (DM.Eval.builtins
+                 [ DM.Core.builtins
+                 ; DM.Bool.builtins
+                 ; DM.Int.builtins
+                 ; DM.Rat.builtins
+                 ; DM.Real.builtins
+                 ; DM.Bitv.builtins
+                   (* ; Array.builtins
+                      ; Fp.builtins *)
+                 ] )
+        in
+        let v = DM.Eval.eval env (encode_expr e) in
+        dvalue_to_value (Expr.ty e) v
 
-    let values_of_model ?symbols:_ (Model ((module Sat), _m)) : Model.t =
-      (* match Sat.get_model m with *)
-      (* | None -> assert false *)
-      (* | Some AEL.Models.{ model; _ } -> ( *)
-      (*   let r = Hashtbl.create 17 in *)
-      (*   match symbols with *)
-      (*   | None -> *)
-      (*     AEL.ModelMap.fold *)
-      (*       (fun ((hs, _, _) as aeid) g () -> *)
-      (*         let sym = aeid_to_sym aeid in *)
-      (*         Hashtbl.add r sym (ae_expr_to_value (cgraph_to_value hs g)) ) *)
-      (*       model (); *)
-      (*     r *)
-      (*   | Some syml -> *)
-      (*     List.iter *)
-      (*       (fun sym -> *)
-      (*         let ((hs, _, _) as aeid) = sym_to_aeid sym in *)
-      (*         let e = *)
-      (*           try cgraph_to_value hs (AEL.ModelMap.find aeid model) *)
-      (*           with Not_found -> *)
-      (*             Fmt.failwith "Altergo_mappings: no value for %a" AEL.Id.pp hs *)
-      (*         in *)
-      (*         Hashtbl.add r sym (ae_expr_to_value e) ) *)
-      (*       syml; *)
-      (*     r ) *)
-      Fmt.failwith
-        "Altergo_mappings: model generation is currently unsupported!"
+    let values_of_model ?symbols (Model ((module Sat), m)) : Model.t =
+      match Sat.get_model m with
+      | None -> assert false
+      | Some AEL.Models.{ model; _ } -> (
+        let r = Hashtbl.create 17 in
+        match symbols with
+        | None ->
+          AEL.ModelMap.fold
+            (fun ((hs, _, _) as aeid) g () ->
+              let sym = aeid_to_sym aeid in
+              Hashtbl.add r sym (ae_expr_to_value (cgraph_to_value hs g)) )
+            model ();
+          r
+        | Some syml ->
+          List.iter
+            (fun sym ->
+              let ((hs, _, _) as aeid) = sym_to_aeid sym in
+              let e =
+                try cgraph_to_value hs (AEL.ModelMap.find aeid model)
+                with Not_found ->
+                  Fmt.failwith "Altergo_mappings: no value for %a" AEL.Id.pp hs
+              in
+              Hashtbl.add r sym (ae_expr_to_value e) )
+            syml;
+          r )
 
     let set_debug _ = ()
   end
