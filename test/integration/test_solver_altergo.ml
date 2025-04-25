@@ -10,9 +10,9 @@ let test_suite =
   "Alt-ergo"
   >::: [ is_available
        ; Alt_ergo.test_params
-         (* ; Alt_ergo.test_cached *)
-         (* ; Alt_ergo.test_lia *)
-         (* ; Alt_ergo.test_bv *)
+       ; Alt_ergo.test_cached
+       ; Alt_ergo.test_lia
+       ; Alt_ergo.test_bv
        ]
 
 let () =
