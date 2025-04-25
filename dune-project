@@ -46,6 +46,8 @@
  (conflicts
   (bitwuzla-cxx
    (< "0.6.0"))
+  (alt-ergo-lib
+   (>= "2.6.1"))
   (z3
    (or
     (< "4.12.2")
