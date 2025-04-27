@@ -7,7 +7,6 @@ let is_available =
 
 let test_suite =
   assert Z3_mappings.is_available;
-  let module Z3_mappings = Z3_mappings.Fresh.Make () in
   let module Z3_opt = Test_optimizer.Make (Z3_mappings) in
   let module Z3 = Test_solver.Make (Z3_mappings) in
   "Z3"

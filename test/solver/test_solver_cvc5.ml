@@ -6,7 +6,7 @@ let is_available =
   "is_available" >:: fun _ -> assert_equal Cvc5_mappings.is_available true
 
 let () =
-  let module Cvc5 = Test_solver.Make (Cvc5_mappings.Fresh.Make ()) in
+  let module Cvc5 = Test_solver.Make (Cvc5_mappings) in
   "cvc5"
   >::: [ is_available
        ; Cvc5.test_params
