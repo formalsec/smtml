@@ -14,7 +14,7 @@ let assert_sat ?f result =
     | Some func ->
       Fmt.failwith "%s: expected 'sat' but got '%a'" func pp_sat result
 
-let assert_equal a b = assert (Expr.equal a b)
+let assert_equal a b = OUnit2.assert_equal ~cmp:Expr.equal a b
 
 module Infix = struct
   let true_ = Expr.Bool.true_
@@ -27,11 +27,11 @@ module Infix = struct
 
   let string x = value (Str x)
 
-  let int8 x = value (Num (I8 x))
+  let int8 x = value (Bitv (Bitvector.of_int8 x))
 
-  let int32 x = value (Num (I32 x))
+  let int32 x = value (Bitv (Bitvector.of_int32 x))
 
-  let int64 x = value (Num (I64 x))
+  let int64 x = value (Bitv (Bitvector.of_int64 x))
 
   let float32 x = value (Num (F32 (Int32.bits_of_float x)))
 
