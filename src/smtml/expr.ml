@@ -102,8 +102,6 @@ let[@inline] compare (hte1 : t) (hte2 : t) = compare hte1.tag hte2.tag
 
 let symbol s = make (Symbol s)
 
-let is_num (e : t) = match view e with Val (Num _) -> true | _ -> false
-
 (** The return type of an expression *)
 let rec ty (hte : t) : Ty.t =
   match view hte with
@@ -351,17 +349,20 @@ let rec binop ty op hte1 hte2 =
   | Sub, Ptr { base; offset }, _ ->
     ptr base (binop (Ty_bitv 32) Sub offset hte2)
   | Rem, Ptr { base; offset }, _ ->
-    let rhs = value (Num (I32 base)) in
+    let rhs = value (Bitv (Bitvector.of_int32 base)) in
     let addr = binop (Ty_bitv 32) Add rhs offset in
     binop ty Rem addr hte2
   | Add, _, Ptr { base; offset } ->
     ptr base (binop (Ty_bitv 32) Add offset hte1)
   | Sub, _, Ptr { base; offset } ->
-    binop ty Sub hte1 (binop (Ty_bitv 32) Add (value (Num (I32 base))) offset)
-  | (Add | Or), Val (Num (I32 0l)), _ -> hte2
-  | (And | Div | DivU | Mul | Rem | RemU), Val (Num (I32 0l)), _ -> hte1
-  | (Add | Or), _, Val (Num (I32 0l)) -> hte1
-  | (And | Mul), _, Val (Num (I32 0l)) -> hte2
+    let base = value (Bitv (Bitvector.of_int32 base)) in
+    binop ty Sub hte1 (binop (Ty_bitv 32) Add base offset)
+  | (Add | Or), Val (Bitv bv), _ when Bitvector.eqz bv -> hte2
+  | (And | Div | DivU | Mul | Rem | RemU), Val (Bitv bv), _
+    when Bitvector.eqz bv ->
+    hte1
+  | (Add | Or), _, Val (Bitv bv) when Bitvector.eqz bv -> hte1
+  | (And | Mul), _, Val (Bitv bv) when Bitvector.eqz bv -> hte2
   | Add, Binop (ty, Add, x, { node = Val v1; _ }), Val v2 ->
     let v = value (Eval.binop ty Add v1 v2) in
     raw_binop ty Add x v
@@ -431,15 +432,17 @@ let rec relop ty op hte1 hte2 =
     , Ptr { base = b2; offset = os2 } ) ->
     if Int32.equal b1 b2 then relop ty op os1 os2
     else
-      value
-        (if Eval.relop ty op (Num (I32 b1)) (Num (I32 b2)) then True else False)
-  | op, Val (Num _ as n), Ptr { base; offset = { node = Val (Num _ as o); _ } }
-    ->
-    let base = Eval.binop (Ty_bitv 32) Add (Num (I32 base)) o in
+      let b1 = Value.Bitv (Bitvector.of_int32 b1) in
+      let b2 = Value.Bitv (Bitvector.of_int32 b2) in
+      value (if Eval.relop ty op b1 b2 then True else False)
+  | ( op
+    , Val (Bitv _ as n)
+    , Ptr { base; offset = { node = Val (Bitv _ as o); _ } } ) ->
+    let base = Eval.binop (Ty_bitv 32) Add (Bitv (Bitvector.of_int32 base)) o in
     value (if Eval.relop ty op n base then True else False)
-  | op, Ptr { base; offset = { node = Val (Num _ as o); _ } }, Val (Num _ as n)
+  | op, Ptr { base; offset = { node = Val (Bitv _ as o); _ } }, Val (Bitv _ as n)
     ->
-    let base = Eval.binop (Ty_bitv 32) Add (Num (I32 base)) o in
+    let base = Eval.binop (Ty_bitv 32) Add (Bitv (Bitvector.of_int32 base)) o in
     value (if Eval.relop ty op base n then True else False)
   | op, List l1, List l2 -> relop_list op l1 l2
   | Gt, _, _ -> relop ty Lt hte2 hte1
@@ -496,29 +499,15 @@ let naryop ty op es =
       raw_naryop Ty_str Concat (make hte :: htes)
     | _ -> raw_naryop ty op es
 
-let nland64 (x : int64) (n : int) =
-  let rec loop x' n' acc =
-    if n' = 0 then Int64.logand x' acc
-    else loop x' (n' - 1) Int64.(logor (shift_left acc 8) 0xffL)
-  in
-  loop x n 0L
-
-let nland32 (x : int32) (n : int) =
-  let rec loop x' n' acc =
-    if n' = 0 then Int32.logand x' acc
-    else loop x' (n' - 1) Int32.(logor (shift_left acc 8) 0xffl)
-  in
-  loop x n 0l
-
-let raw_extract (hte : t) ~(high : int) ~(low : int) : t =
+let[@inline] raw_extract (hte : t) ~(high : int) ~(low : int) : t =
   make (Extract (hte, high, low))
-[@@inline]
 
 let extract (hte : t) ~(high : int) ~(low : int) : t =
   match (view hte, high, low) with
-  | Val (Num (I64 x)), high, low ->
-    let x' = nland64 (Int64.shift_right x (low * 8)) (high - low) in
-    value (Num (I64 x'))
+  | Val (Bitv bv), high, low ->
+    let high = (high * 8) - 1 in
+    let low = low * 8 in
+    value (Bitv (Bitvector.extract bv ~high ~low))
   | Concat (_, e), 4, 0 when Ty.size (ty e) = 4 -> e
   | Concat (e, _), 8, 4 when Ty.size (ty e) = 4 -> e
   | _ ->
@@ -526,12 +515,10 @@ let extract (hte : t) ~(high : int) ~(low : int) : t =
 
 let extract2 (hte : t) (pos : int) : t =
   match view hte with
-  | Val (Num (I32 i)) ->
-    let i' = Int32.(to_int @@ logand 0xffl @@ shift_right i (pos * 8)) in
-    value (Num (I8 i'))
-  | Val (Num (I64 i)) ->
-    let i' = Int64.(to_int @@ logand 0xffL @@ shift_right i (pos * 8)) in
-    value (Num (I8 i'))
+  | Val (Bitv bv) ->
+    let low = pos * 8 in
+    let high = ((pos + 1) * 8) - 1 in
+    value (Bitv (Bitvector.extract bv ~high ~low))
   | Cvtop
       ( _
       , (Zero_extend 24 | Sign_extend 24)
@@ -541,36 +528,13 @@ let extract2 (hte : t) (pos : int) : t =
 
 let raw_concat (msb : t) (lsb : t) : t = make (Concat (msb, lsb)) [@@inline]
 
-let concat (msb : t) (lsb : t) : t =
+let rec concat (msb : t) (lsb : t) : t =
   match (view msb, view lsb) with
-  | ( Extract ({ node = Val (Num (I64 x2)); _ }, h2, l2)
-    , Extract ({ node = Val (Num (I64 x1)); _ }, h1, l1) ) ->
-    let d1 = h1 - l1 in
-    let d2 = h2 - l2 in
-    let x1' = nland64 (Int64.shift_right x1 (l1 * 8)) d1 in
-    let x2' = nland64 (Int64.shift_right x2 (l2 * 8)) d2 in
-    let x = Int64.(logor (shift_left x2' (d1 * 8)) x1') in
-    raw_extract (value (Num (I64 x))) ~high:(d1 + d2) ~low:0
-  | ( Extract ({ node = Val (Num (I32 x2)); _ }, h2, l2)
-    , Extract ({ node = Val (Num (I32 x1)); _ }, h1, l1) ) ->
-    let d1 = h1 - l1 in
-    let d2 = h2 - l2 in
-    let x1' = nland32 (Int32.shift_right x1 (l1 * 8)) d1 in
-    let x2' = nland32 (Int32.shift_right x2 (l2 * 8)) d2 in
-    let x = Int32.(logor (shift_left x2' (d1 * 8)) x1') in
-    raw_extract (value (Num (I32 x))) ~high:(d1 + d2) ~low:0
+  | Val (Bitv a), Val (Bitv b) -> value (Bitv (Bitvector.concat a b))
   | Extract (s1, h, m1), Extract (s2, m2, l) when equal s1 s2 && m1 = m2 ->
     raw_extract s1 ~high:h ~low:l
-  | ( Extract ({ node = Val (Num (I64 x2)); _ }, h2, l2)
-    , Concat
-        ({ node = Extract ({ node = Val (Num (I64 x1)); _ }, h1, l1); _ }, se) )
-    when not (is_num se) ->
-    let d1 = h1 - l1 in
-    let d2 = h2 - l2 in
-    let x1' = nland64 (Int64.shift_right x1 (l1 * 8)) d1 in
-    let x2' = nland64 (Int64.shift_right x2 (l2 * 8)) d2 in
-    let x = Int64.(logor (shift_left x2' (d1 * 8)) x1') in
-    raw_concat (raw_extract (value (Num (I64 x))) ~high:(d1 + d2) ~low:0) se
+  | Val (Bitv _), Concat (({ node = Val (Bitv _); _ } as b), se) ->
+    raw_concat (concat msb b) se
   | _ -> raw_concat msb lsb
 
 (* TODO: don't rebuild so many values it generates unecessary hc lookups *)
@@ -583,26 +547,14 @@ let merge_extracts (e1, h, m1) (e2, m2, l) =
 let concat3 ~msb ~lsb offset =
   assert (offset > 0 && offset <= 8);
   match (view msb, view lsb) with
-  | Val (Num (I8 i1)), Val (Num (I8 i2)) ->
-    value (Num (I32 Int32.(logor (shift_left (of_int i1) 8) (of_int i2))))
-  | Val (Num (I8 i1)), Val (Num (I32 i2)) ->
-    let offset = offset * 8 in
-    if offset < 32 then
-      value (Num (I32 Int32.(logor (shift_left (of_int i1) offset) i2)))
-    else
-      let i1' = Int64.of_int i1 in
-      let i2' = Int64.of_int32 i2 in
-      value (Num (I64 Int64.(logor (shift_left i1' offset) i2')))
-  | Val (Num (I8 i1)), Val (Num (I64 i2)) ->
-    let offset = offset * 8 in
-    value (Num (I64 Int64.(logor (shift_left (of_int i1) offset) i2)))
+  | Val (Bitv a), Val (Bitv b) -> value (Bitv (Bitvector.concat a b))
   | Extract (e1, h, m1), Extract (e2, m2, l) ->
     merge_extracts (e1, h, m1) (e2, m2, l)
   | Extract (e1, h, m1), Concat ({ node = Extract (e2, m2, l); _ }, e3) ->
     make (Concat (merge_extracts (e1, h, m1) (e2, m2, l), e3))
   | _ -> make (Concat (msb, lsb))
 
-let rec simplify_expr ?(rm_extract = true) (hte : t) : t =
+let rec simplify_expr (hte : t) : t =
   match view hte with
   | Val _ | Symbol _ -> hte
   | Ptr { base; offset } -> ptr base (simplify_expr offset)
@@ -628,13 +580,12 @@ let rec simplify_expr ?(rm_extract = true) (hte : t) : t =
     let e = simplify_expr e in
     cvtop ty op e
   | Naryop (ty, op, es) ->
-    let es = List.map (simplify_expr ~rm_extract:false) es in
+    let es = List.map simplify_expr es in
     naryop ty op es
-  | Extract (s, high, low) ->
-    if not rm_extract then hte else extract s ~high ~low
+  | Extract (s, high, low) -> extract s ~high ~low
   | Concat (e1, e2) ->
-    let msb = simplify_expr ~rm_extract:false e1 in
-    let lsb = simplify_expr ~rm_extract:false e2 in
+    let msb = simplify_expr e1 in
+    let lsb = simplify_expr e2 in
     concat msb lsb
   | Binder _ ->
     (* Not simplifying anything atm *)
