@@ -1,4 +1,5 @@
 (executable
+ (enabled_if false)
  (name runner)
  (libraries
   bos
