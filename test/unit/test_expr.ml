@@ -1,3 +1,4 @@
+open OUnit2
 open Smtml
 open Smtml_test.Test_harness
 
@@ -9,14 +10,14 @@ let pp_op fmt = function
   | `Cvtop op -> Ty.Cvtop.pp fmt op
   | `Naryop op -> Ty.Naryop.pp fmt op
 
-let with_type_error f =
+let _with_type_error f =
   try f ()
   with Eval.TypeError { index; value; ty; op; _ } ->
     Fmt.failwith
       "type error: operator %a.%a argument %d got unexpected value %a" Ty.pp ty
       pp_op op index Value.pp value
 
-let test_hc () =
+let test_hc _ =
   let open Infix in
   let length0 = Expr.Hc.length () in
   let ty = Ty.Ty_bitv 32 in
@@ -35,7 +36,7 @@ let test_hc () =
   (*   3. x + y *)
   assert (Expr.Hc.length () - length0 == 3)
 
-let test_unop_int () =
+let test_unop_int _ =
   let open Infix in
   let ty = Ty.Ty_int in
   assert_equal (Expr.unop ty Neg (int 1)) (int ~-1);
@@ -43,7 +44,7 @@ let test_unop_int () =
   let x = symbol "x" ty in
   assert_equal (Expr.unop ty Neg (Expr.unop ty Neg x)) x
 
-let test_unop_real () =
+let test_unop_real _ =
   let open Infix in
   let ty = Ty.Ty_real in
   assert_equal (Expr.unop ty Neg (real 1.0)) (real (-1.0));
@@ -55,19 +56,19 @@ let test_unop_real () =
   assert_equal (Expr.unop ty Trunc (real 1.504)) (real 1.0);
   assert_equal (Expr.unop ty Is_nan (real Float.nan)) true_
 
-let test_unop_string () =
+let test_unop_string _ =
   let open Infix in
   let ty = Ty.Ty_str in
   assert_equal (Expr.unop ty Length (string "abc")) (int 3);
   assert_equal (Expr.unop ty Trim (string " abc\t\n")) (string "abc")
 
-let test_unop_bool () =
+let test_unop_bool _ =
   let ty = Ty.Ty_bool in
   assert_equal (Expr.unop ty Not Expr.Bool.true_) Expr.Bool.false_;
   let x = Expr.symbol (Symbol.make ty "x") in
   assert_equal (Expr.unop ty Not (Expr.unop ty Not x)) x
 
-let test_unop_list () =
+let test_unop_list _ =
   let open Infix in
   let ty = Ty.Ty_list in
   let vlist = list [ Int 1; Int 2; Int 3 ] in
@@ -83,42 +84,43 @@ let test_unop_list () =
   assert_equal (Expr.unop ty Length slist) (int 2);
   assert_equal (Expr.unop ty Reverse (Expr.unop ty Reverse slist)) slist
 
-let test_unop_i32 () =
+let test_unop_i32 _ =
   let open Infix in
   let ty = Ty.Ty_bitv 32 in
   assert_equal (Expr.unop ty Neg (int32 1l)) (int32 (-1l));
   assert_equal (Expr.unop ty Not (int32 (-1l))) (int32 0l)
 
-let test_unop_i64 () =
+let test_unop_i64 _ =
   let open Infix in
   let ty = Ty.Ty_bitv 64 in
   assert_equal (Expr.unop ty Neg (int64 1L)) (int64 (-1L));
   assert_equal (Expr.unop ty Not (int64 (-1L))) (int64 0L)
 
 (* f32 *)
-let test_unop_f32 () =
+let test_unop_f32 _ =
   let open Infix in
   let ty = Ty.Ty_fp 32 in
   assert_equal (Expr.unop ty Trunc (float32 0.75)) (float32 0.0)
 
 (* f64 *)
-let test_unop_f64 () =
+let test_unop_f64 _ =
   let open Infix in
   let ty = Ty.Ty_fp 64 in
   assert_equal (Expr.unop ty Trunc (float64 0.75)) (float64 0.0)
 
-let test_unop () =
-  test_unop_int ();
-  test_unop_real ();
-  test_unop_string ();
-  test_unop_bool ();
-  test_unop_list ();
-  test_unop_i32 ();
-  test_unop_i64 ();
-  test_unop_f32 ();
-  test_unop_f64 ()
+let test_unop =
+  [ "test_unop_int" >:: test_unop_int
+  ; "test_unop_real" >:: test_unop_real
+  ; "test_unop_stri" >:: test_unop_string
+  ; "test_unop_bool" >:: test_unop_bool
+  ; "test_unop_list" >:: test_unop_list
+  ; "test_unop_i32 " >:: test_unop_i32
+  ; "test_unop_i64 " >:: test_unop_i64
+  ; "test_unop_f32 " >:: test_unop_f32
+  ; "test_unop_f64 " >:: test_unop_f64
+  ]
 
-let test_binop_int () =
+let test_binop_int _ =
   let open Infix in
   let ty = Ty.Ty_int in
   assert_equal (Expr.binop ty Add (int 0) (int 42)) (int 42);
@@ -137,7 +139,7 @@ let test_binop_int () =
   assert_equal (Expr.binop ty ShrA (int (-4)) (int 2)) (int (-1))
 (* assert_equal (Expr.binop ty ShrL (int (-4)) (int 2)) (int (-1)) *)
 
-let test_binop_real () =
+let test_binop_real _ =
   let open Infix in
   let ty = Ty.Ty_real in
   assert_equal (Expr.binop ty Add (real 0.0) (real 42.0)) (real 42.0);
@@ -148,7 +150,7 @@ let test_binop_real () =
   assert_equal (Expr.binop ty Min (real 2.0) (real 4.0)) (real 2.0);
   assert_equal (Expr.binop ty Max (real 2.0) (real 4.0)) (real 4.0)
 
-let test_binop_string () =
+let test_binop_string _ =
   let open Infix in
   let ty = Ty.Ty_str in
   assert_equal (Expr.binop ty At (string "abc") (int 0)) (string "a");
@@ -160,7 +162,7 @@ let test_binop_string () =
     (Expr.binop ty String_contains (string "abcd") (string "bc"))
     true_
 
-let test_binop_list () =
+let test_binop_list _ =
   let open Infix in
   let ty = Ty.Ty_list in
   let clist = list [ Int 0; Int 1; Int 2 ] in
@@ -179,7 +181,7 @@ let test_binop_list () =
     (Expr.binop ty List_cons (int 0) (Expr.list [ int 1; int 2 ]))
     slist3
 
-let test_binop_i32 () =
+let test_binop_i32 _ =
   let open Infix in
   let ptr = Expr.ptr 8390670l (int32 2l) in
   assert_equal (Expr.binop (Ty_bitv 32) Rem ptr (int32 1l)) (int32 0l);
@@ -200,7 +202,7 @@ let test_binop_i32 () =
     Expr.(binop (Ty_bitv 32) Rotr (int32 2l) (int32 2l))
     (int32 Int32.min_int)
 
-let test_binop_i64 () =
+let test_binop_i64 _ =
   let open Infix in
   assert_equal (Expr.binop (Ty_bitv 64) Add (int64 0L) (int64 1L)) (int64 1L);
   assert_equal (Expr.binop (Ty_bitv 64) Sub (int64 1L) (int64 0L)) (int64 1L);
@@ -219,7 +221,7 @@ let test_binop_i64 () =
     (Expr.binop (Ty_bitv 64) Rotr (int64 2L) (int64 2L))
     (int64 Int64.min_int)
 
-let test_binop_f32 () =
+let test_binop_f32 _ =
   let open Infix in
   let ty = Ty.Ty_fp 32 in
   assert_equal
@@ -235,7 +237,7 @@ let test_binop_f32 () =
     (Expr.binop ty Copysign (float32 (-4.2)) (float32 (-2.0)))
     (float32 (-4.2))
 
-let test_binop_f64 () =
+let test_binop_f64 _ =
   let open Infix in
   let ty = Ty.Ty_fp 64 in
   assert_equal
@@ -251,7 +253,7 @@ let test_binop_f64 () =
     (Expr.binop ty Copysign (float64 (-4.2)) (float64 (-2.0)))
     (float64 (-4.2))
 
-let test_binop_ptr () =
+let test_binop_ptr _ =
   let open Infix in
   let p0 = Expr.ptr 0l (int32 0l) in
   let p1 = Expr.binop (Ty_bitv 32) Add p0 (int32 4l) in
@@ -260,7 +262,7 @@ let test_binop_ptr () =
   assert_equal (Expr.binop (Ty_bitv 32) Sub p1 (int32 4l)) p0;
   assert_equal (Expr.binop (Ty_bitv 32) Add (int32 4l) p0) p1
 
-let test_binop_simplifications () =
+let test_binop_simplifications _ =
   let open Infix in
   let x = symbol "x" (Ty_bitv 32) in
   let zero = int32 0l in
@@ -277,19 +279,20 @@ let test_binop_simplifications () =
     (binop32 Mul (int32 2l) (binop32 Mul x (int32 2l)))
     (binop32 Mul (int32 4l) x)
 
-let test_binop () =
-  test_binop_int ();
-  test_binop_real ();
-  test_binop_string ();
-  test_binop_list ();
-  test_binop_i32 ();
-  test_binop_i64 ();
-  test_binop_f32 ();
-  test_binop_f64 ();
-  test_binop_ptr ();
-  test_binop_simplifications ()
+let test_binop =
+  [ "test_binop_int" >:: test_binop_int
+  ; "test_binop_real" >:: test_binop_real
+  ; "test_binop_string" >:: test_binop_string
+  ; "test_binop_list" >:: test_binop_list
+  ; "test_binop_i32" >:: test_binop_i32
+  ; "test_binop_i64" >:: test_binop_i64
+  ; "test_binop_f32" >:: test_binop_f32
+  ; "test_binop_f64" >:: test_binop_f64
+  ; "test_binop_ptr" >:: test_binop_ptr
+  ; "test_binop_simplifications" >:: test_binop_simplifications
+  ]
 
-let test_relop_bool () =
+let test_relop_bool _ =
   let open Infix in
   let ty = Ty.Ty_bool in
   assert_equal (Expr.relop ty Eq (int 0) (int 0)) true_;
@@ -301,7 +304,7 @@ let test_relop_bool () =
   assert_equal (Expr.relop ty Eq (int64 0L) (int64 0L)) true_;
   assert_equal (Expr.relop ty Ne (int64 0L) (int64 0L)) false_
 
-let test_relop_int () =
+let test_relop_int _ =
   let open Infix in
   let ty = Ty.Ty_int in
   assert_equal (Expr.relop ty Lt (int 0) (int 1)) true_;
@@ -309,7 +312,7 @@ let test_relop_int () =
   assert_equal (Expr.relop ty Gt (int 0) (int 1)) false_;
   assert_equal (Expr.relop ty Ge (int 0) (int 1)) false_
 
-let test_relop_real () =
+let test_relop_real _ =
   let open Infix in
   let ty = Ty.Ty_real in
   let x = symbol "x" ty in
@@ -320,7 +323,7 @@ let test_relop_real () =
   assert_equal (Expr.relop ty Gt (real 0.0) (real 1.0)) false_;
   assert_equal (Expr.relop ty Ge (real 0.0) (real 1.0)) false_
 
-let test_relop_string () =
+let test_relop_string _ =
   let open Infix in
   let ty = Ty.Ty_str in
   assert_equal (Expr.relop ty Lt (string "a") (string "b")) true_;
@@ -332,7 +335,7 @@ let test_relop_string () =
   assert_equal (Expr.relop ty Eq (string "a") (string "b")) false_;
   assert_equal (Expr.relop ty Ne (string "a") (string "b")) true_
 
-let test_relop_i32 () =
+let test_relop_i32 _ =
   let open Infix in
   let ty = Ty.Ty_bitv 32 in
   assert_equal (Expr.relop ty Lt (int32 0l) (int32 1l)) true_;
@@ -344,7 +347,7 @@ let test_relop_i32 () =
   assert_equal (Expr.relop ty Ge (int32 1l) (int32 0l)) true_;
   assert_equal (Expr.relop ty GeU (int32 0l) (int32 (-1l))) false_
 
-let test_relop_i64 () =
+let test_relop_i64 _ =
   let open Infix in
   let ty = Ty.Ty_bitv 64 in
   assert_equal (Expr.relop ty Lt (int64 0L) (int64 1L)) true_;
@@ -356,7 +359,7 @@ let test_relop_i64 () =
   assert_equal (Expr.relop ty Ge (int64 1L) (int64 0L)) true_;
   assert_equal (Expr.relop ty GeU (int64 0L) (int64 (-1L))) false_
 
-let test_relop_f32 () =
+let test_relop_f32 _ =
   let open Infix in
   let ty = Ty.Ty_fp 32 in
   let nan0 = float32 Float.nan in
@@ -370,7 +373,7 @@ let test_relop_f32 () =
   assert_equal (Expr.relop ty Gt (float32 0.0) (float32 1.0)) false_;
   assert_equal (Expr.relop ty Ge (float32 0.0) (float32 1.0)) false_
 
-let test_relop_f64 () =
+let test_relop_f64 _ =
   let open Infix in
   let ty = Ty.Ty_fp 64 in
   assert_equal (Expr.relop ty Lt (float64 0.0) (float64 1.0)) true_;
@@ -378,7 +381,7 @@ let test_relop_f64 () =
   assert_equal (Expr.relop ty Gt (float64 0.0) (float64 1.0)) false_;
   assert_equal (Expr.relop ty Ge (float64 0.0) (float64 1.0)) false_
 
-let test_relop_app () =
+let test_relop_app _ =
   let open Infix in
   let ty = Ty.Ty_bool in
   assert_equal
@@ -394,7 +397,7 @@ let test_relop_app () =
     (Expr.relop ty Ne (int 1) (app (`Op "undefined")))
     Expr.Bool.true_
 
-let test_relop_ptr () =
+let test_relop_ptr _ =
   let open Infix in
   let ty = Ty.Ty_bitv 32 in
   let p0 = Expr.ptr 0l (int32 0l) in
@@ -412,25 +415,26 @@ let test_relop_ptr () =
   assert_equal (Expr.relop ty Gt p1 (int32 4l)) false_;
   assert_equal (Expr.relop ty Ge (int32 4l) p1) true_
 
-let test_relop () =
-  test_relop_bool ();
-  test_relop_int ();
-  test_relop_real ();
-  test_relop_string ();
-  test_relop_i32 ();
-  test_relop_i64 ();
-  test_relop_f32 ();
-  test_relop_f64 ();
-  test_relop_app ();
-  test_relop_ptr ()
+let test_relop =
+  [ "test_relop_bool" >:: test_relop_bool
+  ; "test_relop_int" >:: test_relop_int
+  ; "test_relop_real" >:: test_relop_real
+  ; "test_relop_string" >:: test_relop_string
+  ; "test_relop_i32" >:: test_relop_i32
+  ; "test_relop_i64" >:: test_relop_i64
+  ; "test_relop_f32" >:: test_relop_f32
+  ; "test_relop_f64" >:: test_relop_f64
+  ; "test_relop_app" >:: test_relop_app
+  ; "test_relop_ptr" >:: test_relop_ptr
+  ]
 
-let test_triop_bool () =
+let test_triop_bool _ =
   let open Infix in
   let ty = Ty.Ty_bool in
   assert_equal (Expr.triop ty Ite true_ (int 1) (int 0)) (int 1);
   assert_equal (Expr.triop ty Ite false_ (int 1) (int 0)) (int 0)
 
-let test_triop_string () =
+let test_triop_string _ =
   let open Infix in
   let ty = Ty.Ty_str in
   assert_equal
@@ -443,19 +447,20 @@ let test_triop_string () =
     (Expr.triop ty String_replace (string "abcd") (string "bc") (string "ef"))
     (string "aefd")
 
-let test_triop_list () =
+let test_triop_list _ =
   let open Infix in
   let ty = Ty.Ty_list in
   assert_equal
     (Expr.triop ty List_set (list [ Int 0; Int 1; Int 2 ]) (int 1) (int 3))
     (list [ Int 0; Int 3; Int 2 ])
 
-let test_triop () =
-  test_triop_bool ();
-  test_triop_string ();
-  test_triop_list ()
+let test_triop =
+  [ "test_triop_bool" >:: test_triop_bool
+  ; "test_triop_string" >:: test_triop_string
+  ; "test_triop_list" >:: test_triop_list
+  ]
 
-let test_cvtop_int () =
+let test_cvtop_int _ =
   let open Infix in
   let ty = Ty.Ty_int in
   assert_equal (Expr.cvtop ty OfBool true_) (int 1);
@@ -463,14 +468,14 @@ let test_cvtop_int () =
   assert_equal (Expr.cvtop ty Reinterpret_float (real 1.)) (int 1);
   assert_equal (Expr.cvtop ty ToString (int 1)) (string "1")
 
-let test_cvtop_real () =
+let test_cvtop_real _ =
   let open Infix in
   let ty = Ty.Ty_real in
   assert_equal (Expr.cvtop ty ToString (real 1.)) (string "1.");
   assert_equal (Expr.cvtop ty OfString (string "1.")) (real 1.);
   assert_equal (Expr.cvtop ty Reinterpret_int (int 1)) (real 1.)
 
-let test_cvtop_string () =
+let test_cvtop_string _ =
   let open Infix in
   let ty = Ty.Ty_str in
   assert_equal (Expr.cvtop ty String_to_code (string "a")) (int 97);
@@ -479,7 +484,7 @@ let test_cvtop_string () =
   assert_equal (Expr.cvtop ty String_from_int (int 42)) (string "42");
   assert_equal (Expr.cvtop ty String_to_float (string "1.")) (real 1.)
 
-let test_cvtop_i32 () =
+let test_cvtop_i32 _ =
   let open Infix in
   assert_equal (Expr.cvtop (Ty_bitv 32) TruncSF32 (float32 8.5)) (int32 8l);
   assert_equal (Expr.cvtop (Ty_bitv 32) TruncSF64 (float64 8.5)) (int32 8l);
@@ -489,33 +494,34 @@ let test_cvtop_i32 () =
   let x = Expr.cvtop (Ty_bitv 32) (Sign_extend 16) x in
   assert (Ty.equal (Expr.ty x) (Ty_bitv 32))
 
-let test_cvtop_i64 () =
+let test_cvtop_i64 _ =
   let open Infix in
   assert_equal (Expr.cvtop (Ty_bitv 64) TruncSF32 (float32 8.5)) (int64 8L);
   assert_equal (Expr.cvtop (Ty_bitv 64) TruncSF64 (float64 8.5)) (int64 8L)
 
-let test_cvtop_f32 () =
+let test_cvtop_f32 _ =
   let open Infix in
   let ty = Ty.Ty_fp 32 in
   assert_equal (Expr.cvtop ty ConvertSI32 (int32 8l)) (float32 8.0);
   assert_equal (Expr.cvtop ty ConvertSI64 (int64 8L)) (float32 8.0)
 
-let test_cvtop_f64 () =
+let test_cvtop_f64 _ =
   let open Infix in
   let ty = Ty.Ty_fp 64 in
   assert_equal (Expr.cvtop ty ConvertSI32 (int32 8l)) (float64 8.0);
   assert_equal (Expr.cvtop ty ConvertSI64 (int64 8L)) (float64 8.0)
 
-let test_cvtop () =
-  test_cvtop_int ();
-  test_cvtop_real ();
-  test_cvtop_string ();
-  test_cvtop_i32 ();
-  test_cvtop_i64 ();
-  test_cvtop_f32 ();
-  test_cvtop_f64 ()
+let test_cvtop =
+  [ "test_cvtop_int" >:: test_cvtop_int
+  ; "test_cvtop_real" >:: test_cvtop_real
+  ; "test_cvtop_string" >:: test_cvtop_string
+  ; "test_cvtop_i32" >:: test_cvtop_i32
+  ; "test_cvtop_i64" >:: test_cvtop_i64
+  ; "test_cvtop_f32" >:: test_cvtop_f32
+  ; "test_cvtop_f64" >:: test_cvtop_f64
+  ]
 
-let test_naryop_bool () =
+let test_naryop_bool _ =
   let open Infix in
   let ty = Ty.Ty_bool in
   assert_equal (Expr.naryop ty Logand [ true_; true_; true_ ]) true_;
@@ -523,7 +529,7 @@ let test_naryop_bool () =
   assert_equal (Expr.naryop ty Logand [ true_; false_; true_ ]) false_;
   assert_equal (Expr.naryop ty Logor [ false_; true_; false_ ]) true_
 
-let test_naryop_string () =
+let test_naryop_string _ =
   let open Infix in
   let ty = Ty.Ty_str in
   assert_equal
@@ -532,11 +538,12 @@ let test_naryop_string () =
   assert_equal (Expr.naryop ty Concat [ string "abc" ]) (string "abc");
   assert_equal (Expr.naryop ty Concat [ string ""; string "" ]) (string "")
 
-let test_naryop () =
-  test_naryop_bool ();
-  test_naryop_string ()
+let test_naryop =
+  [ "test_naryop_bool" >:: test_naryop_bool
+  ; "test_naryop_string" >:: test_naryop_string
+  ]
 
-let test_simplify_assoc () =
+let test_simplify_assoc _ =
   (* Test simplify of left- and righ- associative operators *)
   let open Infix in
   let ty = Ty.Ty_int in
@@ -548,7 +555,7 @@ let test_simplify_assoc () =
   let sym = Expr.raw_binop Ty_int Add (int 3) binary in
   assert_equal (Expr.simplify sym) (Expr.raw_binop Ty_int Add (int 13) x)
 
-let test_simplify_concat () =
+let test_simplify_concat _ =
   (* Test Concat of Extracts simplifications *)
   let open Infix in
   let x = symbol "x" (Ty_bitv 32) in
@@ -559,17 +566,21 @@ let test_simplify_concat () =
   let b3210 = Expr.raw_concat b3 (Expr.raw_concat b2 (Expr.raw_concat b1 b0)) in
   assert_equal x (Expr.simplify b3210)
 
-let test_simplify () =
-  test_simplify_assoc ();
-  test_simplify_concat ()
+let test_simplify =
+  [ "test_simplify_assoc" >:: test_simplify_assoc
+  ; "test_simplify_concat" >:: test_simplify_concat
+  ]
 
-let () =
-  with_type_error @@ fun () ->
-  test_hc ();
-  test_unop ();
-  test_binop ();
-  test_relop ();
-  test_triop ();
-  test_cvtop ();
-  test_naryop ();
-  test_simplify ()
+let test_suite =
+  "Expression unit tests"
+  >::: [ "test_hc" >:: test_hc
+       ; "test_unop" >::: test_unop
+       ; "test_binop" >::: test_binop
+       ; "test_relop" >::: test_relop
+       ; "test_triop" >::: test_triop
+       ; "test_cvtop" >::: test_cvtop
+       ; "test_naryop" >::: test_naryop
+       ; "test_simplify" >::: test_simplify
+       ]
+
+let () = run_test_tt_main test_suite

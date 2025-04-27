@@ -94,6 +94,7 @@
    (and
     :with-test
     (>= "2.5.0")))
+  (ounit2 :with-test)
   ;; Dev dependencies
   (benchpress
    (and

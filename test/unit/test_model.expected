@@ -1,8 +1,0 @@
-{
-  "model": {
-    "u": { "ty": "str", "value": "abc" },
-    "z": { "ty": "bool", "value": true },
-    "y": { "ty": "real", "value": 2.0 },
-    "x": { "ty": "int", "value": 1 }
-  }
-}
