@@ -7,7 +7,7 @@ let is_available =
 
 let test_suite =
   assert Bitwuzla_mappings.is_available;
-  let module Bitwuzla = Test_solver.Make (Bitwuzla_mappings.Fresh.Make ()) in
+  let module Bitwuzla = Test_solver.Make (Bitwuzla_mappings) in
   "Bitwuzla"
   >::: [ is_available
        ; Bitwuzla.test_params
