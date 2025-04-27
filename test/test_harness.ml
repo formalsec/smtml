@@ -7,14 +7,18 @@ let pp_sat fmt = function
   | `Unknown -> Fmt.string fmt "unknown"
 
 let assert_sat ?f result =
-  if match result with `Sat -> true | `Unsat | `Unknown -> false then ()
-  else
-    match f with
-    | None -> Fmt.failwith "expected 'sat' but got '%a'" pp_sat result
-    | Some func ->
-      Fmt.failwith "%s: expected 'sat' but got '%a'" func pp_sat result
+  let fail_msg =
+    Fmt.str "%a: expected 'sat' but got '%a'" (Fmt.option Fmt.string) f pp_sat
+      result
+  in
+  let b = match result with `Sat -> true | `Unsat | `Unknown -> false in
+  OUnit2.assert_bool fail_msg b
 
-let assert_equal a b = OUnit2.assert_equal ~cmp:Expr.equal a b
+let assert_expr a b =
+  let pp_diff fmt (a, b) =
+    Fmt.pf fmt "Got '%a' but expected '%a'" Expr.pp a Expr.pp b
+  in
+  OUnit2.assert_equal ~pp_diff ~cmp:Expr.equal a b
 
 module Infix = struct
   let true_ = Expr.Bool.true_
