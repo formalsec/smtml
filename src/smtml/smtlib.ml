@@ -52,17 +52,12 @@ module Term = struct
       | _ -> Expr.symbol id )
     | Term, Indexed { basename = base; indices } -> (
       match String.(sub base 0 2, sub base 2 (length base - 2), indices) with
-      | "bv", str, [ "8" ] -> begin
-        match int_of_string_opt str with
-        | None -> assert false
-        | Some n -> Expr.value (Num (I8 n))
+      | "bv", str, [ numbits ] -> begin
+        match (int_of_string_opt str, int_of_string_opt numbits) with
+        | Some n, Some width ->
+          Expr.value (Bitv (Bitvector.make (Z.of_int n) width))
+        | (None | Some _), _ -> assert false
       end
-      | "bv", str, [ "32" ] -> begin
-        match int_of_string_opt str with
-        | None -> assert false
-        | Some n -> Expr.value (Num (I32 (Int32.of_int (n land 0xffffffff))))
-      end
-      | "bv", str, [ "64" ] -> Expr.value (Num (I64 (Int64.of_string str)))
       | _ -> Expr.symbol id )
     | Attr, Simple _ -> Expr.symbol id
     | Attr, Indexed _ -> assert false

@@ -558,9 +558,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Int v -> Int_impl.v v
       | Real v -> Real_impl.v v
       | Str v -> String_impl.v v
-      | Num (I8 x) -> I8.v x
-      | Num (I32 x) -> I32.v x
-      | Num (I64 x) -> I64.v x
+      | Num (I8 _) | Num (I32 _) | Num (I64 _) ->
+        Fmt.failwith "Use of (Num (IXX _)) is deprecated use Bitv instead"
       | Num (F32 x) -> Float32_impl.v x
       | Num (F64 x) -> Float64_impl.v x
       | Bitv bv -> M.Bitv.v (Bitvector.to_string bv) (Bitvector.numbits bv)
@@ -645,7 +644,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       match Expr.view hte with
       | Val value -> (ctx, v value)
       | Ptr { base; offset } ->
-        let base' = v (Num (I32 base)) in
+        let base' = v (Bitv (Bitvector.of_int32 base)) in
         let ctx, offset' = encode_expr ctx offset in
         (ctx, I32.binop Add base' offset')
       | Symbol sym -> make_symbol ctx sym
@@ -725,13 +724,13 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           Value.False )
       | Ty_bitv 8 ->
         let i8 = M.Interp.to_bitv v 8 in
-        Value.Num (I8 (Int64.to_int i8))
+        Value.Bitv (Bitvector.of_int8 (Int64.to_int i8))
       | Ty_bitv 32 ->
         let i32 = M.Interp.to_bitv v 32 in
-        Value.Num (I32 (Int64.to_int32 i32))
+        Value.Bitv (Bitvector.of_int32 (Int64.to_int32 i32))
       | Ty_bitv 64 ->
         let i64 = M.Interp.to_bitv v 64 in
-        Value.Num (I64 i64)
+        Value.Bitv (Bitvector.of_int64 i64)
       | Ty_fp 32 ->
         let float = M.Interp.to_float v 8 24 in
         Value.Num (F32 (Int32.bits_of_float float))
