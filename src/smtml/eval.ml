@@ -477,216 +477,287 @@ module Lst = struct
       Fmt.failwith {|naryop: Unsupported list operator "%a"|} Ty.Naryop.pp op
 end
 
-module I32 = struct
-  let to_value (i : int32) : Value.t = Num (I32 i) [@@inline]
+(* module I32 = struct *)
+(*   let to_value (i : int32) : Value.t = Num (I32 i) [@@inline] *)
 
-  let of_value (n : int) (op : op_type) (v : Value.t) : int32 =
-    of_arg
-      (function Num (I32 i) -> i | _ -> raise_notrace (Value (Ty_bitv 32)))
-      n v op
-      (err_str n op (Ty_bitv 32) (Value.type_of v))
-  [@@inline]
+(*   let of_value (n : int) (op : op_type) (v : Value.t) : int32 = *)
+(*     of_arg *)
+(*       (function Num (I32 i) -> i | _ -> raise_notrace (Value (Ty_bitv 32))) *)
+(*       n v op *)
+(*       (err_str n op (Ty_bitv 32) (Value.type_of v)) *)
+(*   [@@inline] *)
 
-  let cmp_u x op y = op Int32.(add x min_int) Int32.(add y min_int) [@@inline]
+(*   let cmp_u x op y = op Int32.(add x min_int) Int32.(add y min_int) [@@inline] *)
 
-  let lt_u x y = cmp_u x Int32.Infix.( < ) y [@@inline]
+(*   let lt_u x y = cmp_u x Int32.Infix.( < ) y [@@inline] *)
 
-  let le_u x y = cmp_u x Int32.Infix.( <= ) y [@@inline]
+(*   let le_u x y = cmp_u x Int32.Infix.( <= ) y [@@inline] *)
 
-  let gt_u x y = cmp_u x Int32.Infix.( > ) y [@@inline]
+(*   let gt_u x y = cmp_u x Int32.Infix.( > ) y [@@inline] *)
 
-  let ge_u x y = cmp_u x Int32.Infix.( >= ) y [@@inline]
+(*   let ge_u x y = cmp_u x Int32.Infix.( >= ) y [@@inline] *)
 
-  let shift f x y = f x Int32.(to_int (logand y 31l)) [@@inline]
+(*   let shift f x y = f x Int32.(to_int (logand y 31l)) [@@inline] *)
 
-  let shl x y = shift Int32.shift_left x y [@@inline]
+(*   let shl x y = shift Int32.shift_left x y [@@inline] *)
 
-  let shr_s x y = shift Int32.shift_right x y [@@inline]
+(*   let shr_s x y = shift Int32.shift_right x y [@@inline] *)
 
-  let shr_u x y = shift Int32.shift_right_logical x y [@@inline]
+(*   let shr_u x y = shift Int32.shift_right_logical x y [@@inline] *)
 
-  (* Stolen rotl and rotr from: *)
-  (* https://github.com/OCamlPro/owi/blob/main/src/int32.ml *)
-  (* We must mask the count to implement rotates via shifts. *)
-  let clamp_rotate_count n = Int32.(to_int (logand n 31l)) [@@inline]
+(*   (1* Stolen rotl and rotr from: *1) *)
+(*   (1* https://github.com/OCamlPro/owi/blob/main/src/int32.ml *1) *)
+(*   (1* We must mask the count to implement rotates via shifts. *1) *)
+(*   let clamp_rotate_count n = Int32.(to_int (logand n 31l)) [@@inline] *)
 
-  let rotl x y =
-    let n = clamp_rotate_count y in
-    Int32.logor (shl x (Int32.of_int n)) (shr_u x (Int32.of_int (32 - n)))
-  [@@inline]
+(*   let rotl x y = *)
+(*     let n = clamp_rotate_count y in *)
+(*     Int32.logor (shl x (Int32.of_int n)) (shr_u x (Int32.of_int (32 - n))) *)
+(*   [@@inline] *)
 
-  let rotr x y =
-    let n = clamp_rotate_count y in
-    Int32.logor (shr_u x (Int32.of_int n)) (shl x (Int32.of_int (32 - n)))
-  [@@inline]
+(*   let rotr x y = *)
+(*     let n = clamp_rotate_count y in *)
+(*     Int32.logor (shr_u x (Int32.of_int n)) (shl x (Int32.of_int (32 - n))) *)
+(*   [@@inline] *)
 
-  let clz n =
-    let n = Ocaml_intrinsics.Int32.count_leading_zeros n in
-    Int32.of_int n
+(*   let clz n = *)
+(*     let n = Ocaml_intrinsics.Int32.count_leading_zeros n in *)
+(*     Int32.of_int n *)
 
-  let ctz n =
-    let n = Ocaml_intrinsics.Int32.count_trailing_zeros n in
-    Int32.of_int n
+(*   let ctz n = *)
+(*     let n = Ocaml_intrinsics.Int32.count_trailing_zeros n in *)
+(*     Int32.of_int n *)
 
-  let popcnt n =
-    let n = Ocaml_intrinsics.Int32.count_set_bits n in
-    Int32.of_int n
+(*   let popcnt n = *)
+(*     let n = Ocaml_intrinsics.Int32.count_set_bits n in *)
+(*     Int32.of_int n *)
 
-  let unop (op : Ty.Unop.t) (v : Value.t) : Value.t =
-    let f =
-      match op with
-      | Neg -> Int32.neg
-      | Not -> Int32.lognot
-      | Clz -> clz
-      | Ctz -> ctz
-      | Popcnt -> popcnt
-      | _ -> Fmt.failwith {|unop: Unsupported i32 operator "%a"|} Ty.Unop.pp op
-    in
-    to_value (f (of_value 1 (`Unop op) v))
+(*   let unop (op : Ty.Unop.t) (v : Value.t) : Value.t = *)
+(*     let f = *)
+(*       match op with *)
+(*       | Neg -> Int32.neg *)
+(*       | Not -> Int32.lognot *)
+(*       | Clz -> clz *)
+(*       | Ctz -> ctz *)
+(*       | Popcnt -> popcnt *)
+(*       | _ -> Fmt.failwith {|unop: Unsupported i32 operator "%a"|} Ty.Unop.pp op *)
+(*     in *)
+(*     to_value (f (of_value 1 (`Unop op) v)) *)
 
-  let binop op v1 v2 =
-    let f =
-      match op with
-      | Ty.Binop.Add -> Int32.add
-      | Sub -> Int32.sub
-      | Mul -> Int32.mul
-      | Div -> Int32.div
-      | DivU -> Int32.unsigned_div
-      | Rem -> Int32.rem
-      | RemU -> Int32.unsigned_rem
-      | And -> Int32.logand
-      | Or -> Int32.logor
-      | Xor -> Int32.logxor
-      | Shl -> shl
-      | ShrL -> shr_u
-      | ShrA -> shr_s
-      | Rotl -> rotl
-      | Rotr -> rotr
-      | _ ->
-        Fmt.failwith {|binop: Unsupported i32 operator "%a"|} Ty.Binop.pp op
-    in
-    to_value (f (of_value 1 (`Binop op) v1) (of_value 2 (`Binop op) v2))
+(*   let binop op v1 v2 = *)
+(*     let f = *)
+(*       match op with *)
+(*       | Ty.Binop.Add -> Int32.add *)
+(*       | Sub -> Int32.sub *)
+(*       | Mul -> Int32.mul *)
+(*       | Div -> Int32.div *)
+(*       | DivU -> Int32.unsigned_div *)
+(*       | Rem -> Int32.rem *)
+(*       | RemU -> Int32.unsigned_rem *)
+(*       | And -> Int32.logand *)
+(*       | Or -> Int32.logor *)
+(*       | Xor -> Int32.logxor *)
+(*       | Shl -> shl *)
+(*       | ShrL -> shr_u *)
+(*       | ShrA -> shr_s *)
+(*       | Rotl -> rotl *)
+(*       | Rotr -> rotr *)
+(*       | _ -> *)
+(*         Fmt.failwith {|binop: Unsupported i32 operator "%a"|} Ty.Binop.pp op *)
+(*     in *)
+(*     to_value (f (of_value 1 (`Binop op) v1) (of_value 2 (`Binop op) v2)) *)
 
-  let relop (op : Ty.Relop.t) (v1 : Value.t) (v2 : Value.t) : bool =
-    let f =
-      match op with
-      | Lt -> Int32.Infix.( < )
-      | LtU -> lt_u
-      | Le -> Int32.Infix.( <= )
-      | LeU -> le_u
-      | Gt -> Int32.Infix.( > )
-      | GtU -> gt_u
-      | Ge -> Int32.Infix.( >= )
-      | GeU -> ge_u
-      | Eq | Ne -> assert false
-    in
-    f (of_value 1 (`Relop op) v1) (of_value 2 (`Relop op) v2)
-end
+(*   let relop (op : Ty.Relop.t) (v1 : Value.t) (v2 : Value.t) : bool = *)
+(*     let f = *)
+(*       match op with *)
+(*       | Lt -> Int32.Infix.( < ) *)
+(*       | LtU -> lt_u *)
+(*       | Le -> Int32.Infix.( <= ) *)
+(*       | LeU -> le_u *)
+(*       | Gt -> Int32.Infix.( > ) *)
+(*       | GtU -> gt_u *)
+(*       | Ge -> Int32.Infix.( >= ) *)
+(*       | GeU -> ge_u *)
+(*       | Eq | Ne -> assert false *)
+(*     in *)
+(*     f (of_value 1 (`Relop op) v1) (of_value 2 (`Relop op) v2) *)
+(* end *)
 
 module I64 = struct
-  let to_value (i : int64) : Value.t = Num (I64 i) [@@inline]
+  (*   let to_value (i : int64) : Value.t = Num (I64 i) [@@inline] *)
 
-  let of_value (n : int) (op : op_type) (v : Value.t) : int64 =
-    of_arg
-      (function Num (I64 i) -> i | _ -> raise_notrace (Value (Ty_bitv 64)))
-      n v op
-      (err_str n op (Ty_bitv 64) (Value.type_of v))
-  [@@inline]
+  (*   let of_value (n : int) (op : op_type) (v : Value.t) : int64 = *)
+  (*     of_arg *)
+  (*       (function Num (I64 i) -> i | _ -> raise_notrace (Value (Ty_bitv 64))) *)
+  (*       n v op *)
+  (*       (err_str n op (Ty_bitv 64) (Value.type_of v)) *)
+  (*   [@@inline] *)
 
   let cmp_u x op y = op Int64.(add x min_int) Int64.(add y min_int) [@@inline]
 
   let lt_u x y = cmp_u x Int64.Infix.( < ) y [@@inline]
 
-  let le_u x y = cmp_u x Int64.Infix.( <= ) y [@@inline]
+  (*   let le_u x y = cmp_u x Int64.Infix.( <= ) y [@@inline] *)
 
-  let gt_u x y = cmp_u x Int64.Infix.( > ) y [@@inline]
+  (*   let gt_u x y = cmp_u x Int64.Infix.( > ) y [@@inline] *)
 
-  let ge_u x y = cmp_u x Int64.Infix.( >= ) y [@@inline]
+  (*   let ge_u x y = cmp_u x Int64.Infix.( >= ) y [@@inline] *)
 
-  let shift f x y = f x Int64.(to_int (logand y 63L)) [@@inline]
+  (*   let shift f x y = f x Int64.(to_int (logand y 63L)) [@@inline] *)
 
-  let shl x y = shift Int64.shift_left x y [@@inline]
+  (*   let shl x y = shift Int64.shift_left x y [@@inline] *)
 
-  let shr_s x y = shift Int64.shift_right x y [@@inline]
+  (*   let shr_s x y = shift Int64.shift_right x y [@@inline] *)
 
-  let shr_u x y = shift Int64.shift_right_logical x y [@@inline]
+  (*   let shr_u x y = shift Int64.shift_right_logical x y [@@inline] *)
 
-  (* Stolen rotl and rotr from: *)
-  (* https://github.com/OCamlPro/owi/blob/main/src/int64.ml *)
-  (* We must mask the count to implement rotates via shifts. *)
-  let clamp_rotate_count n = Int64.(to_int (logand n (of_int 63))) [@@inline]
+  (*   (1* Stolen rotl and rotr from: *1) *)
+  (*   (1* https://github.com/OCamlPro/owi/blob/main/src/int64.ml *1) *)
+  (*   (1* We must mask the count to implement rotates via shifts. *1) *)
+  (*   let clamp_rotate_count n = Int64.(to_int (logand n (of_int 63))) [@@inline] *)
 
-  let rotl x y =
-    let n = clamp_rotate_count y in
-    Int64.logor (shl x (Int64.of_int n)) (shr_u x (Int64.of_int (64 - n)))
-  [@@inline]
+  (*   let rotl x y = *)
+  (*     let n = clamp_rotate_count y in *)
+  (*     Int64.logor (shl x (Int64.of_int n)) (shr_u x (Int64.of_int (64 - n))) *)
+  (*   [@@inline] *)
 
-  let rotr x y =
-    let n = clamp_rotate_count y in
-    Int64.logor (shr_u x (Int64.of_int n)) (shl x (Int64.of_int (64 - n)))
-  [@@inline]
+  (*   let rotr x y = *)
+  (*     let n = clamp_rotate_count y in *)
+  (*     Int64.logor (shr_u x (Int64.of_int n)) (shl x (Int64.of_int (64 - n))) *)
+  (*   [@@inline] *)
 
-  let clz n =
-    let n = Ocaml_intrinsics.Int64.count_leading_zeros n in
-    Int64.of_int n
+  (*   let clz n = *)
+  (*     let n = Ocaml_intrinsics.Int64.count_leading_zeros n in *)
+  (*     Int64.of_int n *)
 
-  let ctz n =
-    let n = Ocaml_intrinsics.Int64.count_trailing_zeros n in
-    Int64.of_int n
+  (*   let ctz n = *)
+  (*     let n = Ocaml_intrinsics.Int64.count_trailing_zeros n in *)
+  (*     Int64.of_int n *)
 
-  let popcnt n =
-    let n = Ocaml_intrinsics.Int64.count_set_bits n in
-    Int64.of_int n
+  (*   let popcnt n = *)
+  (*     let n = Ocaml_intrinsics.Int64.count_set_bits n in *)
+  (*     Int64.of_int n *)
 
-  let unop (op : Ty.Unop.t) (v : Value.t) : Value.t =
-    let f =
-      match op with
-      | Neg -> Int64.neg
-      | Not -> Int64.lognot
-      | Clz -> clz
-      | Ctz -> ctz
-      | Popcnt -> popcnt
-      | _ -> Fmt.failwith {|unop: Unsupported i64 operator "%a"|} Ty.Unop.pp op
-    in
-    to_value (f (of_value 1 (`Unop op) v))
+  (*   let unop (op : Ty.Unop.t) (v : Value.t) : Value.t = *)
+  (*     let f = *)
+  (*       match op with *)
+  (*       | Neg -> Int64.neg *)
+  (*       | Not -> Int64.lognot *)
+  (*       | Clz -> clz *)
+  (*       | Ctz -> ctz *)
+  (*       | Popcnt -> popcnt *)
+  (*       | _ -> Fmt.failwith {|unop: Unsupported i64 operator "%a"|} Ty.Unop.pp op *)
+  (*     in *)
+  (*     to_value (f (of_value 1 (`Unop op) v)) *)
 
-  let binop (op : Ty.Binop.t) (v1 : Value.t) (v2 : Value.t) : Value.t =
-    let f =
-      match op with
-      | Add -> Int64.add
-      | Sub -> Int64.sub
-      | Mul -> Int64.mul
-      | Div -> Int64.div
-      | DivU -> Int64.unsigned_div
-      | Rem -> Int64.rem
-      | RemU -> Int64.unsigned_rem
-      | And -> Int64.logand
-      | Or -> Int64.logor
-      | Xor -> Int64.logxor
-      | Shl -> shl
-      | ShrL -> shr_u
-      | ShrA -> shr_s
-      | Rotl -> rotl
-      | Rotr -> rotr
-      | _ ->
-        Fmt.failwith {|binop: Unsupported i64 operator "%a"|} Ty.Binop.pp op
-    in
-    to_value (f (of_value 1 (`Binop op) v1) (of_value 2 (`Binop op) v2))
+  (*   let binop (op : Ty.Binop.t) (v1 : Value.t) (v2 : Value.t) : Value.t = *)
+  (*     let f = *)
+  (*       match op with *)
+  (*       | Add -> Int64.add *)
+  (*       | Sub -> Int64.sub *)
+  (*       | Mul -> Int64.mul *)
+  (*       | Div -> Int64.div *)
+  (*       | DivU -> Int64.unsigned_div *)
+  (*       | Rem -> Int64.rem *)
+  (*       | RemU -> Int64.unsigned_rem *)
+  (*       | And -> Int64.logand *)
+  (*       | Or -> Int64.logor *)
+  (*       | Xor -> Int64.logxor *)
+  (*       | Shl -> shl *)
+  (*       | ShrL -> shr_u *)
+  (*       | ShrA -> shr_s *)
+  (*       | Rotl -> rotl *)
+  (*       | Rotr -> rotr *)
+  (*       | _ -> *)
+  (*         Fmt.failwith {|binop: Unsupported i64 operator "%a"|} Ty.Binop.pp op *)
+  (*     in *)
+  (*     to_value (f (of_value 1 (`Binop op) v1) (of_value 2 (`Binop op) v2)) *)
 
-  let relop (op : Ty.Relop.t) (v1 : Value.t) (v2 : Value.t) : bool =
-    let f =
-      match op with
-      | Lt -> Int64.Infix.( < )
-      | LtU -> lt_u
-      | Le -> Int64.Infix.( <= )
-      | LeU -> le_u
-      | Gt -> Int64.Infix.( > )
-      | GtU -> gt_u
-      | Ge -> Int64.Infix.( >= )
-      | GeU -> ge_u
-      | Eq | Ne -> assert false
-    in
-    f (of_value 1 (`Relop op) v1) (of_value 2 (`Relop op) v2)
+  (*   let relop (op : Ty.Relop.t) (v1 : Value.t) (v2 : Value.t) : bool = *)
+  (*     let f = *)
+  (*       match op with *)
+  (*       | Lt -> Int64.Infix.( < ) *)
+  (*       | LtU -> lt_u *)
+  (*       | Le -> Int64.Infix.( <= ) *)
+  (*       | LeU -> le_u *)
+  (*       | Gt -> Int64.Infix.( > ) *)
+  (*       | GtU -> gt_u *)
+  (*       | Ge -> Int64.Infix.( >= ) *)
+  (*       | GeU -> ge_u *)
+  (*       | Eq | Ne -> assert false *)
+  (*     in *)
+  (*     f (of_value 1 (`Relop op) v1) (of_value 2 (`Relop op) v2) *)
+end
+
+module Bitv = struct
+  let to_value bv : Value.t = Bitv bv [@@inline]
+
+  let i32_to_value v = to_value @@ Bitvector.of_int32 v
+
+  let i64_to_value v = to_value @@ Bitvector.of_int64 v
+
+  let of_value (n : int) (op : op_type) (v : Value.t) : Bitvector.t =
+    let todo = Ty.Ty_bitv 32 in
+    of_arg
+      (function Bitv bv -> bv | _ -> raise_notrace (Value todo))
+      n v op
+      (err_str n op todo (Value.type_of v))
+
+  let i32_of_value n op v = of_value n op v |> Bitvector.to_int32
+
+  let i64_of_value n op v = of_value n op v |> Bitvector.to_int64
+
+  let unop op bv =
+    let bv = of_value 1 (`Unop op) bv in
+    to_value
+    @@
+    match op with
+    | Ty.Unop.Neg -> Bitvector.neg bv
+    | Not -> Bitvector.lognot bv
+    | Clz -> Bitvector.clz bv
+    | Ctz -> Bitvector.ctz bv
+    | Popcnt -> Bitvector.ctz bv
+    | _ ->
+      Fmt.failwith {|unop: Unsupported bitvectore operator "%a"|} Ty.Unop.pp op
+
+  let binop op bv1 bv2 =
+    let bv1 = of_value 1 (`Binop op) bv1 in
+    let bv2 = of_value 2 (`Binop op) bv2 in
+    to_value
+    @@
+    match op with
+    | Ty.Binop.Add -> Bitvector.add bv1 bv2
+    | Sub -> Bitvector.sub bv1 bv2
+    | Mul -> Bitvector.mul bv1 bv2
+    | Div -> Bitvector.div bv1 bv2
+    | DivU -> Bitvector.div_u bv1 bv2
+    | Rem -> Bitvector.rem bv1 bv2
+    | RemU -> Bitvector.rem_u bv1 bv2
+    | And -> Bitvector.logand bv1 bv2
+    | Or -> Bitvector.logor bv1 bv2
+    | Xor -> Bitvector.logxor bv1 bv2
+    | Shl -> Bitvector.shl bv1 bv2
+    | ShrL -> Bitvector.lshr bv1 bv2
+    | ShrA -> Bitvector.ashr bv1 bv2
+    | Rotl -> Bitvector.rotate_left bv1 bv2
+    | Rotr -> Bitvector.rotate_right bv1 bv2
+    | _ ->
+      Fmt.failwith {|binop: unsupported bitvector operator "%a"|} Ty.Binop.pp op
+
+  let relop op bv1 bv2 =
+    let bv1 = of_value 1 (`Relop op) bv1 in
+    let bv2 = of_value 2 (`Relop op) bv2 in
+    match op with
+    | Ty.Relop.Lt -> Bitvector.lt bv1 bv2
+    | LtU -> Bitvector.lt_u bv1 bv2
+    | Le -> Bitvector.le bv1 bv2
+    | LeU -> Bitvector.le_u bv1 bv2
+    | Gt -> Bitvector.gt bv1 bv2
+    | GtU -> Bitvector.gt_u bv1 bv2
+    | Ge -> Bitvector.ge bv1 bv2
+    | GeU -> Bitvector.ge_u bv1 bv2
+    | Eq -> Bitvector.equal bv1 bv2
+    | Ne -> not @@ Bitvector.equal bv1 bv2
 end
 
 module F32 = struct
@@ -893,18 +964,24 @@ module I32CvtOp = struct
   let cvtop op v =
     let op' = `Cvtop op in
     match op with
-    | Ty.Cvtop.WrapI64 -> I32.to_value (Int64.to_int32 (I64.of_value 1 op' v))
-    | TruncSF32 -> I32.to_value (trunc_f32_s (F32.of_value 1 op' v))
-    | TruncUF32 -> I32.to_value (trunc_f32_u (F32.of_value 1 op' v))
-    | TruncSF64 -> I32.to_value (trunc_f64_s (F64.of_value 1 op' v))
-    | TruncUF64 -> I32.to_value (trunc_f64_u (F64.of_value 1 op' v))
-    | Trunc_sat_f32_s -> I32.to_value (trunc_sat_f32_s (F32.of_value 1 op' v))
-    | Trunc_sat_f32_u -> I32.to_value (trunc_sat_f32_u (F32.of_value 1 op' v))
-    | Trunc_sat_f64_s -> I32.to_value (trunc_sat_f64_s (F64.of_value 1 op' v))
-    | Trunc_sat_f64_u -> I32.to_value (trunc_sat_f64_u (F64.of_value 1 op' v))
-    | Reinterpret_float -> I32.to_value (F32.of_value 1 op' v)
-    | Sign_extend n -> I32.to_value (extend_s n (I32.of_value 1 op' v))
-    | Zero_extend _n -> I32.to_value (I32.of_value 1 op' v)
+    | Ty.Cvtop.WrapI64 ->
+      Bitv.i32_to_value (Int64.to_int32 (Bitv.i64_of_value 1 op' v))
+    | TruncSF32 -> Bitv.i32_to_value (trunc_f32_s (F32.of_value 1 op' v))
+    | TruncUF32 -> Bitv.i32_to_value (trunc_f32_u (F32.of_value 1 op' v))
+    | TruncSF64 -> Bitv.i32_to_value (trunc_f64_s (F64.of_value 1 op' v))
+    | TruncUF64 -> Bitv.i32_to_value (trunc_f64_u (F64.of_value 1 op' v))
+    | Trunc_sat_f32_s ->
+      Bitv.i32_to_value (trunc_sat_f32_s (F32.of_value 1 op' v))
+    | Trunc_sat_f32_u ->
+      Bitv.i32_to_value (trunc_sat_f32_u (F32.of_value 1 op' v))
+    | Trunc_sat_f64_s ->
+      Bitv.i32_to_value (trunc_sat_f64_s (F64.of_value 1 op' v))
+    | Trunc_sat_f64_u ->
+      Bitv.i32_to_value (trunc_sat_f64_u (F64.of_value 1 op' v))
+    | Reinterpret_float -> Bitv.i32_to_value (F32.of_value 1 op' v)
+    | Sign_extend n ->
+      Bitv.i32_to_value (extend_s n (Bitv.i32_of_value 1 op' v))
+    | Zero_extend _n -> Bitv.i32_to_value (Bitv.i32_of_value 1 op' v)
     | OfBool -> v (* already a num here *)
     | ToBool | _ ->
       Fmt.failwith {|cvtop: Unsupported i32 operator "%a"|} Ty.Cvtop.pp op
@@ -997,17 +1074,23 @@ module I64CvtOp = struct
   let cvtop (op : Ty.Cvtop.t) (v : Value.t) : Value.t =
     let op' = `Cvtop op in
     match op with
-    | Sign_extend 32 -> I64.to_value (Int64.of_int32 (I32.of_value 1 op' v))
-    | Zero_extend 32 -> I64.to_value (extend_i32_u (I32.of_value 1 op' v))
-    | TruncSF32 -> I64.to_value (trunc_f32_s (F32.of_value 1 op' v))
-    | TruncUF32 -> I64.to_value (trunc_f32_u (F32.of_value 1 op' v))
-    | TruncSF64 -> I64.to_value (trunc_f64_s (F64.of_value 1 op' v))
-    | TruncUF64 -> I64.to_value (trunc_f64_u (F64.of_value 1 op' v))
-    | Trunc_sat_f32_s -> I64.to_value (trunc_sat_f32_s (F32.of_value 1 op' v))
-    | Trunc_sat_f32_u -> I64.to_value (trunc_sat_f32_u (F32.of_value 1 op' v))
-    | Trunc_sat_f64_s -> I64.to_value (trunc_sat_f64_s (F64.of_value 1 op' v))
-    | Trunc_sat_f64_u -> I64.to_value (trunc_sat_f64_u (F64.of_value 1 op' v))
-    | Reinterpret_float -> I64.to_value (F64.of_value 1 op' v)
+    | Sign_extend 32 ->
+      Bitv.i64_to_value (Int64.of_int32 (Bitv.i32_of_value 1 op' v))
+    | Zero_extend 32 ->
+      Bitv.i64_to_value (extend_i32_u (Bitv.i32_of_value 1 op' v))
+    | TruncSF32 -> Bitv.i64_to_value (trunc_f32_s (F32.of_value 1 op' v))
+    | TruncUF32 -> Bitv.i64_to_value (trunc_f32_u (F32.of_value 1 op' v))
+    | TruncSF64 -> Bitv.i64_to_value (trunc_f64_s (F64.of_value 1 op' v))
+    | TruncUF64 -> Bitv.i64_to_value (trunc_f64_u (F64.of_value 1 op' v))
+    | Trunc_sat_f32_s ->
+      Bitv.i64_to_value (trunc_sat_f32_s (F32.of_value 1 op' v))
+    | Trunc_sat_f32_u ->
+      Bitv.i64_to_value (trunc_sat_f32_u (F32.of_value 1 op' v))
+    | Trunc_sat_f64_s ->
+      Bitv.i64_to_value (trunc_sat_f64_s (F64.of_value 1 op' v))
+    | Trunc_sat_f64_u ->
+      Bitv.i64_to_value (trunc_sat_f64_u (F64.of_value 1 op' v))
+    | Reinterpret_float -> Bitv.i64_to_value (F64.of_value 1 op' v)
     | WrapI64 ->
       raise
         (TypeError
@@ -1067,11 +1150,11 @@ module F32CvtOp = struct
     let op' = `Cvtop op in
     match op with
     | DemoteF64 -> F32.to_value (demote_f64 (F64.of_value 1 op' v))
-    | ConvertSI32 -> F32.to_value (convert_i32_s (I32.of_value 1 op' v))
-    | ConvertUI32 -> F32.to_value (convert_i32_u (I32.of_value 1 op' v))
-    | ConvertSI64 -> F32.to_value (convert_i64_s (I64.of_value 1 op' v))
-    | ConvertUI64 -> F32.to_value (convert_i64_u (I64.of_value 1 op' v))
-    | Reinterpret_int -> F32.to_value (I32.of_value 1 op' v)
+    | ConvertSI32 -> F32.to_value (convert_i32_s (Bitv.i32_of_value 1 op' v))
+    | ConvertUI32 -> F32.to_value (convert_i32_u (Bitv.i32_of_value 1 op' v))
+    | ConvertSI64 -> F32.to_value (convert_i64_s (Bitv.i64_of_value 1 op' v))
+    | ConvertUI64 -> F32.to_value (convert_i64_u (Bitv.i64_of_value 1 op' v))
+    | Reinterpret_int -> F32.to_value (Bitv.i32_of_value 1 op' v)
     | PromoteF32 ->
       raise
         (TypeError
@@ -1131,11 +1214,11 @@ module F64CvtOp = struct
     let op' = `Cvtop op in
     match op with
     | PromoteF32 -> F64.to_value (promote_f32 (F32.of_value 1 op' v))
-    | ConvertSI32 -> F64.to_value (convert_i32_s (I32.of_value 1 op' v))
-    | ConvertUI32 -> F64.to_value (convert_i32_u (I32.of_value 1 op' v))
-    | ConvertSI64 -> F64.to_value (convert_i64_s (I64.of_value 1 op' v))
-    | ConvertUI64 -> F64.to_value (convert_i64_u (I64.of_value 1 op' v))
-    | Reinterpret_int -> F64.to_value (I64.of_value 1 op' v)
+    | ConvertSI32 -> F64.to_value (convert_i32_s (Bitv.i32_of_value 1 op' v))
+    | ConvertUI32 -> F64.to_value (convert_i32_u (Bitv.i32_of_value 1 op' v))
+    | ConvertSI64 -> F64.to_value (convert_i64_s (Bitv.i64_of_value 1 op' v))
+    | ConvertUI64 -> F64.to_value (convert_i64_u (Bitv.i64_of_value 1 op' v))
+    | Reinterpret_int -> F64.to_value (Bitv.i64_of_value 1 op' v)
     | DemoteF64 ->
       raise
         (TypeError
@@ -1149,93 +1232,27 @@ module F64CvtOp = struct
       Fmt.failwith {|cvtop: Unsupported f64 operator "%a"|} Ty.Cvtop.pp op
 end
 
-module Bitv = struct
-  let to_value bv : Value.t = Bitv bv [@@inline]
-
-  let of_value (n : int) (op : op_type) (v : Value.t) : Bitvector.t =
-    let todo = Ty.Ty_bitv 32 in
-    of_arg
-      (function Bitv bv -> bv | _ -> raise_notrace (Value todo))
-      n v op
-      (err_str n op todo (Value.type_of v))
-
-  let unop op bv =
-    let bv = of_value 1 (`Unop op) bv in
-    to_value
-    @@
-    match op with
-    | Ty.Unop.Neg -> Bitvector.neg bv
-    | Not -> Bitvector.lognot bv
-    | Clz -> Bitvector.clz bv
-    | Ctz -> Bitvector.ctz bv
-    | Popcnt -> Bitvector.ctz bv
-    | _ ->
-      Fmt.failwith {|unop: Unsupported bitvectore operator "%a"|} Ty.Unop.pp op
-
-  let binop op bv1 bv2 =
-    let bv1 = of_value 1 (`Binop op) bv1 in
-    let bv2 = of_value 2 (`Binop op) bv2 in
-    to_value
-    @@
-    match op with
-    | Ty.Binop.Add -> Bitvector.add bv1 bv2
-    | Sub -> Bitvector.sub bv1 bv2
-    | Mul -> Bitvector.mul bv1 bv2
-    | Div -> Bitvector.div bv1 bv2
-    | DivU -> Bitvector.div_u bv1 bv2
-    | Rem -> Bitvector.rem bv1 bv2
-    | RemU -> Bitvector.rem_u bv1 bv2
-    | And -> Bitvector.logand bv1 bv2
-    | Or -> Bitvector.logor bv1 bv2
-    | Xor -> Bitvector.logxor bv1 bv2
-    | Shl -> Bitvector.shl bv1 bv2
-    | ShrL -> Bitvector.lshr bv1 bv2
-    | ShrA -> Bitvector.ashr bv1 bv2
-    | Rotl -> Bitvector.rotate_left bv1 bv2
-    | Rotr -> Bitvector.rotate_right bv1 bv2
-    | _ ->
-      Fmt.failwith {|binop: unsupported bitvector operator "%a"|} Ty.Binop.pp op
-
-  let relop op bv1 bv2 =
-    let bv1 = of_value 1 (`Relop op) bv1 in
-    let bv2 = of_value 2 (`Relop op) bv2 in
-    match op with
-    | Ty.Relop.Lt -> Bitvector.lt bv1 bv2
-    | LtU -> Bitvector.lt_u bv1 bv2
-    | Le -> Bitvector.le bv1 bv2
-    | LeU -> Bitvector.le_u bv1 bv2
-    | Gt -> Bitvector.gt bv1 bv2
-    | GtU -> Bitvector.gt_u bv1 bv2
-    | Ge -> Bitvector.ge bv1 bv2
-    | GeU -> Bitvector.ge_u bv1 bv2
-    | Eq -> Bitvector.equal bv1 bv2
-    | Ne -> not @@ Bitvector.equal bv1 bv2
-
-  let cvtop _ = assert false
-end
-
 (* Dispatch *)
 
-let op int real bool str lst _i32 _i64 f32 f64 bv ty op =
+let op int real bool str lst bv f32 f64 ty op =
   match ty with
   | Ty.Ty_int -> int op
   | Ty_real -> real op
   | Ty_bool -> bool op
   | Ty_str -> str op
   | Ty_list -> lst op
+  | Ty_bitv _ -> bv op
   | Ty_fp 32 -> f32 op
   | Ty_fp 64 -> f64 op
-  | Ty_bitv _ -> bv op
   | Ty_fp _ | Ty_app | Ty_unit | Ty_none | Ty_regexp -> assert false
 [@@inline]
 
 let unop =
-  op Int.unop Real.unop Bool.unop Str.unop Lst.unop I32.unop I64.unop F32.unop
-    F64.unop Bitv.unop
+  op Int.unop Real.unop Bool.unop Str.unop Lst.unop Bitv.unop F32.unop F64.unop
 
 let binop =
-  op Int.binop Real.binop Bool.binop Str.binop Lst.binop I32.binop I64.binop
-    F32.binop F64.binop Bitv.binop
+  op Int.binop Real.binop Bool.binop Str.binop Lst.binop Bitv.binop F32.binop
+    F64.binop
 
 let triop = function
   | Ty.Ty_bool -> Bool.triop
@@ -1248,11 +1265,9 @@ let relop = function
   | Ty_real -> Real.relop
   | Ty_bool -> Bool.relop
   | Ty_str -> Str.relop
-  | Ty_bitv 32 -> I32.relop
-  | Ty_bitv 64 -> I64.relop
+  | Ty_bitv _ -> Bitv.relop
   | Ty_fp 32 -> F32.relop
   | Ty_fp 64 -> F64.relop
-  | Ty_bitv _ -> Bitv.relop
   | _ -> assert false
 
 let cvtop = function
@@ -1264,7 +1279,6 @@ let cvtop = function
   | Ty_bitv 64 -> I64CvtOp.cvtop
   | Ty_fp 32 -> F32CvtOp.cvtop
   | Ty_fp 64 -> F64CvtOp.cvtop
-  | Ty_bitv _ -> Bitv.cvtop
   | _ -> assert false
 
 let naryop = function
