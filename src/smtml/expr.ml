@@ -673,12 +673,12 @@ module Make (T : sig
 
   val ty : Ty.t
 
-  val num : elt -> Num.t
+  val value : elt -> Value.t
 end) =
 struct
   open Ty
 
-  let v i = value (Num (T.num i))
+  let v i = value (T.value i)
 
   let sym x = symbol Symbol.(x @: T.ty)
 
@@ -705,7 +705,7 @@ module Bitv = struct
 
     let ty = Ty_bitv 8
 
-    let num i = Num.I8 i
+    let value i = Value.Bitv (Bitvector.of_int8 i)
   end)
 
   module I32 = Make (struct
@@ -713,7 +713,7 @@ module Bitv = struct
 
     let ty = Ty_bitv 32
 
-    let num i = Num.I32 i
+    let value i = Value.Bitv (Bitvector.of_int32 i)
   end)
 
   module I64 = Make (struct
@@ -721,7 +721,7 @@ module Bitv = struct
 
     let ty = Ty_bitv 64
 
-    let num i = Num.I64 i
+    let value i = Value.Bitv (Bitvector.of_int64 i)
   end)
 end
 
@@ -734,7 +734,7 @@ module Fpa = struct
 
       let ty = Ty_fp 32
 
-      let num f = Num.F32 (Int32.bits_of_float f)
+      let value f = Value.Num (F32 (Int32.bits_of_float f))
     end)
 
     (* Redeclare equality due to incorrect theory annotation *)
@@ -749,7 +749,7 @@ module Fpa = struct
 
       let ty = Ty_fp 64
 
-      let num f = Num.F64 (Int64.bits_of_float f)
+      let value f = (Value.Num (F64 (Int64.bits_of_float f)))
     end)
 
     (* Redeclare equality due to incorrect theory annotation *)
