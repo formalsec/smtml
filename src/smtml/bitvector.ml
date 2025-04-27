@@ -47,7 +47,10 @@ let to_signed bv =
   let msb = msb bv in
   if msb then Z.sub bv.value (Z.shift_left Z.one bv.width) else bv.value
 
-let pp fmt bv = Z.pp_print fmt bv.value
+(** Bitvector pretty printer. By default it prints signed bitvectors. *)
+let pp fmt bv =
+  let value = to_signed bv in
+  Z.pp_print fmt value
 
 (* Unop *)
 let neg bv = make (Z.neg bv.value) bv.width
