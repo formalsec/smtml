@@ -3,7 +3,7 @@ open Smtml_test_solver
 
 let () =
   assert Colibri2_mappings.is_available;
-  let module C2 = Test_solver.Make (Colibri2_mappings) in
+  let module C2 = Test_solver.Make (Colibri2_mappings.Fresh.Make ()) in
   C2.test_params ();
   C2.test_cached ();
   C2.test ();

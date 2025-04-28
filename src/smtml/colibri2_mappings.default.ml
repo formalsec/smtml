@@ -198,10 +198,10 @@ module Fresh = struct
         match assumptions with
         | [] -> satisfiability s @@ Scheduler.check_sat s.scheduler
         | _ ->
-          let bp = Scheduler.push s.scheduler in
+          (* let bp = Scheduler.push s.scheduler in *)
           add s assumptions;
           let res = satisfiability s @@ Scheduler.check_sat s.scheduler in
-          Scheduler.pop_to s.scheduler bp;
+          (* Scheduler.pop_to s.scheduler bp; *)
           res
 
       let model s : model option =

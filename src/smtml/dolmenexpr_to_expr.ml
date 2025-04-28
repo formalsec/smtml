@@ -465,6 +465,19 @@ module Fp = struct
       | Min -> DTerm.Float.min
       | Max -> DTerm.Float.max
       | Rem -> DTerm.Float.rem
+      | Copysign ->
+        fun e1 e2 ->
+          let abs_float = DTerm.Float.abs e1 in
+          let zero =
+            match DTerm.ty e1 with
+            | { ty_descr = TyApp ({ builtin = DBuiltin.Float (e, s); _ }, _)
+              ; _
+              } ->
+              DTerm.Float.plus_zero e s
+            | _ -> assert false
+          in
+          DTerm.ite (DTerm.Float.geq e2 zero) abs_float
+            (DTerm.Float.neg abs_float)
       | _ -> Fmt.failwith {|Fp: Unsupported binop operator "%a"|} Binop.pp op
     in
     op' e1 e2
