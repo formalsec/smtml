@@ -749,7 +749,7 @@ module Fpa = struct
 
       let ty = Ty_fp 64
 
-      let value f = (Value.Num (F64 (Int64.bits_of_float f)))
+      let value f = Value.Num (F64 (Int64.bits_of_float f))
     end)
 
     (* Redeclare equality due to incorrect theory annotation *)

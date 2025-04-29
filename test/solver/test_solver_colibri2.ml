@@ -16,5 +16,4 @@ let test_suite =
        ; C2.test_lia
        ]
 
-let () =
-  run_test_tt_main test_suite
+let () = run_test_tt_main test_suite
