@@ -6,7 +6,6 @@ let is_available =
   "is_available" >:: fun _ -> assert_equal Bitwuzla_mappings.is_available true
 
 let test_suite =
-  assert Bitwuzla_mappings.is_available;
   let module Bitwuzla = Test_solver.Make (Bitwuzla_mappings) in
   "Bitwuzla"
   >::: [ is_available

@@ -6,7 +6,6 @@ let is_available =
   "is_available" >:: fun _ -> assert_equal Z3_mappings.is_available true
 
 let test_suite =
-  assert Z3_mappings.is_available;
   let module Z3_opt = Test_optimizer.Make (Z3_mappings) in
   let module Z3 = Test_solver.Make (Z3_mappings) in
   "Z3"
