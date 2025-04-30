@@ -144,15 +144,8 @@ val naryop : Ty.t -> Ty.Naryop.t -> t list -> t
 (** [extract expr ~high ~low] extracts a bit range with simplification. *)
 val extract : t -> high:int -> low:int -> t
 
-(** [extract2 expr pos] extracts a bit range with simplification. *)
-val extract2 : t -> int -> t
-
 (** [concat expr1 expr2] concatenates two expressions with simplification. *)
 val concat : t -> t -> t
-
-(** [concat3 ~msb ~lsb size] concatenates two expressions with simplification,
-    specifying the size of the result. *)
-val concat3 : msb:t -> lsb:t -> int -> t
 
 (** {1 Raw Constructors for Operations} *)
 

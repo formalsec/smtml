@@ -540,12 +540,12 @@ let test_simplify_assoc _ =
   let open Infix in
   let ty = Ty.Ty_int in
   let x = symbol "x" ty in
-  let binary = Expr.binop' Ty_int Add x (int 10) in
-  let sym = Expr.binop' Ty_int Add binary (int 3) in
-  assert_expr (Expr.simplify sym) (Expr.binop' Ty_int Add x (int 13));
-  let binary = Expr.binop' Ty_int Add x (int 10) in
-  let sym = Expr.binop' Ty_int Add (int 3) binary in
-  assert_expr (Expr.simplify sym) (Expr.binop' Ty_int Add (int 13) x)
+  let binary = Expr.raw_binop Ty_int Add x (int 10) in
+  let sym = Expr.raw_binop Ty_int Add binary (int 3) in
+  assert_expr (Expr.simplify sym) (Expr.raw_binop Ty_int Add x (int 13));
+  let binary = Expr.raw_binop Ty_int Add x (int 10) in
+  let sym = Expr.raw_binop Ty_int Add (int 3) binary in
+  assert_expr (Expr.simplify sym) (Expr.raw_binop Ty_int Add (int 13) x)
 
 let test_simplify_concat _ =
   (* Test Concat of Extracts simplifications *)
