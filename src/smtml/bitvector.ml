@@ -192,8 +192,6 @@ let sign_extend width bv =
   let extended = Z.logor bv.value sign_mask in
   make extended new_width
 
-let to_json _bv =
-  (* TODO *)
-  assert false
-
 let to_string bv = Fmt.str "%a" pp bv
+
+let to_json bv = `String (to_string bv)
