@@ -103,7 +103,11 @@ let to_string (v : t) : string = Fmt.str "%a" pp v
 let of_string (cast : Ty.t) v =
   let open Result in
   match cast with
-  | Ty_bitv _ | Ty_fp _ ->
+  | Ty_bitv m -> (
+    match int_of_string_opt v with
+    | None -> Fmt.error_msg "invalid value %s, expected integer" v
+    | Some n -> Ok (Bitv (Bitvector.make (Z.of_int n) m)) )
+  | Ty_fp _ ->
     let+ n = Num.of_string cast v in
     Num n
   | Ty_bool -> (
