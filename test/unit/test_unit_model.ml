@@ -52,8 +52,8 @@ let test_rt_json _ =
     let tbl = Hashtbl.create 16 in
     List.iter
       (fun ((s, v) : Symbol.t * Value.t) -> Hashtbl.replace tbl s v)
-      [ (x, Num (I32 Int32.min_int))
-      ; (y, Num (I64 Int64.max_int))
+      [ (x, Bitv (Bitvector.of_int32 Int32.min_int))
+      ; (y, Bitv (Bitvector.of_int64 Int64.max_int))
       ; (z, Num (F32 1084227584l))
       ];
     tbl
@@ -68,8 +68,8 @@ let test_rt_json _ =
     match (x_val, y_val, z_val) with
     | Some x_val, Some y_val, Some z_val ->
       assert_bool "parsed values are incorrect"
-        ( Value.equal x_val (Num (I32 Int32.min_int))
-        && Value.equal y_val (Num (I64 Int64.max_int))
+        ( Value.equal x_val (Bitv (Bitvector.of_int32 Int32.min_int))
+        && Value.equal y_val (Bitv (Bitvector.of_int64 Int64.max_int))
         && Value.equal z_val (Num (F32 (Int32.bits_of_float 5.0))) )
     | _ -> assert false
   end
