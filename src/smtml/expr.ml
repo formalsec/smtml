@@ -508,51 +508,31 @@ let extract (hte : t) ~(high : int) ~(low : int) : t =
     let high = (high * 8) - 1 in
     let low = low * 8 in
     value (Bitv (Bitvector.extract bv ~high ~low))
+  | ( Cvtop
+        ( _
+        , (Zero_extend 24 | Sign_extend 24)
+        , ({ node = Symbol { ty = Ty_bitv 8; _ }; _ } as sym) )
+    , 1
+    , 0 ) ->
+    sym
   | Concat (_, e), 4, 0 when Ty.size (ty e) = 4 -> e
   | Concat (e, _), 8, 4 when Ty.size (ty e) = 4 -> e
   | _ ->
     if high - low = Ty.size (ty hte) then hte else raw_extract hte ~high ~low
 
-let extract2 (hte : t) (pos : int) : t =
-  match view hte with
-  | Val (Bitv bv) ->
-    let low = pos * 8 in
-    let high = ((pos + 1) * 8) - 1 in
-    value (Bitv (Bitvector.extract bv ~high ~low))
-  | Cvtop
-      ( _
-      , (Zero_extend 24 | Sign_extend 24)
-      , ({ node = Symbol { ty = Ty_bitv 8; _ }; _ } as sym) ) ->
-    sym
-  | _ -> make (Extract (hte, pos + 1, pos))
-
 let raw_concat (msb : t) (lsb : t) : t = make (Concat (msb, lsb)) [@@inline]
 
+(* TODO: don't rebuild so many values it generates unecessary hc lookups *)
 let rec concat (msb : t) (lsb : t) : t =
   match (view msb, view lsb) with
   | Val (Bitv a), Val (Bitv b) -> value (Bitv (Bitvector.concat a b))
-  | Extract (s1, h, m1), Extract (s2, m2, l) when equal s1 s2 && m1 = m2 ->
-    raw_extract s1 ~high:h ~low:l
   | Val (Bitv _), Concat (({ node = Val (Bitv _); _ } as b), se) ->
     raw_concat (concat msb b) se
+  | Extract (s1, h, m1), Extract (s2, m2, l) when equal s1 s2 && m1 = m2 ->
+    if h - l = Ty.size (ty s1) then s1 else raw_extract s1 ~high:h ~low:l
+  | Extract (_, _, _), Concat (({ node = Extract (_, _, _); _ } as e2), e3) ->
+    raw_concat (concat msb e2) e3
   | _ -> raw_concat msb lsb
-
-(* TODO: don't rebuild so many values it generates unecessary hc lookups *)
-let merge_extracts (e1, h, m1) (e2, m2, l) =
-  let ty = ty e1 in
-  if m1 = m2 && equal e1 e2 then
-    if h - l = Ty.size ty then e1 else make (Extract (e1, h, l))
-  else make (Concat (make (Extract (e1, h, m1)), make (Extract (e2, m2, l))))
-
-let concat3 ~msb ~lsb offset =
-  assert (offset > 0 && offset <= 8);
-  match (view msb, view lsb) with
-  | Val (Bitv a), Val (Bitv b) -> value (Bitv (Bitvector.concat a b))
-  | Extract (e1, h, m1), Extract (e2, m2, l) ->
-    merge_extracts (e1, h, m1) (e2, m2, l)
-  | Extract (e1, h, m1), Concat ({ node = Extract (e2, m2, l); _ }, e3) ->
-    make (Concat (merge_extracts (e1, h, m1) (e2, m2, l), e3))
-  | _ -> make (Concat (msb, lsb))
 
 let rec simplify_expr (hte : t) : t =
   match view hte with
