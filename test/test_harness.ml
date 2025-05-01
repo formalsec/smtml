@@ -14,7 +14,7 @@ let assert_sat ?f result =
   let b = match result with `Sat -> true | `Unsat | `Unknown -> false in
   OUnit2.assert_bool fail_msg b
 
-let assert_expr a b =
+let check a b =
   let pp_diff fmt (a, b) =
     Fmt.pf fmt "Got '%a' but expected '%a'" Expr.pp a Expr.pp b
   in
