@@ -988,9 +988,9 @@ module I32CvtOp = struct
 end
 
 module I64CvtOp = struct
-  (* let extend_s n x = *)
-  (*   let shift = 64 - n in *)
-  (*   Int64.(shift_right (shift_left x shift) shift) *)
+  let extend_s n x =
+    let shift = 64 - n in
+    Int64.(shift_right (shift_left x shift) shift)
 
   let extend_i32_u (x : int32) =
     Int64.(logand (of_int32 x) 0x0000_0000_ffff_ffffL)
@@ -1074,9 +1074,9 @@ module I64CvtOp = struct
   let cvtop (op : Ty.Cvtop.t) (v : Value.t) : Value.t =
     let op' = `Cvtop op in
     match op with
-    | Sign_extend 32 ->
-      Bitv.i64_to_value (Int64.of_int32 (Bitv.i32_of_value 1 op' v))
-    | Zero_extend 32 ->
+    | Sign_extend n ->
+      Bitv.i64_to_value (extend_s n (Bitv.i64_of_value 1 op' v))
+    | Zero_extend n when n >= 32 ->
       Bitv.i64_to_value (extend_i32_u (Bitv.i32_of_value 1 op' v))
     | TruncSF32 -> Bitv.i64_to_value (trunc_f32_s (F32.of_value 1 op' v))
     | TruncUF32 -> Bitv.i64_to_value (trunc_f32_u (F32.of_value 1 op' v))
