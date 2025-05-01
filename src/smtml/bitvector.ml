@@ -169,7 +169,7 @@ let concat a b =
   make combined new_width
 
 let extract bv ~high ~low =
-  assert (high <= bv.width && low >= 0 && low < high);
+  assert (high < bv.width && low >= 0 && low <= high);
   let width = high - low + 1 in
   let shifted = Z.shift_right bv.value low in
   let extracted = Z.logand shifted (mask width) in
