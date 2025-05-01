@@ -78,13 +78,13 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     Solver.push solver;
     Solver.add solver Int.[ x >= int 0 ];
     assert_sat (Solver.check solver []);
-    assert_expr (Solver.get_value solver x) (int 0);
+    check (Solver.get_value solver x) (int 0);
     Solver.pop solver 1;
 
     Solver.push solver;
     Solver.add solver [ x = int 3 ];
     assert_sat ~f:"test" (Solver.check solver []);
-    assert_expr (Solver.get_value solver Int.(x * x)) (int 9);
+    check (Solver.get_value solver Int.(x * x)) (int 9);
     Solver.pop solver 1;
 
     Solver.push solver;
@@ -140,7 +140,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     Solver.add solver
       [ Expr.relop ty Gt x (int8 0); Expr.relop ty Lt x (int8 2) ];
     assert_sat ~f:"test_bv_8" (Solver.check solver []);
-    assert_expr (Solver.get_value solver x) (int8 1)
+    check (Solver.get_value solver x) (int8 1)
 
   let test_bv_32 solver_module =
     let open Infix in
@@ -171,7 +171,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let const = float32 50.0 in
     Solver.add solver [ Expr.relop ty Eq x const ];
     assert_sat ~f:"test_fp_get_value32" (Solver.check solver []);
-    assert_expr (Solver.get_value solver x) const
+    check (Solver.get_value solver x) const
 
   let test_fp_get_value64 solver_module =
     let open Infix in
@@ -182,7 +182,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let const = float64 50.0 in
     Solver.add solver [ Expr.relop ty Eq x const ];
     assert_sat ~f:"test_fp_get_value64" (Solver.check solver []);
-    assert_expr (Solver.get_value solver x) const
+    check (Solver.get_value solver x) const
 
   let test_fp_sqrt solver_module =
     let open Infix in
@@ -193,7 +193,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     Solver.add solver [ Expr.relop ty Eq x (float32 4.0) ];
     Solver.add solver [ Expr.relop ty Eq (Expr.unop ty Sqrt x) (float32 2.0) ];
     assert_sat ~f:"test_fp_sqrt" (Solver.check solver []);
-    assert_expr (Solver.get_value solver x) (float32 4.0)
+    check (Solver.get_value solver x) (float32 4.0)
 
   let test_fp_copysign32 solver_module =
     let open Infix in
