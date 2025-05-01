@@ -515,7 +515,7 @@ let extract (hte : t) ~(high : int) ~(low : int) : t =
     , 1
     , 0 ) ->
     sym
-  | Concat (_, e), 4, 0 when Ty.size (ty e) = 4 -> e
+  | Concat (_, e), h, l when Ty.size (ty e) = h - l -> e
   | Concat (e, _), 8, 4 when Ty.size (ty e) = 4 -> e
   | _ ->
     if high - low = Ty.size (ty hte) then hte else raw_extract hte ~high ~low
