@@ -9,6 +9,10 @@ let make v m =
   let masked_value = Z.logand v (mask m) in
   { value = masked_value; width = m }
 
+let view { value; _ } = value
+
+let numbits { width; _ } = width
+
 let of_int8 v =
   (* TODO: add a check on v to make sure it is not too big ? *)
   make (Z.of_int v) 8
@@ -16,22 +20,6 @@ let of_int8 v =
 let of_int32 v = make (Z.of_int32 v) 32
 
 let of_int64 v = make (Z.of_int64 v) 64
-
-let to_int32 v =
-  if v.width <= 32 then Z.to_int32 v.value
-  else
-    Fmt.failwith "call to Smtml.Bitvector.to_int32 on a bitvector of size %d"
-      v.width
-
-let to_int64 v =
-  if v.width <= 64 then Z.to_int64 v.value
-  else
-    Fmt.failwith "call to Smtml.Bitvector.to_int32 on a bitvector of size %d"
-      v.width
-
-let view { value; _ } = value
-
-let numbits { width; _ } = width
 
 let equal a b = Z.equal a.value b.value && a.width = b.width
 
@@ -46,6 +34,18 @@ let msb bv = Z.testbit bv.value (bv.width - 1)
 let to_signed bv =
   let msb = msb bv in
   if msb then Z.sub bv.value (Z.shift_left Z.one bv.width) else bv.value
+
+let to_int32 v =
+  if numbits v <= 32 then Z.to_int32 (to_signed v)
+  else
+    Fmt.failwith "call to Smtml.Bitvector.to_int32 on a bitvector of size %d"
+      v.width
+
+let to_int64 v =
+  if numbits v <= 64 then Z.to_int64 (to_signed v)
+  else
+    Fmt.failwith "call to Smtml.Bitvector.to_int32 on a bitvector of size %d"
+      v.width
 
 (** Bitvector pretty printer. By default it prints signed bitvectors. *)
 let pp fmt bv =
