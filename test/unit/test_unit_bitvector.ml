@@ -174,6 +174,16 @@ let test_concat =
   ; "test_concat_mixed_sizes" >:: test_concat_mixed_sizes
   ]
 
+let test_to_int32 _ =
+  let bv = make (Z.of_string "2441254434") 32 in
+  let actual = to_int32 bv in
+  let expected = -1853712862l in
+  assert_equal expected actual
+
+let test_to_int64 _ =
+  (* TODO *)
+  ()
+
 let test_suite =
   "Bitvector"
   >::: [ "test_make" >:: test_make
@@ -190,6 +200,8 @@ let test_suite =
        ; "test_extensions" >:: test_extensions
        ; "test_extract" >::: test_extract
        ; "test_concat" >::: test_concat
+       ; "test_to_int32" >:: test_to_int32
+       ; "test_to_int64" >:: test_to_int64
        ]
 
 let () = run_test_tt_main test_suite
