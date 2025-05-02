@@ -2,12 +2,12 @@ name: Test Colibri2
 
 on:
   pull_request:
-    types: [ labeled ]
-  workflow_dispatch:
+    branches:
+      - main
+  merge_group:
 
 jobs:
   test-colibri2:
-    if: github.event.label.name == 'colibri2'
     runs-on: ubuntu-latest
     env:
       OPAMCONFIRMLEVEL: unsafe-yes
