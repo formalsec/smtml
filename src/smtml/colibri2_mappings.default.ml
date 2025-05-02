@@ -273,11 +273,11 @@ module Fresh = struct
           Colibri2_core.Value.value Colibri2_theories_LRA.RealValue.key v
         with
         | Some a when A.is_integer a -> Some (Value.Int (A.to_int a))
-        | Some a when A.is_real a ->
+        | Some a ->
           Option.map
             (fun f -> Value.Real f)
             (Float.of_string_opt (A.to_string a))
-        | Some _ | None -> None )
+        | None -> None )
       | Ty_bitv n -> (
         match
           Colibri2_core.Value.value Colibri2_theories_LRA.RealValue.key v
