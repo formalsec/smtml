@@ -808,9 +808,12 @@ let encode_val : Value.t -> expr = function
   | Int v -> I.encode_val v
   | Real v -> Real.encode_val v
   | Str _ -> assert false
-  | Num (I8 x) -> Bv.encode_val C8 x
-  | Num (I32 x) -> Bv.encode_val C32 x
-  | Num (I64 x) -> Bv.encode_val C64 x
+  | Bitv bv when Bitvector.numbits bv = 8 ->
+    Bv.encode_val C8 (Z.to_int (Bitvector.view bv))
+  | Bitv bv when Bitvector.numbits bv = 32 ->
+    Bv.encode_val C32 (Bitvector.to_int32 bv)
+  | Bitv bv when Bitvector.numbits bv = 64 ->
+    Bv.encode_val C64 (Bitvector.to_int64 bv)
   | Num (F32 x) -> Fp.encode_val C32 x
   | Num (F64 x) -> Fp.encode_val C64 x
   | v -> Fmt.failwith {|Unsupported value "%a"|} Value.pp v
@@ -875,7 +878,7 @@ let encode_expr_acc ?(record_sym = fun acc _ -> acc) acc e =
     match Expr.view e with
     | Val v -> (acc, encode_val v)
     | Ptr { base; offset } ->
-      let base' = encode_val (Num (I32 base)) in
+      let base' = encode_val (Bitv (Bitvector.of_int32 base)) in
       let acc, offset' = aux acc offset in
       (acc, DTerm.Bitv.add base' offset')
     | Symbol s ->
