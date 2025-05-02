@@ -414,7 +414,7 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
       let bits_str = String.concat [sign; exp; mant] in
       let bv = Z.of_string_base 2 bits_str in
       let total_bits = String.length bits_str in
-      mk_bv_value_int (mk_bv_sort total_bits) (Float.to_int bv)
+      mk_bv_value_int64 (mk_bv_sort total_bits) (Z.to_int64 bv)
 
       (* let (sign,exp,mant) = match Term.kind x with *)
       (*   | Kind.Fp_fp -> *)
