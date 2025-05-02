@@ -2,12 +2,12 @@ name: Test Bitwuzla
 
 on:
   pull_request:
-    types: [ labeled ]
-  workflow_dispatch:
+    branches:
+      - main
+  merge_group:
 
 jobs:
   test-bitwuzla:
-    if: github.event.label.name == 'bitwuzla'
     runs-on: ubuntu-latest
     env:
       OPAMCONFIRMLEVEL: unsafe-yes
