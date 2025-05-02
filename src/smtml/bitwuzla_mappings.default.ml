@@ -409,29 +409,35 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     let of_ieee_bv eb sb bv = mk_term1_indexed2 Kind.Fp_to_fp_from_bv bv eb sb
 
     (* TODO *)
-    let to_ieee_bv x (* x : Term.IEEE_754 -> Term.Z *) =
-      let (sign,exp,mant) = match Term.kind x with
-        | Kind.Fp_fp ->
-           begin match x with
-           | Term.IEEE_754 (x,y,z) -> (x,y,z)
-           | _ -> Fmt.failwith "Bitwuzla_mappings: to_ieee_bv problem"
-           end
-        | _ -> Fmt.failwith "Bitwuzla_mappings: to_ieee_bv problem"
-      in
-      let v = (Float.pow 2. exp) *. mant *. (Float.pow (-1.) sign) in
-      mk_bv_value_int (mk_bv_sort 64) (Float.to_int v)
+    let to_ieee_bv x =
+      let (sign, exp, mant) = Term.value Term.IEEE_754 x in
+      let bits_str = String.concat [sign; exp; mant] in
+      let bv = Z.of_string_base 2 bits_str in
+      let total_bits = String.length bits_str in
+      mk_bv_value_int (mk_bv_sort total_bits) (Float.to_int bv)
 
-    (*     begin match Term.children x with *)
-    (*       | [|x;y;z|] -> (x,y,z) *)
-    (*       | _ -> Fmt.failwith "Bitwuzla_mappings: to_ieee_bv problem" *)
-    (*     end *)
-    (* | _ -> Fmt.failwith "Bitwuzla_mappings: to_ieee_bv problem" *)
-    (* in *)
-    (* let xx = Term.value x in *)
-    (* let v = (Float.pow 2. exp) *. mant *. (Float.pow (-1.) sign) in *)
-    (* mk_bv_value_int (mk_bv_sort 64) (Float.to_int v) *)
+      (* let (sign,exp,mant) = match Term.kind x with *)
+      (*   | Kind.Fp_fp -> *)
+      (*      begin match x with *)
+      (*      | Term.IEEE_754 (x,y,z) -> (x,y,z) *)
+      (*      | _ -> Fmt.failwith "Bitwuzla_mappings: to_ieee_bv problem" *)
+      (*      end *)
+      (*   | _ -> Fmt.failwith "Bitwuzla_mappings: to_ieee_bv problem" *)
+      (* in *)
+      (* let v = (Float.pow 2. exp) *. mant *. (Float.pow (-1.) sign) in *)
+      (* mk_bv_value_int (mk_bv_sort 64) (Float.to_int v) *)
 
-    (* Fmt.failwith "Bitwuzla_mappings: to_ieee_bv not implemented" *)
+      (*     begin match Term.children x with *)
+      (*       | [|x;y;z|] -> (x,y,z) *)
+      (*       | _ -> Fmt.failwith "Bitwuzla_mappings: to_ieee_bv problem" *)
+      (*     end *)
+      (* | _ -> Fmt.failwith "Bitwuzla_mappings: to_ieee_bv problem" *)
+      (* in *)
+      (* let xx = Term.value x in *)
+      (* let v = (Float.pow 2. exp) *. mant *. (Float.pow (-1.) sign) in *)
+      (* mk_bv_value_int (mk_bv_sort 64) (Float.to_int v) *)
+  
+      (* Fmt.failwith "Bitwuzla_mappings: to_ieee_bv not implemented" *)
   end
 
   module Func = struct
