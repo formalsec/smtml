@@ -558,8 +558,6 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Int v -> Int_impl.v v
       | Real v -> Real_impl.v v
       | Str v -> String_impl.v v
-      | Num (I8 _) | Num (I32 _) | Num (I64 _) ->
-        Fmt.failwith "Use of (Num (IXX _)) is deprecated use Bitv instead"
       | Num (F32 x) -> Float32_impl.v x
       | Num (F64 x) -> Float64_impl.v x
       | Bitv bv -> M.Bitv.v (Bitvector.to_string bv) (Bitvector.numbits bv)

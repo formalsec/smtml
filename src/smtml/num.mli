@@ -11,9 +11,6 @@
 
 (** The type [t] represents values with different numeric types. *)
 type t =
-  | I8 of int  (** 8-bit integer. *)
-  | I32 of int32  (** 32-bit integer. *)
-  | I64 of int64  (** 64-bit integer. *)
   | F32 of int32  (** 32-bit floating-point value, stored as an [int32]. *)
   | F64 of int64  (** 64-bit floating-point value, stored as an [int64]. *)
 
@@ -34,11 +31,6 @@ val compare : t -> t -> int
 (** [equal v1 v2] returns [true] if [v1] and [v2] are equal, otherwise [false].
 *)
 val equal : t -> t -> bool
-
-(** [num_of_bool b] converts a boolean [b] into an integer value of type [t].
-    The exact representation depends on the system's convention, typically 1 for
-    [true] and 0 for [false]. *)
-val num_of_bool : bool -> t
 
 (** {1 Pretty Printing} *)
 
