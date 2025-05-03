@@ -320,11 +320,11 @@ let forall vars body = binder Forall vars body
 
 let exists vars body = binder Exists vars body
 
-let unop' ty op hte = make (Unop (ty, op, hte)) [@@inline]
+let raw_unop ty op hte = make (Unop (ty, op, hte)) [@@inline]
 
 let unop ty op hte =
   match (op, view hte) with
-  | Ty.Unop.(Regexp_loop _ | Regexp_star), _ -> unop' ty op hte
+  | Ty.Unop.(Regexp_loop _ | Regexp_star), _ -> raw_unop ty op hte
   | _, Val v -> value (Eval.unop ty op v)
   | Not, Unop (_, Not, hte') -> hte'
   | Neg, Unop (_, Neg, hte') -> hte'
@@ -333,16 +333,17 @@ let unop ty op hte =
   | Tail, List (_ :: tl) -> make (List tl)
   | Reverse, List es -> make (List (List.rev es))
   | Length, List es -> value (Int (List.length es))
-  | _ -> unop' ty op hte
+  | _ -> raw_unop ty op hte
 
-let binop' ty op hte1 hte2 = make (Binop (ty, op, hte1, hte2)) [@@inline]
+let raw_binop ty op hte1 hte2 = make (Binop (ty, op, hte1, hte2)) [@@inline]
 
 let rec binop ty op hte1 hte2 =
   match (op, view hte1, view hte2) with
-  | Ty.Binop.(String_in_re | Regexp_range), _, _ -> binop' ty op hte1 hte2
+  | Ty.Binop.(String_in_re | Regexp_range), _, _ -> raw_binop ty op hte1 hte2
   | op, Val v1, Val v2 -> value (Eval.binop ty op v1 v2)
   | Sub, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
-    if Int32.equal b1 b2 then binop ty Sub os1 os2 else binop' ty op hte1 hte2
+    if Int32.equal b1 b2 then binop ty Sub os1 os2
+    else raw_binop ty op hte1 hte2
   | Add, Ptr { base; offset }, _ ->
     ptr base (binop (Ty_bitv 32) Add offset hte2)
   | Sub, Ptr { base; offset }, _ ->
@@ -361,19 +362,19 @@ let rec binop ty op hte1 hte2 =
   | (And | Mul), _, Val (Num (I32 0l)) -> hte2
   | Add, Binop (ty, Add, x, { node = Val v1; _ }), Val v2 ->
     let v = value (Eval.binop ty Add v1 v2) in
-    binop' ty Add x v
+    raw_binop ty Add x v
   | Sub, Binop (ty, Sub, x, { node = Val v1; _ }), Val v2 ->
     let v = value (Eval.binop ty Add v1 v2) in
-    binop' ty Sub x v
+    raw_binop ty Sub x v
   | Mul, Binop (ty, Mul, x, { node = Val v1; _ }), Val v2 ->
     let v = value (Eval.binop ty Mul v1 v2) in
-    binop' ty Mul x v
+    raw_binop ty Mul x v
   | Add, Val v1, Binop (ty, Add, x, { node = Val v2; _ }) ->
     let v = value (Eval.binop ty Add v1 v2) in
-    binop' ty Add v x
+    raw_binop ty Add v x
   | Mul, Val v1, Binop (ty, Mul, x, { node = Val v2; _ }) ->
     let v = value (Eval.binop ty Mul v1 v2) in
-    binop' ty Mul v x
+    raw_binop ty Mul v x
   | At, List es, Val (Int n) ->
     (* TODO: use another datastructure? *)
     begin
@@ -385,9 +386,9 @@ let rec binop ty op hte1 hte2 =
   | List_append, List l0, Val (List l1) -> make (List (l0 @ List.map value l1))
   | List_append, Val (List l0), List l1 -> make (List (List.map value l0 @ l1))
   | List_append, List l0, List l1 -> make (List (l0 @ l1))
-  | _ -> binop' ty op hte1 hte2
+  | _ -> raw_binop ty op hte1 hte2
 
-let triop' ty op e1 e2 e3 = make (Triop (ty, op, e1, e2, e3)) [@@inline]
+let raw_triop ty op e1 e2 e3 = make (Triop (ty, op, e1, e2, e3)) [@@inline]
 
 let triop ty op e1 e2 e3 =
   match (op, view e1, view e2, view e3) with
@@ -395,22 +396,22 @@ let triop ty op e1 e2 e3 =
   | Ite, Val False, _, _ -> e3
   | op, Val v1, Val v2, Val v3 -> value (Eval.triop ty op v1 v2 v3)
   | Ite, _, Triop (_, Ite, c2, r1, r2), Triop (_, Ite, _, _, _) ->
-    let else_ = triop' ty Ite e1 r2 e3 in
+    let else_ = raw_triop ty Ite e1 r2 e3 in
     let cond = binop Ty_bool And e1 c2 in
-    triop' ty Ite cond r1 else_
-  | _ -> triop' ty op e1 e2 e3
+    raw_triop ty Ite cond r1 else_
+  | _ -> raw_triop ty op e1 e2 e3
 
-let relop' ty op hte1 hte2 = make (Relop (ty, op, hte1, hte2)) [@@inline]
+let raw_relop ty op hte1 hte2 = make (Relop (ty, op, hte1, hte2)) [@@inline]
 
 let rec relop ty op hte1 hte2 =
   match (op, view hte1, view hte2) with
   | op, Val v1, Val v2 -> value (if Eval.relop ty op v1 v2 then True else False)
   | Ty.Relop.Ne, Val (Real v), _ | Ne, _, Val (Real v) ->
     if Float.is_nan v || Float.is_infinite v then value True
-    else relop' ty op hte1 hte2
+    else raw_relop ty op hte1 hte2
   | _, Val (Real v), _ | _, _, Val (Real v) ->
     if Float.is_nan v || Float.is_infinite v then value False
-    else relop' ty op hte1 hte2
+    else raw_relop ty op hte1 hte2
   | Eq, _, Val Nothing | Eq, Val Nothing, _ -> value False
   | Ne, _, Val Nothing | Ne, Val Nothing, _ -> value True
   | Eq, _, Val (App (`Op "symbol", [ Str _ ]))
@@ -439,7 +440,7 @@ let rec relop ty op hte1 hte2 =
     let base = Eval.binop (Ty_bitv 32) Add (Num (I32 base)) o in
     value (if Eval.relop ty op base n then True else False)
   | op, List l1, List l2 -> relop_list op l1 l2
-  | _, _, _ -> relop' ty op hte1 hte2
+  | _, _, _ -> raw_relop ty op hte1 hte2
 
 and relop_list op l1 l2 =
   match (op, l1, l2) with
@@ -459,16 +460,16 @@ and relop_list op l1 l2 =
   | Ne, _, _ -> unop Ty_bool Not @@ relop_list Eq l1 l2
   | (Lt | LtU | Gt | GtU | Le | LeU | Ge | GeU), _, _ -> assert false
 
-let cvtop' ty op hte = make (Cvtop (ty, op, hte)) [@@inline]
+let raw_cvtop ty op hte = make (Cvtop (ty, op, hte)) [@@inline]
 
 let cvtop ty op hte =
   match (op, view hte) with
-  | Ty.Cvtop.String_to_re, _ -> cvtop' ty op hte
+  | Ty.Cvtop.String_to_re, _ -> raw_cvtop ty op hte
   | _, Val v -> value (Eval.cvtop ty op v)
   | String_to_float, Cvtop (Ty_real, ToString, real) -> real
-  | _ -> cvtop' ty op hte
+  | _ -> raw_cvtop ty op hte
 
-let naryop' ty op es = make (Naryop (ty, op, es)) [@@inline]
+let raw_naryop ty op es = make (Naryop (ty, op, es)) [@@inline]
 
 let naryop ty op es =
   if List.for_all (fun e -> match view e with Val _ -> true | _ -> false) es
@@ -482,12 +483,12 @@ let naryop ty op es =
     | ( Ty_str
       , Concat
       , [ Naryop (Ty_str, Concat, l1); Naryop (Ty_str, Concat, l2) ] ) ->
-      naryop' Ty_str Concat (l1 @ l2)
+      raw_naryop Ty_str Concat (l1 @ l2)
     | Ty_str, Concat, [ Naryop (Ty_str, Concat, htes); hte ] ->
-      naryop' Ty_str Concat (htes @ [ make hte ])
+      raw_naryop Ty_str Concat (htes @ [ make hte ])
     | Ty_str, Concat, [ hte; Naryop (Ty_str, Concat, htes) ] ->
-      naryop' Ty_str Concat (make hte :: htes)
-    | _ -> naryop' ty op es
+      raw_naryop Ty_str Concat (make hte :: htes)
+    | _ -> raw_naryop ty op es
 
 let nland64 (x : int64) (n : int) =
   let rec loop x' n' acc =
@@ -503,7 +504,7 @@ let nland32 (x : int32) (n : int) =
   in
   loop x n 0l
 
-let extract' (hte : t) ~(high : int) ~(low : int) : t =
+let raw_extract (hte : t) ~(high : int) ~(low : int) : t =
   make (Extract (hte, high, low))
 [@@inline]
 
@@ -514,7 +515,8 @@ let extract (hte : t) ~(high : int) ~(low : int) : t =
     value (Num (I64 x'))
   | Concat (_, e), 4, 0 when Ty.size (ty e) = 4 -> e
   | Concat (e, _), 8, 4 when Ty.size (ty e) = 4 -> e
-  | _ -> if high - low = Ty.size (ty hte) then hte else extract' hte ~high ~low
+  | _ ->
+    if high - low = Ty.size (ty hte) then hte else raw_extract hte ~high ~low
 
 let extract2 (hte : t) (pos : int) : t =
   match view hte with
@@ -531,7 +533,7 @@ let extract2 (hte : t) (pos : int) : t =
     sym
   | _ -> make (Extract (hte, pos + 1, pos))
 
-let concat' (msb : t) (lsb : t) : t = make (Concat (msb, lsb)) [@@inline]
+let raw_concat (msb : t) (lsb : t) : t = make (Concat (msb, lsb)) [@@inline]
 
 let concat (msb : t) (lsb : t) : t =
   match (view msb, view lsb) with
@@ -542,7 +544,7 @@ let concat (msb : t) (lsb : t) : t =
     let x1' = nland64 (Int64.shift_right x1 (l1 * 8)) d1 in
     let x2' = nland64 (Int64.shift_right x2 (l2 * 8)) d2 in
     let x = Int64.(logor (shift_left x2' (d1 * 8)) x1') in
-    extract' (value (Num (I64 x))) ~high:(d1 + d2) ~low:0
+    raw_extract (value (Num (I64 x))) ~high:(d1 + d2) ~low:0
   | ( Extract ({ node = Val (Num (I32 x2)); _ }, h2, l2)
     , Extract ({ node = Val (Num (I32 x1)); _ }, h1, l1) ) ->
     let d1 = h1 - l1 in
@@ -550,9 +552,9 @@ let concat (msb : t) (lsb : t) : t =
     let x1' = nland32 (Int32.shift_right x1 (l1 * 8)) d1 in
     let x2' = nland32 (Int32.shift_right x2 (l2 * 8)) d2 in
     let x = Int32.(logor (shift_left x2' (d1 * 8)) x1') in
-    extract' (value (Num (I32 x))) ~high:(d1 + d2) ~low:0
+    raw_extract (value (Num (I32 x))) ~high:(d1 + d2) ~low:0
   | Extract (s1, h, m1), Extract (s2, m2, l) when equal s1 s2 && m1 = m2 ->
-    extract' s1 ~high:h ~low:l
+    raw_extract s1 ~high:h ~low:l
   | ( Extract ({ node = Val (Num (I64 x2)); _ }, h2, l2)
     , Concat
         ({ node = Extract ({ node = Val (Num (I64 x1)); _ }, h1, l1); _ }, se) )
@@ -562,8 +564,8 @@ let concat (msb : t) (lsb : t) : t =
     let x1' = nland64 (Int64.shift_right x1 (l1 * 8)) d1 in
     let x2' = nland64 (Int64.shift_right x2 (l2 * 8)) d2 in
     let x = Int64.(logor (shift_left x2' (d1 * 8)) x1') in
-    concat' (extract' (value (Num (I64 x))) ~high:(d1 + d2) ~low:0) se
-  | _ -> concat' msb lsb
+    raw_concat (raw_extract (value (Num (I64 x))) ~high:(d1 + d2) ~low:0) se
+  | _ -> raw_concat msb lsb
 
 (* TODO: don't rebuild so many values it generates unecessary hc lookups *)
 let merge_extracts (e1, h, m1) (e2, m2, l) =

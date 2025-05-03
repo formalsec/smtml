@@ -541,22 +541,22 @@ let test_simplify_assoc () =
   let open Infix in
   let ty = Ty.Ty_int in
   let x = symbol "x" ty in
-  let binary = Expr.binop' Ty_int Add x (int 10) in
-  let sym = Expr.binop' Ty_int Add binary (int 3) in
-  assert_equal (Expr.simplify sym) (Expr.binop' Ty_int Add x (int 13));
-  let binary = Expr.binop' Ty_int Add x (int 10) in
-  let sym = Expr.binop' Ty_int Add (int 3) binary in
-  assert_equal (Expr.simplify sym) (Expr.binop' Ty_int Add (int 13) x)
+  let binary = Expr.raw_binop Ty_int Add x (int 10) in
+  let sym = Expr.raw_binop Ty_int Add binary (int 3) in
+  assert_equal (Expr.simplify sym) (Expr.raw_binop Ty_int Add x (int 13));
+  let binary = Expr.raw_binop Ty_int Add x (int 10) in
+  let sym = Expr.raw_binop Ty_int Add (int 3) binary in
+  assert_equal (Expr.simplify sym) (Expr.raw_binop Ty_int Add (int 13) x)
 
 let test_simplify_concat () =
   (* Test Concat of Extracts simplifications *)
   let open Infix in
   let x = symbol "x" (Ty_bitv 32) in
-  let b0 = Expr.extract' x ~high:1 ~low:0 in
-  let b1 = Expr.extract' x ~high:2 ~low:1 in
-  let b2 = Expr.extract' x ~high:3 ~low:2 in
-  let b3 = Expr.extract' x ~high:4 ~low:3 in
-  let b3210 = Expr.concat' b3 (Expr.concat' b2 (Expr.concat' b1 b0)) in
+  let b0 = Expr.raw_extract x ~high:1 ~low:0 in
+  let b1 = Expr.raw_extract x ~high:2 ~low:1 in
+  let b2 = Expr.raw_extract x ~high:3 ~low:2 in
+  let b3 = Expr.raw_extract x ~high:4 ~low:3 in
+  let b3210 = Expr.raw_concat b3 (Expr.raw_concat b2 (Expr.raw_concat b1 b0)) in
   assert_equal x (Expr.simplify b3210)
 
 let test_simplify () =
