@@ -308,6 +308,8 @@ let value (v : Value.t) : t = make (Val v) [@@inline]
 
 let ptr base offset = make (Ptr { base; offset })
 
+let list l = make (List l)
+
 let app symbol args = make (App (symbol, args))
 
 let[@inline] binder bt vars expr = make (Binder (bt, vars, expr))
