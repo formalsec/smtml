@@ -62,20 +62,28 @@ let s_expr :=
     | None -> assert false
     | Some v -> Expr.symbol (Symbol.make v x)
   }
-  | c = spec_constant; { make (Val c) }
-  | LPAREN; op = paren_op; RPAREN; { make op }
+  | c = spec_constant; { value c }
+  | LPAREN; op = paren_op; RPAREN; { op }
 
 let paren_op :=
   | PTR; LPAREN; _ = TYPE; x = NUM; RPAREN; offset = s_expr;
-    { Ptr { base = Int32.of_int x; offset } }
-  | (ty, op) = UNARY; e = s_expr; <Unop>
-  | (ty, op) = BINARY; e1 = s_expr; e2 = s_expr; <Binop>
-  | (ty, op) = TERNARY; e1 = s_expr; e2 = s_expr; e3 = s_expr; <Triop>
-  | (ty, op) = CVTOP; e = s_expr; <Cvtop>
-  | (ty, op) = RELOP; e1 = s_expr; e2 = s_expr; <Relop>
-  | (ty, op) = NARY; es = list(s_expr); <Naryop>
-  | EXTRACT; ~ = s_expr; l = NUM; h = NUM; { Extract ( s_expr, h, l) }
-  | CONCAT; e1 = s_expr; e2 = s_expr; <Concat>
+    { Expr.ptr (Int32.of_int x) offset }
+  | (ty, op) = UNARY; e = s_expr;
+    { Expr.unop ty op e }
+  | (ty, op) = BINARY; e1 = s_expr; e2 = s_expr;
+    { Expr.binop ty op e1 e2 }
+  | (ty, op) = TERNARY; e1 = s_expr; e2 = s_expr; e3 = s_expr;
+    { Expr.triop ty op e1 e2 e3 }
+  | (ty, op) = CVTOP; e = s_expr;
+    { Expr.cvtop ty op e }
+  | (ty, op) = RELOP; e1 = s_expr; e2 = s_expr;
+    { Expr.relop ty op e1 e2 }
+  | (ty, op) = NARY; es = list(s_expr);
+    { Expr.naryop ty op es }
+  | EXTRACT; ~ = s_expr; l = NUM; h = NUM;
+    { Expr.extract s_expr ~high:h ~low:l }
+  | CONCAT; e1 = s_expr; e2 = s_expr;
+    { Expr.concat e1 e2 }
 
 let spec_constant :=
   | x = NUM; { Int x }

@@ -45,10 +45,9 @@ let rec rewrite_expr (type_map, expr_map) hte =
       | None -> Fmt.failwith "Undefined symbol: %a" Symbol.pp sym
       | Some expr -> expr )
     | Some ty -> Expr.symbol { sym with ty } )
-  | List htes ->
-    Expr.make (List (List.map (rewrite_expr (type_map, expr_map)) htes))
+  | List htes -> Expr.list (List.map (rewrite_expr (type_map, expr_map)) htes)
   | App (op, htes) ->
-    Expr.make (App (op, List.map (rewrite_expr (type_map, expr_map)) htes))
+    Expr.app op (List.map (rewrite_expr (type_map, expr_map)) htes)
   | Unop (ty, op, hte) ->
     let hte = rewrite_expr (type_map, expr_map) hte in
     let ty = rewrite_ty ty [ Expr.ty hte ] in
@@ -78,7 +77,7 @@ let rec rewrite_expr (type_map, expr_map) hte =
     Expr.cvtop ty op hte
   | Naryop (ty, op, htes) ->
     let htes = List.map (rewrite_expr (type_map, expr_map)) htes in
-    Expr.make (Naryop (ty, op, htes))
+    Expr.naryop ty op htes
   | Extract (hte, h, l) ->
     let hte = rewrite_expr (type_map, expr_map) hte in
     Expr.extract hte ~high:h ~low:l
@@ -112,7 +111,7 @@ let rec rewrite_expr (type_map, expr_map) hte =
           | _ -> assert false )
         (type_map, []) vars
     in
-    Expr.make (Binder (quantifier, vars, rewrite_expr (type_map, expr_map) e))
+    Expr.binder quantifier vars (rewrite_expr (type_map, expr_map) e)
 
 (** Acccumulates types of symbols in [type_map] and calls rewrite_expr *)
 let rewrite_cmd type_map cmd =

@@ -73,13 +73,13 @@ let test_unop_list () =
   let vlist = list [ Int 1; Int 2; Int 3 ] in
   let x = symbol "x" Ty_int in
   let y = symbol "y" Ty_int in
-  let slist = Expr.make (List [ x; y ]) in
+  let slist = Expr.list [ x; y ] in
   assert_equal (Expr.unop ty Head vlist) (int 1);
   assert_equal (Expr.unop ty Tail vlist) (list [ Int 2; Int 3 ]);
   assert_equal (Expr.unop ty Length vlist) (int 3);
   assert_equal (Expr.unop ty Reverse vlist) (list [ Int 3; Int 2; Int 1 ]);
   assert_equal (Expr.unop ty Head slist) x;
-  assert_equal (Expr.unop ty Tail slist) (Expr.make (List [ y ]));
+  assert_equal (Expr.unop ty Tail slist) (Expr.list [ y ]);
   assert_equal (Expr.unop ty Length slist) (int 2);
   assert_equal (Expr.unop ty Reverse (Expr.unop ty Reverse slist)) slist
 
@@ -171,12 +171,12 @@ let test_binop_list () =
   assert_equal
     (Expr.binop Ty_list List_append (list [ Int 0; Int 1 ]) (list [ Int 2 ]))
     clist;
-  let slist2 = Expr.make (List [ int 0; int 1 ]) in
-  let slist3 = Expr.make (List [ int 0; int 1; int 2 ]) in
+  let slist2 = Expr.list [ int 0; int 1 ] in
+  let slist3 = Expr.list [ int 0; int 1; int 2 ] in
   assert_equal (Expr.binop ty At slist3 (int 0)) (int 0);
   assert_equal (Expr.binop ty List_append slist2 (list [ Int 2 ])) slist3;
   assert_equal
-    (Expr.binop ty List_cons (int 0) (Expr.make (List [ int 1; int 2 ])))
+    (Expr.binop ty List_cons (int 0) (Expr.list [ int 1; int 2 ]))
     slist3
 
 let test_binop_i32 () =

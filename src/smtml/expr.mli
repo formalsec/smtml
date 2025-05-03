@@ -14,7 +14,7 @@
 type t = expr Hc.hash_consed
 
 (** The different types of expressions. *)
-and expr =
+and expr = private
   | Val of Value.t  (** A constant value. *)
   | Ptr of
       { base : int32  (** Base address. *)
@@ -34,9 +34,6 @@ and expr =
   | Binder of Binder.t * t list * t  (** A binding expression. *)
 
 (** {1 Constructors and Accessors} *)
-
-(** [make expr] creates a new term from the given expression. *)
-val make : expr -> t
 
 (** [view term] extracts the underlying expression from a term. *)
 val view : t -> expr
@@ -93,6 +90,9 @@ val value : Value.t -> t
     address and offset. *)
 val ptr : int32 -> t -> t
 
+(** [list l] constructs a list expression with the given list of expressions *)
+val list : t list -> t
+
 (** [symbol sym] constructs a symbolic variable expression from the given
     symbol. *)
 val symbol : Symbol.t -> t
@@ -100,6 +100,10 @@ val symbol : Symbol.t -> t
 (** [app sym args] constructs a function application expression with the given
     symbol and arguments. *)
 val app : Symbol.t -> t list -> t
+
+(** [binder ty bindings body] constructs a [ty] bidning expression with the
+    given bindings and body. *)
+val binder : Binder.t -> t list -> t -> t
 
 (** [let_in bindings body] constructs a let-binding expression with the given
     bindings and body. *)
