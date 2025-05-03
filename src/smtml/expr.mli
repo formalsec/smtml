@@ -154,38 +154,153 @@ val concat : t -> t -> t
     specifying the size of the result. *)
 val concat3 : msb:t -> lsb:t -> int -> t
 
-(** {1 Dumb Constructors for Operations} *)
+(** {1 Raw Constructors for Operations} *)
 
-(** These constructors do not apply simplifications. *)
+(** [raw_unop ty op expr] applies a unary operation, creating a node without
+    immediate simplification.
 
-(** [unop' ty op expr] applies a unary operation without simplification. *)
-val unop' : Ty.t -> Ty.Unop.t -> t -> t
+    This function constructs the representation of a unary operation with the
+    specified type [ty], operator [op], and operand [expr]. Unlike a "smart
+    constructor" like [unop], it does not evaluate the expression if possible,
+    but rather creates the AST node representing the unevaluated operation.
 
-(** [binop' ty op expr1 expr2] applies a binary operation without
-    simplification. *)
-val binop' : Ty.t -> Ty.Binop.t -> t -> t -> t
+    For example:
+    {@ocaml[
+      raw_unop Ty_int Neg (value (Int 1))
+    ]}
 
-(** [triop' ty op expr1 expr2 expr3] applies a ternary operation without
-    simplification. *)
-val triop' : Ty.t -> Ty.Triop.t -> t -> t -> t -> t
+    returns the AST node:
+    {@ocaml[
+      Unop (Ty_int, Neg, Val (Int 1))
+    ]}
 
-(** [relop' ty op expr1 expr2] applies a relational operation without
-    simplification. *)
-val relop' : Ty.t -> Ty.Relop.t -> t -> t -> t
+    rather than the simplified value:
+    {@ocaml[
+      Val (Int (-1))
+    ]}
 
-(** [cvtop' ty op expr] applies a conversion operation without simplification.
+    which would typically be the result of the smart constructor [unop]. *)
+val raw_unop : Ty.t -> Ty.Unop.t -> t -> t
+
+(** [raw_binop ty op expr1 expr2] applies a binary operation, creating a node
+    without immediate simplification.
+
+    This function constructs the representation of a binary operation with the
+    specified type [ty], operator [op], and operands [expr1], [expr2]. Unlike a
+    "smart constructor" like [binop], it does not evaluate the expression if
+    possible, but rather creates the AST node representing the unevaluated
+    operation.
+
+    For example:
+    {@ocaml[
+      raw_binop Ty_int Add (value (Int 1)) (value (Int 2))
+    ]}
+
+    returns the AST node:
+    {@ocaml[
+      Binop (Ty_int, Add, Val (Int 1), Val (Int 2))
+    ]}
+
+    rather than the simplified value:
+    {@ocaml[
+      Val (Int 3)
+    ]}
+
+    which would typically be the result of the smart constructor [binop]. *)
+val raw_binop : Ty.t -> Ty.Binop.t -> t -> t -> t
+
+(** [raw_triop ty op expr1 expr2 expr3] applies a ternary operation, creating a
+    node without immediate simplification.
+
+    This function constructs the representation of a ternary operation with the
+    specified type [ty], operator [op], and operands [expr1], [expr2], [expr3].
+    Unlike a "smart constructor" like [triop], it does not evaluate the
+    expression if possible, but rather creates the AST node representing the
+    unevaluated operation.
+
+    For example (using a if-then-else operator):
+    {@ocaml[
+      raw_triop Ty_bool Ite (value True) (value (Int 1)) (value (Int 2))
+    ]}
+
+    returns the AST node:
+    {@ocaml[
+      Triop (Ty_bool, Ite, Val True, Val (Int 1), Val (Int 2))
+    ]}
+
+    rather than the simplified value:
+    {@ocaml[
+      Val (Int 1)
+    ]}
+
+    which would typically be the result of the smart constructor [triop]. *)
+val raw_triop : Ty.t -> Ty.Triop.t -> t -> t -> t -> t
+
+(** [raw_relop ty op expr1 expr2] applies a relational operation, creating a
+    node without immediate simplification.
+
+    This function constructs the representation of a relational operation with
+    the specified operand type [ty], operator [op], and operands [expr1],
+    [expr2]. Unlike a "smart constructor" like [relop], it does not evaluate the
+    expression if possible, but rather creates the AST node representing the
+    unevaluated operation (which will have a boolean type).
+
+    For example:
+    {@ocaml[
+      raw_relop Ty_bool Eq (value (Int 1)) (value (Int 2))
+    ]}
+
+    returns the AST node:
+    {@ocaml[
+      Relop (Ty_bool, Eq, Val (Int 1), Val (Int 2))
+    ]}
+
+    rather than the simplified value:
+    {@ocaml[
+      Val False
+    ]}
+
+    which would typically be the result of the smart constructor [relop]. *)
+val raw_relop : Ty.t -> Ty.Relop.t -> t -> t -> t
+
+(** [raw_cvtop ty op expr] applies a conversion operation, creating a node
+    without immediate simplification.
+
+    This function constructs the representation of a conversion operation with
+    the specified target type [ty], operator [op], and operand [expr]. Unlike a
+    "smart constructor" like [cvtop], it does not evaluate the conversion if
+    possible, but rather creates the AST node representing the unevaluated
+    operation.
+
+    For example:
+    {@ocaml[
+      raw_cvtop Ty_real Reinterpret_int (value (Int 5))
+    ]}
+
+    returns the AST node:
+    {@ocaml[
+      Cvtop (Ty_real, Reinterpret_int, Val (Int 5))
+    ]}
+
+    rather than the simplified value:
+    {@ocaml[
+      Val (Real 5.0)
+    ]}
+
+    which would typically be the result of the smart constructor [cvtop]. *)
+val raw_cvtop : Ty.t -> Ty.Cvtop.t -> t -> t
+
+(** [raw_naryop ty op exprs] applies an N-ary operation without simplification.
 *)
-val cvtop' : Ty.t -> Ty.Cvtop.t -> t -> t
+val raw_naryop : Ty.t -> Ty.Naryop.t -> t list -> t
 
-(** [naryop' ty op exprs] applies an N-ary operation without simplification. *)
-val naryop' : Ty.t -> Ty.Naryop.t -> t list -> t
-
-(** [extract' expr ~high ~low] extracts a bit range without simplification. *)
-val extract' : t -> high:int -> low:int -> t
-
-(** [concat' expr1 expr2] concatenates two expressions without simplification.
+(** [raw_extract expr ~high ~low] extracts a bit range without simplification.
 *)
-val concat' : t -> t -> t
+val raw_extract : t -> high:int -> low:int -> t
+
+(** [raw_concat expr1 expr2] concatenates two expressions without
+    simplification. *)
+val raw_concat : t -> t -> t
 
 (** {1 Expression Simplification} *)
 
