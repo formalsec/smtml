@@ -34,8 +34,10 @@ jobs:
         id: pages
         uses: actions/configure-pages@v5
 
-      - name: Install smtml
-        run: opam install -y . z3 --with-doc --with-test
+      - name: Install Dependencies
+        run: |
+          opam install -y . --deps-only --with-doc --with-test
+          opam install z3
 
       - name: Build doc
         run: opam exec -- dune build @doc
