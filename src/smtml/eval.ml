@@ -93,7 +93,7 @@ module Int = struct
       else if n mod 2 = 0 then exp_by_squaring2 y (x * x) (n / 2)
       else begin
         assert (n mod 2 = 1);
-        exp_by_squaring2 (x * y) (x * y) ((n - 1) / 2)
+        exp_by_squaring2 (x * y) (x * x) ((n - 1) / 2)
       end
     in
     exp_by_squaring2 1 x n
