@@ -15,9 +15,33 @@ let test_make _ =
   assert_equal (view bv) (z 5);
   assert_equal (numbits bv) 8
 
+let test_equal _ =
+  assert (equal (make (z 42) 8) (make (z 42) 8));
+  assert (not (equal (make (z 42) 8) (make (z 42) 16)))
+
+let test_eqz _ =
+  assert_bool "0 == 0" (eqz (make Z.zero 8));
+  assert_bool "42 != 0" (not (eqz (make (z 42) 8)))
+
+let test_eq_one _ =
+  assert_bool "1 == 1" (eq_one (make Z.one 8));
+  assert_bool "42 != 1" (not (eq_one (make (z 42) 8)))
+
 let test_neg _ =
   let bv = make (z 5) 8 in
-  assert (equal (neg bv) (make (z (-5)) 8))
+  assert_equal (neg bv) (make (z (-5)) 8)
+
+let test_clz _ =
+  let bv = make (z 1) 8 in
+  assert_equal (clz bv) (make (z 7) 8)
+
+let test_ctz _ =
+  let bv = make (z 128) 8 in
+  assert_equal (ctz bv) (make (z 7) 8)
+
+let test_popcnt _ =
+  let bv = make (z 0b1010_1010) 8 in
+  assert_equal (popcnt bv) (make (z 4) 8)
 
 let test_add _ =
   let bv1 = make (z 3) 8 in
@@ -187,7 +211,13 @@ let test_to_int64 _ =
 let test_suite =
   "Bitvector"
   >::: [ "test_make" >:: test_make
+       ; "test_equal" >:: test_equal
+       ; "test_eqz" >:: test_eqz
+       ; "test_eq_one" >:: test_eq_one
        ; "test_neg" >:: test_neg
+       ; "test_clz" >:: test_clz
+       ; "test_ctz" >:: test_ctz
+       ; "test_popcn" >:: test_popcnt
        ; "test_add" >:: test_add
        ; "test_sub" >:: test_sub
        ; "test_mul" >:: test_mul
