@@ -1,7 +1,7 @@
 (tests
  (names
-  test_unit_bitvector
-  test_unit_expr
-  test_unit_model
-  test_unit_statistics)
+  test_bitvector
+  test_expr
+  test_model
+  test_statistics)
  (libraries smtml smtml_test yojson ounit2))
