@@ -15,7 +15,7 @@ Install [opam](https://opam.ocaml.org/doc/Install.html) and bootstrap the OCaml 
 <!-- $MDX skip -->
 ```sh
 $ opam init
-$ opam switch create 5.1.1 5.1.1
+$ opam switch create 5.3.0 5.3.0
 ```
 
 Then install encoding:
