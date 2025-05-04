@@ -1,6 +1,7 @@
 (tests
  (names
   test_bitvector
+  test_eval
   test_expr
   test_model
   test_statistics)

@@ -29,6 +29,8 @@ exception Conversion_to_integer
 
 exception Integer_overflow
 
+exception Index_out_of_bounds
+
 (** Exception raised when an invalid value is encountered during evaluation. *)
 exception Value of Ty.t
 
