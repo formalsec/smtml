@@ -415,7 +415,20 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
       let sort = B.mk_fun_sort args ret in
       B.mk_const sort ~symbol:"f32_to_i32"
 
-    let to_ieee_bv f = mk_term2 Kind.Apply f32_to_i32 f
+    let f64_to_i64 =
+      let args = [| Types.float 11 53 |] in
+      let ret = Types.bitv 64 in
+      let sort = B.mk_fun_sort args ret in
+      B.mk_const sort ~symbol:"f64_to_i64"
+
+    let to_ieee_bv f =
+      let f_size = Sort.fp_exp_size (Term.sort f) + Sort.fp_sig_size (Term.sort f) in
+      if f_size = 32 then
+        mk_term2 Kind.Apply f32_to_i32 f
+      else if f_size = 64 then
+        mk_term2 Kind.Apply f64_to_i64 f
+      else
+        Fmt.failwith "Bitwuzla_mappings: Unsupported floating-point size"
   end
 
   module Func = struct
