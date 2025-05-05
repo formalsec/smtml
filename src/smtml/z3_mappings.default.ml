@@ -442,6 +442,7 @@ module M = struct
       | Parallel -> Z3.set_global_param "parallel.enable" (string_of_bool v)
       | Num_threads ->
         Z3.set_global_param "parallel.threads.max" (string_of_int v)
+      | Debug -> ()
 
     let set_params (params : Params.t) =
       List.iter (fun (Params.P (p, v)) -> set_param p v) (Params.to_list params)

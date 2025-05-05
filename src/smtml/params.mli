@@ -23,6 +23,7 @@ type _ param =
   | Parallel : bool param  (** Enable or disable parallel execution. *)
   | Num_threads : int param
     (** Specifies the maximum number of threads to use in parallel mode. *)
+  | Debug : bool param  (** Enable or disable solver debugging messages. *)
 
 (** The type [param'] is a wrapper for storing parameter-value pairs. *)
 type param' = P : 'a param * 'a -> param'

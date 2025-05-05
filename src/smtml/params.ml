@@ -9,6 +9,7 @@ type _ param =
   | Ematching : bool param
   | Parallel : bool param
   | Num_threads : int param
+  | Debug : bool param
 
 let discr : type a. a param -> int = function
   | Timeout -> 0
@@ -17,6 +18,7 @@ let discr : type a. a param -> int = function
   | Ematching -> 3
   | Parallel -> 4
   | Num_threads -> 5
+  | Debug -> 6
 
 module Key = struct
   type t = K : 'a param -> t
@@ -46,6 +48,8 @@ let default_parallel = false
 
 let default_num_threads = 1
 
+let default_debug = false
+
 let default_value (type a) (param : a param) : a =
   match param with
   | Timeout -> default_timeout
@@ -54,6 +58,7 @@ let default_value (type a) (param : a param) : a =
   | Ematching -> default_ematching
   | Parallel -> default_parallel
   | Num_threads -> default_num_threads
+  | Debug -> default_debug
 
 let default () =
   Pmap.empty
@@ -80,7 +85,9 @@ let get (type a) (params : t) (param : a param) : a =
   | Ematching, Some (P (Ematching, v)) -> v
   | Parallel, Some (P (Parallel, v)) -> v
   | Num_threads, Some (P (Num_threads, v)) -> v
-  | (Timeout | Model | Unsat_core | Ematching | Parallel | Num_threads), _ ->
+  | Debug, Some (P (Debug, v)) -> v
+  | ( (Timeout | Model | Unsat_core | Ematching | Parallel | Num_threads | Debug)
+    , _ ) ->
     assert false
 
 let to_list params = List.map snd @@ Pmap.bindings params
