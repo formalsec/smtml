@@ -2,19 +2,20 @@
 (* Copyright (C) 2023-2024 formalsec *)
 (* Written by Hichem Rami Ait El Hara *)
 
-module Fresh = struct
-  open Dolmenexpr_to_expr
+module M = struct
   module A = Colibri2_stdlib.Std.A
   module LRA = Colibri2_theories_LRA
   module Scheduler = Colibri2_solver.Scheduler
   module Context = Colibri2_stdlib.Context
-  module Interp = Colibri2_core.Interp
   module Uninterp = Colibri2_theories_quantifiers.Uninterp
   module Ground = Colibri2_core.Ground
   module IArray = Colibri2_popop_lib.IArray
   module Egraph = Colibri2_core.Egraph
   module ConstSet = Colibri2_core.Expr.Term.Const.S
-  open Builtin
+  module DExpr = Dolmen_std.Expr
+  module DTy = DExpr.Ty
+  module DTerm = DExpr.Term
+  module DBuiltin = Dolmen_std.Builtin
 
   module Var = struct
     include DTerm.Var
@@ -56,7 +57,9 @@ module Fresh = struct
     let ceiling = ceil
   end
 
-  module Make () = struct
+  module Make () : Mappings_intf.M = struct
+    include Dolmenexpr_to_expr.DolmenIntf
+
     type model =
       Colibri2_core.Egraph.wt * (DTerm.Const.t * Colibri2_core.Value.t) list
 
@@ -65,6 +68,8 @@ module Fresh = struct
     type optimize = Sim.Core.t
 
     type handle = optimize * (Sim.Core.P.t * bool) option
+
+    type interp = Colibri2_core.Value.t
 
     type status =
       [ `Sat of Colibri2_core.Egraph.wt
@@ -83,47 +88,60 @@ module Fresh = struct
       ; mutable decls : ConstSet.t
       }
 
-    let () =
-      let term_app1 env s f =
-        Dolmen_loop.Typer.T.builtin_term
-          (Dolmen_type.Base.term_app1
-             (module Dolmen_loop.Typer.T)
-             env s
-             (fun a -> DExpr.Term.apply_cst f [ a.DExpr.term_ty ] [ a ]) )
-      in
-      Colibri2_core.Expr.add_builtins (fun env s ->
-        match s with
-        | Dolmen_loop.Typer.T.Id { ns = Term; name = Simple "StringToInt" } ->
-          term_app1 env s string_to_int
-        | Dolmen_loop.Typer.T.Id { ns = Term; name = Simple "RealToString" } ->
-          term_app1 env s real_to_string
-        | Dolmen_loop.Typer.T.Id { ns = Term; name = Simple "StringToReal" } ->
-          term_app1 env s string_to_real
-        | Dolmen_loop.Typer.T.Id { ns = Term; name = Simple "TrimString" } ->
-          term_app1 env s trim_string
-        | Dolmen_loop.Typer.T.Id { ns = Term; name = Simple "F32ToString" } ->
-          term_app1 env s f32_to_string
-        | Dolmen_loop.Typer.T.Id { ns = Term; name = Simple "StringToF32" } ->
-          term_app1 env s string_to_f32
-        | Dolmen_loop.Typer.T.Id { ns = Term; name = Simple "F64ToString" } ->
-          term_app1 env s f64_to_string
-        | Dolmen_loop.Typer.T.Id { ns = Term; name = Simple "StringToF64" } ->
-          term_app1 env s string_to_f64
-        | _ -> `Not_found )
+    type optimizer
 
-    let satisfiability s = function
-      | `Sat d ->
-        s.state <- `Sat d;
-        `Sat
-      | `Unknown d ->
-        s.state <- `Unknown d;
-        `Unknown
-      | `UnknownUnsat -> `Unknown
-      | `Unsat -> `Unsat
+    let tcst_to_symbol (c : DTerm.Const.t) : Symbol.t =
+      match c with
+      | { builtin = DBuiltin.Base
+        ; path = Local { name } | Absolute { name; _ }
+        ; id_ty
+        ; _
+        } ->
+        Symbol.make (Types.to_ety id_ty) name
+      | _ ->
+        Fmt.failwith {|Unsupported constant term "%a"|} DExpr.Print.term_cst c
 
-    module Smtlib = struct
-      let pp ?name:_ ?logic:_ ?status:_ _fmt _ =
-        Fmt.failwith "Colibri2_mappings: Smtlib.pp not implemented"
+    module Interp = struct
+      let to_int interp =
+        match
+          Colibri2_core.Value.value Colibri2_theories_LRA.RealValue.key interp
+        with
+        | Some a when A.is_integer a -> A.to_int a
+        | _ -> assert false
+
+      let to_real interp =
+        match
+          Colibri2_core.Value.value Colibri2_theories_LRA.RealValue.key interp
+        with
+        | Some a -> (
+          match float_of_string_opt (A.to_string a) with
+          | Some f -> f
+          | None -> assert false )
+        | _ -> assert false
+
+      let to_bool interp =
+        match
+          Colibri2_core.Value.value Colibri2_theories_bool.Boolean.BoolValue.key
+            interp
+        with
+        | Some b -> b
+        | None -> assert false
+
+      let to_string _ = assert false
+
+      let to_bitv interp _n =
+        match
+          Colibri2_core.Value.value Colibri2_theories_LRA.RealValue.key interp
+        with
+        | Some a when A.is_integer a -> Int64.of_string (A.to_string a)
+        | _ -> assert false
+
+      let to_float fp _eb _sb =
+        match
+          Colibri2_core.Value.value Colibri2_theories_fp.Fp_value.key fp
+        with
+        | Some a -> Farith.F.to_float Farith.Mode.NE a
+        | _ -> assert false
     end
 
     module Solver = struct
@@ -140,7 +158,23 @@ module Fresh = struct
           scheduler;
         scheduler
 
-      let make ?params:_ ?logic:_ () =
+      let set_param (type a) (param : a Params.param) (v : a) : unit =
+        match param with
+        | Timeout -> ()
+        | Model -> ()
+        | Unsat_core -> ()
+        | Ematching -> ()
+        | Parallel -> ()
+        | Num_threads -> ()
+        | Debug -> Colibri2_stdlib.Debug.set_info_flags v
+
+      let set_params (params : Params.t) =
+        List.iter
+          (fun (Params.P (p, v)) -> set_param p v)
+          (Params.to_list params)
+
+      let make ?params ?logic:_ () =
+        Option.iter set_params params;
         let scheduler = mk_scheduler () in
         let ctx = Scheduler.get_context scheduler in
         { scheduler
@@ -149,8 +183,6 @@ module Fresh = struct
         ; status_colibri = Context.Ref.create ctx `No
         ; decls = ConstSet.empty
         }
-
-      let add_simplifier s = s
 
       let clone { pushpop; state; status_colibri; decls; _ } =
         let scheduler = mk_scheduler () in
@@ -186,13 +218,17 @@ module Fresh = struct
 
       let add s es =
         Scheduler.add_assertion s.scheduler (fun d ->
-          let es' =
-            List.map
-              (encode_expr ~record_sym:(fun c ->
-                 s.decls <- ConstSet.add c s.decls ) )
-              es
-          in
-          List.iter (fun e -> new_assertion d e) es' )
+          List.iter (fun e -> new_assertion d e) es )
+
+      let satisfiability s = function
+        | `Sat d ->
+          s.state <- `Sat d;
+          `Sat
+        | `Unknown d ->
+          s.state <- `Unknown d;
+          `Unknown
+        | `UnknownUnsat -> `Unknown
+        | `Unsat -> `Unsat
 
       let check s ~assumptions =
         match assumptions with
@@ -211,7 +247,7 @@ module Fresh = struct
             ConstSet.fold_left
               (fun acc c ->
                 let e = DExpr.Term.of_cst c in
-                let v = Interp.interp d e in
+                let v = Colibri2_core.Interp.interp d e in
                 (c, v) :: acc )
               [] s.decls
           in
@@ -219,129 +255,55 @@ module Fresh = struct
         | `Unsat -> assert false
         | `UnknownUnsat -> assert false
 
+      let add_simplifier s = s
+
       let interrupt _ = ()
 
       let get_statistics _ =
         Fmt.failwith "Colibri2_mappings: Solver.get_statistics not implemented"
+
+      let pp_statistics _fmt _solver = ()
+    end
+
+    module Model = struct
+      let get_symbols ((_, m) : model) =
+        List.map (fun (tcst, _) -> tcst_to_symbol tcst) m
+
+      let eval ?completion:_ (env, _) (t : term) =
+        let c2v = Colibri2_core.Interp.interp env t in
+        Some c2v
     end
 
     module Optimizer = struct
-      let make () : optimize = Sim.Core.empty ~is_int:false ~check_invs:false
+      let make () = assert false
 
-      let push _ = ()
+      let push _opt = assert false
 
-      let pop _ = ()
+      let pop _opt = assert false
 
-      let add _ _ = assert false
+      let add _opt _terms = assert false
 
-      let check _ = assert false
+      let check _opt = assert false
 
-      let model o =
-        match Sim.Result.get None o with
-        | Sim.Core.Sat s ->
-          let _model = (Lazy.force s).Sim.Core.main_vars in
-          (* let l = List.map (fun (n, av) -> (n, LRA.RealValue.of_value av)) model in
-             Some l *)
-          None
-        | Sim.Core.Unknown | Sim.Core.Unsat _ | Sim.Core.Unbounded _
-        | Sim.Core.Max (_, _) ->
-          None
+      let model _opt = assert false
 
-      let maximize _ _ = assert false
+      let maximize _opt _term = assert false
 
-      let minimize _ _ = assert false
+      let minimize _opt _term = assert false
 
-      let interrupt _ = ()
+      let interrupt () = assert false
 
-      let get_statistics _ =
-        Fmt.failwith
-          "Colibri2_mappings: Optimizer.get_statistics not implemented"
+      let get_statistics _opt = assert false
+
+      let pp_statistics _fmt _opt = assert false
     end
-
-    let c2value_to_value (ty : Ty.t) (v : Colibri2_core.Value.t) =
-      match ty with
-      | Ty_bool -> (
-        match
-          Colibri2_core.Value.value Colibri2_theories_bool.Boolean.BoolValue.key
-            v
-        with
-        | Some true -> Some Value.True
-        | Some false -> Some Value.False
-        | None -> None )
-      | Ty_int | Ty_real -> (
-        match
-          Colibri2_core.Value.value Colibri2_theories_LRA.RealValue.key v
-        with
-        | Some a when A.is_integer a -> Some (Value.Int (A.to_int a))
-        | Some a ->
-          Option.map
-            (fun f -> Value.Real f)
-            (Float.of_string_opt (A.to_string a))
-        | None -> None )
-      | Ty_bitv n -> (
-        match
-          Colibri2_core.Value.value Colibri2_theories_LRA.RealValue.key v
-        with
-        | Some a when A.is_integer a ->
-          Some
-            (Value.Num
-               ( match n with
-               | 8 -> I8 (A.to_int a)
-               | 32 -> I32 (Int32.of_int (A.to_int a))
-               | 64 -> I64 (Int64.of_int (A.to_int a))
-               | _ -> assert false ) )
-        | _ -> assert false )
-      | Ty_fp n -> (
-        match Colibri2_core.Value.value Colibri2_theories_fp.Fp_value.key v with
-        | None -> assert false
-        | Some a ->
-          Some
-            (Value.Num
-               ( match n with
-               | 32 ->
-                 F32 (Int32.bits_of_float (Farith.F.to_float Farith.Mode.NE a))
-               | 64 ->
-                 F64 (Int64.bits_of_float (Farith.F.to_float Farith.Mode.NE a))
-               | _ -> assert false ) ) )
-      | Ty_str | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp ->
-        Fmt.failwith
-          "Colibri2_mappings2: Unsuppoted model generation of type %a" Ty.pp ty
-
-    let value (e, _) (c : Expr.t) : Value.t =
-      let c2v = Interp.interp e (encode_expr c) in
-      match c2value_to_value (Expr.ty c) c2v with
-      | None -> assert false
-      | Some v -> v
-
-    let values_of_model ?(symbols : Symbol.t list option) ((_, model) : model) :
-      Model.t =
-      let m = Hashtbl.create 512 in
-      match symbols with
-      | Some symbols ->
-        List.iter
-          (fun sy ->
-            let c = tcst_of_symbol sy in
-            match List.assoc_opt c model with
-            | Some v -> (
-              match c2value_to_value (tty_to_etype c.DExpr.id_ty) v with
-              | Some data -> Hashtbl.add m (tcst_to_symbol c) data
-              | None -> () )
-            | _ -> () )
-          symbols;
-        m
-      | None ->
-        List.iter
-          (fun (c, v) ->
-            match c2value_to_value (tty_to_etype c.DExpr.id_ty) v with
-            | Some data -> Hashtbl.add m (tcst_to_symbol c) data
-            | None -> () )
-          model;
-        m
-
-    let set_debug = Colibri2_stdlib.Debug.set_info_flags
   end
+
+  let is_available = true
+
+  include Make ()
 end
 
-let is_available = true
+module M' : Mappings_intf.M_with_make = M
 
-include Fresh.Make ()
+include Mappings.Make (M)
