@@ -221,6 +221,18 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
       ];
     assert_sat ~f:"test_copysign64" (Solver.check solver [])
 
+  let test_to_ieee_bv solver_modulde =
+    let open Infix in
+    let module Solver = (val solver_modulde : Solver_intf.S) in
+    let solver =
+      Solver.create ~params:(Params.default ()) ~logic:Logic.QF_UFBV ()
+    in
+    let x = symbol "x" (Ty_fp 32) in
+    let y = symbol "y" (Ty_bitv 32) in
+    let converted = Expr.cvtop (Ty_bitv 32) Reinterpret_float x in
+    Solver.add solver [ Expr.relop Ty_bool Eq converted y ];
+    assert_sat ~f:"test_i32_of_f32" (Solver.check solver [])
+
   let test_fp =
     "test_fp"
     >::: [ "test_fp_get_value32" >:: wrap test_fp_get_value32
@@ -228,5 +240,6 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
          ; "test_fp_sqrt" >:: wrap test_fp_sqrt
          ; "test_fp_copysign32" >:: wrap test_fp_copysign32
          ; "test_fp_copysign64" >:: wrap test_fp_copysign64
+         ; "test_to_ieee_bv" >:: wrap test_to_ieee_bv
          ]
 end

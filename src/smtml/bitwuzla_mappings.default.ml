@@ -409,35 +409,13 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     let of_ieee_bv eb sb bv = mk_term1_indexed2 Kind.Fp_to_fp_from_bv bv eb sb
 
     (* TODO *)
-    let to_ieee_bv x =
-      let (sign, exp, mant) = Term.value Term.IEEE_754 x in
-      let bits_str = String.concat [sign; exp; mant] in
-      let bv = Z.of_string_base 2 bits_str in
-      let total_bits = String.length bits_str in
-      mk_bv_value_int64 (mk_bv_sort total_bits) (Z.to_int64 bv)
+    let f32_to_i32 =
+      let args = [| Types.float 8 24 |] in
+      let ret = Types.bitv 32 in
+      let sort = B.mk_fun_sort args ret in
+      B.mk_const sort ~symbol:"f32_to_i32"
 
-      (* let (sign,exp,mant) = match Term.kind x with *)
-      (*   | Kind.Fp_fp -> *)
-      (*      begin match x with *)
-      (*      | Term.IEEE_754 (x,y,z) -> (x,y,z) *)
-      (*      | _ -> Fmt.failwith "Bitwuzla_mappings: to_ieee_bv problem" *)
-      (*      end *)
-      (*   | _ -> Fmt.failwith "Bitwuzla_mappings: to_ieee_bv problem" *)
-      (* in *)
-      (* let v = (Float.pow 2. exp) *. mant *. (Float.pow (-1.) sign) in *)
-      (* mk_bv_value_int (mk_bv_sort 64) (Float.to_int v) *)
-
-      (*     begin match Term.children x with *)
-      (*       | [|x;y;z|] -> (x,y,z) *)
-      (*       | _ -> Fmt.failwith "Bitwuzla_mappings: to_ieee_bv problem" *)
-      (*     end *)
-      (* | _ -> Fmt.failwith "Bitwuzla_mappings: to_ieee_bv problem" *)
-      (* in *)
-      (* let xx = Term.value x in *)
-      (* let v = (Float.pow 2. exp) *. mant *. (Float.pow (-1.) sign) in *)
-      (* mk_bv_value_int (mk_bv_sort 64) (Float.to_int v) *)
-  
-      (* Fmt.failwith "Bitwuzla_mappings: to_ieee_bv not implemented" *)
+    let to_ieee_bv f = mk_term2 Kind.Apply f32_to_i32 f
   end
 
   module Func = struct
