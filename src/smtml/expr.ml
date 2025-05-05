@@ -534,38 +534,43 @@ let rec concat (msb : t) (lsb : t) : t =
     raw_concat (concat msb e2) e3
   | _ -> raw_concat msb lsb
 
-let rec simplify_expr (hte : t) : t =
+let rec simplify_expr ?(in_relop = false) (hte : t) : t =
   match view hte with
   | Val _ | Symbol _ -> hte
-  | Ptr { base; offset } -> ptr base (simplify_expr offset)
-  | List es -> make @@ List (List.map simplify_expr es)
-  | App (x, es) -> make @@ App (x, List.map simplify_expr es)
+  | Ptr { base; offset } ->
+    let offset = simplify_expr ~in_relop offset in
+    if not in_relop then ptr base offset
+    else binop (Ty_bitv 32) Add (value (Bitv (Bitvector.of_int32 base))) offset
+  | List es -> make @@ List (List.map (simplify_expr ~in_relop) es)
+  | App (x, es) -> make @@ App (x, List.map (simplify_expr ~in_relop) es)
   | Unop (ty, op, e) ->
-    let e = simplify_expr e in
+    let e = simplify_expr ~in_relop e in
     unop ty op e
   | Binop (ty, op, e1, e2) ->
-    let e1 = simplify_expr e1 in
-    let e2 = simplify_expr e2 in
+    let e1 = simplify_expr ~in_relop e1 in
+    let e2 = simplify_expr ~in_relop e2 in
     binop ty op e1 e2
   | Relop (ty, op, e1, e2) ->
-    let e1 = simplify_expr e1 in
-    let e2 = simplify_expr e2 in
+    let e1 = simplify_expr ~in_relop:true e1 in
+    let e2 = simplify_expr ~in_relop:true e2 in
     relop ty op e1 e2
   | Triop (ty, op, c, e1, e2) ->
-    let c = simplify_expr c in
-    let e1 = simplify_expr e1 in
-    let e2 = simplify_expr e2 in
+    let c = simplify_expr ~in_relop c in
+    let e1 = simplify_expr ~in_relop e1 in
+    let e2 = simplify_expr ~in_relop e2 in
     triop ty op c e1 e2
   | Cvtop (ty, op, e) ->
-    let e = simplify_expr e in
+    let e = simplify_expr ~in_relop e in
     cvtop ty op e
   | Naryop (ty, op, es) ->
-    let es = List.map simplify_expr es in
+    let es = List.map (simplify_expr ~in_relop) es in
     naryop ty op es
-  | Extract (s, high, low) -> extract s ~high ~low
+  | Extract (s, high, low) ->
+    let s = simplify_expr ~in_relop s in
+    extract s ~high ~low
   | Concat (e1, e2) ->
-    let msb = simplify_expr e1 in
-    let lsb = simplify_expr e2 in
+    let msb = simplify_expr ~in_relop e1 in
+    let lsb = simplify_expr ~in_relop e2 in
     concat msb lsb
   | Binder _ ->
     (* Not simplifying anything atm *)
