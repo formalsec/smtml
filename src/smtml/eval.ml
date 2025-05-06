@@ -503,7 +503,7 @@ module Bitv = struct
     | Not -> Bitvector.lognot bv
     | Clz -> Bitvector.clz bv
     | Ctz -> Bitvector.ctz bv
-    | Popcnt -> Bitvector.ctz bv
+    | Popcnt -> Bitvector.popcnt bv
     | _ ->
       Fmt.failwith {|unop: Unsupported bitvectore operator "%a"|} Ty.Unop.pp op
 
