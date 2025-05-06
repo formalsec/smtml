@@ -325,8 +325,7 @@ let unop ty op hte =
   | Ty.Unop.(Regexp_loop _ | Regexp_star), _ -> raw_unop ty op hte
   | _, Val v -> value (Eval.unop ty op v)
   | Not, Unop (_, Not, hte') -> hte'
-  | Not, Relop (t, Eq, a, b) -> make (Relop (t, Ne, a, b))
-  | Not, Relop (t, Ne, a, b) -> make (Relop (t, Eq, a, b))
+  | Not, Relop (t, Eq, a,b) -> Hc.hashcons (Relop (t, Ne, a, b))
   | Neg, Unop (_, Neg, hte') -> hte'
   | Trim, Cvtop (Ty_real, ToString, _) -> hte
   | Head, List (hd :: _) -> hd
@@ -427,6 +426,8 @@ let rec relop ty op hte1 hte2 =
     if Int32.equal b1 b2 then relop Ty_bool Eq os1 os2 else value False
   | Ne, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
     if Int32.equal b1 b2 then relop Ty_bool Ne os1 os2 else value True
+  | GtU, _, _ -> relop ty LtU hte2 hte1
+  | GeU, _, _ -> relop ty LeU hte2 hte1
   | ( (LtU | LeU)
     , Ptr { base = b1; offset = os1 }
     , Ptr { base = b2; offset = os2 } ) ->
