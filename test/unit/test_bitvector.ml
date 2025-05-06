@@ -3,8 +3,9 @@ open Smtml.Bitvector
 
 let check =
   let pp_diff fmt (a, b) =
-    Fmt.pf fmt "{ v = %a; width = %d } != { v = %a; width = %d }" Z.pp_print
-      (view a) (numbits a) Z.pp_print (view b) (numbits b)
+    Fmt.pf fmt
+      "Got: { v = %a; width = %d } but expected: { v = %a; width = %d }"
+      Z.pp_print (view a) (numbits a) Z.pp_print (view b) (numbits b)
   in
   assert_equal ~cmp:equal ~pp_diff
 
@@ -29,73 +30,107 @@ let test_eq_one _ =
 
 let test_neg _ =
   let bv = make (z 5) 8 in
-  assert_equal (neg bv) (make (z (-5)) 8)
+  check (neg bv) (make (z (-5)) 8)
 
 let test_clz _ =
   let bv = make (z 1) 8 in
-  assert_equal (clz bv) (make (z 7) 8)
+  check (clz bv) (make (z 7) 8)
 
 let test_ctz _ =
   let bv = make (z 128) 8 in
-  assert_equal (ctz bv) (make (z 7) 8)
+  check (ctz bv) (make (z 7) 8)
 
 let test_popcnt _ =
   let bv = make (z 0b1010_1010) 8 in
-  assert_equal (popcnt bv) (make (z 4) 8)
+  check (popcnt bv) (make (z 4) 8)
 
 let test_add _ =
   let bv1 = make (z 3) 8 in
   let bv2 = make (z 5) 8 in
-  assert_equal (view (add bv1 bv2)) (z 8)
+  check (add bv1 bv2) (make (z 8) 8)
 
 let test_sub _ =
   let bv1 = make (z 10) 8 in
   let bv2 = make (z 3) 8 in
-  assert_equal (view (sub bv1 bv2)) (z 7)
+  check (sub bv1 bv2) (make (z 7) 8)
 
 let test_mul _ =
   let bv1 = make (z 4) 8 in
   let bv2 = make (z 3) 8 in
-  assert_equal (view (mul bv1 bv2)) (z 12)
+  check (mul bv1 bv2) (make (z 12) 8)
 
 let test_div _ =
   let bv1 = make (z 10) 8 in
   let bv2 = make (z 2) 8 in
-  assert_equal (view (div bv1 bv2)) (z 5)
+  check (div bv1 bv2) (make (z 5) 8)
 
 let test_div_u _ =
   let bv1 = make (z 10) 8 in
   let bv2 = make (z 3) 8 in
-  assert_equal (view (div_u bv1 bv2)) (z (10 / 3))
+  check (div_u bv1 bv2) (make (z (10 / 3)) 8)
 
 let test_logical_ops _ =
   let bv1 = make (z 0b1100) 4 in
   let bv2 = make (z 0b1010) 4 in
-  assert_equal (view (logand bv1 bv2)) (z 0b1000);
-  assert_equal (view (logor bv1 bv2)) (z 0b1110);
-  assert_equal (view (logxor bv1 bv2)) (z 0b0110)
+  check (logand bv1 bv2) (make (z 0b1000) 4);
+  check (logor bv1 bv2) (make (z 0b1110) 4);
+  check (logxor bv1 bv2) (make (z 0b0110) 4)
 
-let test_shifts _ =
+let test_shl _ =
   let bv = make (z 0b0011) 4 in
-  assert_equal (view (shl bv (make (z 1) 4))) (z 0b0110);
-  assert_equal (view (lshr bv (make (z 1) 4))) (z 0b0001);
-  assert_equal (view (ashr bv (make (z 1) 4))) (z 0b0001)
+  check (shl bv (make (z 1) 4)) (make (z 0b0110) 4);
+  let bv = make (z 65475) 64 in
+  let shift_count = make (z (-127)) 64 in
+  let expected = make (z 130950) 64 in
+  check (shl bv shift_count) expected
+
+let test_lshr _ =
+  let bv = make (z 0b0011) 4 in
+  check (lshr bv (make (z 1) 4)) (make (z 0b0001) 4);
+  let bv = make (z (-4294967295)) 64 in
+  let shift_count = make (z (-4294967295)) 64 in
+  let expected = make (Z.of_string "9223372034707292160") 64 in
+  check (lshr bv shift_count) expected
+
+let test_ashr _ =
+  let bv = make (z 0b0011) 4 in
+  check (ashr bv (make (z 1) 4)) (make (z 0b0001) 4);
+  let bv = make (z 0) 64 in
+  let shift_count = make (z (-327699)) 64 in
+  let expected = make (z 0) 64 in
+  check (ashr bv shift_count) expected
 
 let test_comparisons _ =
   let bv1 = make (z 3) 4 in
   let bv2 = make (z 5) 4 in
-  assert (lt bv1 bv2);
-  assert (le bv1 bv2);
-  assert (gt bv2 bv1);
-  assert (ge bv2 bv1);
-  assert (lt_u bv1 bv2);
-  assert (gt_u bv2 bv1)
+  assert_bool "3 < 5" (lt bv1 bv2);
+  assert_bool "3 <= 5" (le bv1 bv2);
+  assert_bool "5 > 3" (gt bv2 bv1);
+  assert_bool "5 >= 3" (ge bv2 bv1);
+  assert_bool "3 <_u 5" (lt_u bv1 bv2);
+  assert_bool "5 >_u 3" (gt_u bv2 bv1)
 
-let test_rotate _ =
+let test_rotate_left_one _ =
   let bv = make (z 0b1101) 4 in
   let one = make (z 1) 4 in
-  assert_equal (view (rotate_left bv one)) (z 0b1011);
-  assert_equal (view (rotate_right bv one)) (z 0b1110)
+  check (rotate_left bv one) (make (z 0b1011) 4)
+
+let test_rotate_left_negative _ =
+  let bv = make (z 0) 64 in
+  let shift_count = make (z (-109)) 64 in
+  let expected = make Z.zero 64 in
+  check (rotate_left bv shift_count) expected
+
+let test_rotate_right_one _ =
+  let bv = make (z 0b1101) 4 in
+  let one = make (z 1) 4 in
+  check (rotate_right bv one) (make (z 0b1110) 4)
+
+let test_rotate_right_negative _ =
+  let bv = make Z.zero 64 in
+  let shift_count = make (z (-5957114)) 64 in
+  let expected = make Z.zero 64 in
+  check (rotate_right bv shift_count) expected
 
 let test_extensions _ =
   let bv = make (z 0b1010) 4 in
@@ -224,9 +259,14 @@ let test_suite =
        ; "test_div" >:: test_div
        ; "test_div_u" >:: test_div_u
        ; "test_logical_ops" >:: test_logical_ops
-       ; "test_shifts" >:: test_shifts
+       ; "test_shl" >:: test_shl
+       ; "test_lshr" >:: test_lshr
+       ; "test_ashr" >:: test_ashr
        ; "test_comparisons" >:: test_comparisons
-       ; "test_rotate" >:: test_rotate
+       ; "test_rotate_left_one" >:: test_rotate_left_one
+       ; "test_rotate_left_negative" >:: test_rotate_left_negative
+       ; "test_rotate_right_one" >:: test_rotate_right_one
+       ; "test_rotate_right_negative" >:: test_rotate_right_negative
        ; "test_extensions" >:: test_extensions
        ; "test_extract" >::: test_extract
        ; "test_concat" >::: test_concat
