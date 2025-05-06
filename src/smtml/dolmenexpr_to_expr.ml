@@ -81,7 +81,7 @@ module DolmenIntf = struct
 
   type func_decl = DTerm.Const.t
 
-  let caches_consts = true
+  let caches_consts = false
 
   let true_ = DTerm._true
 
