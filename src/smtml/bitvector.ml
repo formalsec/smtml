@@ -107,17 +107,22 @@ let logxor a b =
   assert (a.width = b.width);
   make (Z.logxor a.value b.value) a.width
 
+let normalize_shift_amount n width =
+  (* FIXME: only works for widths that are powers of 2. *)
+  assert (width > 0 && width land (width - 1) = 0);
+  Z.to_int @@ Z.logand n (Z.of_int (width - 1))
+
 let shl a n =
-  let n = Z.to_int n.value in
+  let n = normalize_shift_amount (view n) (numbits a) in
   make (Z.shift_left a.value n) a.width
 
 let ashr a n =
-  let n = Z.to_int n.value in
+  let n = normalize_shift_amount (view n) (numbits a) in
   let signed_value = to_signed a in
   make (Z.shift_right signed_value n) a.width
 
 let lshr a n =
-  let n = Z.to_int n.value in
+  let n = normalize_shift_amount (view n) (numbits a) in
   make (Z.shift_right_trunc a.value n) a.width
 
 let rem a b =
@@ -131,14 +136,14 @@ let rem_u a b =
   make (Z.rem a.value b.value) a.width
 
 let rotate_left bv n =
-  let n = Z.to_int n.value mod bv.width in
+  let n = normalize_shift_amount (view n) (numbits bv) in
   let left_part = Z.shift_left bv.value n in
   let right_part = Z.shift_right bv.value (bv.width - n) in
   let rotated = Z.logor left_part right_part in
   make rotated bv.width
 
 let rotate_right bv n =
-  let n = Z.to_int n.value mod bv.width in
+  let n = normalize_shift_amount (view n) (numbits bv) in
   let right_part = Z.shift_right bv.value n in
   let left_part = Z.shift_left bv.value (bv.width - n) in
   let rotated = Z.logor left_part right_part in
