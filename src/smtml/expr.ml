@@ -327,7 +327,7 @@ let unop ty op hte =
   | Ty.Unop.(Regexp_loop _ | Regexp_star), _ -> raw_unop ty op hte
   | _, Val v -> value (Eval.unop ty op v)
   | Not, Unop (_, Not, hte') -> hte'
-  | Not, Relop (t, Eq, a,b) -> Hc.hashcons (Relop (t, Ne, a, b))
+  | Not, Relop (t, Eq, a,b) -> make (Relop (t, Ne, a, b))
   | Neg, Unop (_, Neg, hte') -> hte'
   | Trim, Cvtop (Ty_real, ToString, _) -> hte
   | Head, List (hd :: _) -> hd
