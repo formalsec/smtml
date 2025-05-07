@@ -1,7 +1,14 @@
 ## Unreleased
 
 ### Added
+### Changed
+### Fixed
 
+## v0.7.0
+
+### Added
+
+- Normalization of comparasion operators (@felixL-K)
 - Add custom Bitvector library leveraging zarith and modulo arithmetic
 
 ### Changed
@@ -10,7 +17,10 @@
 
 ### Fixed
 
+- Bring back model generation for alt-ergo-lib in 2.6.2 (@felixL-K)
+- General bug fixes in the concrete evaluation of some operators
 - Fix fxx.{neg|abs|copysign} operators
+- Improvements for the colibri2 mappings (@hra687261)
 - Fix cvc5 mappings use of outdated smtml API functions
 
 ## v0.6.3
