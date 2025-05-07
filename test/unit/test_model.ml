@@ -7,7 +7,7 @@ let test_to_json _ =
   let z = Symbol.make Ty_bool "z" in
   let u = Symbol.make Ty_str "u" in
   let expected =
-{|{
+    {|{
   "model": {
     "u": { "ty": "str", "value": "abc" },
     "z": { "ty": "bool", "value": true },
