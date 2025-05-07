@@ -187,10 +187,10 @@ let negate_relop (hte : t) : (t, string) Result.t =
     match view hte with
     | Relop (ty, Eq, e1, e2) -> Ok (Relop (ty, Ne, e1, e2))
     | Relop (ty, Ne, e1, e2) -> Ok (Relop (ty, Eq, e1, e2))
-    | Relop (ty, Lt, e1, e2) -> Ok (Relop (ty, Ge, e1, e2))
-    | Relop (ty, LtU, e1, e2) -> Ok (Relop (ty, GeU, e1, e2))
-    | Relop (ty, Le, e1, e2) -> Ok (Relop (ty, Gt, e1, e2))
-    | Relop (ty, LeU, e1, e2) -> Ok (Relop (ty, GtU, e1, e2))
+    | Relop (ty, Lt, e1, e2) -> Ok (Relop (ty, Le, e2, e1))
+    | Relop (ty, LtU, e1, e2) -> Ok (Relop (ty, LeU, e2, e1))
+    | Relop (ty, Le, e1, e2) -> Ok (Relop (ty, Lt, e2, e1))
+    | Relop (ty, LeU, e1, e2) -> Ok (Relop (ty, LtU, e2, e1))
     | Relop (ty, Gt, e1, e2) -> Ok (Relop (ty, Le, e1, e2))
     | Relop (ty, GtU, e1, e2) -> Ok (Relop (ty, LeU, e1, e2))
     | Relop (ty, Ge, e1, e2) -> Ok (Relop (ty, Lt, e1, e2))
@@ -325,8 +325,8 @@ let unop ty op hte =
   | Ty.Unop.(Regexp_loop _ | Regexp_star), _ -> raw_unop ty op hte
   | _, Val v -> value (Eval.unop ty op v)
   | Not, Unop (_, Not, hte') -> hte'
-  | Not, Relop (t, Eq, a,b) -> make (Relop (t, Ne, a, b))
-  | Not, Relop (t, Ne, a,b) -> make (Relop (t, Eq, a, b))
+  | Not, Relop (_, _, _, _) ->
+     begin match negate_relop hte with Ok a -> a | Error _ -> assert false end
   | Neg, Unop (_, Neg, hte') -> hte'
   | Trim, Cvtop (Ty_real, ToString, _) -> hte
   | Head, List (hd :: _) -> hd
@@ -369,6 +369,8 @@ let rec binop ty op hte1 hte2 =
   | Sub, Binop (ty, Sub, x, { node = Val v1; _ }), Val v2 ->
     let v = value (Eval.binop ty Add v1 v2) in
     raw_binop ty Sub x v
+  | Mul, Val (Num (I32 1l)), _ -> hte2
+  | Mul, _, Val (Num (I32 1l)) -> hte1
   | Mul, Binop (ty, Mul, x, { node = Val v1; _ }), Val v2 ->
     let v = value (Eval.binop ty Mul v1 v2) in
     raw_binop ty Mul x v
