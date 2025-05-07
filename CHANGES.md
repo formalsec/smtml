@@ -10,6 +10,7 @@
 
 ### Fixed
 
+- Fix fxx.{neg|abs|copysign} operators
 - Fix cvc5 mappings use of outdated smtml API functions
 
 ## v0.6.3

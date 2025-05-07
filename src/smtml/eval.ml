@@ -567,34 +567,43 @@ module F32 = struct
     of_value i op v |> to_float
   [@@inline]
 
+  (* Stolen from Owi *)
+  let abs x = Int32.logand x Int32.max_int
+
+  let neg x = Int32.logxor x Int32.min_int
+
   let unop (op : Ty.Unop.t) (v : Value.t) : Value.t =
-    let v = to_float @@ of_value 1 (`Unop op) v in
+    let f = to_float @@ of_value 1 (`Unop op) v in
     match op with
-    | Neg -> to_value' @@ Float.neg v
-    | Abs -> to_value' @@ Float.abs v
-    | Sqrt -> to_value' @@ Float.sqrt v
-    | Nearest -> to_value' @@ Float.round v
-    | Ceil -> to_value' @@ Float.ceil v
-    | Floor -> to_value' @@ Float.floor v
-    | Trunc -> to_value' @@ Float.trunc v
-    | Is_nan -> if Float.is_nan v then Value.True else Value.False
+    | Neg -> to_value @@ neg @@ of_value 1 (`Unop op) v
+    | Abs -> to_value @@ abs @@ of_value 1 (`Unop op) v
+    | Sqrt -> to_value' @@ Float.sqrt f
+    | Nearest -> to_value' @@ Float.round f
+    | Ceil -> to_value' @@ Float.ceil f
+    | Floor -> to_value' @@ Float.floor f
+    | Trunc -> to_value' @@ Float.trunc f
+    | Is_nan -> if Float.is_nan f then Value.True else Value.False
     | _ -> Fmt.failwith {|unop: Unsupported f32 operator "%a"|} Ty.Unop.pp op
 
+  (* Stolen from Owi *)
+  let copy_sign x y = Int32.logor (abs x) (Int32.logand y Int32.min_int)
+
   let binop (op : Ty.Binop.t) (v1 : Value.t) (v2 : Value.t) : Value.t =
-    let f =
-      match op with
-      | Add -> Float.add
-      | Sub -> Float.sub
-      | Mul -> Float.mul
-      | Div -> Float.div
-      | Rem -> Float.rem
-      | Min -> Float.min
-      | Max -> Float.max
-      | Copysign -> Float.copy_sign
-      | _ ->
-        Fmt.failwith {|binop: Unsupported f32 operator "%a"|} Ty.Binop.pp op
-    in
-    to_value' (f (of_value' 1 (`Binop op) v1) (of_value' 2 (`Binop op) v2))
+    let a = of_value' 1 (`Binop op) v1 in
+    let b = of_value' 1 (`Binop op) v2 in
+    match op with
+    | Add -> to_value' @@ Float.add a b
+    | Sub -> to_value' @@ Float.sub a b
+    | Mul -> to_value' @@ Float.mul a b
+    | Div -> to_value' @@ Float.div a b
+    | Rem -> to_value' @@ Float.rem a b
+    | Min -> to_value' @@ Float.min a b
+    | Max -> to_value' @@ Float.max a b
+    | Copysign ->
+      let a = of_value 1 (`Binop op) v1 in
+      let b = of_value 1 (`Binop op) v2 in
+      to_value (copy_sign a b)
+    | _ -> Fmt.failwith {|binop: Unsupported f32 operator "%a"|} Ty.Binop.pp op
 
   let relop (op : Ty.Relop.t) (v1 : Value.t) (v2 : Value.t) : bool =
     let f =
@@ -631,34 +640,42 @@ module F64 = struct
     of_value i op v |> to_float
   [@@inline]
 
+  (* Stolen from owi *)
+  let abs x = Int64.logand x Int64.max_int
+
+  let neg x = Int64.logxor x Int64.min_int
+
   let unop (op : Ty.Unop.t) (v : Value.t) : Value.t =
-    let v = of_value' 1 (`Unop op) v in
+    let f = of_value' 1 (`Unop op) v in
     match op with
-    | Neg -> to_value' @@ Float.neg v
-    | Abs -> to_value' @@ Float.abs v
-    | Sqrt -> to_value' @@ Float.sqrt v
-    | Nearest -> to_value' @@ Float.round v
-    | Ceil -> to_value' @@ Float.ceil v
-    | Floor -> to_value' @@ Float.floor v
-    | Trunc -> to_value' @@ Float.trunc v
-    | Is_nan -> if Float.is_nan v then Value.True else Value.False
+    | Neg -> to_value @@ neg @@ of_value 1 (`Unop op) v
+    | Abs -> to_value @@ abs @@ of_value 1 (`Unop op) v
+    | Sqrt -> to_value' @@ Float.sqrt f
+    | Nearest -> to_value' @@ Float.round f
+    | Ceil -> to_value' @@ Float.ceil f
+    | Floor -> to_value' @@ Float.floor f
+    | Trunc -> to_value' @@ Float.trunc f
+    | Is_nan -> if Float.is_nan f then Value.True else Value.False
     | _ -> Fmt.failwith {|unop: Unsupported f32 operator "%a"|} Ty.Unop.pp op
 
+  let copy_sign x y = Int64.logor (abs x) (Int64.logand y Int64.min_int)
+
   let binop (op : Ty.Binop.t) (v1 : Value.t) (v2 : Value.t) : Value.t =
-    let f =
-      match op with
-      | Add -> Float.add
-      | Sub -> Float.sub
-      | Mul -> Float.mul
-      | Div -> Float.div
-      | Rem -> Float.rem
-      | Min -> Float.min
-      | Max -> Float.max
-      | Copysign -> Float.copy_sign
-      | _ ->
-        Fmt.failwith {|binop: Unsupported f32 operator "%a"|} Ty.Binop.pp op
-    in
-    to_value' (f (of_value' 1 (`Binop op) v1) (of_value' 2 (`Binop op) v2))
+    let a = of_value' 1 (`Binop op) v1 in
+    let b = of_value' 1 (`Binop op) v2 in
+    match op with
+    | Add -> to_value' @@ Float.add a b
+    | Sub -> to_value' @@ Float.sub a b
+    | Mul -> to_value' @@ Float.mul a b
+    | Div -> to_value' @@ Float.div a b
+    | Rem -> to_value' @@ Float.rem a b
+    | Min -> to_value' @@ Float.min a b
+    | Max -> to_value' @@ Float.max a b
+    | Copysign ->
+      let a = of_value 1 (`Binop op) v1 in
+      let b = of_value 1 (`Binop op) v2 in
+      to_value @@ copy_sign a b
+    | _ -> Fmt.failwith {|binop: Unsupported f32 operator "%a"|} Ty.Binop.pp op
 
   let relop (op : Ty.Relop.t) (v1 : Value.t) (v2 : Value.t) : bool =
     let f =
