@@ -635,11 +635,22 @@ struct
     ]
 end
 
-module F32_test = Float_test (struct
-  let ty = Ty.Ty_fp 32
+module F32_test = struct
+  include Float_test (struct
+    let ty = Ty.Ty_fp 32
 
-  let v = float32
-end)
+    let v = float32
+  end)
+
+  let regression =
+    "test_neg_non_canonical_nan" >:: fun _ ->
+    let nan = Value.Num (F32 0xff8a1d2bl) in
+    let i32 =
+      Eval.cvtop (Ty_bitv 32) Reinterpret_float @@ Eval.unop (Ty_fp 32) Neg nan
+    in
+    let expected = Value.Bitv (Bitvector.of_int32 2139757867l) in
+    assert_equal i32 expected
+end
 
 module F64_test = Float_test (struct
   let ty = Ty.Ty_fp 64
@@ -846,6 +857,8 @@ let test_naryop =
   ; "Str_test.cvtop" >: Str_test.naryop
   ]
 
+let test_regression = "F32_test.regression" >: F32_test.regression
+
 let test_suite =
   "Eval tests"
   >::: [ "test_unop" >::: test_unop
@@ -854,6 +867,7 @@ let test_suite =
        ; "test_relop" >::: test_relop
        ; "test_cvtop" >::: test_cvtop
        ; "test_naryop" >::: test_naryop
+       ; "regression" >: test_regression
        ]
 
 let () = run_test_tt_main test_suite
