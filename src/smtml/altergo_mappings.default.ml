@@ -73,10 +73,10 @@ module Fresh = struct
       let clone _ = Fmt.failwith "Altergo_mappings: clone is not implemented"
 
       let push s =
-        s.cmds <- C.{ st_decl = C.Push 1; st_loc = Dolmen.Std.Loc.dummy } :: s.cmds
+        s.cmds <- C.{ st_decl = C.Push 1; st_loc = AEL.Loc.dummy } :: s.cmds
 
       let pop s n =
-        s.cmds <- C.{ st_decl = C.Pop n; st_loc = Dolmen.Std.Loc.dummy } :: s.cmds
+        s.cmds <- C.{ st_decl = C.Pop n; st_loc = AEL.Loc.dummy } :: s.cmds
 
       let reset s = s.cmds <- []
 
