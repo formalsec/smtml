@@ -185,7 +185,8 @@ let get_symbols (hte : t list) =
 let negate_relop (hte : t) : (t, string) Result.t =
   let e =
     match view hte with
-    | Relop (ty, Eq, e1, e2) -> Ok (Relop (ty, Ne, e1, e2))
+    | Relop (ty, Eq, e1, e2) -> (* Ok (Relop (ty, Ne, e1, e2)) *)
+       Ok (Relop (ty, Ne, make (Binop (ty,Sub,e1,e2)), make (Val (Num (I32 0l)))))
     | Relop (ty, Ne, e1, e2) -> Ok (Relop (ty, Eq, e1, e2))
     | Relop (ty, Lt, e1, e2) -> Ok (Relop (ty, Le, e2, e1))
     | Relop (ty, LtU, e1, e2) -> Ok (Relop (ty, LeU, e2, e1))
@@ -425,6 +426,11 @@ let rec relop ty op hte1 hte2 =
   | Ne, _, Val (App (`Op "symbol", [ Str _ ]))
   | Ne, Val (App (`Op "symbol", [ Str _ ])), _ ->
     value True
+  | Eq, (Symbol s1 as e1), (Symbol s2 as e2) ->
+    if Symbol.equal s1 s2 then
+      make (Unop (Ty_bool, Not, make (Unop (Ty_bool, Is_nan, make e1))))
+    else
+      make (Relop (Ty_fp 32, Eq, make e1, make e2))
   | Eq, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
     if Int32.equal b1 b2 then relop Ty_bool Eq os1 os2 else value False
   | Ne, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
