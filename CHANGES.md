@@ -1,7 +1,13 @@
 ## Unreleased
 
 ### Added
+
+- Add custom Bitvector library leveraging zarith and modulo arithmetic
+
 ### Changed
+
+- Remove value `Num (I32 | I64)` and add value `Bitv of Bitvector.t`
+
 ### Fixed
 
 - Fix cvc5 mappings use of outdated smtml API functions
