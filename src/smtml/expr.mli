@@ -62,7 +62,7 @@ val get_symbols : t list -> Symbol.t list
 
 (** [negate_relop expr] negates a relational operation, if applicable. Returns
     an error if the expression is not a relational operation. *)
-val negate_relop : t -> (t, string) Result.t
+val negate_relop : t -> t
 
 (** {1 Pretty Printing} *)
 
