@@ -405,8 +405,8 @@ let rec binop ty op hte1 hte2 =
   | Sub, Binop (ty, Sub, x, { node = Val v1; _ }), Val v2 ->
     let v = value (Eval.binop ty Add v1 v2) in
     raw_binop ty Sub x v
-  | Mul, Val (Value.Bitv bv), _ when Bitvector.eq_one bv -> hte2
-  | Mul, _, Val (Value.Bitv bv) when Bitvector.eq_one bv -> hte1
+  | Mul, Val (Bitv bv), _ when Bitvector.eq_one bv -> hte2
+  | Mul, _, Val (Bitv bv) when Bitvector.eq_one bv -> hte1
   | Mul, Binop (ty, Mul, x, { node = Val v1; _ }), Val v2 ->
     let v = value (Eval.binop ty Mul v1 v2) in
     raw_binop ty Mul x v
