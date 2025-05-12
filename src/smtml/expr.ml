@@ -316,8 +316,8 @@ let normalize_eq_or_ne op (ty', e1, e2) =
   match ty with
   | Ty_bitv a ->
      let binop = make (Binop (ty, Sub, e1, e2)) in
-     let zero = if a=32 then make (Val (Num (I32 0l)))
-                else make (Val (Num (I64 0L)))
+     let zero = if a=32 then make (Val (Bitv (Bitvector.of_int32 0l)))
+                else make (Val (Bitv (Bitvector.of_int64 0L)))
      in
       make_relop binop zero
   | Ty_fp 32 ->
@@ -405,8 +405,8 @@ let rec binop ty op hte1 hte2 =
   | Sub, Binop (ty, Sub, x, { node = Val v1; _ }), Val v2 ->
     let v = value (Eval.binop ty Add v1 v2) in
     raw_binop ty Sub x v
-  | Mul, Val (Num (I32 1l)), _ -> hte2
-  | Mul, _, Val (Num (I32 1l)) -> hte1
+  | Mul, Val (Value.Bitv bv), _ when Bitvector.eq_one bv -> hte2
+  | Mul, _, Val (Value.Bitv bv) when Bitvector.eq_one bv -> hte1
   | Mul, Binop (ty, Mul, x, { node = Val v1; _ }), Val v2 ->
     let v = value (Eval.binop ty Mul v1 v2) in
     raw_binop ty Mul x v
