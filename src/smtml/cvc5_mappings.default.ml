@@ -48,6 +48,8 @@ module Fresh_cvc5 () = struct
 
   let xor t1 t2 = Term.mk_term tm Kind.Xor [| t1; t2 |]
 
+  let implies t1 t2 = Term.mk_term tm Kind.Implies [| t1; t2 |]
+
   let eq t1 t2 = Term.mk_term tm Kind.Equal [| t1; t2 |]
 
   let distinct ts = Term.mk_term tm Kind.Distinct (Array.of_list ts)

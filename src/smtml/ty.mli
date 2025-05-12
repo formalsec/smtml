@@ -114,6 +114,7 @@ module Binop : sig
     | And  (** Logical or bitwise AND. *)
     | Or  (** Logical or bitwise OR. *)
     | Xor  (** Logical or bitwise XOR. *)
+    | Implies  (** Logical implication. *)
     | Pow  (** Exponentiation. *)
     | Min  (** Minimum. *)
     | Max  (** Maximum. *)

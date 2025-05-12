@@ -48,6 +48,8 @@ module M = struct
 
     let xor e1 e2 = Z3.Boolean.mk_xor ctx e1 e2
 
+    let implies e1 e2 = Z3.Boolean.mk_implies ctx e1 e2
+
     let eq e1 e2 = Z3.Boolean.mk_eq ctx e1 e2
 
     let distinct es = Z3.Boolean.mk_distinct ctx es

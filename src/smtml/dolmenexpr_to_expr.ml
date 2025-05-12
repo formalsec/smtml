@@ -99,6 +99,8 @@ module DolmenIntf = struct
 
   let or_ a b = DTerm._or [ a; b ]
 
+  let implies = DTerm.imply
+
   let logand = DTerm._and
 
   let logor = DTerm._or
@@ -545,6 +547,7 @@ module Boolean = struct
       | Binop.And -> fun a b -> DTerm._and [ a; b ]
       | Or -> fun a b -> DTerm._or [ a; b ]
       | Xor -> DTerm.xor
+      | Implies -> DTerm.imply
       | _ -> Fmt.failwith {|Bool: Unsupported binop operator "%a"|} Binop.pp op
     in
     op' e1 e2

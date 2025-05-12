@@ -67,6 +67,8 @@ module DolmenIntf : sig
 
   val xor : term -> term -> term
 
+  val implies : term -> term -> term
+
   val eq : term -> term -> term
 
   val distinct : term list -> term

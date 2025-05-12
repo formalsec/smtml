@@ -1,6 +1,9 @@
 ## Unreleased
 
 ### Added
+
+Add logical implication that is parsed from SMT-lib `=>`.
+
 ### Changed
 
 - Smtml now handles unknown SMT-lib symbols as apps instead of failing.
