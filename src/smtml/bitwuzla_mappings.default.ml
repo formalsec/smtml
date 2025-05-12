@@ -50,6 +50,8 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
   let xor t1 t2 = mk_term2 Kind.Xor t1 t2
 
+  let implies t1 t2 = mk_term2 Kind.Implies t1 t2
+
   let eq t1 t2 = mk_term2 Kind.Equal t1 t2
 
   let distinct ts = mk_term Kind.Distinct (Array.of_list ts)

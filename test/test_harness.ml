@@ -55,9 +55,7 @@ module Infix = struct
 
   let ( || ) b1 b2 = binop Ty_bool Or b1 b2
 
-  let ( => ) b1 b2 =
-    let left = unop Ty_bool Not b1 in
-    binop Ty_bool Or left b2
+  let ( => ) b1 b2 = binop Ty_bool Implies b1 b2
 
   module Int = struct
     let ( ~- ) i = unop Ty_int Neg i

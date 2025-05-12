@@ -44,6 +44,8 @@ module Nop = struct
 
     let xor _ = assert false
 
+    let implies _ = assert false
+
     let eq _ = assert false
 
     let distinct _ = assert false

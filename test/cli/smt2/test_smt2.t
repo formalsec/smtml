@@ -88,3 +88,7 @@ Test Forall and Exists parsing:
   sat
   $ smtml run test_exists.smt2
   sat
+
+Test implication:
+  $ smtml run test_implication.smt2
+  sat

@@ -74,6 +74,9 @@ module type M = sig
   (** [xor t1 t2] constructs the logical XOR of the terms [t1] and [t2]. *)
   val xor : term -> term -> term
 
+  (** [implies t1 t2] constructs the logical implication of the terms [t1] and [t2]. *)
+  val implies : term -> term -> term
+
   (** [eq t1 t2] constructs the equality of the terms [t1] and [t2]. *)
   val eq : term -> term -> term
 

@@ -187,6 +187,7 @@ module Binop = struct
     | And
     | Or
     | Xor
+    | Implies
     | Pow
     | Min
     | Max
@@ -220,6 +221,7 @@ module Binop = struct
     | And, And
     | Or, Or
     | Xor, Xor
+    | Implies, Implies
     | Pow, Pow
     | Min, Min
     | Max, Max
@@ -237,9 +239,9 @@ module Binop = struct
     | Regexp_range, Regexp_range ->
       true
     | ( ( Add | Sub | Mul | Div | DivU | Rem | RemU | Shl | ShrA | ShrL | And
-        | Or | Xor | Pow | Min | Max | Copysign | Rotl | Rotr | At | List_cons
-        | List_append | String_prefix | String_suffix | String_contains
-        | String_last_index | String_in_re | Regexp_range )
+        | Or | Xor | Implies | Pow | Min | Max | Copysign | Rotl | Rotr | At
+        | List_cons | List_append | String_prefix | String_suffix
+        | String_contains | String_last_index | String_in_re | Regexp_range )
       , _ ) ->
       false
 
@@ -257,6 +259,7 @@ module Binop = struct
     | And -> Fmt.string fmt "and"
     | Or -> Fmt.string fmt "or"
     | Xor -> Fmt.string fmt "xor"
+    | Implies -> Fmt.string fmt "=>"
     | Pow -> Fmt.string fmt "pow"
     | Min -> Fmt.string fmt "min"
     | Max -> Fmt.string fmt "max"

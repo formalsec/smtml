@@ -122,6 +122,7 @@ module Term = struct
       | "or", [ a; b ] -> Expr.raw_binop Ty_bool Or a b
       | "or", ts -> Expr.raw_naryop Ty_bool Logor ts
       | "xor", [ a; b ] -> Expr.raw_binop Ty_bool Xor a b
+      | "=>", [ a; b ] -> Expr.raw_binop Ty_bool Implies a b
       | "+", [ a; b ] -> Expr.raw_binop Ty_none Add a b
       | "+", hd :: tl ->
         List.fold_left (fun acc hd -> Expr.raw_binop Ty_none Add acc hd) hd tl

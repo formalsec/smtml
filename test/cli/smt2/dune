@@ -16,4 +16,5 @@
   test_lia.smt2
   test_lra.smt2
   test_string_all.smt2
-  test_string_hard.smt2))
+  test_string_hard.smt2
+  test_implication.smt2))

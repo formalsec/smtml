@@ -90,6 +90,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Binop.And -> M.and_
         | Or -> M.or_
         | Xor -> M.xor
+        | Implies -> M.implies
         | op ->
           Fmt.failwith {|Bool: Unsupported Z3 binop operator "%a"|} Binop.pp op
 
