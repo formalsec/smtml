@@ -113,7 +113,7 @@ module Term = struct
 
   let apply ?loc (id : t) (args : t list) : t =
     match Expr.view id with
-    | Symbol { namespace = Term; name = Simple name; _ } -> (
+    | Symbol ({ namespace = Term; name = Simple name; _ } as symbol) -> (
       match (name, args) with
       | "-", [ a ] -> Expr.raw_unop Ty_none Neg a
       | "not", [ a ] -> Expr.raw_unop Ty_bool Not a
@@ -252,7 +252,7 @@ module Term = struct
       | "fp.geq", [ a; b ] -> Expr.raw_relop Ty_bool Ge a b
       | "fp.gt", [ a; b ] -> Expr.raw_relop Ty_bool Gt a b
       | "fp.eq", [ a; b ] -> Expr.raw_relop Ty_bool Eq a b
-      | _ -> Fmt.failwith "%acould not parse term app: %s" pp_loc loc name )
+      | _, l -> Expr.app symbol l )
     | Symbol ({ name = Simple _; namespace = Attr; _ } as attr) ->
       Expr.app attr args
     | Symbol { name = Indexed { basename; indices }; _ } -> (
@@ -286,8 +286,7 @@ module Term = struct
         Expr.raw_unop Ty_regexp (Regexp_loop (i1, i2)) a
       | _ ->
         Fmt.failwith "%acould not parse indexed app: %a" pp_loc loc Expr.pp id )
-    | Symbol id ->
-      Fmt.failwith "%acould not parse app: %a" pp_loc loc Symbol.pp id
+    | Symbol id -> Expr.app id args
     | _ ->
       (* Ids can only be symbols. Any other expr here is super wrong *)
       assert false
