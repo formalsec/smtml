@@ -2,6 +2,9 @@
 
 ### Added
 ### Changed
+
+- Smtml now handles unknown SMT-lib symbols as apps instead of failing.
+
 ### Fixed
 
 ## v0.7.0
