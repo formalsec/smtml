@@ -23,6 +23,13 @@ type t =
       }
     (** [Declare_const { id; sort }] declares a new constant [id] of type
         [sort]. *)
+  | Declare_fun of
+      { id : Symbol.t  (** The identifier of the constant. *)
+      ; args : Symbol.t list  (** The sorts (types) of the arguments. *)
+      ; sort : Symbol.t  (** The sort (type) of the declared function. *)
+      }
+    (** [Declare_fun { id; args; sort }] declares a new constant [id] of type
+        [args -> sort]. *)
   | Echo of string
     (** [Echo msg] prints the given message [msg] to the standard output. *)
   | Exit  (** [Exit] terminates the SMT solver session. *)

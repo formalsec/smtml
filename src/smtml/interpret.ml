@@ -32,6 +32,7 @@ module Make (Solver : Solver_intf.S) = struct
       | `Unknown -> Fmt.pr "unknown@." );
       state
     | Declare_const _x -> state
+    | Declare_fun _x -> state
     | Echo x ->
       Fmt.pr "%a" Fmt.string x;
       state

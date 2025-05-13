@@ -9,6 +9,11 @@ type t =
       { id : Symbol.t
       ; sort : Symbol.t
       }
+  | Declare_fun of
+      { id : Symbol.t
+      ; args : Symbol.t list
+      ; sort : Symbol.t
+      }
   | Echo of string
   | Exit
   | Get_assertions
@@ -37,6 +42,10 @@ let pp fmt (instr : t) =
       assumptuions
   | Declare_const { id; sort } ->
     Fmt.pf fmt "(declare-const %a %a)" Symbol.pp id Symbol.pp sort
+  | Declare_fun { id; args; sort } ->
+    Fmt.pf fmt "(declare-fun %a (%a) %a)" Symbol.pp id
+      (Fmt.list ~sep:Fmt.sp Symbol.pp)
+      args Symbol.pp sort
   | Echo line -> Fmt.pf fmt "(echo %S)" line
   | Exit -> Fmt.string fmt "(exit)"
   | Get_assertions -> Fmt.string fmt "(get-assertions)"
