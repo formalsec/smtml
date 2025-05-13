@@ -75,7 +75,11 @@ module Term = struct
     | Some x -> Expr.value (Real x)
     | None -> Fmt.failwith "%aInvalid real" pp_loc loc
 
-  let hexa ?loc:_ (_ : string) = assert false
+  let hexa ?loc:_ (h : string) =
+    let len = String.length h in
+    let hex = String.sub h 1 (len - 1) in
+    let int = Z.of_string (String.cat "0" hex) in
+    Expr.value (Bitv (Bitvector.make int ((len - 2) * 4)))
 
   let binary ?loc:_ (b : string) =
     let set (s : string) (i : int) (n : char) =
@@ -334,6 +338,13 @@ module Statement = struct
   let fun_decl ?loc id ts1 ts2 return_sort =
     match (id, ts1, ts2, Expr.view return_sort) with
     | id, [], [], Symbol sort -> Declare_const { id; sort }
+    | id, [], args, Symbol sort ->
+      let args =
+        List.map
+          (fun e -> match Expr.view e with Symbol s -> s | _ -> assert false)
+          args
+      in
+      Declare_fun { id; args; sort }
     | _ ->
       Fmt.failwith "%afun_decl %a (%a) (%a) %a" pp_loc loc Symbol.pp id
         (Fmt.list Expr.pp) ts1 (Fmt.list Expr.pp) ts2 Expr.pp return_sort

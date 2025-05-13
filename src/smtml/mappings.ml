@@ -647,6 +647,19 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         let ctx, offset' = encode_expr ctx offset in
         (ctx, I32.binop Add base' offset')
       | Symbol sym -> make_symbol ctx sym
+      | App (sym, args) ->
+        let name =
+          match Symbol.name sym with
+          | Simple name -> name
+          | Indexed _ ->
+            Fmt.failwith "Unsupported uninterpreted application of: %a"
+              Symbol.pp sym
+        in
+        let ty = get_type @@ Symbol.type_of sym in
+        let tys = List.map (fun e -> get_type @@ Expr.ty e) args in
+        let ctx, arguments = encode_exprs ctx args in
+        let sym = M.Func.make name tys ty in
+        (ctx, M.Func.apply sym arguments)
       | Unop (ty, op, e) ->
         let ctx, e = encode_expr ctx e in
         (ctx, unop ty op e)
@@ -692,7 +705,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         let ctx, vars = encode_exprs ctx vars in
         let ctx, body = encode_expr ctx body in
         (ctx, M.exists vars body)
-      | List _ | App _ | Binder _ ->
+      | List _ | Binder _ ->
         Fmt.failwith "Cannot encode expression: %a" Expr.pp hte
 
     and encode_exprs ctx (es : Expr.t list) : symbol_ctx * M.term list =

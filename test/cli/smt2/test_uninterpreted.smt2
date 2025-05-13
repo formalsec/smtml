@@ -1,0 +1,5 @@
+(declare-fun f ((_ FloatingPoint 8 24)) (_ BitVec 32))
+(declare-const x (_ FloatingPoint 8 24))
+(assert (= (f x) #x0000002a))
+(check-sat)
+(get-model)

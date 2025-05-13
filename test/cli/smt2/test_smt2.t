@@ -92,3 +92,9 @@ Test Forall and Exists parsing:
 Test implication:
   $ smtml run test_implication.smt2
   sat
+
+Test uninterpreted:
+  $ smtml run test_uninterpreted.smt2
+  sat
+  (model
+    (x f32 0.))

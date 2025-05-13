@@ -46,8 +46,13 @@ let rec rewrite_expr (type_map, expr_map) hte =
       | Some expr -> expr )
     | Some ty -> Expr.symbol { sym with ty } )
   | List htes -> Expr.list (List.map (rewrite_expr (type_map, expr_map)) htes)
-  | App (op, htes) ->
-    Expr.app op (List.map (rewrite_expr (type_map, expr_map)) htes)
+  | App (sym, htes) ->
+    let sym =
+      match Symb_map.find_opt sym type_map with
+      | None -> Fmt.failwith "Undefined symbol: %a" Symbol.pp sym
+      | Some ty -> { sym with ty }
+    in
+    Expr.app sym (List.map (rewrite_expr (type_map, expr_map)) htes)
   | Unop (ty, op, hte) ->
     let hte = rewrite_expr (type_map, expr_map) hte in
     let ty = rewrite_ty ty [ Expr.ty hte ] in
@@ -124,6 +129,7 @@ let rewrite_cmd type_map cmd =
     let htes = List.map (rewrite_expr (type_map, Symb_map.empty)) htes in
     (type_map, Check_sat htes)
   | Declare_const { id; sort } as cmd -> (Symb_map.add id sort.ty type_map, cmd)
+  | Declare_fun { id; sort; _ } as cmd -> (Symb_map.add id sort.ty type_map, cmd)
   | Get_value htes ->
     let htes = List.map (rewrite_expr (type_map, Symb_map.empty)) htes in
     (type_map, Get_value htes)
