@@ -6,6 +6,14 @@ open Cvc5
 include Mappings_intf
 
 module Fresh_cvc5 () = struct
+  module Internals = struct
+    let caches_consts = false
+
+    let is_available = true
+
+    let has_to_ieee_bv = false
+  end
+
   type ty = Sort.sort
 
   type term = Term.term
@@ -21,8 +29,6 @@ module Fresh_cvc5 () = struct
   type optimizer = unit (* Not supported *)
 
   type func_decl = unit
-
-  let caches_consts = false
 
   let tm = TermManager.mk_tm ()
 
@@ -518,10 +524,9 @@ end
 
 module Cvc5_with_make : Mappings_intf.M_with_make = struct
   module Make () = Fresh_cvc5 ()
-
-  let is_available = true
-
   include Fresh_cvc5 ()
+
+  let is_available = Internals.is_available
 end
 
 include Mappings.Make (Cvc5_with_make)

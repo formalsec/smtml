@@ -318,6 +318,6 @@ module Fresh = struct
   end
 end
 
-let is_available = true
-
 include Fresh.Make ()
+
+let is_available = Internals.is_available

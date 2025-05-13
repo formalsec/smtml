@@ -7,6 +7,14 @@ include Mappings_intf
 module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
   open B
 
+  module Internals = struct
+    let caches_consts = false
+
+    let is_available = true
+
+    let has_to_ieee_bv = false
+  end
+
   type ty = Sort.t
 
   type term = Term.t
@@ -24,9 +32,7 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
   type optimizer = unit
 
   (* Not supported *)
-  type func_decl = unit
-
-  let caches_consts = false
+  type func_decl = Term.t
 
   let true_ = mk_true ()
 
@@ -63,13 +69,13 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
   let exists _ = Fmt.failwith "Bitwuzla_mappings: exists not implemented"
 
   module Types = struct
-    let int = Obj.magic 0xdeadc0de
+    let int = mk_bool_sort ()
 
-    let real = Obj.magic 0xdeadbeef
+    let real = mk_bool_sort ()
 
     let bool = mk_bool_sort ()
 
-    let string = Obj.magic 0xbadcafe
+    let string = mk_bool_sort ()
 
     let bitv bitwidth = mk_bv_sort bitwidth
 
@@ -408,33 +414,19 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
     let of_ieee_bv eb sb bv = mk_term1_indexed2 Kind.Fp_to_fp_from_bv bv eb sb
 
-    (* TODO *)
-    let f32_to_i32 =
-      let args = [| Types.float 8 24 |] in
-      let ret = Types.bitv 32 in
-      let sort = B.mk_fun_sort args ret in
-      B.mk_const sort ~symbol:"f32_to_i32"
-
-    let f64_to_i64 =
-      let args = [| Types.float 11 53 |] in
-      let ret = Types.bitv 64 in
-      let sort = B.mk_fun_sort args ret in
-      B.mk_const sort ~symbol:"f64_to_i64"
-
-    let to_ieee_bv f =
-      let f_size = Sort.fp_exp_size (Term.sort f) + Sort.fp_sig_size (Term.sort f) in
-      if f_size = 32 then
-        mk_term2 Kind.Apply f32_to_i32 f
-      else if f_size = 64 then
-        mk_term2 Kind.Apply f64_to_i64 f
-      else
-        Fmt.failwith "Bitwuzla_mappings: Unsupported floating-point size"
+    let to_ieee_bv _f =
+      Fmt.failwith "Bitwuzla_mappings: to_ieee_bv is not implemented"
   end
 
   module Func = struct
-    let make _ _ _ = ()
+    let make symbol args return_ =
+      let args = Array.of_list args in
+      let sort = B.mk_fun_sort args return_ in
+      B.mk_const sort ~symbol
 
-    let apply () _ = false_
+    let apply f args =
+      let args = f :: args in
+      mk_term Kind.Apply @@ Array.of_list args
   end
 
   module Model = struct
@@ -527,9 +519,8 @@ end
 include (
   Mappings.Make (struct
     module Make () = Fresh_bitwuzla (Bitwuzla_cxx.Make ())
-
-    let is_available = true
-
     include Fresh_bitwuzla (Bitwuzla_cxx)
+
+    let is_available = Internals.is_available
   end) :
     S_with_fresh )

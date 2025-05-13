@@ -4,6 +4,14 @@
 
 module Nop = struct
   module Make () = struct
+    module Internals = struct
+      let caches_consts = false
+
+      let is_available = false
+
+      let has_to_ieee_bv = false
+    end
+
     type ty = unit
 
     type term = unit
@@ -19,8 +27,6 @@ module Nop = struct
     type optimizer
 
     type func_decl = unit
-
-    let caches_consts = false
 
     let true_ = ()
 

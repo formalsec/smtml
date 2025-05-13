@@ -50,6 +50,10 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
     let str_trim = M.Func.make "string_trim" [ M.Types.string ] M.Types.string
 
+    let f32_to_i32 = M.Func.make "f32_to_i32" [ f32 ] i32
+
+    let f64_to_i64 = M.Func.make "f64_to_i64" [ f64 ] i64
+
     let get_type = function
       | Ty_int -> M.Types.int
       | Ty_real -> M.Types.real
@@ -66,7 +70,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
     let make_symbol (ctx : symbol_ctx) (s : Symbol.t) : symbol_ctx * M.term =
       let name = match s.name with Simple name -> name | _ -> assert false in
-      if M.caches_consts then
+      if M.Internals.caches_consts then
         let sym = M.const name (get_type s.ty) in
         (Smap.add s sym ctx, sym)
       else
@@ -297,6 +301,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       val bitwidth : int
 
+      val to_ieee_bv : M.term -> M.term
+
       module Ixx : sig
         val of_int : int -> elt
 
@@ -401,7 +407,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           Float.to_sbv bitwidth ~rm:Float.Rounding_mode.rtz e
         | TruncUF32 | TruncUF64 ->
           Float.to_ubv bitwidth ~rm:Float.Rounding_mode.rtz e
-        | Reinterpret_float -> Float.to_ieee_bv e
+        | Reinterpret_float -> to_ieee_bv e
         | ToBool -> M.distinct [ e; v @@ Ixx.of_int 0 ]
         | OfBool -> ite e (v @@ Ixx.of_int 1) (v @@ Ixx.of_int 0)
         | _ -> assert false
@@ -414,12 +420,18 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let bitwidth = 8
 
+      let to_ieee_bv _ = assert false
+
       module Ixx = struct
         let of_int i = i [@@inline]
 
         let shift_left v i = v lsl i [@@inline]
       end
     end)
+
+    let to_ieee_bv f e =
+      if M.Internals.has_to_ieee_bv then M.Float.to_ieee_bv e
+      else M.Func.apply f [ e ]
 
     module I32 = Bitv_impl (struct
       type elt = int32
@@ -428,6 +440,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let bitwidth = 32
 
+      let to_ieee_bv = to_ieee_bv f32_to_i32
+
       module Ixx = Int32
     end)
 
@@ -435,6 +449,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       type elt = int64
 
       let v i = M.Bitv.v (Int64.to_string i) 64
+
+      let to_ieee_bv = to_ieee_bv f64_to_i64
 
       let bitwidth = 64
 

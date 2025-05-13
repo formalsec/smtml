@@ -6,6 +6,14 @@ include Mappings_intf
 
 module M = struct
   module Make () = struct
+    module Internals = struct
+      let caches_consts = true
+
+      let is_available = true
+
+      let has_to_ieee_bv = true
+    end
+
     type ty = Z3.Sort.sort
 
     type term = Z3.Expr.expr
@@ -21,8 +29,6 @@ module M = struct
     type optimizer = Z3.Optimize.optimize
 
     type func_decl = Z3.FuncDecl.func_decl
-
-    let caches_consts = true
 
     let ctx = Z3.mk_context []
 
@@ -554,9 +560,9 @@ module M = struct
     end
   end
 
-  let is_available = true
-
   include Make ()
+
+  let is_available = Internals.is_available
 end
 
 module M' : Mappings_intf.M_with_make = M
