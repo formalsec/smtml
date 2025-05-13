@@ -303,42 +303,24 @@ let exists vars body = binder Exists vars body
 
 let raw_unop ty op hte = make (Unop (ty, op, hte)) [@@inline]
 
-let is_val_real e =
-  match view e with
-  | Val (Real x) -> Float.is_finite x
-  | _ -> false
-
 let normalize_eq_or_ne op (ty', e1, e2) =
-  let is_real = is_val_real e1 && is_val_real e2 in
   let make_relop lhs rhs = Relop (ty', op, lhs, rhs) in
-  let ty,ty2 = ty e1,ty e2 in
-  if Ty.equal ty ty2 then
+  let ty, ty2 = (ty e1, ty e2) in
+  assert (Ty.equal ty ty2);
   match ty with
-  | Ty_bitv a ->
-     let binop = make (Binop (ty, Sub, e1, e2)) in
-     let zero = if a=32 then make (Val (Bitv (Bitvector.of_int32 0l)))
-                else make (Val (Bitv (Bitvector.of_int64 0L)))
-     in
-      make_relop binop zero
-  | Ty_fp 32 ->
-      let lhs, rhs = if is_real then
-          make (Binop (ty, Sub, e1, e2)), make (Val (Num (F32 0l)))
-        else e1, e2
-      in
-      make_relop lhs rhs
-  | Ty_fp 64 ->
-      let lhs, rhs = if is_real then
-          make (Binop (ty, Sub, e1, e2)), make (Val (Num (F64 0L)))
-        else e1, e2
-      in
-      make_relop lhs rhs
+  | Ty_bitv m ->
+    let binop = make (Binop (ty, Sub, e1, e2)) in
+    let zero = make (Val (Bitv (Bitvector.make Z.zero m))) in
+    make_relop binop zero
   | Ty_int ->
-     let binop = make (Binop (ty, Sub, e1, e2)) in
-      let zero = make (Val (Int (Int.zero))) in
-      make_relop binop zero
-  | _ -> Fmt.failwith "Invalid relop (%a) : (%a) (%a) (%a)"
-           Ty.pp ty' pp e1 Ty.Relop.pp op pp e2
-  else Fmt.failwith "relop on unequal types"
+    let binop = make (Binop (ty, Sub, e1, e2)) in
+    let zero = make (Val (Int Int.zero)) in
+    make_relop binop zero
+  | Ty_real ->
+    let binop = make (Binop (ty, Sub, e1, e2)) in
+    let zero = make (Val (Real 0.)) in
+    make_relop binop zero
+  | _ -> make_relop e1 e2
 
 let negate_relop (hte : t) : t =
   let e =
@@ -461,11 +443,11 @@ let rec relop ty op hte1 hte2 =
   | Ne, _, Val (App (`Op "symbol", [ Str _ ]))
   | Ne, Val (App (`Op "symbol", [ Str _ ])), _ ->
     value True
-  | Eq, (
-    (Symbol ({ty=Ty_fp prec1; _} as s1)) as e1),
-    (Symbol ({ty=Ty_fp prec2; _} as s2))
-       when prec1 = prec2 && Symbol.equal s1 s2 ->
-     make (Unop (Ty_bool, Not, make (Unop (Ty_fp prec1, Is_nan, make e1))))
+  | ( Eq
+    , Symbol ({ ty = Ty_fp prec1; _ } as s1)
+    , Symbol ({ ty = Ty_fp prec2; _ } as s2) )
+    when prec1 = prec2 && Symbol.equal s1 s2 ->
+    raw_unop Ty_bool Not (raw_unop (Ty_fp prec1) Is_nan hte1)
   | Eq, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
     if Int32.equal b1 b2 then relop Ty_bool Eq os1 os2 else value False
   | Ne, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
