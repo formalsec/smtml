@@ -13,6 +13,18 @@
     solvers, including term construction, type handling, and solver interaction.
 *)
 module type M = sig
+  module Internals : sig
+    (** [is_available] indicates whether the module is available for use. *)
+    val is_available : bool
+
+    (** [caches_consts] indicates whether the solver caches constants. *)
+    val caches_consts : bool
+
+    (** [has_to_ieee_bv] indicates whether the solver native support for the
+        [to_ieee_bv]. *)
+    val has_to_ieee_bv : bool
+  end
+
   (** The type of SMT sorts (types). *)
   type ty
 
@@ -36,9 +48,6 @@ module type M = sig
 
   (** The type of function declarations. *)
   type func_decl
-
-  (** [caches_consts] indicates whether the solver caches constants. *)
-  val caches_consts : bool
 
   (** [true_] represents the Boolean constant [true]. *)
   val true_ : term
@@ -74,7 +83,8 @@ module type M = sig
   (** [xor t1 t2] constructs the logical XOR of the terms [t1] and [t2]. *)
   val xor : term -> term -> term
 
-  (** [implies t1 t2] constructs the logical implication of the terms [t1] and [t2]. *)
+  (** [implies t1 t2] constructs the logical implication of the terms [t1] and
+      [t2]. *)
   val implies : term -> term -> term
 
   (** [eq t1 t2] constructs the equality of the terms [t1] and [t2]. *)
@@ -711,7 +721,10 @@ module type M_with_make = sig
   (** [Make ()] creates a new instance of the [M] module type. *)
   module Make () : M
 
-  (** [is_available] indicates whether the module is available for use. *)
+  (** [is_available] indicates whether the module is available for use.
+
+      Will be deprecated in the future, please use Internals.is_available
+      instead. *)
   val is_available : bool
 
   (** Include the [M] module type. *)

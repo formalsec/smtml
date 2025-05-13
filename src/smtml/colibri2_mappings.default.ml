@@ -299,9 +299,9 @@ module M = struct
     end
   end
 
-  let is_available = true
-
   include Make ()
+
+  let is_available = Internals.is_available
 end
 
 module M' : Mappings_intf.M_with_make = M
