@@ -24,8 +24,6 @@ module M = struct
     let compare = DStd.Expr.Term.Const.compare
   end)
 
-  module HSMap = AEL.Hstring.Map
-
   let () = AEL.Options.set_produce_models true
 
   let dummy_file = DStd.Loc.mk_file "dummy_file"
@@ -56,6 +54,7 @@ module M = struct
 
     type solver =
       { used_context : Frontend.used_context
+      ; mutable syms : C.sat_tdecl ConstMap.t
       ; mutable cmds : C.sat_tdecl list
       ; mutable model : model option
       }
@@ -113,7 +112,7 @@ module M = struct
       let make ?params ?logic:_ () =
         Option.iter set_params params;
         let used_context = Frontend.init_all_used_context () in
-        { used_context; cmds = []; model = None }
+        { used_context; syms = ConstMap.empty; cmds = []; model = None }
 
       let clone _ = Fmt.failwith "Altergo_mappings: clone is not implemented"
 
@@ -125,20 +124,60 @@ module M = struct
 
       let reset s = s.cmds <- []
 
-      let mk_cmds e_acc el =
-        let stl = mk_dstmt (`Check (List.rev el)) in
-        let mk_res = AEL.Translate.make dummy_file e_acc stl in
-        mk_res
+      let mk_decls new_syms sym_acc =
+        ConstSet.fold
+          (fun c sym_acc ->
+            if ConstMap.mem c sym_acc then sym_acc
+            else
+              let mk_res =
+                AEL.Translate.make dummy_file []
+                  (mk_dstmt (`Decls [ `Term_decl c ]))
+              in
+              match mk_res with
+              | [ d ] -> ConstMap.add c d sym_acc
+              | _ -> assert false )
+          new_syms sym_acc
 
-      let add ?ctx:_ s el =
+      let mk_cmds new_syms sym_acc e_acc (el : term list) :
+        C.sat_tdecl ConstMap.t * C.sat_tdecl list =
+        let stl = mk_dstmt (`Check (List.rev el)) in
+        let sym_acc = mk_decls new_syms sym_acc in
+        let mk_res = AEL.Translate.make dummy_file e_acc stl in
+        (sym_acc, mk_res)
+
+      let get_new_syms ctx =
+        Symbol.Map.fold
+          (fun _ t acc ->
+            let c =
+              match (t : DTerm.t) with
+              | { term_descr = Cst c; _ } -> c
+              | _ -> assert false
+            in
+            ConstSet.add c acc )
+          ctx ConstSet.empty
+
+      let add ?(ctx = Symbol.Map.empty) (s : solver) (el : term list) : unit =
         match el with
         | [] -> ()
         | _ -> (
-          let cmds = mk_cmds s.cmds el in
-          match cmds with [] -> assert false | _hd :: tl -> s.cmds <- tl )
+          let new_syms = get_new_syms ctx in
+          let syms, cmds = mk_cmds new_syms s.syms s.cmds el in
+          match cmds with
+          | [] -> assert false
+          | _hd :: tl ->
+            s.cmds <- tl;
+            s.syms <- syms )
 
-      let check ?ctx:_ s ~assumptions : [> `Sat | `Unknown | `Unsat ] =
-        let cmds = mk_cmds s.cmds assumptions in
+      let add_decls sym_decls cmds =
+        ConstMap.fold (fun _ d acc -> d :: acc) sym_decls cmds
+
+      let check ?(ctx = Symbol.Map.empty) (s : solver) ~(assumptions : term list)
+        : [> `Sat | `Unknown | `Unsat ] =
+        let new_syms = get_new_syms ctx in
+        let syms, cmds = mk_cmds new_syms s.syms s.cmds assumptions in
+        s.cmds <- cmds;
+        s.syms <- syms;
+        let cmds = add_decls syms (List.rev cmds) in
         let ftdn_env = FE.init_env s.used_context in
         List.iter (FE.process_decl ftdn_env) cmds;
         match ftdn_env.FE.res with
@@ -174,23 +213,19 @@ module M = struct
         | Tbitv n -> Ty_bitv n
         | _ -> assert false
 
+      let aeid_to_sym ((hs, tyl, ty) : AEL.Id.typed) =
+        assert (match tyl with [] -> true | _ -> false);
+        Symbol.make (aety_to_ty ty) (AEL.Hstring.view hs)
+
       let get_symbols (Model ((module Sat), m) : model) : Symbol.t list =
         match Sat.get_model m with
         | None -> assert false
         | Some AEL.Models.{ model; _ } ->
-          let _ =
-            AEL.ModelMap.fold
-              (fun (hs, tyl, ty) _ acc ->
-                assert (match tyl with [] -> true | _ -> false);
-                let sy = Symbol.make (aety_to_ty ty) (AEL.Hstring.view hs) in
-                sy :: acc )
-              model []
-          in
-          assert false
-
-      let aeid_to_sym ((hs, tyl, ty) : AEL.Id.typed) =
-        assert (match tyl with [] -> true | _ -> false);
-        Symbol.make (aety_to_ty ty) (AEL.Hstring.view hs)
+          AEL.ModelMap.fold
+            (fun id _ acc ->
+              let sy = aeid_to_sym id in
+              sy :: acc )
+            model []
 
       let ae_expr_to_dvalue e : DM.Value.t =
         match AEL.Expr.term_view e with
@@ -245,36 +280,43 @@ module M = struct
                 m )
             c
 
-      let eval ?ctx:_ ?completion:_ (Model ((module Sat), m) : model) (e : term)
-        : interp option =
-        match Sat.get_model m with
-        | None ->
-          Fmt.failwith "Altergo_mappings: no value for (%a)" DTerm.print e
-        | Some AEL.Models.{ model; _ } ->
-          let m =
-            AEL.ModelMap.fold
-              (fun ((hs, _, _) as id) g acc ->
-                let e = cgraph_to_value hs g in
-                let tcst = Dolmenexpr_to_expr.tcst_of_symbol (aeid_to_sym id) in
-                DM.Model.Cst.add tcst (ae_expr_to_dvalue e) acc )
-              model DM.Model.empty
-          in
-          let env =
-            DM.Env.mk m
-              ~builtins:
-                (DM.Eval.builtins
-                   [ DM.Core.builtins
-                   ; DM.Bool.builtins
-                   ; DM.Int.builtins
-                   ; DM.Rat.builtins
-                   ; DM.Real.builtins
-                   ; DM.Bitv.builtins
-                     (* ; Array.builtins
-                      ; Fp.builtins *)
-                   ] )
-          in
-          let v = DM.Eval.eval env e in
-          Some (dvalue_to_interp (DTerm.ty e) v)
+      let eval ?ctx ?completion:_ (Model ((module Sat), m) : model) (e : term) :
+        interp option =
+        match ctx with
+        | None -> assert false
+        | Some ctx -> (
+          match Sat.get_model m with
+          | None ->
+            Fmt.failwith "Altergo_mappings: no value for (%a)" DTerm.print e
+          | Some AEL.Models.{ model; _ } ->
+            let m =
+              AEL.ModelMap.fold
+                (fun ((hs, _, _) as id) g acc ->
+                  let e = cgraph_to_value hs g in
+                  let sym = aeid_to_sym id in
+                  let tcst =
+                    match (Symbol.Map.find_opt sym ctx : DTerm.t option) with
+                    | Some { term_descr = Cst c; _ } -> c
+                    | _ -> assert false
+                  in
+                  DM.Model.Cst.add tcst (ae_expr_to_dvalue e) acc )
+                model DM.Model.empty
+            in
+            let env =
+              DM.Env.mk m
+                ~builtins:
+                  (DM.Eval.builtins
+                     [ DM.Core.builtins
+                     ; DM.Bool.builtins
+                     ; DM.Int.builtins
+                     ; DM.Rat.builtins
+                     ; DM.Real.builtins
+                     ; DM.Bitv.builtins
+                     ; DM.Fp.builtins
+                     ] )
+            in
+            let v = DM.Eval.eval env e in
+            Some (dvalue_to_interp (DTerm.ty e) v) )
     end
 
     module Optimizer = struct
