@@ -17,57 +17,13 @@ module M = struct
   module DTerm = DExpr.Term
   module DBuiltin = Dolmen_std.Builtin
 
-  module Var = struct
-    include DTerm.Var
-
-    let is_int _ = false
-
-    let print = print
-  end
-
-  module Ex = struct
-    type t = unit
-
-    let print fmt () = Fmt.pf fmt "()"
-
-    let empty = ()
-
-    let union () () = ()
-  end
-
-  module Rat = struct
-    include A
-
-    let m_one = A.minus_one
-
-    let print = A.pp
-
-    let is_int = A.is_integer
-
-    let is_zero v = A.equal v A.zero
-
-    let is_one v = A.equal v A.one
-
-    let mult = A.mul
-
-    let minus = A.neg
-
-    let is_m_one v = A.equal v m_one
-
-    let ceiling = ceil
-  end
-
   module Make () : Mappings_intf.M = struct
     include Dolmenexpr_to_expr.DolmenIntf
 
     type model =
       Colibri2_core.Egraph.wt * (DTerm.Const.t * Colibri2_core.Value.t) list
 
-    module Sim = OcplibSimplex.Basic.Make (Var) (Rat) (Ex)
-
-    type optimize = Sim.Core.t
-
-    type handle = optimize * (Sim.Core.P.t * bool) option
+    type handle
 
     type interp = Colibri2_core.Value.t
 
