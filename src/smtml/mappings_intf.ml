@@ -607,7 +607,12 @@ module type M = sig
 
     (** [eval ?completion model t] evaluates the term [t] in the given [model].
         If [completion] is true, missing values are completed. *)
-    val eval : ?completion:bool -> model -> term -> interp option
+    val eval :
+         ?ctx:term Symbol.Map.t
+      -> ?completion:bool
+      -> model
+      -> term
+      -> interp option
   end
 
   (** {2 Solver Handling} *)

@@ -225,7 +225,7 @@ module M = struct
       let get_symbols ((_, m) : model) =
         List.map (fun (tcst, _) -> tcst_to_symbol tcst) m
 
-      let eval ?completion:_ (env, _) (t : term) =
+      let eval ?ctx:_ ?completion:_ (env, _) (t : term) =
         let c2v = Colibri2_core.Interp.interp env t in
         Some c2v
     end

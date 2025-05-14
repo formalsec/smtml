@@ -411,7 +411,7 @@ module M = struct
             Symbol.make t x )
           (Z3.Model.get_const_decls model)
 
-      let eval ?(completion = false) model term =
+      let eval ?ctx:_ ?(completion = false) model term =
         Z3.Model.eval model term completion
     end
 

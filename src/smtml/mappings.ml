@@ -731,9 +731,9 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           (ctx, e :: es) )
         (ctx, []) es
 
-    let value_of_term model ty term =
+    let value_of_term ?ctx model ty term =
       let v =
-        match M.Model.eval ~completion:true model term with
+        match M.Model.eval ?ctx ~completion:true model term with
         | None -> assert false
         | Some v -> v
       in
@@ -770,8 +770,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         assert false
 
     let value ({ model = m; ctx } : model) (c : Expr.t) : Value.t =
-      let _, e = encode_expr ctx c in
-      value_of_term m (Expr.ty c) e
+      let ctx, e = encode_expr ctx c in
+      value_of_term ~ctx m (Expr.ty c) e
 
     let values_of_model ?symbols ({ model; ctx } as model0) =
       let m = Hashtbl.create 512 in
@@ -785,7 +785,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | None ->
         Smap.iter
           (fun (sym : Symbol.t) term ->
-            let v = value_of_term model sym.ty term in
+            let v = value_of_term ~ctx model sym.ty term in
             Hashtbl.replace m sym v )
           ctx );
       m
