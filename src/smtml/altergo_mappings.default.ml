@@ -2,73 +2,116 @@
 (* Copyright (C) 2023-2024 formalsec *)
 (* Written by Hichem Rami Ait El Hara *)
 
-open Dolmenexpr_to_expr
-module AEL = AltErgoLib
-module Frontend = AEL.Frontend
-module C = AEL.Commands
-module Sat_solver_sig = AEL.Sat_solver_sig
-module Sat_solver = AEL.Sat_solver
-module DStd = Dolmen_std
-module DM = Dolmen_model
+module M = struct
+  open Dolmenexpr_to_expr
+  module AEL = AltErgoLib
+  module Frontend = AEL.Frontend
+  module C = AEL.Commands
+  module Sat_solver_sig = AEL.Sat_solver_sig
+  module Sat_solver = AEL.Sat_solver
+  module DStd = Dolmen_std
+  module DM = Dolmen_model
 
-module ConstSet = Set.Make (struct
-  type t = DStd.Expr.Term.Const.t
+  module ConstSet = Set.Make (struct
+    type t = DStd.Expr.Term.Const.t
 
-  let compare = DStd.Expr.Term.Const.compare
-end)
+    let compare = DStd.Expr.Term.Const.compare
+  end)
 
-module ConstMap = Map.Make (struct
-  type t = DStd.Expr.Term.Const.t
+  module ConstMap = Map.Make (struct
+    type t = DStd.Expr.Term.Const.t
 
-  let compare = DStd.Expr.Term.Const.compare
-end)
+    let compare = DStd.Expr.Term.Const.compare
+  end)
 
-(* TODO: make it possible to choose through an option? *)
-let () = AEL.Options.set_produce_models true
+  let () = AEL.Options.set_produce_models true
 
-let dummy_file = DStd.Loc.mk_file "dummy_file"
+  let dummy_file = DStd.Loc.mk_file "dummy_file"
 
-let mk_dstmt decl =
-  AEL.D_loop.Typer_Pipe.
-    { id = DStd.Id.mk DStd.Id.term "dummy_id"
-    ; contents = decl
-    ; loc = DStd.Loc.no_loc
-    ; attrs = []
-    ; implicit = false
-    }
+  let mk_dstmt decl =
+    AEL.D_loop.Typer_Pipe.
+      { id = DStd.Id.mk DStd.Id.term "dummy_id"
+      ; contents = decl
+      ; loc = DStd.Loc.no_loc
+      ; attrs = []
+      ; implicit = false
+      }
 
-module Fresh = struct
-  module Make () = struct
+  module Make () : Mappings_intf.M = struct
     (* TODO: experiment with other sat solvers? Make it possible to choose
        different sat solvers from command line? *)
     module Sat = AEL.Satml_frontend.Make (AEL.Theory.Main_Default)
     module FE = Frontend.Make (Sat)
+    include Dolmenexpr_to_expr.DolmenIntf
 
     type 'a sat_module = (module Sat_solver_sig.S with type t = 'a)
 
     type model = Model : 'a sat_module * 'a -> model
 
+    type handle
+
+    type interp = AEL.Expr.t
+
     type solver =
       { used_context : Frontend.used_context
-      ; mutable syms : C.sat_tdecl ConstMap.t
       ; mutable cmds : C.sat_tdecl list
       ; mutable model : model option
       }
 
-    type optimize = |
+    type optimizer
 
-    type handle = |
+    module Interp = struct
+      let to_int interp =
+        match AEL.Expr.term_view interp with
+        | { f = Int z; _ } -> Z.to_int z
+        | _ -> assert false
 
-    module Smtlib = struct
-      let pp ?name:_ ?logic:_ ?status:_ _fmt _ = assert false
+      let to_real interp =
+        match AEL.Expr.term_view interp with
+        | { f = Real q; _ } -> (
+          match float_of_string_opt (Q.to_string q) with
+          | Some f -> f
+          | None -> assert false )
+        | _ -> assert false
+
+      let to_bool interp =
+        match AEL.Expr.term_view interp with
+        | { f = True; _ } -> true
+        | { f = False; _ } -> false
+        | _ -> assert false
+
+      let to_string interp =
+        Fmt.failwith "Altergo_mappings: unsupported Interp.to_string(%a)"
+          AEL.Expr.print interp
+
+      let to_bitv interp _n =
+        match AEL.Expr.term_view interp with
+        | { f = Bitv (_, z); _ } -> Z.to_int64 z
+        | _ -> assert false
+
+      let to_float _fp _eb _sb = assert false
     end
 
     module Solver = struct
-      let make ?params:_ ?logic:_ () =
-        let used_context = Frontend.init_all_used_context () in
-        { used_context; syms = ConstMap.empty; cmds = []; model = None }
+      let set_param (type a) (param : a Params.param) (_v : a) : unit =
+        match param with
+        | Timeout -> ()
+        | Model -> ()
+        | Unsat_core -> ()
+        | Ematching -> ()
+        | Parallel -> ()
+        | Num_threads -> ()
+        | Debug -> ()
 
-      let add_simplifier s : solver = s
+      let set_params (params : Params.t) =
+        List.iter
+          (fun (Params.P (p, v)) -> set_param p v)
+          (Params.to_list params)
+
+      let make ?params ?logic:_ () =
+        Option.iter set_params params;
+        let used_context = Frontend.init_all_used_context () in
+        { used_context; cmds = []; model = None }
 
       let clone _ = Fmt.failwith "Altergo_mappings: clone is not implemented"
 
@@ -80,58 +123,20 @@ module Fresh = struct
 
       let reset s = s.cmds <- []
 
-      let exprl_stmtl el =
-        let sym_acc, dtl =
-          List.fold_left
-            (fun (acc, l) e ->
-              let acc, e =
-                encode_expr_acc
-                  ~record_sym:(fun acc c -> ConstSet.add c acc)
-                  acc e
-              in
-              (acc, e :: l) )
-            (ConstSet.empty, []) el
-        in
-        let decl = `Check (List.rev dtl) in
-        (sym_acc, mk_dstmt decl)
-
-      let mk_decls new_syms sym_acc =
-        ConstSet.fold
-          (fun c sym_acc ->
-            if ConstMap.mem c sym_acc then sym_acc
-            else
-              let mk_res =
-                AEL.Translate.make dummy_file []
-                  (mk_dstmt (`Decls [ `Term_decl c ]))
-              in
-              match mk_res with
-              | [ d ] -> ConstMap.add c d sym_acc
-              | _ -> assert false )
-          new_syms sym_acc
-
-      let mk_cmds sym_acc e_acc el =
-        let new_syms, stl = exprl_stmtl el in
-        let sym_acc = mk_decls new_syms sym_acc in
+      let mk_cmds e_acc el =
+        let stl = mk_dstmt (`Check (List.rev el)) in
         let mk_res = AEL.Translate.make dummy_file e_acc stl in
-        (sym_acc, mk_res)
+        mk_res
 
       let add s el =
         match el with
         | [] -> ()
         | _ -> (
-          let syms, cmds = mk_cmds s.syms s.cmds el in
-          match cmds with
-          | [] -> assert false
-          | _hd :: tl ->
-            s.cmds <- tl;
-            s.syms <- syms )
+          let cmds = mk_cmds s.cmds el in
+          match cmds with [] -> assert false | _hd :: tl -> s.cmds <- tl )
 
-      let add_decls sym_decls cmds =
-        ConstMap.fold (fun _ d acc -> d :: acc) sym_decls cmds
-
-      let check s ~assumptions =
-        let syms, cmds = mk_cmds s.syms s.cmds assumptions in
-        let cmds = add_decls syms (List.rev cmds) in
+      let check s ~assumptions : [> `Sat | `Unknown | `Unsat ] =
+        let cmds = mk_cmds s.cmds assumptions in
         let ftdn_env = FE.init_env s.used_context in
         List.iter (FE.process_decl ftdn_env) cmds;
         match ftdn_env.FE.res with
@@ -147,177 +152,159 @@ module Fresh = struct
 
       let model (s : solver) : model option = s.model
 
+      let add_simplifier s = s
+
       let interrupt _ =
         Fmt.failwith "Altergo_mappings: interrupt is not implemented"
 
       let get_statistics _ =
         Fmt.failwith "Altergo_mappings: get_statistics is not implemented"
+
+      let pp_statistics _fmt _solver = ()
+    end
+
+    module Model = struct
+      let aety_to_ty (ty : AEL.Ty.t) : Ty.t =
+        match ty with
+        | Tbool -> Ty_bool
+        | Tint -> Ty_int
+        | Treal -> Ty_real
+        | Tbitv n -> Ty_bitv n
+        | _ -> assert false
+
+      let get_symbols (Model ((module Sat), m) : model) : Symbol.t list =
+        match Sat.get_model m with
+        | None -> assert false
+        | Some AEL.Models.{ model; _ } ->
+          let _ =
+            AEL.ModelMap.fold
+              (fun (hs, tyl, ty) _ acc ->
+                assert (match tyl with [] -> true | _ -> false);
+                let sy = Symbol.make (aety_to_ty ty) (AEL.Hstring.view hs) in
+                sy :: acc )
+              model []
+          in
+          assert false
+
+      let aeid_to_sym ((hs, tyl, ty) : AEL.Id.typed) =
+        assert (match tyl with [] -> true | _ -> false);
+        Symbol.make (aety_to_ty ty) (AEL.Hstring.view hs)
+
+      let ae_expr_to_dvalue e : DM.Value.t =
+        match AEL.Expr.term_view e with
+        | { f = True; _ } -> DM.Bool.mk true
+        | { f = False; _ } -> DM.Bool.mk false
+        | { f = Int z; _ } -> DM.Int.mk z
+        | { f = Real q; _ } -> DM.Real.mk q
+        | { f = Bitv (n, z); _ } -> DM.Bitv.mk n z
+        | _ ->
+          Fmt.failwith "Altergo_mappings: ae_expr_to_dvalue(%a)" AEL.Expr.print
+            e
+
+      let dvalue_to_interp (ty : DTy.t) (v : DM.Value.t) =
+        match DM.Value.extract ~ops:DM.Bool.ops v with
+        | Some true -> AEL.Expr.vrai
+        | Some false -> AEL.Expr.faux
+        | None -> (
+          match DM.Value.extract ~ops:DM.Int.ops v with
+          | Some z -> AEL.Expr.Ints.of_Z z
+          | None -> (
+            match DM.Value.extract ~ops:DM.Real.ops v with
+            | Some q -> AEL.Expr.Reals.of_Q q
+            | None -> (
+              match (DM.Value.extract ~ops:DM.Bitv.ops v, ty) with
+              | ( Some z
+                , { ty_descr =
+                      TyApp ({ builtin = Dolmen_std.Builtin.Bitv size; _ }, _)
+                  ; _
+                  } ) ->
+                AEL.Expr.BV.of_Z ~size z
+              | _ ->
+                Fmt.failwith "Altergo_mappings: dvalue_to_interp(%a)"
+                  DM.Value.print v ) ) )
+
+      let cgraph_to_value hs g =
+        match (g : AEL.ModelMap.graph) with
+        | Free e -> e
+        | C c when AEL.ModelMap.M.cardinal c = 1 -> (
+          match AEL.ModelMap.M.min_binding c with
+          | [], e -> e
+          | _ -> assert false )
+        | C c ->
+          (* Currently, there are no uninterpred functions in the tests/benchs,
+             therefore this is ok, but it should be fixed in the future *)
+          Fmt.failwith "Altergo_mappings: no value for %a (%a)" AEL.Id.pp hs
+            (fun fmt m ->
+              AEL.ModelMap.M.iter
+                (fun k v ->
+                  Fmt.pf fmt "[%a] -> %a; "
+                    (Fmt.list ~sep:Fmt.comma AEL.Expr.print)
+                    k AEL.Expr.print v )
+                m )
+            c
+
+      let eval ?completion:_ (Model ((module Sat), m) : model) (e : term) :
+        interp option =
+        match Sat.get_model m with
+        | None ->
+          Fmt.failwith "Altergo_mappings: no value for (%a)" DTerm.print e
+        | Some AEL.Models.{ model; _ } ->
+          let m =
+            AEL.ModelMap.fold
+              (fun ((hs, _, _) as id) g acc ->
+                let e = cgraph_to_value hs g in
+                let tcst = Dolmenexpr_to_expr.tcst_of_symbol (aeid_to_sym id) in
+                DM.Model.Cst.add tcst (ae_expr_to_dvalue e) acc )
+              model DM.Model.empty
+          in
+          let env =
+            DM.Env.mk m
+              ~builtins:
+                (DM.Eval.builtins
+                   [ DM.Core.builtins
+                   ; DM.Bool.builtins
+                   ; DM.Int.builtins
+                   ; DM.Rat.builtins
+                   ; DM.Real.builtins
+                   ; DM.Bitv.builtins
+                     (* ; Array.builtins
+                      ; Fp.builtins *)
+                   ] )
+          in
+          let v = DM.Eval.eval env e in
+          Some (dvalue_to_interp (DTerm.ty e) v)
     end
 
     module Optimizer = struct
       let make () = assert false
 
-      let push _ = ()
+      let push _opt = assert false
 
-      let pop _ = ()
+      let pop _opt = assert false
 
-      let add _ _ = assert false
+      let add _opt _terms = assert false
 
-      let check _ = assert false
+      let check _opt = assert false
 
-      let model _ = assert false
+      let model _opt = assert false
 
-      let maximize _ _ = assert false
+      let maximize _opt _term = assert false
 
-      let minimize _ _ = assert false
+      let minimize _opt _term = assert false
 
-      let interrupt _ = ()
+      let interrupt () = assert false
 
-      let get_statistics _ = assert false
+      let get_statistics _opt = assert false
+
+      let pp_statistics _fmt _opt = assert false
     end
-
-    let ty_to_aety (ty : Ty.t) : AEL.Ty.t =
-      match ty with
-      | Ty_bool -> Tbool
-      | Ty_int -> Tint
-      | Ty_real -> Treal
-      | Ty_bitv n -> Tbitv n
-      | Ty_list | Ty_none | Ty_str | Ty_app | Ty_unit | Ty_fp _ | Ty_regexp ->
-        assert false
-
-    let aety_to_ty (ty : AEL.Ty.t) : Ty.t =
-      match ty with
-      | Tbool -> Ty_bool
-      | Tint -> Ty_int
-      | Treal -> Ty_real
-      | Tbitv n -> Ty_bitv n
-      | _ -> assert false
-
-    let sym_to_aeid Symbol.{ ty; name; _ } : AEL.Id.typed =
-      match name with
-      | Simple s ->
-        let name = AEL.Hstring.make s in
-        (name, [], ty_to_aety ty)
-      | Indexed _ -> assert false
-
-    let aeid_to_sym ((hs, tyl, ty) : AEL.Id.typed) =
-      assert (match tyl with [] -> true | _ -> false);
-      Symbol.make (aety_to_ty ty) (AEL.Hstring.view hs)
-
-    let ae_expr_to_value e : Value.t =
-      match AEL.Expr.term_view e with
-      | { f = True; _ } -> True
-      | { f = False; _ } -> False
-      | { f = Int z; _ } -> Int (Z.to_int z)
-      | { f = Real q; _ } -> Real (Q.to_float q)
-      | { f = Bitv (n, z); _ } -> Bitv (Bitvector.make z n)
-      | _ ->
-        Fmt.failwith "Altergo_mappings: ae_expr_to_value(%a)" AEL.Expr.print e
-
-    let ae_expr_to_dvalue e : DM.Value.t =
-      match AEL.Expr.term_view e with
-      | { f = True; _ } -> DM.Bool.mk true
-      | { f = False; _ } -> DM.Bool.mk false
-      | { f = Int z; _ } -> DM.Int.mk z
-      | { f = Real q; _ } -> DM.Real.mk q
-      | { f = Bitv (n, z); _ } -> DM.Bitv.mk n z
-      | _ ->
-        Fmt.failwith "Altergo_mappings: ae_expr_to_dvalue(%a)" AEL.Expr.print e
-
-    let dvalue_to_value (ty : Ty.t) (v : DM.Value.t) : Value.t =
-      match DM.Value.extract ~ops:DM.Bool.ops v with
-      | Some true -> True
-      | Some false -> False
-      | None -> (
-        match DM.Value.extract ~ops:DM.Int.ops v with
-        | Some z -> Int (Z.to_int z)
-        | None -> (
-          match DM.Value.extract ~ops:DM.Real.ops v with
-          | Some q -> Real (Q.to_float q)
-          | None -> (
-            match (DM.Value.extract ~ops:DM.Bitv.ops v, ty) with
-            | Some z, Ty_bitv n -> Bitv (Bitvector.make z n)
-            | _ ->
-              Fmt.failwith "Altergo_mappings: dvalue_to_value(%a)"
-                DM.Value.print v ) ) )
-
-    let cgraph_to_value hs g =
-      match (g : AEL.ModelMap.graph) with
-      | Free e -> e
-      | C c when AEL.ModelMap.M.cardinal c = 1 -> (
-        match AEL.ModelMap.M.min_binding c with [], e -> e | _ -> assert false )
-      | C c ->
-        (* Currently, there are no uninterpred functions in the tests/benchs,
-           therefore this is ok, but it should be fixed in the future *)
-        Fmt.failwith "Altergo_mappings: no value for %a (%a)" AEL.Id.pp hs
-          (fun fmt m ->
-            AEL.ModelMap.M.iter
-              (fun k v ->
-                Fmt.pf fmt "[%a] -> %a; "
-                  (Fmt.list ~sep:Fmt.comma AEL.Expr.print)
-                  k AEL.Expr.print v )
-              m )
-          c
-
-    let value (Model ((module Sat), m) : model) (e : Expr.t) : Value.t =
-      match Sat.get_model m with
-      | None -> Fmt.failwith "Altergo_mappings: no value for (%a)" Expr.pp e
-      | Some AEL.Models.{ model; _ } ->
-        let m =
-          AEL.ModelMap.fold
-            (fun ((hs, _, _) as id) g acc ->
-              let e = cgraph_to_value hs g in
-              let tcst = Dolmenexpr_to_expr.tcst_of_symbol (aeid_to_sym id) in
-              DM.Model.Cst.add tcst (ae_expr_to_dvalue e) acc )
-            model DM.Model.empty
-        in
-        let env =
-          DM.Env.mk m
-            ~builtins:
-              (DM.Eval.builtins
-                 [ DM.Core.builtins
-                 ; DM.Bool.builtins
-                 ; DM.Int.builtins
-                 ; DM.Rat.builtins
-                 ; DM.Real.builtins
-                 ; DM.Bitv.builtins
-                   (* ; Array.builtins
-                      ; Fp.builtins *)
-                 ] )
-        in
-        let v = DM.Eval.eval env (encode_expr e) in
-        dvalue_to_value (Expr.ty e) v
-
-    let values_of_model ?symbols (Model ((module Sat), m)) : Model.t =
-      match Sat.get_model m with
-      | None -> assert false
-      | Some AEL.Models.{ model; _ } -> (
-        let r = Hashtbl.create 17 in
-        match symbols with
-        | None ->
-          AEL.ModelMap.fold
-            (fun ((hs, _, _) as aeid) g () ->
-              let sym = aeid_to_sym aeid in
-              Hashtbl.add r sym (ae_expr_to_value (cgraph_to_value hs g)) )
-            model ();
-          r
-        | Some syml ->
-          List.iter
-            (fun sym ->
-              let ((hs, _, _) as aeid) = sym_to_aeid sym in
-              let e =
-                try cgraph_to_value hs (AEL.ModelMap.find aeid model)
-                with Not_found ->
-                  Fmt.failwith "Altergo_mappings: no value for %a" AEL.Id.pp hs
-              in
-              Hashtbl.add r sym (ae_expr_to_value e) )
-            syml;
-          r )
-
-    let set_debug _ = ()
   end
+
+  let is_available = true
+
+  include Make ()
 end
 
-include Fresh.Make ()
+module M' : Mappings_intf.M_with_make = M
 
-let is_available = Internals.is_available
+include Mappings.Make (M)
