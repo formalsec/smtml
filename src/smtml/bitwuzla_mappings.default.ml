@@ -452,9 +452,9 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
     let reset _ = Fmt.failwith "Bitwuzla_mappings: reset not implemented"
 
-    let add solver ts = List.iter (Solver.assert_formula solver) ts
+    let add ?ctx:_ solver ts = List.iter (Solver.assert_formula solver) ts
 
-    let check solver ~assumptions =
+    let check ?ctx:_ solver ~assumptions =
       let assumptions = Array.of_list assumptions in
       match Solver.check_sat ~assumptions solver with
       | Result.Sat -> `Sat

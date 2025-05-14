@@ -24,6 +24,8 @@ module M = struct
     let compare = DStd.Expr.Term.Const.compare
   end)
 
+  module HSMap = AEL.Hstring.Map
+
   let () = AEL.Options.set_produce_models true
 
   let dummy_file = DStd.Loc.mk_file "dummy_file"
@@ -128,14 +130,14 @@ module M = struct
         let mk_res = AEL.Translate.make dummy_file e_acc stl in
         mk_res
 
-      let add s el =
+      let add ?ctx:_ s el =
         match el with
         | [] -> ()
         | _ -> (
           let cmds = mk_cmds s.cmds el in
           match cmds with [] -> assert false | _hd :: tl -> s.cmds <- tl )
 
-      let check s ~assumptions : [> `Sat | `Unknown | `Unsat ] =
+      let check ?ctx:_ s ~assumptions : [> `Sat | `Unknown | `Unsat ] =
         let cmds = mk_cmds s.cmds assumptions in
         let ftdn_env = FE.init_env s.used_context in
         List.iter (FE.process_decl ftdn_env) cmds;

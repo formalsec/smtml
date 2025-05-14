@@ -474,9 +474,9 @@ module M = struct
 
       let reset solver = Z3.Solver.reset solver
 
-      let add solver terms = Z3.Solver.add solver terms
+      let add ?ctx:_ solver terms = Z3.Solver.add solver terms
 
-      let check solver ~assumptions =
+      let check ?ctx:_ solver ~assumptions =
         match Z3.Solver.check solver assumptions with
         | Z3.Solver.UNKNOWN -> `Unknown
         | Z3.Solver.SATISFIABLE -> `Sat

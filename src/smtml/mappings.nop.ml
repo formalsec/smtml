@@ -360,9 +360,9 @@ module Nop = struct
 
       let reset _ = die ()
 
-      let add _ = die ()
+      let add ?ctx:_ _ = die ()
 
-      let check _ ~assumptions:_ = die ()
+      let check ?ctx:_ _ ~assumptions:_ = die ()
 
       let model _ = die ()
 
