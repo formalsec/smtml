@@ -347,6 +347,12 @@ let raw_binop ty op hte1 hte2 = make (Binop (ty, op, hte1, hte2)) [@@inline]
 let rec binop ty op hte1 hte2 =
   match (op, view hte1, view hte2) with
   | Ty.Binop.(String_in_re | Regexp_range), _, _ -> raw_binop ty op hte1 hte2
+  | Ty.Binop.String_contains, _, _ when equal hte2 (make (Val (Str ""))) ->
+    make (Val True)
+  | Ty.Binop.String_prefix, _, _ when equal hte2 (make (Val (Str ""))) ->
+    make (Val True)
+  | Ty.Binop.String_suffix, _, _ when equal hte2 (make (Val (Str ""))) ->
+    make (Val True)
   | op, Val v1, Val v2 -> value (Eval.binop ty op v1 v2)
   | Sub, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
     if Bitvector.equal b1 b2 then binop ty Sub os1 os2
@@ -375,9 +381,18 @@ let rec binop ty op hte1 hte2 =
     hte1
   | (Add | Or), _, Val (Bitv bv) when Bitvector.eqz bv -> hte1
   | (And | Mul), _, Val (Bitv bv) when Bitvector.eqz bv -> hte2
+  | And, Val True, _ -> hte2
+  | And, _, Val True -> hte1
+  | And, Val False, _ | And, _, Val False -> make (Val False)
+  | Or, Val True, _ | Or, _, Val True -> make (Val True)
+  | Or, Val False, _ -> hte2
+  | Or, _, Val False -> hte1
   | Add, Binop (ty, Add, x, { node = Val v1; _ }), Val v2 ->
     let v = value (Eval.binop ty Add v1 v2) in
     raw_binop ty Add x v
+  | And, Binop (ty, And, x, { node = Val v1; _ }), Val v2 ->
+    let v = value (Eval.binop ty And v1 v2) in
+    raw_binop ty And x v
   | Sub, Binop (ty, Sub, x, { node = Val v1; _ }), Val v2 ->
     let v = value (Eval.binop ty Add v1 v2) in
     raw_binop ty Sub x v
@@ -410,6 +425,7 @@ let triop ty op e1 e2 e3 =
   match (op, view e1, view e2, view e3) with
   | Ty.Triop.Ite, Val True, _, _ -> e2
   | Ite, Val False, _, _ -> e3
+  | Ite, _, _, _ when equal e2 e3 -> e2
   | op, Val v1, Val v2, Val v3 -> value (Eval.triop ty op v1 v2 v3)
   | Ite, _, Triop (_, Ite, c2, r1, r2), Triop (_, Ite, _, _, _) ->
     let else_ = raw_triop ty Ite e1 r2 e3 in
