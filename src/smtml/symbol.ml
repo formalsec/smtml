@@ -98,3 +98,9 @@ let to_json { name; ty; _ } =
     ]
 
 let type_of { ty; _ } = ty
+
+module Map = Map.Make (struct
+  type nonrec t = t
+
+  let compare = compare
+end)

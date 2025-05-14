@@ -172,7 +172,7 @@ module M = struct
         Colibri2_core.Egraph.register env n;
         Colibri2_theories_bool.Boolean.set_true env n
 
-      let add s es =
+      let add ?ctx:_ s es =
         Scheduler.add_assertion s.scheduler (fun d ->
           List.iter (fun e -> new_assertion d e) es )
 
@@ -186,7 +186,7 @@ module M = struct
         | `UnknownUnsat -> `Unknown
         | `Unsat -> `Unsat
 
-      let check s ~assumptions =
+      let check ?ctx:_ s ~assumptions =
         match assumptions with
         | [] -> satisfiability s @@ Scheduler.check_sat s.scheduler
         | _ ->

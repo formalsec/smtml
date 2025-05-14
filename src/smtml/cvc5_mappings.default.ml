@@ -461,11 +461,11 @@ module Fresh_cvc5 () = struct
 
     let reset solver = Solver.reset solver
 
-    let add solver ts = List.iter (Solver.assert_formula solver) ts
+    let add ?ctx:_ solver ts = List.iter (Solver.assert_formula solver) ts
 
     (* FIXME: refactor Result class to only include
        SAT/UNSAT/UNKNOWN types? *)
-    let check solver ~assumptions =
+    let check ?ctx:_ solver ~assumptions =
       let assumptions = Array.of_list assumptions in
       let result = Solver.check_sat_assuming solver assumptions in
       match Result.is_sat result with

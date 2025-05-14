@@ -7,7 +7,7 @@ include Mappings_intf
 module Make (M_with_make : M_with_make) : S_with_fresh = struct
   module Make_ (M : M) : S = struct
     open Ty
-    module Smap = Map.Make (Symbol)
+    module Smap = Symbol.Map
 
     type symbol_ctx = M.term Smap.t
 
@@ -832,7 +832,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Some ctx ->
           let ctx, exprs = encode_exprs ctx exprs in
           Stack.push ctx s.ctx;
-          M.Solver.add s.solver exprs
+          M.Solver.add s.solver ~ctx exprs
 
       let check (s : solver) ~assumptions =
         match Stack.top_opt s.ctx with
@@ -840,7 +840,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Some ctx ->
           let ctx, assumptions = encode_exprs ctx assumptions in
           s.last_ctx <- Some ctx;
-          M.Solver.check s.solver ~assumptions
+          M.Solver.check s.solver ~ctx ~assumptions
 
       let model { solver; last_ctx; _ } =
         match last_ctx with
