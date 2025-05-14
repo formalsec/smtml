@@ -433,7 +433,8 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     let get_symbols _ =
       Fmt.failwith "Bitwuzla_mappings: get_symbols not implemented"
 
-    let eval ?completion:_ solver term = Some (Solver.get_value solver term)
+    let eval ?ctx:_ ?completion:_ solver term =
+      Some (Solver.get_value solver term)
   end
 
   module Solver = struct

@@ -245,8 +245,8 @@ module M = struct
                 m )
             c
 
-      let eval ?completion:_ (Model ((module Sat), m) : model) (e : term) :
-        interp option =
+      let eval ?ctx:_ ?completion:_ (Model ((module Sat), m) : model) (e : term)
+        : interp option =
         match Sat.get_model m with
         | None ->
           Fmt.failwith "Altergo_mappings: no value for (%a)" DTerm.print e

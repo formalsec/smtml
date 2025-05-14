@@ -335,7 +335,7 @@ module Nop = struct
     module Model = struct
       let get_symbols _ = assert false
 
-      let eval ?completion:_ _ = assert false
+      let eval ?ctx:_ ?completion:_ _ = assert false
     end
 
     let die () =
