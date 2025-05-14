@@ -2,7 +2,6 @@ available: arch != "arm32" & arch != "x86_32"
 pin-depends: [
   ["colibri2.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#5514303635152b2a0e74bc62914bd3fbcce55445"]
   ["colibrilib.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#5514303635152b2a0e74bc62914bd3fbcce55445"]
-  ["alt-ergo-lib.2.6.2" "git+https://github.com/ocamlpro/alt-ergo.git#a7c4d23bcf46760b43f9bd3c821361403929764a"]
   ["benchpress.dev" "git+https://github.com/sneeuwballen/benchpress.git#7f44cdd9f0511afcce2c9ad3c04cc9b72919bcff"]
   ["extunix.0.4.3" "git+https://github.com/filipeom/extunix.git#ff54e8cc7ec9cdc7171861d74d85f326dbcec62e"]
 ]
