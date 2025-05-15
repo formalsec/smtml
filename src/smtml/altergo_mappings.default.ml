@@ -164,8 +164,8 @@ module M = struct
           let syms, cmds = mk_cmds new_syms s.syms s.cmds el in
           match cmds with
           | [] -> assert false
-          | _hd :: tl ->
-            s.cmds <- tl;
+          | _ :: cmds ->
+            s.cmds <- cmds;
             s.syms <- syms )
 
       let add_decls sym_decls cmds =
@@ -175,8 +175,8 @@ module M = struct
         : [> `Sat | `Unknown | `Unsat ] =
         let new_syms = get_new_syms ctx in
         let syms, cmds = mk_cmds new_syms s.syms s.cmds assumptions in
-        s.cmds <- cmds;
-        s.syms <- syms;
+        (* s.cmds <- cmds;
+            s.syms <- syms; *)
         let cmds = add_decls syms (List.rev cmds) in
         let ftdn_env = FE.init_env s.used_context in
         List.iter (FE.process_decl ftdn_env) cmds;
