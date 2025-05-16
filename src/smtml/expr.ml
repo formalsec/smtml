@@ -548,6 +548,18 @@ let rec cvtop theory op hte =
   | WrapI64, Cvtop (Ty_bitv 64, Zero_extend 32, hte) ->
     assert (Ty.equal theory (ty hte) && Ty.equal theory (Ty_bitv 32));
     hte
+  | ToString, Cvtop (_, OfString, e1) -> e1
+  | OfString, Cvtop (_, ToString, e1) -> e1
+  | PromoteF32, Cvtop (_, DemoteF64, e1) -> e1
+  | DemoteF64, Cvtop (_, PromoteF32, e1) -> e1
+  | Reinterpret_int, Cvtop (_, Reinterpret_float, e1) -> e1
+  | Reinterpret_float, Cvtop (_, Reinterpret_int, e1) -> e1
+  | Zero_extend 0, _ -> hte
+  | Sign_extend 0, _ -> hte
+  | String_from_code, Cvtop (_, String_to_code, e1) -> e1
+  | String_to_code, Cvtop (_, String_from_code, e1) -> e1
+  | String_to_int, Cvtop (_, String_from_int, e1) -> e1
+  | String_from_int, Cvtop (_, String_to_int, e1) -> e1
   | _ -> raw_cvtop theory op hte
 
 let raw_naryop ty op es = make (Naryop (ty, op, es)) [@@inline]
