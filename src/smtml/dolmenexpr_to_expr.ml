@@ -237,8 +237,22 @@ module DolmenIntf = struct
   module Bitv = struct
     include DTerm.Bitv
 
-    let v bv n =
-      let bv = Z.format (Fmt.str "%c0%db" '%' n) (Z.of_string bv) in
+    let int_to_bitvector n bits =
+      let two_pow_n = 1 lsl bits in
+      let unsigned_bv = if n < 0 then two_pow_n + n else n in
+      let rec to_bitlist acc n bits =
+        if bits = 0 then acc
+        else
+          to_bitlist
+            (Prelude.String.cat (string_of_int (n land 1)) acc)
+            (n lsr 1) (bits - 1)
+      in
+      (* let bitlist = to_bitlist [] unsigned_bv bits in
+      Fmt.str "%a" (Fmt.list Fmt.int) bitlist *)
+      to_bitlist "" unsigned_bv bits
+
+    let v (i : string) (n : int) =
+      let bv = int_to_bitvector (Z.to_int (Z.of_string i)) n in
       DTerm.Bitv.mk bv
 
     let lognot = DTerm.Bitv.not
