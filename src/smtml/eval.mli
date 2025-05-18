@@ -49,28 +49,28 @@ exception
 
 (** [unop ty op v] applies a unary operation [op] on the value [v] of type [ty].
     Raises [TypeError] if the value does not match the expected type. *)
-val unop : Ty.t -> Ty.Unop.t -> Value.t -> Value.t
+val unop : 'a Ty.ty -> 'a Ty.Unop.op -> Value.t -> Value.t
 
 (** [binop ty op v1 v2] applies a binary operation [op] on the values [v1] and
     [v2] of type [ty]. Raises [DivideByZero] if the operation involves division
     by zero. Raises [TypeError] if the values do not match the expected type. *)
-val binop : Ty.t -> Ty.Binop.t -> Value.t -> Value.t -> Value.t
+val binop : 'a Ty.ty -> Ty.Binop.t -> Value.t -> Value.t -> Value.t
 
 (** [triop ty op v1 v2 v3] applies a ternary operation [op] on the values [v1],
     [v2], and [v3] of type [ty]. Raises [TypeError] if any value does not match
     the expected type. *)
-val triop : Ty.t -> Ty.Triop.t -> Value.t -> Value.t -> Value.t -> Value.t
+val triop : 'a Ty.ty -> Ty.Triop.t -> Value.t -> Value.t -> Value.t -> Value.t
 
 (** [relop ty op v1 v2] applies a relational operation [op] on the values [v1]
     and [v2] of type [ty]. Returns [true] if the relation holds, otherwise
     [false]. Raises [TypeError] if the values do not match the expected type. *)
-val relop : Ty.t -> Ty.Relop.t -> Value.t -> Value.t -> bool
+val relop : 'a Ty.ty -> Ty.Relop.t -> Value.t -> Value.t -> bool
 
 (** [cvtop ty op v] applies a conversion operation [op] on the value [v] of type
     [ty]. Raises [TypeError] if the value does not match the expected type. *)
-val cvtop : Ty.t -> Ty.Cvtop.t -> Value.t -> Value.t
+val cvtop : 'a Ty.ty -> Ty.Cvtop.t -> Value.t -> Value.t
 
 (** [naryop ty op vs] applies an n-ary operation [op] on the list of values [vs]
     of type [ty]. Raises [TypeError] if any value does not match the expected
     type. *)
-val naryop : Ty.t -> Ty.Naryop.t -> Value.t list -> Value.t
+val naryop : 'a Ty.ty -> Ty.Naryop.t -> Value.t list -> Value.t

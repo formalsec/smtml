@@ -32,13 +32,13 @@ module Term = struct
     match (Symbol.namespace id, Symbol.name id) with
     | Sort, Simple name -> begin
       match name with
-      | "Int" -> Expr.symbol { id with ty = Ty_int }
-      | "Real" -> Expr.symbol { id with ty = Ty_real }
-      | "Bool" -> Expr.symbol { id with ty = Ty_bool }
-      | "String" -> Expr.symbol { id with ty = Ty_str }
-      | "Float32" -> Expr.symbol { id with ty = Ty_fp 32 }
-      | "Float64" -> Expr.symbol { id with ty = Ty_fp 64 }
-      | "RoundingMode" -> Expr.symbol { id with ty = Ty_roundingMode }
+      | "Int" -> Expr.symbol { id with ty = Ty Ty_int }
+      | "Real" -> Expr.symbol { id with ty = Ty Ty_real }
+      | "Bool" -> Expr.symbol { id with ty = Ty Ty_bool }
+      | "String" -> Expr.symbol { id with ty = Ty Ty_str }
+      | "Float32" -> Expr.symbol { id with ty = Ty (Ty_fp 32) }
+      | "Float64" -> Expr.symbol { id with ty = Ty (Ty_fp 64) }
+      | "RoundingMode" -> Expr.symbol { id with ty = Ty Ty_roundingMode }
       | _ -> begin
         match Hashtbl.find_opt custom_sorts name with
         | Some ty -> Expr.symbol { id with ty }
@@ -52,11 +52,11 @@ module Term = struct
       match (basename, indices) with
       | "BitVec", [ n ] -> (
         match int_of_string_opt n with
-        | Some n -> Expr.symbol { id with ty = Ty_bitv n }
+        | Some n -> Expr.symbol { id with ty = Ty (Ty_bitv n) }
         | None -> Fmt.failwith "Invalid bitvector size" )
       | "FloatingPoint", [ e; s ] -> (
         match (int_of_string_opt e, int_of_string_opt s) with
-        | Some e, Some s -> Expr.symbol { id with ty = Ty_fp (e + s) }
+        | Some e, Some s -> Expr.symbol { id with ty = Ty (Ty_fp (e + s)) }
         | _ -> Fmt.failwith "Invalid floating point size" )
       | _ ->
         Fmt.failwith "%acould not parse indexed sort:%a %a@." pp_loc loc
@@ -71,9 +71,9 @@ module Term = struct
       | "roundNearestTiesToEven" | "RNE" | "roundNearestTiesToAway" | "RNA"
       | "roundTowardPositive" | "RTP" | "roundTowardNegative" | "RTN"
       | "roundTowardZero" | "RTZ" ->
-        Expr.symbol { id with ty = Ty_roundingMode }
+        Expr.symbol { id with ty = Ty Ty_roundingMode }
       | "re.all" | "re.allchar" | "re.none" ->
-        Expr.symbol { id with ty = Ty_regexp }
+        Expr.symbol { id with ty = Ty Ty_regexp }
       | _ -> Expr.symbol id
     end
     | Term, Indexed { basename = base; indices } -> begin
