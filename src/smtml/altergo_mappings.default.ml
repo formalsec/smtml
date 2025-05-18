@@ -10,6 +10,7 @@ module M = struct
   module Sat_solver_sig = AEL.Sat_solver_sig
   module Sat_solver = AEL.Sat_solver
   module DStd = Dolmen_std
+  module DBuiltin = DStd.Builtin
   module DM = Dolmen_model
 
   module ConstSet = Set.Make (struct
@@ -60,6 +61,11 @@ module M = struct
       }
 
     type optimizer
+
+    let model_to_modelmap (Model ((module Sat), m) : model) =
+      match Sat.get_model m with
+      | None -> Fmt.failwith "Alt-Ergo mappings: no model found"
+      | Some AEL.Models.{ model; _ } -> model
 
     module Interp = struct
       let to_int interp =
@@ -183,11 +189,13 @@ module M = struct
         match ftdn_env.FE.res with
         | `Sat ->
           let partial_model = ftdn_env.sat_env in
-          s.model <- Some (Model ((module Sat), partial_model));
+          let model = Model ((module Sat), partial_model) in
+          s.model <- Some model;
           `Sat
         | `Unknown ->
           let partial_model = ftdn_env.sat_env in
-          s.model <- Some (Model ((module Sat), partial_model));
+          let model = Model ((module Sat), partial_model) in
+          s.model <- Some model;
           `Sat
         | `Unsat -> `Unsat
 
@@ -251,8 +259,7 @@ module M = struct
             | None -> (
               match (DM.Value.extract ~ops:DM.Bitv.ops v, ty) with
               | ( Some z
-                , { ty_descr =
-                      TyApp ({ builtin = Dolmen_std.Builtin.Bitv size; _ }, _)
+                , { ty_descr = TyApp ({ builtin = DBuiltin.Bitv size; _ }, _)
                   ; _
                   } ) ->
                 AEL.Expr.BV.of_Z ~size z
@@ -280,43 +287,62 @@ module M = struct
                 m )
             c
 
-      let eval ?ctx ?completion:_ (Model ((module Sat), m) : model) (e : term) :
-        interp option =
-        match ctx with
-        | None -> assert false
-        | Some ctx -> (
-          match Sat.get_model m with
-          | None ->
-            Fmt.failwith "Altergo_mappings: no value for (%a)" DTerm.print e
-          | Some AEL.Models.{ model; _ } ->
-            let m =
-              AEL.ModelMap.fold
-                (fun ((hs, _, _) as id) g acc ->
-                  let e = cgraph_to_value hs g in
-                  let sym = aeid_to_sym id in
-                  let tcst =
-                    match (Symbol.Map.find_opt sym ctx : DTerm.t option) with
-                    | Some { term_descr = Cst c; _ } -> c
-                    | _ -> assert false
-                  in
-                  DM.Model.Cst.add tcst (ae_expr_to_dvalue e) acc )
-                model DM.Model.empty
-            in
-            let env =
-              DM.Env.mk m
-                ~builtins:
-                  (DM.Eval.builtins
-                     [ DM.Core.builtins
-                     ; DM.Bool.builtins
-                     ; DM.Int.builtins
-                     ; DM.Rat.builtins
-                     ; DM.Real.builtins
-                     ; DM.Bitv.builtins
-                     ; DM.Fp.builtins
-                     ] )
-            in
-            let v = DM.Eval.eval env e in
-            Some (dvalue_to_interp (DTerm.ty e) v) )
+      let get_defval (c : DTerm.Const.t) : DM.Value.t =
+        match DTerm.Const.ty c with
+        | { ty_descr = TyApp ({ builtin = DBuiltin.Int; _ }, _); _ } ->
+          DM.Int.mk Z.zero
+        | { ty_descr = TyApp ({ builtin = DBuiltin.Real; _ }, _); _ } ->
+          DM.Real.mk Q.zero
+        | { ty_descr = TyApp ({ builtin = DBuiltin.Prop; _ }, _); _ } ->
+          DM.Bool.mk false
+        | { ty_descr = TyApp ({ builtin = DBuiltin.Bitv n; _ }, _); _ } ->
+          DM.Bitv.mk n Z.zero
+        | { ty_descr = TyApp ({ builtin = DBuiltin.Float _; _ }, _); _ } ->
+          DM.Fp.mk (Farith.F.of_float 0.)
+        | _ -> assert false
+
+      let eval ?(ctx = Symbol.Map.empty) ?completion:_
+        (Model _ as model : model) (e : term) : interp option =
+        let model = model_to_modelmap model in
+        let m =
+          AEL.ModelMap.fold
+            (fun ((hs, _, _) as id) g acc ->
+              let e = cgraph_to_value hs g in
+              let sym = aeid_to_sym id in
+              let tcst =
+                match (Symbol.Map.find_opt sym ctx : DTerm.t option) with
+                | Some { term_descr = Cst c; _ } -> c
+                | _ -> assert false
+              in
+              DM.Model.Cst.add tcst (ae_expr_to_dvalue e) acc )
+            model DM.Model.empty
+        in
+        let m =
+          Symbol.Map.fold
+            (fun _ (t : term) acc ->
+              match t with
+              | { term_descr = Cst c; _ } -> (
+                match DM.Model.Cst.find_opt c acc with
+                | Some _ -> acc
+                | None -> DM.Model.Cst.add c (get_defval c) acc )
+              | _ -> assert false )
+            ctx m
+        in
+        let env =
+          DM.Env.mk m
+            ~builtins:
+              (DM.Eval.builtins
+                 [ DM.Core.builtins
+                 ; DM.Bool.builtins
+                 ; DM.Int.builtins
+                 ; DM.Rat.builtins
+                 ; DM.Real.builtins
+                 ; DM.Bitv.builtins
+                 ; DM.Fp.builtins
+                 ] )
+        in
+        let v = DM.Eval.eval env e in
+        Some (dvalue_to_interp (DTerm.ty e) v)
     end
 
     module Optimizer = struct
