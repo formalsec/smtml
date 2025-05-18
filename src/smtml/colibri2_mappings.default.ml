@@ -20,6 +20,14 @@ module M = struct
   module Make () : Mappings_intf.M = struct
     include Dolmenexpr_to_expr.DolmenIntf
 
+    module Internals = struct
+      let caches_consts = false
+
+      let is_available = true
+
+      let has_to_ieee_bv = false
+    end
+
     type model =
       Colibri2_core.Egraph.wt * (DTerm.Const.t * Colibri2_core.Value.t) list
 

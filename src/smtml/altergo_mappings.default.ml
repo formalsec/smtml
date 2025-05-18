@@ -44,6 +44,14 @@ module M = struct
     module FE = Frontend.Make (Sat)
     include Dolmenexpr_to_expr.DolmenIntf
 
+    module Internals = struct
+      let caches_consts = false
+
+      let is_available = true
+
+      let has_to_ieee_bv = false
+    end
+
     type 'a sat_module = (module Sat_solver_sig.S with type t = 'a)
 
     type model = Model : 'a sat_module * 'a -> model
