@@ -37,14 +37,6 @@ module Builtin : sig
 end
 
 module DolmenIntf : sig
-  module Internals : sig
-    val caches_consts : bool
-
-    val is_available : bool
-
-    val has_to_ieee_bv : bool
-  end
-
   type ty = DTy.t
 
   type term = DTerm.t

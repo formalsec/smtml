@@ -75,14 +75,6 @@ end
 module DolmenIntf = struct
   include DTerm
 
-  module Internals = struct
-    let caches_consts = false
-
-    let is_available = true
-
-    let has_to_ieee_bv = false
-  end
-
   type ty = DTy.t
 
   type term = DTerm.t
