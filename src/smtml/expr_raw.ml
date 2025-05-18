@@ -12,7 +12,7 @@ include (
         | Symbol of Symbol.t
         | List of t list
         | App of Symbol.t * t list
-        | Unop of Ty.t * Ty.Unop.t * t
+        | Unop : 'a Ty.ty * 'a Ty.Unop.op * t -> expr
         | Binop of Ty.t * Ty.Binop.t * t * t
         | Triop of Ty.t * Ty.Triop.t * t * t * t
         | Relop of Ty.t * Ty.Relop.t * t * t
@@ -64,17 +64,17 @@ include (
 
       val exists : t list -> t -> t
 
-      val raw_unop : Ty.t -> Ty.Unop.t -> t -> t
+      val raw_unop : 'a Ty.ty  -> 'a Ty.Unop.op -> t -> t
 
-      val raw_binop : Ty.t -> Ty.Binop.t -> t -> t -> t
+      val raw_binop : 'a Ty.ty -> Ty.Binop.t -> t -> t -> t
 
-      val raw_triop : Ty.t -> Ty.Triop.t -> t -> t -> t -> t
+      val raw_triop : 'a Ty.ty -> Ty.Triop.t -> t -> t -> t -> t
 
-      val raw_relop : Ty.t -> Ty.Relop.t -> t -> t -> t
+      val raw_relop : 'a Ty.ty -> Ty.Relop.t -> t -> t -> t
 
-      val raw_cvtop : Ty.t -> Ty.Cvtop.t -> t -> t
+      val raw_cvtop : 'a Ty.ty -> Ty.Cvtop.t -> t -> t
 
-      val raw_naryop : Ty.t -> Ty.Naryop.t -> t list -> t
+      val raw_naryop : 'a Ty.ty -> Ty.Naryop.t -> t list -> t
 
       val raw_extract : t -> high:int -> low:int -> t
 

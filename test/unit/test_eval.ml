@@ -507,7 +507,7 @@ module Str_test = struct
 end
 
 module Float_test (FXX : sig
-  val ty : Ty.t
+  val ty : [ `Ty_fp ] Ty.ty
 
   val v : float -> Value.t
 end) =

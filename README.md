@@ -127,8 +127,8 @@ module Z3 :
 val solver : Z3.t = <abstr>
 
 # let cond =
-    let a = Expr.symbol (Symbol.make Ty.Ty_bool "a") in
-    let b = Expr.symbol (Symbol.make Ty.Ty_bool "b") in
+    let a = Expr.symbol (Symbol.make (Ty.Ty Ty_bool) "a") in
+    let b = Expr.symbol (Symbol.make (Ty.Ty Ty_bool) "b") in
     Expr.(binop Ty_bool And a (unop Ty_bool Not b));;
 val cond : Expr.t = (bool.and a (bool.not b))
 

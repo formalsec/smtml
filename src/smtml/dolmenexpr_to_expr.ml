@@ -150,9 +150,11 @@ module DolmenIntf = struct
 
     let to_ety (ty : DTy.t) : Ty.t =
       match ty with
-      | { ty_descr = TyApp ({ builtin = DBuiltin.Int; _ }, _); _ } -> Ty_int
-      | { ty_descr = TyApp ({ builtin = DBuiltin.Real; _ }, _); _ } -> Ty_real
-      | { ty_descr = TyApp ({ builtin = DBuiltin.Prop; _ }, _); _ } -> Ty_bool
+      | { ty_descr = TyApp ({ builtin = DBuiltin.Int; _ }, _); _ } -> Ty Ty_int
+      | { ty_descr = TyApp ({ builtin = DBuiltin.Real; _ }, _); _ } ->
+        Ty Ty_real
+      | { ty_descr = TyApp ({ builtin = DBuiltin.Prop; _ }, _); _ } ->
+        Ty Ty_bool
       | { ty_descr =
             TyApp
               ( { builtin = DBuiltin.Base
@@ -162,13 +164,13 @@ module DolmenIntf = struct
               , _ )
         ; _
         } ->
-        Ty_str
+        Ty Ty_str
       | { ty_descr = TyApp ({ builtin = DBuiltin.Bitv n; _ }, _); _ } ->
-        Ty_bitv n
+        Ty (Ty_bitv n)
       | { ty_descr = TyApp ({ builtin = DBuiltin.Float (8, 24); _ }, _); _ } ->
-        Ty_fp 32
+        Ty (Ty_fp 32)
       | { ty_descr = TyApp ({ builtin = DBuiltin.Float (11, 53); _ }, _); _ } ->
-        Ty_fp 64
+        Ty (Ty_fp 64)
       | _ -> Fmt.failwith {|Unsupported dolmen type "%a"|} DTy.print ty
   end
 

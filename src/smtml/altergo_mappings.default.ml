@@ -221,10 +221,10 @@ module M = struct
     module Model = struct
       let aety_to_ty (ty : AEL.Ty.t) : Ty.t =
         match ty with
-        | Tbool -> Ty_bool
-        | Tint -> Ty_int
-        | Treal -> Ty_real
-        | Tbitv n -> Ty_bitv n
+        | Tbool -> Ty Ty_bool
+        | Tint -> Ty Ty_int
+        | Treal -> Ty Ty_real
+        | Tbitv n -> Ty (Ty_bitv n)
         | _ -> assert false
 
       let aeid_to_sym ((hs, tyl, ty) : AEL.Id.typed) =

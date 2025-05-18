@@ -65,7 +65,7 @@ let test_unop_string _ =
 let test_unop_bool _ =
   let ty = Ty.Ty_bool in
   check (Expr.unop ty Not Expr.Bool.true_) Expr.Bool.false_;
-  let x = Expr.symbol (Symbol.make ty "x") in
+  let x = Expr.symbol (Symbol.make (Ty ty) "x") in
   check (Expr.unop ty Not (Expr.unop ty Not x)) x
 
 let test_unop_list _ =
@@ -464,11 +464,11 @@ let test_cvtop_i32 _ =
   let open Infix in
   check (Expr.cvtop (Ty_bitv 32) TruncSF32 (float32 8.5)) (int32 8l);
   check (Expr.cvtop (Ty_bitv 32) TruncSF64 (float64 8.5)) (int32 8l);
-  let x = Expr.symbol (Symbol.make (Ty_bitv 32) "x") in
+  let x = Expr.symbol (Symbol.make (Ty (Ty_bitv 32)) "x") in
   let x = Expr.extract x ~high:2 ~low:0 in
-  assert (Ty.equal (Expr.ty x) (Ty_bitv 16));
+  assert (Ty.equal (Expr.ty x) (Ty (Ty_bitv 16)));
   let x = Expr.cvtop (Ty_bitv 32) (Sign_extend 16) x in
-  assert (Ty.equal (Expr.ty x) (Ty_bitv 32))
+  assert (Ty.equal (Expr.ty x) (Ty (Ty_bitv 32)))
 
 let test_cvtop_i64 _ =
   let open Infix in

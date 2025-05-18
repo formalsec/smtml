@@ -71,7 +71,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let open Infix in
     let module Solver = (val solver_module : Solver_intf.S) in
     let solver = Solver.create ~logic:LIA () in
-    let symbol_x = Symbol.("x" @: Ty_int) in
+    let symbol_x = Symbol.("x" @: Ty Ty_int) in
     let x = Expr.symbol symbol_x in
     assert_sat ~f:"test" (Solver.check solver []);
 
@@ -121,8 +121,8 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
         let module Solver = (val solver_module : Solver_intf.S) in
         let solver = Solver.create () in
         assert_sat ~f:"test_lra"
-          (let x = Expr.symbol Symbol.("x" @: Ty_real) in
-           let y = Expr.symbol Symbol.("y" @: Ty_real) in
+          (let x = Expr.symbol Symbol.("x" @: Ty Ty_real) in
+           let y = Expr.symbol Symbol.("y" @: Ty Ty_real) in
            let c0 = Expr.relop Ty_bool Eq x y in
            let c1 =
              Expr.relop Ty_bool Eq

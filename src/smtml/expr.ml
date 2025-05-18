@@ -13,7 +13,7 @@ and expr =
   | Symbol of Symbol.t
   | List of t list
   | App of Symbol.t * t list
-  | Unop of Ty.t * Ty.Unop.t * t
+  | Unop : 'a Ty.ty * 'a Ty.Unop.op * t -> expr
   | Binop of Ty.t * Ty.Binop.t * t * t
   | Triop of Ty.t * Ty.Triop.t * t * t * t
   | Relop of Ty.t * Ty.Relop.t * t * t
@@ -39,7 +39,9 @@ module Expr = struct
     | List l1, List l2 -> list_eq l1 l2
     | App (s1, l1), App (s2, l2) -> Symbol.equal s1 s2 && list_eq l1 l2
     | Unop (t1, op1, e1), Unop (t2, op2, e2) ->
-      Ty.equal t1 t2 && Ty.Unop.equal op1 op2 && phys_equal e1 e2
+      Ty.equal (Ty t1) (Ty t2)
+      && Ty.Unop.equal (U op1) (U op2)
+      && phys_equal e1 e2
     | Binop (t1, op1, e1, e3), Binop (t2, op2, e2, e4) ->
       Ty.equal t1 t2 && Ty.Binop.equal op1 op2 && phys_equal e1 e2
       && phys_equal e3 e4
@@ -106,11 +108,11 @@ let symbol s = make (Symbol s)
 let rec ty (hte : t) : Ty.t =
   match view hte with
   | Val x -> Value.type_of x
-  | Ptr _ -> Ty_bitv 32
+  | Ptr _ -> Ty (Ty_bitv 32)
   | Symbol x -> Symbol.type_of x
-  | List _ -> Ty_list
-  | App (sym, _) -> begin match sym.ty with Ty_none -> Ty_app | ty -> ty end
-  | Unop (ty, _, _) -> ty
+  | List _ -> Ty Ty_list
+  | App (sym, _) -> begin match sym.ty with Ty Ty_none -> Ty Ty_app | ty -> ty end
+  | Unop (ty, _, _) -> Ty ty
   | Binop (ty, _, _, _) -> ty
   | Triop (_, Ite, _, hte1, hte2) ->
     let ty1 = ty hte1 in
@@ -120,13 +122,15 @@ let rec ty (hte : t) : Ty.t =
   | Triop (ty, _, _, _, _) -> ty
   | Relop (ty, _, _, _) -> ty
   | Cvtop (_, (Zero_extend m | Sign_extend m), hte) -> (
-    match ty hte with Ty_bitv n -> Ty_bitv (n + m) | _ -> assert false )
+    match ty hte with
+    | Ty (Ty_bitv n) -> Ty (Ty_bitv (n + m))
+    | _ -> assert false )
   | Cvtop (ty, _, _) -> ty
   | Naryop (ty, _, _) -> ty
-  | Extract (_, h, l) -> Ty_bitv ((h - l) * 8)
+  | Extract (_, h, l) -> Ty (Ty_bitv ((h - l) * 8))
   | Concat (e1, e2) -> (
     match (ty e1, ty e2) with
-    | Ty_bitv n1, Ty_bitv n2 -> Ty_bitv (n1 + n2)
+    | Ty (Ty_bitv n1), Ty (Ty_bitv n2) -> Ty (Ty_bitv (n1 + n2))
     | t1, t2 ->
       Fmt.failwith "Invalid concat of (%a) with (%a)" Ty.pp t1 Ty.pp t2 )
   | Binder (_, _, e) -> ty e
@@ -233,7 +237,7 @@ module Pp = struct
         (Fmt.list ~sep:Fmt.comma pp)
         v
     | Unop (ty, op, e) ->
-      Fmt.pf fmt "@[<hov 1>(%a.%a@ %a)@]" Ty.pp ty Ty.Unop.pp op pp e
+      Fmt.pf fmt "@[<hov 1>(%a.%a@ %a)@]" Ty.pp (Ty ty) Ty.Unop.pp (U op) pp e
     | Binop (ty, op, e1, e2) ->
       Fmt.pf fmt "@[<hov 1>(%a.%a@ %a@ %a)@]" Ty.pp ty Ty.Binop.pp op pp e1 pp
         e2
@@ -301,7 +305,9 @@ let forall vars body = binder Forall vars body
 
 let exists vars body = binder Exists vars body
 
-let raw_unop ty op hte = make (Unop (ty, op, hte)) [@@inline]
+let raw_unop : type a. a Ty.ty -> a Ty.Unop.op -> t -> t =
+ fun ty op hte -> make (Unop (ty, op, hte))
+[@@inline]
 
 let normalize_eq_or_ne op (ty', e1, e2) =
   let make_relop lhs rhs = Relop (ty', op, lhs, rhs) in
@@ -309,15 +315,15 @@ let normalize_eq_or_ne op (ty', e1, e2) =
   if not (Ty.equal ty1 ty2) then make_relop e1 e2
   else begin
     match ty1 with
-    | Ty_bitv m ->
+    | Ty Ty_bitv m ->
       let binop = make (Binop (ty1, Sub, e1, e2)) in
       let zero = make (Val (Bitv (Bitvector.make Z.zero m))) in
       make_relop binop zero
-    | Ty_int ->
+    | Ty Ty_int ->
       let binop = make (Binop (ty1, Sub, e1, e2)) in
       let zero = make (Val (Int Int.zero)) in
       make_relop binop zero
-    | Ty_real ->
+    | Ty Ty_real ->
       let binop = make (Binop (ty1, Sub, e1, e2)) in
       let zero = make (Val (Real 0.)) in
       make_relop binop zero
@@ -341,24 +347,28 @@ let negate_relop (hte : t) : t =
   in
   make e
 
-let unop ty op hte =
+let unop : type a. a Ty.ty -> a Ty.Unop.op -> t -> t =
+ fun ty op hte ->
   match (op, view hte) with
   | Ty.Unop.(Regexp_loop _ | Regexp_star), _ -> raw_unop ty op hte
   | _, Val v -> value (Eval.unop ty op v)
   | Not, Unop (_, Not, hte') -> hte'
-  | Not, Relop (Ty_fp _, _, _, _) -> raw_unop ty op hte
+  | Not, Relop (Ty Ty_fp _, _, _, _) -> raw_unop ty op hte
   | Not, Relop (_, _, _, _) -> negate_relop hte
   | Neg, Unop (_, Neg, hte') -> hte'
-  | Trim, Cvtop (Ty_real, ToString, _) -> hte
+  | Trim, Cvtop (Ty Ty_real, ToString, _) -> hte
   | Head, List (hd :: _) -> hd
   | Tail, List (_ :: tl) -> make (List tl)
   | Reverse, List es -> make (List (List.rev es))
   | Length, List es -> value (Int (List.length es))
   | _ -> raw_unop ty op hte
 
-let raw_binop ty op hte1 hte2 = make (Binop (ty, op, hte1, hte2)) [@@inline]
+let raw_binop : type a. a Ty.ty -> Ty.Binop.t -> t -> t -> t =
+ fun ty op hte1 hte2 -> make (Binop (Ty ty, op, hte1, hte2))
+[@@inline]
 
-let rec binop ty op hte1 hte2 =
+let rec binop : type a. a Ty.ty -> Ty.Binop.t -> t -> t -> t =
+ fun ty op hte1 hte2 ->
   match (op, view hte1, view hte2) with
   | Ty.Binop.(String_in_re | Regexp_range), _, _ -> raw_binop ty op hte1 hte2
   | op, Val v1, Val v2 -> value (Eval.binop ty op v1 v2)
@@ -384,21 +394,21 @@ let rec binop ty op hte1 hte2 =
     hte1
   | (Add | Or), _, Val (Bitv bv) when Bitvector.eqz bv -> hte1
   | (And | Mul), _, Val (Bitv bv) when Bitvector.eqz bv -> hte2
-  | Add, Binop (ty, Add, x, { node = Val v1; _ }), Val v2 ->
+  | Add, Binop (Ty ty, Add, x, { node = Val v1; _ }), Val v2 ->
     let v = value (Eval.binop ty Add v1 v2) in
     raw_binop ty Add x v
-  | Sub, Binop (ty, Sub, x, { node = Val v1; _ }), Val v2 ->
+  | Sub, Binop (Ty ty, Sub, x, { node = Val v1; _ }), Val v2 ->
     let v = value (Eval.binop ty Add v1 v2) in
     raw_binop ty Sub x v
   | Mul, Val (Bitv bv), _ when Bitvector.eq_one bv -> hte2
   | Mul, _, Val (Bitv bv) when Bitvector.eq_one bv -> hte1
-  | Mul, Binop (ty, Mul, x, { node = Val v1; _ }), Val v2 ->
+  | Mul, Binop (Ty ty, Mul, x, { node = Val v1; _ }), Val v2 ->
     let v = value (Eval.binop ty Mul v1 v2) in
     raw_binop ty Mul x v
-  | Add, Val v1, Binop (ty, Add, x, { node = Val v2; _ }) ->
+  | Add, Val v1, Binop (Ty ty, Add, x, { node = Val v2; _ }) ->
     let v = value (Eval.binop ty Add v1 v2) in
     raw_binop ty Add v x
-  | Mul, Val v1, Binop (ty, Mul, x, { node = Val v2; _ }) ->
+  | Mul, Val v1, Binop (Ty ty, Mul, x, { node = Val v2; _ }) ->
     let v = value (Eval.binop ty Mul v1 v2) in
     raw_binop ty Mul v x
   | At, List es, Val (Int n) ->
@@ -414,9 +424,12 @@ let rec binop ty op hte1 hte2 =
   | List_append, List l0, List l1 -> make (List (l0 @ l1))
   | _ -> raw_binop ty op hte1 hte2
 
-let raw_triop ty op e1 e2 e3 = make (Triop (ty, op, e1, e2, e3)) [@@inline]
+let raw_triop : type a. a Ty.ty -> Ty.Triop.t -> t -> t -> t -> t =
+ fun ty op e1 e2 e3 -> make (Triop (Ty ty, op, e1, e2, e3))
+[@@inline]
 
-let triop ty op e1 e2 e3 =
+let triop : type a. a Ty.ty -> Ty.Triop.t -> t -> t -> t -> t =
+ fun ty op e1 e2 e3 ->
   match (op, view e1, view e2, view e3) with
   | Ty.Triop.Ite, Val True, _, _ -> e2
   | Ite, Val False, _, _ -> e3
@@ -427,9 +440,12 @@ let triop ty op e1 e2 e3 =
     raw_triop ty Ite cond r1 else_
   | _ -> raw_triop ty op e1 e2 e3
 
-let raw_relop ty op hte1 hte2 = make (Relop (ty, op, hte1, hte2)) [@@inline]
+let raw_relop : type a. a Ty.ty -> Ty.Relop.t -> t -> t -> t =
+ fun ty op hte1 hte2 -> make (Relop (Ty ty, op, hte1, hte2))
+[@@inline]
 
-let rec relop ty op hte1 hte2 =
+let rec relop : type a. a Ty.ty -> Ty.Relop.t -> t -> t -> t =
+ fun ty op hte1 hte2 ->
   match (op, view hte1, view hte2) with
   | op, Val v1, Val v2 -> value (if Eval.relop ty op v1 v2 then True else False)
   | Ty.Relop.Ne, Val (Real v), _ | Ne, _, Val (Real v) ->
@@ -447,8 +463,8 @@ let rec relop ty op hte1 hte2 =
   | Ne, Val (App (`Op "symbol", [ Str _ ])), _ ->
     value True
   | ( Eq
-    , Symbol ({ ty = Ty_fp prec1; _ } as s1)
-    , Symbol ({ ty = Ty_fp prec2; _ } as s2) )
+    , Symbol ({ ty = Ty (Ty_fp prec1); _ } as s1)
+    , Symbol ({ ty = Ty (Ty_fp prec2); _ } as s2) )
     when prec1 = prec2 && Symbol.equal s1 s2 ->
     raw_unop Ty_bool Not (raw_unop (Ty_fp prec1) Is_nan hte1)
   | Eq, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
@@ -491,24 +507,30 @@ and relop_list op l1 l2 =
           binop Ty_bool And acc
           @@
           match (ty a, ty b) with
-          | Ty_real, Ty_real -> relop Ty_real Eq a b
+          | Ty Ty_real, Ty Ty_real -> relop Ty_real Eq a b
           | _ -> relop Ty_bool Eq a b )
         (value True) l1 l2
   | Ne, _, _ -> unop Ty_bool Not @@ relop_list Eq l1 l2
   | (Lt | LtU | Gt | GtU | Le | LeU | Ge | GeU), _, _ -> assert false
 
-let raw_cvtop ty op hte = make (Cvtop (ty, op, hte)) [@@inline]
+let raw_cvtop : type a. a Ty.ty -> Ty.Cvtop.t -> t -> t =
+ fun ty op hte -> make (Cvtop (Ty ty, op, hte))
+[@@inline]
 
-let cvtop ty op hte =
+let cvtop : type a. a Ty.ty -> Ty.Cvtop.t -> t -> t =
+ fun ty op hte ->
   match (op, view hte) with
   | Ty.Cvtop.String_to_re, _ -> raw_cvtop ty op hte
   | _, Val v -> value (Eval.cvtop ty op v)
-  | String_to_float, Cvtop (Ty_real, ToString, real) -> real
+  | String_to_float, Cvtop (Ty Ty_real, ToString, real) -> real
   | _ -> raw_cvtop ty op hte
 
-let raw_naryop ty op es = make (Naryop (ty, op, es)) [@@inline]
+let raw_naryop : type a. a Ty.ty -> Ty.Naryop.t -> t list -> t =
+ fun ty op es -> make (Naryop (Ty ty, op, es))
+[@@inline]
 
-let naryop ty op es =
+let naryop : type a. a Ty.ty -> Ty.Naryop.t -> t list -> t =
+ fun ty op es ->
   if List.for_all (fun e -> match view e with Val _ -> true | _ -> false) es
   then
     let vs =
@@ -519,11 +541,11 @@ let naryop ty op es =
     match (ty, op, List.map view es) with
     | ( Ty_str
       , Concat
-      , [ Naryop (Ty_str, Concat, l1); Naryop (Ty_str, Concat, l2) ] ) ->
+      , [ Naryop (Ty Ty_str, Concat, l1); Naryop (Ty Ty_str, Concat, l2) ] ) ->
       raw_naryop Ty_str Concat (l1 @ l2)
-    | Ty_str, Concat, [ Naryop (Ty_str, Concat, htes); hte ] ->
+    | Ty_str, Concat, [ Naryop (Ty Ty_str, Concat, htes); hte ] ->
       raw_naryop Ty_str Concat (htes @ [ make hte ])
-    | Ty_str, Concat, [ hte; Naryop (Ty_str, Concat, htes) ] ->
+    | Ty_str, Concat, [ hte; Naryop (Ty Ty_str, Concat, htes) ] ->
       raw_naryop Ty_str Concat (make hte :: htes)
     | _ -> raw_naryop ty op es
 
@@ -539,7 +561,7 @@ let extract (hte : t) ~(high : int) ~(low : int) : t =
   | ( Cvtop
         ( _
         , (Zero_extend 24 | Sign_extend 24)
-        , ({ node = Symbol { ty = Ty_bitv 8; _ }; _ } as sym) )
+        , ({ node = Symbol { ty = Ty (Ty_bitv 8); _ }; _ } as sym) )
     , 1
     , 0 ) ->
     sym
@@ -574,23 +596,23 @@ let rec simplify_expr ?(in_relop = false) (hte : t) : t =
   | Unop (ty, op, e) ->
     let e = simplify_expr ~in_relop e in
     unop ty op e
-  | Binop (ty, op, e1, e2) ->
+  | Binop (Ty ty, op, e1, e2) ->
     let e1 = simplify_expr ~in_relop e1 in
     let e2 = simplify_expr ~in_relop e2 in
     binop ty op e1 e2
-  | Relop (ty, op, e1, e2) ->
+  | Relop (Ty ty, op, e1, e2) ->
     let e1 = simplify_expr ~in_relop:true e1 in
     let e2 = simplify_expr ~in_relop:true e2 in
     relop ty op e1 e2
-  | Triop (ty, op, c, e1, e2) ->
+  | Triop (Ty ty, op, c, e1, e2) ->
     let c = simplify_expr ~in_relop c in
     let e1 = simplify_expr ~in_relop e1 in
     let e2 = simplify_expr ~in_relop e2 in
     triop ty op c e1 e2
-  | Cvtop (ty, op, e) ->
+  | Cvtop (Ty ty, op, e) ->
     let e = simplify_expr ~in_relop e in
     cvtop ty op e
-  | Naryop (ty, op, es) ->
+  | Naryop (Ty ty, op, es) ->
     let es = List.map (simplify_expr ~in_relop) es in
     naryop ty op es
   | Extract (s, high, low) ->
@@ -684,7 +706,7 @@ end
 module Make (T : sig
   type elt
 
-  val ty : Ty.t
+  val ty : [> `Ty_bitv | `Ty_fp ] Ty.ty
 
   val value : elt -> Value.t
 end) =
@@ -693,7 +715,7 @@ struct
 
   let v i = value (T.value i)
 
-  let sym x = symbol Symbol.(x @: T.ty)
+  let sym x = symbol Symbol.(x @: Ty T.ty)
 
   let ( ~- ) e = unop T.ty Neg e
 

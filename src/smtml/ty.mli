@@ -17,19 +17,23 @@ type _ cast =
 (** {1 Type Definitions} *)
 
 (** The type [t] represents smtml types. *)
-type t =
-  | Ty_app  (** Application type. *)
-  | Ty_bitv of int  (** Bitvector type with a specified bit width. *)
-  | Ty_bool  (** Boolean type. *)
-  | Ty_fp of int  (** Floating-point type with a specified bit width. *)
-  | Ty_int  (** Integer type. *)
-  | Ty_list  (** List type. *)
-  | Ty_none  (** None type. *)
-  | Ty_real  (** Real number type. *)
-  | Ty_str  (** String type. *)
-  | Ty_unit  (** Unit type. *)
-  | Ty_regexp  (** Regular expression type. *)
-  | Ty_roundingMode
+type _ ty =
+  | Ty_app : [> `Ty_app ] ty  (** Application type. *)
+  | Ty_bitv : int -> [> `Ty_bitv ] ty
+    (** Bitvector type with a specified bit width. *)
+  | Ty_bool : [> `Ty_bool ] ty  (** Boolean type. *)
+  | Ty_fp : int -> [> `Ty_fp ] ty
+    (** Floating-point type with a specified bit width. *)
+  | Ty_int : [> `Ty_int ] ty  (** Integer type. *)
+  | Ty_list : [> `Ty_list ] ty  (** List type. *)
+  | Ty_none : [> `Ty_none ] ty  (** None type. *)
+  | Ty_real : [> `Ty_real ] ty  (** Real number type. *)
+  | Ty_str : [> `Ty_str ] ty  (** String type. *)
+  | Ty_unit : [> `Ty_unit ] ty  (** Unit type. *)
+  | Ty_regexp : [> `Ty_regexp ] ty  (** Regular expression type. *)
+  | Ty_roundingMode : [> `Ty_roundingMode ] ty
+
+type t = Ty : 'a ty -> t
 
 (** {1 Type Comparison} *)
 
@@ -62,38 +66,45 @@ val size : t -> int
 
 module Unop : sig
   (** The type [t] represents unary operations. *)
-  type t =
-    | Neg  (** Negation. *)
-    | Not  (** Logical NOT. *)
-    | Clz  (** Count leading zeros. *)
-    | Ctz  (** Count trailing zeros. *)
-    | Popcnt  (** Count bits set to 1. *)
+  type t = U : 'a op -> t
+
+  and _ op =
+    | Neg : [< `Ty_int | `Ty_real | `Ty_bitv | `Ty_fp | `Ty_none ] op
+      (** Negation. *)
+    | Not : [< `Ty_bool | `Ty_int | `Ty_bitv | `Ty_none ] op
+      (** Logical NOT. *)
+    | Clz : [ `Ty_bitv ] op  (** Count leading zeros. *)
+    | Ctz : [ `Ty_bitv ] op  (** Count trailing zeros. *)
+    | Popcnt : [ `Ty_bitv ] op  (** Count bits set to 1. *)
     (* Float operations *)
-    | Abs  (** Absolute value. *)
-    | Sqrt  (** Square root. *)
-    | Is_normal
-    | Is_subnormal
-    | Is_negative
-    | Is_positive
-    | Is_infinite
-    | Is_nan  (** Check if NaN. *)
-    | Is_zero
-    | Ceil  (** Ceiling. *)
-    | Floor  (** Floor. *)
-    | Trunc  (** Truncate. *)
-    | Nearest  (** Round to nearest integer. *)
-    | Head  (** Get the head of a list. *)
-    | Tail  (** Get the tail of a list. *)
-    | Reverse  (** Reverse a list. *)
-    | Length  (** Get the length of a list. *)
+    | Abs : [< `Ty_int | `Ty_real | `Ty_fp | `Ty_none ] op
+      (** Absolute value. *)
+    | Sqrt : [< `Ty_real | `Ty_fp | `Ty_none ] op  (** Square root. *)
+    | Is_normal : [< `Ty_fp | `Ty_none ] op
+    | Is_subnormal : [< `Ty_fp | `Ty_none ] op
+    | Is_negative : [< `Ty_fp | `Ty_none ] op
+    | Is_positive : [< `Ty_fp | `Ty_none ] op
+    | Is_infinite : [< `Ty_fp | `Ty_none ] op
+    | Is_nan : [< `Ty_real | `Ty_fp | `Ty_none ] op  (** Check if NaN. *)
+    | Is_zero : [< `Ty_fp | `Ty_none ] op
+    | Ceil : [< `Ty_real | `Ty_fp | `Ty_none ] op  (** Ceiling. *)
+    | Floor : [< `Ty_real | `Ty_fp | `Ty_none ] op  (** Floor. *)
+    | Trunc : [< `Ty_real | `Ty_fp | `Ty_none ] op  (** Truncate. *)
+    | Nearest : [< `Ty_real | `Ty_fp | `Ty_none ] op
+      (** Round to nearest integer. *)
+    | Head : [ `Ty_list ] op  (** Get the head of a list. *)
+    | Tail : [ `Ty_list ] op  (** Get the tail of a list. *)
+    | Reverse : [ `Ty_list ] op  (** Reverse a list. *)
+    | Length : [< `Ty_list | `Ty_str ] op  (** Get the length of a list. *)
     (* String operations *)
-    | Trim  (** Trim whitespace (uninterpreted). *)
+    | Trim : [ `Ty_str ] op  (** Trim whitespace (uninterpreted). *)
     (* Regexp operations *)
-    | Regexp_star  (** Kleene star. *)
-    | Regexp_loop of (int * int)  (** Loop with a range. *)
-    | Regexp_plus  (** Kleene plus. *)
-    | Regexp_opt  (** Optional. *)
-    | Regexp_comp  (** Complement. *)
+    | Regexp_star : [< `Ty_str | `Ty_regexp ] op  (** Kleene star. *)
+    | Regexp_loop : (int * int) -> [< `Ty_str | `Ty_regexp ] op
+      (** Loop with a range. *)
+    | Regexp_plus : [< `Ty_str | `Ty_regexp ] op  (** Kleene plus. *)
+    | Regexp_opt : [< `Ty_str | `Ty_regexp ] op  (** Optional. *)
+    | Regexp_comp : [< `Ty_str | `Ty_regexp ] op  (** Complement. *)
 
   (** [equal op1 op2] checks if unary operations [op1] and [op2] are equal. *)
   val equal : t -> t -> bool

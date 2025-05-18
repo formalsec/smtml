@@ -89,15 +89,15 @@ module M = struct
 
       let to_ety sort =
         match Z3.Sort.get_sort_kind sort with
-        | Z3enums.INT_SORT -> Ty.Ty_int
-        | REAL_SORT -> Ty.Ty_real
-        | BOOL_SORT -> Ty.Ty_bool
-        | SEQ_SORT -> Ty.Ty_str
-        | BV_SORT -> Ty.Ty_bitv (Z3.BitVector.get_size sort)
+        | Z3enums.INT_SORT -> Ty.Ty Ty_int
+        | REAL_SORT -> Ty.Ty Ty_real
+        | BOOL_SORT -> Ty.Ty Ty_bool
+        | SEQ_SORT -> Ty.Ty Ty_str
+        | BV_SORT -> Ty.Ty (Ty_bitv (Z3.BitVector.get_size sort))
         | FLOATING_POINT_SORT ->
           let ebits = Z3.FloatingPoint.get_ebits ctx sort in
           let sbits = Z3.FloatingPoint.get_sbits ctx sort in
-          Ty.Ty_fp (ebits + sbits)
+          Ty.Ty (Ty_fp (ebits + sbits))
         | _ -> assert false
     end
 

@@ -8,16 +8,16 @@ let assert_equal =
   assert_equal ~cmp:String.equal ~pp_diff
 
 let test_to_json _ =
-  let x = Symbol.make Ty_int "x" in
-  let y = Symbol.make Ty_real "y" in
-  let z = Symbol.make Ty_bool "z" in
-  let u = Symbol.make Ty_str "u" in
+  let x = Symbol.make (Ty Ty_int) "x" in
+  let y = Symbol.make (Ty Ty_real) "y" in
+  let z = Symbol.make (Ty Ty_bool) "z" in
+  let u = Symbol.make (Ty Ty_str) "u" in
   let expected =
     {|{
   "model": {
     "x": { "ty": "int", "value": 1 },
-    "u": { "ty": "str", "value": "abc" },
     "y": { "ty": "real", "value": 2.0 },
+    "u": { "ty": "str", "value": "abc" },
     "z": { "ty": "bool", "value": true }
   }
 }|}
@@ -51,9 +51,9 @@ let test_of_json _ =
   assert_bool "cannot parse model" (match model with Ok _ -> true | _ -> false)
 
 let test_rt_json _ =
-  let x = Symbol.make (Ty_bitv 32) "x" in
-  let y = Symbol.make (Ty_bitv 64) "y" in
-  let z = Symbol.make (Ty_fp 32) "y" in
+  let x = Symbol.make (Ty (Ty_bitv 32)) "x" in
+  let y = Symbol.make (Ty (Ty_bitv 64)) "y" in
+  let z = Symbol.make (Ty (Ty_fp 32)) "y" in
   let orig_model : Model.t =
     let tbl = Hashtbl.create 16 in
     List.iter

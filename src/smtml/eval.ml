@@ -48,6 +48,7 @@ exception Integer_overflow
 (* FIXME: use snake case instead *)
 exception Index_out_of_bounds
 
+(* Helpers *)
 let of_arg f n v op msg =
   try f v
   with Value t -> raise (TypeError { index = n; value = v; ty = t; op; msg })
@@ -57,31 +58,39 @@ let err_str n op ty_expected ty_actual =
   Fmt.str "Argument %d of %a expected type %a but got %a instead." n pp_op_type
     op Ty.pp ty_expected Ty.pp ty_actual
 
+let is_float fpclass f =
+  match (Float.classify_float f, fpclass) with
+  | FP_normal, FP_normal
+  | FP_subnormal, FP_subnormal
+  | FP_infinite, FP_infinite
+  | FP_nan, FP_nan
+  | FP_zero, FP_zero ->
+    true
+  | (FP_normal | FP_subnormal | FP_infinite | FP_nan | FP_zero), _ -> false
+
 module Int = struct
   let to_value (i : int) : Value.t = Int i [@@inline]
 
   let of_value (n : int) (op : op_type) (v : Value.t) : int =
     of_arg
-      (function Int i -> i | _ -> raise_notrace (Value Ty_int))
+      (function Int i -> i | _ -> raise_notrace (Value (Ty Ty_int)))
       n v op
-      (err_str n op Ty_int (Value.type_of v))
+      (err_str n op (Ty Ty_int) (Value.type_of v))
   [@@inline]
 
   let str_value (n : int) (op : op_type) (v : Value.t) : string =
     of_arg
-      (function Str str -> str | _ -> raise_notrace (Value Ty_str))
+      (function Str str -> str | _ -> raise_notrace (Value (Ty Ty_str)))
       n v op
-      (err_str n op Ty_str (Value.type_of v))
+      (err_str n op (Ty Ty_str) (Value.type_of v))
 
-  let unop (op : Ty.Unop.t) (v : Value.t) : Value.t =
+  let unop (op : [ `Ty_int ] Ty.Unop.op) (v : Value.t) : Value.t =
     let f =
-      match op with
-      | Neg -> Int.neg
-      | Not -> Int.lognot
-      | Abs -> Int.abs
-      | _ -> Fmt.failwith {|unop: Unsupported int operator "%a"|} Ty.Unop.pp op
+      match op with Neg -> Int.neg | Not -> Int.lognot | Abs -> Int.abs
+      (* | _ -> *)
+      (*   Fmt.failwith {|unop: Unsupported int operator "%a"|} Ty.Unop.pp (U op) *)
     in
-    to_value (f (of_value 1 (`Unop op) v))
+    to_value (f (of_value 1 (`Unop (U op)) v))
 
   let exp_by_squaring x n =
     let rec exp_by_squaring2 y x n =
@@ -155,13 +164,13 @@ module Real = struct
 
   let of_value (n : int) (op : op_type) (v : Value.t) : float =
     of_arg
-      (function Real v -> v | _ -> raise_notrace (Value Ty_int))
+      (function Real v -> v | _ -> raise_notrace (Value (Ty Ty_int)))
       n v op
-      (err_str n op Ty_real (Value.type_of v))
+      (err_str n op (Ty Ty_real) (Value.type_of v))
   [@@inline]
 
-  let unop (op : Ty.Unop.t) (v : Value.t) : Value.t =
-    let v = of_value 1 (`Unop op) v in
+  let unop (op : [ `Ty_real ] Ty.Unop.op) (v : Value.t) : Value.t =
+    let v = of_value 1 (`Unop (U op)) v in
     match op with
     | Neg -> to_value @@ Float.neg v
     | Abs -> to_value @@ Float.abs v
@@ -171,7 +180,7 @@ module Real = struct
     | Floor -> to_value @@ Float.floor v
     | Trunc -> to_value @@ Float.trunc v
     | Is_nan -> if Float.is_nan v then Value.True else Value.False
-    | _ -> Fmt.failwith {|unop: Unsupported real operator "%a"|} Ty.Unop.pp op
+  (* | _ -> Fmt.failwith {|unop: Unsupported real operator "%a"|} Ty.Unop.pp op *)
 
   let binop (op : Ty.Binop.t) (v1 : Value.t) (v2 : Value.t) : Value.t =
     let f =
@@ -208,14 +217,18 @@ module Real = struct
     match op with
     | ToString -> Str (Float.to_string (of_value 1 op' v))
     | OfString ->
-      let v = match v with Str v -> v | _ -> raise_notrace (Value Ty_str) in
+      let v =
+        match v with Str v -> v | _ -> raise_notrace (Value (Ty Ty_str))
+      in
       begin
         match Float.of_string_opt v with
         | None -> raise (Invalid_argument "float_of_int")
         | Some v -> to_value v
       end
     | Reinterpret_int ->
-      let v = match v with Int v -> v | _ -> raise_notrace (Value Ty_int) in
+      let v =
+        match v with Int v -> v | _ -> raise_notrace (Value (Ty Ty_int))
+      in
       to_value (float_of_int v)
     | Reinterpret_float -> Int (Float.to_int (of_value 1 op' v))
     | _ -> Fmt.failwith {|cvtop: Unsupported real operator "%a"|} Ty.Cvtop.pp op
@@ -227,16 +240,14 @@ module Bool = struct
   let of_value (n : int) (op : op_type) (v : Value.t) : bool =
     of_arg
       (function
-        | True -> true | False -> false | _ -> raise_notrace (Value Ty_bool) )
+        | True -> true | False -> false | _ -> raise_notrace (Value (Ty Ty_bool)) )
       n v op
-      (err_str n op Ty_bool (Value.type_of v))
+      (err_str n op (Ty Ty_bool) (Value.type_of v))
   [@@inline]
 
-  let unop (op : Ty.Unop.t) v =
-    let b = of_value 1 (`Unop op) v in
-    match op with
-    | Not -> to_value (not b)
-    | _ -> Fmt.failwith {|unop: Unsupported bool operator "%a"|} Ty.Unop.pp op
+  let unop (op : [ `Ty_bool ] Ty.Unop.op) v =
+    let b = of_value 1 (`Unop (U op)) v in
+    match op with Not -> to_value (not b)
 
   let xor b1 b2 =
     match (b1, b2) with
@@ -287,9 +298,9 @@ module Str = struct
 
   let of_value (n : int) (op : op_type) (v : Value.t) : string =
     of_arg
-      (function Str str -> str | _ -> raise_notrace (Value Ty_str))
+      (function Str str -> str | _ -> raise_notrace (Value (Ty Ty_str)))
       n v op
-      (err_str n op Ty_str (Value.type_of v))
+      (err_str n op (Ty Ty_str) (Value.type_of v))
   [@@inline]
 
   let replace s t t' =
@@ -320,12 +331,13 @@ module Str = struct
 
   let contains s sub = if indexof s sub 0 < 0 then false else true
 
-  let unop (op : Ty.Unop.t) v =
-    let str = of_value 1 (`Unop op) v in
+  let unop (op : [ `Ty_str ] Ty.Unop.op) v =
+    let str = of_value 1 (`Unop (U op)) v in
     match op with
     | Length -> Int.to_value (String.length str)
     | Trim -> to_value (String.trim str)
-    | _ -> Fmt.failwith {|unop: Unsupported str operator "%a"|} Ty.Unop.pp op
+    | Regexp_star | Regexp_loop _ | Regexp_plus | Regexp_opt | Regexp_comp ->
+      Fmt.failwith {|unop: Unsupported str operator "%a"|} Ty.Unop.pp (U op)
 
   let binop (op : Ty.Binop.t) v1 v2 =
     let op' = `Binop op in
@@ -414,13 +426,13 @@ end
 module Lst = struct
   let of_value (n : int) (op : op_type) (v : Value.t) : Value.t list =
     of_arg
-      (function List lst -> lst | _ -> raise_notrace (Value Ty_list))
+      (function List lst -> lst | _ -> raise_notrace (Value (Ty Ty_list)))
       n v op
-      (err_str n op Ty_list (Value.type_of v))
+      (err_str n op (Ty Ty_list) (Value.type_of v))
   [@@inline]
 
-  let unop (op : Ty.Unop.t) (v : Value.t) : Value.t =
-    let lst = of_value 1 (`Unop op) v in
+  let unop (op : [ `Ty_list ] Ty.Unop.op) (v : Value.t) : Value.t =
+    let lst = of_value 1 (`Unop (U op)) v in
     match op with
     | Head -> begin match lst with hd :: _tl -> hd | [] -> assert false end
     | Tail -> begin
@@ -428,7 +440,6 @@ module Lst = struct
     end
     | Length -> Int.to_value (List.length lst)
     | Reverse -> List (List.rev lst)
-    | _ -> Fmt.failwith {|unop: Unsupported list operator "%a"|} Ty.Unop.pp op
 
   let binop (op : Ty.Binop.t) v1 v2 =
     let op' = `Binop op in
@@ -484,7 +495,7 @@ module Bitv = struct
   let i64_to_value v = to_value @@ Bitvector.of_int64 v
 
   let of_value (n : int) (op : op_type) (v : Value.t) : Bitvector.t =
-    let todo = Ty.Ty_bitv 32 in
+    let todo = Ty.Ty (Ty_bitv 32) in
     of_arg
       (function Bitv bv -> bv | _ -> raise_notrace (Value todo))
       n v op
@@ -494,18 +505,16 @@ module Bitv = struct
 
   let i64_of_value n op v = of_value n op v |> Bitvector.to_int64
 
-  let unop op bv =
-    let bv = of_value 1 (`Unop op) bv in
+  let unop (op : [ `Ty_bitv ] Ty.Unop.op) bv =
+    let bv = of_value 1 (`Unop (U op)) bv in
     to_value
     @@
     match op with
-    | Ty.Unop.Neg -> Bitvector.neg bv
+    | Neg -> Bitvector.neg bv
     | Not -> Bitvector.lognot bv
     | Clz -> Bitvector.clz bv
     | Ctz -> Bitvector.ctz bv
     | Popcnt -> Bitvector.popcnt bv
-    | _ ->
-      Fmt.failwith {|unop: Unsupported bitvectore operator "%a"|} Ty.Unop.pp op
 
   let binop op bv1 bv2 =
     let bv1 = of_value 1 (`Binop op) bv1 in
@@ -558,9 +567,9 @@ module F32 = struct
 
   let of_value (i : int) (op : op_type) (v : Value.t) : int32 =
     of_arg
-      (function Num (F32 f) -> f | _ -> raise_notrace (Value (Ty_fp 32)))
+      (function Num (F32 f) -> f | _ -> raise_notrace (Value (Ty (Ty_fp 32))))
       i v op
-      (err_str i op (Ty_fp 32) (Value.type_of v))
+      (err_str i op (Ty (Ty_fp 32)) (Value.type_of v))
   [@@inline]
 
   let of_value' (i : int) (op : op_type) (v : Value.t) : float =
@@ -572,18 +581,23 @@ module F32 = struct
 
   let neg x = Int32.logxor x Int32.min_int
 
-  let unop (op : Ty.Unop.t) (v : Value.t) : Value.t =
-    let f = to_float @@ of_value 1 (`Unop op) v in
+  let unop (op : [ `Ty_fp ] Ty.Unop.op) (v : Value.t) : Value.t =
+    let f = to_float @@ of_value 1 (`Unop (U op)) v in
     match op with
-    | Neg -> to_value @@ neg @@ of_value 1 (`Unop op) v
-    | Abs -> to_value @@ abs @@ of_value 1 (`Unop op) v
+    | Neg -> to_value @@ neg @@ of_value 1 (`Unop (U op)) v
+    | Abs -> to_value @@ abs @@ of_value 1 (`Unop (U op)) v
     | Sqrt -> to_value' @@ Float.sqrt f
     | Nearest -> to_value' @@ Float.round f
     | Ceil -> to_value' @@ Float.ceil f
     | Floor -> to_value' @@ Float.floor f
     | Trunc -> to_value' @@ Float.trunc f
-    | Is_nan -> if Float.is_nan f then Value.True else Value.False
-    | _ -> Fmt.failwith {|unop: Unsupported f32 operator "%a"|} Ty.Unop.pp op
+    | Is_normal -> Bool.to_value @@ is_float FP_normal f
+    | Is_subnormal -> Bool.to_value @@ is_float FP_subnormal f
+    | Is_negative -> assert false
+    | Is_positive -> assert false
+    | Is_infinite -> Bool.to_value @@ is_float FP_infinite f
+    | Is_nan -> Bool.to_value @@ Float.is_nan f
+    | Is_zero -> Bool.to_value @@ is_float FP_zero f
 
   (* Stolen from Owi *)
   let copy_sign x y = Int32.logor (abs x) (Int32.logand y Int32.min_int)
@@ -631,9 +645,9 @@ module F64 = struct
 
   let of_value (i : int) (op : op_type) (v : Value.t) : int64 =
     of_arg
-      (function Num (F64 f) -> f | _ -> raise_notrace (Value (Ty_fp 64)))
+      (function Num (F64 f) -> f | _ -> raise_notrace (Value (Ty (Ty_fp 64))))
       i v op
-      (err_str i op (Ty_fp 64) (Value.type_of v))
+      (err_str i op (Ty (Ty_fp 64)) (Value.type_of v))
   [@@inline]
 
   let of_value' (i : int) (op : op_type) (v : Value.t) : float =
@@ -645,18 +659,23 @@ module F64 = struct
 
   let neg x = Int64.logxor x Int64.min_int
 
-  let unop (op : Ty.Unop.t) (v : Value.t) : Value.t =
-    let f = of_value' 1 (`Unop op) v in
+  let unop (op : [ `Ty_fp ] Ty.Unop.op) (v : Value.t) : Value.t =
+    let f = of_value' 1 (`Unop (U op)) v in
     match op with
-    | Neg -> to_value @@ neg @@ of_value 1 (`Unop op) v
-    | Abs -> to_value @@ abs @@ of_value 1 (`Unop op) v
+    | Neg -> to_value @@ neg @@ of_value 1 (`Unop (U op)) v
+    | Abs -> to_value @@ abs @@ of_value 1 (`Unop (U op)) v
     | Sqrt -> to_value' @@ Float.sqrt f
     | Nearest -> to_value' @@ Float.round f
     | Ceil -> to_value' @@ Float.ceil f
     | Floor -> to_value' @@ Float.floor f
     | Trunc -> to_value' @@ Float.trunc f
-    | Is_nan -> if Float.is_nan f then Value.True else Value.False
-    | _ -> Fmt.failwith {|unop: Unsupported f32 operator "%a"|} Ty.Unop.pp op
+    | Is_normal -> Bool.to_value @@ is_float FP_normal f
+    | Is_subnormal -> Bool.to_value @@ is_float FP_subnormal f
+    | Is_negative -> assert false
+    | Is_positive -> assert false
+    | Is_infinite -> Bool.to_value @@ is_float FP_infinite f
+    | Is_nan -> Bool.to_value @@ Float.is_nan f
+    | Is_zero -> Bool.to_value @@ is_float FP_zero f
 
   let copy_sign x y = Int64.logor (abs x) (Int64.logand y Int64.min_int)
 
@@ -901,7 +920,7 @@ module I64CvtOp = struct
         (TypeError
            { index = 1
            ; value = v
-           ; ty = Ty_bitv 64
+           ; ty = Ty (Ty_bitv 64)
            ; op = `Cvtop WrapI64
            ; msg = "Cannot wrapI64 on an I64"
            } )
@@ -965,7 +984,7 @@ module F32CvtOp = struct
         (TypeError
            { index = 1
            ; value = v
-           ; ty = Ty_fp 32
+           ; ty = Ty (Ty_fp 32)
            ; op = `Cvtop PromoteF32
            ; msg = "F64 must promote a F32"
            } )
@@ -1029,7 +1048,7 @@ module F64CvtOp = struct
         (TypeError
            { index = 1
            ; value = v
-           ; ty = Ty_bitv 64
+           ; ty = Ty (Ty_bitv 64)
            ; op = `Cvtop DemoteF64
            ; msg = "F32 must demote a F64"
            } )
@@ -1039,35 +1058,52 @@ end
 
 (* Dispatch *)
 
-let op int real bool str lst bv f32 f64 ty op =
-  match ty with
-  | Ty.Ty_int -> int op
-  | Ty_real -> real op
-  | Ty_bool -> bool op
-  | Ty_str -> str op
-  | Ty_list -> lst op
-  | Ty_bitv _ -> bv op
-  | Ty_fp 32 -> f32 op
-  | Ty_fp 64 -> f64 op
+let unop : type a. a Ty.ty -> a Ty.Unop.op -> Value.t -> Value.t =
+ fun ty op ->
+  match (ty, op) with
+  | Ty_int, ((Neg | Not | Abs) as op) -> Int.unop op
+  | Ty_real, ((Neg | Abs | Sqrt | Is_nan | Ceil | Floor | Trunc | Nearest) as op)
+    ->
+    Real.unop op
+  | Ty_bool, Not -> Bool.unop Not
+  | ( Ty_str
+    , ( ( Length | Trim | Regexp_star | Regexp_loop _ | Regexp_plus | Regexp_opt
+        | Regexp_comp ) as op ) ) ->
+    Str.unop op
+  | Ty_list, ((Head | Tail | Reverse | Length) as op) -> Lst.unop op
+  | Ty_bitv _, ((Neg | Not | Clz | Ctz | Popcnt) as op) -> Bitv.unop op
+  | ( Ty_fp 32
+    , ((Neg | Abs | Sqrt | Is_nan | Ceil | Floor | Trunc | Nearest) as op) ) ->
+    F32.unop op
+  | ( Ty_fp 64
+    , ((Neg | Abs | Sqrt | Is_nan | Ceil | Floor | Trunc | Nearest) as op) ) ->
+    F64.unop op
+  | (Ty_fp _ | Ty_app | Ty_unit | Ty_none | Ty_regexp | Ty_roundingMode), _ ->
+    assert false
+
+let binop : type a. a Ty.ty -> Ty.Binop.t -> Value.t -> Value.t -> Value.t =
+  function
+  | Ty_int -> Int.binop
+  | Ty_real -> Real.binop
+  | Ty_bool -> Bool.binop
+  | Ty_str -> Str.binop
+  | Ty_list -> Lst.binop
+  | Ty_bitv _ -> Bitv.binop
+  | Ty_fp 32 -> F32.binop
+  | Ty_fp 64 -> F64.binop
   | Ty_fp _ | Ty_app | Ty_unit | Ty_none | Ty_regexp | Ty_roundingMode ->
     assert false
-[@@inline]
 
-let unop =
-  op Int.unop Real.unop Bool.unop Str.unop Lst.unop Bitv.unop F32.unop F64.unop
-
-let binop =
-  op Int.binop Real.binop Bool.binop Str.binop Lst.binop Bitv.binop F32.binop
-    F64.binop
-
-let triop = function
-  | Ty.Ty_bool -> Bool.triop
+let triop : type a.
+  a Ty.ty -> Ty.Triop.t -> Value.t -> Value.t -> Value.t -> Value.t = function
+  | Ty_bool -> Bool.triop
   | Ty_str -> Str.triop
   | Ty_list -> Lst.triop
   | _ -> assert false
 
-let relop = function
-  | Ty.Ty_int -> Int.relop
+let relop : type a. a Ty.ty -> Ty.Relop.t -> Value.t -> Value.t -> bool =
+  function
+  | Ty_int -> Int.relop
   | Ty_real -> Real.relop
   | Ty_bool -> Bool.relop
   | Ty_str -> Str.relop
@@ -1076,8 +1112,8 @@ let relop = function
   | Ty_fp 64 -> F64.relop
   | _ -> assert false
 
-let cvtop = function
-  | Ty.Ty_int -> Int.cvtop
+let cvtop : type a. a Ty.ty -> Ty.Cvtop.t -> Value.t -> Value.t = function
+  | Ty_int -> Int.cvtop
   | Ty_real -> Real.cvtop
   | Ty_str -> Str.cvtop
   | Ty_bitv 32 -> I32CvtOp.cvtop
@@ -1086,8 +1122,9 @@ let cvtop = function
   | Ty_fp 64 -> F64CvtOp.cvtop
   | _ -> assert false
 
-let naryop = function
-  | Ty.Ty_bool -> Bool.naryop
+let naryop : type a. a Ty.ty -> Ty.Naryop.t -> Value.t list -> Value.t =
+  function
+  | Ty_bool -> Bool.naryop
   | Ty_str -> Str.naryop
   | Ty_list -> Lst.naryop
   | _ -> assert false
