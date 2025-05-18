@@ -7,20 +7,22 @@ type _ cast =
   | C32 : int32 cast
   | C64 : int64 cast
 
-type t =
-  | Ty_app
-  | Ty_bitv of int
-  | Ty_bool
-  | Ty_fp of int
-  | Ty_int
-  | Ty_list
-  | Ty_none
-  | Ty_real
-  | Ty_str
-  | Ty_unit
-  | Ty_regexp
+type _ ty =
+  | Ty_app : [> `Ty_app ] ty
+  | Ty_bitv : int -> [> `Ty_bitv ] ty
+  | Ty_bool : [> `Ty_bool ] ty
+  | Ty_fp : int -> [> `Ty_fp ] ty
+  | Ty_int : [> `Ty_int ] ty
+  | Ty_list : [> `Ty_list ] ty
+  | Ty_none : [> `Ty_none ] ty
+  | Ty_real : [> `Ty_real ] ty
+  | Ty_str : [> `Ty_str ] ty
+  | Ty_unit : [> `Ty_unit ] ty
+  | Ty_regexp : [> `Ty_regexp ] ty
 
-let discr = function
+type t = Ty : 'a ty -> t
+
+let discr : type a. a ty -> int = function
   | Ty_app -> 0
   | Ty_bool -> 1
   | Ty_int -> 2
@@ -33,11 +35,12 @@ let discr = function
   | Ty_bitv n -> 9 + n
   | Ty_fp n -> 10 + n
 
-let compare t1 t2 = compare (discr t1) (discr t2)
+let compare (Ty t1) (Ty t2) = compare (discr t1) (discr t2)
 
 let equal t1 t2 = compare t1 t2 = 0
 
-let pp fmt = function
+let pp fmt (Ty ty) =
+  match ty with
   | Ty_int -> Fmt.string fmt "int"
   | Ty_real -> Fmt.string fmt "real"
   | Ty_bool -> Fmt.string fmt "bool"
@@ -53,15 +56,15 @@ let pp fmt = function
 let string_of_type (ty : t) : string = Fmt.str "%a" pp ty
 
 let of_string = function
-  | "int" -> Ok Ty_int
-  | "real" -> Ok Ty_real
-  | "bool" -> Ok Ty_bool
-  | "str" -> Ok Ty_str
-  | "list" -> Ok Ty_list
-  | "app" -> Ok Ty_app
-  | "unit" -> Ok Ty_unit
-  | "none" -> Ok Ty_none
-  | "regexp" -> Ok Ty_regexp
+  | "int" -> Ok (Ty Ty_int)
+  | "real" -> Ok (Ty Ty_real)
+  | "bool" -> Ok (Ty Ty_bool)
+  | "str" -> Ok (Ty Ty_str)
+  | "list" -> Ok (Ty Ty_list)
+  | "app" -> Ok (Ty Ty_app)
+  | "unit" -> Ok (Ty Ty_unit)
+  | "none" -> Ok (Ty Ty_none)
+  | "regexp" -> Ok (Ty Ty_regexp)
   | s ->
     if String.starts_with ~prefix:"i" s then begin
       let s = String.sub s 1 (String.length s - 1) in
@@ -69,7 +72,7 @@ let of_string = function
       | None -> Fmt.error_msg "can not parse type %s" s
       | Some n when n < 0 ->
         Fmt.error_msg "size of bitvectors must be a positive integer"
-      | Some n -> Ok (Ty_bitv n)
+      | Some n -> Ok (Ty (Ty_bitv n))
     end
     else if String.starts_with ~prefix:"f" s then begin
       let s = String.sub s 1 (String.length s - 1) in
@@ -77,11 +80,11 @@ let of_string = function
       | None -> Fmt.error_msg "can not parse type %s" s
       | Some n when n < 0 ->
         Fmt.error_msg "size of fp must be a positive integer"
-      | Some n -> Ok (Ty_fp n)
+      | Some n -> Ok (Ty (Ty_fp n))
     end
     else Fmt.error_msg "can not parse type %s" s
 
-let size (ty : t) : int =
+let size (Ty ty : t) : int =
   match ty with
   | Ty_bitv n | Ty_fp n -> n / 8
   | Ty_int | Ty_bool -> 4
@@ -89,34 +92,36 @@ let size (ty : t) : int =
     assert false
 
 module Unop = struct
-  type t =
-    | Neg
-    | Not
-    | Clz
-    | Ctz
-    | Popcnt
-    (* Float *)
-    | Abs
-    | Sqrt
-    | Is_nan
-    | Ceil
-    | Floor
-    | Trunc
-    | Nearest
-    | Head
-    | Tail
-    | Reverse
-    | Length
-    (* String *)
-    | Trim
-    (* RegExp *)
-    | Regexp_star
-    | Regexp_loop of (int * int)
-    | Regexp_plus
-    | Regexp_opt
-    | Regexp_comp
+  type t = U : 'a op -> t
 
-  let equal o1 o2 =
+  and _ op =
+    | Neg : [< `Ty_int | `Ty_real | `Ty_bitv | `Ty_fp ] op
+    | Not : [< `Ty_bool | `Ty_int | `Ty_bitv ] op
+    | Clz : [ `Ty_bitv ] op
+    | Ctz : [ `Ty_bitv ] op
+    | Popcnt : [ `Ty_bitv ] op
+    (* Float *)
+    | Abs : [< `Ty_int | `Ty_real | `Ty_fp ] op
+    | Sqrt : [< `Ty_real | `Ty_fp ] op
+    | Is_nan : [< `Ty_real | `Ty_fp ] op
+    | Ceil : [< `Ty_real | `Ty_fp ] op
+    | Floor : [< `Ty_real | `Ty_fp ] op
+    | Trunc : [< `Ty_real | `Ty_fp ] op
+    | Nearest : [< `Ty_real | `Ty_fp ] op
+    | Head : [ `Ty_list ] op
+    | Tail : [ `Ty_list ] op
+    | Reverse : [ `Ty_list ] op
+    | Length : [< `Ty_list | `Ty_str ] op
+    (* String *)
+    | Trim : [ `Ty_str ] op
+    (* RegExp *)
+    | Regexp_star : [< `Ty_str | `Ty_regexp ] op
+    | Regexp_loop : (int * int) -> [< `Ty_str | `Ty_regexp ] op
+    | Regexp_plus : [< `Ty_str | `Ty_regexp ] op
+    | Regexp_opt : [< `Ty_str | `Ty_regexp ] op
+    | Regexp_comp : [< `Ty_str | `Ty_regexp ] op
+
+  let equal (U o1) (U o2) =
     match (o1, o2) with
     | Neg, Neg
     | Not, Not
@@ -147,7 +152,8 @@ module Unop = struct
       , _ ) ->
       false
 
-  let pp fmt = function
+  let pp fmt (U op) =
+    match op with
     | Neg -> Fmt.string fmt "neg"
     | Not -> Fmt.string fmt "not"
     | Clz -> Fmt.string fmt "clz"
