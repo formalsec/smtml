@@ -25,7 +25,12 @@ module M = struct
     let compare = DStd.Expr.Term.Const.compare
   end)
 
-  let () = AEL.Options.set_produce_models true
+  let () =
+    AEL.Options.set_produce_models true;
+    Printexc.register_printer (fun exn ->
+      match exn with
+      | AEL.Errors.Error e -> Some (Fmt.str "%a" AEL.Errors.report e)
+      | _ -> None )
 
   let dummy_file = DStd.Loc.mk_file "dummy_file"
 
