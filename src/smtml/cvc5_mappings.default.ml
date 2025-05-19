@@ -423,7 +423,8 @@ module Fresh_cvc5 () = struct
     let get_symbols _ =
       Fmt.failwith "Cvc5_mappings: get_symbols not implemented"
 
-    let eval ?completion:_ solver term = Some (Solver.get_value solver term)
+    let eval ?ctx:_ ?completion:_ solver term =
+      Some (Solver.get_value solver term)
   end
 
   module Solver = struct
@@ -434,7 +435,7 @@ module Fresh_cvc5 () = struct
       | Unsat_core ->
         Solver.set_option slv "produce-unsat-cores" (string_of_bool v)
       | Ematching -> Solver.set_option slv "e-matching" (string_of_bool v)
-      | Parallel | Num_threads -> ()
+      | Parallel | Num_threads | Debug -> ()
 
     let set_params slv params =
       List.iter
