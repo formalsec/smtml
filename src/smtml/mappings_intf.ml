@@ -13,18 +13,6 @@
     solvers, including term construction, type handling, and solver interaction.
 *)
 module type M = sig
-  module Internals : sig
-    (** [is_available] indicates whether the module is available for use. *)
-    val is_available : bool
-
-    (** [caches_consts] indicates whether the solver caches constants. *)
-    val caches_consts : bool
-
-    (** [has_to_ieee_bv] indicates whether the solver native support for the
-        [to_ieee_bv]. *)
-    val has_to_ieee_bv : bool
-  end
-
   (** The type of SMT sorts (types). *)
   type ty
 
@@ -101,6 +89,14 @@ module type M = sig
 
   (** [exists vars body] constructs an existential quantification term. *)
   val exists : term list -> term -> term
+
+  module Internals : sig
+    (** [is_available] indicates whether the module is available for use. *)
+    val is_available : bool
+
+    (** [caches_consts] indicates whether the solver caches constants. *)
+    val caches_consts : bool
+  end
 
   (** {2 Type Handling} *)
 
@@ -584,7 +580,7 @@ module type M = sig
 
     (** [to_ieee_bv t] converts the floating-point term [t] to an IEEE bitvector
         term. *)
-    val to_ieee_bv : term -> term
+    val to_ieee_bv : (term -> term) option
   end
 
   (** {2 Function Handling} *)

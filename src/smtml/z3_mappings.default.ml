@@ -10,8 +10,6 @@ module M = struct
       let caches_consts = true
 
       let is_available = true
-
-      let has_to_ieee_bv = true
     end
 
     type ty = Z3.Sort.sort
@@ -393,7 +391,7 @@ module M = struct
       let of_ieee_bv eb sb bv =
         Z3.FloatingPoint.mk_to_fp_bv ctx bv (Types.float eb sb)
 
-      let to_ieee_bv fp = Z3.FloatingPoint.mk_to_ieee_bv ctx fp
+      let to_ieee_bv = Some (fun fp -> Z3.FloatingPoint.mk_to_ieee_bv ctx fp)
     end
 
     module Func = struct

@@ -10,8 +10,6 @@ module Fresh_cvc5 () = struct
     let caches_consts = false
 
     let is_available = true
-
-    let has_to_ieee_bv = false
   end
 
   type ty = Sort.sort
@@ -411,7 +409,7 @@ module Fresh_cvc5 () = struct
       let op = Op.mk_op tm Kind.Floatingpoint_to_fp_from_ieee_bv [| i1; i2 |] in
       Term.mk_term_op tm op [| t |]
 
-    let to_ieee_bv _ = assert false
+    let to_ieee_bv = None
   end
 
   module Func = struct

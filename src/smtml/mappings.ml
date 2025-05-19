@@ -429,9 +429,10 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       end
     end)
 
-    let to_ieee_bv f e =
-      if M.Internals.has_to_ieee_bv then M.Float.to_ieee_bv e
-      else M.Func.apply f [ e ]
+    let to_ieee_bv =
+      match M.Float.to_ieee_bv with
+      | Some to_ieee_bv -> fun _ e -> to_ieee_bv e
+      | None -> fun f e -> M.Func.apply f [ e ]
 
     module I32 = Bitv_impl (struct
       type elt = int32

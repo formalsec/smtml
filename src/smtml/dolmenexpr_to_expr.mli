@@ -324,7 +324,7 @@ module DolmenIntf : sig
 
     val of_ieee_bv : int -> int -> term -> term
 
-    val to_ieee_bv : term -> term
+    val to_ieee_bv : (term -> term) option
   end
 
   module Func : sig
