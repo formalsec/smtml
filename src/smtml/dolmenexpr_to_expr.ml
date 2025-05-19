@@ -341,7 +341,7 @@ module DolmenIntf = struct
 
     let of_ieee_bv eb sb bv = DTerm.Float.ieee_format_to_fp eb sb bv
 
-    let to_ieee_bv _fp = assert false
+    let to_ieee_bv = None
   end
 
   module Func = struct

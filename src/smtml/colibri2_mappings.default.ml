@@ -24,8 +24,6 @@ module M = struct
       let caches_consts = false
 
       let is_available = true
-
-      let has_to_ieee_bv = false
     end
 
     type model =

@@ -49,8 +49,6 @@ module M = struct
       let caches_consts = false
 
       let is_available = true
-
-      let has_to_ieee_bv = false
     end
 
     type 'a sat_module = (module Sat_solver_sig.S with type t = 'a)

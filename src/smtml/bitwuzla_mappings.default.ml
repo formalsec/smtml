@@ -11,8 +11,6 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     let caches_consts = false
 
     let is_available = true
-
-    let has_to_ieee_bv = false
   end
 
   type ty = Sort.t
@@ -414,8 +412,7 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
     let of_ieee_bv eb sb bv = mk_term1_indexed2 Kind.Fp_to_fp_from_bv bv eb sb
 
-    let to_ieee_bv _f =
-      Fmt.failwith "Bitwuzla_mappings: to_ieee_bv is not implemented"
+    let to_ieee_bv = None
   end
 
   module Func = struct

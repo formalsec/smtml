@@ -8,8 +8,6 @@ module Nop = struct
       let caches_consts = false
 
       let is_available = false
-
-      let has_to_ieee_bv = false
     end
 
     type ty = unit
@@ -323,7 +321,7 @@ module Nop = struct
 
       let of_ieee_bv _ = assert false
 
-      let to_ieee_bv _ = assert false
+      let to_ieee_bv = None
     end
 
     module Func = struct
