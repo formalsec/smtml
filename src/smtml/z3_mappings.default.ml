@@ -296,9 +296,13 @@ module M = struct
 
       let rem_u e1 e2 = Z3.BitVector.mk_urem ctx e1 e2
 
-      let rotate_left e1 e2 = Z3.BitVector.mk_ext_rotate_left ctx e1 e2
+      let rotate_left n e = Z3.BitVector.mk_rotate_left ctx n e
 
-      let rotate_right e1 e2 = Z3.BitVector.mk_ext_rotate_right ctx e1 e2
+      let rotate_right n e = Z3.BitVector.mk_rotate_right ctx n e
+
+      let ext_rotate_left e1 e2 = Z3.BitVector.mk_ext_rotate_left ctx e1 e2
+
+      let ext_rotate_right e1 e2 = Z3.BitVector.mk_ext_rotate_right ctx e1 e2
 
       let lt e1 e2 = Z3.BitVector.mk_slt ctx e1 e2
 

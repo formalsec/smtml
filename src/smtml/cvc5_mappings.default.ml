@@ -254,10 +254,18 @@ module Fresh_cvc5 () = struct
 
     let rem_u t1 t2 = Term.mk_term tm Kind.Bitvector_urem [| t1; t2 |]
 
-    let rotate_left t1 t2 =
+    let rotate_left n t =
+      let op = Op.mk_op tm Kind.Bitvector_rotate_left [| n |] in
+      Term.mk_term_op tm op [| t |]
+
+    let rotate_right n t =
+      let op = Op.mk_op tm Kind.Bitvector_rotate_right [| n |] in
+      Term.mk_term_op tm op [| t |]
+
+    let ext_rotate_left t1 t2 =
       Term.mk_term tm Kind.Bitvector_rotate_left [| t1; t2 |]
 
-    let rotate_right t1 t2 =
+    let ext_rotate_right t1 t2 =
       Term.mk_term tm Kind.Bitvector_rotate_right [| t1; t2 |]
 
     let lt t1 t2 = Term.mk_term tm Kind.Bitvector_slt [| t1; t2 |]

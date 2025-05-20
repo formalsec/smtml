@@ -235,6 +235,10 @@ module Nop = struct
 
       let rotate_right _ = assert false
 
+      let ext_rotate_left _ = assert false
+
+      let ext_rotate_right _ = assert false
+
       let lt _ = assert false
 
       let lt_u _ = assert false

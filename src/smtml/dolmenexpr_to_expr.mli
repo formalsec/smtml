@@ -234,9 +234,13 @@ module DolmenIntf : sig
 
     val rem_u : term -> term -> term
 
-    val rotate_left : term -> term -> term
+    val rotate_left : int -> term -> term
 
-    val rotate_right : term -> term -> term
+    val rotate_right : int -> term -> term
+
+    val ext_rotate_left : term -> term -> term
+
+    val ext_rotate_right : term -> term -> term
 
     val lt : term -> term -> term
 

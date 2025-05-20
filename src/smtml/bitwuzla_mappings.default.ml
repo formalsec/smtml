@@ -270,9 +270,13 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
     let rem_u t1 t2 = mk_term2 Kind.Bv_urem t1 t2
 
-    let rotate_left t1 t2 = mk_term2 Kind.Bv_rol t1 t2
+    let rotate_left n t = mk_term1_indexed1 Kind.Bv_rol t n
 
-    let rotate_right t1 t2 = mk_term2 Kind.Bv_ror t1 t2
+    let rotate_right n t = mk_term1_indexed1 Kind.Bv_ror t n
+
+    let ext_rotate_left t1 t2 = mk_term2 Kind.Bv_rol t1 t2
+
+    let ext_rotate_right t1 t2 = mk_term2 Kind.Bv_ror t1 t2
 
     let lt t1 t2 = mk_term2 Kind.Bv_slt t1 t2
 

@@ -5,6 +5,8 @@
   test_bitv_const.smt2
   test_bitv_sort.smt2
   test_bitv_funs.smt2
+  test_bitv_rotl.smt2
+  test_bitv_rotr.smt2
   test_core_all.smt2
   test_core_binary.smt2
   test_core_const.smt2

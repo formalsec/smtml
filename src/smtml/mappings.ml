@@ -361,6 +361,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Popcnt -> popcnt
         | Neg -> Bitv.neg
         | Not -> Bitv.lognot
+        | Rotate_left n -> Bitv.rotate_left n
+        | Rotate_right n -> Bitv.rotate_right n
         | op ->
           Fmt.failwith {|Bitv: Unsupported unary operator "%a"|} Unop.pp op
 
@@ -378,8 +380,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | ShrL -> Bitv.lshr
         | Rem -> Bitv.rem
         | RemU -> Bitv.rem_u
-        | Rotl -> Bitv.rotate_left
-        | Rotr -> Bitv.rotate_right
+        | Ext_rotate_left -> Bitv.ext_rotate_left
+        | Ext_rotate_right -> Bitv.ext_rotate_right
         | op ->
           Fmt.failwith {|Bitv: Unsupported binary operator "%a"|} Binop.pp op
 

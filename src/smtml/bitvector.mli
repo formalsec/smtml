@@ -58,9 +58,13 @@ val rem : t -> t -> t
 
 val rem_u : t -> t -> t
 
-val rotate_left : t -> t -> t
+val rotate_left : int -> t -> t
 
-val rotate_right : t -> t -> t
+val rotate_right : int -> t -> t
+
+val ext_rotate_left : t -> t -> t
+
+val ext_rotate_right : t -> t -> t
 
 val lt : t -> t -> bool
 

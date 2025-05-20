@@ -260,7 +260,7 @@ module Term = struct
       | _, l -> Expr.app symbol l )
     | Symbol ({ name = Simple _; namespace = Attr; _ } as attr) ->
       Expr.app attr args
-    | Symbol { name = Indexed { basename; indices }; _ } -> (
+    | Symbol { name = Indexed { basename; indices }; namespace = Term; _ } -> (
       match (basename, indices, args) with
       | "extract", [ h; l ], [ a ] ->
         let high =
@@ -281,6 +281,16 @@ module Term = struct
           | Some bits -> bits
         in
         Expr.raw_cvtop Ty_none (Zero_extend bits) a
+      | "rotate_left", [ bits ], [ a ] -> begin
+        match int_of_string_opt bits with
+        | None -> assert false
+        | Some n -> Expr.raw_unop Ty_none (Rotate_left n) a
+      end
+      | "rotate_right", [ bits ], [ a ] -> begin
+        match int_of_string_opt bits with
+        | None -> assert false
+        | Some n -> Expr.raw_unop Ty_none (Rotate_right n) a
+      end
       | "re.loop", [ i1; i2 ], [ a ] ->
         let i1 =
           match int_of_string_opt i1 with None -> assert false | Some i1 -> i1

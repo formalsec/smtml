@@ -95,6 +95,8 @@ module Unop = struct
     | Clz
     | Ctz
     | Popcnt
+    | Rotate_left of int
+    | Rotate_right of int
     (* Float *)
     | Abs
     | Sqrt
@@ -141,9 +143,11 @@ module Unop = struct
     | Regexp_opt, Regexp_opt
     | Regexp_comp, Regexp_comp ->
       true
-    | ( ( Neg | Not | Clz | Popcnt | Ctz | Abs | Sqrt | Is_nan | Ceil | Floor
-        | Trunc | Nearest | Head | Tail | Reverse | Length | Trim | Regexp_star
-        | Regexp_loop _ | Regexp_plus | Regexp_opt | Regexp_comp )
+    | Rotate_left l, Rotate_left r | Rotate_right l, Rotate_right r -> l = r
+    | ( ( Neg | Not | Clz | Popcnt | Ctz | Rotate_left _ | Rotate_right _ | Abs
+        | Sqrt | Is_nan | Ceil | Floor | Trunc | Nearest | Head | Tail | Reverse
+        | Length | Trim | Regexp_star | Regexp_loop _ | Regexp_plus | Regexp_opt
+        | Regexp_comp )
       , _ ) ->
       false
 
@@ -153,6 +157,8 @@ module Unop = struct
     | Clz -> Fmt.string fmt "clz"
     | Ctz -> Fmt.string fmt "ctz"
     | Popcnt -> Fmt.string fmt "popcnt"
+    | Rotate_left i -> Fmt.pf fmt "(_ rotate_left %d)" i
+    | Rotate_right i -> Fmt.pf fmt "(_ rotate_right %d)" i
     | Abs -> Fmt.string fmt "abs"
     | Sqrt -> Fmt.string fmt "sqrt"
     | Is_nan -> Fmt.string fmt "is_nan"
@@ -192,8 +198,8 @@ module Binop = struct
     | Min
     | Max
     | Copysign
-    | Rotl
-    | Rotr
+    | Ext_rotate_left
+    | Ext_rotate_right
     | At
     | List_cons
     | List_append
@@ -226,8 +232,8 @@ module Binop = struct
     | Min, Min
     | Max, Max
     | Copysign, Copysign
-    | Rotl, Rotl
-    | Rotr, Rotr
+    | Ext_rotate_left, Ext_rotate_left
+    | Ext_rotate_right, Ext_rotate_right
     | At, At
     | List_cons, List_cons
     | List_append, List_append
@@ -239,9 +245,10 @@ module Binop = struct
     | Regexp_range, Regexp_range ->
       true
     | ( ( Add | Sub | Mul | Div | DivU | Rem | RemU | Shl | ShrA | ShrL | And
-        | Or | Xor | Implies | Pow | Min | Max | Copysign | Rotl | Rotr | At
-        | List_cons | List_append | String_prefix | String_suffix
-        | String_contains | String_last_index | String_in_re | Regexp_range )
+        | Or | Xor | Implies | Pow | Min | Max | Copysign | Ext_rotate_left
+        | Ext_rotate_right | At | List_cons | List_append | String_prefix
+        | String_suffix | String_contains | String_last_index | String_in_re
+        | Regexp_range )
       , _ ) ->
       false
 
@@ -264,8 +271,8 @@ module Binop = struct
     | Min -> Fmt.string fmt "min"
     | Max -> Fmt.string fmt "max"
     | Copysign -> Fmt.string fmt "copysign"
-    | Rotl -> Fmt.string fmt "rotl"
-    | Rotr -> Fmt.string fmt "rotr"
+    | Ext_rotate_left -> Fmt.string fmt "ext_rotl"
+    | Ext_rotate_right -> Fmt.string fmt "ext_rotr"
     | At -> Fmt.string fmt "at"
     | List_cons -> Fmt.string fmt "cons"
     | List_append -> Fmt.string fmt "append"

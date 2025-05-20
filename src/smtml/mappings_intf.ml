@@ -408,11 +408,18 @@ module type M = sig
         [t1] and [t2]. *)
     val rem_u : term -> term -> term
 
-    (** [rotate_left t1 t2] constructs the left rotation of [t1] by [t2]. *)
-    val rotate_left : term -> term -> term
+    (** [rotate_left n t] constructs the left rotation of [t] by [n]. *)
+    val rotate_left : int -> term -> term
 
-    (** [rotate_right t1 t2] constructs the right rotation of [t1] by [t2]. *)
-    val rotate_right : term -> term -> term
+    (** [rotate_right n t] constructs the right rotation of [t] by [n]. *)
+    val rotate_right : int -> term -> term
+
+    (** [ext_rotate_left t1 t2] constructs the left rotation of [t1] by [t2]. *)
+    val ext_rotate_left : term -> term -> term
+
+    (** [ext_rotate_right t1 t2] constructs the right rotation of [t1] by [t2].
+    *)
+    val ext_rotate_right : term -> term -> term
 
     (** [lt t1 t2] constructs the less-than relation between bitvector terms
         [t1] and [t2]. *)

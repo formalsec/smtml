@@ -188,10 +188,10 @@ let test_binop_i32 _ =
   check (Expr.binop (Ty_bitv 32) Shl (int32 1l) (int32 2l)) (int32 4l);
   check (Expr.binop (Ty_bitv 32) ShrA (int32 4l) (int32 2l)) (int32 1l);
   check
-    (Expr.binop (Ty_bitv 32) Rotl (int32 Int32.min_int) (int32 2l))
+    (Expr.binop (Ty_bitv 32) Ext_rotate_left (int32 Int32.min_int) (int32 2l))
     (int32 2l);
   check
-    Expr.(binop (Ty_bitv 32) Rotr (int32 2l) (int32 2l))
+    Expr.(binop (Ty_bitv 32) Ext_rotate_right (int32 2l) (int32 2l))
     (int32 Int32.min_int)
 
 let test_binop_i64 _ =
@@ -207,10 +207,10 @@ let test_binop_i64 _ =
   check (Expr.binop (Ty_bitv 64) Shl (int64 1L) (int64 2L)) (int64 4L);
   check (Expr.binop (Ty_bitv 64) ShrA (int64 4L) (int64 2L)) (int64 1L);
   check
-    (Expr.binop (Ty_bitv 64) Rotl (int64 Int64.min_int) (int64 2L))
+    (Expr.binop (Ty_bitv 64) Ext_rotate_left (int64 Int64.min_int) (int64 2L))
     (int64 2L);
   check
-    (Expr.binop (Ty_bitv 64) Rotr (int64 2L) (int64 2L))
+    (Expr.binop (Ty_bitv 64) Ext_rotate_right (int64 2L) (int64 2L))
     (int64 Int64.min_int)
 
 let test_binop_f32 _ =

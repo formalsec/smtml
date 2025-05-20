@@ -504,6 +504,8 @@ module Bitv = struct
     | Clz -> Bitvector.clz bv
     | Ctz -> Bitvector.ctz bv
     | Popcnt -> Bitvector.popcnt bv
+    | Rotate_left n -> Bitvector.rotate_left n bv
+    | Rotate_right n -> Bitvector.rotate_right n bv
     | _ ->
       Fmt.failwith {|unop: Unsupported bitvectore operator "%a"|} Ty.Unop.pp op
 
@@ -526,8 +528,8 @@ module Bitv = struct
     | Shl -> Bitvector.shl bv1 bv2
     | ShrL -> Bitvector.lshr bv1 bv2
     | ShrA -> Bitvector.ashr bv1 bv2
-    | Rotl -> Bitvector.rotate_left bv1 bv2
-    | Rotr -> Bitvector.rotate_right bv1 bv2
+    | Ext_rotate_left -> Bitvector.ext_rotate_left bv1 bv2
+    | Ext_rotate_right -> Bitvector.ext_rotate_right bv1 bv2
     | _ ->
       Fmt.failwith {|binop: unsupported bitvector operator "%a"|} Ty.Binop.pp op
 

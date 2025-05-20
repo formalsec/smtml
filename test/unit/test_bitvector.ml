@@ -113,24 +113,24 @@ let test_comparisons _ =
 let test_rotate_left_one _ =
   let bv = make (z 0b1101) 4 in
   let one = make (z 1) 4 in
-  check (rotate_left bv one) (make (z 0b1011) 4)
+  check (ext_rotate_left bv one) (make (z 0b1011) 4)
 
 let test_rotate_left_negative _ =
   let bv = make (z 0) 64 in
   let shift_count = make (z (-109)) 64 in
   let expected = make Z.zero 64 in
-  check (rotate_left bv shift_count) expected
+  check (ext_rotate_left bv shift_count) expected
 
 let test_rotate_right_one _ =
   let bv = make (z 0b1101) 4 in
   let one = make (z 1) 4 in
-  check (rotate_right bv one) (make (z 0b1110) 4)
+  check (ext_rotate_right bv one) (make (z 0b1110) 4)
 
 let test_rotate_right_negative _ =
   let bv = make Z.zero 64 in
   let shift_count = make (z (-5957114)) 64 in
   let expected = make Z.zero 64 in
-  check (rotate_right bv shift_count) expected
+  check (ext_rotate_right bv shift_count) expected
 
 let test_extensions _ =
   let bv = make (z 0b1010) 4 in

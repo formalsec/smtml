@@ -135,19 +135,23 @@ let rem_u a b =
   if Z.equal b.value Z.zero then raise Division_by_zero;
   make (Z.rem a.value b.value) a.width
 
-let rotate_left bv n =
+let ext_rotate_left bv n =
   let n = normalize_shift_amount (view n) (numbits bv) in
   let left_part = Z.shift_left bv.value n in
   let right_part = Z.shift_right bv.value (bv.width - n) in
   let rotated = Z.logor left_part right_part in
   make rotated bv.width
 
-let rotate_right bv n =
+let ext_rotate_right bv n =
   let n = normalize_shift_amount (view n) (numbits bv) in
   let right_part = Z.shift_right bv.value n in
   let left_part = Z.shift_left bv.value (bv.width - n) in
   let rotated = Z.logor left_part right_part in
   make rotated bv.width
+
+let rotate_left n bv = ext_rotate_left bv (make (Z.of_int n) (numbits bv))
+
+let rotate_right n bv = ext_rotate_right bv (make (Z.of_int n) (numbits bv))
 
 (* Relop *)
 let lt_u a b = Z.lt a.value b.value

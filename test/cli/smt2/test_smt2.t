@@ -54,6 +54,16 @@ Test FloatingPoint parsing:
   $ smtml run test_fp.smt2
   sat
 
+Test BitVector parsing:
+  $ smtml run test_bitv_rotl.smt2
+  sat
+  (model
+    (x i32 16))
+  $ smtml run test_bitv_rotr.smt2
+  sat
+  (model
+    (x i32 1048576))
+
 Tests smt2 with the --from-file argument:
   $ cat <<EOF > test.list
   > test_empty.smt2
