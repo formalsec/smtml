@@ -23,12 +23,12 @@ let debug fmt k = if debug then k (Fmt.epr fmt)
 let rewrite_ty unknown_ty tys =
   debug "  rewrite_ty: %a@." (fun k -> k Ty.pp unknown_ty);
   match (unknown_ty, tys) with
-  | Ty.Ty_none, [ ty ] -> ty
-  | Ty.Ty_none, [ ty1; ty2 ] ->
+  | Ty.Ty Ty_none, [ ty ] -> ty
+  | Ty Ty_none, [ ty1; ty2 ] ->
     debug "  rewrite_ty: %a %a@." (fun k -> k Ty.pp ty1 Ty.pp ty2);
     assert (Ty.equal ty1 ty2);
     ty1
-  | Ty.Ty_none, _ -> assert false
+  | Ty Ty_none, _ -> assert false
   | ty, _ -> ty
 
 (** Propagates types in [type_map] and inlines [Let_in] binders *)
@@ -53,34 +53,35 @@ let rec rewrite_expr (type_map, expr_map) hte =
       | Some ty -> { sym with ty }
     in
     Expr.app sym (List.map (rewrite_expr (type_map, expr_map)) htes)
-  | Unop (ty, op, hte) ->
-    let hte = rewrite_expr (type_map, expr_map) hte in
-    let ty = rewrite_ty ty [ Expr.ty hte ] in
-    Expr.unop ty op hte
+  | Unop (_ty, _op, _hte) ->
+    (* let hte = rewrite_expr (type_map, expr_map) hte in *)
+    (* let ty = rewrite_ty ty [ Expr.ty hte ] in *)
+    (* Expr.unop ty op hte *)
+    assert false
   | Binop (ty, op, hte1, hte2) ->
     let hte1 = rewrite_expr (type_map, expr_map) hte1 in
     let hte2 = rewrite_expr (type_map, expr_map) hte2 in
-    let ty = rewrite_ty ty [ Expr.ty hte1; Expr.ty hte2 ] in
+    let (Ty ty) = rewrite_ty ty [ Expr.ty hte1; Expr.ty hte2 ] in
     Expr.binop ty op hte1 hte2
-  | Triop (ty, op, hte1, hte2, hte3) ->
+  | Triop (Ty ty, op, hte1, hte2, hte3) ->
     let hte1 = rewrite_expr (type_map, expr_map) hte1 in
     let hte2 = rewrite_expr (type_map, expr_map) hte2 in
     let hte3 = rewrite_expr (type_map, expr_map) hte3 in
     Expr.triop ty op hte1 hte2 hte3
-  | Relop (ty, ((Eq | Ne) as op), hte1, hte2) ->
+  | Relop (Ty ty, ((Eq | Ne) as op), hte1, hte2) ->
     let hte1 = rewrite_expr (type_map, expr_map) hte1 in
     let hte2 = rewrite_expr (type_map, expr_map) hte2 in
     Expr.relop ty op hte1 hte2
   | Relop (ty, op, hte1, hte2) ->
     let hte1 = rewrite_expr (type_map, expr_map) hte1 in
     let hte2 = rewrite_expr (type_map, expr_map) hte2 in
-    let ty = rewrite_ty ty [ Expr.ty hte1; Expr.ty hte2 ] in
+    let (Ty ty) = rewrite_ty ty [ Expr.ty hte1; Expr.ty hte2 ] in
     Expr.relop ty op hte1 hte2
   | Cvtop (ty, op, hte) ->
     let hte = rewrite_expr (type_map, expr_map) hte in
-    let ty = rewrite_ty ty [ Expr.ty hte ] in
+    let (Ty ty) = rewrite_ty ty [ Expr.ty hte ] in
     Expr.cvtop ty op hte
-  | Naryop (ty, op, htes) ->
+  | Naryop (Ty ty, op, htes) ->
     let htes = List.map (rewrite_expr (type_map, expr_map)) htes in
     Expr.naryop ty op htes
   | Extract (hte, h, l) ->
