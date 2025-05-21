@@ -1,6 +1,12 @@
 open OUnit2
 open Smtml
 
+let assert_equal =
+  let pp_diff fmt (expected, real) =
+    Fmt.pf fmt "Expected: %s@.Real: %s@." expected real
+  in
+  assert_equal ~cmp:String.equal ~pp_diff
+
 let test_to_json _ =
   let x = Symbol.make Ty_int "x" in
   let y = Symbol.make Ty_real "y" in
@@ -9,10 +15,10 @@ let test_to_json _ =
   let expected =
     {|{
   "model": {
+    "x": { "ty": "int", "value": 1 },
     "u": { "ty": "str", "value": "abc" },
-    "z": { "ty": "bool", "value": true },
     "y": { "ty": "real", "value": 2.0 },
-    "x": { "ty": "int", "value": 1 }
+    "z": { "ty": "bool", "value": true }
   }
 }|}
   in
