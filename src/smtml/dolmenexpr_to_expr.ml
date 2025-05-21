@@ -269,9 +269,9 @@ module DolmenIntf = struct
 
     let rem_u = DTerm.Bitv.urem
 
-    let rotate_left t1 t2 = DTerm.Bitv.rotate_left (int_of_term t1) t2
+    let rotate_left t1 t2 = DTerm.Bitv.rotate_left (int_of_term t2) t1
 
-    let rotate_right t1 t2 = DTerm.Bitv.rotate_right (int_of_term t1) t2
+    let rotate_right t1 t2 = DTerm.Bitv.rotate_right (int_of_term t2) t1
 
     let lt t1 t2 = DTerm.Bitv.slt t1 t2
 
