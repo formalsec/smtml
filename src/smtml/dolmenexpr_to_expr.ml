@@ -132,7 +132,7 @@ module DolmenIntf = struct
 
   let int_of_term (t : DTerm.t) =
     match t.term_descr with
-    | Cst { builtin = DBuiltin.Integer i; _ } ->
+    | Cst { builtin = DBuiltin.Bitvec i; _ } ->
       (* There may be a proper alternative to int_of_string somewhere,
          since its hidden by prelude. *)
       Z.to_int (Z.of_string i)
