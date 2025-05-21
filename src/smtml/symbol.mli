@@ -54,11 +54,11 @@ val var : namespace
 (** {1 Symbol Creation} *)
 
 (** [s @: ty] creates a symbol with name [s] and type [ty], belonging to the
-    default namespace. *)
+    term (function, constant) namespace. *)
 val ( @: ) : string -> Ty.t -> t
 
-(** [make ty s] creates a symbol with type [ty] and name [s] in the default
-    namespace. *)
+(** [make ty s] creates a symbol with type [ty] and name [s] in the term
+    (function, constant) namespace. *)
 val make : Ty.t -> string -> t
 
 (** [make3 ty name ns] creates a symbol with type [ty], name [name], and

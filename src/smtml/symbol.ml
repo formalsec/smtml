@@ -36,7 +36,7 @@ module Name = struct
 end
 
 let ( @: ) (name : string) (ty : Ty.t) : t =
-  { name = Name.simple name; namespace = var; ty }
+  { name = Name.simple name; namespace = term; ty }
 
 let name { name; _ } = name
 
