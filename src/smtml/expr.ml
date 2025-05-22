@@ -346,12 +346,6 @@ let raw_binop ty op hte1 hte2 = make (Binop (ty, op, hte1, hte2)) [@@inline]
 let rec binop ty op hte1 hte2 =
   match (op, view hte1, view hte2) with
   | Ty.Binop.(String_in_re | Regexp_range), _, _ -> raw_binop ty op hte1 hte2
-  | Ty.Binop.String_contains, _, _ when equal hte2 (make (Val (Str ""))) ->
-    make (Val True)
-  | Ty.Binop.String_prefix, _, _ when equal hte2 (make (Val (Str ""))) ->
-    make (Val True)
-  | Ty.Binop.String_suffix, _, _ when equal hte2 (make (Val (Str ""))) ->
-    make (Val True)
   | op, Val v1, Val v2 -> value (Eval.binop ty op v1 v2)
   | Sub, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
     if Bitvector.equal b1 b2 then binop ty Sub os1 os2
@@ -410,6 +404,9 @@ let rec binop ty op hte1 hte2 =
     (* TODO: use another datastructure? *)
     begin match List.nth_opt es n with None -> assert false | Some v -> v
     end
+  | String_contains, _, Val (Str "") -> make (Val True)
+  | String_prefix, _, Val (Str "") -> make (Val True)
+  | String_suffix, _, Val (Str "") -> make (Val True)
   | List_cons, _, List es -> make (List (hte1 :: es))
   | List_append, List _, (List [] | Val (List [])) -> hte1
   | List_append, (List [] | Val (List [])), List _ -> hte2
@@ -529,16 +526,14 @@ let rec cvtop theory op hte =
   | ToBool, Cvtop (_, OfBool, hte) -> hte
   | OfBool, Cvtop (_, ToBool, hte) -> hte
   | String_to_float, Cvtop (Ty_real, ToString, hte) -> hte
-  | ( Reinterpret_float
-    , Cvtop (Ty_real, Reinterpret_int, { node = Symbol { ty = Ty_int; _ }; _ })
-    ) ->
-    hte
   | Reinterpret_float, Cvtop (Ty_real, Reinterpret_int, e1) -> e1
-  | Reinterpret_float, Cvtop (Ty_fp 32, Reinterpret_int, e1) -> e1
-  | Reinterpret_float, Cvtop (Ty_fp 64, Reinterpret_int, e1) -> e1
+  | Reinterpret_float, Cvtop (Ty_fp n, Reinterpret_int, e) ->
+    assert (match theory with Ty_bitv m -> n = m | _ -> false);
+    e
   | Reinterpret_int, Cvtop (Ty_int, Reinterpret_float, e1) -> e1
-  | Reinterpret_int, Cvtop (Ty_bitv 32, Reinterpret_float, e1) -> e1
-  | Reinterpret_int, Cvtop (Ty_bitv 64, Reinterpret_float, e1) -> e1
+  | Reinterpret_int, Cvtop (Ty_bitv m, Reinterpret_float, e) ->
+    assert (match theory with Ty_fp n -> n = m | _ -> false);
+    e
   | Zero_extend n, Ptr { base; offset } ->
     let offset = cvtop theory op offset in
     make (Ptr { base = Bitvector.zero_extend n base; offset })
@@ -552,8 +547,6 @@ let rec cvtop theory op hte =
   | OfString, Cvtop (_, ToString, e1) -> e1
   | PromoteF32, Cvtop (_, DemoteF64, e1) -> e1
   | DemoteF64, Cvtop (_, PromoteF32, e1) -> e1
-  | Reinterpret_int, Cvtop (_, Reinterpret_float, e1) -> e1
-  | Reinterpret_float, Cvtop (_, Reinterpret_int, e1) -> e1
   | Zero_extend 0, _ -> hte
   | Sign_extend 0, _ -> hte
   | String_from_code, Cvtop (_, String_to_code, e1) -> e1
