@@ -287,31 +287,11 @@ let exists vars body = binder Exists vars body
 
 let raw_unop ty op hte = make (Unop (ty, op, hte)) [@@inline]
 
-let normalize_eq_or_ne op (ty', e1, e2) =
-  let make_relop lhs rhs = Relop (ty', op, lhs, rhs) in
-  let ty1, ty2 = (ty e1, ty e2) in
-  if not (Ty.equal ty1 ty2) then make_relop e1 e2
-  else begin
-    match ty1 with
-    | Ty_bitv m ->
-      let binop = make (Binop (ty1, Sub, e1, e2)) in
-      let zero = make (Val (Bitv (Bitvector.make Z.zero m))) in
-      make_relop binop zero
-    | Ty_int ->
-      let binop = make (Binop (ty1, Sub, e1, e2)) in
-      let zero = make (Val (Int Int.zero)) in
-      make_relop binop zero
-    | Ty_real ->
-      let binop = make (Binop (ty1, Sub, e1, e2)) in
-      let zero = make (Val (Real 0.)) in
-      make_relop binop zero
-    | _ -> make_relop e1 e2
-  end
-
 let negate_relop (hte : t) : t =
   let e =
     match view hte with
-    | Relop (ty, ((Eq | Ne) as op), e1, e2) -> normalize_eq_or_ne op (ty, e1, e2)
+    | Relop (ty, Eq, e1, e2) -> Relop (ty, Ne, e1, e2)
+    | Relop (ty, Ne, e1, e2) -> Relop (ty, Eq, e1, e2)
     | Relop (ty, Lt, e1, e2) -> Relop (ty, Le, e2, e1)
     | Relop (ty, LtU, e1, e2) -> Relop (ty, LeU, e2, e1)
     | Relop (ty, Le, e1, e2) -> Relop (ty, Lt, e2, e1)
@@ -373,6 +353,10 @@ let rec binop ty op hte1 hte2 =
     when Bitvector.eqz bv ->
     hte1
   | (Add | Or), _, Val (Bitv bv) when Bitvector.eqz bv -> hte1
+  | Add, _, Val (Real 0.) -> hte1
+  | Add, Val (Real 0.), _ -> hte2
+  | Add, _, Val (Num (F32 0l)) -> hte1
+  | Add, Val (Num (F32 0l)), _ -> hte2
   | (And | Mul), _, Val (Bitv bv) when Bitvector.eqz bv -> hte2
   | And, Val True, _ -> hte2
   | And, _, Val True -> hte1
@@ -404,9 +388,8 @@ let rec binop ty op hte1 hte2 =
     (* TODO: use another datastructure? *)
     begin match List.nth_opt es n with None -> assert false | Some v -> v
     end
-  | String_contains, _, Val (Str "") -> make (Val True)
-  | String_prefix, _, Val (Str "") -> make (Val True)
-  | String_suffix, _, Val (Str "") -> make (Val True)
+  | (String_contains | String_prefix | String_suffix), _, Val (Str "") ->
+    value True
   | List_cons, _, List es -> make (List (hte1 :: es))
   | List_append, List _, (List [] | Val (List [])) -> hte1
   | List_append, (List [] | Val (List [])), List _ -> hte2

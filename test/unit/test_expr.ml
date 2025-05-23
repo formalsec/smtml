@@ -633,6 +633,142 @@ let test_simplify_concat =
   ; "test_simplify_concat_i32_symbol" >:: test_simplify_concat_i32_symbol
   ]
 
+let test_simplify_reinterpret_int _ =
+  let open Infix in
+  let sym_0 = symbol "symbol_0" (Ty_fp 32) in
+  let lhs =
+    Expr.binop (Ty_fp 32) Add
+      (Expr.cvtop (Ty_fp 32) Reinterpret_int
+         (Expr.cvtop (Ty_bitv 32) Reinterpret_float sym_0) )
+      (float32 0.)
+  in
+  let sym_1 = symbol "symbol_1" (Ty_fp 32) in
+  let rhs =
+    Expr.cvtop (Ty_fp 32) Reinterpret_int
+      (Expr.cvtop (Ty_bitv 32) Reinterpret_float sym_1)
+  in
+  let result = Expr.binop (Ty_fp 32) Add lhs rhs in
+  let expected = Expr.binop (Ty_fp 32) Add sym_0 sym_1 in
+  check result expected
+
+let test_str_contains_empty_rhs _ =
+  let open Infix in
+  let str s = Expr.value (Str s) in
+  let s = symbol "x" Ty_str in
+  let e = Expr.binop Ty_bool String_contains s (str "") in
+  let expected = Expr.value True in
+  check e expected
+
+let test_str_prefix_empty_rhs _ =
+  let open Infix in
+  let str s = Expr.value (Str s) in
+  let s = symbol "x" Ty_str in
+  let e = Expr.binop Ty_bool String_prefix s (str "") in
+  let expected = Expr.value True in
+  check e expected
+
+let test_str_suffix_empty_rhs _ =
+  let open Infix in
+  let str s = Expr.value (Str s) in
+  let s = symbol "x" Ty_str in
+  let e = Expr.binop Ty_bool String_suffix s (str "") in
+  let expected = Expr.value True in
+  check e expected
+
+let test_and_true_rhs _ =
+  let open Infix in
+  let symbol_i name = symbol name Ty_int in
+  let s = symbol_i "x" in
+  let e = Expr.binop Ty_bool And s (Expr.value True) in
+  check e s
+
+let test_and_false_lhs _ =
+  let open Infix in
+  let symbol_i name = symbol name Ty_int in
+  let s = symbol_i "x" in
+  let e = Expr.binop Ty_bool And (Expr.value False) s in
+  check e (Expr.value False)
+
+let test_or_true_rhs _ =
+  let open Infix in
+  let symbol_i name = symbol name Ty_int in
+  let s = symbol_i "x" in
+  let e = Expr.binop Ty_bool Or s (Expr.value True) in
+  check e (Expr.value True)
+
+let test_or_false_rhs _ =
+  let open Infix in
+  let symbol_i name = symbol name Ty_int in
+  let s = symbol_i "x" in
+  let e = Expr.binop Ty_bool Or s (Expr.value False) in
+  check e s
+
+let test_and_fold_constants _ =
+  let open Infix in
+  let x = symbol "x" Ty_int in
+  let v1 = Expr.value (Int 3) in
+  let v2 = Expr.value (Int 6) in
+  let and_const = Expr.binop Ty_int And x (Expr.binop Ty_int And v1 v2) in
+  match (v1.node, v2.node) with
+  | Val v1, Val v2 ->
+    let folded = Expr.value (Eval.binop Ty_int And v1 v2) in
+    let expected = Expr.binop Ty_int And x folded in
+    check and_const expected
+  | _ -> assert false
+
+let test_ite_same_branches _ =
+  let open Infix in
+  let symbol_i name = symbol name Ty_int in
+  let c = symbol_i "cond" in
+  let x = symbol_i "x" in
+  let e = Expr.triop Ty_int Ite c x x in
+  check e x
+
+let test_to_string_of_string _ =
+  let open Infix in
+  let s = symbol "s" Ty_str in
+  let e = Expr.cvtop Ty_str ToString (Expr.cvtop Ty_str OfString s) in
+  check e s
+
+let test_zero_extend_0 _ =
+  let open Infix in
+  let x = symbol "x" (Ty_bitv 32) in
+  let e = Expr.cvtop (Ty_bitv 32) (Zero_extend 0) x in
+  check e x
+
+let test_string_to_code_from_code _ =
+  let open Infix in
+  let s = symbol "s" Ty_str in
+  let e =
+    Expr.cvtop Ty_int String_to_code (Expr.cvtop Ty_str String_from_code s)
+  in
+  check e s
+
+let test_string_to_int_from_int _ =
+  let open Infix in
+  let s = symbol "s" Ty_str in
+  let e =
+    Expr.cvtop Ty_int String_to_int (Expr.cvtop Ty_str String_from_int s)
+  in
+  check e s
+
+let test_simplify_normalize =
+  [ "test_simplify_reinterpret_int" >:: test_simplify_reinterpret_int
+  ; "test_str_contains_empty_rhs" >:: test_str_contains_empty_rhs
+  ; "test_str_prefix_empty_rhs" >:: test_str_prefix_empty_rhs
+  ; "test_str_suffix_empty_rhs" >:: test_str_suffix_empty_rhs
+  ; "test_and_true_rhs" >:: test_and_true_rhs
+  ; "test_and_false_lhs" >:: test_and_false_lhs
+  ; "test_or_true_rhs" >:: test_or_true_rhs
+  ; "test_or_false_rhs" >:: test_or_false_rhs
+  ; "test_and_fold_constants" >:: test_and_fold_constants
+  ; "test_ite_same_branches" >:: test_ite_same_branches
+  ; "test_to_string_of_string" >:: test_to_string_of_string
+  ; "test_zero_extend_0" >:: test_zero_extend_0
+  ; "test_string_to_code_from_code" >:: test_string_to_code_from_code
+  ; "test_string_to_int_from_int" >:: test_string_to_int_from_int
+  ]
+
 let test_simplify_ptr _ =
   let open Infix in
   let expected = Expr.ptr 8389648l (int32 16l) in
@@ -683,6 +819,7 @@ let test_simplify =
   ; "test_simplify_concat" >::: test_simplify_concat
   ; "test_simplify_ptr" >:: test_simplify_ptr
   ; "test_simplify_unop" >::: test_simplify_unop
+  ; "test_simplify_normalize" >::: test_simplify_normalize
   ]
 
 let test_inline_symbol_values_empty (_ : test_ctxt) =
