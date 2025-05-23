@@ -619,10 +619,32 @@ let test_simplify_concat =
   ; "test_simplify_concat_i32_symbol" >:: test_simplify_concat_i32_symbol
   ]
 
+let test_simplify_reinterpret_int _ =
+  let open Infix in
+  let sym_0 = symbol "symbol_0" (Ty_fp 32) in
+  let lhs =
+    Expr.binop (Ty_fp 32) Add
+      (Expr.cvtop (Ty_fp 32) Reinterpret_int
+         (Expr.cvtop (Ty_bitv 32) Reinterpret_float sym_0) )
+      (float32 0.)
+  in
+  let sym_1 = symbol "symbol_1" (Ty_fp 32) in
+  let rhs =
+    Expr.cvtop (Ty_fp 32) Reinterpret_int
+      (Expr.cvtop (Ty_bitv 32) Reinterpret_float sym_1)
+  in
+  let result = Expr.binop (Ty_fp 32) Add lhs rhs in
+  let expected = Expr.binop (Ty_fp 32) Add sym_0 sym_1 in
+  check result expected
+
+let test_simplify_normalize =
+  [ "test_simplify_reinterpret_int" >:: test_simplify_reinterpret_int ]
+
 let test_simplify =
   [ "test_simplify_assoc" >:: test_simplify_assoc
   ; "test_simplify_extract" >::: test_simplify_extract
   ; "test_simplify_concat" >::: test_simplify_concat
+  ; "test_simplify_normalize" >::: test_simplify_normalize
   ]
 
 let test_suite =
