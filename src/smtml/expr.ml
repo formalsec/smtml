@@ -353,14 +353,15 @@ let rec binop ty op hte1 hte2 =
     when Bitvector.eqz bv ->
     hte1
   | (Add | Or), _, Val (Bitv bv) when Bitvector.eqz bv -> hte1
-  | Add, _, Val (Real 0.) -> hte1
-  | Add, Val (Real 0.), _ -> hte2
-  | Add, _, Val (Num (F32 0l)) -> hte1
-  | Add, Val (Num (F32 0l)), _ -> hte2
+  | Add, _, Val (Real -0.) -> hte1
+  | Add, Val (Real -0.), _ -> hte2
+  | Add, _, Val (Num (F32 -0l)) -> hte1
+  | Add, Val (Num (F32 -0l)), _ -> hte2
   | (And | Mul), _, Val (Bitv bv) when Bitvector.eqz bv -> hte2
   | And, Val True, _ -> hte2
   | And, _, Val True -> hte1
-  | And, Val False, _ | And, _, Val False -> make (Val False)
+  | And, Val False, _ -> hte1
+  | And, _, Val False -> hte2
   | Or, Val True, _ | Or, _, Val True -> make (Val True)
   | Or, Val False, _ -> hte2
   | Or, _, Val False -> hte1
