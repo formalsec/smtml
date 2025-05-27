@@ -358,6 +358,11 @@ let raw_binop ty op hte1 hte2 = make (Binop (ty, op, hte1, hte2)) [@@inline]
 let rec binop ty op hte1 hte2 =
   match (op, view hte1, view hte2) with
   | Ty.Binop.(String_in_re | Regexp_range), _, _ -> raw_binop ty op hte1 hte2
+  | ( ( Ty.Binop.String_contains | Ty.Binop.String_prefix
+      | Ty.Binop.String_suffix )
+    , _
+    , Val (Str "") ) ->
+    make (Val True)
   | op, Val v1, Val v2 -> value (Eval.binop ty op v1 v2)
   | Sub, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
     if Int32.equal b1 b2 then binop ty Sub os1 os2
@@ -380,10 +385,24 @@ let rec binop ty op hte1 hte2 =
     when Bitvector.eqz bv ->
     hte1
   | (Add | Or), _, Val (Bitv bv) when Bitvector.eqz bv -> hte1
+  | Add, _, Val (Real -0.) -> hte1
+  | Add, Val (Real -0.), _ -> hte2
+  | Add, _, Val (Num (F32 -0l)) -> hte1
+  | Add, Val (Num (F32 -0l)), _ -> hte2
   | (And | Mul), _, Val (Bitv bv) when Bitvector.eqz bv -> hte2
+  | And, Val True, _ -> hte2
+  | And, _, Val True -> hte1
+  | And, Val False, _ -> hte1
+  | And, _, Val False -> hte2
+  | Or, Val True, _ | Or, _, Val True -> make (Val True)
+  | Or, Val False, _ -> hte2
+  | Or, _, Val False -> hte1
   | Add, Binop (ty, Add, x, { node = Val v1; _ }), Val v2 ->
     let v = value (Eval.binop ty Add v1 v2) in
     raw_binop ty Add x v
+  | And, Binop (ty, And, x, { node = Val v1; _ }), Val v2 ->
+    let v = value (Eval.binop ty And v1 v2) in
+    raw_binop ty And x v
   | Sub, Binop (ty, Sub, x, { node = Val v1; _ }), Val v2 ->
     let v = value (Eval.binop ty Add v1 v2) in
     raw_binop ty Sub x v
@@ -417,6 +436,7 @@ let triop ty op e1 e2 e3 =
   match (op, view e1, view e2, view e3) with
   | Ty.Triop.Ite, Val True, _, _ -> e2
   | Ite, Val False, _, _ -> e3
+  | Ite, _, _, _ when equal e2 e3 -> e2
   | op, Val v1, Val v2, Val v3 -> value (Eval.triop ty op v1 v2 v3)
   | Ite, _, Triop (_, Ite, c2, r1, r2), Triop (_, Ite, _, _, _) ->
     let else_ = raw_triop ty Ite e1 r2 e3 in
@@ -450,6 +470,7 @@ let rec relop ty op hte1 hte2 =
     raw_unop Ty_bool Not (raw_unop (Ty_fp prec1) Is_nan hte1)
   | Eq, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
     if Int32.equal b1 b2 then relop Ty_bool Eq os1 os2 else value False
+  (* | Eq, _, _ -> make (normalize_eq_or_ne Eq (ty,hte1,hte2)) *)
   | Ne, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
     if Int32.equal b1 b2 then relop Ty_bool Ne os1 os2 else value True
   | ( (LtU | LeU)
@@ -501,6 +522,22 @@ let cvtop ty op hte =
   | Ty.Cvtop.String_to_re, _ -> raw_cvtop ty op hte
   | _, Val v -> value (Eval.cvtop ty op v)
   | String_to_float, Cvtop (Ty_real, ToString, real) -> real
+  | Reinterpret_float, Cvtop (Ty_real, Reinterpret_int, e1) -> e1
+  | Reinterpret_float, Cvtop (Ty_fp n, Reinterpret_int, e) ->
+    assert (match ty with Ty_bitv m -> n = m | _ -> false);
+    e
+  | Reinterpret_int, Cvtop (Ty_int, Reinterpret_float, e1) -> e1
+  | Reinterpret_int, Cvtop (Ty_bitv m, Reinterpret_float, e) ->
+    assert (match ty with Ty_fp n -> n = m | _ -> false);
+    e
+  | ToString, Cvtop (_, OfString, e1) -> e1
+  | ToBool, Cvtop (_, OfBool, e1) -> e1
+  | Zero_extend 0, _ -> hte
+  | Sign_extend 0, _ -> hte
+  | String_from_code, Cvtop (_, String_to_code, e1) -> e1
+  | String_to_code, Cvtop (_, String_from_code, e1) -> e1
+  | String_to_int, Cvtop (_, String_from_int, e1) -> e1
+  | String_from_int, Cvtop (_, String_to_int, e1) -> e1
   | _ -> raw_cvtop ty op hte
 
 let raw_naryop ty op es = make (Naryop (ty, op, es)) [@@inline]
