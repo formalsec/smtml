@@ -13,6 +13,7 @@
   test_exists.smt2
   test_forall.smt2
   test_fp.smt2
+  test_fp_literals.smt2
   test_lia.smt2
   test_lra.smt2
   test_string_all.smt2

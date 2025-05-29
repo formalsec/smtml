@@ -30,6 +30,7 @@ type t =
   | QF_AX  (** Quantifier-free array theory. *)
   | QF_BV  (** Quantifier-free bitvector theory. *)
   | QF_BVFP  (** Quantifier-free bitvectors and floating-point arithmetic. *)
+  | QF_FP  (** Quantifier-free floating-point arithmetic. *)
   | QF_IDL  (** Quantifier-free integer difference logic. *)
   | QF_LIA  (** Quantifier-free linear integer arithmetic. *)
   | QF_LRA  (** Quantifier-free linear real arithmetic. *)

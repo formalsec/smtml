@@ -12,8 +12,21 @@ let pp_loc fmt = function
   | None -> ()
   | Some loc -> Fmt.pf fmt "%a: " Loc.print_compact loc
 
+let z_of_string_opt str =
+  match Z.of_string str with
+  | exception Invalid_argument _ -> None
+  | z -> Some z
+
 module Term = struct
   type t = Expr.t
+
+  let fp_of_size f ebits sbits =
+    match (ebits, sbits) with
+    | "8", "24" -> Expr.value (Num (F32 (Int32.bits_of_float f)))
+    | "11", "53" -> Expr.value (Num (F64 (Int64.bits_of_float f)))
+    | _ ->
+      Fmt.failwith "fp_of_size: unsupported %a (fp %a %a)" Fmt.float f
+        Fmt.string ebits Fmt.string sbits
 
   let const ?loc (id : Symbol.t) : t =
     match (Symbol.namespace id, Symbol.name id) with
@@ -50,15 +63,24 @@ module Term = struct
       | "true" -> Expr.value True
       | "false" -> Expr.value False
       | _ -> Expr.symbol id )
-    | Term, Indexed { basename = base; indices } -> (
-      match String.(sub base 0 2, sub base 2 (length base - 2), indices) with
-      | "bv", str, [ numbits ] -> begin
-        match (int_of_string_opt str, int_of_string_opt numbits) with
-        | Some n, Some width ->
-          Expr.value (Bitv (Bitvector.make (Z.of_int n) width))
+    | Term, Indexed { basename = base; indices } -> begin
+      match (base, indices) with
+      | bv, [ numbits ] when String.starts_with ~prefix:"bv" bv -> begin
+        let str = String.sub bv 2 (String.length bv - 2) in
+        match (z_of_string_opt str, int_of_string_opt numbits) with
+        | Some z, Some width -> Expr.value (Bitv (Bitvector.make z width))
         | (None | Some _), _ -> assert false
       end
-      | _ -> Expr.symbol id )
+      | "+oo", [ ebits; sbits ] -> fp_of_size Float.infinity ebits sbits
+      | "-oo", [ ebits; sbits ] -> fp_of_size Float.neg_infinity ebits sbits
+      | "+zero", [ ebits; sbits ] -> fp_of_size Float.zero ebits sbits
+      | "-zero", [ ebits; sbits ] ->
+        fp_of_size (Float.neg Float.zero) ebits sbits
+      | "NaN", [ ebits; sbits ] -> fp_of_size Float.nan ebits sbits
+      | _ ->
+        Log.debug (fun k -> k "const: Unknown %a making app" Symbol.pp id);
+        Expr.symbol id
+    end
     | Attr, Simple _ -> Expr.symbol id
     | Attr, Indexed _ -> assert false
     | Var, _ -> Fmt.failwith "%acould not parse var: %a" pp_loc loc Symbol.pp id
@@ -94,6 +116,7 @@ module Term = struct
     match Expr.view symbol with
     | Symbol s ->
       (* Hack: var bindings are 1 argument lambdas *)
+      Log.debug (fun k -> k "colon: unknown '%a' making app" Expr.pp symbol);
       Expr.app s [ term ]
     | _ ->
       Fmt.failwith "%acould not parse colon: %a %a" pp_loc loc Expr.pp symbol
@@ -257,8 +280,11 @@ module Term = struct
       | "fp.geq", [ a; b ] -> Expr.raw_relop Ty_bool Ge a b
       | "fp.gt", [ a; b ] -> Expr.raw_relop Ty_bool Gt a b
       | "fp.eq", [ a; b ] -> Expr.raw_relop Ty_bool Eq a b
-      | _, l -> Expr.app symbol l )
+      | _, l ->
+        Log.debug (fun k -> k "apply: unknown %a making app" Symbol.pp symbol);
+        Expr.app symbol l )
     | Symbol ({ name = Simple _; namespace = Attr; _ } as attr) ->
+      Log.debug (fun k -> k "apply: unknown %a making app" Symbol.pp attr);
       Expr.app attr args
     | Symbol { name = Indexed { basename; indices }; _ } -> (
       match (basename, indices, args) with
@@ -291,7 +317,9 @@ module Term = struct
         Expr.raw_unop Ty_regexp (Regexp_loop (i1, i2)) a
       | _ ->
         Fmt.failwith "%acould not parse indexed app: %a" pp_loc loc Expr.pp id )
-    | Symbol id -> Expr.app id args
+    | Symbol id ->
+      Log.debug (fun k -> k "apply: unknown %a making app" Symbol.pp id);
+      Expr.app id args
     | _ ->
       (* Ids can only be symbols. Any other expr here is super wrong *)
       assert false

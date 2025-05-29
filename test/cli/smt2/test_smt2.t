@@ -53,6 +53,14 @@ Test BitVector parsing:
 Test FloatingPoint parsing:
   $ smtml run test_fp.smt2
   sat
+  $ smtml run test_fp_literals.smt2
+  sat
+  (model
+    (nan_val f32 nan)
+    (neg_inf f32 neg_infinity)
+    (neg_zero f32 -0.)
+    (pos_inf f32 infinity)
+    (pos_zero f32 0.))
 
 Tests smt2 with the --from-file argument:
   $ cat <<EOF > test.list
