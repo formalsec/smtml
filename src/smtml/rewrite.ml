@@ -23,12 +23,12 @@ let debug fmt k = if debug then k (Fmt.epr fmt)
 let rewrite_ty unknown_ty tys =
   debug "  rewrite_ty: %a@." (fun k -> k Ty.pp unknown_ty);
   match (unknown_ty, tys) with
-  | Ty.Ty_none, [ ty ] -> ty
-  | Ty.Ty_none, [ ty1; ty2 ] ->
+  | Ty_none, [ ty ] -> ty
+  | Ty_none, [ ty1; ty2 ] ->
     debug "  rewrite_ty: %a %a@." (fun k -> k Ty.pp ty1 Ty.pp ty2);
     assert (Ty.equal ty1 ty2);
     ty1
-  | Ty.Ty_none, _ -> assert false
+  | Ty_none, _ -> assert false
   | ty, _ -> ty
 
 (** Propagates types in [type_map] and inlines [Let_in] binders *)
