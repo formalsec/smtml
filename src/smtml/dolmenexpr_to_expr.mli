@@ -302,6 +302,8 @@ module DolmenIntf : sig
 
     val rem : term -> term -> term
 
+    val fma : rm:term -> term -> term -> term -> term
+
     val eq : term -> term -> term
 
     val lt : term -> term -> term

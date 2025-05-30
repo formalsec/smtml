@@ -363,6 +363,8 @@ module M = struct
 
       let max e1 e2 = Z3.FloatingPoint.mk_max ctx e1 e2
 
+      let fma ~rm a b c = Z3.FloatingPoint.mk_fma ctx rm a b c
+
       let rem e1 e2 = Z3.FloatingPoint.mk_rem ctx e1 e2
 
       let eq e1 e2 = Z3.FloatingPoint.mk_eq ctx e1 e2

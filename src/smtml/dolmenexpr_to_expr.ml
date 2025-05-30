@@ -325,6 +325,8 @@ module DolmenIntf = struct
 
     let div ~rm t1 t2 = DTerm.Float.div rm t1 t2
 
+    let fma ~rm a b c = DTerm.Float.fma rm a b c
+
     let le = DTerm.Float.leq
 
     let ge = DTerm.Float.geq

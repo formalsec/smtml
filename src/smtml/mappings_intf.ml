@@ -527,6 +527,9 @@ module type M = sig
         [t2]. *)
     val max : term -> term -> term
 
+    (** [fma ~rm a b c] *)
+    val fma : rm:term -> term -> term -> term -> term
+
     (** [rem t1 t2] constructs the remainder of the floating-point terms [t1]
         and [t2]. *)
     val rem : term -> term -> term

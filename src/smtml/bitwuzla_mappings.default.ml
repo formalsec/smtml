@@ -386,6 +386,8 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
     let max t1 t2 = mk_term2 Kind.Fp_max t1 t2
 
+    let fma ~rm a b c = mk_term Kind.Fp_fma [| rm; a; b; c |]
+
     let rem t1 t2 = mk_term2 Kind.Fp_rem t1 t2
 
     let eq t1 t2 = mk_term2 Kind.Fp_equal t1 t2

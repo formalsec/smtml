@@ -699,6 +699,12 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         let ctx, b = encode_expr ctx b in
         let rm = get_rounding_mode rm in
         (ctx, M.Float.div ~rm a b)
+      | App ({ name = Simple "fp.fma"; _ }, [ rm; a; b; c ]) ->
+        let ctx, a = encode_expr ctx a in
+        let ctx, b = encode_expr ctx b in
+        let ctx, c = encode_expr ctx c in
+        let rm = get_rounding_mode rm in
+        (ctx, M.Float.fma ~rm a b c)
       | App ({ name = Simple "fp.sqrt"; _ }, [ rm; a ]) ->
         let ctx, a = encode_expr ctx a in
         let rm = get_rounding_mode rm in

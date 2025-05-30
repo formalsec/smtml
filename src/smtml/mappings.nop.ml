@@ -299,6 +299,8 @@ module Nop = struct
 
       let rem _ = assert false
 
+      let fma ~rm:_ = assert false
+
       let eq _ = assert false
 
       let lt _ = assert false

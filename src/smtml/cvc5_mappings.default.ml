@@ -373,6 +373,8 @@ module Fresh_cvc5 () = struct
 
     let max t1 t2 = Term.mk_term tm Kind.Floatingpoint_max [| t1; t2 |]
 
+    let fma ~rm a b c = Term.mk_term Kind.Floatingpoint_fma [| rm; a; b; c |]
+
     let rem t1 t2 = Term.mk_term tm Kind.Floatingpoint_rem [| t1; t2 |]
 
     let eq t1 t2 = Term.mk_term tm Kind.Floatingpoint_eq [| t1; t2 |]
