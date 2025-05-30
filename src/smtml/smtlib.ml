@@ -275,11 +275,11 @@ module Term = struct
         Expr.raw_unop Ty_none Trunc a
       | "fp.min", [ a; b ] -> Expr.raw_binop Ty_none Min a b
       | "fp.max", [ a; b ] -> Expr.raw_binop Ty_none Max a b
-      | "fp.leq", [ a; b ] -> Expr.raw_relop Ty_bool Le a b
-      | "fp.lt", [ a; b ] -> Expr.raw_relop Ty_bool Lt a b
-      | "fp.geq", [ a; b ] -> Expr.raw_relop Ty_bool Ge a b
-      | "fp.gt", [ a; b ] -> Expr.raw_relop Ty_bool Gt a b
-      | "fp.eq", [ a; b ] -> Expr.raw_relop Ty_bool Eq a b
+      | "fp.leq", [ a; b ] -> Expr.raw_relop Ty_none Le a b
+      | "fp.lt", [ a; b ] -> Expr.raw_relop Ty_none Lt a b
+      | "fp.geq", [ a; b ] -> Expr.raw_relop Ty_none Ge a b
+      | "fp.gt", [ a; b ] -> Expr.raw_relop Ty_none Gt a b
+      | "fp.eq", [ a; b ] -> Expr.raw_relop Ty_none Eq a b
       | _, l ->
         Log.debug (fun k -> k "apply: unknown %a making app" Symbol.pp symbol);
         Expr.app symbol l )
