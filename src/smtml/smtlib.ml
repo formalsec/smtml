@@ -135,6 +135,12 @@ module Term = struct
     let exponent_shifted = Int32.shift_left exponent 23 in
     Int32.logor sign_shifted (Int32.logor exponent_shifted mantissa)
 
+  let make_fp_binop symbol (op : Ty.Binop.t) rm a b =
+    match Expr.view rm with
+    | Symbol { name = Simple "roundNearestTiesToEven"; _ } ->
+      Expr.raw_binop Ty_none op a b
+    | _ -> Expr.app symbol [ rm; a; b ]
+
   let apply ?loc (id : t) (args : t list) : t =
     match Expr.view id with
     | Symbol ({ namespace = Term; name = Simple name; _ } as symbol) -> (
@@ -237,53 +243,28 @@ module Term = struct
             Expr.pp eb Expr.pp i )
       | "fp.abs", [ a ] -> Expr.raw_unop Ty_none Abs a
       | "fp.neg", [ a ] -> Expr.raw_unop Ty_none Neg a
-      | ( "fp.add"
-        , [ { node = Symbol { name = Simple "roundNearestTiesToEven"; _ }; _ }
-          ; a
-          ; b
-          ] ) ->
-        Expr.raw_binop Ty_none Add a b
-      | ( "fp.sub"
-        , [ { node = Symbol { name = Simple "roundNearestTiesToEven"; _ }; _ }
-          ; a
-          ; b
-          ] ) ->
-        Expr.raw_binop Ty_none Sub a b
-      | ( "fp.mul"
-        , [ { node = Symbol { name = Simple "roundNearestTiesToEven"; _ }; _ }
-          ; a
-          ; b
-          ] ) ->
-        Expr.raw_binop Ty_none Mul a b
-      | ( "fp.div"
-        , [ { node = Symbol { name = Simple "roundNearestTiesToEven"; _ }; _ }
-          ; a
-          ; b
-          ] ) ->
-        Expr.raw_binop Ty_none Div a b
+      | "fp.add", [ rm; a; b ] -> make_fp_binop symbol Add rm a b
+      | "fp.sub", [ rm; a; b ] -> make_fp_binop symbol Sub rm a b
+      | "fp.mul", [ rm; a; b ] -> make_fp_binop symbol Mul rm a b
+      | "fp.div", [ rm; a; b ] -> make_fp_binop symbol Div rm a b
       | ( "fp.sqrt"
         , [ { node = Symbol { name = Simple "roundNearestTiesToEven"; _ }; _ }
           ; a
           ] ) ->
         Expr.raw_unop Ty_none Sqrt a
       | "fp.rem", [ a; b ] -> Expr.raw_binop Ty_none Rem a b
-      | ( "fp.roundToIntegral"
-        , [ { node = Symbol { name = Simple "roundNearestTiesToEven"; _ }; _ }
-          ; a
-          ] ) ->
-        Expr.raw_unop Ty_none Nearest a
-      | ( "fp.roundToIntegral"
-        , [ { node = Symbol { name = Simple "roundTowardPositive"; _ }; _ }; a ]
-        ) ->
-        Expr.raw_unop Ty_none Ceil a
-      | ( "fp.roundToIntegral"
-        , [ { node = Symbol { name = Simple "roundTowardNegative"; _ }; _ }; a ]
-        ) ->
-        Expr.raw_unop Ty_none Floor a
-      | ( "fp.roundToIntegral"
-        , [ { node = Symbol { name = Simple "roundTowardZero"; _ }; _ }; a ] )
-        ->
-        Expr.raw_unop Ty_none Trunc a
+      | "fp.roundToIntegral", [ rm; a ] -> begin
+        match Expr.view rm with
+        | Symbol { name = Simple "roundNearestTiesToEven"; _ } ->
+          Expr.raw_unop Ty_none Nearest a
+        | Symbol { name = Simple "roundTowardPositive"; _ } ->
+          Expr.raw_unop Ty_none Ceil a
+        | Symbol { name = Simple "roundTowardNegative"; _ } ->
+          Expr.raw_unop Ty_none Floor a
+        | Symbol { name = Simple "roundTowardZero"; _ } ->
+          Expr.raw_unop Ty_none Trunc a
+        | _ -> Expr.app symbol args
+      end
       | "fp.min", [ a; b ] -> Expr.raw_binop Ty_none Min a b
       | "fp.max", [ a; b ] -> Expr.raw_binop Ty_none Max a b
       | "fp.leq", [ a; b ] -> Expr.raw_relop Ty_none Le a b
@@ -291,9 +272,9 @@ module Term = struct
       | "fp.geq", [ a; b ] -> Expr.raw_relop Ty_none Ge a b
       | "fp.gt", [ a; b ] -> Expr.raw_relop Ty_none Gt a b
       | "fp.eq", [ a; b ] -> Expr.raw_relop Ty_none Eq a b
-      | _, l ->
+      | _ ->
         Log.debug (fun k -> k "apply: unknown %a making app" Symbol.pp symbol);
-        Expr.app symbol l )
+        Expr.app symbol args )
     | Symbol ({ name = Simple _; namespace = Attr; _ } as attr) ->
       Log.debug (fun k -> k "apply: unknown %a making app" Symbol.pp attr);
       Expr.app attr args

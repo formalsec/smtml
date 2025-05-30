@@ -656,6 +656,20 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty.Ty_regexp -> Regexp_impl.naryop
       | ty -> Fmt.failwith "Naryop for type \"%a\" not implemented" Ty.pp ty
 
+    let get_rounding_mode rm =
+      match Expr.view rm with
+      | Symbol { name = Simple ("roundNearestTiesToEven" | "RNE"); _ } ->
+        M.Float.Rounding_mode.rne
+      | Symbol { name = Simple ("roundNearestTiesToAway" | "RNA"); _ } ->
+        M.Float.Rounding_mode.rna
+      | Symbol { name = Simple ("roundTowardPositive" | "RTP"); _ } ->
+        M.Float.Rounding_mode.rtp
+      | Symbol { name = Simple ("roundTowardNegative" | "RTN"); _ } ->
+        M.Float.Rounding_mode.rtn
+      | Symbol { name = Simple ("roundTowardZero" | "RTZ"); _ } ->
+        M.Float.Rounding_mode.rtz
+      | _ -> Fmt.failwith "unknown rouding mode: %a" Expr.pp rm
+
     let rec encode_expr ctx (hte : Expr.t) : symbol_ctx * M.term =
       match Expr.view hte with
       | Val value -> (ctx, v value)
@@ -664,6 +678,35 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         let ctx, offset' = encode_expr ctx offset in
         (ctx, I32.binop Add base' offset')
       | Symbol sym -> make_symbol ctx sym
+      (* FIXME: add a way to support building these expressions without apps *)
+      | App ({ name = Simple "fp.add"; _ }, [ rm; a; b ]) ->
+        let ctx, a = encode_expr ctx a in
+        let ctx, b = encode_expr ctx b in
+        let rm = get_rounding_mode rm in
+        (ctx, M.Float.add ~rm a b)
+      | App ({ name = Simple "fp.sub"; _ }, [ rm; a; b ]) ->
+        let ctx, a = encode_expr ctx a in
+        let ctx, b = encode_expr ctx b in
+        let rm = get_rounding_mode rm in
+        (ctx, M.Float.sub ~rm a b)
+      | App ({ name = Simple "fp.mul"; _ }, [ rm; a; b ]) ->
+        let ctx, a = encode_expr ctx a in
+        let ctx, b = encode_expr ctx b in
+        let rm = get_rounding_mode rm in
+        (ctx, M.Float.mul ~rm a b)
+      | App ({ name = Simple "fp.div"; _ }, [ rm; a; b ]) ->
+        let ctx, a = encode_expr ctx a in
+        let ctx, b = encode_expr ctx b in
+        let rm = get_rounding_mode rm in
+        (ctx, M.Float.div ~rm a b)
+      | App ({ name = Simple "fp.sqrt"; _ }, [ rm; a ]) ->
+        let ctx, a = encode_expr ctx a in
+        let rm = get_rounding_mode rm in
+        (ctx, M.Float.sqrt ~rm a)
+      | App ({ name = Simple "fp.roundToIntegral"; _ }, [ rm; a ]) ->
+        let ctx, a = encode_expr ctx a in
+        let rm = get_rounding_mode rm in
+        (ctx, M.Float.round_to_integral ~rm a)
       | App (sym, args) ->
         let name =
           match Symbol.name sym with
