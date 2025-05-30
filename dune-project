@@ -114,7 +114,7 @@
    :with-dev-setup)
   (mdx
    :with-test)
-  (owl
+  (sexplib
    :with-dev-setup)
   (tls-lwt
    :with-dev-setup)))

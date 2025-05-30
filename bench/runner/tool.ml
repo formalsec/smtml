@@ -47,7 +47,7 @@ let cmd ?from_file prover files =
   | Smtml { name; st } ->
     ( "smtml"
     , let args =
-        "--mode" :: "incremental" :: "--solver"
+        "--dry" :: "--mode" :: "incremental" :: "--solver"
         :: Fmt.str "%a" pp_prover_name name
         ::
         ( match from_file with
@@ -81,7 +81,7 @@ let fork_and_run ?timeout ?from_file prover file =
     dup2 ~src:stdout_write ~dst:Unix.stdout;
     dup2 ~src:stderr_write ~dst:Unix.stderr;
     Option.iter limit_cpu timeout;
-    Unix.execv prog argv
+    Unix.execvp prog argv
   end
   else begin
     Unix.close stdout_write;
