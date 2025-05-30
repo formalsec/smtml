@@ -130,10 +130,7 @@ module Term = struct
     let exponent_shifted = Int64.shift_left exponent 52 in
     Int64.logor sign_shifted (Int64.logor exponent_shifted mantissa)
 
-  let combine_to_int32 sign_bit exponent_bit mantissa_bit =
-    let sign = Int32.of_string sign_bit in
-    let exponent = Int32.of_string exponent_bit in
-    let mantissa = Int32.of_string mantissa_bit in
+  let combine_to_int32 sign exponent mantissa =
     let sign_shifted = Int32.shift_left sign 31 in
     let exponent_shifted = Int32.shift_left exponent 23 in
     Int32.logor sign_shifted (Int32.logor exponent_shifted mantissa)
@@ -214,13 +211,27 @@ module Term = struct
       | "concat", [ a; b ] -> Expr.raw_concat a b
       | "fp", [ s; eb; i ] -> (
         match (Expr.view s, Expr.view eb, Expr.view i) with
-        | Val (Str sign), Val (Str eb), Val (Str i) -> (
+        | Val (Str sign), Val (Str eb), Val (Str i) -> begin
           match (String.length sign, String.length eb, String.length i) with
           (* 32 bit float -> sign = 1, eb = 8, i = 24 - 1 = 23  *)
-          | 3, 10, 25 -> Expr.value (Num (F32 (combine_to_int32 sign eb i)))
+          | 3, 10, 25 ->
+            let sign = Int32.of_string sign in
+            let exponent = Int32.of_string eb in
+            let mantissa = Int32.of_string i in
+            Expr.value (Num (F32 (combine_to_int32 sign exponent mantissa)))
           (* 64 bit float -> sign = 1, eb = 11, i = 53 - 1 = 52  *)
           | 3, 13, 54 -> Expr.value (Num (F64 (combine_to_int64 sign eb i)))
-          | _ -> Fmt.failwith "%afp size not supported" pp_loc loc )
+          | _ -> Fmt.failwith "%afp size not supported" pp_loc loc
+        end
+        | Val (Str sign), Val (Bitv eb), Val (Str i) -> begin
+          match (String.length sign, Bitvector.numbits eb, String.length i) with
+          | 3, 8, 25 ->
+            let sign = Int32.of_string sign in
+            let exponent = Bitvector.to_int32 eb in
+            let mantissa = Int32.of_string i in
+            Expr.value (Num (F32 (combine_to_int32 sign exponent mantissa)))
+          | _ -> Fmt.failwith "%afp size not supported" pp_loc loc
+        end
         | _ ->
           Fmt.failwith "%acould not parse fp: %a %a %a" pp_loc loc Expr.pp s
             Expr.pp eb Expr.pp i )
