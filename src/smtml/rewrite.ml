@@ -28,6 +28,11 @@ let rewrite_ty unknown_ty tys =
     debug "  rewrite_ty: %a %a@." (fun k -> k Ty.pp ty1 Ty.pp ty2);
     assert (Ty.equal ty1 ty2);
     ty1
+  | Ty_none, ty1 :: ty2 :: [ ty3 ] ->
+    debug "  rewrite_ty: %a %a %a@." (fun k -> k Ty.pp ty1 Ty.pp ty2 Ty.pp ty3);
+    assert (Ty.equal ty1 ty2);
+    assert (Ty.equal ty2 ty3);
+    ty1
   | Ty_none, _ -> assert false
   | ty, _ -> ty
 
@@ -54,6 +59,12 @@ let rec rewrite_expr (type_map, expr_map) hte =
     let b = rewrite_expr (type_map, expr_map) b in
     let ty = rewrite_ty Ty_none [ Expr.ty a; Expr.ty b ] in
     Expr.app { sym with ty } [ rm; a; b ]
+  | App (({ name = Simple "fp.fma"; _ } as sym), [ rm; a; b; c ]) ->
+    let a = rewrite_expr (type_map, expr_map) a in
+    let b = rewrite_expr (type_map, expr_map) b in
+    let c = rewrite_expr (type_map, expr_map) c in
+    let ty = rewrite_ty Ty_none [ Expr.ty a; Expr.ty b; Expr.ty c ] in
+    Expr.app { sym with ty } [ rm; a; b; c ]
   | App
       ( ({ name = Simple ("fp.sqrt" | "fp.roundToIntegral"); _ } as sym)
       , [ rm; a ] ) ->
