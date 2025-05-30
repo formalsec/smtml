@@ -305,22 +305,24 @@ let raw_unop ty op hte = make (Unop (ty, op, hte)) [@@inline]
 
 let normalize_eq_or_ne op (ty', e1, e2) =
   let make_relop lhs rhs = Relop (ty', op, lhs, rhs) in
-  let ty, ty2 = (ty e1, ty e2) in
-  assert (Ty.equal ty ty2);
-  match ty with
-  | Ty_bitv m ->
-    let binop = make (Binop (ty, Sub, e1, e2)) in
-    let zero = make (Val (Bitv (Bitvector.make Z.zero m))) in
-    make_relop binop zero
-  | Ty_int ->
-    let binop = make (Binop (ty, Sub, e1, e2)) in
-    let zero = make (Val (Int Int.zero)) in
-    make_relop binop zero
-  | Ty_real ->
-    let binop = make (Binop (ty, Sub, e1, e2)) in
-    let zero = make (Val (Real 0.)) in
-    make_relop binop zero
-  | _ -> make_relop e1 e2
+  let ty1, ty2 = (ty e1, ty e2) in
+  if not (Ty.equal ty1 ty2) then make_relop e1 e2
+  else begin
+    match ty1 with
+    | Ty_bitv m ->
+      let binop = make (Binop (ty1, Sub, e1, e2)) in
+      let zero = make (Val (Bitv (Bitvector.make Z.zero m))) in
+      make_relop binop zero
+    | Ty_int ->
+      let binop = make (Binop (ty1, Sub, e1, e2)) in
+      let zero = make (Val (Int Int.zero)) in
+      make_relop binop zero
+    | Ty_real ->
+      let binop = make (Binop (ty1, Sub, e1, e2)) in
+      let zero = make (Val (Real 0.)) in
+      make_relop binop zero
+    | _ -> make_relop e1 e2
+  end
 
 let negate_relop (hte : t) : t =
   let e =
