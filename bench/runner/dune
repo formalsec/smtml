@@ -1,6 +1,5 @@
 (executable
- (enabled_if false)
- (name runner)
+ (name main)
  (libraries
   bos
   cohttp
@@ -8,10 +7,10 @@
   cmdliner
   extunix
   dune-glob
-  owl
   lwt
   yojson
   str
+  sexplib
   smtml
   smtml.prelude)
  (flags

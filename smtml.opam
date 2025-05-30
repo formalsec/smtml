@@ -47,7 +47,7 @@ depends: [
   "dune-glob" {with-dev-setup}
   "lwt" {with-dev-setup}
   "mdx" {with-test}
-  "owl" {with-dev-setup}
+  "sexplib" {with-dev-setup}
   "tls-lwt" {with-dev-setup}
 ]
 depopts: ["alt-ergo-lib" "bitwuzla-cxx" "colibri2" "cvc5" "z3"]
