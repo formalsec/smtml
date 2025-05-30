@@ -110,7 +110,9 @@ module Term = struct
       Bytes.to_string bs
     in
     let bv = set b 0 '0' in
-    Expr.value (Str bv)
+    let len = String.length bv in
+    let int = Z.of_string bv in
+    Expr.value (Bitv (Bitvector.make int (len - 2)))
 
   let colon ?loc (symbol : t) (term : t) : t =
     match Expr.view symbol with
@@ -215,32 +217,16 @@ module Term = struct
       | "bvsge", [ a; b ] -> Expr.raw_relop Ty_none Ge a b
       | "bvuge", [ a; b ] -> Expr.raw_relop Ty_none GeU a b
       | "concat", [ a; b ] -> Expr.raw_concat a b
-      | "fp", [ s; eb; i ] -> (
-        match (Expr.view s, Expr.view eb, Expr.view i) with
-        | Val (Str sign), Val (Str eb), Val (Str i) -> begin
-          match (String.length sign, String.length eb, String.length i) with
-          (* 32 bit float -> sign = 1, eb = 8, i = 24 - 1 = 23  *)
-          | 3, 10, 25 ->
-            let sign = Int32.of_string sign in
-            let exponent = Int32.of_string eb in
-            let mantissa = Int32.of_string i in
-            Expr.value (Num (F32 (combine_to_int32 sign exponent mantissa)))
-          (* 64 bit float -> sign = 1, eb = 11, i = 53 - 1 = 52  *)
-          | 3, 13, 54 -> Expr.value (Num (F64 (combine_to_int64 sign eb i)))
-          | _ -> Fmt.failwith "%afp size not supported" pp_loc loc
-        end
-        | Val (Str sign), Val (Bitv eb), Val (Str i) -> begin
-          match (String.length sign, Bitvector.numbits eb, String.length i) with
-          | 3, 8, 25 ->
-            let sign = Int32.of_string sign in
-            let exponent = Bitvector.to_int32 eb in
-            let mantissa = Int32.of_string i in
-            Expr.value (Num (F32 (combine_to_int32 sign exponent mantissa)))
-          | _ -> Fmt.failwith "%afp size not supported" pp_loc loc
-        end
-        | _ ->
-          Fmt.failwith "%acould not parse fp: %a %a %a" pp_loc loc Expr.pp s
-            Expr.pp eb Expr.pp i )
+      | ( "fp"
+        , [ { node = Val (Bitv sign); _ }
+          ; { node = Val (Bitv eb); _ }
+          ; { node = Val (Bitv i); _ }
+          ] ) ->
+        let fp = Bitvector.(concat sign (concat eb i)) in
+        let fp_sz = Bitvector.numbits fp in
+        if fp_sz = 32 then Expr.value (Num (F32 (Bitvector.to_int32 fp)))
+        else if fp_sz = 64 then Expr.value (Num (F64 (Bitvector.to_int64 fp)))
+        else Fmt.failwith "%afp size not supported" pp_loc loc
       | "fp.abs", [ a ] -> Expr.raw_unop Ty_none Abs a
       | "fp.neg", [ a ] -> Expr.raw_unop Ty_none Neg a
       | "fp.add", [ rm; a; b ] -> make_fp_binop symbol Add rm a b
@@ -307,6 +293,15 @@ module Term = struct
           match int_of_string_opt i2 with None -> assert false | Some i2 -> i2
         in
         Expr.raw_unop Ty_regexp (Regexp_loop (i1, i2)) a
+      | ( "to_fp"
+        , [ "11"; "53" ]
+        , [ { node =
+                Symbol { name = Simple ("roundNearestTiesToEven" | "RNE"); _ }
+            ; _
+            }
+          ; a
+          ] ) ->
+        Expr.raw_cvtop (Ty_fp 64) PromoteF32 a
       | _ ->
         Fmt.failwith "%acould not parse indexed app: %a" pp_loc loc Expr.pp id )
     | Symbol id ->
