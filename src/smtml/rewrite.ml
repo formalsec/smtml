@@ -92,7 +92,7 @@ let rec rewrite_expr (type_map, expr_map) hte =
     let hte2 = rewrite_expr (type_map, expr_map) hte2 in
     let hte3 = rewrite_expr (type_map, expr_map) hte3 in
     Expr.triop ty op hte1 hte2 hte3
-  | Relop (ty, ((Eq | Ne) as op), hte1, hte2) ->
+  | Relop (ty, ((Eq | Ne) as op), hte1, hte2) when not (Ty.equal Ty_none ty) ->
     let hte1 = rewrite_expr (type_map, expr_map) hte1 in
     let hte2 = rewrite_expr (type_map, expr_map) hte2 in
     Expr.relop ty op hte1 hte2
