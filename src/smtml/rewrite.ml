@@ -38,14 +38,28 @@ let rec rewrite_expr (type_map, expr_map) hte =
   | Val _ -> hte
   | Ptr { base; offset } ->
     Expr.ptr base (rewrite_expr (type_map, expr_map) offset)
-  | Symbol sym -> (
+  | Symbol sym -> begin
     match Symb_map.find_opt sym type_map with
     | None -> (
       match Symb_map.find_opt sym expr_map with
       | None -> Fmt.failwith "Undefined symbol: %a" Symbol.pp sym
       | Some expr -> expr )
-    | Some ty -> Expr.symbol { sym with ty } )
+    | Some ty -> Expr.symbol { sym with ty }
+  end
   | List htes -> Expr.list (List.map (rewrite_expr (type_map, expr_map)) htes)
+  | App
+      ( ({ name = Simple ("fp.add" | "fp.sub" | "fp.mul" | "fp.div"); _ } as sym)
+      , [ rm; a; b ] ) ->
+    let a = rewrite_expr (type_map, expr_map) a in
+    let b = rewrite_expr (type_map, expr_map) b in
+    let ty = rewrite_ty Ty_none [ Expr.ty a; Expr.ty b ] in
+    Expr.app { sym with ty } [ rm; a; b ]
+  | App
+      ( ({ name = Simple ("fp.sqrt" | "fp.roundToIntegral"); _ } as sym)
+      , [ rm; a ] ) ->
+    let a = rewrite_expr (type_map, expr_map) a in
+    let ty = rewrite_ty Ty_none [ Expr.ty a ] in
+    Expr.app { sym with ty } [ rm; a ]
   | App (sym, htes) ->
     let sym =
       match Symb_map.find_opt sym type_map with
