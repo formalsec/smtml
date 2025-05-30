@@ -346,7 +346,19 @@ module M = struct
 
       let sqrt ~rm e = Z3.FloatingPoint.mk_sqrt ctx rm e
 
+      let is_normal e = Z3.FloatingPoint.mk_is_normal ctx e
+
+      let is_subnormal e = Z3.FloatingPoint.mk_is_subnormal ctx e
+
+      let is_negative e = Z3.FloatingPoint.mk_is_negative ctx e
+
+      let is_positive e = Z3.FloatingPoint.mk_is_positive ctx e
+
+      let is_infinite e = Z3.FloatingPoint.mk_is_infinite ctx e
+
       let is_nan e = Z3.FloatingPoint.mk_is_nan ctx e
+
+      let is_zero e = Z3.FloatingPoint.mk_is_zero ctx e
 
       let round_to_integral ~rm e =
         Z3.FloatingPoint.mk_round_to_integral ctx rm e

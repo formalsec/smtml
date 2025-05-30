@@ -70,7 +70,13 @@ module Unop : sig
     (* Float operations *)
     | Abs  (** Absolute value. *)
     | Sqrt  (** Square root. *)
+    | Is_normal
+    | Is_subnormal
+    | Is_negative
+    | Is_positive
+    | Is_infinite
     | Is_nan  (** Check if NaN. *)
+    | Is_zero
     | Ceil  (** Ceiling. *)
     | Floor  (** Floor. *)
     | Trunc  (** Truncate. *)

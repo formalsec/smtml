@@ -496,6 +496,18 @@ module type M = sig
         using the rounding mode [rm]. *)
     val sqrt : rm:term -> term -> term
 
+    val is_normal : term -> term
+
+    val is_subnormal : term -> term
+
+    val is_negative : term -> term
+
+    val is_positive : term -> term
+
+    val is_infinite : term -> term
+
+    val is_zero : term -> term
+
     (** [is_nan t] checks if the floating-point term [t] is NaN. *)
     val is_nan : term -> term
 

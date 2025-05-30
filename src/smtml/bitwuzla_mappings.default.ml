@@ -370,7 +370,19 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
     let sqrt ~rm t = mk_term2 Kind.Fp_sqrt rm t
 
+    let is_normal t = mk_term1 Kind.Fp_is_normal t
+
+    let is_subnormal t = mk_term1 Kind.Fp_is_subnormal t
+
+    let is_negative t = mk_term1 Kind.Fp_is_neg t
+
+    let is_positive t = mk_term1 Kind.Fp_is_pos t
+
+    let is_infinite t = mk_term1 Kind.Fp_is_inf t
+
     let is_nan t = mk_term1 Kind.Fp_is_nan t
+
+    let is_zero t = mk_term1 Kind.Fp_is_zero t
 
     let round_to_integral ~rm t = mk_term2 Kind.Fp_rti rm t
 
