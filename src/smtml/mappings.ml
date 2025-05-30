@@ -482,7 +482,13 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Unop.Neg -> Float.neg e
         | Abs -> Float.abs e
         | Sqrt -> Float.sqrt ~rm:Float.Rounding_mode.rne e
+        | Is_normal -> Float.is_normal e
+        | Is_subnormal -> Float.is_subnormal e
+        | Is_negative -> Float.is_negative e
+        | Is_positive -> Float.is_positive e
+        | Is_infinite -> Float.is_infinite e
         | Is_nan -> Float.is_nan e
+        | Is_zero -> Float.is_zero e
         | Ceil -> Float.round_to_integral ~rm:Float.Rounding_mode.rtp e
         | Floor -> Float.round_to_integral ~rm:Float.Rounding_mode.rtn e
         | Trunc -> Float.round_to_integral ~rm:Float.Rounding_mode.rtz e

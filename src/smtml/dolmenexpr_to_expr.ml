@@ -313,7 +313,19 @@ module DolmenIntf = struct
 
     let sqrt ~rm t = DTerm.Float.sqrt rm t
 
+    let is_normal = DTerm.Float.isNormal
+
+    let is_subnormal = DTerm.Float.isSubnormal
+
+    let is_negative = DTerm.Float.isNegative
+
+    let is_positive = DTerm.Float.isPositive
+
+    let is_infinite = DTerm.Float.isInfinite
+
     let is_nan = DTerm.Float.isNaN
+
+    let is_zero = DTerm.Float.isZero
 
     let round_to_integral ~rm t = DTerm.Float.roundToIntegral rm t
 

@@ -281,7 +281,19 @@ module Nop = struct
 
       let sqrt ~rm:_ = assert false
 
+      let is_normal _ = assert false
+
+      let is_subnormal _ = assert false
+
+      let is_negative _ = assert false
+
+      let is_positive _ = assert false
+
+      let is_infinite _ = assert false
+
       let is_nan _ = assert false
+
+      let is_zero _ = assert false
 
       let round_to_integral ~rm:_ = assert false
 

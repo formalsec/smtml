@@ -284,6 +284,18 @@ module DolmenIntf : sig
 
     val sqrt : rm:term -> term -> term
 
+    val is_normal : term -> term
+
+    val is_subnormal : term -> term
+
+    val is_negative : term -> term
+
+    val is_positive : term -> term
+
+    val is_infinite : term -> term
+
+    val is_zero : term -> term
+
     val is_nan : term -> term
 
     val round_to_integral : rm:term -> term -> term

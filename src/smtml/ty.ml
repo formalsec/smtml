@@ -98,7 +98,13 @@ module Unop = struct
     (* Float *)
     | Abs
     | Sqrt
+    | Is_normal
+    | Is_subnormal
+    | Is_negative
+    | Is_positive
+    | Is_infinite
     | Is_nan
+    | Is_zero
     | Ceil
     | Floor
     | Trunc
@@ -125,7 +131,13 @@ module Unop = struct
     | Ctz, Ctz
     | Abs, Abs
     | Sqrt, Sqrt
+    | Is_normal, Is_normal
+    | Is_subnormal, Is_subnormal
+    | Is_negative, Is_negative
+    | Is_positive, Is_positive
+    | Is_infinite, Is_infinite
     | Is_nan, Is_nan
+    | Is_zero, Is_zero
     | Ceil, Ceil
     | Floor, Floor
     | Trunc, Trunc
@@ -141,9 +153,11 @@ module Unop = struct
     | Regexp_opt, Regexp_opt
     | Regexp_comp, Regexp_comp ->
       true
-    | ( ( Neg | Not | Clz | Popcnt | Ctz | Abs | Sqrt | Is_nan | Ceil | Floor
-        | Trunc | Nearest | Head | Tail | Reverse | Length | Trim | Regexp_star
-        | Regexp_loop _ | Regexp_plus | Regexp_opt | Regexp_comp )
+    | ( ( Neg | Not | Clz | Popcnt | Ctz | Abs | Sqrt | Is_normal | Is_subnormal
+        | Is_negative | Is_positive | Is_infinite | Is_nan | Is_zero | Ceil
+        | Floor | Trunc | Nearest | Head | Tail | Reverse | Length | Trim
+        | Regexp_star | Regexp_loop _ | Regexp_plus | Regexp_opt | Regexp_comp
+          )
       , _ ) ->
       false
 
@@ -155,7 +169,13 @@ module Unop = struct
     | Popcnt -> Fmt.string fmt "popcnt"
     | Abs -> Fmt.string fmt "abs"
     | Sqrt -> Fmt.string fmt "sqrt"
+    | Is_normal -> Fmt.string fmt "isNormal"
+    | Is_subnormal -> Fmt.string fmt "isSubnormal"
+    | Is_negative -> Fmt.string fmt "isNegative"
+    | Is_positive -> Fmt.string fmt "isPositive"
+    | Is_infinite -> Fmt.string fmt "isInfinite"
     | Is_nan -> Fmt.string fmt "is_nan"
+    | Is_zero -> Fmt.string fmt "isZero"
     | Ceil -> Fmt.string fmt "ceil"
     | Floor -> Fmt.string fmt "floor"
     | Trunc -> Fmt.string fmt "trunc"

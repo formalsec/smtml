@@ -124,19 +124,6 @@ module Term = struct
       Fmt.failwith "%acould not parse colon: %a %a" pp_loc loc Expr.pp symbol
         Expr.pp term
 
-  let combine_to_int64 sign_bit exponent_bit mantissa_bit =
-    let sign = Int64.of_string sign_bit in
-    let exponent = Int64.of_string exponent_bit in
-    let mantissa = Int64.of_string mantissa_bit in
-    let sign_shifted = Int64.shift_left sign 63 in
-    let exponent_shifted = Int64.shift_left exponent 52 in
-    Int64.logor sign_shifted (Int64.logor exponent_shifted mantissa)
-
-  let combine_to_int32 sign exponent mantissa =
-    let sign_shifted = Int32.shift_left sign 31 in
-    let exponent_shifted = Int32.shift_left exponent 23 in
-    Int32.logor sign_shifted (Int32.logor exponent_shifted mantissa)
-
   let make_fp_binop symbol (op : Ty.Binop.t) rm a b =
     match Expr.view rm with
     | Symbol { name = Simple "roundNearestTiesToEven"; _ } ->
@@ -227,6 +214,13 @@ module Term = struct
         if fp_sz = 32 then Expr.value (Num (F32 (Bitvector.to_int32 fp)))
         else if fp_sz = 64 then Expr.value (Num (F64 (Bitvector.to_int64 fp)))
         else Fmt.failwith "%afp size not supported" pp_loc loc
+      | "fp.isNormal", [ a ] -> Expr.raw_unop Ty_none Is_normal a
+      | "fp.isSubnormal", [ a ] -> Expr.raw_unop Ty_none Is_subnormal a
+      | "fp.isNegative", [ a ] -> Expr.raw_unop Ty_none Is_negative a
+      | "fp.isPositive", [ a ] -> Expr.raw_unop Ty_none Is_positive a
+      | "fp.isInfinite", [ a ] -> Expr.raw_unop Ty_none Is_infinite a
+      | "fp.isNaN", [ a ] -> Expr.raw_unop Ty_none Is_nan a
+      | "fp.isZero", [ a ] -> Expr.raw_unop Ty_none Is_zero a
       | "fp.abs", [ a ] -> Expr.raw_unop Ty_none Abs a
       | "fp.neg", [ a ] -> Expr.raw_unop Ty_none Neg a
       | "fp.add", [ rm; a; b ] -> make_fp_binop symbol Add rm a b

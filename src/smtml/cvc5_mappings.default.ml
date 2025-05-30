@@ -356,7 +356,19 @@ module Fresh_cvc5 () = struct
 
     let sqrt ~rm t = Term.mk_term tm Kind.Floatingpoint_sqrt [| rm; t |]
 
+    let is_normal t = Term.mk_term tm Kind.Floatingpoint_is_normal [| t |]
+
+    let is_subnormal t = Term.mk_term tm Kind.Floatingpoint_is_subnormal [| t |]
+
+    let is_negative t = Term.mk_term tm Kind.Floatingpoint_is_neg [| t |]
+
+    let is_positive t = Term.mk_term tm Kind.Floatingpoint_is_pos [| t |]
+
+    let is_infinite t = Term.mk_term tm Kind.Floatingpoint_is_inf [| t |]
+
     let is_nan t = Term.mk_term tm Kind.Floatingpoint_is_nan [| t |]
+
+    let is_zero t = Term.mk_term tm Kind.Floatingpoint_is_zero [| t |]
 
     let round_to_integral ~rm t =
       Term.mk_term tm Kind.Floatingpoint_rti [| rm; t |]
@@ -373,7 +385,7 @@ module Fresh_cvc5 () = struct
 
     let max t1 t2 = Term.mk_term tm Kind.Floatingpoint_max [| t1; t2 |]
 
-    let fma ~rm a b c = Term.mk_term Kind.Floatingpoint_fma [| rm; a; b; c |]
+    let fma ~rm a b c = Term.mk_term tm Kind.Floatingpoint_fma [| rm; a; b; c |]
 
     let rem t1 t2 = Term.mk_term tm Kind.Floatingpoint_rem [| t1; t2 |]
 
