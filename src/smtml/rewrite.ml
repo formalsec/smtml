@@ -21,15 +21,18 @@ let debug fmt k = if debug then k (Fmt.epr fmt)
 
 (* FIXME: This is a very basic way to infer types. I'm surprised it even works *)
 let rewrite_ty unknown_ty tys =
-  debug "  rewrite_ty: %a@." (fun k -> k Ty.pp unknown_ty);
   match (unknown_ty, tys) with
-  | Ty_none, [ ty ] -> ty
+  | Ty.Ty_none, [ ty ] ->
+    debug "  rewrite_ty: %a -> %a@." (fun k -> k Ty.pp unknown_ty Ty.pp ty);
+    ty
   | Ty_none, [ ty1; ty2 ] ->
-    debug "  rewrite_ty: %a %a@." (fun k -> k Ty.pp ty1 Ty.pp ty2);
+    debug "  rewrite_ty: %a -> (%a %a)@." (fun k ->
+      k Ty.pp unknown_ty Ty.pp ty1 Ty.pp ty2 );
     assert (Ty.equal ty1 ty2);
     ty1
   | Ty_none, ty1 :: ty2 :: [ ty3 ] ->
-    debug "  rewrite_ty: %a %a %a@." (fun k -> k Ty.pp ty1 Ty.pp ty2 Ty.pp ty3);
+    debug "  rewrite_ty: %a ->(%a %a %a)@." (fun k ->
+      k Ty.pp unknown_ty Ty.pp ty1 Ty.pp ty2 Ty.pp ty3 );
     assert (Ty.equal ty1 ty2);
     assert (Ty.equal ty2 ty3);
     ty1
@@ -55,11 +58,13 @@ let rec rewrite_expr (type_map, expr_map) hte =
   | App
       ( ({ name = Simple ("fp.add" | "fp.sub" | "fp.mul" | "fp.div"); _ } as sym)
       , [ rm; a; b ] ) ->
+    let rm = rewrite_expr (type_map, expr_map) rm in
     let a = rewrite_expr (type_map, expr_map) a in
     let b = rewrite_expr (type_map, expr_map) b in
     let ty = rewrite_ty Ty_none [ Expr.ty a; Expr.ty b ] in
     Expr.app { sym with ty } [ rm; a; b ]
   | App (({ name = Simple "fp.fma"; _ } as sym), [ rm; a; b; c ]) ->
+    let rm = rewrite_expr (type_map, expr_map) rm in
     let a = rewrite_expr (type_map, expr_map) a in
     let b = rewrite_expr (type_map, expr_map) b in
     let c = rewrite_expr (type_map, expr_map) c in
@@ -68,6 +73,7 @@ let rec rewrite_expr (type_map, expr_map) hte =
   | App
       ( ({ name = Simple ("fp.sqrt" | "fp.roundToIntegral"); _ } as sym)
       , [ rm; a ] ) ->
+    let rm = rewrite_expr (type_map, expr_map) rm in
     let a = rewrite_expr (type_map, expr_map) a in
     let ty = rewrite_ty Ty_none [ Expr.ty a ] in
     Expr.app { sym with ty } [ rm; a ]

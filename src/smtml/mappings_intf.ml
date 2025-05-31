@@ -120,6 +120,8 @@ module type M = sig
         significand width [s]. *)
     val float : int -> int -> ty
 
+    val roundingMode : ty
+
     (** [ty t] retrieves the type of the term [t]. *)
     val ty : term -> ty
 

@@ -1049,7 +1049,8 @@ let op int real bool str lst bv f32 f64 ty op =
   | Ty_bitv _ -> bv op
   | Ty_fp 32 -> f32 op
   | Ty_fp 64 -> f64 op
-  | Ty_fp _ | Ty_app | Ty_unit | Ty_none | Ty_regexp -> assert false
+  | Ty_fp _ | Ty_app | Ty_unit | Ty_none | Ty_regexp | Ty_roundingMode ->
+    assert false
 [@@inline]
 
 let unop =

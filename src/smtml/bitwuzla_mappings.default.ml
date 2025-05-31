@@ -79,6 +79,8 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
     let float ebits sbits = mk_fp_sort ebits sbits
 
+    let roundingMode = mk_rm_sort ()
+
     let ty t = Term.sort t
 
     let to_ety _ = Fmt.failwith "Bitwuzla_mappings: to_ety not implemented"

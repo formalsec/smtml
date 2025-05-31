@@ -30,7 +30,7 @@ module Term = struct
 
   let const ?loc (id : Symbol.t) : t =
     match (Symbol.namespace id, Symbol.name id) with
-    | Sort, Simple name -> (
+    | Sort, Simple name -> begin
       match name with
       | "Int" -> Expr.symbol { id with ty = Ty_int }
       | "Real" -> Expr.symbol { id with ty = Ty_real }
@@ -38,11 +38,16 @@ module Term = struct
       | "String" -> Expr.symbol { id with ty = Ty_str }
       | "Float32" -> Expr.symbol { id with ty = Ty_fp 32 }
       | "Float64" -> Expr.symbol { id with ty = Ty_fp 64 }
-      | _ -> (
+      | "RoundingMode" -> Expr.symbol { id with ty = Ty_roundingMode }
+      | _ -> begin
         match Hashtbl.find_opt custom_sorts name with
+        | Some ty -> Expr.symbol { id with ty }
         | None ->
-          Fmt.failwith "%acould not find sort: %a" pp_loc loc Symbol.pp id
-        | Some ty -> Expr.symbol { id with ty } ) )
+          Logs.err (fun k ->
+            k "%acould not find sort: %a" pp_loc loc Symbol.pp id );
+          Expr.symbol id
+      end
+    end
     | Sort, Indexed { basename; indices } -> (
       match (basename, indices) with
       | "BitVec", [ n ] -> (
@@ -78,7 +83,7 @@ module Term = struct
         fp_of_size (Float.neg Float.zero) ebits sbits
       | "NaN", [ ebits; sbits ] -> fp_of_size Float.nan ebits sbits
       | _ ->
-        Log.debug (fun k -> k "const: Unknown %a making app" Symbol.pp id);
+        Log.debug (fun k -> k "const: unknown %a making app" Symbol.pp id);
         Expr.symbol id
     end
     | Attr, Simple _ -> Expr.symbol id
@@ -90,12 +95,12 @@ module Term = struct
   let int ?loc (x : string) =
     match int_of_string_opt x with
     | Some x -> Expr.value (Int x)
-    | None -> Fmt.failwith "%aInvalid int" pp_loc loc
+    | None -> Fmt.failwith "%ainvalid int" pp_loc loc
 
   let real ?loc (x : string) =
     match float_of_string_opt x with
     | Some x -> Expr.value (Real x)
-    | None -> Fmt.failwith "%aInvalid real" pp_loc loc
+    | None -> Fmt.failwith "%ainvalid real" pp_loc loc
 
   let hexa ?loc:_ (h : string) =
     let len = String.length h in
