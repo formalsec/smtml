@@ -48,7 +48,7 @@ module Term = struct
           Expr.symbol id
       end
     end
-    | Sort, Indexed { basename; indices } -> (
+    | Sort, Indexed { basename; indices } -> begin
       match (basename, indices) with
       | "BitVec", [ n ] -> (
         match int_of_string_opt n with
@@ -62,12 +62,18 @@ module Term = struct
         Fmt.failwith "%acould not parse indexed sort:%a %a@." pp_loc loc
           Fmt.string basename
           (Fmt.parens (Fmt.list ~sep:Fmt.sp Fmt.string))
-          indices )
-    | Term, Simple name -> (
+          indices
+    end
+    | Term, Simple name -> begin
       match name with
       | "true" -> Expr.value True
       | "false" -> Expr.value False
-      | _ -> Expr.symbol id )
+      | "roundNearestTiesToEven" | "RNE" | "roundNearestTiesToAway" | "RNA"
+      | "roundTowardPositive" | "RTP" | "roundTowardNegative" | "RTN"
+      | "roundTowardZero" | "RTZ" ->
+        Expr.symbol { id with ty = Ty_roundingMode }
+      | _ -> Expr.symbol id
+    end
     | Term, Indexed { basename = base; indices } -> begin
       match (base, indices) with
       | bv, [ numbits ] when String.starts_with ~prefix:"bv" bv -> begin
@@ -137,7 +143,7 @@ module Term = struct
 
   let apply ?loc (id : t) (args : t list) : t =
     match Expr.view id with
-    | Symbol ({ namespace = Term; name = Simple name; _ } as symbol) -> (
+    | Symbol ({ namespace = Term; name = Simple name; _ } as symbol) -> begin
       match (name, args) with
       | "-", [ a ] -> Expr.raw_unop Ty_none Neg a
       | "not", [ a ] -> Expr.raw_unop Ty_bool Not a
@@ -259,11 +265,12 @@ module Term = struct
       | "fp.eq", [ a; b ] -> Expr.raw_relop Ty_none Eq a b
       | _ ->
         Log.debug (fun k -> k "apply: unknown %a making app" Symbol.pp symbol);
-        Expr.app symbol args )
+        Expr.app symbol args
+    end
     | Symbol ({ name = Simple _; namespace = Attr; _ } as attr) ->
       Log.debug (fun k -> k "apply: unknown %a making app" Symbol.pp attr);
       Expr.app attr args
-    | Symbol { name = Indexed { basename; indices }; _ } -> (
+    | Symbol { name = Indexed { basename; indices }; _ } -> begin
       match (basename, indices, args) with
       | "extract", [ h; l ], [ a ] ->
         let high =
@@ -302,7 +309,8 @@ module Term = struct
           ] ) ->
         Expr.raw_cvtop (Ty_fp 64) PromoteF32 a
       | _ ->
-        Fmt.failwith "%acould not parse indexed app: %a" pp_loc loc Expr.pp id )
+        Fmt.failwith "%acould not parse indexed app: %a" pp_loc loc Expr.pp id
+    end
     | Symbol id ->
       Log.debug (fun k -> k "apply: unknown %a making app" Symbol.pp id);
       Expr.app id args
