@@ -77,6 +77,8 @@ module Fresh_cvc5 () = struct
 
     let float ebits sbits = Sort.mk_fp_sort tm ebits sbits
 
+    let roundingMode = Sort.mk_rm_sort tm
+
     let ty t = Term.sort t
 
     let to_ety _ = assert false

@@ -29,6 +29,7 @@ type t =
   | Ty_str  (** String type. *)
   | Ty_unit  (** Unit type. *)
   | Ty_regexp  (** Regular expression type. *)
+  | Ty_roundingMode
 
 (** {1 Type Comparison} *)
 

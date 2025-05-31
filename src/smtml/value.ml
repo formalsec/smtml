@@ -121,7 +121,7 @@ let of_string (cast : Ty.t) v =
     | None -> Fmt.error_msg "invalid value %s, expected real" v
     | Some n -> Ok (Real n) )
   | Ty_str -> Ok (Str v)
-  | Ty_app | Ty_list | Ty_none | Ty_unit | Ty_regexp ->
+  | Ty_app | Ty_list | Ty_none | Ty_unit | Ty_regexp | Ty_roundingMode ->
     Fmt.error_msg "unsupported parsing values of type %a" Ty.pp cast
 
 let rec to_json (v : t) : Yojson.Basic.t =

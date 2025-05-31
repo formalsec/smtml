@@ -90,6 +90,8 @@ module DolmenIntf : sig
 
     val float : int -> int -> ty
 
+    val roundingMode : ty
+
     val ty : term -> ty
 
     val to_ety : ty -> Ty.t

@@ -10,9 +10,9 @@ module Nop = struct
       let is_available = false
     end
 
-    type ty = unit
+    type ty = [ `Ty ]
 
-    type term = unit
+    type term = [ `Term ]
 
     type interp
 
@@ -24,11 +24,11 @@ module Nop = struct
 
     type optimizer
 
-    type func_decl = unit
+    type func_decl = [ `Func_decl ]
 
-    let true_ = ()
+    let true_ = `Term
 
-    let false_ = ()
+    let false_ = `Term
 
     let int _ = assert false
 
@@ -61,17 +61,19 @@ module Nop = struct
     let exists _ _ = assert false
 
     module Types = struct
-      let int = ()
+      let int = `Ty
 
-      let real = ()
+      let real = `Ty
 
-      let bool = ()
+      let bool = `Ty
 
-      let string = ()
+      let string = `Ty
 
-      let bitv _ = ()
+      let bitv _ = `Ty
 
-      let float _ _ = ()
+      let float _ _ = `Ty
+
+      let roundingMode = `Ty
 
       let ty _ = assert false
 
@@ -262,15 +264,15 @@ module Nop = struct
 
     module Float = struct
       module Rounding_mode = struct
-        let rne = ()
+        let rne = `Term
 
-        let rna = ()
+        let rna = `Term
 
-        let rtp = ()
+        let rtp = `Term
 
-        let rtn = ()
+        let rtn = `Term
 
-        let rtz = ()
+        let rtz = `Term
       end
 
       let v _ = assert false
@@ -339,9 +341,9 @@ module Nop = struct
     end
 
     module Func = struct
-      let make _ _ _ = ()
+      let make _ _ _ = `Func_decl
 
-      let apply () _ = ()
+      let apply `Func_decl _ = `Term
     end
 
     module Model = struct

@@ -19,6 +19,7 @@ type t =
   | Ty_str
   | Ty_unit
   | Ty_regexp
+  | Ty_roundingMode
 
 let discr = function
   | Ty_app -> 0
@@ -30,8 +31,9 @@ let discr = function
   | Ty_str -> 6
   | Ty_unit -> 7
   | Ty_regexp -> 8
-  | Ty_bitv n -> 9 + n
-  | Ty_fp n -> 10 + n
+  | Ty_roundingMode -> 9
+  | Ty_bitv n -> 10 + n
+  | Ty_fp n -> 11 + n
 
 let compare t1 t2 = compare (discr t1) (discr t2)
 
@@ -49,6 +51,7 @@ let pp fmt = function
   | Ty_unit -> Fmt.string fmt "unit"
   | Ty_none -> Fmt.string fmt "none"
   | Ty_regexp -> Fmt.string fmt "regexp"
+  | Ty_roundingMode -> Fmt.string fmt "RoudingMode"
 
 let string_of_type (ty : t) : string = Fmt.str "%a" pp ty
 
@@ -62,6 +65,7 @@ let of_string = function
   | "unit" -> Ok Ty_unit
   | "none" -> Ok Ty_none
   | "regexp" -> Ok Ty_regexp
+  | "RoundingMode" -> Ok Ty_roundingMode
   | s ->
     if String.starts_with ~prefix:"i" s then begin
       let s = String.sub s 1 (String.length s - 1) in
@@ -85,7 +89,8 @@ let size (ty : t) : int =
   match ty with
   | Ty_bitv n | Ty_fp n -> n / 8
   | Ty_int | Ty_bool -> 4
-  | Ty_real | Ty_str | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp ->
+  | Ty_real | Ty_str | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp
+  | Ty_roundingMode ->
     assert false
 
 module Unop = struct

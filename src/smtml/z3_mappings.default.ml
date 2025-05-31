@@ -81,6 +81,8 @@ module M = struct
 
       let float eb sb = Z3.FloatingPoint.mk_sort ctx eb sb
 
+      let roundingMode = Z3.FloatingPoint.RoundingMode.mk_sort ctx
+
       let ty term = Z3.Expr.get_sort term
 
       let to_ety sort =
