@@ -24,6 +24,7 @@
   dolmenexpr_to_expr
   eval
   expr
+  expr_raw
   interpret
   interpret_intf
   lexer
