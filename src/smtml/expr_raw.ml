@@ -80,12 +80,105 @@ include (
 
       val raw_concat : t -> t -> t
 
+      module Hc : sig
+        val clear : unit -> unit
+
+        val stats : unit -> Hashtbl.statistics
+
+        val length : unit -> int
+      end
+
       module Bool : sig
         val true_ : t
 
         val false_ : t
 
         val v : bool -> t
+      end
+
+      module Set : sig
+        type elt = t
+
+        type key = elt
+
+        type t
+
+        val empty : t
+
+        val is_empty : t -> bool
+
+        val mem : elt -> t -> bool
+
+        val add : elt -> t -> t
+
+        val singleton : elt -> t
+
+        val cardinal : t -> int
+
+        val is_singleton : t -> elt option
+
+        val remove : elt -> t -> t
+
+        val unsigned_min_elt : t -> elt
+
+        val unsigned_max_elt : t -> elt
+
+        val pop_unsigned_minimum : t -> (elt * t) option
+
+        val pop_unsigned_maximum : t -> (elt * t) option
+
+        val iter : (elt -> unit) -> t -> unit
+
+        val filter : (elt -> bool) -> t -> t
+
+        val for_all : (elt -> bool) -> t -> bool
+
+        val fold : (elt -> 'acc -> 'acc) -> t -> 'acc -> 'acc
+
+        val split : elt -> t -> t * bool * t
+
+        val pretty :
+             ?pp_sep:(Format.formatter -> unit -> unit)
+          -> (Format.formatter -> elt -> unit)
+          -> Format.formatter
+          -> t
+          -> unit
+
+        val union : t -> t -> t
+
+        val inter : t -> t -> t
+
+        val disjoint : t -> t -> bool
+
+        val subset : t -> t -> bool
+
+        val diff : t -> t -> t
+
+        val min_elt_inter : t -> t -> elt option
+
+        val max_elt_inter : t -> t -> elt option
+
+        val to_seq : t -> elt Seq.t
+
+        val to_rev_seq : t -> elt Seq.t
+
+        val add_seq : elt Seq.t -> t -> t
+
+        val of_seq : elt Seq.t -> t
+
+        val of_list : elt list -> t
+
+        val to_list : t -> elt list
+
+        val hash : t -> int
+
+        val to_int : t -> int
+
+        val equal : t -> t -> bool
+
+        val compare : t -> t -> int
+
+        val get_symbols : t -> Symbol.t list
       end
     end )
 
@@ -101,7 +194,7 @@ let cvtop = raw_cvtop
 
 let naryop = raw_naryop
 
-let extract ~high ~low = raw_extract ~high ~low
+let extract t ~high ~low = raw_extract t ~high ~low
 
 let concat = raw_concat
 
