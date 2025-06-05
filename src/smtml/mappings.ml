@@ -894,10 +894,27 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           Stack.push ctx s.ctx;
           M.Solver.add s.solver ~ctx exprs
 
+      let log_query_to_file (assumptions : Expr.t list) : unit =
+        let assumption_strings =
+          List.map (fun a -> Fmt.str "%a" Expr.pp a) assumptions
+        in
+        let json =
+          `Assoc
+            [ ("hash", `String (Fmt.str "%x" (Hashtbl.hash assumption_strings)))
+            ; ("query", `List (List.map (fun s -> `String s) assumption_strings))
+            ; ("pid", `String (Int.to_string @@ Unix.getpid ()))
+            ]
+        in
+        let json_line =
+          String.concat "" [ Yojson.Basic.to_string json; "\n" ]
+        in
+        Tmp_log_path.write json_line
+
       let check (s : solver) ~assumptions =
         match Stack.top_opt s.ctx with
         | None -> assert false
         | Some ctx ->
+          log_query_to_file assumptions;
           let ctx, assumptions = encode_exprs ctx assumptions in
           s.last_ctx <- Some ctx;
           M.Solver.check s.solver ~ctx ~assumptions
