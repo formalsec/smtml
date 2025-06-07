@@ -61,19 +61,19 @@ module Nop = struct
     let exists _ _ = assert false
 
     module Types = struct
-      let int = `Ty
+      let int = lazy `Ty
 
-      let real = `Ty
+      let real = lazy `Ty
 
-      let bool = `Ty
+      let bool = lazy `Ty
 
-      let string = `Ty
+      let string = lazy `Ty
 
       let bitv _ = `Ty
 
       let float _ _ = `Ty
 
-      let roundingMode = `Ty
+      let roundingMode = lazy `Ty
 
       let ty _ = assert false
 

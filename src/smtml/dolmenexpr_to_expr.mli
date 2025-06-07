@@ -78,19 +78,19 @@ module DolmenIntf : sig
   val exists : term list -> term -> term
 
   module Types : sig
-    val int : ty
+    val int : ty Lazy.t
 
-    val real : ty
+    val real : ty Lazy.t
 
-    val bool : ty
+    val bool : ty Lazy.t
 
-    val string : ty
+    val string : ty Lazy.t
 
     val bitv : int -> ty
 
     val float : int -> int -> ty
 
-    val roundingMode : ty
+    val roundingMode : ty Lazy.t
 
     val ty : term -> ty
 
