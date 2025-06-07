@@ -69,19 +69,19 @@ module M = struct
       |> Z3.Quantifier.expr_of_quantifier
 
     module Types = struct
-      let int = Z3.Arithmetic.Integer.mk_sort ctx
+      let int = lazy (Z3.Arithmetic.Integer.mk_sort ctx)
 
-      let real = Z3.Arithmetic.Real.mk_sort ctx
+      let real = lazy (Z3.Arithmetic.Real.mk_sort ctx)
 
-      let bool = Z3.Boolean.mk_sort ctx
+      let bool = lazy (Z3.Boolean.mk_sort ctx)
 
-      let string = Z3.Seq.mk_string_sort ctx
+      let string = lazy (Z3.Seq.mk_string_sort ctx)
 
       let bitv n = Z3.BitVector.mk_sort ctx n
 
       let float eb sb = Z3.FloatingPoint.mk_sort ctx eb sb
 
-      let roundingMode = Z3.FloatingPoint.RoundingMode.mk_sort ctx
+      let roundingMode = lazy (Z3.FloatingPoint.RoundingMode.mk_sort ctx)
 
       let ty term = Z3.Expr.get_sort term
 

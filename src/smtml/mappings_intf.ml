@@ -102,16 +102,16 @@ module type M = sig
 
   module Types : sig
     (** [int] represents the integer type. *)
-    val int : ty
+    val int : ty Lazy.t
 
     (** [real] represents the real number type. *)
-    val real : ty
+    val real : ty Lazy.t
 
     (** [bool] represents the Boolean type. *)
-    val bool : ty
+    val bool : ty Lazy.t
 
     (** [string] represents the string type. *)
-    val string : ty
+    val string : ty Lazy.t
 
     (** [bitv n] represents a bitvector type of width [n]. *)
     val bitv : int -> ty
@@ -120,7 +120,7 @@ module type M = sig
         significand width [s]. *)
     val float : int -> int -> ty
 
-    val roundingMode : ty
+    val roundingMode : ty Lazy.t
 
     (** [ty t] retrieves the type of the term [t]. *)
     val ty : term -> ty

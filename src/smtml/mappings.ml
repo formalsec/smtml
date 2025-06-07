@@ -30,55 +30,62 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       ; ctx : symbol_ctx Stack.t
       }
 
-    let i8 = M.Types.bitv 8
+    let i8 = lazy (M.Types.bitv 8)
 
-    let i32 = M.Types.bitv 32
+    let i32 = lazy (M.Types.bitv 32)
 
-    let i64 = M.Types.bitv 64
+    let i64 = lazy (M.Types.bitv 64)
 
-    let f32 = M.Types.float 8 24
+    let f32 = lazy (M.Types.float 8 24)
 
-    let f64 = M.Types.float 11 53
+    let f64 = lazy (M.Types.float 11 53)
 
-    let int2str = M.Func.make "int_to_string" [ M.Types.int ] M.Types.string
-
-    let str2int = M.Func.make "string_to_int" [ M.Types.string ] M.Types.int
-
-    let real2str = M.Func.make "real_to_string " [ M.Types.real ] M.Types.string
-
-    let str2real = M.Func.make "string_to_real" [ M.Types.string ] M.Types.real
-
-    let str_trim = M.Func.make "string_trim" [ M.Types.string ] M.Types.string
-
-    let f32_to_i32 = M.Func.make "f32_to_i32" [ f32 ] i32
-
-    let f64_to_i64 = M.Func.make "f64_to_i64" [ f64 ] i64
-
-    let get_type = function
-      | Ty_int -> M.Types.int
-      | Ty_real -> M.Types.real
-      | Ty_bool -> M.Types.bool
-      | Ty_str -> M.Types.string
-      | Ty_bitv 8 -> i8
-      | Ty_bitv 32 -> i32
-      | Ty_bitv 64 -> i64
+    let sort = function
+      | Ty_int -> Lazy.force M.Types.int
+      | Ty_real -> Lazy.force M.Types.real
+      | Ty_bool -> Lazy.force M.Types.bool
+      | Ty_str -> Lazy.force M.Types.string
+      | Ty_bitv 8 -> Lazy.force i8
+      | Ty_bitv 32 -> Lazy.force i32
+      | Ty_bitv 64 -> Lazy.force i64
       | Ty_bitv n -> M.Types.bitv n
-      | Ty_fp 32 -> f32
-      | Ty_fp 64 -> f64
-      | Ty_roundingMode -> M.Types.roundingMode
+      | Ty_fp 32 -> Lazy.force f32
+      | Ty_fp 64 -> Lazy.force f64
+      | Ty_roundingMode -> Lazy.force M.Types.roundingMode
       | (Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp) as ty ->
         Fmt.failwith "Unsupported theory: %a@." Ty.pp ty
+
+    let int2str =
+      lazy (M.Func.make "int_to_string" [ sort Ty_int ] (sort Ty_str))
+
+    let str2int =
+      lazy (M.Func.make "string_to_int" [ sort Ty_str ] (sort Ty_int))
+
+    let real2str =
+      lazy (M.Func.make "real_to_string " [ sort Ty_real ] (sort Ty_str))
+
+    let str2real =
+      lazy (M.Func.make "string_to_real" [ sort Ty_str ] (sort Ty_real))
+
+    let str_trim =
+      lazy (M.Func.make "string_trim" [ sort Ty_str ] (sort Ty_str))
+
+    let f32_to_i32 =
+      lazy (M.Func.make "f32_to_i32" [ sort (Ty_fp 32) ] (sort (Ty_bitv 32)))
+
+    let f64_to_i64 =
+      lazy (M.Func.make "f64_to_i64" [ sort (Ty_fp 64) ] (sort (Ty_bitv 64)))
 
     let make_symbol (ctx : symbol_ctx) (s : Symbol.t) : symbol_ctx * M.term =
       let name = match s.name with Simple name -> name | _ -> assert false in
       if M.Internals.caches_consts then
-        let sym = M.const name (get_type s.ty) in
+        let sym = M.const name (sort s.ty) in
         (Smap.add s sym ctx, sym)
       else
         match Smap.find_opt s ctx with
         | Some sym -> (ctx, sym)
         | None ->
-          let sym = M.const name (get_type s.ty) in
+          let sym = M.const name (sort s.ty) in
           (Smap.add s sym ctx, sym)
 
     module Bool_impl = struct
@@ -150,8 +157,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let cvtop op e =
         match op with
-        | Cvtop.ToString -> M.Func.apply int2str [ e ]
-        | OfString -> M.Func.apply str2int [ e ]
+        | Cvtop.ToString -> M.Func.apply (Lazy.force int2str) [ e ]
+        | OfString -> M.Func.apply (Lazy.force str2int) [ e ]
         | Reinterpret_float -> M.Real.to_int e
         | op ->
           Fmt.failwith {|Int: Unsupported cvtop operator "%a"|} Cvtop.pp op
@@ -198,8 +205,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let cvtop op e =
         match op with
-        | Cvtop.ToString -> M.Func.apply real2str [ e ]
-        | OfString -> M.Func.apply str2real [ e ]
+        | Cvtop.ToString -> M.Func.apply (Lazy.force real2str) [ e ]
+        | OfString -> M.Func.apply (Lazy.force str2real) [ e ]
         | Reinterpret_int -> M.Int.to_real e
         | op ->
           Fmt.failwith {|Real: Unsupported cvtop operator "%a"|} Cvtop.pp op
@@ -211,7 +218,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       let unop op e =
         match op with
         | Unop.Length -> M.String.length e
-        | Trim -> M.Func.apply str_trim [ e ]
+        | Trim -> M.Func.apply (Lazy.force str_trim) [ e ]
         | op ->
           Fmt.failwith {|String: Unsupported unop operator "%a"|} Unop.pp op
 
@@ -442,7 +449,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let bitwidth = 32
 
-      let to_ieee_bv = to_ieee_bv f32_to_i32
+      let to_ieee_bv e = to_ieee_bv (Lazy.force f32_to_i32) e
 
       module Ixx = Int32
     end)
@@ -452,7 +459,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let v i = M.Bitv.v (Int64.to_string i) 64
 
-      let to_ieee_bv = to_ieee_bv f64_to_i64
+      let to_ieee_bv e = to_ieee_bv (Lazy.force f64_to_i64) e
 
       let bitwidth = 64
 
@@ -731,8 +738,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
             Fmt.failwith "Unsupported uninterpreted application of: %a"
               Symbol.pp sym
         in
-        let ty = get_type @@ Symbol.type_of sym in
-        let tys = List.map (fun e -> get_type @@ Expr.ty e) args in
+        let ty = sort @@ Symbol.type_of sym in
+        let tys = List.map (fun e -> sort @@ Expr.ty e) args in
         let ctx, arguments = encode_exprs ctx args in
         let sym = M.Func.make name tys ty in
         (ctx, M.Func.apply sym arguments)

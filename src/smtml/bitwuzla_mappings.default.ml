@@ -67,19 +67,19 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
   let exists _ = Fmt.failwith "Bitwuzla_mappings: exists not implemented"
 
   module Types = struct
-    let int = mk_bool_sort ()
+    let int = lazy (mk_bool_sort ())
 
-    let real = mk_bool_sort ()
+    let real = lazy (mk_bool_sort ())
 
-    let bool = mk_bool_sort ()
+    let bool = lazy (mk_bool_sort ())
 
-    let string = mk_bool_sort ()
+    let string = lazy (mk_bool_sort ())
 
     let bitv bitwidth = mk_bv_sort bitwidth
 
     let float ebits sbits = mk_fp_sort ebits sbits
 
-    let roundingMode = mk_rm_sort ()
+    let roundingMode = lazy (mk_rm_sort ())
 
     let ty t = Term.sort t
 

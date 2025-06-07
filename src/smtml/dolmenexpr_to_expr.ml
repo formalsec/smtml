@@ -144,6 +144,16 @@ module DolmenIntf = struct
   module Types = struct
     include DTy
 
+    let int = lazy int
+
+    let real = lazy real
+
+    let bool = lazy bool
+
+    let string = lazy string
+
+    let roundingMode = lazy roundingMode
+
     let ty = DTerm.ty
 
     let to_ety (ty : DTy.t) : Ty.t =
