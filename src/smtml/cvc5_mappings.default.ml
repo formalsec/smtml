@@ -65,19 +65,19 @@ module Fresh_cvc5 () = struct
   let exists _ = Fmt.failwith "Cvc5_mappings: exists not implemented"
 
   module Types = struct
-    let int = Sort.mk_int_sort tm
+    let int = lazy (Sort.mk_int_sort tm)
 
-    let real = Sort.mk_real_sort tm
+    let real = lazy (Sort.mk_real_sort tm)
 
-    let bool = Sort.mk_bool_sort tm
+    let bool = lazy (Sort.mk_bool_sort tm)
 
-    let string = Sort.mk_string_sort tm
+    let string = lazy (Sort.mk_string_sort tm)
 
     let bitv bitwidth = Sort.mk_bv_sort tm bitwidth
 
     let float ebits sbits = Sort.mk_fp_sort tm ebits sbits
 
-    let roundingMode = Sort.mk_rm_sort tm
+    let roundingMode = lazy (Sort.mk_rm_sort tm)
 
     let ty t = Term.sort t
 
