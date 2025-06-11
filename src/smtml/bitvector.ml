@@ -17,6 +17,10 @@ let of_int8 v =
   (* TODO: add a check on v to make sure it is not too big ? *)
   make (Z.of_int v) 8
 
+let of_int16 v =
+  (* TODO: add a check on v to make sure it is not too big ? *)
+  make (Z.of_int v) 16
+
 let of_int32 v = make (Z.of_int32 v) 32
 
 let of_int64 v = make (Z.of_int64 v) 64
