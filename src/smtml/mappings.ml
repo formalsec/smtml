@@ -813,6 +813,9 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty_bitv 8 ->
         let i8 = M.Interp.to_bitv v 8 in
         Value.Bitv (Bitvector.of_int8 (Int64.to_int i8))
+      | Ty_bitv 16 ->
+        let i16 = M.Interp.to_bitv v 16 in
+        Value.Bitv (Bitvector.of_int16 (Int64.to_int i16))
       | Ty_bitv 32 ->
         let i32 = M.Interp.to_bitv v 32 in
         Value.Bitv (Bitvector.of_int32 (Int64.to_int32 i32))
