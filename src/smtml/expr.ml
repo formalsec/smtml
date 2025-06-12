@@ -346,6 +346,7 @@ let unop ty op hte =
   | Ty.Unop.(Regexp_loop _ | Regexp_star), _ -> raw_unop ty op hte
   | _, Val v -> value (Eval.unop ty op v)
   | Not, Unop (_, Not, hte') -> hte'
+  | Not, Relop (Ty_fp _, _, _, _) -> raw_unop ty op hte
   | Not, Relop (_, _, _, _) -> negate_relop hte
   | Neg, Unop (_, Neg, hte') -> hte'
   | Trim, Cvtop (Ty_real, ToString, _) -> hte
