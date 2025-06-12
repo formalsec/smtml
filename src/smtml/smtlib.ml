@@ -72,6 +72,8 @@ module Term = struct
       | "roundTowardPositive" | "RTP" | "roundTowardNegative" | "RTN"
       | "roundTowardZero" | "RTZ" ->
         Expr.symbol { id with ty = Ty_roundingMode }
+      | "re.all" | "re.allchar" | "re.none" ->
+        Expr.symbol { id with ty = Ty_regexp }
       | _ -> Expr.symbol id
     end
     | Term, Indexed { basename = base; indices } -> begin
@@ -191,6 +193,7 @@ module Term = struct
       | "re.opt", [ a ] -> Expr.raw_unop Ty_regexp Regexp_opt a
       | "re.comp", [ a ] -> Expr.raw_unop Ty_regexp Regexp_comp a
       | "re.range", [ a; b ] -> Expr.raw_binop Ty_regexp Regexp_range a b
+      | "re.inter", [ a; b ] -> Expr.raw_binop Ty_regexp Regexp_inter a b
       | "re.union", n -> Expr.raw_naryop Ty_regexp Regexp_union n
       | "re.++", n -> Expr.raw_naryop Ty_regexp Concat n
       | "bvnot", [ a ] -> Expr.raw_unop Ty_none Not a

@@ -122,6 +122,9 @@ module type M = sig
 
     val roundingMode : ty
 
+    (** [regexp] represents the regular expression type. *)
+    val regexp : ty
+
     (** [ty t] retrieves the type of the term [t]. *)
     val ty : term -> ty
 
@@ -318,6 +321,16 @@ module type M = sig
   (** {2 Regular Expression Operations} *)
 
   module Re : sig
+    (** [all] constructs the regular expression that matches all. *)
+    val all : unit -> term
+
+    (** [allchar] constructs the regular expression that matches any character.
+    *)
+    val allchar : unit -> term
+
+    (** [empty] constructs the empty regular expression. *)
+    val none : unit -> term
+
     (** [star t] constructs the Kleene star of the regular expression term [t].
     *)
     val star : term -> term
@@ -336,6 +349,10 @@ module type M = sig
     (** [range t1 t2] constructs a regular expression term matching characters
         in the range from [t1] to [t2]. *)
     val range : term -> term -> term
+
+    (** [inter t1 t2] constructs the intersection of the regular expression
+        terms [t1] and [t2]. *)
+    val inter : term -> term -> term
 
     (** [loop t min max] constructs a regular expression term matching [t]
         repeated between [min] and [max] times. *)

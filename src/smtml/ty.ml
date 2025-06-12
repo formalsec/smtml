@@ -230,6 +230,7 @@ module Binop = struct
     | String_in_re
     (* Regexp *)
     | Regexp_range
+    | Regexp_inter
 
   let equal o1 o2 =
     match (o1, o2) with
@@ -261,12 +262,14 @@ module Binop = struct
     | String_contains, String_contains
     | String_last_index, String_last_index
     | String_in_re, String_in_re
-    | Regexp_range, Regexp_range ->
+    | Regexp_range, Regexp_range
+    | Regexp_inter, Regexp_inter ->
       true
     | ( ( Add | Sub | Mul | Div | DivU | Rem | RemU | Shl | ShrA | ShrL | And
         | Or | Xor | Implies | Pow | Min | Max | Copysign | Rotl | Rotr | At
         | List_cons | List_append | String_prefix | String_suffix
-        | String_contains | String_last_index | String_in_re | Regexp_range )
+        | String_contains | String_last_index | String_in_re | Regexp_range
+        | Regexp_inter )
       , _ ) ->
       false
 
@@ -300,6 +303,7 @@ module Binop = struct
     | String_last_index -> Fmt.string fmt "last_indexof"
     | String_in_re -> Fmt.string fmt "in_re"
     | Regexp_range -> Fmt.string fmt "range"
+    | Regexp_inter -> Fmt.string fmt "inter"
 end
 
 module Relop = struct

@@ -81,6 +81,8 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
     let roundingMode = mk_rm_sort ()
 
+    let regexp = mk_bool_sort ()
+
     let ty t = Term.sort t
 
     let to_ety _ = Fmt.failwith "Bitwuzla_mappings: to_ety not implemented"
@@ -222,6 +224,12 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
   end
 
   module Re = struct
+    let allchar _ = Fmt.failwith "Bitwuzla_mappings: Re.allchar not implemented"
+
+    let all _ = Fmt.failwith "Bitwuzla_mappings: Re.all not implemented"
+
+    let none _ = Fmt.failwith "Bitwuzla_mappings: Re.none not implemented"
+
     let star _ = Fmt.failwith "Bitwuzla_mappings: Re.star not implemented"
 
     let plus _ = Fmt.failwith "Bitwuzla_mappings: Re.plus not implemented"
@@ -231,6 +239,8 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     let comp _ = Fmt.failwith "Bitwuzla_mappings: Re.comp not implemented"
 
     let range _ = Fmt.failwith "Bitwuzla_mappings: Re.range not implemented"
+
+    let inter _ = Fmt.failwith "Bitwuzla_mappings: Re.inter not implemented"
 
     let loop _ = Fmt.failwith "Bitwuzla_mappings: Re.loop not implemented"
 
