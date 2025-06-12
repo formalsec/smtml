@@ -92,6 +92,8 @@ module DolmenIntf : sig
 
     val roundingMode : ty
 
+    val regexp : ty
+
     val ty : term -> ty
 
     val to_ety : ty -> Ty.t
@@ -186,6 +188,12 @@ module DolmenIntf : sig
   end
 
   module Re : sig
+    val allchar : unit -> term
+
+    val all : unit -> term
+
+    val none : unit -> term
+
     val star : term -> term
 
     val plus : term -> term
@@ -195,6 +203,8 @@ module DolmenIntf : sig
     val comp : term -> term
 
     val range : term -> term -> term
+
+    val inter : term -> term -> term
 
     val loop : term -> int -> int -> term
 

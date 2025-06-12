@@ -143,6 +143,7 @@ module Binop : sig
     | String_in_re  (** Check if a string matches a regular expression. *)
     (* Regexp operations *)
     | Regexp_range  (** Range of characters. *)
+    | Regexp_inter  (** Intersection of regular expressions. *)
 
   (** [equal op1 op2] checks if binary operations [op1] and [op2] are equal. *)
   val equal : t -> t -> bool

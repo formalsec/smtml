@@ -79,6 +79,8 @@ module Fresh_cvc5 () = struct
 
     let roundingMode = Sort.mk_rm_sort tm
 
+    let regexp = Sort.mk_bool_sort tm
+
     let ty t = Term.sort t
 
     let to_ety _ = assert false
@@ -204,6 +206,12 @@ module Fresh_cvc5 () = struct
   end
 
   module Re = struct
+    let allchar () = Term.mk_term tm Kind.Regexp_allchar [||]
+
+    let all () = Term.mk_term tm Kind.Regexp_all [||]
+
+    let none () = Term.mk_term tm Kind.Regexp_none [||]
+
     let star t = Term.mk_term tm Kind.Regexp_star [| t |]
 
     let plus t = Term.mk_term tm Kind.Regexp_plus [| t |]
@@ -213,6 +221,8 @@ module Fresh_cvc5 () = struct
     let comp t = Term.mk_term tm Kind.Regexp_complement [| t |]
 
     let range t1 t2 = Term.mk_term tm Kind.Regexp_range [| t1; t2 |]
+
+    let inter t1 t2 = Term.mk_term tm Kind.Regexp_inter [| t1; t2 |]
 
     let loop t i1 i2 =
       let op = Op.mk_op tm Kind.Regexp_loop [| i1; i2 |] in
