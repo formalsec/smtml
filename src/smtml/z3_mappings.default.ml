@@ -83,6 +83,8 @@ module M = struct
 
       let roundingMode = Z3.FloatingPoint.RoundingMode.mk_sort ctx
 
+      let regexp = Z3.Seq.mk_re_sort ctx string
+
       let ty term = Z3.Expr.get_sort term
 
       let to_ety sort =
@@ -245,9 +247,19 @@ module M = struct
 
       let replace e1 ~pattern ~with_ =
         Z3.Seq.mk_seq_replace ctx e1 pattern with_
+
+      let replace_all _ ~pattern:_ ~with_:_ =
+        Fmt.failwith "Z3_mappings: String.replace_all not implemented"
     end
 
     module Re = struct
+      let allchar () =
+        Z3.Seq.mk_re_full ctx (Z3.Seq.mk_re_sort ctx Types.string)
+
+      let all () = Z3.Seq.mk_re_full ctx (Z3.Seq.mk_re_sort ctx Types.string)
+
+      let none () = Z3.Seq.mk_re_empty ctx (Z3.Seq.mk_re_sort ctx Types.string)
+
       let star e = Z3.Seq.mk_re_star ctx e
 
       let plus e = Z3.Seq.mk_re_plus ctx e
@@ -257,6 +269,8 @@ module M = struct
       let comp e = Z3.Seq.mk_re_complement ctx e
 
       let range e1 e2 = Z3.Seq.mk_re_range ctx e1 e2
+
+      let inter e1 e2 = Z3.Seq.mk_re_intersect ctx [ e1; e2 ]
 
       let loop e i1 i2 = Z3.Seq.mk_re_loop ctx e i1 i2
 

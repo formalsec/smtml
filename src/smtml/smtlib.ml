@@ -72,6 +72,8 @@ module Term = struct
       | "roundTowardPositive" | "RTP" | "roundTowardNegative" | "RTN"
       | "roundTowardZero" | "RTZ" ->
         Expr.symbol { id with ty = Ty_roundingMode }
+      | "re.all" | "re.allchar" | "re.none" ->
+        Expr.symbol { id with ty = Ty_regexp }
       | _ -> Expr.symbol id
     end
     | Term, Indexed { basename = base; indices } -> begin
@@ -178,6 +180,8 @@ module Term = struct
       | "str.substr", [ a; b; c ] -> Expr.triop Ty_str String_extract a b c
       | "str.indexof", [ a; b; c ] -> Expr.triop Ty_str String_index a b c
       | "str.replace", [ a; b; c ] -> Expr.triop Ty_str String_replace a b c
+      | "str.replace_all", [ a; b; c ] ->
+        Expr.triop Ty_str String_replace_all a b c
       | "str.++", n -> Expr.raw_naryop Ty_str Concat n
       | "str.<", [ a; b ] -> Expr.raw_relop Ty_str Lt a b
       | "str.<=", [ a; b ] -> Expr.raw_relop Ty_str Le a b
@@ -191,6 +195,7 @@ module Term = struct
       | "re.opt", [ a ] -> Expr.raw_unop Ty_regexp Regexp_opt a
       | "re.comp", [ a ] -> Expr.raw_unop Ty_regexp Regexp_comp a
       | "re.range", [ a; b ] -> Expr.raw_binop Ty_regexp Regexp_range a b
+      | "re.inter", [ a; b ] -> Expr.raw_binop Ty_regexp Regexp_inter a b
       | "re.union", n -> Expr.raw_naryop Ty_regexp Regexp_union n
       | "re.++", n -> Expr.raw_naryop Ty_regexp Concat n
       | "bvnot", [ a ] -> Expr.raw_unop Ty_none Not a

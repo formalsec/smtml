@@ -66,7 +66,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty_fp 32 -> f32
       | Ty_fp 64 -> f64
       | Ty_roundingMode -> M.Types.roundingMode
-      | (Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp) as ty ->
+      | Ty_regexp -> M.Types.regexp
+      | (Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none) as ty ->
         Fmt.failwith "Unsupported theory: %a@." Ty.pp ty
 
     let make_symbol (ctx : symbol_ctx) (s : Symbol.t) : symbol_ctx * M.term =
@@ -230,6 +231,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Triop.String_extract -> M.String.sub e1 ~pos:e2 ~len:e3
         | String_index -> M.String.index_of e1 ~sub:e2 ~pos:e3
         | String_replace -> M.String.replace e1 ~pattern:e2 ~with_:e3
+        | String_replace_all -> M.String.replace_all e1 ~pattern:e2 ~with_:e3
         | _ ->
           Fmt.failwith {|String: Unsupported triop operator "%a"|} Triop.pp op
 
@@ -272,6 +274,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       let binop op e1 e2 =
         match op with
         | Binop.Regexp_range -> M.Re.range e1 e2
+        | Regexp_inter -> M.Re.inter e1 e2
         | op ->
           Fmt.failwith {|Regexp: Unsupported binop operator "%a"|} Binop.pp op
 
@@ -687,6 +690,9 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         let base' = v (Bitv (Bitvector.of_int32 base)) in
         let ctx, offset' = encode_expr ctx offset in
         (ctx, I32.binop Add base' offset')
+      | Symbol { name = Simple "re.all"; _ } -> (ctx, M.Re.all ())
+      | Symbol { name = Simple "re.none"; _ } -> (ctx, M.Re.none ())
+      | Symbol { name = Simple "re.allchar"; _ } -> (ctx, M.Re.allchar ())
       | Symbol sym -> make_symbol ctx sym
       (* FIXME: add a way to support building these expressions without apps *)
       | App ({ name = Simple "fp.add"; _ }, [ rm; a; b ]) ->

@@ -75,6 +75,8 @@ module Nop = struct
 
       let roundingMode = `Ty
 
+      let regexp = `Ty
+
       let ty _ = assert false
 
       let to_ety _ = assert false
@@ -180,9 +182,17 @@ module Nop = struct
       let index_of _ ~sub:_ ~pos:_ = assert false
 
       let replace _ ~pattern:_ ~with_:_ = assert false
+
+      let replace_all _ ~pattern:_ ~with_:_ = assert false
     end
 
     module Re = struct
+      let allchar _ = assert false
+
+      let all _ = assert false
+
+      let none _ = assert false
+
       let star _ = assert false
 
       let plus _ = assert false
@@ -192,6 +202,8 @@ module Nop = struct
       let comp _ = assert false
 
       let range _ = assert false
+
+      let inter _ = assert false
 
       let loop _ = assert false
 
