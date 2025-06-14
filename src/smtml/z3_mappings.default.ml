@@ -247,6 +247,9 @@ module M = struct
 
       let replace e1 ~pattern ~with_ =
         Z3.Seq.mk_seq_replace ctx e1 pattern with_
+
+      let replace_all _ ~pattern:_ ~with_:_ =
+        Fmt.failwith "Z3_mappings: String.replace_all not implemented"
     end
 
     module Re = struct

@@ -355,6 +355,7 @@ module Triop = struct
     | String_extract
     | String_replace
     | String_index
+    | String_replace_all
 
   let equal op1 op2 =
     match (op1, op2) with
@@ -362,9 +363,12 @@ module Triop = struct
     | List_set, List_set
     | String_extract, String_extract
     | String_replace, String_replace
-    | String_index, String_index ->
+    | String_index, String_index
+    | String_replace_all, String_replace_all ->
       true
-    | (Ite | List_set | String_extract | String_replace | String_index), _ ->
+    | ( ( Ite | List_set | String_extract | String_replace | String_index
+        | String_replace_all )
+      , _ ) ->
       false
 
   let pp fmt = function
@@ -372,6 +376,7 @@ module Triop = struct
     | String_extract -> Fmt.string fmt "substr"
     | String_replace -> Fmt.string fmt "replace"
     | String_index -> Fmt.string fmt "indexof"
+    | String_replace_all -> Fmt.string fmt "replace_all"
     | List_set -> Fmt.string fmt "set"
 end
 
