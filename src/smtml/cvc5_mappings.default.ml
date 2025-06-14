@@ -203,6 +203,9 @@ module Fresh_cvc5 () = struct
 
     let replace t1 ~pattern ~with_ =
       Term.mk_term tm Kind.String_replace [| t1; pattern; with_ |]
+
+    let replace_all t1 ~pattern ~with_ =
+      Term.mk_term tm Kind.String_replace_all [| t1; pattern; with_ |]
   end
 
   module Re = struct

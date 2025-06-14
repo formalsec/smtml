@@ -231,6 +231,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Triop.String_extract -> M.String.sub e1 ~pos:e2 ~len:e3
         | String_index -> M.String.index_of e1 ~sub:e2 ~pos:e3
         | String_replace -> M.String.replace e1 ~pattern:e2 ~with_:e3
+        | String_replace_all -> M.String.replace_all e1 ~pattern:e2 ~with_:e3
         | _ ->
           Fmt.failwith {|String: Unsupported triop operator "%a"|} Triop.pp op
 

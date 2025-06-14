@@ -316,6 +316,10 @@ module type M = sig
     (** [replace t ~pattern ~with_] constructs the string term resulting from
         replacing [pattern] with [with_] in [t]. *)
     val replace : term -> pattern:term -> with_:term -> term
+
+    (** [replace_all t ~pattern ~with_] constructs the string term resulting
+        from replacing all occurrences of [pattern] with [with_] in [t]. *)
+    val replace_all : term -> pattern:term -> with_:term -> term
   end
 
   (** {2 Regular Expression Operations} *)

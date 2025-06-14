@@ -221,6 +221,9 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
     let replace _ ~pattern:_ ~with_:_ =
       Fmt.failwith "Bitwuzla_mappings: String.replace not implemented"
+
+    let replace_all _ ~pattern:_ ~with_:_ =
+      Fmt.failwith "Bitwuzla_mappings: String.replace_all not implemented"
   end
 
   module Re = struct
