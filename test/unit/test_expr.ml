@@ -620,8 +620,8 @@ let test_fp_nan_not_geffects _ =
   let x = symbol "x" ty in
   let y = symbol "y" ty in
   (* x != x makes isNaN(x) *)
-  let expr = Expr.unop ty Not (Expr.relop ty Ge x y) in
-  let expected = Expr.unop ty Not (Expr.relop ty Le y x) in
+  let expr = Expr.unop Ty_bool Not (Expr.relop ty Ge x y) in
+  let expected = Expr.unop Ty_bool Not (Expr.relop ty Le y x) in
   check expr expected
 
 let test_simplify_concat =
