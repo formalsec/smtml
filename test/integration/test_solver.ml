@@ -221,9 +221,9 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
       ];
     assert_sat ~f:"test_copysign64" (Solver.check solver [])
 
-  let test_to_ieee_bv solver_modulde =
+  let test_to_ieee_bv solver_module =
     let open Infix in
-    let module Solver = (val solver_modulde : Solver_intf.S) in
+    let module Solver = (val solver_module : Solver_intf.S) in
     let solver =
       Solver.create ~params:(Params.default ()) ~logic:Logic.QF_UFBV ()
     in
