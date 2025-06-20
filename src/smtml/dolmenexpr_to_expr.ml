@@ -175,6 +175,10 @@ module DolmenIntf = struct
   module Int = struct
     include DTerm.Int
 
+    let to_string t = DTerm.String.of_int t
+
+    let of_string t = DTerm.String.to_int t
+
     let neg = DTerm.Int.minus
   end
 
