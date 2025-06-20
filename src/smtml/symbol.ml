@@ -71,10 +71,10 @@ let make ty name = name @: ty
 
 let make3 ty name namespace = { ty; name; namespace }
 
-let mk namespace name = { ty = Ty_none; name = Name.simple name; namespace }
+let mk namespace name = { ty = Ty Ty_none; name = Name.simple name; namespace }
 
 let indexed namespace basename indices =
-  { ty = Ty_none; name = Name.indexed basename indices; namespace }
+  { ty = Ty Ty_none; name = Name.indexed basename indices; namespace }
 
 let pp_namespace fmt = function
   | Attr -> Fmt.string fmt "attr"

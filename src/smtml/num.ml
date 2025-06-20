@@ -12,7 +12,7 @@ type printer =
   ]
 
 let type_of (n : t) =
-  match n with F32 _ -> Ty.(Ty_fp 32) | F64 _ -> Ty.(Ty_fp 64)
+  match n with F32 _ -> Ty.Ty (Ty_fp 32) | F64 _ -> Ty.Ty (Ty_fp 64)
 
 let compare n1 n2 =
   match (n1, n2) with
@@ -47,7 +47,7 @@ let pp fmt v = !printer fmt v
 
 let to_string (n : t) : string = Fmt.str "%a" pp n
 
-let of_string (cast : Ty.t) value =
+let of_string (Ty cast : Ty.t) value =
   match cast with
   | Ty_fp 32 -> (
     match float_of_string_opt value with

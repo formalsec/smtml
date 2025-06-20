@@ -55,19 +55,19 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
     let f64_to_i64 = M.Func.make "f64_to_i64" [ f64 ] i64
 
     let get_type = function
-      | Ty_int -> M.Types.int
-      | Ty_real -> M.Types.real
-      | Ty_bool -> M.Types.bool
-      | Ty_str -> M.Types.string
-      | Ty_bitv 8 -> i8
-      | Ty_bitv 32 -> i32
-      | Ty_bitv 64 -> i64
-      | Ty_bitv n -> M.Types.bitv n
-      | Ty_fp 32 -> f32
-      | Ty_fp 64 -> f64
-      | Ty_roundingMode -> M.Types.roundingMode
-      | Ty_regexp -> M.Types.regexp
-      | (Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none) as ty ->
+      | Ty Ty_int -> M.Types.int
+      | Ty Ty_real -> M.Types.real
+      | Ty Ty_bool -> M.Types.bool
+      | Ty Ty_str -> M.Types.string
+      | Ty (Ty_bitv 8) -> i8
+      | Ty (Ty_bitv 32) -> i32
+      | Ty (Ty_bitv 64) -> i64
+      | Ty (Ty_bitv n) -> M.Types.bitv n
+      | Ty (Ty_fp 32) -> f32
+      | Ty (Ty_fp 64) -> f64
+      | Ty Ty_roundingMode -> M.Types.roundingMode
+      | Ty Ty_regexp -> M.Types.regexp
+      | Ty (Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none) as ty ->
         Fmt.failwith "Unsupported theory: %a@." Ty.pp ty
 
     let make_symbol (ctx : symbol_ctx) (s : Symbol.t) : symbol_ctx * M.term =
@@ -87,10 +87,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let false_ = M.false_
 
-      let unop = function
-        | Unop.Not -> M.not_
-        | op ->
-          Fmt.failwith {|Bool: Unsupported Z3 unop operator "%a"|} Unop.pp op
+      let unop (op : [ `Ty_bool ] Ty.Unop.op) e =
+        match op with Unop.Not -> M.not_ e
 
       let binop = function
         | Binop.And -> M.and_
@@ -126,9 +124,11 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
     module Int_impl = struct
       let v i = M.int i [@@inline]
 
-      let unop = function
-        | Unop.Neg -> M.Int.neg
-        | op -> Fmt.failwith {|Int: Unsupported unop operator "%a"|} Unop.pp op
+      let unop (op : [ `Ty_int ] Ty.Unop.op) e =
+        match op with
+        | Neg -> M.Int.neg e
+        | Not | Abs ->
+          Fmt.failwith {|Int: Unsupported unop operator "%a"|} Unop.pp (U op)
 
       let binop = function
         | Binop.Add -> M.Int.add
@@ -161,18 +161,18 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
     module Real_impl = struct
       let v f = M.real f [@@inline]
 
-      let unop op e =
+      let unop (op : [ `Ty_real ] Ty.Unop.op) e =
         let open M in
         match op with
-        | Unop.Neg -> Real.neg e
+        | Neg -> Real.neg e
         | Abs -> ite (Real.gt e (real 0.)) e (Real.neg e)
         | Sqrt -> Real.pow e (v 0.5)
         | Ceil ->
           let x_int = M.Real.to_int e in
           ite (eq (Int.to_real x_int) e) x_int (Int.add x_int (int 1))
         | Floor -> Real.to_int e
-        | Nearest | Is_nan | _ ->
-          Fmt.failwith {|Real: Unsupported unop operator "%a"|} Unop.pp op
+        | Nearest | Trunc | Is_nan ->
+          Fmt.failwith {|Real: Unsupported unop operator "%a"|} Unop.pp (U op)
 
       let binop op e1 e2 =
         match op with
@@ -209,12 +209,13 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
     module String_impl = struct
       let v s = M.String.v s [@@inline]
 
-      let unop op e =
+      let unop (op : [ `Ty_str ] Ty.Unop.op) e =
         match op with
-        | Unop.Length -> M.String.length e
+        | Length -> M.String.length e
         | Trim -> M.Func.apply str_trim [ e ]
-        | op ->
-          Fmt.failwith {|String: Unsupported unop operator "%a"|} Unop.pp op
+        | Regexp_comp | Regexp_opt | Regexp_plus | Regexp_loop _ | Regexp_star
+          ->
+          Fmt.failwith {|String: Unsupported unop operator "%a"|} Unop.pp (U op)
 
       let binop op e1 e2 =
         match op with
@@ -261,15 +262,13 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
     end
 
     module Regexp_impl = struct
-      let unop op e =
+      let unop (op : [ `Ty_regexp ] Ty.Unop.op) e =
         match op with
-        | Unop.Regexp_star -> M.Re.star e
+        | Regexp_star -> M.Re.star e
         | Regexp_plus -> M.Re.plus e
         | Regexp_opt -> M.Re.opt e
         | Regexp_comp -> M.Re.comp e
         | Regexp_loop (i1, i2) -> M.Re.loop e i1 i2
-        | op ->
-          Fmt.failwith {|Regexp: Unsupported unop operator "%a"|} Unop.pp op
 
       let binop op e1 e2 =
         match op with
@@ -359,14 +358,13 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         in
         loop 0 (v @@ Ixx.of_int 0)
 
-      let unop = function
-        | Unop.Clz -> clz
-        | Ctz -> ctz
-        | Popcnt -> popcnt
-        | Neg -> Bitv.neg
-        | Not -> Bitv.lognot
-        | op ->
-          Fmt.failwith {|Bitv: Unsupported unary operator "%a"|} Unop.pp op
+      let unop (op : [ `Ty_bitv ] Ty.Unop.op) e =
+        match op with
+        | Unop.Clz -> clz e
+        | Ctz -> ctz e
+        | Popcnt -> popcnt e
+        | Neg -> Bitv.neg e
+        | Not -> Bitv.lognot e
 
       let binop = function
         | Binop.Add -> Bitv.add
@@ -481,9 +479,9 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       open M
       include F
 
-      let unop op e =
+      let unop (op : [ `Ty_fp ] Ty.Unop.op) e =
         match op with
-        | Unop.Neg -> Float.neg e
+        | Neg -> Float.neg e
         | Abs -> Float.abs e
         | Sqrt -> Float.sqrt ~rm:Float.Rounding_mode.rne e
         | Is_normal -> Float.is_normal e
@@ -497,7 +495,6 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Floor -> Float.round_to_integral ~rm:Float.Rounding_mode.rtn e
         | Trunc -> Float.round_to_integral ~rm:Float.Rounding_mode.rtz e
         | Nearest -> Float.round_to_integral ~rm:Float.Rounding_mode.rne e
-        | _ -> Fmt.failwith {|Fp: Unsupported unary operator "%a"|} Unop.pp op
 
       let binop op e1 e2 =
         match op with
@@ -591,81 +588,106 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Bitv bv -> M.Bitv.v (Bitvector.to_string bv) (Bitvector.numbits bv)
       | List _ | App _ | Unit | Nothing -> assert false
 
-    let unop = function
-      | Ty.Ty_int -> Int_impl.unop
-      | Ty.Ty_real -> Real_impl.unop
-      | Ty.Ty_bool -> Bool_impl.unop
-      | Ty.Ty_str -> String_impl.unop
-      | Ty.Ty_regexp -> Regexp_impl.unop
-      | Ty.Ty_bitv 8 -> I8.unop
-      | Ty.Ty_bitv 32 -> I32.unop
-      | Ty.Ty_bitv 64 -> I64.unop
-      | Ty.Ty_fp 32 -> Float32_impl.unop
-      | Ty.Ty_fp 64 -> Float64_impl.unop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none
-      | Ty_roundingMode ->
+    let unop : type a. a Ty.ty -> a Ty.Unop.op -> M.term -> M.term =
+     fun ty op e ->
+      match (ty, op) with
+      | Ty_int, ((Neg | Not | Abs) as op) -> Int_impl.unop op e
+      | ( Ty_real
+        , ((Neg | Abs | Sqrt | Is_nan | Ceil | Floor | Trunc | Nearest) as op) )
+        ->
+        Real_impl.unop op e
+      | Ty_bool, Not -> Bool_impl.unop Not e
+      | ( Ty_str
+        , ( ( Length | Trim | Regexp_star | Regexp_loop _ | Regexp_plus
+            | Regexp_opt | Regexp_comp ) as op ) ) ->
+        String_impl.unop op e
+      | ( Ty_regexp
+        , ( ( Regexp_star | Regexp_loop _ | Regexp_plus | Regexp_opt
+            | Regexp_comp ) as op ) ) ->
+        Regexp_impl.unop op e
+      | Ty_bitv n, ((Neg | Not | Clz | Ctz | Popcnt) as op) ->
+        if n = 8 then I8.unop op e
+        else if n = 32 then I32.unop op e
+        else begin
+          assert (n = 64);
+          I64.unop op e
+        end
+      | ( Ty_fp n
+        , ( ( Neg | Abs | Sqrt | Is_normal | Is_subnormal | Is_negative
+            | Is_positive | Is_infinite | Is_nan | Is_zero | Ceil | Floor
+            | Trunc | Nearest ) as op ) ) ->
+        if n = 32 then Float32_impl.unop op e
+        else begin
+          assert (n = 64);
+          Float64_impl.unop op e
+        end
+      | (Ty_list | Ty_app | Ty_unit | Ty_roundingMode | Ty_none), _ ->
         assert false
 
     let binop = function
-      | Ty.Ty_int -> Int_impl.binop
-      | Ty.Ty_real -> Real_impl.binop
-      | Ty.Ty_bool -> Bool_impl.binop
-      | Ty.Ty_str -> String_impl.binop
-      | Ty.Ty_regexp -> Regexp_impl.binop
-      | Ty.Ty_bitv 8 -> I8.binop
-      | Ty.Ty_bitv 32 -> I32.binop
-      | Ty.Ty_bitv 64 -> I64.binop
-      | Ty.Ty_fp 32 -> Float32_impl.binop
-      | Ty.Ty_fp 64 -> Float64_impl.binop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none
-      | Ty_roundingMode ->
+      | Ty Ty_int -> Int_impl.binop
+      | Ty Ty_real -> Real_impl.binop
+      | Ty Ty_bool -> Bool_impl.binop
+      | Ty Ty_str -> String_impl.binop
+      | Ty Ty_regexp -> Regexp_impl.binop
+      | Ty (Ty_bitv 8) -> I8.binop
+      | Ty (Ty_bitv 32) -> I32.binop
+      | Ty (Ty_bitv 64) -> I64.binop
+      | Ty (Ty_fp 32) -> Float32_impl.binop
+      | Ty (Ty_fp 64) -> Float64_impl.binop
+      | Ty
+          ( Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_roundingMode
+          | Ty_none ) ->
         assert false
 
     let triop = function
-      | Ty.Ty_int | Ty.Ty_real -> assert false
-      | Ty.Ty_bool -> Bool_impl.triop
-      | Ty.Ty_str -> String_impl.triop
-      | Ty.Ty_bitv 8 -> I8.triop
-      | Ty.Ty_bitv 32 -> I32.triop
-      | Ty.Ty_bitv 64 -> I64.triop
-      | Ty.Ty_fp 32 -> Float32_impl.triop
-      | Ty.Ty_fp 64 -> Float64_impl.triop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none
-      | Ty_regexp | Ty_roundingMode ->
+      | Ty (Ty_int | Ty_real) -> assert false
+      | Ty Ty_bool -> Bool_impl.triop
+      | Ty Ty_str -> String_impl.triop
+      | Ty (Ty_bitv 8) -> I8.triop
+      | Ty (Ty_bitv 32) -> I32.triop
+      | Ty (Ty_bitv 64) -> I64.triop
+      | Ty (Ty_fp 32) -> Float32_impl.triop
+      | Ty (Ty_fp 64) -> Float64_impl.triop
+      | Ty
+          ( Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none
+          | Ty_regexp | Ty_roundingMode ) ->
         assert false
 
     let relop = function
-      | Ty.Ty_int -> Int_impl.relop
-      | Ty.Ty_real -> Real_impl.relop
-      | Ty.Ty_bool -> Bool_impl.relop
-      | Ty.Ty_str -> String_impl.relop
-      | Ty.Ty_bitv 8 -> I8.relop
-      | Ty.Ty_bitv 32 -> I32.relop
-      | Ty.Ty_bitv 64 -> I64.relop
-      | Ty.Ty_fp 32 -> Float32_impl.relop
-      | Ty.Ty_fp 64 -> Float64_impl.relop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none
-      | Ty_regexp | Ty_roundingMode ->
+      | Ty Ty_int -> Int_impl.relop
+      | Ty Ty_real -> Real_impl.relop
+      | Ty Ty_bool -> Bool_impl.relop
+      | Ty Ty_str -> String_impl.relop
+      | Ty (Ty_bitv 8) -> I8.relop
+      | Ty (Ty_bitv 32) -> I32.relop
+      | Ty (Ty_bitv 64) -> I64.relop
+      | Ty (Ty_fp 32) -> Float32_impl.relop
+      | Ty (Ty_fp 64) -> Float64_impl.relop
+      | Ty
+          ( Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none
+          | Ty_regexp | Ty_roundingMode ) ->
         assert false
 
     let cvtop = function
-      | Ty.Ty_int -> Int_impl.cvtop
-      | Ty.Ty_real -> Real_impl.cvtop
-      | Ty.Ty_bool -> Bool_impl.cvtop
-      | Ty.Ty_str -> String_impl.cvtop
-      | Ty.Ty_bitv 8 -> I8.cvtop
-      | Ty.Ty_bitv 32 -> I32.cvtop
-      | Ty.Ty_bitv 64 -> I64.cvtop
-      | Ty.Ty_fp 32 -> Float32_impl.cvtop
-      | Ty.Ty_fp 64 -> Float64_impl.cvtop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none
-      | Ty_regexp | Ty_roundingMode ->
+      | Ty Ty_int -> Int_impl.cvtop
+      | Ty Ty_real -> Real_impl.cvtop
+      | Ty Ty_bool -> Bool_impl.cvtop
+      | Ty Ty_str -> String_impl.cvtop
+      | Ty (Ty_bitv 8) -> I8.cvtop
+      | Ty (Ty_bitv 32) -> I32.cvtop
+      | Ty (Ty_bitv 64) -> I64.cvtop
+      | Ty (Ty_fp 32) -> Float32_impl.cvtop
+      | Ty (Ty_fp 64) -> Float64_impl.cvtop
+      | Ty
+          ( Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none
+          | Ty_regexp | Ty_roundingMode ) ->
         assert false
 
     let naryop = function
-      | Ty.Ty_str -> String_impl.naryop
-      | Ty.Ty_bool -> Bool_impl.naryop
-      | Ty.Ty_regexp -> Regexp_impl.naryop
+      | Ty Ty_str -> String_impl.naryop
+      | Ty Ty_bool -> Bool_impl.naryop
+      | Ty Ty_regexp -> Regexp_impl.naryop
       | ty -> Fmt.failwith "Naryop for type \"%a\" not implemented" Ty.pp ty
 
     let get_rounding_mode ctx rm =
@@ -797,7 +819,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           (ctx, e :: es) )
         (ctx, []) es
 
-    let value_of_term ?ctx model ty term =
+    let value_of_term ?ctx model (Ty ty) term =
       let v =
         match M.Model.eval ?ctx ~completion:true model term with
         | None -> assert false
