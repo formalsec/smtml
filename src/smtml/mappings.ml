@@ -40,10 +40,6 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
     let f64 = M.Types.float 11 53
 
-    let int2str = M.Func.make "int_to_string" [ M.Types.int ] M.Types.string
-
-    let str2int = M.Func.make "string_to_int" [ M.Types.string ] M.Types.int
-
     let real2str = M.Func.make "real_to_string " [ M.Types.real ] M.Types.string
 
     let str2real = M.Func.make "string_to_real" [ M.Types.string ] M.Types.real
@@ -151,8 +147,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let cvtop op e =
         match op with
-        | Cvtop.ToString -> M.Func.apply int2str [ e ]
-        | OfString -> M.Func.apply str2int [ e ]
+        | Cvtop.ToString -> M.Int.to_string e
+        | OfString -> M.Int.of_string e
         | Reinterpret_float -> M.Real.to_int e
         | op ->
           Fmt.failwith {|Int: Unsupported cvtop operator "%a"|} Cvtop.pp op

@@ -165,6 +165,10 @@ module M = struct
 
       let to_real e = Z3.Arithmetic.Integer.mk_int2real ctx e
 
+      let to_string e = Z3.Seq.mk_int_to_str ctx e
+
+      let of_string e = Z3.Seq.mk_str_to_int ctx e
+
       let add e1 e2 = Z3.Arithmetic.mk_add ctx [ e1; e2 ]
 
       let sub e1 e2 = Z3.Arithmetic.mk_sub ctx [ e1; e2 ]
