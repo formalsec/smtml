@@ -165,6 +165,12 @@ module type M = sig
     (** [to_real t] converts the integer term [t] to a real number term. *)
     val to_real : term -> term
 
+    (** [to_string t] converts the integer term [t] to a string term. *)
+    val to_string : term -> term
+
+    (** [of_string n] constructs an integer term from the string term [n]. *)
+    val of_string : term -> term
+
     (** [add t1 t2] constructs the sum of the integer terms [t1] and [t2]. *)
     val add : term -> term -> term
 
