@@ -250,6 +250,12 @@ module M = struct
 
       let replace_all _ ~pattern:_ ~with_:_ =
         Fmt.failwith "Z3_mappings: String.replace_all not implemented"
+
+      let replace_re e1 ~pattern ~with_ =
+        Z3.Seq.mk_seq_replace ctx e1 pattern with_
+
+      let replace_re_all _ ~pattern:_ ~with_:_ =
+        Fmt.failwith "Z3_mappings: String.replace_all_re not implemented"
     end
 
     module Re = struct
@@ -269,6 +275,8 @@ module M = struct
       let comp e = Z3.Seq.mk_re_complement ctx e
 
       let range e1 e2 = Z3.Seq.mk_re_range ctx e1 e2
+
+      let diff _ = Fmt.failwith "Z3_mappings: Re.diff not implemented"
 
       let inter e1 e2 = Z3.Seq.mk_re_intersect ctx [ e1; e2 ]
 

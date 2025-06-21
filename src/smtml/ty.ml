@@ -231,6 +231,7 @@ module Binop = struct
     (* Regexp *)
     | Regexp_range
     | Regexp_inter
+    | Regexp_diff
 
   let equal o1 o2 =
     match (o1, o2) with
@@ -263,13 +264,14 @@ module Binop = struct
     | String_last_index, String_last_index
     | String_in_re, String_in_re
     | Regexp_range, Regexp_range
-    | Regexp_inter, Regexp_inter ->
+    | Regexp_inter, Regexp_inter
+    | Regexp_diff, Regexp_diff ->
       true
     | ( ( Add | Sub | Mul | Div | DivU | Rem | RemU | Shl | ShrA | ShrL | And
         | Or | Xor | Implies | Pow | Min | Max | Copysign | Rotl | Rotr | At
         | List_cons | List_append | String_prefix | String_suffix
         | String_contains | String_last_index | String_in_re | Regexp_range
-        | Regexp_inter )
+        | Regexp_inter | Regexp_diff )
       , _ ) ->
       false
 
@@ -304,6 +306,7 @@ module Binop = struct
     | String_in_re -> Fmt.string fmt "in_re"
     | Regexp_range -> Fmt.string fmt "range"
     | Regexp_inter -> Fmt.string fmt "inter"
+    | Regexp_diff -> Fmt.string fmt "diff"
 end
 
 module Relop = struct
@@ -356,6 +359,8 @@ module Triop = struct
     | String_replace
     | String_index
     | String_replace_all
+    | String_replace_re
+    | String_replace_re_all
 
   let equal op1 op2 =
     match (op1, op2) with
@@ -364,10 +369,12 @@ module Triop = struct
     | String_extract, String_extract
     | String_replace, String_replace
     | String_index, String_index
-    | String_replace_all, String_replace_all ->
+    | String_replace_all, String_replace_all
+    | String_replace_re, String_replace_re
+    | String_replace_re_all, String_replace_re_all ->
       true
     | ( ( Ite | List_set | String_extract | String_replace | String_index
-        | String_replace_all )
+        | String_replace_all | String_replace_re | String_replace_re_all )
       , _ ) ->
       false
 
@@ -377,6 +384,8 @@ module Triop = struct
     | String_replace -> Fmt.string fmt "replace"
     | String_index -> Fmt.string fmt "indexof"
     | String_replace_all -> Fmt.string fmt "replace_all"
+    | String_replace_re -> Fmt.string fmt "replace_re"
+    | String_replace_re_all -> Fmt.string fmt "replace_re_all"
     | List_set -> Fmt.string fmt "set"
 end
 

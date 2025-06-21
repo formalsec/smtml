@@ -39,6 +39,7 @@ module Term = struct
       | "Float32" -> Expr.symbol { id with ty = Ty_fp 32 }
       | "Float64" -> Expr.symbol { id with ty = Ty_fp 64 }
       | "RoundingMode" -> Expr.symbol { id with ty = Ty_roundingMode }
+      | "RegLang" -> Expr.symbol { id with ty = Ty_regexp }
       | _ -> begin
         match Hashtbl.find_opt custom_sorts name with
         | Some ty -> Expr.symbol { id with ty }
