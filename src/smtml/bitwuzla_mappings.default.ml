@@ -224,6 +224,12 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
     let replace_all _ ~pattern:_ ~with_:_ =
       Fmt.failwith "Bitwuzla_mappings: String.replace_all not implemented"
+
+    let replace_re _ ~pattern:_ ~with_:_ =
+      Fmt.failwith "Bitwuzla_mappings: String.replace_re not implemented"
+
+    let replace_re_all _ ~pattern:_ ~with_:_ =
+      Fmt.failwith "Bitwuzla_mappings: String.replace_re_all not implemented"
   end
 
   module Re = struct
@@ -242,6 +248,8 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     let comp _ = Fmt.failwith "Bitwuzla_mappings: Re.comp not implemented"
 
     let range _ = Fmt.failwith "Bitwuzla_mappings: Re.range not implemented"
+
+    let diff _ = Fmt.failwith "Bitwuzla_mappings: Re.diff not implemented"
 
     let inter _ = Fmt.failwith "Bitwuzla_mappings: Re.inter not implemented"
 
