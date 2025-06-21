@@ -39,6 +39,7 @@ module Term = struct
       | "Float32" -> Expr.symbol { id with ty = Ty_fp 32 }
       | "Float64" -> Expr.symbol { id with ty = Ty_fp 64 }
       | "RoundingMode" -> Expr.symbol { id with ty = Ty_roundingMode }
+      | "RegLan" -> Expr.symbol { id with ty = Ty_regexp }
       | _ -> begin
         match Hashtbl.find_opt custom_sorts name with
         | Some ty -> Expr.symbol { id with ty }
@@ -182,6 +183,10 @@ module Term = struct
       | "str.replace", [ a; b; c ] -> Expr.triop Ty_str String_replace a b c
       | "str.replace_all", [ a; b; c ] ->
         Expr.triop Ty_str String_replace_all a b c
+      | "str.replace_re", [ a; b; c ] ->
+        Expr.triop Ty_str String_replace_re a b c
+      | "str.replace_re_all", [ a; b; c ] ->
+        Expr.triop Ty_str String_replace_re_all a b c
       | "str.++", n -> Expr.raw_naryop Ty_str Concat n
       | "str.<", [ a; b ] -> Expr.raw_relop Ty_str Lt a b
       | "str.<=", [ a; b ] -> Expr.raw_relop Ty_str Le a b
@@ -195,7 +200,11 @@ module Term = struct
       | "re.opt", [ a ] -> Expr.raw_unop Ty_regexp Regexp_opt a
       | "re.comp", [ a ] -> Expr.raw_unop Ty_regexp Regexp_comp a
       | "re.range", [ a; b ] -> Expr.raw_binop Ty_regexp Regexp_range a b
+      | "re.diff", [ a; b ] -> Expr.raw_binop Ty_regexp Regexp_diff a b
       | "re.inter", [ a; b ] -> Expr.raw_binop Ty_regexp Regexp_inter a b
+      | "re.inter", [ a; b; c ] ->
+        Expr.raw_binop Ty_regexp Regexp_inter a
+          (Expr.raw_binop Ty_regexp Regexp_inter b c)
       | "re.union", n -> Expr.raw_naryop Ty_regexp Regexp_union n
       | "re.++", n -> Expr.raw_naryop Ty_regexp Concat n
       | "bvnot", [ a ] -> Expr.raw_unop Ty_none Not a

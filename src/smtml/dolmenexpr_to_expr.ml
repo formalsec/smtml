@@ -210,6 +210,11 @@ module DolmenIntf = struct
     let replace t ~pattern ~with_ = DTerm.String.replace t pattern with_
 
     let replace_all t ~pattern ~with_ = DTerm.String.replace_all t pattern with_
+
+    let replace_re t ~pattern ~with_ = DTerm.String.replace_re t pattern with_
+
+    let replace_re_all t ~pattern ~with_ =
+      DTerm.String.replace_re_all t pattern with_
   end
 
   module Re = struct
@@ -228,6 +233,8 @@ module DolmenIntf = struct
     let comp = DTerm.String.RegLan.complement
 
     let range = DTerm.String.RegLan.range
+
+    let diff = DTerm.String.RegLan.diff
 
     let inter = DTerm.String.RegLan.inter
 

@@ -320,6 +320,16 @@ module type M = sig
     (** [replace_all t ~pattern ~with_] constructs the string term resulting
         from replacing all occurrences of [pattern] with [with_] in [t]. *)
     val replace_all : term -> pattern:term -> with_:term -> term
+
+    (** [replace_re t ~pattern ~with_] constructs the string term resulting from
+        replacing the first occurrence of the regular expression [pattern] with
+        [with_] in [t]. *)
+    val replace_re : term -> pattern:term -> with_:term -> term
+
+    (** [replace_re_all t ~pattern ~with_] constructs the string term resulting
+        from replacing all occurrences of the regular expression [pattern] with
+        [with_] in [t]. *)
+    val replace_re_all : term -> pattern:term -> with_:term -> term
   end
 
   (** {2 Regular Expression Operations} *)
@@ -353,6 +363,10 @@ module type M = sig
     (** [range t1 t2] constructs a regular expression term matching characters
         in the range from [t1] to [t2]. *)
     val range : term -> term -> term
+
+    (** [diff t1 t2] constructs the difference of the regular expression terms
+        [t1] and [t2]. *)
+    val diff : term -> term -> term
 
     (** [inter t1 t2] constructs the intersection of the regular expression
         terms [t1] and [t2]. *)

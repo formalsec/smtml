@@ -187,6 +187,10 @@ module DolmenIntf : sig
     val replace : term -> pattern:term -> with_:term -> term
 
     val replace_all : term -> pattern:term -> with_:term -> term
+
+    val replace_re : term -> pattern:term -> with_:term -> term
+
+    val replace_re_all : term -> pattern:term -> with_:term -> term
   end
 
   module Re : sig
@@ -205,6 +209,8 @@ module DolmenIntf : sig
     val comp : term -> term
 
     val range : term -> term -> term
+
+    val diff : term -> term -> term
 
     val inter : term -> term -> term
 

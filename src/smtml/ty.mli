@@ -144,6 +144,7 @@ module Binop : sig
     (* Regexp operations *)
     | Regexp_range  (** Range of characters. *)
     | Regexp_inter  (** Intersection of regular expressions. *)
+    | Regexp_diff  (** Difference of regular expressions. *)
 
   (** [equal op1 op2] checks if binary operations [op1] and [op2] are equal. *)
   val equal : t -> t -> bool
@@ -186,15 +187,20 @@ module Triop : sig
     | Ite  (** If-then-else. *)
     | List_set  (** Set an element in a list. *)
     (* String operations *)
-    | String_extract
-      (** Extract a substring. (str.substr String Int Int String) *)
+    | String_extract  (** Extract a substring. (str.substr String Int Int) *)
     | String_replace
-      (** Replace a substring. (str.replace String String String String) *)
+      (** Replace a substring. (str.replace String String String) *)
     | String_index
-      (** Find the index of a substring. (str.indexof String String Int Int) *)
+      (** Find the index of a substring. (str.indexof String String Int) *)
     | String_replace_all
       (** Replace all occurrences of a substring. (str.replace_all String String
-          String String) *)
+          String) *)
+    | String_replace_re
+      (** Replace using a regular expression. (str.replace_re String RegLan
+          String) *)
+    | String_replace_re_all
+      (** Replace all occurrences using a regular expression.
+          (str.replace_re_all String RegLan String) *)
 
   (** [equal op1 op2] checks if ternary operations [op1] and [op2] are equal. *)
   val equal : t -> t -> bool

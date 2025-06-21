@@ -206,6 +206,12 @@ module Fresh_cvc5 () = struct
 
     let replace_all t1 ~pattern ~with_ =
       Term.mk_term tm Kind.String_replace_all [| t1; pattern; with_ |]
+
+    let replace_re t1 ~pattern ~with_ =
+      Term.mk_term tm Kind.String_replace_re [| t1; pattern; with_ |]
+
+    let replace_re_all t1 ~pattern ~with_ =
+      Term.mk_term tm Kind.String_replace_re_all [| t1; pattern; with_ |]
   end
 
   module Re = struct
@@ -224,6 +230,8 @@ module Fresh_cvc5 () = struct
     let comp t = Term.mk_term tm Kind.Regexp_complement [| t |]
 
     let range t1 t2 = Term.mk_term tm Kind.Regexp_range [| t1; t2 |]
+
+    let diff t1 t2 = Term.mk_term tm Kind.Regexp_diff [| t1; t2 |]
 
     let inter t1 t2 = Term.mk_term tm Kind.Regexp_inter [| t1; t2 |]
 
