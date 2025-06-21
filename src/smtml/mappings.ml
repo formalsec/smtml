@@ -232,6 +232,9 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | String_index -> M.String.index_of e1 ~sub:e2 ~pos:e3
         | String_replace -> M.String.replace e1 ~pattern:e2 ~with_:e3
         | String_replace_all -> M.String.replace_all e1 ~pattern:e2 ~with_:e3
+        | String_replace_re -> M.String.replace_re e1 ~pattern:e2 ~with_:e3
+        | String_replace_re_all ->
+          M.String.replace_re_all e1 ~pattern:e2 ~with_:e3
         | _ ->
           Fmt.failwith {|String: Unsupported triop operator "%a"|} Triop.pp op
 
@@ -275,6 +278,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         match op with
         | Binop.Regexp_range -> M.Re.range e1 e2
         | Regexp_inter -> M.Re.inter e1 e2
+        | Regexp_diff -> M.Re.diff e1 e2
         | op ->
           Fmt.failwith {|Regexp: Unsupported binop operator "%a"|} Binop.pp op
 
