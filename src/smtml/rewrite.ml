@@ -19,25 +19,40 @@ let debug = false
 
 let debug fmt k = if debug then k (Fmt.epr fmt)
 
+let unify_types tys =
+  match tys with
+  | [] -> Ty.Ty_none
+  | [ ty ] -> ty
+  | ty1 :: ty2 :: rest ->
+    let unify t1 t2 =
+      if Ty.equal t1 t2 then Some t1
+      else
+        match (t1, t2) with
+        | Ty.Ty_int, Ty.Ty_real | Ty.Ty_real, Ty.Ty_int -> Some Ty.Ty_real
+        | Ty.Ty_str, Ty.Ty_int | Ty.Ty_int, Ty.Ty_str -> Some Ty.Ty_int
+        | _ -> None
+    in
+    let rec fold tys acc =
+      match tys with
+      | [] -> acc
+      | hd :: tl -> (
+        match unify acc hd with
+        | Some t -> fold tl t
+        | None -> Fmt.failwith "Type mismatch in rewrite_ty" )
+    in
+    fold rest
+      ( match unify ty1 ty2 with
+      | Some t -> t
+      | None -> Fmt.failwith "Type mismatch" )
+
 (* FIXME: This is a very basic way to infer types. I'm surprised it even works *)
 let rewrite_ty unknown_ty tys =
-  match (unknown_ty, tys) with
-  | Ty.Ty_none, [ ty ] ->
+  match unknown_ty with
+  | Ty.Ty_none ->
+    let ty = unify_types tys in
     debug "  rewrite_ty: %a -> %a@." (fun k -> k Ty.pp unknown_ty Ty.pp ty);
     ty
-  | Ty_none, [ ty1; ty2 ] ->
-    debug "  rewrite_ty: %a -> (%a %a)@." (fun k ->
-      k Ty.pp unknown_ty Ty.pp ty1 Ty.pp ty2 );
-    assert (Ty.equal ty1 ty2);
-    ty1
-  | Ty_none, ty1 :: ty2 :: [ ty3 ] ->
-    debug "  rewrite_ty: %a ->(%a %a %a)@." (fun k ->
-      k Ty.pp unknown_ty Ty.pp ty1 Ty.pp ty2 Ty.pp ty3 );
-    assert (Ty.equal ty1 ty2);
-    assert (Ty.equal ty2 ty3);
-    ty1
-  | Ty_none, _ -> assert false
-  | ty, _ -> ty
+  | ty -> ty
 
 (** Propagates types in [type_map] and inlines [Let_in] binders *)
 let rec rewrite_expr (type_map, expr_map) hte =
