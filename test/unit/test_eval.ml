@@ -155,27 +155,11 @@ module Int_test = struct
       let result = Eval.cvtop Ty_int OfBool True in
       assert_equal (int 1) result
     in
-    let test_to_string _ =
-      let result = Eval.cvtop Ty_int ToString (int 42) in
-      assert_equal (str "42") result
-    in
-    let test_of_string _ =
-      let result = Eval.cvtop Ty_int OfString (str "123") in
-      assert_equal (int 123) result
-    in
-    let test_of_string_error _ =
-      assert_parse_error @@ fun () ->
-      let _ = Eval.cvtop Ty_int OfString (str "not_an_int") in
-      ()
-    in
     let test_reinterpret_float _ =
       let result = Eval.cvtop Ty_int Reinterpret_float (real 42.0) in
       assert_equal (int 42) result
     in
     [ "test_of_bool" >:: test_of_bool
-    ; "test_to_string" >:: test_to_string
-    ; "test_of_string" >:: test_of_string
-    ; "test_of_string_error" >:: test_of_string_error
     ; "test_reinterpret_float" >:: test_reinterpret_float
     ]
 end

@@ -101,10 +101,6 @@ module Nop = struct
 
       let to_real _ = assert false
 
-      let to_string _ = assert false
-
-      let of_string _ = assert false
-
       let add _ = assert false
 
       let sub _ = assert false

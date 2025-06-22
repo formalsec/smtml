@@ -441,8 +441,7 @@ let test_cvtop_int _ =
   let ty = Ty.Ty_int in
   check (Expr.cvtop ty OfBool true_) (int 1);
   check (Expr.cvtop ty OfBool false_) (int 0);
-  check (Expr.cvtop ty Reinterpret_float (real 1.)) (int 1);
-  check (Expr.cvtop ty ToString (int 1)) (string "1")
+  check (Expr.cvtop ty Reinterpret_float (real 1.)) (int 1)
 
 let test_cvtop_real _ =
   let open Infix in

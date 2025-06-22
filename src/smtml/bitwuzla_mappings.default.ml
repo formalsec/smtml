@@ -128,12 +128,6 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     let to_real _ =
       Fmt.failwith "Bitwuzla_mappings: Int.to_real not implemented"
 
-    let to_string _ =
-      Fmt.failwith "Bitwuzla_mappings: Int.to_string not implemented"
-
-    let of_string _ =
-      Fmt.failwith "Bitwuzla_mappings: Int.of_string not implemented"
-
     let add _ = Fmt.failwith "Bitwuzla_mappings: Int.add not implemented"
 
     let sub _ = Fmt.failwith "Bitwuzla_mappings: Int.sub not implemented"

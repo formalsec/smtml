@@ -67,7 +67,7 @@ module Int = struct
       (err_str n op Ty_int (Value.type_of v))
   [@@inline]
 
-  let str_value (n : int) (op : op_type) (v : Value.t) : string =
+  let _str_value (n : int) (op : op_type) (v : Value.t) : string =
     of_arg
       (function Str str -> str | _ -> raise_notrace (Value Ty_str))
       n v op
@@ -140,13 +140,6 @@ module Int = struct
     | OfBool -> to_value (of_bool v)
     | Reinterpret_float ->
       Int (Int.of_float (match v with Real v -> v | _ -> assert false))
-    | ToString -> Str (string_of_int (of_value 1 (`Cvtop op) v))
-    | OfString -> begin
-      let s = str_value 1 (`Cvtop op) v in
-      match int_of_string_opt s with
-      | None -> raise (Invalid_argument "int_of_string")
-      | Some i -> Int i
-    end
     | _ -> Fmt.failwith {|cvtop: Unsupported int operator "%a"|} Ty.Cvtop.pp op
 end
 
