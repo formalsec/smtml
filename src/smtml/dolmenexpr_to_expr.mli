@@ -104,10 +104,6 @@ module DolmenIntf : sig
 
     val to_real : term -> term
 
-    val to_string : term -> term
-
-    val of_string : term -> term
-
     val add : term -> term -> term
 
     val sub : term -> term -> term

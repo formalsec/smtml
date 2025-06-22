@@ -147,9 +147,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let cvtop op e =
         match op with
-        | Cvtop.ToString -> M.Int.to_string e
-        | OfString -> M.Int.of_string e
-        | Reinterpret_float -> M.Real.to_int e
+        | Cvtop.Reinterpret_float -> M.Real.to_int e
         | op ->
           Fmt.failwith {|Int: Unsupported cvtop operator "%a"|} Cvtop.pp op
     end

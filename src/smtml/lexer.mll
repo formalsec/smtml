@@ -48,8 +48,6 @@ let keywords =
      ; ("int.le", RELOP (Ty_int, Le))
      ; ("int.gt", RELOP (Ty_int, Gt))
      ; ("int.ge", RELOP (Ty_int, Ge))
-     ; ("int.to_string", CVTOP (Ty_int, ToString))
-     ; ("int.of_string", CVTOP (Ty_int, OfString))
      ; ("int.reinterpret_real", CVTOP (Ty_int, Reinterpret_float))
      ; ("real.neg", UNARY (Ty_real, Neg))
      ; ("real.abs", UNARY (Ty_real, Abs))

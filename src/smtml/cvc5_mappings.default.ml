@@ -116,10 +116,6 @@ module Fresh_cvc5 () = struct
 
     let to_real t = Term.mk_term tm Kind.To_real [| t |]
 
-    let to_string t = Term.mk_term tm Kind.String_from_int [| t |]
-
-    let of_string t = Term.mk_term tm Kind.String_to_int [| t |]
-
     let add t1 t2 = Term.mk_term tm Kind.Add [| t1; t2 |]
 
     let sub t1 t2 = Term.mk_term tm Kind.Sub [| t1; t2 |]
