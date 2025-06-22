@@ -7,7 +7,7 @@ type t = expr Hc.hash_consed
 and expr =
   | Val of Value.t
   | Ptr of
-      { base : int32
+      { base : Bitvector.t
       ; offset : t
       }
   | Symbol of Symbol.t
@@ -34,7 +34,7 @@ module Expr = struct
     match (e1, e2) with
     | Val v1, Val v2 -> Value.equal v1 v2
     | Ptr { base = b1; offset = o1 }, Ptr { base = b2; offset = o2 } ->
-      Int32.equal b1 b2 && phys_equal o1 o2
+      Bitvector.equal b1 b2 && phys_equal o1 o2
     | Symbol s1, Symbol s2 -> Symbol.equal s1 s2
     | List l1, List l2 -> list_eq l1 l2
     | App (s1, l1), App (s2, l2) -> Symbol.equal s1 s2 && list_eq l1 l2
@@ -225,7 +225,8 @@ module Pp = struct
   let rec pp fmt (hte : t) =
     match view hte with
     | Val v -> Value.pp fmt v
-    | Ptr { base; offset } -> Fmt.pf fmt "(Ptr (i32 %ld) %a)" base pp offset
+    | Ptr { base; offset } ->
+      Fmt.pf fmt "(Ptr %a %a)" Bitvector.pp base pp offset
     | Symbol s -> Fmt.pf fmt "@[<hov 1>%a@]" Symbol.pp s
     | List v -> Fmt.pf fmt "@[<hov 1>[%a]@]" (Fmt.list ~sep:Fmt.comma pp) v
     | App (s, v) ->
@@ -287,7 +288,7 @@ let to_string e = Fmt.str "%a" pp e
 
 let value (v : Value.t) : t = make (Val v) [@@inline]
 
-let ptr base offset = make (Ptr { base; offset })
+let ptr base offset = make (Ptr { base = Bitvector.of_int32 base; offset })
 
 let list l = make (List l)
 
@@ -363,21 +364,26 @@ let rec binop ty op hte1 hte2 =
   | Ty.Binop.(String_in_re | Regexp_range), _, _ -> raw_binop ty op hte1 hte2
   | op, Val v1, Val v2 -> value (Eval.binop ty op v1 v2)
   | Sub, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
-    if Int32.equal b1 b2 then binop ty Sub os1 os2
+    if Bitvector.equal b1 b2 then binop ty Sub os1 os2
     else raw_binop ty op hte1 hte2
   | Add, Ptr { base; offset }, _ ->
-    ptr base (binop (Ty_bitv 32) Add offset hte2)
+    let m = Bitvector.numbits base in
+    make (Ptr { base; offset = binop (Ty_bitv m) Add offset hte2 })
   | Sub, Ptr { base; offset }, _ ->
-    ptr base (binop (Ty_bitv 32) Sub offset hte2)
+    let m = Bitvector.numbits base in
+    make (Ptr { base; offset = binop (Ty_bitv m) Sub offset hte2 })
   | Rem, Ptr { base; offset }, _ ->
-    let rhs = value (Bitv (Bitvector.of_int32 base)) in
-    let addr = binop (Ty_bitv 32) Add rhs offset in
+    let m = Bitvector.numbits base in
+    let rhs = value (Bitv base) in
+    let addr = binop (Ty_bitv m) Add rhs offset in
     binop ty Rem addr hte2
   | Add, _, Ptr { base; offset } ->
-    ptr base (binop (Ty_bitv 32) Add offset hte1)
+    let m = Bitvector.numbits base in
+    make (Ptr { base; offset = binop (Ty_bitv m) Add offset hte1 })
   | Sub, _, Ptr { base; offset } ->
-    let base = value (Bitv (Bitvector.of_int32 base)) in
-    binop ty Sub hte1 (binop (Ty_bitv 32) Add base offset)
+    let m = Bitvector.numbits base in
+    let base = value (Bitv base) in
+    binop ty Sub hte1 (binop (Ty_bitv m) Add base offset)
   | (Add | Or), Val (Bitv bv), _ when Bitvector.eqz bv -> hte2
   | (And | Div | DivU | Mul | Rem | RemU), Val (Bitv bv), _
     when Bitvector.eqz bv ->
@@ -452,25 +458,25 @@ let rec relop ty op hte1 hte2 =
     when prec1 = prec2 && Symbol.equal s1 s2 ->
     raw_unop Ty_bool Not (raw_unop (Ty_fp prec1) Is_nan hte1)
   | Eq, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
-    if Int32.equal b1 b2 then relop Ty_bool Eq os1 os2 else value False
+    if Bitvector.equal b1 b2 then relop Ty_bool Eq os1 os2 else value False
   | Ne, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
-    if Int32.equal b1 b2 then relop Ty_bool Ne os1 os2 else value True
+    if Bitvector.equal b1 b2 then relop Ty_bool Ne os1 os2 else value True
   | ( (LtU | LeU)
     , Ptr { base = b1; offset = os1 }
     , Ptr { base = b2; offset = os2 } ) ->
-    if Int32.equal b1 b2 then relop ty op os1 os2
+    if Bitvector.equal b1 b2 then relop ty op os1 os2
     else
-      let b1 = Value.Bitv (Bitvector.of_int32 b1) in
-      let b2 = Value.Bitv (Bitvector.of_int32 b2) in
+      let b1 = Value.Bitv b1 in
+      let b2 = Value.Bitv b2 in
       value (if Eval.relop ty op b1 b2 then True else False)
   | ( op
     , Val (Bitv _ as n)
     , Ptr { base; offset = { node = Val (Bitv _ as o); _ } } ) ->
-    let base = Eval.binop (Ty_bitv 32) Add (Bitv (Bitvector.of_int32 base)) o in
+    let base = Eval.binop (Ty_bitv 32) Add (Bitv base) o in
     value (if Eval.relop ty op n base then True else False)
   | op, Ptr { base; offset = { node = Val (Bitv _ as o); _ } }, Val (Bitv _ as n)
     ->
-    let base = Eval.binop (Ty_bitv 32) Add (Bitv (Bitvector.of_int32 base)) o in
+    let base = Eval.binop (Ty_bitv 32) Add (Bitv base) o in
     value (if Eval.relop ty op base n then True else False)
   | op, List l1, List l2 -> relop_list op l1 l2
   | Gt, _, _ -> relop ty Lt hte2 hte1
@@ -499,11 +505,17 @@ and relop_list op l1 l2 =
 
 let raw_cvtop ty op hte = make (Cvtop (ty, op, hte)) [@@inline]
 
-let cvtop ty op hte =
+let rec cvtop ty op hte =
   match (op, view hte) with
   | Ty.Cvtop.String_to_re, _ -> raw_cvtop ty op hte
   | _, Val v -> value (Eval.cvtop ty op v)
   | String_to_float, Cvtop (Ty_real, ToString, real) -> real
+  | Zero_extend n, Ptr { base; offset } ->
+    let offset = cvtop ty op offset in
+    make (Ptr { base = Bitvector.zero_extend n base; offset })
+  | WrapI64, Ptr { base; offset } ->
+    let offset = cvtop ty op offset in
+    make (Ptr { base = Bitvector.extract base ~high:31 ~low:0; offset })
   | _ -> raw_cvtop ty op hte
 
 let raw_naryop ty op es = make (Naryop (ty, op, es)) [@@inline]
@@ -567,8 +579,8 @@ let rec simplify_expr ?(in_relop = false) (hte : t) : t =
   | Val _ | Symbol _ -> hte
   | Ptr { base; offset } ->
     let offset = simplify_expr ~in_relop offset in
-    if not in_relop then ptr base offset
-    else binop (Ty_bitv 32) Add (value (Bitv (Bitvector.of_int32 base))) offset
+    if not in_relop then make (Ptr { base; offset })
+    else binop (Ty_bitv 32) Add (value (Bitv base)) offset
   | List es -> make @@ List (List.map (simplify_expr ~in_relop) es)
   | App (x, es) -> make @@ App (x, List.map (simplify_expr ~in_relop) es)
   | Unop (ty, op, e) ->

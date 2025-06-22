@@ -17,7 +17,7 @@ type t = expr Hc.hash_consed
 and expr = private
   | Val of Value.t  (** A constant value. *)
   | Ptr of
-      { base : int32  (** Base address. *)
+      { base : Bitvector.t (** Base address. *)
       ; offset : t  (** Offset from base. *)
       }
   | Symbol of Symbol.t  (** A symbolic variable. *)

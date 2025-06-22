@@ -16,7 +16,8 @@ let assert_sat ?f result =
 
 let check a b =
   let pp_diff fmt (a, b) =
-    Fmt.pf fmt "Got '%a' but expected '%a'" Expr.pp a Expr.pp b
+    Fmt.pf fmt "@.@[<v>Expected:@;  @[<v>'%a'@]@;Real:@;  @[<v>'%a'@]@]" Expr.pp
+      a Expr.pp b
   in
   OUnit2.assert_equal ~pp_diff ~cmp:Expr.equal a b
 

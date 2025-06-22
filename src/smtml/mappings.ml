@@ -687,9 +687,9 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       match Expr.view hte with
       | Val value -> (ctx, v value)
       | Ptr { base; offset } ->
-        let base' = v (Bitv (Bitvector.of_int32 base)) in
-        let ctx, offset' = encode_expr ctx offset in
-        (ctx, I32.binop Add base' offset')
+        let base = v (Bitv base) in
+        let ctx, offset = encode_expr ctx offset in
+        (ctx, I32.binop Add base offset)
       | Symbol { name = Simple "re.all"; _ } -> (ctx, M.Re.all ())
       | Symbol { name = Simple "re.none"; _ } -> (ctx, M.Re.none ())
       | Symbol { name = Simple "re.allchar"; _ } -> (ctx, M.Re.allchar ())
