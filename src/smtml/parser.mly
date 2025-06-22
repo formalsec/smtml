@@ -29,7 +29,7 @@ let get_bind x = Hashtbl.find_opt varmap x
 %token <bool> BOOL
 %token <string> STR
 %token <string> SYMBOL
-%token <Ty.t * Ty.Unop.t> UNARY
+%token <Utils_parse.unop> UNARY
 %token <Ty.t * Ty.Binop.t> BINARY
 %token <Ty.t * Ty.Triop.t> TERNARY
 %token <Ty.t * Ty.Relop.t> RELOP
@@ -68,18 +68,19 @@ let s_expr :=
 let paren_op :=
   | PTR; LPAREN; _ = TYPE; x = NUM; RPAREN; offset = s_expr;
     { Expr.ptr (Int32.of_int x) offset }
-  | (ty, op) = UNARY; e = s_expr;
-    { Expr.unop ty op e }
+  | op = UNARY; e = s_expr;
+    { let U (ty, op) = op in Expr.unop ty op e }
   | (ty, op) = BINARY; e1 = s_expr; e2 = s_expr;
-    { Expr.binop ty op e1 e2 }
+    { let Ty ty = ty in Expr.binop ty op e1 e2 }
   | (ty, op) = TERNARY; e1 = s_expr; e2 = s_expr; e3 = s_expr;
-    { Expr.triop ty op e1 e2 e3 }
+    { let Ty ty = ty in Expr.triop ty op e1 e2 e3 }
   | (ty, op) = CVTOP; e = s_expr;
-    { Expr.cvtop ty op e }
+    { let Ty ty = ty in Expr.cvtop ty op e }
   | (ty, op) = RELOP; e1 = s_expr; e2 = s_expr;
-    { Expr.relop ty op e1 e2 }
+    { let Ty ty = ty in Expr.relop ty op e1 e2 }
   | (ty, op) = NARY; es = list(s_expr);
-    { Expr.naryop ty op es }
+    { let Ty ty = ty in
+      Expr.naryop ty op es }
   | EXTRACT; ~ = s_expr; l = NUM; h = NUM;
     { Expr.extract s_expr ~high:h ~low:l }
   | CONCAT; e1 = s_expr; e2 = s_expr;
@@ -93,14 +94,14 @@ let spec_constant :=
   | LPAREN; ty = TYPE; x = NUM; RPAREN;
     {
       match ty with
-      | Ty_bitv 32 -> Bitv (Bitvector.of_int32 (Int32.of_int x))
-      | Ty_bitv 64 -> Bitv (Bitvector.of_int64 (Int64.of_int x))
+      | Ty (Ty_bitv 32) -> Bitv (Bitvector.of_int32 (Int32.of_int x))
+      | Ty (Ty_bitv 64) -> Bitv (Bitvector.of_int64 (Int64.of_int x))
       | _ -> Fmt.failwith "invalid bitv type"
     }
   | LPAREN; ty = TYPE; x = DEC; RPAREN;
     {
       match ty with
-      | Ty_fp 32 -> Num (F32 (Int32.bits_of_float x))
-      | Ty_fp 64 -> Num (F64 (Int64.bits_of_float x))
+      | Ty (Ty_fp 32) -> Num (F32 (Int32.bits_of_float x))
+      | Ty (Ty_fp 64) -> Num (F64 (Int64.bits_of_float x))
       | _ -> Fmt.failwith "invalid fp type"
     }

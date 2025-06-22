@@ -22,21 +22,21 @@ let debug fmt k = if debug then k (Fmt.epr fmt)
 (* FIXME: This is a very basic way to infer types. I'm surprised it even works *)
 let rewrite_ty unknown_ty tys =
   match (unknown_ty, tys) with
-  | Ty.Ty_none, [ ty ] ->
+  | Ty.Ty Ty_none, [ ty ] ->
     debug "  rewrite_ty: %a -> %a@." (fun k -> k Ty.pp unknown_ty Ty.pp ty);
     ty
-  | Ty_none, [ ty1; ty2 ] ->
+  | Ty Ty_none, [ ty1; ty2 ] ->
     debug "  rewrite_ty: %a -> (%a %a)@." (fun k ->
       k Ty.pp unknown_ty Ty.pp ty1 Ty.pp ty2 );
     assert (Ty.equal ty1 ty2);
     ty1
-  | Ty_none, ty1 :: ty2 :: [ ty3 ] ->
+  | Ty Ty_none, ty1 :: ty2 :: [ ty3 ] ->
     debug "  rewrite_ty: %a ->(%a %a %a)@." (fun k ->
       k Ty.pp unknown_ty Ty.pp ty1 Ty.pp ty2 Ty.pp ty3 );
     assert (Ty.equal ty1 ty2);
     assert (Ty.equal ty2 ty3);
     ty1
-  | Ty_none, _ -> assert false
+  | Ty Ty_none, _ -> assert false
   | ty, _ -> ty
 
 (** Propagates types in [type_map] and inlines [Let_in] binders *)
@@ -48,7 +48,7 @@ let rec rewrite_expr (type_map, expr_map) hte =
     Expr.ptr base (rewrite_expr (type_map, expr_map) offset)
   | Symbol sym -> begin
     (* Avoid rewriting well-typed symbols already *)
-    if not (Ty.equal Ty_none (Symbol.type_of sym)) then hte
+    if not (Ty.equal (Ty Ty_none) (Symbol.type_of sym)) then hte
     else
       match Symb_map.find_opt sym type_map with
       | None -> (
@@ -64,21 +64,21 @@ let rec rewrite_expr (type_map, expr_map) hte =
     let rm = rewrite_expr (type_map, expr_map) rm in
     let a = rewrite_expr (type_map, expr_map) a in
     let b = rewrite_expr (type_map, expr_map) b in
-    let ty = rewrite_ty Ty_none [ Expr.ty a; Expr.ty b ] in
+    let ty = rewrite_ty (Ty Ty_none) [ Expr.ty a; Expr.ty b ] in
     Expr.app { sym with ty } [ rm; a; b ]
   | App (({ name = Simple "fp.fma"; _ } as sym), [ rm; a; b; c ]) ->
     let rm = rewrite_expr (type_map, expr_map) rm in
     let a = rewrite_expr (type_map, expr_map) a in
     let b = rewrite_expr (type_map, expr_map) b in
     let c = rewrite_expr (type_map, expr_map) c in
-    let ty = rewrite_ty Ty_none [ Expr.ty a; Expr.ty b; Expr.ty c ] in
+    let ty = rewrite_ty (Ty Ty_none) [ Expr.ty a; Expr.ty b; Expr.ty c ] in
     Expr.app { sym with ty } [ rm; a; b; c ]
   | App
       ( ({ name = Simple ("fp.sqrt" | "fp.roundToIntegral"); _ } as sym)
       , [ rm; a ] ) ->
     let rm = rewrite_expr (type_map, expr_map) rm in
     let a = rewrite_expr (type_map, expr_map) a in
-    let ty = rewrite_ty Ty_none [ Expr.ty a ] in
+    let ty = rewrite_ty (Ty Ty_none) [ Expr.ty a ] in
     Expr.app { sym with ty } [ rm; a ]
   | App (sym, htes) ->
     let sym =
@@ -87,34 +87,61 @@ let rec rewrite_expr (type_map, expr_map) hte =
       | Some ty -> { sym with ty }
     in
     Expr.app sym (List.map (rewrite_expr (type_map, expr_map)) htes)
-  | Unop (ty, op, hte) ->
+  | Unop (ty, op, hte) -> begin
     let hte = rewrite_expr (type_map, expr_map) hte in
-    let ty = rewrite_ty ty [ Expr.ty hte ] in
-    Expr.unop ty op hte
+    let (Ty ty) = rewrite_ty (Ty ty) [ Expr.ty hte ] in
+    match (ty, op) with
+    | Ty_bool, Not -> Expr.unop Ty_bool Not hte
+    | Ty_int, ((Neg | Not | Abs) as op) -> Expr.unop Ty_int op hte
+    | Ty_real, ((Neg | Abs | Sqrt | Ceil | Floor | Trunc | Nearest) as op) ->
+      Expr.unop Ty_real op hte
+    | ( Ty_str
+      , ( ( Length | Trim | Regexp_star | Regexp_loop _ | Regexp_plus
+          | Regexp_opt | Regexp_comp ) as op ) ) ->
+      Expr.unop Ty_str op hte
+    | (Ty_bitv _ as ty), ((Neg | Not | Clz | Ctz | Popcnt) as op) ->
+      Expr.unop ty op hte
+    | ( (Ty_fp _ as ty)
+      , ( ( Neg | Abs | Sqrt | Is_normal | Is_subnormal | Is_negative
+          | Is_positive | Is_infinite | Is_nan | Is_zero | Ceil | Floor | Trunc
+          | Nearest ) as op ) ) ->
+      Expr.unop ty op hte
+    | Ty_list, ((Head | Tail | Reverse | Length) as op) ->
+      Expr.unop Ty_list op hte
+    | ( Ty_regexp
+      , ( (Regexp_star | Regexp_loop _ | Regexp_plus | Regexp_opt | Regexp_comp)
+          as op ) ) ->
+      Expr.unop Ty_regexp op hte
+    | (Ty_app | Ty_none | Ty_unit | Ty_roundingMode), _ ->
+      Fmt.failwith "TypeError: Unop typed with theory with no opeartors"
+    | _ ->
+      Fmt.failwith "TypeError: Unop (%a, %a)" Ty.pp (Ty ty) Ty.Unop.pp (U op)
+  end
   | Binop (ty, op, hte1, hte2) ->
     let hte1 = rewrite_expr (type_map, expr_map) hte1 in
     let hte2 = rewrite_expr (type_map, expr_map) hte2 in
-    let ty = rewrite_ty ty [ Expr.ty hte1; Expr.ty hte2 ] in
+    let (Ty ty) = rewrite_ty ty [ Expr.ty hte1; Expr.ty hte2 ] in
     Expr.binop ty op hte1 hte2
-  | Triop (ty, op, hte1, hte2, hte3) ->
+  | Triop (Ty ty, op, hte1, hte2, hte3) ->
     let hte1 = rewrite_expr (type_map, expr_map) hte1 in
     let hte2 = rewrite_expr (type_map, expr_map) hte2 in
     let hte3 = rewrite_expr (type_map, expr_map) hte3 in
     Expr.triop ty op hte1 hte2 hte3
-  | Relop (ty, ((Eq | Ne) as op), hte1, hte2) when not (Ty.equal Ty_none ty) ->
+  | Relop ((Ty ty as ty_), ((Eq | Ne) as op), hte1, hte2)
+    when not (Ty.equal (Ty Ty_none) ty_) ->
     let hte1 = rewrite_expr (type_map, expr_map) hte1 in
     let hte2 = rewrite_expr (type_map, expr_map) hte2 in
     Expr.relop ty op hte1 hte2
   | Relop (ty, op, hte1, hte2) ->
     let hte1 = rewrite_expr (type_map, expr_map) hte1 in
     let hte2 = rewrite_expr (type_map, expr_map) hte2 in
-    let ty = rewrite_ty ty [ Expr.ty hte1; Expr.ty hte2 ] in
+    let (Ty ty) = rewrite_ty ty [ Expr.ty hte1; Expr.ty hte2 ] in
     Expr.relop ty op hte1 hte2
   | Cvtop (ty, op, hte) ->
     let hte = rewrite_expr (type_map, expr_map) hte in
-    let ty = rewrite_ty ty [ Expr.ty hte ] in
+    let (Ty ty) = rewrite_ty ty [ Expr.ty hte ] in
     Expr.cvtop ty op hte
-  | Naryop (ty, op, htes) ->
+  | Naryop (Ty ty, op, htes) ->
     let htes = List.map (rewrite_expr (type_map, expr_map)) htes in
     Expr.naryop ty op htes
   | Extract (hte, h, l) ->

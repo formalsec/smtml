@@ -23,7 +23,7 @@ and expr = private
   | Symbol of Symbol.t  (** A symbolic variable. *)
   | List of t list  (** A list of expressions. *)
   | App of Symbol.t * t list  (** Function application. *)
-  | Unop of Ty.t * Ty.Unop.t * t  (** Unary operation. *)
+  | Unop : 'a Ty.ty * 'a Ty.Unop.op * t -> expr  (** Unary operation. *)
   | Binop of Ty.t * Ty.Binop.t * t * t  (** Binary operation. *)
   | Triop of Ty.t * Ty.Triop.t * t * t * t  (** Ternary operation. *)
   | Relop of Ty.t * Ty.Relop.t * t * t  (** Relational operation. *)
@@ -122,24 +122,24 @@ val exists : t list -> t -> t
 (** These constructors apply simplifications during construction. *)
 
 (** [unop ty op expr] applies a unary operation with simplification. *)
-val unop : Ty.t -> Ty.Unop.t -> t -> t
+val unop : 'a Ty.ty -> 'a Ty.Unop.op -> t -> t
 
 (** [binop ty op expr1 expr2] applies a binary operation with simplification. *)
-val binop : Ty.t -> Ty.Binop.t -> t -> t -> t
+val binop : 'a Ty.ty -> Ty.Binop.t -> t -> t -> t
 
 (** [triop ty op expr1 expr2 expr3] applies a ternary operation with
     simplification. *)
-val triop : Ty.t -> Ty.Triop.t -> t -> t -> t -> t
+val triop : 'a Ty.ty -> Ty.Triop.t -> t -> t -> t -> t
 
 (** [relop ty op expr1 expr2] applies a relational operation with
     simplification. *)
-val relop : Ty.t -> Ty.Relop.t -> t -> t -> t
+val relop : 'a Ty.ty -> Ty.Relop.t -> t -> t -> t
 
 (** [cvtop ty op expr] applies a conversion operation with simplification. *)
-val cvtop : Ty.t -> Ty.Cvtop.t -> t -> t
+val cvtop : 'a Ty.ty -> Ty.Cvtop.t -> t -> t
 
 (** [naryop ty op exprs] applies an N-ary operation with simplification. *)
-val naryop : Ty.t -> Ty.Naryop.t -> t list -> t
+val naryop : 'a Ty.ty -> Ty.Naryop.t -> t list -> t
 
 (** [extract expr ~high ~low] extracts a bit range with simplification. *)
 val extract : t -> high:int -> low:int -> t
@@ -173,7 +173,7 @@ val concat : t -> t -> t
     ]}
 
     which would typically be the result of the smart constructor [unop]. *)
-val raw_unop : Ty.t -> Ty.Unop.t -> t -> t
+val raw_unop : 'a Ty.ty -> 'a Ty.Unop.op -> t -> t
 
 (** [raw_binop ty op expr1 expr2] applies a binary operation, creating a node
     without immediate simplification.
@@ -200,7 +200,7 @@ val raw_unop : Ty.t -> Ty.Unop.t -> t -> t
     ]}
 
     which would typically be the result of the smart constructor [binop]. *)
-val raw_binop : Ty.t -> Ty.Binop.t -> t -> t -> t
+val raw_binop : 'a Ty.ty -> Ty.Binop.t -> t -> t -> t
 
 (** [raw_triop ty op expr1 expr2 expr3] applies a ternary operation, creating a
     node without immediate simplification.
@@ -227,7 +227,7 @@ val raw_binop : Ty.t -> Ty.Binop.t -> t -> t -> t
     ]}
 
     which would typically be the result of the smart constructor [triop]. *)
-val raw_triop : Ty.t -> Ty.Triop.t -> t -> t -> t -> t
+val raw_triop : 'a Ty.ty -> Ty.Triop.t -> t -> t -> t -> t
 
 (** [raw_relop ty op expr1 expr2] applies a relational operation, creating a
     node without immediate simplification.
@@ -254,7 +254,7 @@ val raw_triop : Ty.t -> Ty.Triop.t -> t -> t -> t -> t
     ]}
 
     which would typically be the result of the smart constructor [relop]. *)
-val raw_relop : Ty.t -> Ty.Relop.t -> t -> t -> t
+val raw_relop : 'a Ty.ty -> Ty.Relop.t -> t -> t -> t
 
 (** [raw_cvtop ty op expr] applies a conversion operation, creating a node
     without immediate simplification.
@@ -281,11 +281,11 @@ val raw_relop : Ty.t -> Ty.Relop.t -> t -> t -> t
     ]}
 
     which would typically be the result of the smart constructor [cvtop]. *)
-val raw_cvtop : Ty.t -> Ty.Cvtop.t -> t -> t
+val raw_cvtop : 'a Ty.ty -> Ty.Cvtop.t -> t -> t
 
 (** [raw_naryop ty op exprs] applies an N-ary operation without simplification.
 *)
-val raw_naryop : Ty.t -> Ty.Naryop.t -> t list -> t
+val raw_naryop : 'a Ty.ty -> Ty.Naryop.t -> t list -> t
 
 (** [raw_extract expr ~high ~low] extracts a bit range without simplification.
 *)

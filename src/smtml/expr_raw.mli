@@ -19,7 +19,7 @@ and expr = private
   | Symbol of Symbol.t  (** A symbolic variable. *)
   | List of t list  (** A list of expressions. *)
   | App of Symbol.t * t list  (** Function application. *)
-  | Unop of Ty.t * Ty.Unop.t * t  (** Unary operation. *)
+  | Unop : 'a Ty.ty * 'a Ty.Unop.op * t -> expr  (** Unary operation. *)
   | Binop of Ty.t * Ty.Binop.t * t * t  (** Binary operation. *)
   | Triop of Ty.t * Ty.Triop.t * t * t * t  (** Ternary operation. *)
   | Relop of Ty.t * Ty.Relop.t * t * t  (** Relational operation. *)
@@ -118,22 +118,22 @@ val exists : t list -> t -> t
 (** These constructors do NOT apply simplifications during construction. *)
 
 (** [unop ty op expr] applies a raw unary. *)
-val unop : Ty.t -> Ty.Unop.t -> t -> t
+val unop : 'a Ty.ty -> 'a Ty.Unop.op -> t -> t
 
 (** [binop ty op expr1 expr2] applies a raw binary. *)
-val binop : Ty.t -> Ty.Binop.t -> t -> t -> t
+val binop : 'a Ty.ty -> Ty.Binop.t -> t -> t -> t
 
 (** [triop ty op expr1 expr2 expr3] applies a raw ternary operation. *)
-val triop : Ty.t -> Ty.Triop.t -> t -> t -> t -> t
+val triop : 'a Ty.ty -> Ty.Triop.t -> t -> t -> t -> t
 
 (** [relop ty op expr1 expr2] applies a raw relational operation. *)
-val relop : Ty.t -> Ty.Relop.t -> t -> t -> t
+val relop : 'a Ty.ty -> Ty.Relop.t -> t -> t -> t
 
 (** [cvtop ty op expr] applies a raw conversion. *)
-val cvtop : Ty.t -> Ty.Cvtop.t -> t -> t
+val cvtop : 'a Ty.ty -> Ty.Cvtop.t -> t -> t
 
 (** [naryop ty op exprs] applies a raw N-ary operation. *)
-val naryop : Ty.t -> Ty.Naryop.t -> t list -> t
+val naryop : 'a Ty.ty -> Ty.Naryop.t -> t list -> t
 
 (** [extract expr ~high ~low] extracts a bit range. *)
 val extract : t -> high:int -> low:int -> t

@@ -51,6 +51,7 @@
   symbol
   ty
   utils
+  utils_parse
   value
   z3_mappings)
  (private_modules lexer parser)

@@ -19,16 +19,16 @@ type t =
 
 let type_of (v : t) : Ty.t =
   match v with
-  | True | False -> Ty_bool
-  | Unit -> Ty_unit
-  | Int _ -> Ty_int
-  | Real _ -> Ty_real
-  | Str _ -> Ty_str
+  | True | False -> Ty Ty_bool
+  | Unit -> Ty Ty_unit
+  | Int _ -> Ty Ty_int
+  | Real _ -> Ty Ty_real
+  | Str _ -> Ty Ty_str
   | Num n -> Num.type_of n
-  | Bitv bv -> Ty_bitv (Bitvector.numbits bv)
-  | List _ -> Ty_list
-  | App _ -> Ty_app
-  | Nothing -> Ty_none
+  | Bitv bv -> Ty (Ty_bitv (Bitvector.numbits bv))
+  | List _ -> Ty Ty_list
+  | App _ -> Ty Ty_app
+  | Nothing -> Ty Ty_none
 
 let discr = function
   | True -> 0
@@ -100,12 +100,12 @@ let rec pp fmt = function
 
 let to_string (v : t) : string = Fmt.str "%a" pp v
 
-let of_string (cast : Ty.t) v =
+let of_string (Ty cast as ty : Ty.t) v =
   let open Result in
   match cast with
   | Ty_bitv m -> Ok (Bitv (Bitvector.make (Z.of_string v) m))
   | Ty_fp _ ->
-    let+ n = Num.of_string cast v in
+    let+ n = Num.of_string ty v in
     Num n
   | Ty_bool -> (
     match v with
@@ -122,7 +122,7 @@ let of_string (cast : Ty.t) v =
     | Some n -> Ok (Real n) )
   | Ty_str -> Ok (Str v)
   | Ty_app | Ty_list | Ty_none | Ty_unit | Ty_regexp | Ty_roundingMode ->
-    Fmt.error_msg "unsupported parsing values of type %a" Ty.pp cast
+    Fmt.error_msg "unsupported parsing values of type %a" Ty.pp ty
 
 let rec to_json (v : t) : Yojson.Basic.t =
   match v with

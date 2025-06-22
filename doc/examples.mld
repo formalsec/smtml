@@ -72,7 +72,7 @@ let read_int () = Scanf.scanf " %d" (fun x -> x)
 
 let int x = Expr.value (Int x)
 
-let symbol x = Expr.symbol Symbol.(x @: Ty_int)
+let symbol x = Expr.symbol Symbol.(x @: Ty Ty_int)
 
 let ( = ) i1 i2 = Expr.relop Ty_bool Eq i1 i2
 
