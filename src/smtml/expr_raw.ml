@@ -6,7 +6,7 @@ include (
       and expr = private
         | Val of Value.t
         | Ptr of
-            { base : int32
+            { base : Bitvector.t
             ; offset : t
             }
         | Symbol of Symbol.t

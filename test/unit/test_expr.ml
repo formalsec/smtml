@@ -629,11 +629,21 @@ let test_simplify_concat =
   ; "test_simplify_concat_i32_symbol" >:: test_simplify_concat_i32_symbol
   ]
 
+let test_simplify_ptr _ =
+  let open Infix in
+  let expected = Expr.ptr 8389648l (int32 16l) in
+  let ptr = Expr.ptr 8389648l (int32 0l) in
+  let ptr = Expr.cvtop (Ty_bitv 64) (Zero_extend 32) ptr in
+  let ptr = Expr.binop (Ty_bitv 64) Add ptr (int64 16L) in
+  let real = Expr.cvtop (Ty_bitv 32) WrapI64 ptr in
+  check expected real
+
 let test_simplify =
   [ "test_simplify_assoc" >:: test_simplify_assoc
   ; "test_fp_nan_not_geffects" >:: test_fp_nan_not_geffects
   ; "test_simplify_extract" >::: test_simplify_extract
   ; "test_simplify_concat" >::: test_simplify_concat
+  ; "test_simplify_ptr" >:: test_simplify_ptr
   ]
 
 let test_suite =

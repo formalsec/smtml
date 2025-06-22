@@ -45,6 +45,7 @@ let rec rewrite_expr (type_map, expr_map) hte =
   match Expr.view hte with
   | Val _ -> hte
   | Ptr { base; offset } ->
+    let base = Bitvector.to_int32 base in
     Expr.ptr base (rewrite_expr (type_map, expr_map) offset)
   | Symbol sym -> begin
     (* Avoid rewriting well-typed symbols already *)
