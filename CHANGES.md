@@ -2,10 +2,12 @@
 
 ### Added
 
-Add logical implication that is parsed from SMT-lib `=>`.
+- More pointer simplifications
+- Add logical implication that is parsed from SMT-lib `=>`.
 
 ### Changed
 
+- Base of pointers as bitvectors instead of fixed int32.
 - Smtml now handles unknown SMT-lib symbols as apps instead of failing.
 
 ### Fixed
