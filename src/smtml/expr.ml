@@ -505,18 +505,21 @@ and relop_list op l1 l2 =
 
 let raw_cvtop ty op hte = make (Cvtop (ty, op, hte)) [@@inline]
 
-let rec cvtop ty op hte =
+let rec cvtop theory op hte =
   match (op, view hte) with
-  | Ty.Cvtop.String_to_re, _ -> raw_cvtop ty op hte
-  | _, Val v -> value (Eval.cvtop ty op v)
+  | Ty.Cvtop.String_to_re, _ -> raw_cvtop theory op hte
+  | _, Val v -> value (Eval.cvtop theory op v)
   | String_to_float, Cvtop (Ty_real, ToString, real) -> real
   | Zero_extend n, Ptr { base; offset } ->
-    let offset = cvtop ty op offset in
+    let offset = cvtop theory op offset in
     make (Ptr { base = Bitvector.zero_extend n base; offset })
   | WrapI64, Ptr { base; offset } ->
-    let offset = cvtop ty op offset in
+    let offset = cvtop theory op offset in
     make (Ptr { base = Bitvector.extract base ~high:31 ~low:0; offset })
-  | _ -> raw_cvtop ty op hte
+  | WrapI64, Cvtop (Ty_bitv 64, Zero_extend 32, hte) ->
+    assert (Ty.equal theory (ty hte) && Ty.equal theory (Ty_bitv 32));
+    hte
+  | _ -> raw_cvtop theory op hte
 
 let raw_naryop ty op es = make (Naryop (ty, op, es)) [@@inline]
 
