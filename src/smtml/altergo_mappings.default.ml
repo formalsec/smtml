@@ -99,7 +99,7 @@ module M = struct
 
       let to_bitv interp _n =
         match AEL.Expr.term_view interp with
-        | { f = Bitv (_, z); _ } -> Z.to_int64 z
+        | { f = Bitv (_, z); _ } -> z
         | _ -> assert false
 
       let to_float _fp _eb _sb = assert false

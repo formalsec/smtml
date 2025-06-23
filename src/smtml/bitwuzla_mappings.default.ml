@@ -98,7 +98,7 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     let to_string _ =
       Fmt.failwith "Bitwuzla_mappings: to_string not implemented"
 
-    let to_bitv t _bitwidth = Z.to_int64 @@ Term.value Term.Z t
+    let to_bitv t _bitwidth = Term.value Term.Z t
 
     let to_float t ebits sbits =
       let fp_size = ebits + sbits in

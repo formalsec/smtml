@@ -106,7 +106,7 @@ module Fresh_cvc5 () = struct
         let bv = Term.get_bv t bitwidth in
         if String.starts_with ~prefix:"#" bv then set bv 0 '0' else bv
       in
-      Int64.of_string bv
+      Z.of_string bv
 
     let to_float _t _ebits _sbits = assert false
   end

@@ -122,7 +122,7 @@ module M = struct
           Bytes.set bs i n;
           Bytes.to_string bs
         in
-        Int64.of_string (set (Z3.Expr.to_string interp) 0 '0')
+        Z.of_string (set (Z3.Expr.to_string interp) 0 '0')
 
       let to_float fp _eb _sb =
         assert (Z3.Expr.is_numeral fp);
