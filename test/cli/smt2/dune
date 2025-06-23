@@ -2,21 +2,4 @@
  (enabled_if %{lib-available:z3})
  (deps
   %{bin:smtml}
-  test_bitv_const.smt2
-  test_bitv_sort.smt2
-  test_bitv_funs.smt2
-  test_core_all.smt2
-  test_core_binary.smt2
-  test_core_const.smt2
-  test_core_true.smt2
-  test_empty.smt2
-  test_exists.smt2
-  test_forall.smt2
-  test_fp.smt2
-  test_fp_literals.smt2
-  test_lia.smt2
-  test_lra.smt2
-  test_string_all.smt2
-  test_string_hard.smt2
-  test_implication.smt2
-  test_uninterpreted.smt2))
+  (source_tree ./)))

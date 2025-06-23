@@ -149,7 +149,7 @@ module type M = sig
 
     (** [to_bitv interp n] converts an interpretation to a bitvector of width
         [n]. *)
-    val to_bitv : interp -> int -> int64
+    val to_bitv : interp -> int -> Z.t
 
     (** [to_float interp e s] converts an interpretation to a floating-point
         number with exponent width [e] and significand width [s]. *)

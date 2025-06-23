@@ -1,0 +1,5 @@
+(declare-const x (_ BitVec 3))
+(declare-const y (_ BitVec 5))
+(assert (= (concat y x) (_ bv42 8)))
+(check-sat)
+(get-model)

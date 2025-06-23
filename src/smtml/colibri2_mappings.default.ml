@@ -95,7 +95,7 @@ module M = struct
         match
           Colibri2_core.Value.value Colibri2_theories_LRA.RealValue.key interp
         with
-        | Some a when A.is_integer a -> Int64.of_string (A.to_string a)
+        | Some a when A.is_integer a -> Z.of_string (A.to_string a)
         | _ -> assert false
 
       let to_float fp _eb _sb =

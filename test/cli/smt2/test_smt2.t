@@ -49,6 +49,11 @@ Test BitVector parsing:
   sat
   $ smtml run test_bitv_funs.smt2
   sat
+  $ smtml run test_bitv_width.smt2
+  sat
+  (model
+    (x i3 2)
+    (y i5 5))
 
 Test FloatingPoint parsing:
   $ smtml run test_fp.smt2
