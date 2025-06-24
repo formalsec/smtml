@@ -182,10 +182,66 @@ let get_symbols (hte : t list) =
   List.iter symbols hte;
   Hashtbl.fold (fun k () acc -> k :: acc) tbl []
 
+let rec pp fmt (hte : t) =
+  match view hte with
+  | Val v -> Value.pp fmt v
+  | Ptr { base; offset } -> Fmt.pf fmt "(Ptr %a %a)" Bitvector.pp base pp offset
+  | Symbol s -> Fmt.pf fmt "@[<hov 1>%a@]" Symbol.pp s
+  | List v -> Fmt.pf fmt "@[<hov 1>[%a]@]" (Fmt.list ~sep:Fmt.comma pp) v
+  | App (s, v) ->
+    Fmt.pf fmt "@[<hov 1>(%a@ %a)@]" Symbol.pp s (Fmt.list ~sep:Fmt.comma pp) v
+  | Unop (ty, op, e) ->
+    Fmt.pf fmt "@[<hov 1>(%a.%a@ %a)@]" Ty.pp ty Ty.Unop.pp op pp e
+  | Binop (ty, op, e1, e2) ->
+    Fmt.pf fmt "@[<hov 1>(%a.%a@ %a@ %a)@]" Ty.pp ty Ty.Binop.pp op pp e1 pp e2
+  | Triop (ty, op, e1, e2, e3) ->
+    Fmt.pf fmt "@[<hov 1>(%a.%a@ %a@ %a@ %a)@]" Ty.pp ty Ty.Triop.pp op pp e1 pp
+      e2 pp e3
+  | Relop (ty, op, e1, e2) ->
+    Fmt.pf fmt "@[<hov 1>(%a.%a@ %a@ %a)@]" Ty.pp ty Ty.Relop.pp op pp e1 pp e2
+  | Cvtop (ty, op, e) ->
+    Fmt.pf fmt "@[<hov 1>(%a.%a@ %a)@]" Ty.pp ty Ty.Cvtop.pp op pp e
+  | Naryop (ty, op, es) ->
+    Fmt.pf fmt "@[<hov 1>(%a.%a@ (%a))@]" Ty.pp ty Ty.Naryop.pp op
+      (Fmt.list ~sep:Fmt.comma pp)
+      es
+  | Extract (e, h, l) -> Fmt.pf fmt "@[<hov 1>(extract@ %a@ %d@ %d)@]" pp e l h
+  | Concat (e1, e2) -> Fmt.pf fmt "@[<hov 1>(++@ %a@ %a)@]" pp e1 pp e2
+  | Binder (b, vars, e) ->
+    Fmt.pf fmt "@[<hov 1>(%a@ (%a)@ %a)@]" Binder.pp b (Fmt.list ~sep:Fmt.sp pp)
+      vars pp e
+
+let pp_list fmt (es : t list) = Fmt.hovbox (Fmt.list ~sep:Fmt.comma pp) fmt es
+
+let pp_smt fmt (es : t list) : unit =
+  let pp_symbols fmt syms =
+    Fmt.list ~sep:Fmt.semi
+      (fun fmt sym ->
+        let t = Symbol.type_of sym in
+        Fmt.pf fmt "(let-const %a %a)" Symbol.pp sym Ty.pp t )
+      fmt syms
+  in
+  let pp_asserts fmt es =
+    Fmt.list ~sep:Fmt.semi
+      (fun fmt e -> Fmt.pf fmt "(assert @[<h 2>%a@])" pp e)
+      fmt es
+  in
+  let syms = get_symbols es in
+  if List.length syms > 0 then Fmt.pf fmt "%a@\n" pp_symbols syms;
+  if List.length es > 0 then Fmt.pf fmt "%a@\n" pp_asserts es;
+  Fmt.string fmt "(check-sat)"
+
+let to_string e = Fmt.str "%a" pp e
+
 module Set = struct
   include PatriciaTree.MakeHashconsedSet (Key) ()
 
   let hash = to_int
+
+  let pp fmt v =
+    Fmt.pf fmt "@[<hov 1>%a@]"
+      (pretty ~pp_sep:(fun fmt () -> Fmt.pf fmt "@;") pp)
+      v
 
   let get_symbols (set : t) =
     let tbl = Hashtbl.create 64 in
@@ -220,71 +276,6 @@ module Set = struct
     iter symbols set;
     Hashtbl.fold (fun k () acc -> k :: acc) tbl []
 end
-
-module Pp = struct
-  let rec pp fmt (hte : t) =
-    match view hte with
-    | Val v -> Value.pp fmt v
-    | Ptr { base; offset } ->
-      Fmt.pf fmt "(Ptr %a %a)" Bitvector.pp base pp offset
-    | Symbol s -> Fmt.pf fmt "@[<hov 1>%a@]" Symbol.pp s
-    | List v -> Fmt.pf fmt "@[<hov 1>[%a]@]" (Fmt.list ~sep:Fmt.comma pp) v
-    | App (s, v) ->
-      Fmt.pf fmt "@[<hov 1>(%a@ %a)@]" Symbol.pp s
-        (Fmt.list ~sep:Fmt.comma pp)
-        v
-    | Unop (ty, op, e) ->
-      Fmt.pf fmt "@[<hov 1>(%a.%a@ %a)@]" Ty.pp ty Ty.Unop.pp op pp e
-    | Binop (ty, op, e1, e2) ->
-      Fmt.pf fmt "@[<hov 1>(%a.%a@ %a@ %a)@]" Ty.pp ty Ty.Binop.pp op pp e1 pp
-        e2
-    | Triop (ty, op, e1, e2, e3) ->
-      Fmt.pf fmt "@[<hov 1>(%a.%a@ %a@ %a@ %a)@]" Ty.pp ty Ty.Triop.pp op pp e1
-        pp e2 pp e3
-    | Relop (ty, op, e1, e2) ->
-      Fmt.pf fmt "@[<hov 1>(%a.%a@ %a@ %a)@]" Ty.pp ty Ty.Relop.pp op pp e1 pp
-        e2
-    | Cvtop (ty, op, e) ->
-      Fmt.pf fmt "@[<hov 1>(%a.%a@ %a)@]" Ty.pp ty Ty.Cvtop.pp op pp e
-    | Naryop (ty, op, es) ->
-      Fmt.pf fmt "@[<hov 1>(%a.%a@ (%a))@]" Ty.pp ty Ty.Naryop.pp op
-        (Fmt.list ~sep:Fmt.comma pp)
-        es
-    | Extract (e, h, l) ->
-      Fmt.pf fmt "@[<hov 1>(extract@ %a@ %d@ %d)@]" pp e l h
-    | Concat (e1, e2) -> Fmt.pf fmt "@[<hov 1>(++@ %a@ %a)@]" pp e1 pp e2
-    | Binder (b, vars, e) ->
-      Fmt.pf fmt "@[<hov 1>(%a@ (%a)@ %a)@]" Binder.pp b
-        (Fmt.list ~sep:Fmt.sp pp) vars pp e
-
-  let pp_list fmt (es : t list) = Fmt.hovbox (Fmt.list ~sep:Fmt.comma pp) fmt es
-
-  let pp_smt fmt (es : t list) : unit =
-    let pp_symbols fmt syms =
-      Fmt.list ~sep:Fmt.semi
-        (fun fmt sym ->
-          let t = Symbol.type_of sym in
-          Fmt.pf fmt "(let-const %a %a)" Symbol.pp sym Ty.pp t )
-        fmt syms
-    in
-    let pp_asserts fmt es =
-      Fmt.list ~sep:Fmt.semi
-        (fun fmt e -> Fmt.pf fmt "(assert @[<h 2>%a@])" pp e)
-        fmt es
-    in
-    let syms = get_symbols es in
-    if List.length syms > 0 then Fmt.pf fmt "%a@\n" pp_symbols syms;
-    if List.length es > 0 then Fmt.pf fmt "%a@\n" pp_asserts es;
-    Fmt.string fmt "(check-sat)"
-end
-
-let pp = Pp.pp
-
-let pp_list = Pp.pp_list
-
-let pp_smt = Pp.pp_smt
-
-let to_string e = Fmt.str "%a" pp e
 
 let value (v : Value.t) : t = make (Val v) [@@inline]
 

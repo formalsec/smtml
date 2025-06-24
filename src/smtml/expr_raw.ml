@@ -137,12 +137,7 @@ include (
 
         val split : elt -> t -> t * bool * t
 
-        val pretty :
-             ?pp_sep:(Format.formatter -> unit -> unit)
-          -> (Format.formatter -> elt -> unit)
-          -> Format.formatter
-          -> t
-          -> unit
+        val pp : Format.formatter -> t -> unit
 
         val union : t -> t -> t
 
