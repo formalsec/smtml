@@ -13,7 +13,7 @@ type t = expr Hc.hash_consed
 and expr = private
   | Val of Value.t  (** A constant value. *)
   | Ptr of
-      { base : Bitvector.t (** Base address. *)
+      { base : Bitvector.t  (** Base address. *)
       ; offset : t  (** Offset from base. *)
       }
   | Symbol of Symbol.t  (** A symbolic variable. *)
@@ -278,16 +278,8 @@ module Set : sig
       {!to_int}.*)
   val split : elt -> t -> t * bool * t
 
-  (** Pretty prints the set, [pp_sep] is called once between each element, it
-      defaults to
-      {{:https://v2.ocaml.org/api/Format.html#VALpp_print_cut}[Format.pp_print_cut]}
-  *)
-  val pretty :
-       ?pp_sep:(Format.formatter -> unit -> unit)
-    -> (Format.formatter -> elt -> unit)
-    -> Format.formatter
-    -> t
-    -> unit
+  (** Pretty prints the set. *)
+  val pp : Format.formatter -> t -> unit
 
   (** {1 Functions on pairs of sets} *)
 
