@@ -509,7 +509,8 @@ let rec cvtop theory op hte =
   match (op, view hte) with
   | Ty.Cvtop.String_to_re, _ -> raw_cvtop theory op hte
   | _, Val v -> value (Eval.cvtop theory op v)
-  | String_to_float, Cvtop (Ty_real, ToString, real) -> real
+  | String_to_float, Cvtop (Ty_real, ToString, hte) -> hte
+  | Reinterpret_float, Cvtop (Ty_real, Reinterpret_int, hte) -> hte
   | Zero_extend n, Ptr { base; offset } ->
     let offset = cvtop theory op offset in
     make (Ptr { base = Bitvector.zero_extend n base; offset })
