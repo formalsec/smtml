@@ -52,8 +52,8 @@ let run ~debug ~dry ~print_statistics ~solver_type ~solver_mode ~from_file
     match ast with
     | Ok _ when dry -> state
     | Ok ast -> Some (Interpret.start ?state ast)
-    | Error (`Parsing_error err) ->
-      Log.err (fun k -> k "Error while parsing %a" Fpath.pp file);
+    | Error (`Parsing_error ((fpath, err_msg) as err)) ->
+      Log.err (fun k -> k "%a: %s" Fpath.pp fpath err_msg);
       incr exception_count;
       exception_log := err :: !exception_log;
       state
@@ -93,28 +93,36 @@ let run ~debug ~dry ~print_statistics ~solver_type ~solver_mode ~from_file
       | Ok files -> List.fold_left run_file None files )
   in
   if print_statistics then Log.app (fun k -> k "total time: %.06f" !total_t);
-  let write_exception_log = function
-    | [] -> Ok ()
+  let write_exception_log =
+    let open Smtml_prelude.Result in
+    function
+    | [] -> Ok None
     | exns ->
       let total = !total_tests in
       let exceptions = !exception_count in
       assert (total > 0);
       let percentage = float exceptions /. float total *. 100.0 in
-      let log_fpath = Fpath.v "exceptions.log" in
-      Bos.OS.File.writef log_fpath
-        "Total tests: %d@\n\
-         Exceptions: %d@\n\
-         Exception percentage: %.2f%%@\n\
-         @\n\
-         %a"
-        total exceptions percentage
-        (Fmt.list
-           ~sep:(fun fmt () -> Fmt.pf fmt "@\n@\n")
-           (fun fmt (path, err) ->
-             Fmt.pf fmt "File: %a@\nError: %s" Fpath.pp path err ) )
-        exns
+      let log_file = Fpath.v (Filename.temp_file "smtml" "exceptions.sexp") in
+      let* () =
+        Bos.OS.File.writef log_file
+          "@[<v 1>((total-tests %d)@;\
+           (exceptions %d)@;\
+           (exception-percentage %.2f%%)@;\
+           @[<v 1>(errors (@;\
+           %a@;\
+           ))@]@;)@]"
+          total exceptions percentage
+          (Fmt.list ~sep:Fmt.cut (fun fmt (fpath, err_msg) ->
+             Fmt.pf fmt "@[<hov 1>((file \"%a\")@;(error %S))@]" Fpath.pp fpath
+               err_msg ) )
+          exns
+      in
+      Ok (Some log_file)
   in
   match write_exception_log !exception_log with
   | Error (`Msg err) ->
     Log.warn (fun k -> k "Could not write excptions log: %s" err)
-  | Ok () -> ()
+  | Ok None -> ()
+  | Ok (Some fpath) ->
+    Log.app (fun k ->
+      k "Exception log successfully written to: %a" Fpath.pp fpath )
