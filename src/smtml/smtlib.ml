@@ -43,7 +43,7 @@ module Term = struct
         match Hashtbl.find_opt custom_sorts name with
         | Some ty -> Expr.symbol { id with ty }
         | None ->
-          Logs.err (fun k ->
+          Log.err (fun k ->
             k "%acould not find sort: %a" pp_loc loc Symbol.pp id );
           Expr.symbol id
       end
