@@ -24,7 +24,12 @@ let filenames =
   Arg.(value & pos_all fpath [] & info [] ~docv ~doc)
 
 let solver_type =
-  let doc = "SMT solver to use" in
+  let doc =
+    Fmt.str "Configure which SMT solver to use. Available options are: %a"
+      (Fmt.list ~sep:Fmt.comma (fun fmt v ->
+         Fmt.pf fmt "$(b,%a)" Solver_type.pp v ) )
+      Solver_dispatcher.available
+  in
   Arg.(value & opt Solver_type.conv Z3_solver & info [ "s"; "solver" ] ~doc)
 
 let solver_mode =
