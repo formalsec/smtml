@@ -184,6 +184,10 @@ module Nop = struct
       let replace _ ~pattern:_ ~with_:_ = assert false
 
       let replace_all _ ~pattern:_ ~with_:_ = assert false
+
+      let replace_re _ ~pattern:_ ~with_:_ = assert false
+
+      let replace_re_all _ ~pattern:_ ~with_:_ = assert false
     end
 
     module Re = struct
@@ -202,6 +206,8 @@ module Nop = struct
       let comp _ = assert false
 
       let range _ = assert false
+
+      let diff _ = assert false
 
       let inter _ = assert false
 
