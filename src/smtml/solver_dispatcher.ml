@@ -11,9 +11,10 @@ let is_available = function
   | Cvc5_solver -> Cvc5_mappings.is_available
   | Altergo_solver -> Altergo_mappings.is_available
 
+(* FIXME: Find a way to ensure we don't forget to add available solver to this list when we extend the [Solver_type.t]*)
 let available =
   List.filter is_available
-    [ Z3_solver; Bitwuzla_solver; Colibri2_solver; Cvc5_solver ]
+    [ Z3_solver; Bitwuzla_solver; Colibri2_solver; Cvc5_solver; Altergo_solver ]
 
 let mappings_of_solver : Solver_type.t -> (module Mappings.S_with_fresh) =
   function
