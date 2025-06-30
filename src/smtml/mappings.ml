@@ -891,9 +891,18 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         match Stack.top_opt s.ctx with
         | None -> assert false
         | Some ctx ->
-          let ctx, assumptions = encode_exprs ctx assumptions in
+          let ctx, assumptions1 = encode_exprs ctx assumptions in
           s.last_ctx <- Some ctx;
-          M.Solver.check s.solver ~ctx ~assumptions
+
+          let usage_before = Rusage.get Self in
+          let res = M.Solver.check s.solver ~ctx ~assumptions:assumptions1 in
+          let usage_after = Rusage.get Self in
+
+          let ut = usage_after.utime -. usage_before.utime in
+          let st = usage_after.stime -. usage_before.stime in
+          Tmp_log_path.write assumptions ut st;
+
+          res
 
       let model { solver; last_ctx; _ } =
         match last_ctx with
