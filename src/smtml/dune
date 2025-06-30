@@ -31,6 +31,7 @@
   log
   logic
   mappings
+  tmp_log_path
   mappings_intf
   model
   num
@@ -58,6 +59,7 @@
   (:standard -open Smtml_prelude))
  (libraries
   bos
+  rusage
   cmdliner
   dolmen
   dolmen_type
@@ -69,6 +71,8 @@
   scfg
   smtml.prelude
   yojson
+  mtime
+  mtime.clock.os
   zarith
   (select
    colibri2_mappings.ml
