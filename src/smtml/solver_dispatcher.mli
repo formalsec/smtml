@@ -15,6 +15,9 @@
     [Solver_type.is_available]. *)
 val is_available : Solver_type.t -> bool
 
+(** [supported_solvers] returns a list of all supported solvers. *)
+val supported_solvers : Solver_type.t list
+
 (** [available] returns a list of all available solvers.
 
     The list can be empty if no solvers are installed. *)
