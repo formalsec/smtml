@@ -52,6 +52,10 @@ val compare : t -> t -> int
 (** [ty expr] determines the type of an expression. *)
 val ty : t -> Ty.t
 
+(** [memoize_ty expr] memoizes the type of an expression, returning the cached
+    type if available. *)
+val memoize_ty : t -> Ty.t
+
 (** [is_symbolic expr] checks if an expression is symbolic (i.e., contains
     symbolic variables). *)
 val is_symbolic : t -> bool
