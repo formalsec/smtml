@@ -305,6 +305,13 @@ module Term = struct
           | Some bits -> bits
         in
         Expr.raw_cvtop Ty_none (Zero_extend bits) a
+      | "sign_extend", [ bits ], [ a ] ->
+        let bits =
+          match int_of_string_opt bits with
+          | None -> assert false
+          | Some bits -> bits
+        in
+        Expr.raw_cvtop Ty_none (Sign_extend bits) a
       | "re.loop", [ i1; i2 ], [ a ] ->
         let i1 =
           match int_of_string_opt i1 with None -> assert false | Some i1 -> i1
