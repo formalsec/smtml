@@ -363,6 +363,8 @@ let rec binop ty op hte1 hte2 =
   | Sub, Ptr { base; offset }, _ ->
     let m = Bitvector.numbits base in
     make (Ptr { base; offset = binop (Ty_bitv m) Sub offset hte2 })
+  | Sub, _, _ when Ty.equal Ty_real ty && phys_equal hte1 hte2 -> value (Real 0.)
+  | Sub, _, _ when Ty.equal Ty_int ty && phys_equal hte1 hte2 -> value (Int 0)
   | Rem, Ptr { base; offset }, _ ->
     let m = Bitvector.numbits base in
     let rhs = value (Bitv base) in
@@ -381,6 +383,8 @@ let rec binop ty op hte1 hte2 =
     hte1
   | (Add | Or), _, Val (Bitv bv) when Bitvector.eqz bv -> hte1
   | (And | Mul), _, Val (Bitv bv) when Bitvector.eqz bv -> hte2
+  | And, hte, Val True | And, Val True, hte -> make hte
+  | And, _, Val False | And, Val False, _ -> value False
   | Add, Binop (ty, Add, x, { node = Val v1; _ }), Val v2 ->
     let v = value (Eval.binop ty Add v1 v2) in
     raw_binop ty Add x v
@@ -417,12 +421,46 @@ let triop ty op e1 e2 e3 =
   match (op, view e1, view e2, view e3) with
   | Ty.Triop.Ite, Val True, _, _ -> e2
   | Ite, Val False, _, _ -> e3
+  | Ite, _, Val True, Val False -> e1
+  | Ite, cond, Val False, Val True -> raw_unop ty Not (make cond)
   | op, Val v1, Val v2, Val v3 -> value (Eval.triop ty op v1 v2 v3)
   | Ite, _, Triop (_, Ite, c2, r1, r2), Triop (_, Ite, _, _, _) ->
     let else_ = raw_triop ty Ite e1 r2 e3 in
     let cond = binop Ty_bool And e1 c2 in
     raw_triop ty Ite cond r1 else_
   | _ -> raw_triop ty op e1 e2 e3
+
+let raw_naryop ty op es = make (Naryop (ty, op, es)) [@@inline]
+
+let naryop ty op es =
+  if List.for_all (fun e -> match view e with Val _ -> true | _ -> false) es
+  then
+    let vs =
+      List.map (fun e -> match view e with Val v -> v | _ -> assert false) es
+    in
+    value (Eval.naryop ty op vs)
+  else
+    match (ty, op, List.map view es) with
+    | ( Ty_str
+      , Concat
+      , [ Naryop (Ty_str, Concat, l1); Naryop (Ty_str, Concat, l2) ] ) ->
+      raw_naryop Ty_str Concat (l1 @ l2)
+    | Ty_str, Concat, [ Naryop (Ty_str, Concat, htes); hte ] ->
+      raw_naryop Ty_str Concat (htes @ [ make hte ])
+    | Ty_str, Concat, [ hte; Naryop (Ty_str, Concat, htes) ] ->
+      raw_naryop Ty_str Concat (make hte :: htes)
+    | Ty_bool, Logand, l -> (
+      if List.exists (function Val False -> true | _ -> false) l then
+        value False
+      else
+        let l' =
+          List.filter (fun e -> match e with Val True -> false | _ -> true) l
+        in
+        match l' with
+        | [] -> value True
+        | [ hte ] -> make hte
+        | _ -> raw_naryop ty op es )
+    | _ -> raw_naryop ty op es
 
 let raw_relop ty op hte1 hte2 = make (Relop (ty, op, hte1, hte2)) [@@inline]
 
@@ -437,6 +475,43 @@ let rec relop ty op hte1 hte2 =
     else raw_relop ty op hte1 hte2
   | Eq, _, Val Nothing | Eq, Val Nothing, _ -> value False
   | Ne, _, Val Nothing | Ne, Val Nothing, _ -> value True
+  | Ne, _, _ when phys_equal hte1 hte2 -> value False
+  | Eq, hte, Val True | Eq, Val True, hte -> make hte
+  | Eq, hte, Val False | Eq, Val False, hte -> unop ty Not (make hte)
+  | Eq, Unop (ty1, op1, x1), Unop (ty2, op2, x2)
+    when Ty.equal ty1 ty2 && Ty.Unop.equal op1 op2 ->
+    relop ty Eq x1 x2
+  | Eq, Cvtop (ty1, op1, x1), Cvtop (ty2, op2, x2)
+    when Ty.equal ty1 ty2 && Ty.Cvtop.equal op1 op2 ->
+    relop ty Eq x1 x2
+  | Eq, Binop (ty1, op1, x1, y1), Binop (ty2, op2, x2, y2)
+    when Ty.equal ty1 ty2 && Ty.Binop.equal op1 op2 && phys_equal y1 y2 ->
+    relop ty Eq x1 x2
+  | Eq, Binop (ty1, op1, x1, y1), Binop (ty2, op2, x2, y2)
+    when Ty.equal ty1 ty2 && Ty.Binop.equal op1 op2 && phys_equal x1 x2 ->
+    relop ty Eq y1 y2
+  | Eq, Naryop (Ty_str, Concat, l1), Naryop (Ty_str, Concat, l2) ->
+    let rec strip_common_suffix l1 l2 =
+      match (List.rev l1, List.rev l2) with
+      | h1 :: t1, h2 :: t2 when phys_equal h1 h2 ->
+        strip_common_suffix (List.rev t1) (List.rev t2)
+      | _ -> (l1, l2)
+    in
+    let rec strip_common_prefix l1 l2 =
+      match (l1, l2) with
+      | h1 :: t1, h2 :: t2 when phys_equal h1 h2 -> strip_common_prefix t1 t2
+      | _ -> (l1, l2)
+    in
+    let l1', l2' =
+      strip_common_suffix l1 l2 |> fun (a, b) -> strip_common_prefix a b
+    in
+    begin
+      match (l1', l2') with
+      | [], [] -> value True
+      | [ x ], [ y ] -> relop ty Eq x y
+      | _ ->
+        relop Ty_bool Eq (naryop Ty_str Concat l1') (naryop Ty_str Concat l2')
+    end
   | Eq, _, Val (App (`Op "symbol", [ Str _ ]))
   | Eq, Val (App (`Op "symbol", [ Str _ ])), _ ->
     value False
@@ -515,27 +590,6 @@ let rec cvtop theory op hte =
     assert (Ty.equal theory (ty hte) && Ty.equal theory (Ty_bitv 32));
     hte
   | _ -> raw_cvtop theory op hte
-
-let raw_naryop ty op es = make (Naryop (ty, op, es)) [@@inline]
-
-let naryop ty op es =
-  if List.for_all (fun e -> match view e with Val _ -> true | _ -> false) es
-  then
-    let vs =
-      List.map (fun e -> match view e with Val v -> v | _ -> assert false) es
-    in
-    value (Eval.naryop ty op vs)
-  else
-    match (ty, op, List.map view es) with
-    | ( Ty_str
-      , Concat
-      , [ Naryop (Ty_str, Concat, l1); Naryop (Ty_str, Concat, l2) ] ) ->
-      raw_naryop Ty_str Concat (l1 @ l2)
-    | Ty_str, Concat, [ Naryop (Ty_str, Concat, htes); hte ] ->
-      raw_naryop Ty_str Concat (htes @ [ make hte ])
-    | Ty_str, Concat, [ hte; Naryop (Ty_str, Concat, htes) ] ->
-      raw_naryop Ty_str Concat (make hte :: htes)
-    | _ -> raw_naryop ty op es
 
 let[@inline] raw_extract (hte : t) ~(high : int) ~(low : int) : t =
   make (Extract (hte, high, low))
