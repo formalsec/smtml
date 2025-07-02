@@ -215,6 +215,7 @@ module Term = struct
       | "bvadd", [ a; b ] -> Expr.raw_binop Ty_none Add a b
       | "bvsub", [ a; b ] -> Expr.raw_binop Ty_none Sub a b
       | "bvmul", [ a; b ] -> Expr.raw_binop Ty_none Mul a b
+      | "bvsdiv", [ a; b ] -> Expr.raw_binop Ty_none Div a b
       | "bvudiv", [ a; b ] -> Expr.raw_binop Ty_none DivU a b
       | "bvurem", [ a; b ] -> Expr.raw_binop Ty_none RemU a b
       | "bvshl", [ a; b ] -> Expr.raw_binop Ty_none Shl a b
