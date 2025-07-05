@@ -1,16 +1,35 @@
 ## Unreleased
 
 ### Added
+### Changed
+### Fixed
 
+## v0.8.0
+
+### Added
+
+- Add `Solver_dispatcher.supported_solvers` list
+- Add alt-ergo to list of available solver to check
+- Add `Expr.Set.pp` function
+- Simplify int->float->int conversions
+- Add simplification for `((extract 31 0) ((zero_extend 32) x))` = `x`
+- Value lifting for arbitrary bitvectors
+- Add support for a bunch of FPA in the SMT-LIB parser
+- Add uninterpred `to_ieee_bv` to solvers that don't support it
 - More pointer simplifications
 - Add logical implication that is parsed from SMT-lib `=>`.
 
 ### Changed
 
+- Serialize exception log output in sexp format to a temp file
+- Remove OfString and ToString operators from Int module
 - Base of pointers as bitvectors instead of fixed int32.
 - Smtml now handles unknown SMT-lib symbols as apps instead of failing.
 
 ### Fixed
+
+- Fix rotates in alt-ergo and colibri2
+- Fix cvc5's bindings
 
 ## v0.7.0
 
