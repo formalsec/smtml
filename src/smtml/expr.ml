@@ -508,9 +508,11 @@ let rec relop ty op hte1 hte2 =
     begin
       match (l1', l2') with
       | [], [] -> value True
-      | [ x ], [ y ] -> relop ty Eq x y
+      | [ x ], [ y ] -> raw_relop ty Eq x y
       | _ ->
-        relop Ty_bool Eq (naryop Ty_str Concat l1') (naryop Ty_str Concat l2')
+        raw_relop Ty_bool Eq
+          (raw_naryop Ty_str Concat l1')
+          (raw_naryop Ty_str Concat l2')
     end
   | Eq, _, Val (App (`Op "symbol", [ Str _ ]))
   | Eq, Val (App (`Op "symbol", [ Str _ ])), _ ->
