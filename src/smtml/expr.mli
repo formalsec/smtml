@@ -47,6 +47,8 @@ val equal : t -> t -> bool
 (** [compare t1 t2] compares two terms lexicographically. *)
 val compare : t -> t -> int
 
+val compare_expr : t -> t -> int
+
 (** {1 Type and Symbol Handling} *)
 
 (** [ty expr] determines the type of an expression. *)

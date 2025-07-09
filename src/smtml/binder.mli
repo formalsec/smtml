@@ -20,6 +20,9 @@ type t =
     and [q2] are equal. *)
 val equal : t -> t -> bool
 
+(** [compare t1 t2] performs a total order comparison of types [t1] and [t2]. *)
+val compare : t -> t -> int
+
 (** {1 Pretty Printing} *)
 
 (** Pretty-printer for quantifiers and let-bindings. Formats a value of type [t]

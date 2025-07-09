@@ -166,6 +166,65 @@ module Unop = struct
       , _ ) ->
       false
 
+  let compare (e1 : t) (e2 : t) =
+    match (e1, e2) with
+    | x, y when equal x y -> 0
+    | Neg, _ -> 1
+    | _, Neg -> -1
+    | Not, _ -> 1
+    | _, Not -> -1
+    | Clz, _ -> 1
+    | _, Clz -> -1
+    | Ctz, _ -> 1
+    | _, Ctz -> -1
+    | Popcnt, _ -> 1
+    | _, Popcnt -> -1
+    | Abs, _ -> 1
+    | _, Abs -> -1
+    | Sqrt, _ -> 1
+    | _, Sqrt -> -1
+    | Is_normal, _ -> 1
+    | _, Is_normal -> -1
+    | Is_subnormal, _ -> 1
+    | _, Is_subnormal -> -1
+    | Is_negative, _ -> 1
+    | _, Is_negative -> -1
+    | Is_positive, _ -> 1
+    | _, Is_positive -> -1
+    | Is_infinite, _ -> 1
+    | _, Is_infinite -> -1
+    | Is_nan, _ -> 1
+    | _, Is_nan -> -1
+    | Is_zero, _ -> 1
+    | _, Is_zero -> -1
+    | Ceil, _ -> 1
+    | _, Ceil -> -1
+    | Floor, _ -> 1
+    | _, Floor -> -1
+    | Trunc, _ -> 1
+    | _, Trunc -> -1
+    | Nearest, _ -> 1
+    | _, Nearest -> -1
+    | Head, _ -> 1
+    | _, Head -> -1
+    | Tail, _ -> 1
+    | _, Tail -> -1
+    | Reverse, _ -> 1
+    | _, Reverse -> -1
+    | Length, _ -> 1
+    | _, Length -> -1
+    | Trim, _ -> 1
+    | _, Trim -> -1
+    | Regexp_star, _ -> 1
+    | _, Regexp_star -> -1
+    | Regexp_loop (_, _), _ -> 1
+    | _, Regexp_loop (_, _) -> -1
+    | Regexp_plus, _ -> 1
+    | _, Regexp_plus -> -1
+    | Regexp_opt, _ -> 1
+    | _, Regexp_opt -> -1
+    | Regexp_comp, _ -> 1
+
   let pp fmt = function
     | Neg -> Fmt.string fmt "neg"
     | Not -> Fmt.string fmt "not"
@@ -273,6 +332,69 @@ module Binop = struct
       , _ ) ->
       false
 
+  let compare (e1 : t) (e2 : t) =
+    match (e1, e2) with
+    | x, y when equal x y -> 0
+    | Add, _ -> 1
+    | _, Add -> -1
+    | Sub, _ -> 1
+    | _, Sub -> -1
+    | Mul, _ -> 1
+    | _, Mul -> -1
+    | Div, _ -> 1
+    | _, Div -> -1
+    | DivU, _ -> 1
+    | _, DivU -> -1
+    | Rem, _ -> 1
+    | _, Rem -> -1
+    | RemU, _ -> 1
+    | _, RemU -> -1
+    | Shl, _ -> 1
+    | _, Shl -> -1
+    | ShrA, _ -> 1
+    | _, ShrA -> -1
+    | ShrL, _ -> 1
+    | _, ShrL -> -1
+    | And, _ -> 1
+    | _, And -> -1
+    | Or, _ -> 1
+    | _, Or -> -1
+    | Xor, _ -> 1
+    | _, Xor -> -1
+    | Implies, _ -> 1
+    | _, Implies -> -1
+    | Pow, _ -> 1
+    | _, Pow -> -1
+    | Min, _ -> 1
+    | _, Min -> -1
+    | Max, _ -> 1
+    | _, Max -> -1
+    | Copysign, _ -> 1
+    | _, Copysign -> -1
+    | Rotl, _ -> 1
+    | _, Rotl -> -1
+    | Rotr, _ -> 1
+    | _, Rotr -> -1
+    | At, _ -> 1
+    | _, At -> -1
+    | List_cons, _ -> 1
+    | _, List_cons -> -1
+    | List_append, _ -> 1
+    | _, List_append -> -1
+    | String_prefix, _ -> 1
+    | _, String_prefix -> -1
+    | String_suffix, _ -> 1
+    | _, String_suffix -> -1
+    | String_contains, _ -> 1
+    | _, String_contains -> -1
+    | String_last_index, _ -> 1
+    | _, String_last_index -> -1
+    | String_in_re, _ -> 1
+    | _, String_in_re -> -1
+    | Regexp_range, _ -> 1
+    | _, Regexp_range -> -1
+    | Regexp_inter, _ -> 1
+
   let pp fmt = function
     | Add -> Fmt.string fmt "add"
     | Sub -> Fmt.string fmt "sub"
@@ -334,6 +456,29 @@ module Relop = struct
       true
     | (Eq | Ne | Lt | LtU | Gt | GtU | Le | LeU | Ge | GeU), _ -> false
 
+  let compare (e1 : t) (e2 : t) =
+    match (e1, e2) with
+    | x, y when equal x y -> 0
+    | Eq, _ -> 1
+    | _, Eq -> -1
+    | Ne, _ -> 1
+    | _, Ne -> -1
+    | Lt, _ -> 1
+    | _, Lt -> -1
+    | LtU, _ -> 1
+    | _, LtU -> -1
+    | Gt, _ -> 1
+    | _, Gt -> -1
+    | GtU, _ -> 1
+    | _, GtU -> -1
+    | Le, _ -> 1
+    | _, Le -> -1
+    | LeU, _ -> 1
+    | _, LeU -> -1
+    | Ge, _ -> 1
+    | _, Ge -> -1
+    | GeU, _ -> 1
+
   let pp fmt = function
     | Eq -> Fmt.string fmt "eq"
     | Ne -> Fmt.string fmt "ne"
@@ -370,6 +515,21 @@ module Triop = struct
         | String_replace_all )
       , _ ) ->
       false
+
+  let compare (e1 : t) (e2 : t) =
+    match (e1, e2) with
+    | x, y when equal x y -> 0
+    | Ite, _ -> 1
+    | _, Ite -> -1
+    | List_set, _ -> 1
+    | _, List_set -> -1
+    | String_extract, _ -> 1
+    | _, String_extract -> -1
+    | String_replace, _ -> 1
+    | _, String_replace -> -1
+    | String_index, _ -> 1
+    | _, String_index -> -1
+    | String_replace_all, _ -> 1
 
   let pp fmt = function
     | Ite -> Fmt.string fmt "ite"
@@ -454,6 +614,67 @@ module Cvtop = struct
       , _ ) ->
       false
 
+  let compare (e1 : t) (e2 : t) =
+    match (e1, e2) with
+    | x, y when equal x y -> 0
+    | ToString, _ -> 1
+    | _, ToString -> -1
+    | OfString, _ -> 1
+    | _, OfString -> -1
+    | ToBool, _ -> 1
+    | _, ToBool -> -1
+    | OfBool, _ -> 1
+    | _, OfBool -> -1
+    | Reinterpret_int, _ -> 1
+    | _, Reinterpret_int -> -1
+    | Reinterpret_float, _ -> 1
+    | _, Reinterpret_float -> -1
+    | DemoteF64, _ -> 1
+    | _, DemoteF64 -> -1
+    | PromoteF32, _ -> 1
+    | _, PromoteF32 -> -1
+    | ConvertSI32, _ -> 1
+    | _, ConvertSI32 -> -1
+    | ConvertUI32, _ -> 1
+    | _, ConvertUI32 -> -1
+    | ConvertSI64, _ -> 1
+    | _, ConvertSI64 -> -1
+    | ConvertUI64, _ -> 1
+    | _, ConvertUI64 -> -1
+    | TruncSF32, _ -> 1
+    | _, TruncSF32 -> -1
+    | TruncUF32, _ -> 1
+    | _, TruncUF32 -> -1
+    | TruncSF64, _ -> 1
+    | _, TruncSF64 -> -1
+    | TruncUF64, _ -> 1
+    | _, TruncUF64 -> -1
+    | Trunc_sat_f32_s, _ -> 1
+    | _, Trunc_sat_f32_s -> -1
+    | Trunc_sat_f32_u, _ -> 1
+    | _, Trunc_sat_f32_u -> -1
+    | Trunc_sat_f64_s, _ -> 1
+    | _, Trunc_sat_f64_s -> -1
+    | Trunc_sat_f64_u, _ -> 1
+    | _, Trunc_sat_f64_u -> -1
+    | WrapI64, _ -> 1
+    | _, WrapI64 -> -1
+    | Sign_extend _, _ -> 1
+    | _, Sign_extend _ -> -1
+    | Zero_extend _, _ -> 1
+    | _, Zero_extend _ -> -1
+    | String_to_code, _ -> 1
+    | _, String_to_code -> -1
+    | String_from_code, _ -> 1
+    | _, String_from_code -> -1
+    | String_to_int, _ -> 1
+    | _, String_to_int -> -1
+    | String_from_int, _ -> 1
+    | _, String_from_int -> -1
+    | String_to_float, _ -> 1
+    | _, String_to_float -> -1
+    | String_to_re, _ -> 1
+
   let pp fmt = function
     | ToString -> Fmt.string fmt "to_string"
     | OfString -> Fmt.string fmt "of_string"
@@ -501,6 +722,17 @@ module Naryop = struct
     | Regexp_union, Regexp_union ->
       true
     | (Logand | Logor | Concat | Regexp_union), _ -> false
+
+  let compare (e1 : t) (e2 : t) =
+    match (e1, e2) with
+    | x, y when equal x y -> 0
+    | Logand, _ -> 1
+    | _, Logand -> -1
+    | Logor, _ -> 1
+    | _, Logor -> -1
+    | Concat, _ -> 1
+    | _, Concat -> -1
+    | Regexp_union, _ -> 1
 
   let pp fmt = function
     | Logand -> Fmt.string fmt "and"

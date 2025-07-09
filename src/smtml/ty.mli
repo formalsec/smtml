@@ -98,6 +98,10 @@ module Unop : sig
   (** [equal op1 op2] checks if unary operations [op1] and [op2] are equal. *)
   val equal : t -> t -> bool
 
+  (** [compare t1 t2] performs a total order comparison of unops [t1] and [t2].
+  *)
+  val compare : t -> t -> int
+
   (** [pp fmt op] pretty-prints the unary operation [op] using the formatter
       [fmt]. *)
   val pp : t Fmt.t
@@ -148,6 +152,10 @@ module Binop : sig
   (** [equal op1 op2] checks if binary operations [op1] and [op2] are equal. *)
   val equal : t -> t -> bool
 
+  (** [compare t1 t2] performs a total order comparison of binops [t1] and [t2].
+  *)
+  val compare : t -> t -> int
+
   (** [pp fmt op] pretty-prints the binary operation [op] using the formatter
       [fmt]. *)
   val pp : t Fmt.t
@@ -172,6 +180,10 @@ module Relop : sig
   (** [equal op1 op2] checks if relational operations [op1] and [op2] are equal.
   *)
   val equal : t -> t -> bool
+
+  (** [compare t1 t2] performs a total order comparison of relops [t1] and [t2].
+  *)
+  val compare : t -> t -> int
 
   (** [pp fmt op] pretty-prints the relational operation [op] using the
       formatter [fmt]. *)
@@ -198,6 +210,10 @@ module Triop : sig
 
   (** [equal op1 op2] checks if ternary operations [op1] and [op2] are equal. *)
   val equal : t -> t -> bool
+
+  (** [compare t1 t2] performs a total order comparison of triops [t1] and [t2].
+  *)
+  val compare : t -> t -> int
 
   (** [pp fmt op] pretty-prints the ternary operation [op] using the formatter
       [fmt]. *)
@@ -246,6 +262,10 @@ module Cvtop : sig
   *)
   val equal : t -> t -> bool
 
+  (** [compare t1 t2] performs a total order comparison of cvtops [t1] and [t2].
+  *)
+  val compare : t -> t -> int
+
   (** [pp fmt op] pretty-prints the conversion operation [op] using the
       formatter [fmt]. *)
   val pp : t Fmt.t
@@ -263,6 +283,10 @@ module Naryop : sig
 
   (** [equal op1 op2] checks if n-ary operations [op1] and [op2] are equal. *)
   val equal : t -> t -> bool
+
+  (** [compare t1 t2] performs a total order comparison of types [t1] and [t2].
+  *)
+  val compare : t -> t -> int
 
   (** [pp fmt op] pretty-prints the n-ary operation [op] using the formatter
       [fmt]. *)
