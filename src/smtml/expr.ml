@@ -364,7 +364,8 @@ let rec binop ty op hte1 hte2 =
   | And, _, Val True -> hte1
   | And, Val False, _ -> hte1
   | And, _, Val False -> hte2
-  | Or, Val True, _ | Or, _, Val True -> make (Val True)
+  | Or, Val True, _ -> hte1
+  | Or, _, Val True -> hte2
   | Or, Val False, _ -> hte2
   | Or, _, Val False -> hte1
   | Add, Binop (ty, Add, x, { node = Val v1; _ }), Val v2 ->
