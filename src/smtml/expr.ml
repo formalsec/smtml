@@ -371,9 +371,6 @@ let rec binop ty op hte1 hte2 =
   | Add, Binop (ty, Add, x, { node = Val v1; _ }), Val v2 ->
     let v = value (Eval.binop ty Add v1 v2) in
     raw_binop ty Add x v
-  | And, Binop (ty, And, x, { node = Val v1; _ }), Val v2 ->
-    let v = value (Eval.binop ty And v1 v2) in
-    raw_binop ty And x v
   | Sub, Binop (ty, Sub, x, { node = Val v1; _ }), Val v2 ->
     let v = value (Eval.binop ty Add v1 v2) in
     raw_binop ty Sub x v
