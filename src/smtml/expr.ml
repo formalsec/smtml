@@ -357,6 +357,8 @@ let rec binop ty op hte1 hte2 =
   | Add, Val (Real -0.), _ -> hte2
   | Add, _, Val (Num (F32 -0l)) -> hte1
   | Add, Val (Num (F32 -0l)), _ -> hte2
+  | Add, _, Val (Num (F64 -0L)) -> hte1
+  | Add, Val (Num (F64 -0L)), _ -> hte2
   | (And | Mul), _, Val (Bitv bv) when Bitvector.eqz bv -> hte2
   | And, Val True, _ -> hte2
   | And, _, Val True -> hte1
@@ -535,8 +537,6 @@ let rec cvtop theory op hte =
   | Sign_extend 0, _ -> hte
   | String_from_code, Cvtop (_, String_to_code, e1) -> e1
   | String_to_code, Cvtop (_, String_from_code, e1) -> e1
-  | String_to_int, Cvtop (_, String_from_int, e1) -> e1
-  | String_from_int, Cvtop (_, String_to_int, e1) -> e1
   | _ -> raw_cvtop theory op hte
 
 let raw_naryop ty op es = make (Naryop (ty, op, es)) [@@inline]
