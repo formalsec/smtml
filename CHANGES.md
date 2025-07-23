@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- 2025-07-23 Allow smtml to compile with z3 4.15.x ([#391](https://github.com/formalsec/smtml/issues/391))
+- 2025-07-22 Avoid integer overflow when creating Dolmen terms in Bitv.v by using Zarith
 - 2025-07-20 Use git-cliff for automatic changelog generation ([#388](https://github.com/formalsec/smtml/issues/388))
 
 ## 0.8.0 - 2025-07-05
