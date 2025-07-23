@@ -126,6 +126,7 @@ module Unop = struct
     | Regexp_plus
     | Regexp_opt
     | Regexp_comp
+  [@@deriving ord]
 
   let equal o1 o2 =
     match (o1, o2) with
@@ -231,6 +232,7 @@ module Binop = struct
     (* Regexp *)
     | Regexp_range
     | Regexp_inter
+  [@@deriving ord]
 
   let equal o1 o2 =
     match (o1, o2) with
@@ -318,6 +320,7 @@ module Relop = struct
     | LeU
     | Ge
     | GeU
+  [@@deriving ord]
 
   let equal op1 op2 =
     match (op1, op2) with
@@ -356,6 +359,7 @@ module Triop = struct
     | String_replace
     | String_index
     | String_replace_all
+  [@@deriving ord]
 
   let equal op1 op2 =
     match (op1, op2) with
@@ -412,6 +416,7 @@ module Cvtop = struct
     | String_from_int
     | String_to_float
     | String_to_re
+  [@@deriving ord]
 
   let equal op1 op2 =
     match (op1, op2) with
@@ -492,6 +497,7 @@ module Naryop = struct
     | Logor
     | Concat
     | Regexp_union
+  [@@deriving ord]
 
   let equal op1 op2 =
     match (op1, op2) with
