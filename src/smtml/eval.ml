@@ -124,6 +124,7 @@ module Int = struct
       | Le -> ( <= )
       | Gt -> ( > )
       | Ge -> ( >= )
+      | Eq -> Int.equal
       | _ ->
         Fmt.failwith {|relop: Unsupported int operator "%a"|} Ty.Relop.pp op
     in

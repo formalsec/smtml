@@ -391,6 +391,10 @@ let test_relop_ptr _ =
   check (Expr.relop ty Gt p1 (int32 4l)) false_;
   check (Expr.relop ty Ge (int32 4l) p1) true_
 
+let test_relop_eq _ =
+  let open Infix in
+  check (Expr.relop Ty.Ty_int Eq (int 42) (int 42)) true_
+
 let test_relop =
   [ "test_relop_bool" >:: test_relop_bool
   ; "test_relop_int" >:: test_relop_int
@@ -402,6 +406,7 @@ let test_relop =
   ; "test_relop_f64" >:: test_relop_f64
   ; "test_relop_app" >:: test_relop_app
   ; "test_relop_ptr" >:: test_relop_ptr
+  ; "test_relop_ptr" >:: test_relop_eq
   ]
 
 let test_triop_bool _ =
