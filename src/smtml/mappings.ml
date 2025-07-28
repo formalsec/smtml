@@ -897,7 +897,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           let res = M.Solver.check s.solver ~ctx ~assumptions in
           let usage_after = Mtime_clock.count usage_before in
 
-          Tmp_log_path.write exprs (Mtime.Span.to_uint64_ns usage_after);
+          Utils.write exprs (Mtime.Span.to_uint64_ns usage_after);
 
           res
 

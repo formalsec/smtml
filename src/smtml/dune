@@ -31,7 +31,6 @@
   log
   logic
   mappings
-  tmp_log_path
   mappings_intf
   model
   num
