@@ -42,7 +42,7 @@ module Base (M : Mappings_intf.S) = struct
     incr solver_count;
     Utils.run_and_time_call
       ~use:(fun time -> solver_time := !solver_time +. time)
-      (fun () -> M.Solver.check solver ~assumptions:es)
+      (fun () -> M.Solver.check solver ~exprs:es)
 
   let check_set solver es = check solver @@ Expr.Set.to_list es
 
