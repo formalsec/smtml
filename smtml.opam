@@ -34,6 +34,7 @@ depends: [
   "prelude" {>= "0.5"}
   "rusage"
   "scfg" {>= "0.5"}
+  "mtime" {>= "2.0.0"}
   "yojson" {>= "1.6.0"}
   "zarith" {>= "1.5"}
   "odoc" {with-doc}

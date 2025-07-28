@@ -30,6 +30,7 @@ type t =
   | Ty_unit  (** Unit type. *)
   | Ty_regexp  (** Regular expression type. *)
   | Ty_roundingMode
+[@@deriving ord]
 
 (** {1 Type Comparison} *)
 
@@ -94,6 +95,7 @@ module Unop : sig
     | Regexp_plus  (** Kleene plus. *)
     | Regexp_opt  (** Optional. *)
     | Regexp_comp  (** Complement. *)
+  [@@deriving ord]
 
   (** [equal op1 op2] checks if unary operations [op1] and [op2] are equal. *)
   val equal : t -> t -> bool
@@ -144,6 +146,7 @@ module Binop : sig
     (* Regexp operations *)
     | Regexp_range  (** Range of characters. *)
     | Regexp_inter  (** Intersection of regular expressions. *)
+  [@@deriving ord]
 
   (** [equal op1 op2] checks if binary operations [op1] and [op2] are equal. *)
   val equal : t -> t -> bool
@@ -168,6 +171,7 @@ module Relop : sig
     | LeU  (** Unsigned less than or equal. *)
     | Ge  (** Greater than or equal. *)
     | GeU  (** Unsigned greater than or equal. *)
+  [@@deriving ord]
 
   (** [equal op1 op2] checks if relational operations [op1] and [op2] are equal.
   *)
@@ -195,6 +199,7 @@ module Triop : sig
     | String_replace_all
       (** Replace all occurrences of a substring. (str.replace_all String String
           String String) *)
+  [@@deriving ord]
 
   (** [equal op1 op2] checks if ternary operations [op1] and [op2] are equal. *)
   val equal : t -> t -> bool
@@ -241,6 +246,7 @@ module Cvtop : sig
     | String_from_int  (** Convert integer to string. *)
     | String_to_float  (** Convert string to float. *)
     | String_to_re  (** Convert string to regular expression. *)
+  [@@deriving ord]
 
   (** [equal op1 op2] checks if conversion operations [op1] and [op2] are equal.
   *)
@@ -260,6 +266,7 @@ module Naryop : sig
     | Logor  (** Logical OR. *)
     | Concat  (** Concatenation. *)
     | Regexp_union  (** Union of regular expressions. *)
+  [@@deriving ord]
 
   (** [equal op1 op2] checks if n-ary operations [op1] and [op2] are equal. *)
   val equal : t -> t -> bool

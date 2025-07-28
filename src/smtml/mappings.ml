@@ -810,8 +810,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         else (
           assert (Z.equal b Z.zero);
           Value.False )
-      | Ty_bitv m ->
-        Value.Bitv (Bitvector.make (M.Interp.to_bitv v m) m)
+      | Ty_bitv m -> Value.Bitv (Bitvector.make (M.Interp.to_bitv v m) m)
       | Ty_fp 32 ->
         let float = M.Interp.to_float v 8 24 in
         Value.Num (F32 (Int32.bits_of_float float))
@@ -891,9 +890,16 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         match Stack.top_opt s.ctx with
         | None -> assert false
         | Some ctx ->
-          let ctx, assumptions = encode_exprs ctx assumptions in
+          let ctx, encoded_assuptions = encode_exprs ctx assumptions in
           s.last_ctx <- Some ctx;
-          M.Solver.check s.solver ~ctx ~assumptions
+
+          let usage_before = Mtime_clock.counter () in
+          let res = M.Solver.check s.solver ~ctx ~assumptions:encoded_assuptions in
+          let usage_after = Mtime_clock.count usage_before in
+
+          Utils.write assumptions (Mtime.Span.to_uint64_ns usage_after);
+
+          res
 
       let model { solver; last_ctx; _ } =
         match last_ctx with
