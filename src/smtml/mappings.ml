@@ -886,18 +886,18 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           Stack.push ctx s.ctx;
           M.Solver.add s.solver ~ctx exprs
 
-      let check (s : solver) ~exprs =
+      let check (s : solver) ~assumptions =
         match Stack.top_opt s.ctx with
         | None -> assert false
         | Some ctx ->
-          let ctx, assumptions = encode_exprs ctx exprs in
+          let ctx, encoded_assuptions = encode_exprs ctx assumptions in
           s.last_ctx <- Some ctx;
 
           let usage_before = Mtime_clock.counter () in
-          let res = M.Solver.check s.solver ~ctx ~assumptions in
+          let res = M.Solver.check s.solver ~ctx ~assumptions:encoded_assuptions in
           let usage_after = Mtime_clock.count usage_before in
 
-          Utils.write exprs (Mtime.Span.to_uint64_ns usage_after);
+          Utils.write assumptions (Mtime.Span.to_uint64_ns usage_after);
 
           res
 

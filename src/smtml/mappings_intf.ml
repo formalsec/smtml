@@ -845,7 +845,7 @@ module type S = sig
         [solver] with the given [assumptions]. Returns [`Sat], [`Unsat], or
         [`Unknown]. *)
     val check :
-      solver -> exprs:Expr.t list -> [ `Sat | `Unsat | `Unknown ]
+      solver -> assumptions:Expr.t list -> [ `Sat | `Unsat | `Unknown ]
 
     (** [model solver] retrieves the model from the solver [solver], if one
         exists. *)
