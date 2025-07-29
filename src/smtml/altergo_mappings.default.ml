@@ -252,7 +252,7 @@ module M = struct
           Fmt.failwith "Altergo_mappings: ae_expr_to_dvalue(%a)" AEL.Expr.print
             e
 
-      let dvalue_to_interp (ty : DTy.t) (v : DM.Value.t) =
+      let dvalue_to_interp (ty : DTy.t) (v : DM.Value.t) : interp =
         match DM.Value.extract ~ops:DM.Bool.ops v with
         | Some true -> AEL.Expr.vrai
         | Some false -> AEL.Expr.faux
@@ -292,20 +292,6 @@ module M = struct
                     k AEL.Expr.print v )
                 m )
             c
-
-      let get_defval (c : DTerm.Const.t) : DM.Value.t =
-        match DTerm.Const.ty c with
-        | { ty_descr = TyApp ({ builtin = DBuiltin.Int; _ }, _); _ } ->
-          DM.Int.mk Z.zero
-        | { ty_descr = TyApp ({ builtin = DBuiltin.Real; _ }, _); _ } ->
-          DM.Real.mk Q.zero
-        | { ty_descr = TyApp ({ builtin = DBuiltin.Prop; _ }, _); _ } ->
-          DM.Bool.mk false
-        | { ty_descr = TyApp ({ builtin = DBuiltin.Bitv n; _ }, _); _ } ->
-          DM.Bitv.mk n Z.zero
-        | { ty_descr = TyApp ({ builtin = DBuiltin.Float _; _ }, _); _ } ->
-          DM.Fp.mk (Farith.F.of_float 0.)
-        | _ -> assert false
 
       let eval ?(ctx = Symbol.Map.empty) ?completion:_
         (Model _ as model : model) (e : term) : interp option =
