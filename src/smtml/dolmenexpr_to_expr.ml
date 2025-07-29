@@ -76,11 +76,21 @@ end
 module DolmenIntf = struct
   include DTerm
 
+  module ConstMap = Map.Make (struct
+    type t = DTerm.Const.t
+
+    let compare = DTerm.Const.compare
+  end)
+
   type ty = DTy.t
 
   type term = DTerm.t
 
+  type interp = DM.Value.t
+
   type func_decl = DTerm.Const.t
+
+  type model = interp ConstMap.t
 
   let true_ = DTerm._true
 
@@ -171,6 +181,35 @@ module DolmenIntf = struct
       | { ty_descr = TyApp ({ builtin = DBuiltin.Float (11, 53); _ }, _); _ } ->
         Ty_fp 64
       | _ -> Fmt.failwith {|Unsupported dolmen type "%a"|} DTy.print ty
+  end
+
+  module Interp = struct
+    let to_int interp =
+      match DM.Value.extract ~ops:DM.Int.ops interp with
+      | Some z -> Z.to_int z
+      | _ -> assert false
+
+    let to_real interp =
+      match DM.Value.extract ~ops:DM.Real.ops interp with
+      | Some q -> Q.to_float q
+      | _ -> assert false
+
+    let to_bool interp =
+      match DM.Value.extract ~ops:DM.Bool.ops interp with
+      | Some b -> b
+      | None -> assert false
+
+    let to_string _ = assert false
+
+    let to_bitv interp _n =
+      match DM.Value.extract ~ops:DM.Bitv.ops interp with
+      | Some z -> z
+      | _ -> assert false
+
+    let to_float interp _eb _sb =
+      match DM.Value.extract ~ops:DM.Fp.ops interp with
+      | Some f -> Farith.F.to_float Farith.Mode.NE f
+      | _ -> assert false
   end
 
   module Int = struct
@@ -386,17 +425,65 @@ module DolmenIntf = struct
     let pp ?name:_ ?logic:_ ?status:_ = Fmt.list DTerm.print
   end
 
-  let get_defval (c : DTerm.Const.t) : DM.Value.t =
-    match DTerm.Const.ty c with
-    | { ty_descr = TyApp ({ builtin = DBuiltin.Int; _ }, _); _ } ->
-      DM.Int.mk Z.zero
-    | { ty_descr = TyApp ({ builtin = DBuiltin.Real; _ }, _); _ } ->
-      DM.Real.mk Q.zero
-    | { ty_descr = TyApp ({ builtin = DBuiltin.Prop; _ }, _); _ } ->
-      DM.Bool.mk false
-    | { ty_descr = TyApp ({ builtin = DBuiltin.Bitv n; _ }, _); _ } ->
-      DM.Bitv.mk n Z.zero
-    | { ty_descr = TyApp ({ builtin = DBuiltin.Float _; _ }, _); _ } ->
-      DM.Fp.mk (Farith.F.of_float 0.)
-    | _ -> assert false
+  module Model = struct
+    let tcst_to_symbol (c : DTerm.Const.t) : Symbol.t =
+      match c with
+      | { builtin = DBuiltin.Base
+        ; path = Local { name } | Absolute { name; _ }
+        ; id_ty
+        ; _
+        } ->
+        Symbol.make (Types.to_ety id_ty) name
+      | _ ->
+        Fmt.failwith {|Unsupported constant term "%a"|} DExpr.Print.term_cst c
+
+    let get_defval (c : DTerm.Const.t) : DM.Value.t =
+      match DTerm.Const.ty c with
+      | { ty_descr = TyApp ({ builtin = DBuiltin.Int; _ }, _); _ } ->
+        DM.Int.mk Z.zero
+      | { ty_descr = TyApp ({ builtin = DBuiltin.Real; _ }, _); _ } ->
+        DM.Real.mk Q.zero
+      | { ty_descr = TyApp ({ builtin = DBuiltin.Prop; _ }, _); _ } ->
+        DM.Bool.mk false
+      | { ty_descr = TyApp ({ builtin = DBuiltin.Bitv n; _ }, _); _ } ->
+        DM.Bitv.mk n Z.zero
+      | { ty_descr = TyApp ({ builtin = DBuiltin.Float _; _ }, _); _ } ->
+        DM.Fp.mk (Farith.F.of_float 0.)
+      | _ -> assert false
+
+    let get_symbols (m : model) =
+      ConstMap.fold (fun tcst _ acc -> tcst_to_symbol tcst :: acc) m []
+
+    let eval ?(ctx = Symbol.Map.empty) ?completion:_ (m : model) (e : term) :
+      interp option =
+      let m =
+        ConstMap.fold (fun c v acc -> DM.Model.Cst.add c v acc) m DM.Model.empty
+      in
+      let m =
+        Symbol.Map.fold
+          (fun _ (t : term) acc ->
+            match t with
+            | { term_descr = Cst c; _ } -> (
+              match DM.Model.Cst.find_opt c acc with
+              | Some _ -> acc
+              | None -> DM.Model.Cst.add c (get_defval c) acc )
+            | _ -> assert false )
+          ctx m
+      in
+      let env =
+        DM.Env.mk m
+          ~builtins:
+            (DM.Eval.builtins
+               [ DM.Core.builtins
+               ; DM.Bool.builtins
+               ; DM.Int.builtins
+               ; DM.Rat.builtins
+               ; DM.Real.builtins
+               ; DM.Bitv.builtins
+               ; DM.Fp.builtins
+               ] )
+      in
+      let v = DM.Eval.eval env e in
+      Some v
+  end
 end
