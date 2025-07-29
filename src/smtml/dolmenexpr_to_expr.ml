@@ -6,6 +6,7 @@ module DExpr = Dolmen_std.Expr
 module DTy = DExpr.Ty
 module DTerm = DExpr.Term
 module DBuiltin = Dolmen_std.Builtin
+module DM = Dolmen_model
 
 module Builtin = struct
   (* additional builtins *)
@@ -384,4 +385,18 @@ module DolmenIntf = struct
   module Smtlib = struct
     let pp ?name:_ ?logic:_ ?status:_ = Fmt.list DTerm.print
   end
+
+  let get_defval (c : DTerm.Const.t) : DM.Value.t =
+    match DTerm.Const.ty c with
+    | { ty_descr = TyApp ({ builtin = DBuiltin.Int; _ }, _); _ } ->
+      DM.Int.mk Z.zero
+    | { ty_descr = TyApp ({ builtin = DBuiltin.Real; _ }, _); _ } ->
+      DM.Real.mk Q.zero
+    | { ty_descr = TyApp ({ builtin = DBuiltin.Prop; _ }, _); _ } ->
+      DM.Bool.mk false
+    | { ty_descr = TyApp ({ builtin = DBuiltin.Bitv n; _ }, _); _ } ->
+      DM.Bitv.mk n Z.zero
+    | { ty_descr = TyApp ({ builtin = DBuiltin.Float _; _ }, _); _ } ->
+      DM.Fp.mk (Farith.F.of_float 0.)
+    | _ -> assert false
 end

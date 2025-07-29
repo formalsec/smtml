@@ -12,10 +12,13 @@ module M = struct
   module IArray = Colibri2_popop_lib.IArray
   module Egraph = Colibri2_core.Egraph
   module ConstSet = Colibri2_core.Expr.Term.Const.S
+  module ConstMap = Colibri2_core.Expr.Term.Const.M
   module DExpr = Dolmen_std.Expr
   module DTy = DExpr.Ty
   module DTerm = DExpr.Term
   module DBuiltin = Dolmen_std.Builtin
+  module DM = Dolmen_model
+  module C2V = Colibri2_core.Value
 
   module Make () : Mappings_intf.M = struct
     include Dolmenexpr_to_expr.DolmenIntf
@@ -26,16 +29,15 @@ module M = struct
       let is_available = true
     end
 
-    type model =
-      Colibri2_core.Egraph.wt * (DTerm.Const.t * Colibri2_core.Value.t) list
+    type model = Colibri2_core.Value.t ConstMap.t
 
     type handle
 
     type interp = Colibri2_core.Value.t
 
     type status =
-      [ `Sat of Colibri2_core.Egraph.wt
-      | `Unknown of Colibri2_core.Egraph.wt
+      [ `Sat of model
+      | `Unknown of model
       | `Search
       | `Unsat
       | `StepLimitReached
@@ -47,7 +49,6 @@ module M = struct
       ; mutable state : status
       ; mutable status_colibri :
           [ `No | `Sat | `Unsat | `Unknown | `StepLimitReached ] Context.Ref.t
-      ; mutable decls : ConstSet.t
       }
 
     type optimizer
@@ -143,12 +144,11 @@ module M = struct
         ; pushpop = []
         ; state = `Search
         ; status_colibri = Context.Ref.create ctx `No
-        ; decls = ConstSet.empty
         }
 
-      let clone { pushpop; state; status_colibri; decls; _ } =
+      let clone { pushpop; state; status_colibri; _ } =
         let scheduler = mk_scheduler () in
-        { scheduler; pushpop; state; status_colibri; decls }
+        { scheduler; pushpop; state; status_colibri }
 
       let push st = st.pushpop <- Scheduler.push st.scheduler :: st.pushpop
 
@@ -170,52 +170,71 @@ module M = struct
         s.scheduler <- scheduler;
         s.pushpop <- [];
         s.state <- `Search;
-        s.status_colibri <- Context.Ref.create ctx `No;
-        s.decls <- ConstSet.empty
+        s.status_colibri <- Context.Ref.create ctx `No
 
       let new_assertion env e =
         let n = Colibri2_core.Ground.convert env e in
         Colibri2_core.Egraph.register env n;
         Colibri2_theories_bool.Boolean.set_true env n
 
+      let syms_from_ctx ctx =
+        Option.fold ~none:ConstSet.empty
+          ~some:(fun ctx ->
+            Symbol.Map.fold
+              (fun _ t acc ->
+                let c =
+                  match (t : DTerm.t) with
+                  | { term_descr = Cst c; _ } -> c
+                  | _ -> assert false
+                in
+                ConstSet.add c acc )
+              ctx ConstSet.empty )
+          ctx
+
       let add ?ctx:_ s es =
         Scheduler.add_assertion s.scheduler (fun d ->
           List.iter (fun e -> new_assertion d e) es )
 
-      let satisfiability s = function
+      let mk_model syms d : model =
+        ConstSet.fold_left
+          (fun acc c ->
+            let e = DExpr.Term.of_cst c in
+            let v = Colibri2_core.Interp.interp d e in
+            ConstMap.add c v acc )
+          ConstMap.empty syms
+
+      let satisfiability syms s = function
         | `Sat d ->
-          s.state <- `Sat d;
+          let m = mk_model syms d in
+          s.state <- `Sat m;
           `Sat
         | `Unknown d ->
-          s.state <- `Unknown d;
+          let m = mk_model syms d in
+          s.state <- `Unknown m;
           `Unknown
         | `UnknownUnsat -> `Unknown
         | `Unsat -> `Unsat
 
-      let check ?ctx:_ s ~assumptions =
+      let check ?ctx s ~assumptions =
         match assumptions with
-        | [] -> satisfiability s @@ Scheduler.check_sat s.scheduler
+        | [] ->
+          satisfiability (syms_from_ctx ctx) s
+          @@ Scheduler.check_sat s.scheduler
         | _ ->
-          (* let bp = Scheduler.push s.scheduler in *)
+          let bp = Scheduler.push s.scheduler in
           add s assumptions;
-          let res = satisfiability s @@ Scheduler.check_sat s.scheduler in
-          (* Scheduler.pop_to s.scheduler bp; *)
+          let res =
+            satisfiability (syms_from_ctx ctx) s
+            @@ Scheduler.check_sat s.scheduler
+          in
+          Scheduler.pop_to s.scheduler bp;
           res
 
       let model s : model option =
-        match Scheduler.check_sat s.scheduler with
-        | `Sat d | `Unknown d ->
-          let l =
-            ConstSet.fold_left
-              (fun acc c ->
-                let e = DExpr.Term.of_cst c in
-                let v = Colibri2_core.Interp.interp d e in
-                (c, v) :: acc )
-              [] s.decls
-          in
-          Some (d, l)
+        match s.state with
+        | `Sat m | `Unknown m -> Some m
+        | `StepLimitReached | `Search -> None
         | `Unsat -> assert false
-        | `UnknownUnsat -> assert false
 
       let add_simplifier s = s
 
@@ -228,12 +247,92 @@ module M = struct
     end
 
     module Model = struct
-      let get_symbols ((_, m) : model) =
-        List.map (fun (tcst, _) -> tcst_to_symbol tcst) m
+      let get_symbols (m : model) =
+        ConstMap.fold_left (fun acc tcst _ -> tcst_to_symbol tcst :: acc) [] m
 
-      let eval ?ctx:_ ?completion:_ (env, _) (t : term) =
-        let c2v = Colibri2_core.Interp.interp env t in
-        Some c2v
+      let cvalue_to_dvalue (ty : DTy.t) v =
+        match ty with
+        | { ty_descr = TyApp ({ builtin = DBuiltin.Prop; _ }, _); _ } -> (
+          match C2V.value Colibri2_theories_bool.Boolean.BoolValue.key v with
+          | Some b -> DM.Bool.mk b
+          | None -> assert false )
+        | { ty_descr = TyApp ({ builtin = DBuiltin.Int; _ }, _); _ } -> (
+          match C2V.value Colibri2_theories_LRA.RealValue.key v with
+          | Some a when A.is_integer a -> DM.Int.mk (A.to_z a)
+          | _ -> assert false )
+        | { ty_descr = TyApp ({ builtin = DBuiltin.Real; _ }, _); _ } -> (
+          match C2V.value Colibri2_theories_LRA.RealValue.key v with
+          | Some a -> DM.Real.mk (Colibri2_stdlib.Std.Q.to_q (A.floor_q a))
+          | _ -> assert false )
+        | { ty_descr = TyApp ({ builtin = DBuiltin.Bitv n; _ }, _); _ } -> (
+          match C2V.value Colibri2_theories_LRA.RealValue.key v with
+          | Some a -> DM.Bitv.mk n (A.to_z a)
+          | _ -> assert false )
+        | { ty_descr = TyApp ({ builtin = DBuiltin.Float _; _ }, _); _ } -> (
+          match C2V.value Colibri2_theories_fp.Fp_value.key v with
+          | Some f -> DM.Fp.mk f
+          | _ -> assert false )
+        | _ -> assert false
+
+      let dvalue_to_interp (ty : DTy.t) (v : DM.Value.t) : interp =
+        match DM.Value.extract ~ops:DM.Bool.ops v with
+        | Some b -> Colibri2_theories_bool.Boolean.values_of_bool b
+        | None -> (
+          match DM.Value.extract ~ops:DM.Int.ops v with
+          | Some z -> Colibri2_theories_LRA.RealValue.of_value (A.of_z z)
+          | None -> (
+            match DM.Value.extract ~ops:DM.Real.ops v with
+            | Some q ->
+              Colibri2_theories_LRA.RealValue.of_value
+                (A.of_q (Colibri2_stdlib.Std.Q.of_q q))
+            | None -> (
+              match (DM.Value.extract ~ops:DM.Bitv.ops v, ty) with
+              | ( Some z
+                , { ty_descr = TyApp ({ builtin = DBuiltin.Bitv _; _ }, _); _ }
+                ) ->
+                Colibri2_theories_LRA.RealValue.of_value (A.of_z z)
+              | _ -> (
+                match DM.Value.extract ~ops:DM.Fp.ops v with
+                | Some f ->
+                  Colibri2_theories_fp.Fp_value.of_value f
+                    (Ground.Ty.convert Ground.Subst.empty.ty ty)
+                | _ ->
+                  Fmt.failwith "Colibri2_mappings: dvalue_to_interp(%a)"
+                    DM.Value.print v ) ) ) )
+
+      let eval ?(ctx = Symbol.Map.empty) ?completion:_ m (e : term) =
+        let m =
+          ConstMap.fold
+            (fun c v acc ->
+              DM.Model.Cst.add c (cvalue_to_dvalue (DTerm.Const.ty c) v) acc )
+            m DM.Model.empty
+        in
+        let m =
+          Symbol.Map.fold
+            (fun _ (t : term) acc ->
+              match t with
+              | { term_descr = Cst c; _ } -> (
+                match DM.Model.Cst.find_opt c acc with
+                | Some _ -> acc
+                | None -> DM.Model.Cst.add c (get_defval c) acc )
+              | _ -> assert false )
+            ctx m
+        in
+        let env =
+          DM.Env.mk m
+            ~builtins:
+              (DM.Eval.builtins
+                 [ DM.Core.builtins
+                 ; DM.Bool.builtins
+                 ; DM.Int.builtins
+                 ; DM.Rat.builtins
+                 ; DM.Real.builtins
+                 ; DM.Bitv.builtins
+                 ; DM.Fp.builtins
+                 ] )
+        in
+        let v = DM.Eval.eval env e in
+        Some (dvalue_to_interp (DTerm.ty e) v)
     end
 
     module Optimizer = struct

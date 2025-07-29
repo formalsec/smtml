@@ -5,6 +5,7 @@
 module DExpr = Dolmen_std.Expr
 module DTy = DExpr.Ty
 module DTerm = DExpr.Term
+module DM = Dolmen_model
 
 module Builtin : sig
   val string_ty_cst : DExpr.ty_cst
@@ -374,4 +375,6 @@ module DolmenIntf : sig
       -> ?status:[ `Sat | `Unknown | `Unsat ]
       -> term list Fmt.t
   end
+
+  val get_defval : DExpr.term_cst -> DM.Value.t
 end
