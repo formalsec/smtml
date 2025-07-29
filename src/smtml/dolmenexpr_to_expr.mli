@@ -38,9 +38,15 @@ module Builtin : sig
 end
 
 module DolmenIntf : sig
+  module ConstMap : Map.S with type key = DExpr.term_cst
+
   type ty = DTy.t
 
   type term = DTerm.t
+
+  type interp = DM.Value.t
+
+  type model = interp ConstMap.t
 
   type func_decl = DTerm.Const.t
 
@@ -98,6 +104,20 @@ module DolmenIntf : sig
     val ty : term -> ty
 
     val to_ety : ty -> Ty.t
+  end
+
+  module Interp : sig
+    val to_int : interp -> int
+
+    val to_real : interp -> float
+
+    val to_bool : interp -> bool
+
+    val to_string : interp -> string
+
+    val to_bitv : interp -> int -> Z.t
+
+    val to_float : interp -> int -> int -> float
   end
 
   module Int : sig
@@ -368,6 +388,20 @@ module DolmenIntf : sig
     val apply : func_decl -> term list -> term
   end
 
+  module Model : sig
+    (** [get_symbols model] retrieves the list of symbols in the model. *)
+    val get_symbols : model -> Symbol.t list
+
+    (** [eval ?completion model t] evaluates the term [t] in the given [model].
+        If [completion] is true, missing values are completed. *)
+    val eval :
+         ?ctx:term Symbol.Map.t
+      -> ?completion:bool
+      -> model
+      -> term
+      -> interp option
+  end
+
   module Smtlib : sig
     val pp :
          ?name:string
@@ -375,6 +409,4 @@ module DolmenIntf : sig
       -> ?status:[ `Sat | `Unknown | `Unsat ]
       -> term list Fmt.t
   end
-
-  val get_defval : DExpr.term_cst -> DM.Value.t
 end

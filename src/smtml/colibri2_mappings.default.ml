@@ -29,11 +29,7 @@ module M = struct
       let is_available = true
     end
 
-    type model = Colibri2_core.Value.t ConstMap.t
-
     type handle
-
-    type interp = Colibri2_core.Value.t
 
     type status =
       [ `Sat of model
@@ -52,60 +48,6 @@ module M = struct
       }
 
     type optimizer
-
-    let tcst_to_symbol (c : DTerm.Const.t) : Symbol.t =
-      match c with
-      | { builtin = DBuiltin.Base
-        ; path = Local { name } | Absolute { name; _ }
-        ; id_ty
-        ; _
-        } ->
-        Symbol.make (Types.to_ety id_ty) name
-      | _ ->
-        Fmt.failwith {|Unsupported constant term "%a"|} DExpr.Print.term_cst c
-
-    module Interp = struct
-      let to_int interp =
-        match
-          Colibri2_core.Value.value Colibri2_theories_LRA.RealValue.key interp
-        with
-        | Some a when A.is_integer a -> A.to_int a
-        | _ -> assert false
-
-      let to_real interp =
-        match
-          Colibri2_core.Value.value Colibri2_theories_LRA.RealValue.key interp
-        with
-        | Some a -> (
-          match float_of_string_opt (A.to_string a) with
-          | Some f -> f
-          | None -> assert false )
-        | _ -> assert false
-
-      let to_bool interp =
-        match
-          Colibri2_core.Value.value Colibri2_theories_bool.Boolean.BoolValue.key
-            interp
-        with
-        | Some b -> b
-        | None -> assert false
-
-      let to_string _ = assert false
-
-      let to_bitv interp _n =
-        match
-          Colibri2_core.Value.value Colibri2_theories_LRA.RealValue.key interp
-        with
-        | Some a when A.is_integer a -> Z.of_string (A.to_string a)
-        | _ -> assert false
-
-      let to_float fp _eb _sb =
-        match
-          Colibri2_core.Value.value Colibri2_theories_fp.Fp_value.key fp
-        with
-        | Some a -> Farith.F.to_float Farith.Mode.NE a
-        | _ -> assert false
-    end
 
     module Solver = struct
       let mk_scheduler () =
@@ -195,12 +137,36 @@ module M = struct
         Scheduler.add_assertion s.scheduler (fun d ->
           List.iter (fun e -> new_assertion d e) es )
 
+      let cvalue_to_dvalue (ty : DTy.t) v =
+        match ty with
+        | { ty_descr = TyApp ({ builtin = DBuiltin.Prop; _ }, _); _ } -> (
+          match C2V.value Colibri2_theories_bool.Boolean.BoolValue.key v with
+          | Some b -> DM.Bool.mk b
+          | None -> assert false )
+        | { ty_descr = TyApp ({ builtin = DBuiltin.Int; _ }, _); _ } -> (
+          match C2V.value Colibri2_theories_LRA.RealValue.key v with
+          | Some a when A.is_integer a -> DM.Int.mk (A.to_z a)
+          | _ -> assert false )
+        | { ty_descr = TyApp ({ builtin = DBuiltin.Real; _ }, _); _ } -> (
+          match C2V.value Colibri2_theories_LRA.RealValue.key v with
+          | Some a -> DM.Real.mk (Colibri2_stdlib.Std.Q.to_q (A.floor_q a))
+          | _ -> assert false )
+        | { ty_descr = TyApp ({ builtin = DBuiltin.Bitv n; _ }, _); _ } -> (
+          match C2V.value Colibri2_theories_LRA.RealValue.key v with
+          | Some a -> DM.Bitv.mk n (A.to_z a)
+          | _ -> assert false )
+        | { ty_descr = TyApp ({ builtin = DBuiltin.Float _; _ }, _); _ } -> (
+          match C2V.value Colibri2_theories_fp.Fp_value.key v with
+          | Some f -> DM.Fp.mk f
+          | _ -> assert false )
+        | _ -> assert false
+
       let mk_model syms d : model =
         ConstSet.fold_left
           (fun acc c ->
             let e = DExpr.Term.of_cst c in
             let v = Colibri2_core.Interp.interp d e in
-            ConstMap.add c v acc )
+            ConstMap.add c (cvalue_to_dvalue (DTerm.Const.ty c) v) acc )
           ConstMap.empty syms
 
       let satisfiability syms s = function
@@ -244,95 +210,6 @@ module M = struct
         Fmt.failwith "Colibri2_mappings: Solver.get_statistics not implemented"
 
       let pp_statistics _fmt _solver = ()
-    end
-
-    module Model = struct
-      let get_symbols (m : model) =
-        ConstMap.fold_left (fun acc tcst _ -> tcst_to_symbol tcst :: acc) [] m
-
-      let cvalue_to_dvalue (ty : DTy.t) v =
-        match ty with
-        | { ty_descr = TyApp ({ builtin = DBuiltin.Prop; _ }, _); _ } -> (
-          match C2V.value Colibri2_theories_bool.Boolean.BoolValue.key v with
-          | Some b -> DM.Bool.mk b
-          | None -> assert false )
-        | { ty_descr = TyApp ({ builtin = DBuiltin.Int; _ }, _); _ } -> (
-          match C2V.value Colibri2_theories_LRA.RealValue.key v with
-          | Some a when A.is_integer a -> DM.Int.mk (A.to_z a)
-          | _ -> assert false )
-        | { ty_descr = TyApp ({ builtin = DBuiltin.Real; _ }, _); _ } -> (
-          match C2V.value Colibri2_theories_LRA.RealValue.key v with
-          | Some a -> DM.Real.mk (Colibri2_stdlib.Std.Q.to_q (A.floor_q a))
-          | _ -> assert false )
-        | { ty_descr = TyApp ({ builtin = DBuiltin.Bitv n; _ }, _); _ } -> (
-          match C2V.value Colibri2_theories_LRA.RealValue.key v with
-          | Some a -> DM.Bitv.mk n (A.to_z a)
-          | _ -> assert false )
-        | { ty_descr = TyApp ({ builtin = DBuiltin.Float _; _ }, _); _ } -> (
-          match C2V.value Colibri2_theories_fp.Fp_value.key v with
-          | Some f -> DM.Fp.mk f
-          | _ -> assert false )
-        | _ -> assert false
-
-      let dvalue_to_interp (ty : DTy.t) (v : DM.Value.t) : interp =
-        match DM.Value.extract ~ops:DM.Bool.ops v with
-        | Some b -> Colibri2_theories_bool.Boolean.values_of_bool b
-        | None -> (
-          match DM.Value.extract ~ops:DM.Int.ops v with
-          | Some z -> Colibri2_theories_LRA.RealValue.of_value (A.of_z z)
-          | None -> (
-            match DM.Value.extract ~ops:DM.Real.ops v with
-            | Some q ->
-              Colibri2_theories_LRA.RealValue.of_value
-                (A.of_q (Colibri2_stdlib.Std.Q.of_q q))
-            | None -> (
-              match (DM.Value.extract ~ops:DM.Bitv.ops v, ty) with
-              | ( Some z
-                , { ty_descr = TyApp ({ builtin = DBuiltin.Bitv _; _ }, _); _ }
-                ) ->
-                Colibri2_theories_LRA.RealValue.of_value (A.of_z z)
-              | _ -> (
-                match DM.Value.extract ~ops:DM.Fp.ops v with
-                | Some f ->
-                  Colibri2_theories_fp.Fp_value.of_value f
-                    (Ground.Ty.convert Ground.Subst.empty.ty ty)
-                | _ ->
-                  Fmt.failwith "Colibri2_mappings: dvalue_to_interp(%a)"
-                    DM.Value.print v ) ) ) )
-
-      let eval ?(ctx = Symbol.Map.empty) ?completion:_ m (e : term) =
-        let m =
-          ConstMap.fold
-            (fun c v acc ->
-              DM.Model.Cst.add c (cvalue_to_dvalue (DTerm.Const.ty c) v) acc )
-            m DM.Model.empty
-        in
-        let m =
-          Symbol.Map.fold
-            (fun _ (t : term) acc ->
-              match t with
-              | { term_descr = Cst c; _ } -> (
-                match DM.Model.Cst.find_opt c acc with
-                | Some _ -> acc
-                | None -> DM.Model.Cst.add c (get_defval c) acc )
-              | _ -> assert false )
-            ctx m
-        in
-        let env =
-          DM.Env.mk m
-            ~builtins:
-              (DM.Eval.builtins
-                 [ DM.Core.builtins
-                 ; DM.Bool.builtins
-                 ; DM.Int.builtins
-                 ; DM.Rat.builtins
-                 ; DM.Real.builtins
-                 ; DM.Bitv.builtins
-                 ; DM.Fp.builtins
-                 ] )
-        in
-        let v = DM.Eval.eval env e in
-        Some (dvalue_to_interp (DTerm.ty e) v)
     end
 
     module Optimizer = struct

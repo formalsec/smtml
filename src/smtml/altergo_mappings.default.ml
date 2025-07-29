@@ -51,13 +51,7 @@ module M = struct
       let is_available = true
     end
 
-    type 'a sat_module = (module Sat_solver_sig.S with type t = 'a)
-
-    type model = Model : 'a sat_module * 'a -> model
-
     type handle
-
-    type interp = AEL.Expr.t
 
     type solver =
       { used_context : Frontend.used_context
@@ -67,43 +61,6 @@ module M = struct
       }
 
     type optimizer
-
-    let model_to_modelmap (Model ((module Sat), m) : model) =
-      match Sat.get_model m with
-      | None -> Fmt.failwith "Alt-Ergo mappings: no model found"
-      | Some AEL.Models.{ model; _ } -> model
-
-    module Interp = struct
-      let to_int interp =
-        match AEL.Expr.term_view interp with
-        | { f = Int z; _ } -> Z.to_int z
-        | _ -> assert false
-
-      let to_real interp =
-        match AEL.Expr.term_view interp with
-        | { f = Real q; _ } -> (
-          match float_of_string_opt (Q.to_string q) with
-          | Some f -> f
-          | None -> assert false )
-        | _ -> assert false
-
-      let to_bool interp =
-        match AEL.Expr.term_view interp with
-        | { f = True; _ } -> true
-        | { f = False; _ } -> false
-        | _ -> assert false
-
-      let to_string interp =
-        Fmt.failwith "Altergo_mappings: unsupported Interp.to_string(%a)"
-          AEL.Expr.print interp
-
-      let to_bitv interp _n =
-        match AEL.Expr.term_view interp with
-        | { f = Bitv (_, z); _ } -> z
-        | _ -> assert false
-
-      let to_float _fp _eb _sb = assert false
-    end
 
     module Solver = struct
       let set_param (type a) (param : a Params.param) (_v : a) : unit =
@@ -183,42 +140,6 @@ module M = struct
       let add_decls sym_decls cmds =
         ConstMap.fold (fun _ d acc -> d :: acc) sym_decls cmds
 
-      let check ?(ctx = Symbol.Map.empty) (s : solver) ~(assumptions : term list)
-        : [> `Sat | `Unknown | `Unsat ] =
-        let new_syms = get_new_syms ctx in
-        let syms, cmds = mk_cmds new_syms s.syms s.cmds assumptions in
-        (* s.cmds <- cmds;
-            s.syms <- syms; *)
-        let cmds = add_decls syms (List.rev cmds) in
-        let ftdn_env = FE.init_env s.used_context in
-        List.iter (FE.process_decl ftdn_env) cmds;
-        match ftdn_env.FE.res with
-        | `Sat ->
-          let partial_model = ftdn_env.sat_env in
-          let model = Model ((module Sat), partial_model) in
-          s.model <- Some model;
-          `Sat
-        | `Unknown ->
-          let partial_model = ftdn_env.sat_env in
-          let model = Model ((module Sat), partial_model) in
-          s.model <- Some model;
-          `Sat
-        | `Unsat -> `Unsat
-
-      let model (s : solver) : model option = s.model
-
-      let add_simplifier s = s
-
-      let interrupt _ =
-        Fmt.failwith "Altergo_mappings: interrupt is not implemented"
-
-      let get_statistics _ =
-        Fmt.failwith "Altergo_mappings: get_statistics is not implemented"
-
-      let pp_statistics _fmt _solver = ()
-    end
-
-    module Model = struct
       let aety_to_ty (ty : AEL.Ty.t) : Ty.t =
         match ty with
         | Tbool -> Ty_bool
@@ -230,48 +151,6 @@ module M = struct
       let aeid_to_sym ((hs, tyl, ty) : AEL.Id.typed) =
         assert (match tyl with [] -> true | _ -> false);
         Symbol.make (aety_to_ty ty) (AEL.Hstring.view hs)
-
-      let get_symbols (Model ((module Sat), m) : model) : Symbol.t list =
-        match Sat.get_model m with
-        | None -> assert false
-        | Some AEL.Models.{ model; _ } ->
-          AEL.ModelMap.fold
-            (fun id _ acc ->
-              let sy = aeid_to_sym id in
-              sy :: acc )
-            model []
-
-      let ae_expr_to_dvalue e : DM.Value.t =
-        match AEL.Expr.term_view e with
-        | { f = True; _ } -> DM.Bool.mk true
-        | { f = False; _ } -> DM.Bool.mk false
-        | { f = Int z; _ } -> DM.Int.mk z
-        | { f = Real q; _ } -> DM.Real.mk q
-        | { f = Bitv (n, z); _ } -> DM.Bitv.mk n z
-        | _ ->
-          Fmt.failwith "Altergo_mappings: ae_expr_to_dvalue(%a)" AEL.Expr.print
-            e
-
-      let dvalue_to_interp (ty : DTy.t) (v : DM.Value.t) : interp =
-        match DM.Value.extract ~ops:DM.Bool.ops v with
-        | Some true -> AEL.Expr.vrai
-        | Some false -> AEL.Expr.faux
-        | None -> (
-          match DM.Value.extract ~ops:DM.Int.ops v with
-          | Some z -> AEL.Expr.Ints.of_Z z
-          | None -> (
-            match DM.Value.extract ~ops:DM.Real.ops v with
-            | Some q -> AEL.Expr.Reals.of_Q q
-            | None -> (
-              match (DM.Value.extract ~ops:DM.Bitv.ops v, ty) with
-              | ( Some z
-                , { ty_descr = TyApp ({ builtin = DBuiltin.Bitv size; _ }, _)
-                  ; _
-                  } ) ->
-                AEL.Expr.BV.of_Z ~size z
-              | _ ->
-                Fmt.failwith "Altergo_mappings: dvalue_to_interp(%a)"
-                  DM.Value.print v ) ) )
 
       let cgraph_to_value hs g =
         match (g : AEL.ModelMap.graph) with
@@ -293,48 +172,62 @@ module M = struct
                 m )
             c
 
-      let eval ?(ctx = Symbol.Map.empty) ?completion:_
-        (Model _ as model : model) (e : term) : interp option =
-        let model = model_to_modelmap model in
-        let m =
-          AEL.ModelMap.fold
-            (fun ((hs, _, _) as id) g acc ->
-              let e = cgraph_to_value hs g in
-              let sym = aeid_to_sym id in
-              let tcst =
-                match (Symbol.Map.find_opt sym ctx : DTerm.t option) with
-                | Some { term_descr = Cst c; _ } -> c
-                | _ -> assert false
-              in
-              DM.Model.Cst.add tcst (ae_expr_to_dvalue e) acc )
-            model DM.Model.empty
-        in
-        let m =
-          Symbol.Map.fold
-            (fun _ (t : term) acc ->
-              match t with
-              | { term_descr = Cst c; _ } -> (
-                match DM.Model.Cst.find_opt c acc with
-                | Some _ -> acc
-                | None -> DM.Model.Cst.add c (get_defval c) acc )
-              | _ -> assert false )
-            ctx m
-        in
-        let env =
-          DM.Env.mk m
-            ~builtins:
-              (DM.Eval.builtins
-                 [ DM.Core.builtins
-                 ; DM.Bool.builtins
-                 ; DM.Int.builtins
-                 ; DM.Rat.builtins
-                 ; DM.Real.builtins
-                 ; DM.Bitv.builtins
-                 ; DM.Fp.builtins
-                 ] )
-        in
-        let v = DM.Eval.eval env e in
-        Some (dvalue_to_interp (DTerm.ty e) v)
+      let ae_expr_to_dvalue e : DM.Value.t =
+        match AEL.Expr.term_view e with
+        | { f = True; _ } -> DM.Bool.mk true
+        | { f = False; _ } -> DM.Bool.mk false
+        | { f = Int z; _ } -> DM.Int.mk z
+        | { f = Real q; _ } -> DM.Real.mk q
+        | { f = Bitv (n, z); _ } -> DM.Bitv.mk n z
+        | _ ->
+          Fmt.failwith "Altergo_mappings: ae_expr_to_dvalue(%a)" AEL.Expr.print
+            e
+
+      let mk_model ~ctx model =
+        AEL.ModelMap.fold
+          (fun ((hs, _, _) as id) g acc ->
+            let e = cgraph_to_value hs g in
+            let sym = aeid_to_sym id in
+            let tcst =
+              match (Symbol.Map.find_opt sym ctx : DTerm.t option) with
+              | Some { term_descr = Cst c; _ } -> c
+              | _ -> assert false
+            in
+            ConstMap.add tcst (ae_expr_to_dvalue e) acc )
+          model ConstMap.empty
+
+      let check ?(ctx = Symbol.Map.empty) (s : solver) ~(assumptions : term list)
+        : [> `Sat | `Unknown | `Unsat ] =
+        let new_syms = get_new_syms ctx in
+        let syms, cmds = mk_cmds new_syms s.syms s.cmds assumptions in
+        (* s.cmds <- cmds;
+            s.syms <- syms; *)
+        let cmds = add_decls syms (List.rev cmds) in
+        let ftdn_env = FE.init_env s.used_context in
+        List.iter (FE.process_decl ftdn_env) cmds;
+        match ftdn_env.FE.res with
+        | `Unknown | `Sat ->
+          let model =
+            match Sat.get_model ftdn_env.sat_env with
+            | None -> Fmt.failwith "Alt-Ergo mappings: no model found"
+            | Some AEL.Models.{ model; _ } -> model
+          in
+          let model = mk_model ~ctx model in
+          s.model <- Some model;
+          `Sat
+        | `Unsat -> `Unsat
+
+      let model (s : solver) : model option = s.model
+
+      let add_simplifier s = s
+
+      let interrupt _ =
+        Fmt.failwith "Altergo_mappings: interrupt is not implemented"
+
+      let get_statistics _ =
+        Fmt.failwith "Altergo_mappings: get_statistics is not implemented"
+
+      let pp_statistics _fmt _solver = ()
     end
 
     module Optimizer = struct
