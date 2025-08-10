@@ -1,7 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.9.0 - 2025-07-31
 
+- 2025-07-31 Patch Expr.relop to accept theory specific types for equality ([#394](https://github.com/formalsec/smtml/issues/394))
+- 2025-07-31 Add CODEOWNERS
+- 2025-07-26 [fix] Construction phormulas with int equality
 - 2025-07-23 Allow smtml to compile with z3 4.15.x ([#391](https://github.com/formalsec/smtml/issues/391))
 - 2025-07-22 Avoid integer overflow when creating Dolmen terms in Bitv.v by using Zarith
 - 2025-07-20 Use git-cliff for automatic changelog generation ([#388](https://github.com/formalsec/smtml/issues/388))
