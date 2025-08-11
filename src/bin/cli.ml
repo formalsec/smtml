@@ -48,6 +48,10 @@ let print_statistics =
   let doc = "Print statistics" in
   Arg.(value & flag & info [ "print-statistics" ] ~doc)
 
+let no_strict_status =
+  let doc = "Disable strict status checking" in
+  Arg.(value & flag & info [ "no-strict-status" ] ~doc)
+
 let from_file =
   let doc =
     "File containing a list of files to run. This argument discards any \
@@ -65,11 +69,12 @@ let cmd_run =
   let+ debug
   and+ dry
   and+ print_statistics
+  and+ no_strict_status
   and+ solver_type
   and+ solver_mode
   and+ from_file
   and+ filenames in
-  Cmd_run.run ~debug ~dry ~print_statistics ~solver_type ~solver_mode ~from_file
+  Cmd_run.run ~debug ~dry ~print_statistics ~no_strict_status ~solver_type ~solver_mode ~from_file
     ~filenames
 
 let info_to_smt2 =
