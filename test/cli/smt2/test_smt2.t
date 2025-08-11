@@ -119,3 +119,7 @@ Test status tracking:
          Failure("Expected status: unsat, but solver returned sat")
          
   [125]
+
+  $ smtml run --no-strict-status test_set_info_status.smt2
+  sat
+  smtml: [ERROR] Expected status: unsat, but solver returned sat

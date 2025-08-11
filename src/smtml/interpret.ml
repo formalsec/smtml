@@ -15,9 +15,9 @@ module Make (Solver : Solver_intf.S) = struct
     let params = Params.(default () $ (Model, true)) in
     let solver = Solver.create ~params () in
     Solver.push solver;
-    { stmts; smap = Hashtbl.create 16; solver; status = expected_status }
+    { stmts; smap = Hashtbl.create 16; solver; expected_status = expected_status }
 
-  let eval stmt (state : exec_state) : exec_state =
+  let eval stmt (state : exec_state) ~no_strict_status : exec_state =
     let { solver; _ } = state in
     match stmt with
     | Assert e ->
@@ -31,11 +31,17 @@ module Make (Solver : Solver_intf.S) = struct
       | `Sat -> Fmt.pr "sat@."
       | `Unsat -> Fmt.pr "unsat@."
       | `Unknown -> Fmt.pr "unknown@." );
-      ( match (state.status, actual) with
+      ( match (state.expected_status, actual) with
       | Some `Sat, `Unsat ->
-        Fmt.failwith "Expected status: sat, but solver returned unsat"
+        if no_strict_status then
+          Log.warn (fun k ->
+            k "Expected status: sat, but solver returned unsat" )
+        else Fmt.failwith "Expected status: sat, but solver returned unsat"
       | Some `Unsat, `Sat ->
-        Fmt.failwith "Expected status: unsat, but solver returned sat"
+        if no_strict_status then
+          Log.err (fun k ->
+            k "Expected status: unsat, but solver returned sat" )
+        else Fmt.failwith "Expected status: unsat, but solver returned sat"
       | _ -> () (* Unknown or matching cases are fine *) );
       state
     | Declare_const _x -> state
@@ -71,10 +77,11 @@ module Make (Solver : Solver_intf.S) = struct
       Log.debug (fun k -> k "Unsupported: %a" Ast.pp stmt);
       state
 
-  let rec loop (state : exec_state) : exec_state =
+  let rec loop (state : exec_state) ~no_strict_status : exec_state =
     match state.stmts with
     | [] -> state
-    | stmt :: stmts -> loop (eval stmt { state with stmts })
+    | stmt :: stmts ->
+      loop (eval stmt { state with stmts } ~no_strict_status) ~no_strict_status
 
   let parse_status (t : Expr.t) : [ `Sat | `Unsat | `Unknown ] option =
     match Expr.view t with
@@ -88,23 +95,23 @@ module Make (Solver : Solver_intf.S) = struct
         None )
     | _ -> None
 
-  let extract_status (script : Ast.script) : [ `Sat | `Unsat | `Unknown ] option
-      =
-    List.fold_left
-      (fun acc cmd ->
-        match cmd with Ast.Set_info term -> parse_status term | _ -> acc )
-      None script
+  let find_expected_status (script : Ast.script) :
+    [ `Sat | `Unsat | `Unknown ] option =
+    List.find_map
+      (fun cmd ->
+        match cmd with Ast.Set_info term -> parse_status term | _ -> None )
+      script
 
-  let start ?state (stmts : Ast.script) : exec_state =
+  let start ?state (stmts : Ast.script) ~no_strict_status : exec_state =
     Log.debug (fun k -> k "Starting interpreter...");
-    let expected_status = extract_status stmts in
+    let expected_status = find_expected_status stmts in
     let st =
       match state with
       | None -> init_state stmts expected_status
       | Some st ->
         Solver.pop st.solver 1;
         Solver.push st.solver;
-        { st with stmts; status = expected_status }
+        { st with stmts; expected_status = expected_status }
     in
-    loop st
+    loop st ~no_strict_status
 end
