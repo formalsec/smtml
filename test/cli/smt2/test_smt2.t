@@ -111,3 +111,11 @@ Test uninterpreted:
   sat
   (model
     (x f32 0.))
+
+Test status tracking:
+  $ smtml run test_set_info_status.smt2
+  sat
+  smtml: internal error, uncaught exception:
+         Failure("Expected status: unsat, but solver returned sat")
+         
+  [125]

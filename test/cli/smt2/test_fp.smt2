@@ -1,5 +1,5 @@
 (set-logic QF_FP)
-(set-info :status unsat)
+(set-info :status sat)
 (declare-fun x () Float64)
 (declare-fun y () Float64)
 (declare-fun r () Float64)

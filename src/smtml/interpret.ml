@@ -11,11 +11,11 @@ module Make (Solver : Solver_intf.S) = struct
 
   type exec_state = solver state
 
-  let init_state stmts =
+  let init_state stmts expected_status =
     let params = Params.(default () $ (Model, true)) in
     let solver = Solver.create ~params () in
     Solver.push solver;
-    { stmts; smap = Hashtbl.create 16; solver }
+    { stmts; smap = Hashtbl.create 16; solver; status = expected_status }
 
   let eval stmt (state : exec_state) : exec_state =
     let { solver; _ } = state in
@@ -26,10 +26,17 @@ module Make (Solver : Solver_intf.S) = struct
       state
     | Check_sat assumptions ->
       Log.debug (fun k -> k "check-sat: %a" Expr.pp_list assumptions);
-      ( match Solver.check solver assumptions with
+      let actual = Solver.check solver assumptions in
+      ( match actual with
       | `Sat -> Fmt.pr "sat@."
       | `Unsat -> Fmt.pr "unsat@."
       | `Unknown -> Fmt.pr "unknown@." );
+      ( match (state.status, actual) with
+      | Some `Sat, `Unsat ->
+        Fmt.failwith "Expected status: sat, but solver returned unsat"
+      | Some `Unsat, `Sat ->
+        Fmt.failwith "Expected status: unsat, but solver returned sat"
+      | _ -> () (* Unknown or matching cases are fine *) );
       state
     | Declare_const _x -> state
     | Declare_fun _x -> state
@@ -69,15 +76,35 @@ module Make (Solver : Solver_intf.S) = struct
     | [] -> state
     | stmt :: stmts -> loop (eval stmt { state with stmts })
 
+  let parse_status (t : Expr.t) : [ `Sat | `Unsat | `Unknown ] option =
+    match Expr.view t with
+    | App ({ name = Simple ":status"; _ }, [ st ]) -> (
+      match Expr.view st with
+      | Symbol { name = Simple "sat"; _ } -> Some `Sat
+      | Symbol { name = Simple "unsat"; _ } -> Some `Unsat
+      | Symbol { name = Simple "unknown"; _ } -> Some `Unknown
+      | _ ->
+        Log.debug (fun k -> k "Unrecognised status value: %a" Expr.pp st);
+        None )
+    | _ -> None
+
+  let extract_status (script : Ast.script) : [ `Sat | `Unsat | `Unknown ] option
+      =
+    List.fold_left
+      (fun acc cmd ->
+        match cmd with Ast.Set_info term -> parse_status term | _ -> acc )
+      None script
+
   let start ?state (stmts : Ast.script) : exec_state =
     Log.debug (fun k -> k "Starting interpreter...");
+    let expected_status = extract_status stmts in
     let st =
       match state with
-      | None -> init_state stmts
+      | None -> init_state stmts expected_status
       | Some st ->
         Solver.pop st.solver 1;
         Solver.push st.solver;
-        { st with stmts }
+        { st with stmts; status = expected_status }
     in
     loop st
 end

@@ -9,6 +9,7 @@ type 'a state =
   { stmts : Ast.script  (** The script being executed *)
   ; smap : (string, Ty.t) Hashtbl.t  (** A mapping of variable names to types *)
   ; solver : 'a  (** The underlying solver instance *)
+  ; status : [ `Sat | `Unsat | `Unknown ] option  (** The status of the execution*)
   }
 
 (** {2 Interpreter Interface} *)
