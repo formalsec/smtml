@@ -20,7 +20,7 @@ bug-reports: "https://github.com/formalsec/smtml/issues"
 depends: [
   "bos"
   "cmdliner" {>= "1.3.0"}
-  "dune" {>= "3.10"}
+  "dune" {>= "3.19"}
   "dolmen" {= "0.10"}
   "dolmen_type" {= "0.10"}
   "dolmen_model" {= "0.10"}
@@ -71,6 +71,7 @@ build: [
   ]
 ]
 dev-repo: "git+https://github.com/formalsec/smtml.git"
+x-maintenance-intent: ["(latest)"]
 available: arch != "arm32" & arch != "x86_32"
 pin-depends: [
   ["colibri2.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#5514303635152b2a0e74bc62914bd3fbcce55445"]
@@ -78,4 +79,3 @@ pin-depends: [
   ["benchpress.dev" "git+https://github.com/sneeuwballen/benchpress.git#7f44cdd9f0511afcce2c9ad3c04cc9b72919bcff"]
   ["extunix.0.4.3" "git+https://github.com/filipeom/extunix.git#ff54e8cc7ec9cdc7171861d74d85f326dbcec62e"]
 ]
-x-maintenance-intent: [ "(latest)" ]
