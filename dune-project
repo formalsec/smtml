@@ -1,4 +1,4 @@
-(lang dune 3.10)
+(lang dune 3.19)
 
 (using menhir 2.1)
 
@@ -21,6 +21,8 @@
  "José Fragoso Santos <jose.fragoso@tecnico.ulisboa.pt>")
 
 (maintainers "Filipe Marques <filipe.s.marques@tecnico.ulisboa.pt>")
+
+(maintenance_intent "(latest)")
 
 (documentation "https://formalsec.github.io/smtml/smtml/index.html")
 
