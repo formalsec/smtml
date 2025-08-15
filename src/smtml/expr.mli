@@ -148,6 +148,9 @@ val naryop : Ty.t -> Ty.Naryop.t -> t list -> t
 (** [extract expr ~high ~low] extracts a bit range with simplification. *)
 val extract : t -> high:int -> low:int -> t
 
+(** [zero_extend expr n] zero-extends a bitvector expression by [n] bits. *)
+val zero_extend : t -> int -> t
+
 (** [concat expr1 expr2] concatenates two expressions with simplification. *)
 val concat : t -> t -> t
 

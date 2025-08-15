@@ -30,6 +30,8 @@ let unify_types tys =
         match (t1, t2) with
         | Ty.Ty_int, Ty.Ty_real | Ty.Ty_real, Ty.Ty_int -> Some Ty.Ty_real
         | Ty.Ty_str, Ty.Ty_int | Ty.Ty_int, Ty.Ty_str -> Some Ty.Ty_int
+        | Ty.Ty_bitv w1, Ty.Ty_bitv w2 when w1 >= w2 -> Some t1
+        | Ty.Ty_bitv w1, Ty.Ty_bitv w2 when w1 < w2 -> Some t2
         | _ -> None
     in
     let rec fold tys acc =
