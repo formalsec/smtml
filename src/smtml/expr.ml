@@ -128,14 +128,13 @@ let rec ty (hte : t) : Ty.t =
     match ty hte with Ty_bitv n -> Ty_bitv (n + m) | _ -> assert false )
   | Cvtop (ty, _, _) -> ty
   | Naryop (ty, _, _) -> ty
-  | Extract (_, h, l) -> Ty_bitv ((h - l) * 8)
+  | Extract (_, h, l) -> Ty_bitv (h - l + 1)
   | Concat (e1, e2) -> (
     match (ty e1, ty e2) with
     | Ty_bitv n1, Ty_bitv n2 -> Ty_bitv (n1 + n2)
     | t1, t2 ->
       Fmt.failwith "Invalid concat of (%a) with (%a)" Ty.pp t1 Ty.pp t2 )
   | Binder (_, _, e) -> ty e
-
 
 module TyTbl = Hashtbl.Make (Expr)
 
@@ -167,7 +166,7 @@ let memoize_ty (hte : t) : Ty.t =
           match ty hte with Ty_bitv n -> Ty_bitv (n + m) | _ -> assert false )
         | Cvtop (ty, _, _) -> ty
         | Naryop (ty, _, _) -> ty
-        | Extract (_, h, l) -> Ty_bitv ((h - l) * 8)
+        | Extract (_, h, l) -> Ty_bitv (h - l + 1)
         | Concat (e1, e2) -> (
           match (aux e1, aux e2) with
           | Ty_bitv n1, Ty_bitv n2 -> Ty_bitv (n1 + n2)
@@ -599,10 +598,7 @@ let[@inline] raw_extract (hte : t) ~(high : int) ~(low : int) : t =
 
 let extract (hte : t) ~(high : int) ~(low : int) : t =
   match (view hte, high, low) with
-  | Val (Bitv bv), high, low ->
-    let high = (high * 8) - 1 in
-    let low = low * 8 in
-    value (Bitv (Bitvector.extract bv ~high ~low))
+  | Val (Bitv bv), high, low -> value (Bitv (Bitvector.extract bv ~high ~low))
   | ( Cvtop
         ( _
         , (Zero_extend 24 | Sign_extend 24)
@@ -614,6 +610,11 @@ let extract (hte : t) ~(high : int) ~(low : int) : t =
   | Concat (e, _), 8, 4 when Ty.size (ty e) = 4 -> e
   | _ ->
     if high - low = Ty.size (ty hte) then hte else raw_extract hte ~high ~low
+
+let zero_extend (hte : t) (n : int) : t =
+  match view hte with
+  | Val (Bitv bv) -> value (Bitv (Bitvector.zero_extend n bv))
+  | _ -> raw_cvtop (ty hte) (Zero_extend n) hte
 
 let raw_concat (msb : t) (lsb : t) : t = make (Concat (msb, lsb)) [@@inline]
 
