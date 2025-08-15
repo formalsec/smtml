@@ -467,6 +467,24 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       module Ixx = Int64
     end)
 
+    module Generic_bv = Bitv_impl (struct
+      type elt = Bitvector.t
+
+      let v i = M.Bitv.v (Bitvector.to_string i) (Bitvector.numbits i)
+
+      let bitwidth = 0
+
+      let to_ieee_bv _ = assert false
+
+      module Ixx = struct
+        let of_int i = Bitvector.of_int8 i
+
+        let shift_left a n =
+          let n' = Bitvector.of_int8 n in
+          Bitvector.shl a n'
+      end
+    end)
+
     module type Float_sig = sig
       type elt
 
@@ -585,6 +603,15 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       (*   Z3.FuncDecl.mk_func_decl_s ctx "StringToF64" [ str_sort ] fp64_sort *)
     end)
 
+    let normalize_bv_width e1 (w1 : int) e2 (w2 : int) =
+      if w1 = w2 then (e1, e2)
+      else
+        let maxw = max w1 w2 in
+        let extend e orig_w =
+          if orig_w < maxw then M.Bitv.zero_extend (maxw - orig_w) e else e
+        in
+        (extend e1 w1, extend e2 w2)
+
     let v : Value.t -> M.term = function
       | True -> Bool_impl.true_
       | False -> Bool_impl.false_
@@ -599,78 +626,77 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
     let unop = function
       | Ty.Ty_int -> Int_impl.unop
-      | Ty_real -> Real_impl.unop
-      | Ty_bool -> Bool_impl.unop
-      | Ty_str -> String_impl.unop
-      | Ty_regexp -> Regexp_impl.unop
-      | Ty_bitv 8 -> I8.unop
-      | Ty_bitv 32 -> I32.unop
-      | Ty_bitv 64 -> I64.unop
-      | Ty_fp 32 -> Float32_impl.unop
-      | Ty_fp 64 -> Float64_impl.unop
-      | ( Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none
-        | Ty_roundingMode ) as ty ->
-        Fmt.failwith "Unsupported encoding of unary operators for theory '%a'"
-          Ty.pp ty
+      | Ty.Ty_real -> Real_impl.unop
+      | Ty.Ty_bool -> Bool_impl.unop
+      | Ty.Ty_str -> String_impl.unop
+      | Ty.Ty_regexp -> Regexp_impl.unop
+      | Ty.Ty_bitv 8 -> I8.unop
+      | Ty.Ty_bitv 32 -> I32.unop
+      | Ty.Ty_bitv 64 -> I64.unop
+      | Ty.Ty_bitv _ -> Generic_bv.unop
+      | Ty.Ty_fp 32 -> Float32_impl.unop
+      | Ty.Ty_fp 64 -> Float64_impl.unop
+      | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_roundingMode ->
+        assert false
 
     let binop = function
       | Ty.Ty_int -> Int_impl.binop
-      | Ty_real -> Real_impl.binop
-      | Ty_bool -> Bool_impl.binop
-      | Ty_str -> String_impl.binop
-      | Ty_regexp -> Regexp_impl.binop
-      | Ty_bitv 8 -> I8.binop
-      | Ty_bitv 32 -> I32.binop
-      | Ty_bitv 64 -> I64.binop
-      | Ty_fp 32 -> Float32_impl.binop
-      | Ty_fp 64 -> Float64_impl.binop
-      | ( Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none
-        | Ty_roundingMode ) as ty ->
-        Fmt.failwith "Unsupported encoding of binary operators for theory '%a'"
-          Ty.pp ty
+      | Ty.Ty_real -> Real_impl.binop
+      | Ty.Ty_bool -> Bool_impl.binop
+      | Ty.Ty_str -> String_impl.binop
+      | Ty.Ty_regexp -> Regexp_impl.binop
+      | Ty.Ty_bitv 8 -> I8.binop
+      | Ty.Ty_bitv 32 -> I32.binop
+      | Ty.Ty_bitv 64 -> I64.binop
+      | Ty.Ty_bitv _ -> Generic_bv.binop
+      | Ty.Ty_fp 32 -> Float32_impl.binop
+      | Ty.Ty_fp 64 -> Float64_impl.binop
+      | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_roundingMode ->
+        assert false
 
     let triop = function
       | Ty.Ty_bool -> Bool_impl.triop
-      | Ty_str -> String_impl.triop
-      | Ty_bitv 8 -> I8.triop
-      | Ty_bitv 32 -> I32.triop
-      | Ty_bitv 64 -> I64.triop
-      | Ty_fp 32 -> Float32_impl.triop
-      | Ty_fp 64 -> Float64_impl.triop
-      | ( Ty_int | Ty_real | Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit
-        | Ty_none | Ty_regexp | Ty_roundingMode ) as ty ->
+      | Ty.Ty_str -> String_impl.triop
+      | Ty.Ty_bitv 8 -> I8.triop
+      | Ty.Ty_bitv 32 -> I32.triop
+      | Ty.Ty_bitv 64 -> I64.triop
+      | Ty.Ty_bitv _ -> Generic_bv.triop
+      | Ty.Ty_fp 32 -> Float32_impl.triop
+      | Ty.Ty_fp 64 -> Float64_impl.triop
+      | ( Ty_int | Ty_real | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none
+        | Ty_regexp | Ty_roundingMode ) as ty ->
         Fmt.failwith "Unsupported encoding of ternary operators for theory '%a'"
           Ty.pp ty
 
     let relop = function
       | Ty.Ty_int -> Int_impl.relop
-      | Ty_real -> Real_impl.relop
-      | Ty_bool -> Bool_impl.relop
-      | Ty_str -> String_impl.relop
-      | Ty_bitv 8 -> I8.relop
-      | Ty_bitv 32 -> I32.relop
-      | Ty_bitv 64 -> I64.relop
-      | Ty_fp 32 -> Float32_impl.relop
-      | Ty_fp 64 -> Float64_impl.relop
-      | ( Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp
-        | Ty_roundingMode ) as ty ->
-        Fmt.failwith "Unsupported encoding of relop operators for theory '%a'"
-          Ty.pp ty
+      | Ty.Ty_real -> Real_impl.relop
+      | Ty.Ty_bool -> Bool_impl.relop
+      | Ty.Ty_str -> String_impl.relop
+      | Ty.Ty_bitv 8 -> I8.relop
+      | Ty.Ty_bitv 32 -> I32.relop
+      | Ty.Ty_bitv 64 -> I64.relop
+      | Ty.Ty_bitv _ -> Generic_bv.relop
+      | Ty.Ty_fp 32 -> Float32_impl.relop
+      | Ty.Ty_fp 64 -> Float64_impl.relop
+      | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp
+      | Ty_roundingMode ->
+        assert false
 
     let cvtop = function
       | Ty.Ty_int -> Int_impl.cvtop
-      | Ty_real -> Real_impl.cvtop
-      | Ty_bool -> Bool_impl.cvtop
-      | Ty_str -> String_impl.cvtop
-      | Ty_bitv 8 -> I8.cvtop
-      | Ty_bitv 32 -> I32.cvtop
-      | Ty_bitv 64 -> I64.cvtop
-      | Ty_fp 32 -> Float32_impl.cvtop
-      | Ty_fp 64 -> Float64_impl.cvtop
-      | ( Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp
-        | Ty_roundingMode ) as ty ->
-        Fmt.failwith "Unsupported encoding of convert operators for theory '%a'"
-          Ty.pp ty
+      | Ty.Ty_real -> Real_impl.cvtop
+      | Ty.Ty_bool -> Bool_impl.cvtop
+      | Ty.Ty_str -> String_impl.cvtop
+      | Ty.Ty_bitv 8 -> I8.cvtop
+      | Ty.Ty_bitv 32 -> I32.cvtop
+      | Ty.Ty_bitv 64 -> I64.cvtop
+      | Ty.Ty_bitv _ -> Generic_bv.cvtop
+      | Ty.Ty_fp 32 -> Float32_impl.cvtop
+      | Ty.Ty_fp 64 -> Float64_impl.cvtop
+      | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp
+      | Ty_roundingMode ->
+        assert false
 
     let naryop = function
       | Ty.Ty_str -> String_impl.naryop
@@ -757,19 +783,35 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Unop (ty, op, e) ->
         let ctx, e = encode_expr ctx e in
         (ctx, unop ty op e)
-      | Binop (ty, op, e1, e2) ->
-        let ctx, e1 = encode_expr ctx e1 in
-        let ctx, e2 = encode_expr ctx e2 in
-        (ctx, binop ty op e1 e2)
+      | Binop (ty, op, e1, e2) -> begin
+        match (Expr.ty e1, Expr.ty e2) with
+        | Ty_bitv w1, Ty_bitv w2 when w1 <> w2 ->
+          let ctx, e1 = encode_expr ctx e1 in
+          let ctx, e2 = encode_expr ctx e2 in
+          let e1, e2 = normalize_bv_width e1 w1 e2 w2 in
+          (ctx, binop ty op e1 e2)
+        | _ ->
+          let ctx, e1 = encode_expr ctx e1 in
+          let ctx, e2 = encode_expr ctx e2 in
+          (ctx, binop ty op e1 e2)
+      end
       | Triop (ty, op, e1, e2, e3) ->
         let ctx, e1 = encode_expr ctx e1 in
         let ctx, e2 = encode_expr ctx e2 in
         let ctx, e3 = encode_expr ctx e3 in
         (ctx, triop ty op e1 e2 e3)
-      | Relop (ty, op, e1, e2) ->
-        let ctx, e1 = encode_expr ctx e1 in
-        let ctx, e2 = encode_expr ctx e2 in
-        (ctx, relop ty op e1 e2)
+      | Relop (ty, op, e1, e2) -> begin
+        match (Expr.ty e1, Expr.ty e2) with
+        | Ty_bitv _w1, Ty_bitv _w2 when _w1 <> _w2 ->
+          let ctx, e1 = encode_expr ctx e1 in
+          let ctx, e2 = encode_expr ctx e2 in
+          let e1, e2 = normalize_bv_width e1 _w1 e2 _w2 in
+          (ctx, relop ty op e1 e2)
+        | _ ->
+          let ctx, e1 = encode_expr ctx e1 in
+          let ctx, e2 = encode_expr ctx e2 in
+          (ctx, relop ty op e1 e2)
+      end
       | Cvtop (ty, op, e) ->
         let ctx, e = encode_expr ctx e in
         (ctx, cvtop ty op e)
@@ -786,7 +828,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         (ctx, naryop ty op es)
       | Extract (e, h, l) ->
         let ctx, e = encode_expr ctx e in
-        (ctx, M.Bitv.extract e ~high:((h * 8) - 1) ~low:(l * 8))
+        (ctx, M.Bitv.extract e ~high:h ~low:l)
       | Concat (e1, e2) ->
         let ctx, e1 = encode_expr ctx e1 in
         let ctx, e2 = encode_expr ctx e2 in
