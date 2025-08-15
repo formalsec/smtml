@@ -261,7 +261,7 @@ let memoize_ty (hte : t) : Ty.t =
           match ty hte with Ty_bitv n -> Ty_bitv (n + m) | _ -> assert false )
         | Cvtop (ty, _, _) -> ty
         | Naryop (ty, _, _) -> ty
-        | Extract (_, h, l) -> Ty_bitv ((h - l) * 8)
+        | Extract (_, h, l) -> Ty_bitv (h - l + 1)
         | Concat (e1, e2) -> (
           match (aux e1, aux e2) with
           | Ty_bitv n1, Ty_bitv n2 -> Ty_bitv (n1 + n2)
@@ -741,6 +741,11 @@ let extract (hte : t) ~(high : int) ~(low : int) : t =
   | _ ->
     if high - low + 1 = Ty.bitsize (ty hte) then hte
     else raw_extract hte ~high ~low
+
+let zero_extend (hte : t) (n : int) : t =
+  match view hte with
+  | Val (Bitv bv) -> value (Bitv (Bitvector.zero_extend n bv))
+  | _ -> raw_cvtop (ty hte) (Zero_extend n) hte
 
 let raw_concat (msb : t) (lsb : t) : t = make (Concat (msb, lsb)) [@@inline]
 
