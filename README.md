@@ -90,8 +90,8 @@ $ bisect-ppx-report html    # Detailed Report in _coverage/index.html
 # #require "smtml";;
 # open Smtml;;
 # #install_printer Expr.pp;;
-# #install_printer Value.pp
-# #install_printer Symbol.pp
+# #install_printer Value.pp;;
+# #install_printer Symbol.pp;;
 # #install_printer Statistics.pp;;
 # let pp_model = Model.pp ~no_values:false;;
 val pp_model : Model.t Fmt.t = <fun>
