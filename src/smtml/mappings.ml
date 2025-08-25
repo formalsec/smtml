@@ -137,7 +137,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           Fmt.failwith {|Int: Unsupported binop operator "%a"|} Binop.pp op
 
       let relop = function
-        | Relop.Eq | Ne -> assert false
+        | Relop.Eq -> M.eq
+        | Ne -> fun a b -> M.distinct [ a; b ]
         | Lt -> M.Int.lt
         | Gt -> M.Int.gt
         | Le -> M.Int.le
@@ -390,7 +391,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let relop op e1 e2 =
         match op with
-        | Relop.Eq | Ne -> assert false
+        | Relop.Eq -> M.eq e1 e2
+        | Ne -> M.distinct [ e1; e2 ]
         | Lt -> Bitv.lt e1 e2
         | LtU -> Bitv.lt_u e1 e2
         | Le -> Bitv.le e1 e2
