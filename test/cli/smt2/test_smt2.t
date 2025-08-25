@@ -88,7 +88,7 @@ Tests smt2 with the --from-file argument:
   sat
   sat
   (model
-    (x real -2.)
+    (x real 2.)
     (y real 4.))
   sat
   sat

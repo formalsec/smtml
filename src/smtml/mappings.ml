@@ -791,11 +791,14 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         Fmt.failwith "Cannot encode expression: %a" Expr.pp hte
 
     and encode_exprs ctx (es : Expr.t list) : symbol_ctx * M.term list =
-      List.fold_left
-        (fun (ctx, es) e ->
-          let ctx, e = encode_expr ctx e in
-          (ctx, e :: es) )
-        (ctx, []) es
+      let ctx, exprs =
+        List.fold_left
+          (fun (ctx, es) e ->
+            let ctx, e = encode_expr ctx e in
+            (ctx, e :: es) )
+          (ctx, []) es
+      in
+      (ctx, List.rev exprs)
 
     let value_of_term ?ctx model ty term =
       let v =
@@ -816,8 +819,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         else (
           assert (Z.equal b Z.zero);
           Value.False )
-      | Ty_bitv m ->
-        Value.Bitv (Bitvector.make (M.Interp.to_bitv v m) m)
+      | Ty_bitv m -> Value.Bitv (Bitvector.make (M.Interp.to_bitv v m) m)
       | Ty_fp 32 ->
         let float = M.Interp.to_float v 8 24 in
         Value.Num (F32 (Int32.bits_of_float float))
