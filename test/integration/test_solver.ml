@@ -221,9 +221,9 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
       ];
     assert_sat ~f:"test_copysign64" (Solver.check solver [])
 
-  let test_to_ieee_bv solver_modulde =
+  let test_to_ieee_bv solver_module =
     let open Infix in
-    let module Solver = (val solver_modulde : Solver_intf.S) in
+    let module Solver = (val solver_module : Solver_intf.S) in
     let solver =
       Solver.create ~params:(Params.default ()) ~logic:Logic.QF_UFBV ()
     in
@@ -241,5 +241,22 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
          ; "test_fp_copysign32" >:: wrap test_fp_copysign32
          ; "test_fp_copysign64" >:: wrap test_fp_copysign64
          ; "test_to_ieee_bv" >:: wrap test_to_ieee_bv
+         ]
+
+  let test_uninterpreted =
+    "test_uninterpreted_function"
+    >::: [ ( "test_int_bool_app"
+           >:: wrap @@ fun solver_module ->
+               let module Solver = (val solver_module : Solver_intf.S) in
+               let solver =
+                 Solver.create ~params:(Params.default ()) ~logic:Logic.QF_UFBV
+                   ()
+               in
+               let f = Symbol.(make Ty_int "f") in
+               let app = Expr.app f [ Expr.value (Int 1); Expr.value True ] in
+               Solver.add solver
+                 [ Expr.relop Ty_int Eq app (Expr.value (Int 2)) ];
+               assert_sat ~f:"test_uninterpreted_function"
+                 (Solver.check solver []) )
          ]
 end
