@@ -17,6 +17,7 @@ let test_suite =
        ; Z3.test_lra
        ; Z3.test_bv
        ; Z3.test_fp
+       ; Z3.test_uninterpreted
        ]
 
 let () = run_test_tt_main test_suite
