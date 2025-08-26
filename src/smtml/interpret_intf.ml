@@ -9,7 +9,8 @@ type 'a state =
   { stmts : Ast.script  (** The script being executed *)
   ; smap : (string, Ty.t) Hashtbl.t  (** A mapping of variable names to types *)
   ; solver : 'a  (** The underlying solver instance *)
-  ; expected_status : [ `Sat | `Unsat | `Unknown ] option  (** The status of the execution*)
+  ; expected_status : [ `Sat | `Unsat | `Unknown ] option
+      (** The status of the execution*)
   }
 
 (** {2 Interpreter Interface} *)
@@ -21,7 +22,8 @@ module type S = sig
   type exec_state
 
   (** Initializes execution with an optional state *)
-  val start : ?state:exec_state -> Ast.script -> no_strict_status:bool -> exec_state
+  val start :
+    ?state:exec_state -> Ast.script -> no_strict_status:bool -> exec_state
 end
 
 (** {2 Interpreter functor interface} *)

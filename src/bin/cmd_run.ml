@@ -25,8 +25,8 @@ let parse_file filename =
   in
   List.rev files
 
-let run ~debug ~dry ~print_statistics ~no_strict_status ~solver_type ~solver_mode ~from_file
-  ~filenames =
+let run ~debug ~dry ~print_statistics ~no_strict_status ~solver_type
+  ~solver_mode ~from_file ~filenames =
   if debug then Logs.Src.set_level Log.src (Some Logs.Debug);
   Logs.set_reporter @@ Logs.format_reporter ();
   let module Solver = (val get_solver debug solver_type solver_mode) in
@@ -110,7 +110,8 @@ let run ~debug ~dry ~print_statistics ~no_strict_status ~solver_type ~solver_mod
            (exception-percentage %.2f%%)@;\
            @[<v 1>(errors (@;\
            %a@;\
-           ))@]@;)@]"
+           ))@]@;\
+           )@]"
           total exceptions percentage
           (Fmt.list ~sep:Fmt.cut (fun fmt (fpath, err_msg) ->
              Fmt.pf fmt "@[<hov 1>((file \"%a\")@;(error %S))@]" Fpath.pp fpath
