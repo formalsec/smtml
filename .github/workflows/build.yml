@@ -7,16 +7,33 @@ on:
   merge_group:
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    env:
+      # allow opam depext to yes package manager prompts
+      OPAMCONFIRMLEVEL: unsafe-yes
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "5.3"
+
+      - name: Install dependencies
+        run: opam install -y . --deps-only --with-dev-setup
+
+      - name: Run lint
+        run: ./scripts/lint.sh
+
   build:
+    needs: lint
     strategy:
       fail-fast: false
       matrix:
-        os:
-          - ubuntu-latest
-          - macos-latest
-        ocaml-compiler:
-          - "4.14"
-          - "5.3"
+        os: [ubuntu-latest, macos-latest]
+        ocaml-compiler: ["5.3"]
     runs-on: ${{ matrix.os }}
     env:
       # allow opam depext to yes package manager prompts
@@ -37,6 +54,41 @@ jobs:
 
       - name: Install dependencies
         run: opam install -y . --deps-only --with-test
+
+      - name: Build
+        run: opam exec -- dune build @install
+
+      - name: Test
+        run: opam exec -- dune runtest
+
+  test-solver:
+    needs: lint
+    name: Test ${{ matrix.solver }}
+    strategy:
+      fail-fast: false
+      matrix:
+        solver: ["alt-ergo-lib", "bitwuzla-cxx", "colibri2", "cvc5", "z3"]
+    runs-on: ubuntu-latest
+    env:
+      OPAMCONFIRMLEVEL: unsafe-yes
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+        # Removes ·git to prevent opam from checking out submodueles
+      - name: Remove .git
+        run: rm -rf .git
+
+      - name: Setup OCaml 5.3
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "5.3"
+          dune-cache: true
+
+      - name: Install ${{ matrix.solver }}
+        run: |
+          opam install -y . --deps-only --with-test
+          opam install ${{ matrix.solver }}
 
       - name: Build
         run: opam exec -- dune build @install

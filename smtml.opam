@@ -41,6 +41,8 @@ depends: [
   "bisect_ppx" {with-test & >= "2.5.0"}
   "ounit2" {with-test}
   "benchpress" {with-dev-setup & = "dev"}
+  "ocamlformat" {with-dev-setup}
+  "ppxlib" {>= "0.35.0" & < "0.36.0" & with-dev-setup}
   "cohttp" {with-dev-setup}
   "cohttp-lwt-unix" {with-dev-setup}
   "extunix" {with-dev-setup}
