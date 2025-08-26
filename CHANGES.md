@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.10.0 - 2025-08-26
+
+- 2025-08-26 Release v0.10.0
+- 2025-08-26 Fix lints
+- 2025-08-26 Add lint step in build CI and refactor solver CI
+- 2025-08-26 Fix app expressing encoding order in mappings
+- 2025-08-26 Add missing relop mappings for Eq|Ne
+- 2025-08-25 Bump actions/upload-pages-artifact from 3 to 4
+- 2025-08-19 Add the missing ;; in the README.md ([#402](https://github.com/formalsec/smtml/issues/402))
+- 2025-08-18 Bump actions/checkout from 4 to 5
+- 2025-08-13 Bump dune to 3.19 and add maintenance_intent to dune-project
+- 2025-08-11 PR #397 review changes
+- 2025-08-11 Add set-info status tracking for .smt2 files
+- 2025-08-11 Add missing operators
+- 2025-08-11 Fix type propagation during rewriting
+- 2025-08-10 Release v0.9.0
+
 ## 0.9.0 - 2025-07-31
 
 - 2025-07-31 Patch Expr.relop to accept theory specific types for equality ([#394](https://github.com/formalsec/smtml/issues/394))
