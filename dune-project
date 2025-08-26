@@ -104,6 +104,13 @@
    (and
     :with-dev-setup
     (= "dev")))
+  (ocamlformat
+   :with-dev-setup)
+  (ppxlib
+   (and
+    (>= "0.35.0")
+    (< "0.36.0")
+    :with-dev-setup))
   (cohttp
    :with-dev-setup)
   (cohttp-lwt-unix
