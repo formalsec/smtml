@@ -74,8 +74,8 @@ let cmd_run =
   and+ solver_mode
   and+ from_file
   and+ filenames in
-  Cmd_run.run ~debug ~dry ~print_statistics ~no_strict_status ~solver_type ~solver_mode ~from_file
-    ~filenames
+  Cmd_run.run ~debug ~dry ~print_statistics ~no_strict_status ~solver_type
+    ~solver_mode ~from_file ~filenames
 
 let info_to_smt2 =
   let doc = "Convert .smtml into .smt2" in

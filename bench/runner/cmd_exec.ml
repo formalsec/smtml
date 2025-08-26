@@ -185,7 +185,7 @@ let main ~hook:_ ~timeout ~provers ~dirs =
   let time_elapsed = Unix.gettimeofday () -. start_time in
   List.iter
     (fun (prover, passed) ->
-      let percent = (float passed /. float num_files) *. 100. in
+      let percent = float passed /. float num_files *. 100. in
       Fmt.pr "@[<v 2>%-*s:@;Passed: %05d/%05d (%03.2f%%)@." w_prover
         (Tool.prover_to_string prover)
         passed num_files percent )

@@ -15,7 +15,7 @@ module Make (Solver : Solver_intf.S) = struct
     let params = Params.(default () $ (Model, true)) in
     let solver = Solver.create ~params () in
     Solver.push solver;
-    { stmts; smap = Hashtbl.create 16; solver; expected_status = expected_status }
+    { stmts; smap = Hashtbl.create 16; solver; expected_status }
 
   let eval stmt (state : exec_state) ~no_strict_status : exec_state =
     let { solver; _ } = state in
@@ -111,7 +111,7 @@ module Make (Solver : Solver_intf.S) = struct
       | Some st ->
         Solver.pop st.solver 1;
         Solver.push st.solver;
-        { st with stmts; expected_status = expected_status }
+        { st with stmts; expected_status }
     in
     loop st ~no_strict_status
 end
