@@ -216,7 +216,7 @@ module Cached (Mappings_ : Mappings.S) = struct
       | Some res -> res
       | None ->
         let result = check_set s.solver assert_ in
-        Cache.add cache es result;
+        Cache.add cache assert_ result;
         result
 
     let check (s : t) (es : Expr.t list) = check_set s (Expr.Set.of_list es)
