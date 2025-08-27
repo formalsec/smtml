@@ -19,6 +19,30 @@ let debug = false
 
 let debug fmt k = if debug then k (Fmt.epr fmt)
 
+module VarNormalizer = struct
+  let counter = ref 0
+
+  let table = ref Symb_map.empty
+
+  let canonical_name (v : Symbol.t) : Symbol.t =
+    match Symb_map.find_opt v !table with
+    | Some v' -> v'
+    | None ->
+      incr counter;
+      let new_name =
+        Symbol.make (Symbol.type_of v)
+          (String.concat "" [ "#__#v"; Int.to_string !counter; "#__#" ])
+      in
+      table := Symb_map.add v new_name !table;
+      new_name
+
+  let find_sym (v : Symbol.t) : Symbol.t option = Symb_map.find_opt v !table
+
+  let reset () =
+    counter := 0;
+    table := Symb_map.empty
+end
+
 let unify_types tys =
   match tys with
   | [] -> Ty.Ty_none
@@ -66,6 +90,7 @@ let rec rewrite_expr (type_map, expr_map) hte =
     (* Avoid rewriting well-typed symbols already *)
     if not (Ty.equal Ty_none (Symbol.type_of sym)) then hte
     else
+      let sym = Option.value (VarNormalizer.find_sym sym) ~default:sym in
       match Symb_map.find_opt sym type_map with
       | None -> (
         match Symb_map.find_opt sym expr_map with
@@ -150,7 +175,9 @@ let rec rewrite_expr (type_map, expr_map) hte =
             (* Searches the outer expr_map. Because I don't think the list of
                var bindings are in scope for themselves? *)
             let e = rewrite_expr (type_map, expr_map) e in
-            Symb_map.add sym e map
+            Symb_map.add
+              (Option.value (VarNormalizer.find_sym sym) ~default:sym)
+              e map
           | _ -> assert false )
         expr_map vars
     in
@@ -178,7 +205,9 @@ let rewrite_cmd type_map cmd =
   | Check_sat htes ->
     let htes = List.map (rewrite_expr (type_map, Symb_map.empty)) htes in
     (type_map, Check_sat htes)
-  | Declare_const { id; sort } as cmd -> (Symb_map.add id sort.ty type_map, cmd)
+  | Declare_const { id; sort } as cmd ->
+    let normalized_id = VarNormalizer.canonical_name id in
+    (Symb_map.add normalized_id sort.ty type_map, cmd)
   | Declare_fun { id; sort; _ } as cmd -> (Symb_map.add id sort.ty type_map, cmd)
   | Get_value htes ->
     let htes = List.map (rewrite_expr (type_map, Symb_map.empty)) htes in
@@ -186,6 +215,7 @@ let rewrite_cmd type_map cmd =
   | cmd -> (type_map, cmd)
 
 let rewrite script =
+  VarNormalizer.reset ();
   let _, cmds =
     List.fold_left
       (fun (type_map, cmds) cmd ->
