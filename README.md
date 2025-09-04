@@ -86,6 +86,8 @@ $ bisect-ppx-report html    # Detailed Report in _coverage/index.html
 
 ## Quick Start
 
+See [here](https://formalsec.github.io/smtml/smtml/) for more detailed documentation.
+
 ```ocaml
 # #require "smtml";;
 # open Smtml;;
