@@ -28,6 +28,7 @@
   interpret
   interpret_intf
   lexer
+  loc
   log
   logic
   mappings

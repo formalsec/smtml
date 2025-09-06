@@ -9,6 +9,7 @@ include (
             { base : Bitvector.t
             ; offset : t
             }
+        | Loc of Loc.t
         | Symbol of Symbol.t
         | List of t list
         | App of Symbol.t * t list
@@ -49,6 +50,8 @@ include (
       val value : Value.t -> t
 
       val ptr : int32 -> t -> t
+
+      val loc : Loc.t -> t
 
       val list : t list -> t
 

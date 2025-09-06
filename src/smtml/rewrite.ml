@@ -58,7 +58,7 @@ let rewrite_ty unknown_ty tys =
 let rec rewrite_expr (type_map, expr_map) hte =
   debug "rewrite_expr: %a@." (fun k -> k Expr.pp hte);
   match Expr.view hte with
-  | Val _ -> hte
+  | Val _ | Loc _ -> hte
   | Ptr { base; offset } ->
     let base = Bitvector.to_int32 base in
     Expr.ptr base (rewrite_expr (type_map, expr_map) offset)
