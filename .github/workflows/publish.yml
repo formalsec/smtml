@@ -1,0 +1,35 @@
+name: opam-repository
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      # allow opam depext to yes package manager prompts
+      OPAMCONFIRMLEVEL: unsafe-yes
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Setup OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "5.3"
+
+      - name: Install dependencies
+        run: |
+          opam pin https://github.com/ocaml/opam.git
+          opam pin https://github.com/filipeom/opam-publish.git#filipe/improve-headless
+          opam install opam-publish
+
+      - name: Publish
+        env:
+          OPAM_PUBLISH_GH_TOKEN: ${{ secrets.OPAM_PUBLISH_GH_TOKEN }}
+        run: ./scripts/publish.sh
