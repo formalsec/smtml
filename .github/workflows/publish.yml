@@ -1,0 +1,26 @@
+name: Publish to opam-repository
+
+on:
+  branches:
+    - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    env:
+      # allow opam depext to yes package manager prompts
+      OPAMCONFIRMLEVEL: unsafe-yes
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "5.3"
+
+      - name: Install dependencies
+        run: opam install opam-publish
+
+      - name: Publish
+        run: ./scripts/publish.sh
