@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.11.0 - 2025-09-17
+
+- 2025-09-07 Add new `Loc` expression to model abstract locations ([#382](https://github.com/formalsec/smtml/issues/382))
+- 2025-08-27 Fix cache key in cached solver mode
+- 2025-08-26 Update maintenance intent to include any patch to the previous version
+
 ## 0.10.0 - 2025-08-26
 
 - 2025-08-26 Release v0.10.0
