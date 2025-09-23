@@ -70,6 +70,7 @@
   scfg
   smtml.prelude
   yojson
+  mtime.clock
   zarith
   (select
    colibri2_mappings.ml
@@ -106,7 +107,9 @@
    (-> altergo_mappings.nop.ml)))
  (instrumentation
   (backend bisect_ppx --exclusions src/smtml/bisect.exclude)
-  (deps bisect.exclude)))
+  (deps bisect.exclude))
+ (preprocess
+  (pps ppx_deriving.std)))
 
 (rule
  (targets

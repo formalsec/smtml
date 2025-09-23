@@ -8,3 +8,29 @@ let run_and_time_call ~use f =
   let stop = Unix.gettimeofday () in
   use (stop -. start);
   result
+
+let query_log_path : Fpath.t option =
+  let env_var = "QUERY_LOG_PATH" in
+  match Bos.OS.Env.var env_var with Some p -> Some (Fpath.v p) | None -> None
+
+(* If the environment variable [QUERY_LOG_PATH] is set, stores and writes
+   all queries sent to the solver (with their timestamps) to the given file *)
+let write =
+  match query_log_path with
+  | None -> fun _ _ -> ()
+  | Some path ->
+    let log_entries : (Expr.t list * int64) list ref = ref [] in
+    let close () =
+      let entries = List.rev !log_entries in
+      let bytes = Marshal.to_string entries [] in
+      match Bos.OS.File.write path bytes with
+      | Ok () -> ()
+      | Error (`Msg e) -> Fmt.failwith "Failed to write log: %s" e
+    in
+    at_exit close;
+    Sys.set_signal Sys.sigterm (Sys.Signal_handle (fun _ -> close ()));
+    (* write *)
+    let mutex = Mutex.create () in
+    fun assumptions time ->
+      let entry = (assumptions, time) in
+      Mutex.protect mutex (fun () -> log_entries := entry :: !log_entries)
