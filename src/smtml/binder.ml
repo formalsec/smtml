@@ -3,6 +3,7 @@ type t =
   | Forall
   | Exists
   | Let_in
+[@@deriving ord]
 
 let equal a b =
   match (a, b) with
