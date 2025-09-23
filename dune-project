@@ -84,6 +84,8 @@
   rusage
   (scfg
    (>= "0.5"))
+  (mtime
+    (>= "2.0.0"))
   (yojson
    (>= "1.6.0"))
   (zarith

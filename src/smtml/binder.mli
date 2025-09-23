@@ -15,6 +15,7 @@ type t =
   | Exists  (** Existential quantifier ([exists x. P(x)]). *)
   | Let_in
     (** Let-binding ([let x = e in P(x)]), used for local definitions. *)
+[@@deriving ord]
 
 (** [equal q1 q2] returns [true] if the quantifiers or binding constructs [q1]
     and [q2] are equal. *)
