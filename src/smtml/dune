@@ -25,6 +25,7 @@
   eval
   expr
   expr_raw
+  expr_intf
   interpret
   interpret_intf
   lexer
