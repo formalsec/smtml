@@ -63,6 +63,7 @@
   cmdliner
   dolmen
   dolmen_type
+  dolmen_model
   hc
   fpath
   menhirLib
@@ -104,7 +105,7 @@
   (select
    altergo_mappings.ml
    from
-   (alt-ergo-lib dolmen_model -> altergo_mappings.default.ml)
+   (alt-ergo-lib -> altergo_mappings.default.ml)
    (-> altergo_mappings.nop.ml)))
  (instrumentation
   (backend bisect_ppx --exclusions src/smtml/bisect.exclude)
@@ -150,5 +151,5 @@
     altergo_mappings.nop.ml
     (progn
      (echo "let solver_name = \"alt-ergo\"\n")
-     (echo "let solver_package = \"alt-ergo dolmen_model\"\n")
+     (echo "let solver_package = solver_name\n")
      (cat %{deps}))))))
