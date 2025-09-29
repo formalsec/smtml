@@ -1,7 +1,7 @@
 available: arch != "arm32" & arch != "x86_32"
 pin-depends: [
-  ["colibri2.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#5514303635152b2a0e74bc62914bd3fbcce55445"]
-  ["colibrilib.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#5514303635152b2a0e74bc62914bd3fbcce55445"]
+  ["colibri2.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#4ba26c9e1d031765e799251480166af720638e6e"]
+  ["colibrilib.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#4ba26c9e1d031765e799251480166af720638e6e"]
   ["benchpress.dev" "git+https://github.com/sneeuwballen/benchpress.git#7f44cdd9f0511afcce2c9ad3c04cc9b72919bcff"]
   ["extunix.0.4.3" "git+https://github.com/filipeom/extunix.git#ff54e8cc7ec9cdc7171861d74d85f326dbcec62e"]
 ]
