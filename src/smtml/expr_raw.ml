@@ -1,184 +1,8 @@
-include (
-  Expr :
-    sig
-      type t = expr Hc.hash_consed
-
-      and expr = private
-        | Val of Value.t
-        | Ptr of
-            { base : Bitvector.t
-            ; offset : t
-            }
-        | Loc of Loc.t
-        | Symbol of Symbol.t
-        | List of t list
-        | App of Symbol.t * t list
-        | Unop of Ty.t * Ty.Unop.t * t
-        | Binop of Ty.t * Ty.Binop.t * t * t
-        | Triop of Ty.t * Ty.Triop.t * t * t * t
-        | Relop of Ty.t * Ty.Relop.t * t * t
-        | Cvtop of Ty.t * Ty.Cvtop.t * t
-        | Naryop of Ty.t * Ty.Naryop.t * t list
-        | Extract of t * int * int
-        | Concat of t * t
-        | Binder of Binder.t * t list * t
-
-      val view : t -> expr
-
-      val hash : t -> int
-
-      val equal : t -> t -> bool
-
-      val compare : t -> t -> int
-
-      val ty : t -> Ty.t
-
-      val is_symbolic : t -> bool
-
-      val get_symbols : t list -> Symbol.t list
-
-      val negate_relop : t -> t
-
-      val pp : t Fmt.t
-
-      val pp_smt : t list Fmt.t
-
-      val pp_list : t list Fmt.t
-
-      val to_string : t -> string
-
-      val value : Value.t -> t
-
-      val ptr : int32 -> t -> t
-
-      val loc : Loc.t -> t
-
-      val list : t list -> t
-
-      val symbol : Symbol.t -> t
-
-      val app : Symbol.t -> t list -> t
-
-      val binder : Binder.t -> t list -> t -> t
-
-      val let_in : t list -> t -> t
-
-      val forall : t list -> t -> t
-
-      val exists : t list -> t -> t
-
-      val raw_unop : Ty.t -> Ty.Unop.t -> t -> t
-
-      val raw_binop : Ty.t -> Ty.Binop.t -> t -> t -> t
-
-      val raw_triop : Ty.t -> Ty.Triop.t -> t -> t -> t -> t
-
-      val raw_relop : Ty.t -> Ty.Relop.t -> t -> t -> t
-
-      val raw_cvtop : Ty.t -> Ty.Cvtop.t -> t -> t
-
-      val raw_naryop : Ty.t -> Ty.Naryop.t -> t list -> t
-
-      val raw_extract : t -> high:int -> low:int -> t
-
-      val raw_concat : t -> t -> t
-
-      module Hc : sig
-        val clear : unit -> unit
-
-        val stats : unit -> Hashtbl.statistics
-
-        val length : unit -> int
-      end
-
-      module Bool : sig
-        val true_ : t
-
-        val false_ : t
-
-        val v : bool -> t
-      end
-
-      module Set : sig
-        type elt = t
-
-        type key = elt
-
-        type t
-
-        val empty : t
-
-        val is_empty : t -> bool
-
-        val mem : elt -> t -> bool
-
-        val add : elt -> t -> t
-
-        val singleton : elt -> t
-
-        val cardinal : t -> int
-
-        val is_singleton : t -> elt option
-
-        val remove : elt -> t -> t
-
-        val unsigned_min_elt : t -> elt
-
-        val unsigned_max_elt : t -> elt
-
-        val pop_unsigned_minimum : t -> (elt * t) option
-
-        val pop_unsigned_maximum : t -> (elt * t) option
-
-        val iter : (elt -> unit) -> t -> unit
-
-        val filter : (elt -> bool) -> t -> t
-
-        val for_all : (elt -> bool) -> t -> bool
-
-        val fold : (elt -> 'acc -> 'acc) -> t -> 'acc -> 'acc
-
-        val split : elt -> t -> t * bool * t
-
-        val pp : Format.formatter -> t -> unit
-
-        val union : t -> t -> t
-
-        val inter : t -> t -> t
-
-        val disjoint : t -> t -> bool
-
-        val subset : t -> t -> bool
-
-        val diff : t -> t -> t
-
-        val min_elt_inter : t -> t -> elt option
-
-        val max_elt_inter : t -> t -> elt option
-
-        val to_seq : t -> elt Seq.t
-
-        val to_rev_seq : t -> elt Seq.t
-
-        val add_seq : elt Seq.t -> t -> t
-
-        val of_seq : elt Seq.t -> t
-
-        val of_list : elt list -> t
-
-        val to_list : t -> elt list
-
-        val hash : t -> int
-
-        val to_int : t -> int
-
-        val equal : t -> t -> bool
-
-        val compare : t -> t -> int
-
-        val get_symbols : t -> Symbol.t list
-      end
-    end )
+(* SPDX-License-Identifier: MIT *)
+(* Copyright (C) 2023-2025 formalsec *)
+(* Written by the Smtml programmers *)
+
+include Expr
 
 let unop = raw_unop
 
@@ -216,4 +40,95 @@ module Bool = struct
   let or_ a b = raw_binop Ty_bool Or a b
 
   let ite a b c = raw_triop Ty_bool Ite a b c
+end
+
+module Make (T : sig
+  type elt
+
+  val ty : Ty.t
+
+  val value : elt -> Value.t
+end) =
+struct
+  open Ty
+
+  let v i = value (T.value i)
+
+  let sym x = symbol Symbol.(x @: T.ty)
+
+  let ( ~- ) e = unop T.ty Neg e
+
+  let ( = ) e1 e2 = relop Ty_bool Eq e1 e2
+
+  let ( != ) e1 e2 = relop Ty_bool Ne e1 e2
+
+  let ( > ) e1 e2 = relop T.ty Gt e1 e2
+
+  let ( >= ) e1 e2 = relop T.ty Ge e1 e2
+
+  let ( < ) e1 e2 = relop T.ty Lt e1 e2
+
+  let ( <= ) e1 e2 = relop T.ty Le e1 e2
+end
+
+module Bitv = struct
+  open Ty
+
+  module I8 = Make (struct
+    type elt = int
+
+    let ty = Ty_bitv 8
+
+    let value i = Value.Bitv (Bitvector.of_int8 i)
+  end)
+
+  module I32 = Make (struct
+    type elt = int32
+
+    let ty = Ty_bitv 32
+
+    let value i = Value.Bitv (Bitvector.of_int32 i)
+  end)
+
+  module I64 = Make (struct
+    type elt = int64
+
+    let ty = Ty_bitv 64
+
+    let value i = Value.Bitv (Bitvector.of_int64 i)
+  end)
+end
+
+module Fpa = struct
+  open Ty
+
+  module F32 = struct
+    include Make (struct
+      type elt = float
+
+      let ty = Ty_fp 32
+
+      let value f = Value.Num (F32 (Int32.bits_of_float f))
+    end)
+
+    (* Redeclare equality due to incorrect theory annotation *)
+    let ( = ) e1 e2 = relop (Ty_fp 32) Eq e1 e2
+
+    let ( != ) e1 e2 = relop (Ty_fp 32) Ne e1 e2
+  end
+
+  module F64 = struct
+    include Make (struct
+      type elt = float
+
+      let ty = Ty_fp 64
+
+      let value f = Value.Num (F64 (Int64.bits_of_float f))
+    end)
+
+    (* Redeclare equality due to incorrect theory annotation *)
+    let ( = ) e1 e2 = relop (Ty_fp 64) Eq e1 e2
+
+    let ( != ) e1 e2 = relop (Ty_fp 64) Ne e1 e2
+  end
 end
