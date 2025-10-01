@@ -11,6 +11,7 @@
  (modules
   altergo_mappings
   ast
+  base_expr
   bitvector
   bitwuzla_mappings
   binder
@@ -44,6 +45,7 @@
   parser
   regression_model_default
   rewrite
+  simplifier
   smtlib
   smtzilla
   solver
@@ -58,7 +60,7 @@
   utils
   value
   z3_mappings)
- (private_modules lexer parser lru)
+ (private_modules lexer parser lru base_expr)
  (flags
   (:standard -open Smtml_prelude)
   (:standard -open Smtzilla_utils))
@@ -128,6 +130,18 @@
   (deps bisect.exclude))
  (preprocess
   (pps ppx_deriving.std ppx_deriving.show ppx_enumerate)))
+
+(executable
+ (name build_simplifier)
+ (modules build_simplifier)
+ (libraries sexplib fmt fpath bos))
+
+(rule
+ (targets simplifier.ml)
+ (deps rules.ssn build_simplifier.exe)
+ (action
+  (with-stdout-to %{targets}
+    (run %{dep:build_simplifier.exe}))))
 
 (rule
  (targets
