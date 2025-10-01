@@ -12,6 +12,7 @@
   altergo_mappings
   ast
   ;axioms
+  base_expr
   bitvector
   bitwuzla_mappings
   binder
@@ -43,6 +44,7 @@
   parse
   parser
   rewrite
+  simplifier
   smtlib
   solver
   solver_dispatcher
@@ -55,7 +57,7 @@
   utils
   value
   z3_mappings)
- (private_modules lexer parser)
+ (private_modules lexer parser base_expr)
  (flags
   (:standard -open Smtml_prelude))
  (libraries
@@ -112,6 +114,18 @@
   (deps bisect.exclude))
  (preprocess
   (pps ppx_deriving.std)))
+
+(executable
+ (name build_simplifier)
+ (modules build_simplifier)
+ (libraries sexplib fmt bos))
+
+(rule
+ (targets simplifier.ml)
+ (deps rules.ssn build_simplifier.exe)
+ (action
+  (with-stdout-to %{targets}
+    (run %{dep:build_simplifier.exe}))))
 
 (rule
  (targets
