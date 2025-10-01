@@ -2,107 +2,7 @@
 (* Copyright (C) 2023-2024 formalsec *)
 (* Written by the Smtml programmers *)
 
-type t = expr Hc.hash_consed
-
-and expr =
-  | Val of Value.t
-  | Ptr of
-      { base : Bitvector.t
-      ; offset : t
-      }
-  | Loc of Loc.t
-  | Symbol of Symbol.t
-  | List of t list
-  | App of Symbol.t * t list
-  | Unop of Ty.t * Ty.Unop.t * t
-  | Binop of Ty.t * Ty.Binop.t * t * t
-  | Triop of Ty.t * Ty.Triop.t * t * t * t
-  | Relop of Ty.t * Ty.Relop.t * t * t
-  | Cvtop of Ty.t * Ty.Cvtop.t * t
-  | Naryop of Ty.t * Ty.Naryop.t * t list
-  | Extract of t * int * int
-  | Concat of t * t
-  | Binder of Binder.t * t list * t
-
-module Expr = struct
-  type t = expr
-
-  let list_eq (l1 : 'a list) (l2 : 'a list) : bool =
-    if List.compare_lengths l1 l2 = 0 then List.for_all2 phys_equal l1 l2
-    else false
-
-  let equal (e1 : expr) (e2 : expr) : bool =
-    match (e1, e2) with
-    | Val v1, Val v2 -> Value.equal v1 v2
-    | Loc a, Loc b -> Loc.compare a b = 0
-    | Ptr { base = b1; offset = o1 }, Ptr { base = b2; offset = o2 } ->
-      Bitvector.equal b1 b2 && phys_equal o1 o2
-    | Symbol s1, Symbol s2 -> Symbol.equal s1 s2
-    | List l1, List l2 -> list_eq l1 l2
-    | App (s1, l1), App (s2, l2) -> Symbol.equal s1 s2 && list_eq l1 l2
-    | Unop (t1, op1, e1), Unop (t2, op2, e2) ->
-      Ty.equal t1 t2 && Ty.Unop.equal op1 op2 && phys_equal e1 e2
-    | Binop (t1, op1, e1, e3), Binop (t2, op2, e2, e4) ->
-      Ty.equal t1 t2 && Ty.Binop.equal op1 op2 && phys_equal e1 e2
-      && phys_equal e3 e4
-    | Relop (t1, op1, e1, e3), Relop (t2, op2, e2, e4) ->
-      Ty.equal t1 t2 && Ty.Relop.equal op1 op2 && phys_equal e1 e2
-      && phys_equal e3 e4
-    | Triop (t1, op1, e1, e3, e5), Triop (t2, op2, e2, e4, e6) ->
-      Ty.equal t1 t2 && Ty.Triop.equal op1 op2 && phys_equal e1 e2
-      && phys_equal e3 e4 && phys_equal e5 e6
-    | Cvtop (t1, op1, e1), Cvtop (t2, op2, e2) ->
-      Ty.equal t1 t2 && Ty.Cvtop.equal op1 op2 && phys_equal e1 e2
-    | Naryop (t1, op1, l1), Naryop (t2, op2, l2) ->
-      Ty.equal t1 t2 && Ty.Naryop.equal op1 op2 && list_eq l1 l2
-    | Extract (e1, h1, l1), Extract (e2, h2, l2) ->
-      phys_equal e1 e2 && h1 = h2 && l1 = l2
-    | Concat (e1, e3), Concat (e2, e4) -> phys_equal e1 e2 && phys_equal e3 e4
-    | Binder (binder1, vars1, e1), Binder (binder2, vars2, e2) ->
-      Binder.equal binder1 binder2 && list_eq vars1 vars2 && phys_equal e1 e2
-    | ( ( Val _ | Ptr _ | Loc _ | Symbol _ | List _ | App _ | Unop _ | Binop _
-        | Triop _ | Relop _ | Cvtop _ | Naryop _ | Extract _ | Concat _
-        | Binder _ )
-      , _ ) ->
-      false
-
-  let hash (e : expr) : int =
-    let h x = Hashtbl.hash x in
-    match e with
-    | Val v -> h v
-    | Ptr { base; offset } -> h (base, offset.tag)
-    | Loc l -> h l
-    | Symbol s -> h s
-    | List v -> h v
-    | App (x, es) -> h (x, es)
-    | Unop (ty, op, e) -> h (ty, op, e.tag)
-    | Cvtop (ty, op, e) -> h (ty, op, e.tag)
-    | Binop (ty, op, e1, e2) -> h (ty, op, e1.tag, e2.tag)
-    | Relop (ty, op, e1, e2) -> h (ty, op, e1.tag, e2.tag)
-    | Triop (ty, op, e1, e2, e3) -> h (ty, op, e1.tag, e2.tag, e3.tag)
-    | Naryop (ty, op, es) -> h (ty, op, es)
-    | Extract (e, hi, lo) -> h (e.tag, hi, lo)
-    | Concat (e1, e2) -> h (e1.tag, e2.tag)
-    | Binder (b, vars, e) -> h (b, vars, e.tag)
-end
-
-module Hc = Hc.Make [@inlined hint] (Expr)
-
-let equal (hte1 : t) (hte2 : t) = phys_equal hte1 hte2 [@@inline]
-
-let hash (hte : t) = hte.tag [@@inline]
-
-module Key = struct
-  type nonrec t = t
-
-  let to_int hte = hash hte
-end
-
-let[@inline] make e = Hc.hashcons e
-
-let[@inline] view (hte : t) = hte.node
-
-let[@inline] compare (hte1 : t) (hte2 : t) = compare hte1.tag hte2.tag
+include Base_expr
 
 let symbol s = make (Symbol s)
 
@@ -333,15 +233,10 @@ module Set = struct
     Hashtbl.fold (fun k () acc -> k :: acc) tbl []
 end
 
-let value (v : Value.t) : t = make (Val v) [@@inline]
 
 let ptr base offset = make (Ptr { base = Bitvector.of_int32 base; offset })
 
 let loc l = make (Loc l)
-
-let list l = make (List l)
-
-let app symbol args = make (App (symbol, args))
 
 let[@inline] binder bt vars expr = make (Binder (bt, vars, expr))
 
@@ -351,7 +246,13 @@ let forall vars body = binder Forall vars body
 
 let exists vars body = binder Exists vars body
 
-let raw_unop ty op hte = make (Unop (ty, op, hte)) [@@inline]
+let unop ty op hte = Simplifier.simplify_unop ty op hte
+
+let binop ty op hte1 hte2 = Simplifier.simplify_binop ty op hte1 hte2
+
+let triop ty op hte1 hte2 hte3 = Simplifier.simplify_triop ty op hte1 hte2 hte3
+
+let naryop ty op htes = Simplifier.simplify_naryop ty op htes
 
 let normalize_eq_or_ne op (ty', e1, e2) =
   let make_relop lhs rhs = Relop (ty', op, lhs, rhs) in
@@ -390,98 +291,6 @@ let negate_relop (hte : t) : t =
     | _ -> Fmt.failwith "negate_relop: not a relop."
   in
   make e
-
-let unop ty op hte =
-  match (op, view hte) with
-  | Ty.Unop.(Regexp_loop _ | Regexp_star), _ -> raw_unop ty op hte
-  | _, Val v -> value (Eval.unop ty op v)
-  | Not, Unop (_, Not, hte') -> hte'
-  | Not, Relop (Ty_fp _, _, _, _) -> raw_unop ty op hte
-  | Not, Relop (_, _, _, _) -> negate_relop hte
-  | Neg, Unop (_, Neg, hte') -> hte'
-  | Trim, Cvtop (Ty_real, ToString, _) -> hte
-  | Head, List (hd :: _) -> hd
-  | Tail, List (_ :: tl) -> make (List tl)
-  | Reverse, List es -> make (List (List.rev es))
-  | Length, List es -> value (Int (List.length es))
-  | _ -> raw_unop ty op hte
-
-let raw_binop ty op hte1 hte2 = make (Binop (ty, op, hte1, hte2)) [@@inline]
-
-let rec binop ty op hte1 hte2 =
-  match (op, view hte1, view hte2) with
-  | Ty.Binop.(String_in_re | Regexp_range), _, _ -> raw_binop ty op hte1 hte2
-  | op, Val v1, Val v2 -> value (Eval.binop ty op v1 v2)
-  | Sub, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
-    if Bitvector.equal b1 b2 then binop ty Sub os1 os2
-    else raw_binop ty op hte1 hte2
-  | Add, Ptr { base; offset }, _ ->
-    let m = Bitvector.numbits base in
-    make (Ptr { base; offset = binop (Ty_bitv m) Add offset hte2 })
-  | Sub, Ptr { base; offset }, _ ->
-    let m = Bitvector.numbits base in
-    make (Ptr { base; offset = binop (Ty_bitv m) Sub offset hte2 })
-  | Rem, Ptr { base; offset }, _ ->
-    let m = Bitvector.numbits base in
-    let rhs = value (Bitv base) in
-    let addr = binop (Ty_bitv m) Add rhs offset in
-    binop ty Rem addr hte2
-  | Add, _, Ptr { base; offset } ->
-    let m = Bitvector.numbits base in
-    make (Ptr { base; offset = binop (Ty_bitv m) Add offset hte1 })
-  | Sub, _, Ptr { base; offset } ->
-    let m = Bitvector.numbits base in
-    let base = value (Bitv base) in
-    binop ty Sub hte1 (binop (Ty_bitv m) Add base offset)
-  | (Add | Or), Val (Bitv bv), _ when Bitvector.eqz bv -> hte2
-  | (And | Div | DivU | Mul | Rem | RemU), Val (Bitv bv), _
-    when Bitvector.eqz bv ->
-    hte1
-  | (Add | Or), _, Val (Bitv bv) when Bitvector.eqz bv -> hte1
-  | (And | Mul), _, Val (Bitv bv) when Bitvector.eqz bv -> hte2
-  | Add, Binop (ty, Add, x, { node = Val v1; _ }), Val v2 ->
-    let v = value (Eval.binop ty Add v1 v2) in
-    raw_binop ty Add x v
-  | Sub, Binop (ty, Sub, x, { node = Val v1; _ }), Val v2 ->
-    let v = value (Eval.binop ty Add v1 v2) in
-    raw_binop ty Sub x v
-  | Mul, Val (Bitv bv), _ when Bitvector.eq_one bv -> hte2
-  | Mul, _, Val (Bitv bv) when Bitvector.eq_one bv -> hte1
-  | Mul, Binop (ty, Mul, x, { node = Val v1; _ }), Val v2 ->
-    let v = value (Eval.binop ty Mul v1 v2) in
-    raw_binop ty Mul x v
-  | Add, Val v1, Binop (ty, Add, x, { node = Val v2; _ }) ->
-    let v = value (Eval.binop ty Add v1 v2) in
-    raw_binop ty Add v x
-  | Mul, Val v1, Binop (ty, Mul, x, { node = Val v2; _ }) ->
-    let v = value (Eval.binop ty Mul v1 v2) in
-    raw_binop ty Mul v x
-  | At, List es, Val (Int n) ->
-    (* TODO: use another datastructure? *)
-    begin match List.nth_opt es n with None -> assert false | Some v -> v
-    end
-  | List_cons, _, List es -> make (List (hte1 :: es))
-  | List_append, List _, (List [] | Val (List [])) -> hte1
-  | List_append, (List [] | Val (List [])), List _ -> hte2
-  | List_append, List l0, Val (List l1) -> make (List (l0 @ List.map value l1))
-  | List_append, Val (List l0), List l1 -> make (List (List.map value l0 @ l1))
-  | List_append, List l0, List l1 -> make (List (l0 @ l1))
-  | _ -> raw_binop ty op hte1 hte2
-
-let raw_triop ty op e1 e2 e3 = make (Triop (ty, op, e1, e2, e3)) [@@inline]
-
-let triop ty op e1 e2 e3 =
-  match (op, view e1, view e2, view e3) with
-  | Ty.Triop.Ite, Val True, _, _ -> e2
-  | Ite, Val False, _, _ -> e3
-  | op, Val v1, Val v2, Val v3 -> value (Eval.triop ty op v1 v2 v3)
-  | Ite, _, Triop (_, Ite, c2, r1, r2), Triop (_, Ite, _, _, _) ->
-    let else_ = raw_triop ty Ite e1 r2 e3 in
-    let cond = binop Ty_bool And e1 c2 in
-    raw_triop ty Ite cond r1 else_
-  | _ -> raw_triop ty op e1 e2 e3
-
-let raw_relop ty op hte1 hte2 = make (Relop (ty, op, hte1, hte2)) [@@inline]
 
 let rec relop ty op hte1 hte2 =
   match (op, view hte1, view hte2) with
@@ -573,26 +382,6 @@ let rec cvtop theory op hte =
     hte
   | _ -> raw_cvtop theory op hte
 
-let raw_naryop ty op es = make (Naryop (ty, op, es)) [@@inline]
-
-let naryop ty op es =
-  if List.for_all (fun e -> match view e with Val _ -> true | _ -> false) es
-  then
-    let vs =
-      List.map (fun e -> match view e with Val v -> v | _ -> assert false) es
-    in
-    value (Eval.naryop ty op vs)
-  else
-    match (ty, op, List.map view es) with
-    | ( Ty_str
-      , Concat
-      , [ Naryop (Ty_str, Concat, l1); Naryop (Ty_str, Concat, l2) ] ) ->
-      raw_naryop Ty_str Concat (l1 @ l2)
-    | Ty_str, Concat, [ Naryop (Ty_str, Concat, htes); hte ] ->
-      raw_naryop Ty_str Concat (htes @ [ make hte ])
-    | Ty_str, Concat, [ hte; Naryop (Ty_str, Concat, htes) ] ->
-      raw_naryop Ty_str Concat (make hte :: htes)
-    | _ -> raw_naryop ty op es
 
 let[@inline] raw_extract (hte : t) ~(high : int) ~(low : int) : t =
   make (Extract (hte, high, low))
