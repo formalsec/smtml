@@ -1,0 +1,35 @@
+name: Release PR
+
+on:
+  workflow_dispatch:
+  schedule:
+    # TODO: Friday release instead? :o
+    - cron: "0 9 * * 1" # Create releases 9AM on a monday
+
+jobs:
+  release-pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0      # fetch all commits
+          tags: true          # fetch all tags
+
+      - name: Set up Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install gh -y
+          cargo install git-cliff --locked
+
+      - name: Authenticate GitHub CLI
+        run: gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Run release PR script
+        run: ./scripts/create-release.sh
