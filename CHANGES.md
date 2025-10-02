@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.12.0 - 2025-10-02
+
+- 2025-10-02 Add workflow to weekly create a new release ([#386](https://github.com/formalsec/smtml/issues/386))
+- 2025-10-01 Update dune file
+- 2025-10-01 Update colibri2 version
+- 2025-10-01 Use Dolmen's models for Alt-Ergo and Colibri2
+- 2025-10-01 Rely on `ctx` only for colibri2's models
+- 2025-09-29 Fix Expr_raw module interface
+- 2025-09-29 Log SMT queries and execution times to serialized files
+
+## 0.11.0 - 2025-09-21
+
+- 2025-09-21 Automatic release scripts and workflow ([#386](https://github.com/formalsec/smtml/issues/386))
+- 2025-09-07 Add new `Loc` expression to model abstract locations ([#382](https://github.com/formalsec/smtml/issues/382))
+- 2025-08-27 Fix cache key in cached solver mode
+- 2025-08-26 Update maintenance intent to include any patch to the previous version
+
 ## 0.10.0 - 2025-08-26
 
 - 2025-08-26 Release v0.10.0
