@@ -253,6 +253,8 @@ module Nop = struct
 
       let lshr _ = assert false
 
+      let smod _ = assert false
+
       let rem _ = assert false
 
       let rem_u _ = assert false
@@ -260,6 +262,16 @@ module Nop = struct
       let rotate_left _ = assert false
 
       let rotate_right _ = assert false
+
+      let nego _ = assert false
+
+      let addo ~signed:_ = assert false
+
+      let subo ~signed:_ = assert false
+
+      let mulo ~signed:_ = assert false
+
+      let divo _ = assert false
 
       let lt _ = assert false
 

@@ -296,6 +296,8 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
     let lshr t1 t2 = mk_term2 Kind.Bv_shr t1 t2
 
+    let smod t1 t2 = mk_term2 Kind.Bv_smod t1 t2
+
     let rem t1 t2 = mk_term2 Kind.Bv_srem t1 t2
 
     let rem_u t1 t2 = mk_term2 Kind.Bv_urem t1 t2
@@ -303,6 +305,19 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     let rotate_left t1 t2 = mk_term2 Kind.Bv_rol t1 t2
 
     let rotate_right t1 t2 = mk_term2 Kind.Bv_ror t1 t2
+
+    let nego t = mk_term1 Kind.Bv_nego t
+
+    let addo ~signed t1 t2 =
+      mk_term2 (if signed then Kind.Bv_saddo else Kind.Bv_uaddo) t1 t2
+
+    let subo ~signed t1 t2 =
+      mk_term2 (if signed then Kind.Bv_ssubo else Kind.Bv_usubo) t1 t2
+
+    let mulo ~signed t1 t2 =
+      mk_term2 (if signed then Kind.Bv_smulo else Kind.Bv_umulo) t1 t2
+
+    let divo t1 t2 = mk_term2 Kind.Bv_sdivo t1 t2
 
     let lt t1 t2 = mk_term2 Kind.Bv_slt t1 t2
 
