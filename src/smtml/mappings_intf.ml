@@ -165,6 +165,9 @@ module type M = sig
     (** [to_real t] converts the integer term [t] to a real number term. *)
     val to_real : term -> term
 
+    (** [to_bv m t] convertes integer [t] term into a bitvector of size [m]. *)
+    val to_bv : int -> term -> term
+
     (** [add t1 t2] constructs the sum of the integer terms [t1] and [t2]. *)
     val add : term -> term -> term
 
@@ -183,6 +186,9 @@ module type M = sig
     (** [rem t1 t2] constructs the remainder of the integer terms [t1] and [t2].
     *)
     val rem : term -> term -> term
+
+    (** [mod t1 t2] constructs the modules operator *)
+    val mod_ : term -> term -> term
 
     (** [pow t1 t2] constructs the power of the integer terms [t1] and [t2]. *)
     val pow : term -> term -> term
@@ -396,6 +402,9 @@ module type M = sig
 
     (** [lognot t] constructs the bitwise NOT of the bitvector term [t]. *)
     val lognot : term -> term
+
+    (** [to_int ~signed t] convertes the bitvector term [t] into an integer. *)
+    val to_int : signed:bool -> term -> term
 
     (** [add t1 t2] constructs the sum of the bitvector terms [t1] and [t2]. *)
     val add : term -> term -> term

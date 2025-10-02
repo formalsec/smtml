@@ -216,6 +216,10 @@ module DolmenIntf = struct
     include DTerm.Int
 
     let neg = DTerm.Int.minus
+
+    let to_bv = DTerm.Bitv.of_int
+
+    let mod_ = DTerm.Int.rem_f
   end
 
   module Real = struct
@@ -304,6 +308,8 @@ module DolmenIntf = struct
       DTerm.Bitv.mk bv
 
     let lognot = DTerm.Bitv.not
+
+    let to_int ~signed:_ = DTerm.Bitv.to_nat
 
     let div = DTerm.Bitv.sdiv
 

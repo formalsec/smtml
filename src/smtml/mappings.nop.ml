@@ -101,6 +101,8 @@ module Nop = struct
 
       let to_real _ = assert false
 
+      let to_bv _ = assert false
+
       let add _ = assert false
 
       let sub _ = assert false
@@ -110,6 +112,8 @@ module Nop = struct
       let div _ = assert false
 
       let rem _ = assert false
+
+      let mod_ _ = assert false
 
       let pow _ = assert false
 
@@ -224,6 +228,8 @@ module Nop = struct
       let neg _ = assert false
 
       let lognot _ = assert false
+
+      let to_int ~signed:_ = assert false
 
       let add _ = assert false
 

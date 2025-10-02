@@ -128,6 +128,8 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     let to_real _ =
       Fmt.failwith "Bitwuzla_mappings: Int.to_real not implemented"
 
+    let to_bv _ = Fmt.failwith "Bitwuzla_mappings: Int.to_bv not implemented"
+
     let add _ = Fmt.failwith "Bitwuzla_mappings: Int.add not implemented"
 
     let sub _ = Fmt.failwith "Bitwuzla_mappings: Int.sub not implemented"
@@ -137,6 +139,8 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     let div _ = Fmt.failwith "Bitwuzla_mappings: Int.div not implemented"
 
     let rem _ = Fmt.failwith "Bitwuzla_mappings: Int.rem not implemented"
+
+    let mod_ _ = Fmt.failwith "Bitwuzla_mappings: Int.mod_ not implemented"
 
     let pow _ = Fmt.failwith "Bitwuzla_mappings: Int.pow not implemented"
 
@@ -266,6 +270,9 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     let neg t = mk_term1 Kind.Bv_neg t
 
     let lognot t = mk_term1 Kind.Bv_not t
+
+    let to_int ~signed:_ _t =
+      Fmt.failwith "Bitwuzla_mappings: Bitv.to_int not implemented"
 
     let add t1 t2 = mk_term2 Kind.Bv_add t1 t2
 

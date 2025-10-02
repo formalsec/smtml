@@ -116,6 +116,8 @@ module Fresh_cvc5 () = struct
 
     let to_real t = Term.mk_term tm Kind.To_real [| t |]
 
+    let to_bv _m _t = Fmt.failwith "Cvc5_mappings: Int.to_bv not implemented"
+
     let add t1 t2 = Term.mk_term tm Kind.Add [| t1; t2 |]
 
     let sub t1 t2 = Term.mk_term tm Kind.Sub [| t1; t2 |]
@@ -125,6 +127,8 @@ module Fresh_cvc5 () = struct
     let div t1 t2 = Term.mk_term tm Kind.Ints_division [| t1; t2 |]
 
     let rem t1 t2 = Term.mk_term tm Kind.Ints_modulus [| t1; t2 |]
+
+    let mod_ t1 t2 = Term.mk_term tm Kind.Ints_modulus [| t1; t2 |]
 
     let pow t1 t2 = Term.mk_term tm Kind.Pow [| t1; t2 |]
 
@@ -250,6 +254,9 @@ module Fresh_cvc5 () = struct
     let neg t = Term.mk_term tm Kind.Bitvector_neg [| t |]
 
     let lognot t = Term.mk_term tm Kind.Bitvector_not [| t |]
+
+    let to_int ~signed:_ _t =
+      Fmt.failwith "Cvc5_mappings: Int.to_int not implemented"
 
     let add t1 t2 = Term.mk_term tm Kind.Bitvector_add [| t1; t2 |]
 
