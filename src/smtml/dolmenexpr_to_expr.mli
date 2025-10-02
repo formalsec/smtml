@@ -125,6 +125,8 @@ module DolmenIntf : sig
 
     val to_real : term -> term
 
+    val to_bv : int -> term -> term
+
     val add : term -> term -> term
 
     val sub : term -> term -> term
@@ -134,6 +136,8 @@ module DolmenIntf : sig
     val div : term -> term -> term
 
     val rem : term -> term -> term
+
+    val mod_ : term -> term -> term
 
     val pow : term -> term -> term
 
@@ -248,6 +252,8 @@ module DolmenIntf : sig
     val neg : term -> term
 
     val lognot : term -> term
+
+    val to_int : signed:bool -> term -> term
 
     val add : term -> term -> term
 

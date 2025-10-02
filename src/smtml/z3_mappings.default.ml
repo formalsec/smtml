@@ -165,6 +165,8 @@ module M = struct
 
       let to_real e = Z3.Arithmetic.Integer.mk_int2real ctx e
 
+      let to_bv m e = Z3.Arithmetic.Integer.mk_int2bv ctx m e
+
       let add e1 e2 = Z3.Arithmetic.mk_add ctx [ e1; e2 ]
 
       let sub e1 e2 = Z3.Arithmetic.mk_sub ctx [ e1; e2 ]
@@ -174,6 +176,8 @@ module M = struct
       let div e1 e2 = Z3.Arithmetic.mk_div ctx e1 e2
 
       let rem e1 e2 = Z3.Arithmetic.Integer.mk_rem ctx e1 e2
+
+      let mod_ e1 e2 = Z3.Arithmetic.Integer.mk_mod ctx e1 e2
 
       let pow e1 e2 = Z3.Arithmetic.mk_power ctx e1 e2
 
@@ -293,6 +297,8 @@ module M = struct
       let neg e = Z3.BitVector.mk_neg ctx e
 
       let lognot e = Z3.BitVector.mk_not ctx e
+
+      let to_int ~signed e = Z3.BitVector.mk_bv2int ctx e signed
 
       let add e1 e2 = Z3.BitVector.mk_add ctx e1 e2
 
