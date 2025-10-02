@@ -446,6 +446,10 @@ module type M = sig
     (** [lshr t1 t2] constructs the logical right shift of [t1] by [t2]. *)
     val lshr : term -> term -> term
 
+    (** [smod t1 t2] two's complement signed remainder (sign follows divisor).
+    *)
+    val smod : term -> term -> term
+
     (** [rem t1 t2] constructs the remainder of the bitvector terms [t1] and
         [t2]. *)
     val rem : term -> term -> term
@@ -459,6 +463,38 @@ module type M = sig
 
     (** [rotate_right t1 t2] constructs the right rotation of [t1] by [t2]. *)
     val rotate_right : term -> term -> term
+
+    (** [nego t] constructs a predicate that checks that whether the bit-wise
+        negation of [t] does not overflow. *)
+    val nego : term -> term
+
+    (** [addo ~signed t1 t2] constructs a predicate that checks whether the
+        bitwise addition of [t1] and [t2] does not overflow.
+
+        The [signed] argument is a boolean:
+        - [true] -> for signed addition
+        - [false] -> for unsigned addition *)
+    val addo : signed:bool -> term -> term -> term
+
+    (** [subo ~signed t1 t2] constructs a predicate that checks whether the
+        bitwise subtraction of [t1] and [t2] does not overflow.
+
+        The [signed] argument is a boolean:
+        - [true] -> for signed subtraction
+        - [false] -> for unsigned subtraction *)
+    val subo : signed:bool -> term -> term -> term
+
+    (** [mulo ~signed t1 t2] constructs a predicate that checks whether the
+        bitwise multiplication of [t1] and [t2] does not overflow.
+
+        The [signed] argument is a boolean:
+        - [true] -> for signed multiplication
+        - [false] -> for unsigned multiplication *)
+    val mulo : signed:bool -> term -> term -> term
+
+    (** [divo t1 t2] constructs a predicate that checks whether the bitwise
+        division of [t1] and [t2] does not overflow. *)
+    val divo : term -> term -> term
 
     (** [lt t1 t2] constructs the less-than relation between bitvector terms
         [t1] and [t2]. *)

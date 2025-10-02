@@ -335,17 +335,27 @@ module DolmenIntf = struct
 
     let rotate_right t1 t2 = DTerm.Bitv.rotate_right (int_of_term t2) t1
 
-    let lt t1 t2 = DTerm.Bitv.slt t1 t2
+    let nego _ = Fmt.failwith "Dolmenexpr: nego not implemented"
 
-    let lt_u t1 t2 = DTerm.Bitv.ult t1 t2
+    let addo ~signed:_ = Fmt.failwith "Dolmenexpr: addo not implemented"
+
+    let subo ~signed:_ = Fmt.failwith "Dolmenexpr: subo not implemented"
+
+    let mulo ~signed:_ = Fmt.failwith "Dolmenexpr: mulo not implemented"
+
+    let divo _ = Fmt.failwith "Dolmenexpr: divo not implemented"
+
+    let lt = DTerm.Bitv.slt
+
+    let lt_u = DTerm.Bitv.ult
 
     let le = DTerm.Bitv.sle
 
     let le_u = DTerm.Bitv.ule
 
-    let gt t1 t2 = DTerm.Bitv.sgt t1 t2
+    let gt = DTerm.Bitv.sgt
 
-    let gt_u t1 t2 = DTerm.Bitv.ugt t1 t2
+    let gt_u = DTerm.Bitv.ugt
 
     let ge = DTerm.Bitv.sge
 

@@ -277,6 +277,8 @@ module DolmenIntf : sig
 
     val lshr : term -> term -> term
 
+    val smod : term -> term -> term
+
     val rem : term -> term -> term
 
     val rem_u : term -> term -> term
@@ -284,6 +286,16 @@ module DolmenIntf : sig
     val rotate_left : term -> term -> term
 
     val rotate_right : term -> term -> term
+
+    val nego : term -> term
+
+    val addo : signed:bool -> term -> term -> term
+
+    val subo : signed:bool -> term -> term -> term
+
+    val mulo : signed:bool -> term -> term -> term
+
+    val divo : term -> term -> term
 
     val lt : term -> term -> term
 

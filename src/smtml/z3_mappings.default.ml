@@ -322,6 +322,8 @@ module M = struct
 
       let lshr e1 e2 = Z3.BitVector.mk_lshr ctx e1 e2
 
+      let smod e1 e2 = Z3.BitVector.mk_smod ctx e1 e2
+
       let rem e1 e2 = Z3.BitVector.mk_srem ctx e1 e2
 
       let rem_u e1 e2 = Z3.BitVector.mk_urem ctx e1 e2
@@ -329,6 +331,16 @@ module M = struct
       let rotate_left e1 e2 = Z3.BitVector.mk_ext_rotate_left ctx e1 e2
 
       let rotate_right e1 e2 = Z3.BitVector.mk_ext_rotate_right ctx e1 e2
+
+      let nego e = Z3.BitVector.mk_neg_no_overflow ctx e
+
+      let addo ~signed e1 e2 = Z3.BitVector.mk_add_no_overflow ctx e1 e2 signed
+
+      let subo ~signed:_ e1 e2 = Z3.BitVector.mk_sub_no_overflow ctx e1 e2
+
+      let mulo ~signed e1 e2 = Z3.BitVector.mk_mul_no_overflow ctx e1 e2 signed
+
+      let divo e1 e2 = Z3.BitVector.mk_sdiv_no_overflow ctx e1 e2
 
       let lt e1 e2 = Z3.BitVector.mk_slt ctx e1 e2
 

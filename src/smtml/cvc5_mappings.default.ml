@@ -280,6 +280,8 @@ module Fresh_cvc5 () = struct
 
     let lshr t1 t2 = Term.mk_term tm Kind.Bitvector_lshr [| t1; t2 |]
 
+    let smod _ = Fmt.failwith "Cvc5_mappings: smod not implemented"
+
     let rem t1 t2 = Term.mk_term tm Kind.Bitvector_srem [| t1; t2 |]
 
     let rem_u t1 t2 = Term.mk_term tm Kind.Bitvector_urem [| t1; t2 |]
@@ -289,6 +291,16 @@ module Fresh_cvc5 () = struct
 
     let rotate_right t1 t2 =
       Term.mk_term tm Kind.Bitvector_rotate_right [| t1; t2 |]
+
+    let nego _ = Fmt.failwith "Cvc5_mappings: nego not implemented"
+
+    let addo ~signed:_ = Fmt.failwith "Cvc5_mappings: addo not implemented"
+
+    let subo ~signed:_ = Fmt.failwith "Cvc5_mappings: subo not implemented"
+
+    let mulo ~signed:_ = Fmt.failwith "Cvc5_mappings: mulo not implemented"
+
+    let divo _ = Fmt.failwith "Cvc5_mappings: divo not support not implemented"
 
     let lt t1 t2 = Term.mk_term tm Kind.Bitvector_slt [| t1; t2 |]
 
