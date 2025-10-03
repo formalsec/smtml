@@ -93,7 +93,11 @@ module Fresh_cvc5 () = struct
 
     let to_bool t = Term.get_bool t
 
-    let to_string _ = assert false
+    let to_string t =
+      let s = Term.to_string t in
+      if String.starts_with ~prefix:"\"" s && String.ends_with ~suffix:"\"" s
+      then String.sub s 1 (String.length s - 2)
+      else s
 
     let to_bitv t bitwidth =
       assert (Term.is_bv t);
