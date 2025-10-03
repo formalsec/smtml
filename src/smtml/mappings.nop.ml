@@ -389,14 +389,24 @@ module Nop = struct
     end
 
     let die () =
+      let error_s = Fmt.styled `Red (Fmt.styled `Bold Fmt.string) in
+      let solver_s = Fmt.styled `Yellow Fmt.string in
+      let cmd_s = Fmt.styled `Cyan Fmt.string in
+      let link_s = Fmt.styled `Underline (Fmt.styled `Blue Fmt.string) in
+      let note_s = Fmt.styled `Bold Fmt.string in
       Fmt.epr
-        "The %s solver is not installed. You must install it through opam with \
-         the command `opam install %s`. You could also try to use another \
-         solver (have a look at the supported solvers here: \
-         https://github.com/formalsec/smtml?tab=readme-ov-file#supported-solvers). \
-         Note that installing the solver with your system package manager is \
-         not enough, you must install it through opam."
-        solver_name solver_package;
+        "%a%a: The %a solver is not installed.\n\n\
+         To install it, run the following command: %a\n\n\
+         Alternatively, you can use a different solver.\n\
+         See supported solvers here: %a\n\n\
+         %a: Installing the solver with your system package manager is not \
+         enough, you must install it through opam.\n"
+        Fmt.set_style_renderer `Ansi_tty error_s "error" solver_s solver_name
+        cmd_s
+        (Fmt.str "opam install %s" solver_package)
+        link_s "https://github.com/formalsec/smtml#supported-solvers" note_s
+        "Note";
+
       exit 1
 
     module Solver = struct
