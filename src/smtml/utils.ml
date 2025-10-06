@@ -13,6 +13,17 @@ let query_log_path : Fpath.t option =
   let env_var = "QUERY_LOG_PATH" in
   match Bos.OS.Env.var env_var with Some p -> Some (Fpath.v p) | None -> None
 
+let[@inline never] protect m f =
+  Mutex.lock m;
+  match f () with
+  | x ->
+    Mutex.unlock m;
+    x
+  | exception e ->
+    Mutex.unlock m;
+    let bt = Printexc.get_raw_backtrace () in
+    Printexc.raise_with_backtrace e bt
+
 (* If the environment variable [QUERY_LOG_PATH] is set, stores and writes
    all queries sent to the solver (with their timestamps) to the given file *)
 let write =
@@ -33,4 +44,4 @@ let write =
     let mutex = Mutex.create () in
     fun assumptions time ->
       let entry = (assumptions, time) in
-      Mutex.protect mutex (fun () -> log_entries := entry :: !log_entries)
+      protect mutex (fun () -> log_entries := entry :: !log_entries)
