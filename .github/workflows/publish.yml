@@ -24,10 +24,7 @@ jobs:
           ocaml-compiler: "5.3"
 
       - name: Install dependencies
-        run: |
-          opam pin https://github.com/ocaml/opam.git
-          opam pin https://github.com/filipeom/opam-publish.git#filipe/improve-headless
-          opam install opam-publish
+        run: opam install opam-publish
 
       - name: Publish
         env:
