@@ -22,6 +22,7 @@
 ((binop ty Mul (binop ty Mul x (Val v1)) (Val v2)) ==> (binop ty Mul x (Val (Eval.binop ty Mul v1 v2))))
 ((binop ty Add (Val v1) (binop ty Add x (Val v2))) ==> (binop ty Add (Val (Eval.binop ty Add v1 v2)) x))
 ((binop ty Mul (Val v1) (binop ty Mul x (Val v2))) ==> (binop ty Mul (Val (Eval.binop ty Mul v1 v2)) x))
+((binop _ty List_cons hte1 (concrete Ty_list l)) ==> (concrete Ty_list (List.cons (make hte1) l)))
 ((binop _ty List_append (concrete Ty_list l0) (concrete Ty_list [])) ==> (concrete Ty_list l0))
 ((binop _ty List_append (concrete Ty_list []) (concrete Ty_list l1)) ==> (concrete Ty_list l1))
 ((binop _ty List_append (concrete Ty_list l0) (Val (List l1))) ==> (concrete Ty_list (List.append l0 (List.map value l1))))
@@ -31,3 +32,5 @@
 ((triop _ty Ite (Val False) _e1 e2) ==> (e2))
 ((triop ty Ite c1 (triop _ty1 Ite c2 e1 e2) (triop _ty2 Ite c3 e3 e4)) ==> (triop ty Ite (binop Ty_bool And c1 c2) e1 (triop ty Ite c1 e2 (triop ty Ite c3 e3 e4))))
 ((naryop Ty_str Concat [(naryop Ty_str Concat l1); (naryop Ty_str Concat l2)]) ==> (naryop Ty_str Concat (List.append l1 l2)))
+((naryop Ty_str Concat [(naryop Ty_str Concat htes); hte]) ==> (naryop Ty_str Concat (List.append htes [hte])))
+((naryop Ty_str Concat [hte; (naryop Ty_str Concat htes)]) ==> (naryop Ty_str Concat (List.cons (make hte) htes)))
