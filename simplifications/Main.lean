@@ -41,6 +41,8 @@ lemma simplification_unop_000008 {α : Type} (x : α) (n : Nat) :
   List.length (List.replicate n x) = n :=
 by simp
 
+lemma simplification_unop_000009 : List.reverse (List.reverse x) = x := by simp
+
 
 -- Binary operators
 
@@ -83,6 +85,50 @@ lemma simplification_binop_000008 (x : Real) (c1 c2 : Real) :
   (x + c1) + c2 = x + (c1 + c2) :=
 by ring
 
+-- 0 ||| e1 = e1
+lemma simplification_binop_000009 {w : Nat} (e1 : BitVec w) :
+  (0 ||| e1) = e1 :=
+by simp
+
+-- e1 ||| 0 = e1
+lemma simplification_binop_000010 {w : Nat} (e1 : BitVec w) :
+  (e1 ||| 0) = e1 :=
+by simp
+
+-- e1 + 0 = e1
+lemma simplification_binop_000011 {w : Nat} (e1 : BitVec w) :
+  (e1 + 0) = e1 :=
+by simp
+
+-- 0 + e1 = e1
+lemma simplification_binop_000012 {w : Nat} (e1 : BitVec w) :
+  (0 + e1) = e1 :=
+by simp
+
+-- e1 &&& 0 = 0
+lemma simplification_binop_000013 {w : Nat} (e1 : BitVec w) :
+  (e1 &&& 0) = 0 :=
+by simp
+
+-- 0 &&& e1 = 0
+lemma simplification_binop_000014 {w : Nat} (e1 : BitVec w) :
+  (0 &&& e1) = 0 :=
+by simp
+
+-- e1 * 0 = 0
+lemma simplification_binop_000015 {w : Nat} (e1 : BitVec w) :
+  (e1 * 0) = 0 :=
+by simp
+
+-- e1 * 1 = e1
+lemma simplification_binop_000016 {w : Nat} (e1 : BitVec w) :
+  (e1 * 1) = e1 :=
+by simp
+
+-- 1 * e1 = e1
+lemma simplification_binop_000017 {w : Nat} (e1 : BitVec w) :
+  (1 * e1) = e1 :=
+by simp
 
 -- Ternary Operators
 
@@ -106,6 +152,17 @@ lemma simplification_triop_000003 {α : Sort u} {cond1 cond2 cond3 : Prop}
   ite cond1 (ite cond2 r1 r2) (ite cond3 r3 r4)
     = ite (cond1 ∧ cond2) r1 (ite cond1 r2 (ite cond3 r3 r4)) :=
 by grind
+
+-- BitVec.extractLsb h l n = n, if h < w, 0 ≤ l, and (w : ℤ) = h - l + 1
+lemma simplification_triop_000004
+  {w : Nat}
+  {h l : Int}
+  (n : BitVec w)
+  (_ : h < w)
+  (_ : 0 ≤ l)
+  (size_eq : (w : ℤ) = h - l + 1) :
+  BitVec.extractLsb h l n = size_eq ▸ n :=
+by sorry
 
 -- Nary Operators
 lemma simplification_naryop_000001 (l1 l2 : List String) :
