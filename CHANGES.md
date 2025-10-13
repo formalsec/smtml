@@ -1,7 +1,12 @@
 # Changelog
 
+## 0.13.0 - 2025-10-13
+
+- 2025-10-07 Unpin opam-publish in publish CI
+
 ## 0.12.0 - 2025-10-06
 
+- 2025-10-06 Release 0.12.0
 - 2025-10-06 Backwards compatibility with ocaml 4.14
 - 2025-10-03 Improve error message on missing solver ([#424](https://github.com/formalsec/smtml/issues/424))
 - 2025-10-03 Add missing cvc5 `to_string` operator
