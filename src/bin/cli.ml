@@ -87,3 +87,12 @@ let cmd_to_smt2 =
   and+ solver_type
   and+ filename in
   Cmd_to_smt2.run ~debug ~solver_type ~filename
+
+let info_to_smtml =
+  let doc = "Print/Format the content of an .smtml file" in
+  Cmd.info "to-smtml" ~doc
+
+let cmd_to_smtml =
+  let open Term.Syntax in
+  let+ filename in
+  Cmd_to_smt2.run_to_smtml ~filename
