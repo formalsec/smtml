@@ -220,7 +220,7 @@ let rec pp fmt (hte : t) =
 
 let pp_list fmt (es : t list) = Fmt.hovbox (Fmt.list ~sep:Fmt.comma pp) fmt es
 
-let pp_smt fmt (es : t list) : unit =
+let pp_smtml fmt (es : t list) : unit =
   let pp_symbols fmt syms =
     Fmt.list ~sep:Fmt.semi
       (fun fmt sym ->

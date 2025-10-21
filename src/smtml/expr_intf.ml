@@ -72,9 +72,9 @@ module type S = sig
       [fmt]. *)
   val pp : t Fmt.t
 
-  (** [pp_smt fmt terms] prints a list of terms in SMT-LIB format using the
+  (** [pp_smt fmt terms] prints a list of terms in the smtml format using the
       formatter [fmt]. *)
-  val pp_smt : t list Fmt.t
+  val pp_smtml : t list Fmt.t
 
   (** [pp_list fmt terms] prints a list of expressions in a human-readable
       format using the formatter [fmt]. *)
