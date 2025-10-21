@@ -441,7 +441,7 @@ module type S = sig
     val split : elt -> t -> t * bool * t
 
     (** Pretty prints the set, *)
-    val pp : Format.formatter -> t -> unit
+    val pp : t Fmt.t
 
     (** {1 Functions on pairs of sets} *)
 
