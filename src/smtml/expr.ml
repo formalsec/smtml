@@ -222,16 +222,14 @@ let pp_list fmt (es : t list) = Fmt.hovbox (Fmt.list ~sep:Fmt.comma pp) fmt es
 
 let pp_smtml fmt (es : t list) : unit =
   let pp_symbols fmt syms =
-    Fmt.list ~sep:Fmt.semi
+    Fmt.list
       (fun fmt sym ->
         let t = Symbol.type_of sym in
         Fmt.pf fmt "(let-const %a %a)" Symbol.pp sym Ty.pp t )
       fmt syms
   in
   let pp_asserts fmt es =
-    Fmt.list ~sep:Fmt.semi
-      (fun fmt e -> Fmt.pf fmt "(assert @[<h 2>%a@])" pp e)
-      fmt es
+    Fmt.list (fun fmt e -> Fmt.pf fmt "(assert @[<h 2>%a@])" pp e) fmt es
   in
   let syms = get_symbols es in
   if List.length syms > 0 then Fmt.pf fmt "%a@\n" pp_symbols syms;
