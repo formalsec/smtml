@@ -588,7 +588,7 @@ module M = struct
     end
 
     module Smtlib = struct
-      let pp ?name ?logic ?status fmt =
+      let pp ?name ?logic ?status fmt l =
         let name = Option.value name ~default:"" in
         let logic =
           Fmt.str "%a"
@@ -601,14 +601,17 @@ module M = struct
           | `Unsat -> "unsat"
           | `Unknown -> "unknown"
         in
-        function
+        match l with
         | [] -> ()
         | [ x ] ->
           Fmt.pf fmt "%s"
             (Z3.SMT.benchmark_to_smtstring ctx name logic status "" [] x)
-        | hd :: tl ->
-          (* Prints formulas in correct order? *)
-          let tl = List.rev tl in
+        | _ :: _ ->
+          let hd, tl =
+            match List.rev l with
+            | hd :: tl -> (hd, List.rev tl)
+            | _ -> assert false
+          in
           Fmt.pf fmt "%s"
             (Z3.SMT.benchmark_to_smtstring ctx name logic status "" tl hd)
     end
