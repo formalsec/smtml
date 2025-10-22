@@ -153,8 +153,8 @@ let solve (toys : toy list) (packs : pack list) (daily_max : int) =
 
   (* Maximise *)
   match Z3.maximize opt profit with
-  | Some v -> Format.printf "%a@." Value.pp v
-  | None -> Format.printf "Unfeasible@."
+  | Some v -> Fmt.pr "%a@." Value.pp v
+  | None -> Fmt.pr "Unfeasible@."
 
 let () =
   let num_toys : int = read_int () in
