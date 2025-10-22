@@ -8,6 +8,7 @@ type t =
 
 type printer =
   [ `Pretty
+  | `Full
   | `Hexadecimal
   ]
 
@@ -29,6 +30,10 @@ let pp_num fmt = function
   | F32 f -> Fmt.pf fmt "(f32 %F)" (Int32.float_of_bits f)
   | F64 f -> Fmt.pf fmt "(f64 %F)" (Int64.float_of_bits f)
 
+let pp_num_full fmt = function
+  | F32 f -> Fmt.pf fmt "(f32 %f)" (Int32.float_of_bits f)
+  | F64 f -> Fmt.pf fmt "(f64 %f)" (Int64.float_of_bits f)
+
 let pp_hex fmt = function
   | F32 f -> Fmt.pf fmt "(fp 0x%08lx)" f
   | F64 f -> Fmt.pf fmt "(fp 0x%016Lx)" f
@@ -37,10 +42,11 @@ let pp_no_type fmt = function
   | F32 f -> Fmt.pf fmt "%F" (Int32.float_of_bits f)
   | F64 f -> Fmt.pf fmt "%F" (Int64.float_of_bits f)
 
-let printer = ref pp_num
+let printer = ref pp_no_type
 
 let set_default_printer = function
   | `Pretty -> printer := pp_num
+  | `Full -> printer := pp_num_full
   | `Hexadecimal -> printer := pp_hex
 
 let pp fmt v = !printer fmt v

@@ -22,7 +22,17 @@ val equal : t -> t -> bool
 
 val compare : t -> t -> int
 
-val pp : Format.formatter -> t -> unit
+(** Representation options for value printing. *)
+type printer =
+  [ `Pretty  (** Human-readable format. *)
+  | `WithType  (** Print with type info. *)
+  ]
+
+(** [set_default_printer p] sets the default printer format for displaying
+    values. *)
+val set_default_printer : printer -> unit
+
+val pp : t Fmt.t
 
 val neg : t -> t
 
