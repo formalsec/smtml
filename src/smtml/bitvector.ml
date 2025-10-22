@@ -51,10 +51,27 @@ let to_int64 v =
     Fmt.failwith "call to Smtml.Bitvector.to_int32 on a bitvector of size %d"
       v.width
 
+type printer =
+  [ `Pretty  (** Human-readable format. *)
+  | `WithType  (** Print with type info. *)
+  ]
+
 (** Bitvector pretty printer. By default it prints signed bitvectors. *)
-let pp fmt bv =
+let pp_bv fmt bv =
   let value = to_signed bv in
   Z.pp_print fmt value
+
+let pp_wtype fmt bv =
+  let value = to_signed bv in
+  Fmt.pf fmt "(i%d %a)" bv.width Z.pp_print value
+
+let printer = ref pp_bv
+
+let set_default_printer = function
+  | `Pretty -> printer := pp_bv
+  | `WithType -> printer := pp_wtype
+
+let pp fmt e = !printer fmt e
 
 (* Unop *)
 let neg bv = make (Z.neg bv.value) bv.width

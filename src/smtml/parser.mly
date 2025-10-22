@@ -104,3 +104,24 @@ let spec_constant :=
       | Ty_fp 64 -> Num (F64 (Int64.bits_of_float x))
       | _ -> Fmt.failwith "invalid fp type"
     }
+  | LPAREN; ty = TYPE; x = SYMBOL; RPAREN;
+    {
+      match ty with
+      | Ty_fp 32 ->
+      begin match x with
+        | "inf" ->
+          Num (F32 (Int32.bits_of_float (Float.infinity)))
+        | "-inf" ->
+          Num (F32 (Int32.bits_of_float (Float.neg Float.infinity)))
+        | _ -> Fmt.failwith "invalid fp value: %s" x
+      end
+      | Ty_fp 64 ->
+      begin match x with
+        | "inf" ->
+          Num (F64 (Int64.bits_of_float Float.infinity))
+        | "-inf" ->
+          Num (F64 (Int64.bits_of_float (Float.neg Float.infinity)))
+        | _ -> Fmt.failwith "invalid fp value: %s" x
+      end
+      | _ -> Fmt.failwith "invalid fp type"
+    }

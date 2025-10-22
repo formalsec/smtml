@@ -17,6 +17,7 @@ type t =
 (** Representation options for value printing. *)
 type printer =
   [ `Pretty  (** Human-readable format. *)
+  | `Full  (** Full floating-point number. *)
   | `Hexadecimal  (** Hexadecimal representation. *)
   ]
 

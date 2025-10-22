@@ -1,0 +1,25 @@
+(let-const x i32)
+(let-const y i32)
+
+(assert (=
+  (i64.mul (i64.extend_i32_s y) (i64.extend_i32_s x))
+  (i64.add
+    (bool.ite
+      (bool.eq
+        (i64.and (i64.extend_i32_s y) (i64 9223372036))
+        (i64 1))
+        (i64.extend_i32_s x) (i64 0))
+    (i64.mul
+      (i64.div_s
+        (i64.sub
+          (i64.extend_i32_s y)
+          (i64.extend_i32_u
+            (i32.of_bool
+              (bool.eq
+                (i64.and (i64.extend_i32_s y) (i64 -36854775807))
+                (i64 1)))))
+        (i64 2))
+      (i64.shl (i64.extend_i32_s x) (i64 1))))
+))
+
+(check-sat)
