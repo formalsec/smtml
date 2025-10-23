@@ -622,6 +622,4 @@ module M = struct
   let is_available = Internals.is_available
 end
 
-module M' : Mappings_intf.M_with_make = M
-
 include Mappings.Make (M)

@@ -5,6 +5,8 @@
 include Mappings_intf
 
 module Make (M_with_make : M_with_make) : S_with_fresh = struct
+  module Mappings : M_with_make = M_with_make
+
   module Make_ (M : M) : S = struct
     open Ty
     module Smap = Symbol.Map
