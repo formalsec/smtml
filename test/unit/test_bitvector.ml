@@ -33,12 +33,12 @@ let test_neg _ =
   check (neg bv) (make (z (-5)) 8)
 
 let test_clz _ =
-  let bv = make (z 1) 8 in
-  check (clz bv) (make (z 7) 8)
+  let bv = make (z 2) 8 in
+  check (clz bv) (make (z 6) 8)
 
 let test_ctz _ =
-  let bv = make (z 128) 8 in
-  check (ctz bv) (make (z 7) 8)
+  let bv = make (z 64) 8 in
+  check (ctz bv) (make (z 6) 8)
 
 let test_popcnt _ =
   let bv = make (z 0b1010_1010) 8 in
