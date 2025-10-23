@@ -11,7 +11,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
 
   let teardown _solver_module _test_ctxt = ()
 
-  let wrap f test_ctxt =
+  let with_solver f test_ctxt =
     let solver_module = bracket setup teardown test_ctxt in
     f solver_module
 
@@ -36,8 +36,8 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
 
   let test_params =
     "test_params"
-    >::: [ "test_default_params" >:: wrap test_default_params
-         ; "test_solver_params" >:: wrap test_solver_params
+    >::: [ "test_default_params" >:: with_solver test_default_params
+         ; "test_solver_params" >:: with_solver test_solver_params
          ]
 
   let test_cache_hits _ =
@@ -63,8 +63,8 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
 
   let test_cached =
     "test_cached"
-    >::: [ "test_cache_hits" >:: wrap test_cache_hits
-         ; "test_cache_get_model" >:: wrap test_cache_get_model
+    >::: [ "test_cache_hits" >:: with_solver test_cache_hits
+         ; "test_cache_get_model" >:: with_solver test_cache_get_model
          ]
 
   let test_lia_0 solver_module =
@@ -113,11 +113,13 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
 
   let test_lia =
     "test_lia"
-    >::: [ "test_lia_0" >:: wrap test_lia_0; "test_lia_1" >:: wrap test_lia_1 ]
+    >::: [ "test_lia_0" >:: with_solver test_lia_0
+         ; "test_lia_1" >:: with_solver test_lia_1
+         ]
 
   let test_lra =
     "test_lra"
-    >:: wrap @@ fun solver_module ->
+    >:: with_solver @@ fun solver_module ->
         let module Solver = (val solver_module : Solver_intf.S) in
         let solver = Solver.create () in
         assert_sat ~f:"test_lra"
@@ -160,7 +162,9 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
 
   let test_bv =
     "test_bv"
-    >::: [ "test_bv_8" >:: wrap test_bv_8; "test_bv_32" >:: wrap test_bv_32 ]
+    >::: [ "test_bv_8" >:: with_solver test_bv_8
+         ; "test_bv_32" >:: with_solver test_bv_32
+         ]
 
   let test_fp_get_value32 solver_module =
     let open Infix in
@@ -235,18 +239,18 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
 
   let test_fp =
     "test_fp"
-    >::: [ "test_fp_get_value32" >:: wrap test_fp_get_value32
-         ; "test_fp_get_value64" >:: wrap test_fp_get_value64
-         ; "test_fp_sqrt" >:: wrap test_fp_sqrt
-         ; "test_fp_copysign32" >:: wrap test_fp_copysign32
-         ; "test_fp_copysign64" >:: wrap test_fp_copysign64
-         ; "test_to_ieee_bv" >:: wrap test_to_ieee_bv
+    >::: [ "test_fp_get_value32" >:: with_solver test_fp_get_value32
+         ; "test_fp_get_value64" >:: with_solver test_fp_get_value64
+         ; "test_fp_sqrt" >:: with_solver test_fp_sqrt
+         ; "test_fp_copysign32" >:: with_solver test_fp_copysign32
+         ; "test_fp_copysign64" >:: with_solver test_fp_copysign64
+         ; "test_to_ieee_bv" >:: with_solver test_to_ieee_bv
          ]
 
   let test_uninterpreted =
     "test_uninterpreted_function"
     >::: [ ( "test_int_bool_app"
-           >:: wrap @@ fun solver_module ->
+           >:: with_solver @@ fun solver_module ->
                let module Solver = (val solver_module : Solver_intf.S) in
                let solver =
                  Solver.create ~params:(Params.default ()) ~logic:Logic.QF_UFBV

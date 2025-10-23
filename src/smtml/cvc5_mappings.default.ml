@@ -478,6 +478,30 @@ module Fresh_cvc5 () = struct
     let apply () _ = false_
   end
 
+  module Adt = struct
+    module Cons = struct
+      type t = [ `Adt_constructor ]
+
+      let make _ ~fields:_ =
+        Fmt.failwith "Cvc5_mappings: Adt.Cons.make not implemented"
+    end
+
+    type t = [ `Adt ]
+
+    let make _ _cons = `Adt
+
+    let ty _ = assert false
+
+    let constructor _ =
+      Fmt.failwith "Cvc5_mappings: Adt.get_constructors not implemented"
+
+    let selector _ =
+      Fmt.failwith "Cvc5_mappings: Adt.get_recognizers not implemented"
+
+    let tester _ =
+      Fmt.failwith "Cvc5_mappings: Adt.get_accessors not implemented"
+  end
+
   (* TODO *)
   module Model = struct
     let get_symbols _ =

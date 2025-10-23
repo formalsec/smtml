@@ -485,6 +485,30 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
       mk_term Kind.Apply @@ Array.of_list args
   end
 
+  module Adt = struct
+    module Cons = struct
+      type t = [ `Adt_constructor ]
+
+      let make _ ~fields:_ =
+        Fmt.failwith "Bitwuzla_mappings: Adt.Cons.make not implemented"
+    end
+
+    type t = [ `Adt ]
+
+    let make _ _cons = `Adt
+
+    let ty _ = assert false
+
+    let constructor _ =
+      Fmt.failwith "Bitwuzla_mappings: Adt.get_constructors not implemented"
+
+    let selector _ =
+      Fmt.failwith "Bitwuzla_mappings: Adt.get_recognizers not implemented"
+
+    let tester _ =
+      Fmt.failwith "Bitwuzla_mappings: Adt.get_accessors not implemented"
+  end
+
   module Model = struct
     let get_symbols _ =
       Fmt.failwith "Bitwuzla_mappings: get_symbols not implemented"

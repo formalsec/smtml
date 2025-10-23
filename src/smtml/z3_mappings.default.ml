@@ -2,6 +2,8 @@
 (* Copyright (C) 2023-2024 formalsec *)
 (* Written by the Smtml programmers *)
 
+let s_equal = String.equal
+
 include Mappings_intf
 
 module M = struct
@@ -454,6 +456,50 @@ module M = struct
       let make name params ret = Z3.FuncDecl.mk_func_decl_s ctx name params ret
 
       let apply f params = Z3.FuncDecl.apply f params
+    end
+
+    module Adt = struct
+      module Cons = struct
+        type t = Z3.Datatype.Constructor.constructor
+
+        let make cons_name ~fields =
+          let is_cons_name = Fmt.str "is-%s" cons_name in
+          let is_cons_sym = Z3.Symbol.mk_string ctx is_cons_name in
+          let fields, sorts = List.split fields in
+          let fields = List.map (Z3.Symbol.mk_string ctx) fields in
+          let indices = List.init (List.length fields) (fun _ -> 0) in
+          Z3.Datatype.mk_constructor_s ctx cons_name is_cons_sym fields sorts
+            indices
+      end
+
+      type t =
+        { adt : Z3.Sort.sort
+        ; constructors : Z3.FuncDecl.func_decl list
+        ; selectors : Z3.FuncDecl.func_decl list list
+        ; testers : Z3.FuncDecl.func_decl list
+        }
+
+      let make name cons =
+        let adt = Z3.Datatype.mk_sort_s ctx name cons in
+        let constructors = Z3.Datatype.get_constructors adt in
+        let selectors = Z3.Datatype.get_accessors adt in
+        let testers = Z3.Datatype.get_recognizers adt in
+        { adt; constructors; selectors; testers }
+
+      let ty { adt; _ } = adt
+
+      let find_decl name decls =
+        List.find_opt
+          (fun decl ->
+            Z3.FuncDecl.get_name decl |> Z3.Symbol.to_string |> s_equal name )
+          decls
+
+      let constructor name { constructors; _ } = find_decl name constructors
+
+      let selector name { selectors; _ } =
+        List.find_map (find_decl name) selectors
+
+      let tester name { testers; _ } = find_decl name testers
     end
 
     module Model = struct
