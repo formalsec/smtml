@@ -17,8 +17,8 @@ type t =
 (** Representation options for value printing. *)
 type printer =
   [ `Pretty  (** Human-readable format. *)
-  | `Full  (** Full floating-point number. *)
   | `Hexadecimal  (** Hexadecimal representation. *)
+  | `NoType  (** Human-readable format with no type information. *)
   ]
 
 (** [type_of v] returns the type of the given value [v]. *)
@@ -38,6 +38,9 @@ val equal : t -> t -> bool
 (** [set_default_printer p] sets the default printer format for displaying
     values. *)
 val set_default_printer : printer -> unit
+
+(** [set_default_printer ()] gets the default printer. *)
+val get_default_printer : unit -> printer
 
 (** [pp] is a formatter for values of type [t], using the currently set printer.
 *)

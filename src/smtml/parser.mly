@@ -26,6 +26,7 @@ let get_bind x = Hashtbl.find_opt varmap x
 
 %token <int> NUM
 %token <float> DEC
+%token <string> HEX
 %token <bool> BOOL
 %token <string> STR
 %token <string> SYMBOL
@@ -104,24 +105,12 @@ let spec_constant :=
       | Ty_fp 64 -> Num (F64 (Int64.bits_of_float x))
       | _ -> Fmt.failwith "invalid fp type"
     }
-  | LPAREN; ty = TYPE; x = SYMBOL; RPAREN;
+  | LPAREN; ty = TYPE; x = HEX; RPAREN;
     {
       match ty with
-      | Ty_fp 32 ->
-      begin match x with
-        | "inf" ->
-          Num (F32 (Int32.bits_of_float (Float.infinity)))
-        | "-inf" ->
-          Num (F32 (Int32.bits_of_float (Float.neg Float.infinity)))
-        | _ -> Fmt.failwith "invalid fp value: %s" x
-      end
-      | Ty_fp 64 ->
-      begin match x with
-        | "inf" ->
-          Num (F64 (Int64.bits_of_float Float.infinity))
-        | "-inf" ->
-          Num (F64 (Int64.bits_of_float (Float.neg Float.infinity)))
-        | _ -> Fmt.failwith "invalid fp value: %s" x
-      end
-      | _ -> Fmt.failwith "invalid fp type"
+      | Ty_bitv 32 -> Bitv (Bitvector.of_int32 (Int32.of_string x))
+      | Ty_bitv 64 -> Bitv (Bitvector.of_int64 (Int64.of_string x))
+      | Ty_fp 32 -> Num (F32 (Int32.of_string x))
+      | Ty_fp 64 -> Num (F64 (Int64.of_string x))
+      | _ -> Fmt.failwith "invalid type"
     }

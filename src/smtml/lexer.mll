@@ -269,8 +269,8 @@ let character = ['a'-'z' 'A'-'Z']
 let digits = '0' | [ '1'-'9' ] digit*
 let numeral = '-'? digits
 let decimal = '-'? digits '.' digit*
-let hexadec = "#x" (['a'-'f' 'A'-'F'] | digit)+
-let binary = "#b" ('0' | '1')+
+let hexadec = "0x" (['a'-'f' 'A'-'F'] | digit)+
+let binary = "0b" ('0' | '1')+
 let bool = "true" | "false"
 
 let symbols = ['~''!''@''$''%''^''&''*''_''-''+''=''<''>''.''?''/']
@@ -282,6 +282,8 @@ rule token = parse
   | ')' { RPAREN }
 
   | "nan" { DEC Float.nan }
+  | "inf" { DEC Float.infinity }
+  | "-inf" { DEC Float.neg_infinity }
   | numeral as s {
     match int_of_string_opt s with
     | Some i -> NUM i
@@ -293,7 +295,7 @@ rule token = parse
     | None -> assert false
   }
   | bool as s { BOOL (String.equal s "true") }
-  | hexadec { Fmt.failwith "TODO: Lexer(hexadec)" }
+  | hexadec as s { HEX s }
   | binary { Fmt.failwith "TODO: Lexer(binary)" }
   | '"' { string (Buffer.create 17) lexbuf }
 
