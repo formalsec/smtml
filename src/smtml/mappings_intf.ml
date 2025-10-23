@@ -692,6 +692,50 @@ module type M = sig
     val apply : func_decl -> term list -> term
   end
 
+  (** {2 Algebraic Data Type Handling} *)
+
+  module Adt : sig
+    (** {3 Constructor Definition} *)
+
+    (** This module defines the interface for creating ADT constructors. *)
+    module Cons : sig
+      (** The abstract type for an ADT constructor definition. *)
+      type t
+
+      (** [make name ~fields] constructs an ADT constructor definition with the
+          given [name] and a list of [fields]. Each field in the list is a tuple
+          of its name (string) and its type ([ty option]). A [None] type for a
+          field indicates a recursive reference to the ADT being defined. *)
+      val make : string -> fields:(string * ty option) list -> t
+    end
+
+    (** The abstract type representing a defined Algebraic Data Type,
+        encapsulating its sort and associated functions (constructors,
+        selectors, and testers). *)
+    type t
+
+    (** [make name constructors] defines a new ADT with the given [name] and a
+        list of [constructors] (of type [Cons.t]). This returns the ADT
+        definition [t]. *)
+    val make : string -> Cons.t list -> t
+
+    (** [ty adt] retrieves the SMT sort ([ty]) of the defined ADT [adt]. *)
+    val ty : t -> ty
+
+    (** [constructor name adt] retrieves the constructor function declaration
+        (e.g., [Cons]) with the given [name] from the ADT [adt], if it exists.
+    *)
+    val constructor : string -> t -> func_decl option
+
+    (** [selector name adt] retrieves the selector function declaration (e.g.,
+        [field_a]) with the given [name] from the ADT [adt], if it exists. *)
+    val selector : string -> t -> func_decl option
+
+    (** [tester name adt] retrieves the tester function declaration (e.g.,
+        ["is-Cons"]) with the given [name] from the ADT [adt], if it exists. *)
+    val tester : string -> t -> func_decl option
+  end
+
   (** {2 Model Handling} *)
 
   module Model : sig

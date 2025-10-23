@@ -437,6 +437,28 @@ module DolmenIntf = struct
     let apply f tl = DTerm.apply_cst f [] tl
   end
 
+  module Adt = struct
+    module Cons = struct
+      type t = Dolmen_std.Path.t * (ty * Dolmen_std.Path.t option) list
+
+      let make _ ~fields:_ = assert false
+    end
+
+    type t = DExpr.ty_def * (func_decl * (ty * func_decl option) list) list
+
+    let make cons_name cons =
+      let cons_name = DTy.Const.mk (Dolmen_std.Path.local cons_name) 0 in
+      DTerm.define_adt cons_name [] cons
+
+    let ty _ = assert false
+
+    let constructor _ = assert false
+
+    let selector _ = assert false
+
+    let tester _ = assert false
+  end
+
   module Smtlib = struct
     let pp ?name:_ ?logic:_ ?status:_ = Fmt.list DTerm.print
   end

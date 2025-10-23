@@ -400,6 +400,26 @@ module DolmenIntf : sig
     val to_ieee_bv : (term -> term) option
   end
 
+  module Adt : sig
+    module Cons : sig
+      type t
+
+      val make : string -> fields:(string * ty option) list -> t
+    end
+
+    type t = DExpr.ty_def * (func_decl * (ty * func_decl option) list) list
+
+    val make : string -> Cons.t list -> t
+
+    val ty : t -> ty
+
+    val constructor : string -> t -> func_decl option
+
+    val selector : string -> t -> func_decl option
+
+    val tester : string -> t -> func_decl option
+  end
+
   module Func : sig
     val make : string -> ty list -> ty -> func_decl
 

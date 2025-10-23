@@ -382,6 +382,26 @@ module Nop = struct
       let apply `Func_decl _ = `Term
     end
 
+    module Adt = struct
+      module Cons = struct
+        type t = [ `Adt_constructor ]
+
+        let make _ ~fields:_ = `Adt_constructor
+      end
+
+      type t = [ `Adt ]
+
+      let make _ _ = `Adt
+
+      let ty _ = assert false
+
+      let constructor _ = assert false
+
+      let selector _ = assert false
+
+      let tester _ = assert false
+    end
+
     module Model = struct
       let get_symbols _ = assert false
 
