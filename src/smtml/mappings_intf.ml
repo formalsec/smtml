@@ -963,6 +963,8 @@ end
 (** The [S_with_fresh] module type extends [S] with a functor for creating fresh
     instances of [S] and a flag indicating availability of the mappings. *)
 module type S_with_fresh = sig
+  module Mappings : M_with_make
+
   (** [Fresh.Make ()] creates a new instance of the [S] module type. *)
   module Fresh : sig
     module Make () : S

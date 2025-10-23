@@ -260,6 +260,4 @@ module M = struct
   include Make ()
 end
 
-module M' : Mappings_intf.M_with_make = M
-
 include Mappings.Make (M)
