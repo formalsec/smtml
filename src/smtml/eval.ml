@@ -204,10 +204,9 @@ module Real = struct
     | ToString -> Str (Float.to_string (of_value 1 op' v))
     | OfString ->
       let v = match v with Str v -> v | _ -> raise_notrace (Value Ty_str) in
-      begin
-        match Float.of_string_opt v with
-        | None -> raise (Invalid_argument "float_of_int")
-        | Some v -> to_value v
+      begin match Float.of_string_opt v with
+      | None -> raise (Invalid_argument "float_of_int")
+      | Some v -> to_value v
       end
     | Reinterpret_int ->
       let v = match v with Int v -> v | _ -> raise_notrace (Value Ty_int) in
@@ -431,11 +430,10 @@ module Lst = struct
     | At ->
       let lst = of_value 1 op' v1 in
       let i = Int.of_value 2 op' v2 in
-      begin
-        (* TODO: change datastructure? *)
-        match List.nth_opt lst i with
-        | None -> raise Index_out_of_bounds
-        | Some v -> v
+      (* TODO: change datastructure? *)
+      begin match List.nth_opt lst i with
+      | None -> raise Index_out_of_bounds
+      | Some v -> v
       end
     | List_cons -> List (v1 :: of_value 1 op' v2)
     | List_append -> List (of_value 1 op' v1 @ of_value 2 op' v2)
@@ -969,8 +967,6 @@ module F32CvtOp = struct
 end
 
 module F64CvtOp = struct
-  Float.is_nan
-
   let promote_f32 x =
     let xf = F32.to_float x in
     if Float.Infix.(xf = xf) then F64.of_float xf

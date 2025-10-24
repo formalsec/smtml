@@ -529,10 +529,9 @@ module Fresh_cvc5 () = struct
     let make ?params ?logic () =
       let logic = Option.map (fun l -> Fmt.str "%a" Logic.pp l) logic in
       let slv = Solver.mk_solver ?logic tm in
-      begin
-        match params with
-        | None -> set_params slv (Params.default ())
-        | Some params -> set_params slv params
+      begin match params with
+      | None -> set_params slv (Params.default ())
+      | Some params -> set_params slv params
       end;
       slv
 

@@ -414,8 +414,7 @@ let rec binop ty op hte1 hte2 =
     raw_binop ty Mul v x
   | At, List es, Val (Int n) ->
     (* TODO: use another datastructure? *)
-    begin
-      match List.nth_opt es n with None -> assert false | Some v -> v
+    begin match List.nth_opt es n with None -> assert false | Some v -> v
     end
   | List_cons, _, List es -> make (List (hte1 :: es))
   | List_append, List _, (List [] | Val (List [])) -> hte1
