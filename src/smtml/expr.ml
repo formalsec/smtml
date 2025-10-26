@@ -148,6 +148,7 @@ let memoize_ty (hte : t) : Ty.t =
         match view hte with
         | Val x -> Value.type_of x
         | Ptr _ -> Ty_bitv 32
+        | Loc _ -> Ty_app
         | Symbol x -> Symbol.type_of x
         | List _ -> Ty_list
         | App (sym, _) -> begin
@@ -611,10 +612,6 @@ let extract (hte : t) ~(high : int) ~(low : int) : t =
   | _ ->
     if high - low = Ty.size (ty hte) then hte else raw_extract hte ~high ~low
 
-let zero_extend (hte : t) (n : int) : t =
-  match view hte with
-  | Val (Bitv bv) -> value (Bitv (Bitvector.zero_extend n bv))
-  | _ -> raw_cvtop (ty hte) (Zero_extend n) hte
 
 let raw_concat (msb : t) (lsb : t) : t = make (Concat (msb, lsb)) [@@inline]
 
