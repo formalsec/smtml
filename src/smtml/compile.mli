@@ -11,4 +11,4 @@
 
     [path] is the file path to read and process. The function returns a list of
     AST nodes resulting from the rewrite process. *)
-val until_rewrite : Fpath.t -> Ast.t list
+val until_rewrite : Fpath.t -> no_simpls:bool -> Ast.t list
