@@ -57,13 +57,13 @@ let rewrite_ty unknown_ty tys =
   | ty -> ty
 
 (** Propagates types in [type_map] and inlines [Let_in] binders *)
-let rec rewrite_expr (type_map, expr_map) hte =
+let rec rewrite_expr (type_map, expr_map) hte ~no_simpls =
   debug "rewrite_expr: %a@." (fun k -> k Expr.pp hte);
   match Expr.view hte with
   | Val _ | Loc _ -> hte
   | Ptr { base; offset } ->
     let base = Bitvector.to_int32 base in
-    Expr.ptr base (rewrite_expr (type_map, expr_map) offset)
+    Expr.ptr base (rewrite_expr (type_map, expr_map) offset ~no_simpls)
   | Symbol sym -> begin
     (* Avoid rewriting well-typed symbols already *)
     if not (Ty.equal Ty_none (Symbol.type_of sym)) then hte
@@ -75,27 +75,28 @@ let rec rewrite_expr (type_map, expr_map) hte =
         | Some expr -> expr )
       | Some ty -> Expr.symbol { sym with ty }
   end
-  | List htes -> Expr.list (List.map (rewrite_expr (type_map, expr_map)) htes)
+  | List htes ->
+    Expr.list (List.map (rewrite_expr (type_map, expr_map) ~no_simpls) htes)
   | App
       ( ({ name = Simple ("fp.add" | "fp.sub" | "fp.mul" | "fp.div"); _ } as sym)
       , [ rm; a; b ] ) ->
-    let rm = rewrite_expr (type_map, expr_map) rm in
-    let a = rewrite_expr (type_map, expr_map) a in
-    let b = rewrite_expr (type_map, expr_map) b in
+    let rm = rewrite_expr (type_map, expr_map) rm ~no_simpls in
+    let a = rewrite_expr (type_map, expr_map) a ~no_simpls in
+    let b = rewrite_expr (type_map, expr_map) b ~no_simpls in
     let ty = rewrite_ty Ty_none [ Expr.ty a; Expr.ty b ] in
     Expr.app { sym with ty } [ rm; a; b ]
   | App (({ name = Simple "fp.fma"; _ } as sym), [ rm; a; b; c ]) ->
-    let rm = rewrite_expr (type_map, expr_map) rm in
-    let a = rewrite_expr (type_map, expr_map) a in
-    let b = rewrite_expr (type_map, expr_map) b in
-    let c = rewrite_expr (type_map, expr_map) c in
+    let rm = rewrite_expr (type_map, expr_map) rm ~no_simpls in
+    let a = rewrite_expr (type_map, expr_map) a ~no_simpls in
+    let b = rewrite_expr (type_map, expr_map) b ~no_simpls in
+    let c = rewrite_expr (type_map, expr_map) c ~no_simpls in
     let ty = rewrite_ty Ty_none [ Expr.ty a; Expr.ty b; Expr.ty c ] in
     Expr.app { sym with ty } [ rm; a; b; c ]
   | App
       ( ({ name = Simple ("fp.sqrt" | "fp.roundToIntegral"); _ } as sym)
       , [ rm; a ] ) ->
-    let rm = rewrite_expr (type_map, expr_map) rm in
-    let a = rewrite_expr (type_map, expr_map) a in
+    let rm = rewrite_expr (type_map, expr_map) rm ~no_simpls in
+    let a = rewrite_expr (type_map, expr_map) a ~no_simpls in
     let ty = rewrite_ty Ty_none [ Expr.ty a ] in
     Expr.app { sym with ty } [ rm; a ]
   | App (sym, htes) ->
@@ -104,44 +105,50 @@ let rec rewrite_expr (type_map, expr_map) hte =
       | None -> Fmt.failwith "Undefined symbol: %a" Symbol.pp sym
       | Some ty -> { sym with ty }
     in
-    Expr.app sym (List.map (rewrite_expr (type_map, expr_map)) htes)
+    Expr.app sym (List.map (rewrite_expr (type_map, expr_map) ~no_simpls) htes)
   | Unop (ty, op, hte) ->
-    let hte = rewrite_expr (type_map, expr_map) hte in
+    let hte = rewrite_expr (type_map, expr_map) hte ~no_simpls in
     let ty = rewrite_ty ty [ Expr.ty hte ] in
-    Expr.unop ty op hte
+    if no_simpls then Expr.raw_unop ty op hte else Expr.unop ty op hte
   | Binop (ty, op, hte1, hte2) ->
-    let hte1 = rewrite_expr (type_map, expr_map) hte1 in
-    let hte2 = rewrite_expr (type_map, expr_map) hte2 in
+    let hte1 = rewrite_expr (type_map, expr_map) hte1 ~no_simpls in
+    let hte2 = rewrite_expr (type_map, expr_map) hte2 ~no_simpls in
     let ty = rewrite_ty ty [ Expr.ty hte1; Expr.ty hte2 ] in
-    Expr.binop ty op hte1 hte2
+    if no_simpls then Expr.raw_binop ty op hte1 hte2
+    else Expr.binop ty op hte1 hte2
   | Triop (ty, op, hte1, hte2, hte3) ->
-    let hte1 = rewrite_expr (type_map, expr_map) hte1 in
-    let hte2 = rewrite_expr (type_map, expr_map) hte2 in
-    let hte3 = rewrite_expr (type_map, expr_map) hte3 in
-    Expr.triop ty op hte1 hte2 hte3
+    let hte1 = rewrite_expr (type_map, expr_map) hte1 ~no_simpls in
+    let hte2 = rewrite_expr (type_map, expr_map) hte2 ~no_simpls in
+    let hte3 = rewrite_expr (type_map, expr_map) hte3 ~no_simpls in
+    let ty = rewrite_ty ty [ Expr.ty hte1; Expr.ty hte2; Expr.ty hte3 ] in
+    if no_simpls then Expr.raw_triop ty op hte1 hte2 hte3
+    else Expr.triop ty op hte1 hte2 hte3
   | Relop (ty, ((Eq | Ne) as op), hte1, hte2) when not (Ty.equal Ty_none ty) ->
-    let hte1 = rewrite_expr (type_map, expr_map) hte1 in
-    let hte2 = rewrite_expr (type_map, expr_map) hte2 in
-    Expr.relop ty op hte1 hte2
+    let hte1 = rewrite_expr (type_map, expr_map) hte1 ~no_simpls in
+    let hte2 = rewrite_expr (type_map, expr_map) hte2 ~no_simpls in
+    if no_simpls then Expr.raw_relop ty op hte1 hte2
+    else Expr.relop ty op hte1 hte2
   | Relop (ty, op, hte1, hte2) ->
-    let hte1 = rewrite_expr (type_map, expr_map) hte1 in
-    let hte2 = rewrite_expr (type_map, expr_map) hte2 in
+    let hte1 = rewrite_expr (type_map, expr_map) hte1 ~no_simpls in
+    let hte2 = rewrite_expr (type_map, expr_map) hte2 ~no_simpls in
     let ty = rewrite_ty ty [ Expr.ty hte1; Expr.ty hte2 ] in
-    Expr.relop ty op hte1 hte2
+    if no_simpls then Expr.raw_relop ty op hte1 hte2
+    else Expr.relop ty op hte1 hte2
   | Cvtop (ty, op, hte) ->
-    let hte = rewrite_expr (type_map, expr_map) hte in
+    let hte = rewrite_expr (type_map, expr_map) hte ~no_simpls in
     let ty = rewrite_ty ty [ Expr.ty hte ] in
-    Expr.cvtop ty op hte
+    if no_simpls then Expr.raw_cvtop ty op hte else Expr.cvtop ty op hte
   | Naryop (ty, op, htes) ->
-    let htes = List.map (rewrite_expr (type_map, expr_map)) htes in
-    Expr.naryop ty op htes
+    let htes = List.map (rewrite_expr (type_map, expr_map) ~no_simpls) htes in
+    if no_simpls then Expr.raw_naryop ty op htes else Expr.naryop ty op htes
   | Extract (hte, h, l) ->
-    let hte = rewrite_expr (type_map, expr_map) hte in
-    Expr.extract hte ~high:h ~low:l
+    let hte = rewrite_expr (type_map, expr_map) hte ~no_simpls in
+    if no_simpls then Expr.raw_extract hte ~high:h ~low:l
+    else Expr.extract hte ~high:h ~low:l
   | Concat (hte1, hte2) ->
-    let hte1 = rewrite_expr (type_map, expr_map) hte1 in
-    let hte2 = rewrite_expr (type_map, expr_map) hte2 in
-    Expr.concat hte1 hte2
+    let hte1 = rewrite_expr (type_map, expr_map) hte1 ~no_simpls in
+    let hte2 = rewrite_expr (type_map, expr_map) hte2 ~no_simpls in
+    if no_simpls then Expr.raw_concat hte1 hte2 else Expr.concat hte1 hte2
   | Binder (Let_in, vars, e) ->
     (* Then, we rewrite the types of the expr *)
     let expr_map =
@@ -151,12 +158,12 @@ let rec rewrite_expr (type_map, expr_map) hte =
           | App (sym, [ e ]) ->
             (* Searches the outer expr_map. Because I don't think the list of
                var bindings are in scope for themselves? *)
-            let e = rewrite_expr (type_map, expr_map) e in
+            let e = rewrite_expr (type_map, expr_map) e ~no_simpls in
             Symb_map.add sym e map
           | _ -> assert false )
         expr_map vars
     in
-    rewrite_expr (type_map, expr_map) e
+    rewrite_expr (type_map, expr_map) e ~no_simpls
   | Binder (((Forall | Exists) as quantifier), vars, e) ->
     let type_map, vars =
       List.fold_left
@@ -168,30 +175,34 @@ let rec rewrite_expr (type_map, expr_map) hte =
           | _ -> assert false )
         (type_map, []) vars
     in
-    Expr.binder quantifier vars (rewrite_expr (type_map, expr_map) e)
+    Expr.binder quantifier vars (rewrite_expr (type_map, expr_map) e ~no_simpls)
 
 (** Acccumulates types of symbols in [type_map] and calls rewrite_expr *)
-let rewrite_cmd type_map cmd =
+let rewrite_cmd type_map cmd ~no_simpls =
   debug " rewrite_cmd: %a@." (fun k -> k Ast.pp cmd);
   match cmd with
   | Ast.Assert hte ->
-    let hte = rewrite_expr (type_map, Symb_map.empty) hte in
+    let hte = rewrite_expr (type_map, Symb_map.empty) hte ~no_simpls in
     (type_map, Ast.Assert hte)
   | Check_sat htes ->
-    let htes = List.map (rewrite_expr (type_map, Symb_map.empty)) htes in
+    let htes =
+      List.map (rewrite_expr (type_map, Symb_map.empty) ~no_simpls) htes
+    in
     (type_map, Check_sat htes)
   | Declare_const { id; sort } as cmd -> (Symb_map.add id sort.ty type_map, cmd)
   | Declare_fun { id; sort; _ } as cmd -> (Symb_map.add id sort.ty type_map, cmd)
   | Get_value htes ->
-    let htes = List.map (rewrite_expr (type_map, Symb_map.empty)) htes in
+    let htes =
+      List.map (rewrite_expr (type_map, Symb_map.empty) ~no_simpls) htes
+    in
     (type_map, Get_value htes)
   | cmd -> (type_map, cmd)
 
-let rewrite script =
+let rewrite script ~no_simpls =
   let _, cmds =
     List.fold_left
       (fun (type_map, cmds) cmd ->
-        let type_map, new_cmd = rewrite_cmd type_map cmd in
+        let type_map, new_cmd = rewrite_cmd type_map cmd ~no_simpls in
         debug "     new_cmd: %a@." (fun k -> k Ast.pp new_cmd);
         (type_map, new_cmd :: cmds) )
       (Symb_map.empty, []) script

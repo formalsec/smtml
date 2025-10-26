@@ -25,7 +25,7 @@ let parse_file filename =
   in
   List.rev files
 
-let run ~debug ~dry ~print_statistics ~no_strict_status ~solver_type
+let run ~debug ~dry ~print_statistics ~no_strict_status ~no_simpls ~solver_type
   ~solver_mode ~from_file ~filenames =
   if debug then Logs.Src.set_level Log.src (Some Logs.Debug);
   Logs.set_reporter @@ Logs.format_reporter ();
@@ -45,17 +45,25 @@ let run ~debug ~dry ~print_statistics ~no_strict_status ~solver_type
         total_t := !total_t +. exec_t;
         Log.app (fun m -> m "Run %a in %.06f" Fpath.pp file exec_t) ) )
     @@ fun () ->
-    let ast =
-      try Ok (Compile.until_rewrite file)
-      with Parse.Syntax_error err -> Error (`Parsing_error (file, err))
-    in
-    match ast with
-    | Ok _ when dry -> state
-    | Ok ast -> Some (Interpret.start ?state ast ~no_strict_status)
-    | Error (`Parsing_error ((fpath, err_msg) as err)) ->
-      Log.err (fun k -> k "%a: %s" Fpath.pp fpath err_msg);
+    try
+      let ast =
+        try Ok (Compile.until_rewrite file ~no_simpls)
+        with Parse.Syntax_error err -> Error (`Parsing_error (file, err))
+      in
+      match ast with
+      | Ok _ when dry -> state
+      | Ok ast -> Some (Interpret.start ?state ast ~no_strict_status)
+      | Error (`Parsing_error ((fpath, err_msg) as err)) ->
+        Log.err (fun k -> k "%a: %s" Fpath.pp fpath err_msg);
+        incr exception_count;
+        exception_log := err :: !exception_log;
+        state
+    with ex ->
+      let err_msg = Printexc.to_string ex in
+      Log.err (fun k ->
+        k "Unhandled exception processing file %a: %s" Fpath.pp file err_msg );
       incr exception_count;
-      exception_log := err :: !exception_log;
+      exception_log := (file, err_msg) :: !exception_log;
       state
   in
   let run_dir prev_state d =
@@ -65,7 +73,14 @@ let run ~debug ~dry ~print_statistics ~no_strict_status ~solver_type
           if Fpath.has_ext ".smt2" path then run_file state path else state )
         prev_state d
     in
-    match result with Error (`Msg e) -> failwith e | Ok state -> state
+    match result with
+    | Error (`Msg e) ->
+      let err_msg = "Error traversing directory: " ^ e in
+      Log.err (fun k -> k "%a: %s" Fpath.pp d err_msg);
+      incr exception_count;
+      exception_log := (d, err_msg) :: !exception_log;
+      prev_state
+    | Ok state -> state
   in
   let run_path prev_state path =
     match Fpath.to_string path with
@@ -75,9 +90,18 @@ let run ~debug ~dry ~print_statistics ~no_strict_status ~solver_type
       | Ok false ->
         Log.warn (fun k -> k "%a: No such file or directory" Fpath.pp path);
         prev_state
-      | Ok true ->
-        if Sys.is_directory (Fpath.to_string path) then run_dir prev_state path
-        else run_file prev_state path
+      | Ok true -> (
+        try
+          if Sys.is_directory (Fpath.to_string path) then
+            run_dir prev_state path
+          else run_file prev_state path
+        with ex ->
+          let err_msg = Printexc.to_string ex in
+          Log.err (fun k ->
+            k "Error processing path %a: %s" Fpath.pp path err_msg );
+          incr exception_count;
+          exception_log := (path, err_msg) :: !exception_log;
+          prev_state )
       | Error (`Msg err) ->
         Log.err (fun k -> k "%s" err);
         prev_state )
@@ -100,8 +124,9 @@ let run ~debug ~dry ~print_statistics ~no_strict_status ~solver_type
     | exns ->
       let total = !total_tests in
       let exceptions = !exception_count in
-      assert (total > 0);
-      let percentage = float exceptions /. float total *. 100.0 in
+      let percentage =
+        if total = 0 then 0.0 else float exceptions /. float total *. 100.0
+      in
       let log_file = Fpath.v (Filename.temp_file "smtml" "exceptions.sexp") in
       let* () =
         Bos.OS.File.writef log_file

@@ -52,6 +52,10 @@ let no_strict_status =
   let doc = "Disable strict status checking" in
   Arg.(value & flag & info [ "no-strict-status" ] ~doc)
 
+let no_simpls =
+  let doc = "Disable simplifications during rewriting" in
+  Arg.(value & flag & info [ "no-simpls" ] ~doc)
+
 let from_file =
   let doc =
     "File containing a list of files to run. This argument discards any \
@@ -83,6 +87,10 @@ let cmd_run =
       ~solver_mode ~from_file ~filenames
   in
   Cmd.v info term
+
+let info_to_smt2 =
+  let doc = "Convert .smtml into .smt2" in
+  Cmd.info "to-smt2" ~doc
 
 let cmd_to_smt2 =
   let info =
