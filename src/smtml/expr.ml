@@ -231,6 +231,49 @@ let rec return_type (hte : t) : Ty.t =
       Fmt.failwith "Invalid concat of (%a) with (%a)" Ty.pp t1 Ty.pp t2 )
   | Binder (_, _, e) -> return_type e
 
+module TyTbl = Hashtbl.Make (Expr)
+
+let memoize_ty (hte : t) : Ty.t =
+  let ty_tbl = TyTbl.create 64 in
+  let rec aux (hte : t) =
+    match TyTbl.find_opt ty_tbl (view hte) with
+    | Some ty -> ty
+    | None ->
+      let ty =
+        match view hte with
+        | Val x -> Value.type_of x
+        | Ptr _ -> Ty_bitv 32
+        | Symbol x -> Symbol.type_of x
+        | List _ -> Ty_list
+        | App (sym, _) -> begin
+          match sym.ty with Ty_none -> Ty_app | ty -> ty
+        end
+        | Unop (ty, _, _) -> ty
+        | Binop (ty, _, _, _) -> ty
+        | Triop (_, Ite, _, hte1, hte2) ->
+          let ty1 = aux hte1 in
+          let ty2 = aux hte2 in
+          assert (Ty.equal ty1 ty2);
+          ty1
+        | Triop (ty, _, _, _, _) -> ty
+        | Relop (ty, _, _, _) -> ty
+        | Cvtop (_, (Zero_extend m | Sign_extend m), hte) -> (
+          match ty hte with Ty_bitv n -> Ty_bitv (n + m) | _ -> assert false )
+        | Cvtop (ty, _, _) -> ty
+        | Naryop (ty, _, _) -> ty
+        | Extract (_, h, l) -> Ty_bitv ((h - l) * 8)
+        | Concat (e1, e2) -> (
+          match (aux e1, aux e2) with
+          | Ty_bitv n1, Ty_bitv n2 -> Ty_bitv (n1 + n2)
+          | t1, t2 ->
+            Fmt.failwith "Invalid concat of (%a) with (%a)" Ty.pp t1 Ty.pp t2 )
+        | Binder (_, _, e) -> aux e
+      in
+      TyTbl.add ty_tbl (view hte) ty;
+      ty
+  in
+  aux hte
+
 let rec is_symbolic (v : t) : bool =
   match view v with
   | Val _ -> false
@@ -361,6 +404,27 @@ let forall vars body = binder Forall vars body
 let exists vars body = binder Exists vars body
 
 let raw_unop ty op hte = make (Unop (ty, op, hte)) [@@inline]
+
+let normalize_eq_or_ne op (ty', e1, e2) =
+  let make_relop lhs rhs = Relop (ty', op, lhs, rhs) in
+  let ty1, ty2 = (memoize_ty e1, memoize_ty e2) in
+  if not (Ty.equal ty1 ty2) then make_relop e1 e2
+  else begin
+    match ty1 with
+    | Ty_bitv m ->
+      let binop = make (Binop (ty1, Sub, e1, e2)) in
+      let zero = make (Val (Bitv (Bitvector.make Z.zero m))) in
+      make_relop binop zero
+    | Ty_int ->
+      let binop = make (Binop (ty1, Sub, e1, e2)) in
+      let zero = make (Val (Int Z.zero)) in
+      make_relop binop zero
+    | Ty_real ->
+      let binop = make (Binop (ty1, Sub, e1, e2)) in
+      let zero = make (Val (Real 0.)) in
+      make_relop binop zero
+    | _ -> make_relop e1 e2
+  end
 
 let negate_relop (hte : t) : t =
   let e =
