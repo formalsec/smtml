@@ -742,10 +742,6 @@ let extract (hte : t) ~(high : int) ~(low : int) : t =
     if high - low + 1 = Ty.bitsize (ty hte) then hte
     else raw_extract hte ~high ~low
 
-let zero_extend (hte : t) (n : int) : t =
-  match view hte with
-  | Val (Bitv bv) -> value (Bitv (Bitvector.zero_extend n bv))
-  | _ -> raw_cvtop (ty hte) (Zero_extend n) hte
 
 let raw_concat (msb : t) (lsb : t) : t = make (Concat (msb, lsb)) [@@inline]
 
