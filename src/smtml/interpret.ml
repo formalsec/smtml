@@ -11,8 +11,8 @@ module Make (Solver : Solver_intf.S) = struct
 
   type exec_state = solver state
 
-  let init_state stmts expected_status =
-    let params = Params.(default () $ (Model, true)) in
+  let init_state stmts expected_status ~timeout =
+    let params = Params.(default () $ (Model, true) $ (Timeout, timeout)) in
     let solver = Solver.create ~params () in
     Solver.push solver;
     { stmts; smap = Hashtbl.create 16; solver; expected_status }
@@ -102,12 +102,13 @@ module Make (Solver : Solver_intf.S) = struct
         match cmd with Ast.Set_info term -> parse_status term | _ -> None )
       script
 
-  let start ?state (stmts : Ast.script) ~no_strict_status : exec_state =
+  let start ?state (stmts : Ast.script) ~no_strict_status ~timeout : exec_state
+      =
     Log.debug (fun k -> k "Starting interpreter...");
     let expected_status = find_expected_status stmts in
     let st =
       match state with
-      | None -> init_state stmts expected_status
+      | None -> init_state stmts expected_status ~timeout
       | Some st ->
         Solver.pop st.solver 1;
         Solver.push st.solver;
