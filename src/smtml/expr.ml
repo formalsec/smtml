@@ -159,13 +159,13 @@ let memoize_ty (hte : t) : Ty.t =
           match sym.ty with Ty_none -> Ty_app | ty -> ty
         end
         | Triop (_, Ite, _, hte1, hte2) ->
-          let ty1 = ty hte1 in
+          let ty1 = aux hte1 in
           assert (
-            let ty2 = ty hte2 in
+            let ty2 = aux hte2 in
             Ty.equal ty1 ty2 );
           ty1
         | Cvtop (_, (Zero_extend m | Sign_extend m), hte) -> (
-          match ty hte with Ty_bitv n -> Ty_bitv (n + m) | _ -> assert false )
+          match aux hte with Ty_bitv n -> Ty_bitv (n + m) | _ -> assert false )
         | Unop (ty, _, _)
         | Binop (ty, _, _, _)
         | Triop (ty, _, _, _, _)
@@ -179,7 +179,7 @@ let memoize_ty (hte : t) : Ty.t =
           | Ty_bitv n1, Ty_bitv n2 -> Ty_bitv (n1 + n2)
           | t1, t2 ->
             Fmt.failwith "Invalid concat of (%a) with (%a)" Ty.pp t1 Ty.pp t2 )
-        | Binder (_, _, e) -> ty e
+        | Binder (_, _, e) -> aux e
       in
       TyTbl.add ty_tbl (view hte) ty;
       ty
@@ -585,7 +585,6 @@ let extract (hte : t) ~(high : int) ~(low : int) : t =
   | Concat (e, _), 8, 4 when Ty.size (ty e) = 4 -> e
   | _ ->
     if high - low = Ty.size (ty hte) then hte else raw_extract hte ~high ~low
-
 
 let raw_concat (msb : t) (lsb : t) : t = make (Concat (msb, lsb)) [@@inline]
 

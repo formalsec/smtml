@@ -518,7 +518,7 @@ module Fresh_cvc5 () = struct
   module Solver = struct
     let set_param (type a) slv (param : a Params.param) (v : a) : unit =
       match param with
-      | Timeout -> Solver.set_option slv "tlimit" (string_of_int v)
+      | Timeout -> Solver.set_option slv "tlimit-per" (string_of_int v)
       | Model -> Solver.set_option slv "produce-models" (string_of_bool v)
       | Unsat_core ->
         Solver.set_option slv "produce-unsat-cores" (string_of_bool v)

@@ -25,8 +25,8 @@ let parse_file filename =
   in
   List.rev files
 
-let run ~debug ~dry ~print_statistics ~no_strict_status ~no_simpls ~solver_type
-  ~solver_mode ~from_file ~filenames =
+let run ~debug ~dry ~print_statistics ~no_strict_status ~no_simpls ~timeout
+  ~solver_type ~solver_mode ~from_file ~filenames =
   if debug then Logs.Src.set_level Log.src (Some Logs.Debug);
   Logs.set_reporter @@ Logs.format_reporter ();
   let module Solver = (val get_solver debug solver_type solver_mode) in
@@ -52,7 +52,7 @@ let run ~debug ~dry ~print_statistics ~no_strict_status ~no_simpls ~solver_type
       in
       match ast with
       | Ok _ when dry -> state
-      | Ok ast -> Some (Interpret.start ?state ast ~no_strict_status)
+      | Ok ast -> Some (Interpret.start ?state ast ~no_strict_status ~timeout)
       | Error (`Parsing_error ((fpath, err_msg) as err)) ->
         Log.err (fun k -> k "%a: %s" Fpath.pp fpath err_msg);
         incr exception_count;
