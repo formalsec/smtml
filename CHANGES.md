@@ -1,7 +1,25 @@
 # Changelog
 
+## 0.13.0 - 2025-10-27
+
+- 2025-10-24 Bump ocamlformat 0.27.0 -> 0.28.1
+- 2025-10-24 Expose solver mappings to declare non-parametric datatypes
+- 2025-10-24 Use the the hex format to print and parse floats
+- 2025-10-24 Properly print bvs and floats and ensure that they can be parsed
+- 2025-10-24 Prettier formatting for printing in the smtml format
+- 2025-10-23 Expose a solver's `M_with_make` as part of the solver mappings
+- 2025-10-22 Upd examples.mld
+- 2025-10-22 No commas between asserts in smtml format
+- 2025-10-22 Parse "signed" operations the way they are printed (with the `_s` at the end)
+- 2025-10-22 Add the to-smtml command
+- 2025-10-22 Rename Expr.pp_smt to Expr.pp_smtml
+- 2025-10-22 Replace Format with Fmt
+- 2025-10-22 Fix the order of formulas printed by the z3 mapping printer
+- 2025-10-07 Unpin opam-publish in publish CI
+
 ## 0.12.0 - 2025-10-06
 
+- 2025-10-06 Release 0.12.0
 - 2025-10-06 Backwards compatibility with ocaml 4.14
 - 2025-10-03 Improve error message on missing solver ([#424](https://github.com/formalsec/smtml/issues/424))
 - 2025-10-03 Add missing cvc5 `to_string` operator
