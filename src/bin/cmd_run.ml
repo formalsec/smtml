@@ -57,7 +57,9 @@ let run (s : Settings.Run.t) =
       match ast with
       | Ok _ when s.dry -> state
       | Ok ast ->
-        Some (Interpret.start ?state ast ~no_strict_status:s.no_strict_status)
+        Some
+          (Interpret.start ?state ast ~no_strict_status:s.no_strict_status
+             ~timeout:s.timeout )
       | Error (`Msg msg) ->
         Log.err (fun k -> k "%a: %s" Fpath.pp file msg);
         incr exception_count;

@@ -11,6 +11,7 @@ module Run = struct
     ; print_statistics : bool
     ; no_strict_status : bool
     ; no_simpls : bool
+    ; timeout : int
     ; solver_type : Smtml.Solver_type.t
     ; solver_mode : Smtml.Solver_mode.t
     ; from_file : Fpath.t option
