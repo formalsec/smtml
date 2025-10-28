@@ -1126,11 +1126,24 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
             s.last_assumptions <- assumptions );
           let ctx, encoded_assuptions = Encoder.encode_exprs ctx assumptions in
           s.last_ctx <- Some ctx;
-          Utils.check_log_query
-            (fun () ->
-              M.Solver.check s.solver ~ctx:ctx.syms
-                ~assumptions:encoded_assuptions )
-            M.Internals.name (List.rev assumptions)
+          let usage_before =
+            if Option.is_some Utils.perf_log_path then
+              Some (Mtime_clock.counter ())
+            else None
+          in
+          let res =
+            Utils.check_log_query
+              (fun () ->
+                M.Solver.check s.solver ~ctx:ctx.syms
+                  ~assumptions:encoded_assuptions )
+              M.Internals.name (List.rev assumptions)
+          in
+          Option.iter
+            (fun usage_before ->
+              Utils.add_check_sat_and_commit
+                (Mtime.Span.to_float_ns (Mtime_clock.count usage_before)) )
+            usage_before;
+          res
 
       let model { solver; last_ctx; assumptions; last_assumptions; _ } =
         match last_ctx with
