@@ -73,6 +73,7 @@
   smtml.prelude
   yojson
   mtime.clock
+  threads
   zarith
   (select
    colibri2_mappings.ml
@@ -90,7 +91,7 @@
   (select
    bitwuzla_mappings.ml
    from
-   (threads bitwuzla-cxx -> bitwuzla_mappings.default.ml)
+   (bitwuzla-cxx -> bitwuzla_mappings.default.ml)
    (-> bitwuzla_mappings.nop.ml))
   (select
    z3_mappings.ml
