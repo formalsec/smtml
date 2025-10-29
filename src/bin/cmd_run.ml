@@ -29,6 +29,8 @@ let parse_file filename =
   in
   List.rev files
 
+exception Timeout
+
 let run (s : Settings.Run.t) =
   if s.debug then Logs.Src.set_level Log.src (Some Logs.Debug);
   Logs.set_reporter @@ Logs.format_reporter ();
@@ -42,7 +44,7 @@ let run (s : Settings.Run.t) =
   let run_file state file =
     Log.debug (fun k -> k "File %a..." Fpath.pp file);
     incr total_tests;
-    let start_t = Unix.gettimeofday () in
+    let start_t = Unix.gettimeofday () in    
     Fun.protect ~finally:(fun () ->
       if s.print_statistics then (
         let exec_t = Unix.gettimeofday () -. start_t in
@@ -57,6 +59,21 @@ let run (s : Settings.Run.t) =
       match ast with
       | Ok _ when s.dry -> state
       | Ok ast ->
+        let old_handler = ref Sys.Signal_default in
+        let timeout_sec = float_of_int s.timeout /. 1000. in
+        Fun.protect
+          ~finally:(fun () ->
+            ignore
+              (Unix.setitimer Unix.ITIMER_REAL
+                 { it_value = 0.; it_interval = 0. } );
+            ignore (Sys.signal Sys.sigalrm !old_handler) )
+        @@ fun () ->
+        old_handler :=
+          Sys.signal Sys.sigalrm (Sys.Signal_handle (fun _ -> raise Timeout));
+        if timeout_sec > 0. then
+          ignore
+            (Unix.setitimer Unix.ITIMER_REAL
+               { it_value = timeout_sec; it_interval = 0. } );
         Some
           (Interpret.start ?state ast ~no_strict_status:s.no_strict_status
              ~timeout:s.timeout )
@@ -71,7 +88,16 @@ let run (s : Settings.Run.t) =
             kind );
         incr exception_count;
         state
-    with ex ->
+    with
+    | Timeout ->
+      let err_msg =
+        Printf.sprintf "Timeout during interpretation after %d ms" s.timeout
+      in
+      Log.err (fun k -> k "File %a: %s" Fpath.pp file err_msg);
+      incr exception_count;
+      exception_log := (file, err_msg) :: !exception_log;
+      state
+    | ex ->
       let err_msg = Printexc.to_string ex in
       Log.err (fun k ->
         k "Unhandled exception processing file %a: %s" Fpath.pp file err_msg );
