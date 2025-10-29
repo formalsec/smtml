@@ -63,3 +63,7 @@ val of_string : Ty.t -> string -> (t, [> `Msg of string ]) result
 
 (** [to_json v] converts the value [v] into a JSON representation. *)
 val to_json : t -> Yojson.Basic.t
+
+module Smtlib : sig
+  val pp : t Fmt.t
+end

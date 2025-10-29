@@ -137,3 +137,18 @@ let rec to_json (v : t) : Yojson.Basic.t =
   | List l -> `List (List.map to_json l)
   | Nothing -> `Null
   | App _ -> assert false
+
+module Smtlib = struct
+  let pp fmt = function
+    | True -> Fmt.string fmt "true"
+    | False -> Fmt.string fmt "false"
+    | Int x -> Fmt.int fmt x
+    | Real x -> Fmt.pf fmt "%F" x
+    | Num x -> Num.pp fmt x
+    | Bitv bv -> Bitvector.pp fmt bv
+    | Str x -> Fmt.pf fmt "%S" x
+    | Unit -> assert false
+    | List _ -> assert false
+    | App _ -> assert false
+    | Nothing -> assert false
+end

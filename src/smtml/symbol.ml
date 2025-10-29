@@ -104,3 +104,12 @@ module Map = Map.Make (struct
 
   let compare = compare
 end)
+
+module Smtlib = struct
+  let pp fmt { ty; name; namespace } =
+    match namespace with
+    | Term -> pp_name fmt name
+    | Sort -> Ty.Smtlib.pp fmt ty
+    | Var -> assert false
+    | Attr -> assert false
+end

@@ -95,14 +95,14 @@ module Make (Solver : Solver_intf.S) = struct
         None )
     | _ -> None
 
-  let find_expected_status (script : Ast.script) :
+  let find_expected_status (script : Ast.Script.t) :
     [ `Sat | `Unsat | `Unknown ] option =
     List.find_map
       (fun cmd ->
         match cmd with Ast.Set_info term -> parse_status term | _ -> None )
       script
 
-  let start ?state (stmts : Ast.script) ~no_strict_status : exec_state =
+  let start ?state (stmts : Ast.Script.t) ~no_strict_status : exec_state =
     Log.debug (fun k -> k "Starting interpreter...");
     let expected_status = find_expected_status stmts in
     let st =

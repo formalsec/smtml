@@ -523,3 +523,62 @@ module Naryop = struct
     | Concat -> Fmt.string fmt "++"
     | Regexp_union -> Fmt.string fmt "union"
 end
+
+module Smtlib = struct
+  let pp fmt = function
+    | Ty_int -> Fmt.string fmt "Int"
+    | Ty_real -> Fmt.string fmt "Real"
+    | Ty_bool -> Fmt.string fmt "Bool"
+    | Ty_str -> Fmt.string fmt "String"
+    | Ty_bitv n -> Fmt.pf fmt "(_ BitVec %d)" n
+    | Ty_fp _n -> assert false
+    | Ty_list -> assert false
+    | Ty_app -> assert false
+    | Ty_unit -> assert false
+    | Ty_none -> assert false
+    | Ty_regexp -> Fmt.string fmt "RegLan"
+    | Ty_roundingMode -> Fmt.string fmt "RoudingMode"
+
+  let pp_unop fmt ((ty, op) : t * Unop.t) =
+    match (ty, op) with
+    | Ty_bool, Not -> Fmt.string fmt "not"
+    | _ -> assert false
+
+  let pp_binop fmt ((ty, op) : t * Binop.t) =
+    match (ty, op) with
+    | (Ty_int | Ty_real), Add -> Fmt.string fmt "+"
+    | (Ty_int | Ty_real), Sub -> Fmt.string fmt "-"
+    | (Ty_int | Ty_real), Mul -> Fmt.string fmt "*"
+    | (Ty_int | Ty_real), Div -> Fmt.string fmt "/"
+    | Ty_str, At -> Fmt.string fmt "str.at"
+    | Ty_str, String_prefix -> Fmt.string fmt "str.prefixof"
+    | Ty_str, String_suffix -> Fmt.string fmt "str.suffixof"
+    | Ty_str, String_contains -> Fmt.string fmt "str.contains"
+    | Ty_str, String_last_index -> assert false
+    | Ty_str, String_in_re -> Fmt.string fmt "str.in_re"
+    | _ -> assert false
+
+  let pp_relop fmt ((ty, op) : t * Relop.t) =
+    match (ty, op) with
+    | Ty_fp _, Eq -> Fmt.string fmt "fp.eq"
+    | _, Eq -> Fmt.string fmt "="
+    | _, Ne -> assert false
+    | Ty_bitv _, Gt -> Fmt.string fmt "bvsgt"
+    | _, Gt -> Fmt.string fmt ">"
+    | Ty_bitv _, GtU -> Fmt.string fmt "bvugt"
+    | _, GtU -> Fmt.string fmt ">"
+    | Ty_bitv _, Ge -> Fmt.string fmt "bvsge"
+    | _, Ge -> Fmt.string fmt ">="
+    | Ty_bitv _, GeU -> Fmt.string fmt "bvuge"
+    | _, GeU -> Fmt.string fmt ">="
+    | Ty_str, Lt -> Fmt.string fmt "str.<"
+    | Ty_bitv _, Lt -> Fmt.string fmt "bvslt"
+    | _, Lt -> Fmt.string fmt "<"
+    | Ty_bitv _, LtU -> Fmt.string fmt "bvult"
+    | _, LtU -> Fmt.string fmt "<"
+    | Ty_str, Le -> Fmt.string fmt "str.<="
+    | Ty_bitv _, Le -> Fmt.string fmt "bvsle"
+    | _, Le -> Fmt.string fmt "<="
+    | Ty_bitv _, LeU -> Fmt.string fmt "bvule"
+    | _, LeU -> Fmt.string fmt ">="
+end

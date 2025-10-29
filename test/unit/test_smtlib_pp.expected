@@ -1,0 +1,6 @@
+(declare-const x Int)
+(declare-const y Int)
+(assert (= (+ x y) 30))
+(assert (< (* 2 y) x))
+(assert (< 10 y))
+(check-sat)

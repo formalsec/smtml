@@ -15,10 +15,10 @@ exception Syntax_error of string
 
 module Smtml : sig
   (** [from_file file] parses an SMT-ML script from the given [file]. *)
-  val from_file : Fpath.t -> Ast.script
+  val from_file : Fpath.t -> Ast.Script.t
 
   (** [from_string s] parses an SMT-ML script from the given string [s]. *)
-  val from_string : string -> Ast.script
+  val from_string : string -> Ast.Script.t
 end
 
 (** {1 SMT-LIB Parsing} *)
@@ -26,11 +26,11 @@ end
 module Smtlib : sig
   (** [from_file file] parses an SMT-LIB compliant script from the given [file].
   *)
-  val from_file : Fpath.t -> Ast.script
+  val from_file : Fpath.t -> Ast.Script.t
 end
 
 (** {1 Generic Parsing} *)
 
 (** [from_file file] attempts to parse an SMT-ML (.smtml) or SMT-LIB (.smt2)
     script based on the file extension of [file]. *)
-val from_file : Fpath.t -> Ast.script
+val from_file : Fpath.t -> Ast.Script.t

@@ -111,3 +111,7 @@ val to_string : t -> string
 val to_json : t -> Yojson.Basic.t
 
 module Map : Map.S with type key = t
+
+module Smtlib : sig
+  val pp : t Fmt.t
+end
