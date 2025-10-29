@@ -1,1 +1,5 @@
 (dirs runner)
+
+(executable
+ (name test_collections_c)
+ (libraries bos ounit2 smtml))
