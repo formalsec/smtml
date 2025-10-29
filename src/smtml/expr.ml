@@ -794,3 +794,28 @@ module Fpa = struct
     let ( != ) e1 e2 = relop (Ty_fp 64) Ne e1 e2
   end
 end
+
+module Smtlib = struct
+  let rec pp fmt (hte : t) =
+    match view hte with
+    | Val v -> Value.Smtlib.pp fmt v
+    | Ptr _ -> assert false
+    | Loc _ -> assert false
+    | Symbol s -> Fmt.pf fmt "@[<hov 1>%a@]" Symbol.pp s
+    | List _ -> assert false
+    | App _ -> assert false
+    | Unop (ty, op, e) ->
+      Fmt.pf fmt "@[<hov 1>(%a@ %a)@]" Ty.Smtlib.pp_unop (ty, op) pp e
+    | Binop (ty, op, e1, e2) ->
+      Fmt.pf fmt "@[<hov 1>(%a@ %a@ %a)@]" Ty.Smtlib.pp_binop (ty, op) pp e1 pp
+        e2
+    | Triop _ -> assert false
+    | Relop (ty, op, e1, e2) ->
+      Fmt.pf fmt "@[<hov 1>(%a@ %a@ %a)@]" Ty.Smtlib.pp_relop (ty, op) pp e1 pp
+        e2
+    | Cvtop _ -> assert false
+    | Naryop _ -> assert false
+    | Extract _ -> assert false
+    | Concat _ -> assert false
+    | Binder _ -> assert false
+end

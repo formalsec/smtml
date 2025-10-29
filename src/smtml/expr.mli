@@ -4,3 +4,7 @@
 
 (** @inline *)
 include Expr_intf.S
+
+module Smtlib : sig
+  val pp : t Fmt.t
+end

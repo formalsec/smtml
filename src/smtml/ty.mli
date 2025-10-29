@@ -281,3 +281,13 @@ module Naryop : sig
       [fmt]. *)
   val pp : t Fmt.t
 end
+
+module Smtlib : sig
+  val pp : t Fmt.t
+
+  val pp_unop : (t * Unop.t) Fmt.t
+
+  val pp_binop : (t * Binop.t) Fmt.t
+
+  val pp_relop : (t * Relop.t) Fmt.t
+end

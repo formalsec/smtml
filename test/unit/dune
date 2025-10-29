@@ -1,3 +1,9 @@
 (tests
- (names test_bitvector test_eval test_expr test_model test_statistics)
+ (names
+  test_bitvector
+  test_eval
+  test_expr
+  test_model
+  test_statistics
+  test_smtlib_pp)
  (libraries smtml smtml_test yojson ounit2))
