@@ -25,6 +25,8 @@ let parse_file filename =
   in
   List.rev files
 
+exception Timeout
+
 let run ~debug ~dry ~print_statistics ~no_strict_status ~no_simpls ~timeout
   ~solver_type ~solver_mode ~from_file ~filenames =
   if debug then Logs.Src.set_level Log.src (Some Logs.Debug);
@@ -38,7 +40,7 @@ let run ~debug ~dry ~print_statistics ~no_strict_status ~no_simpls ~timeout
   let run_file state file =
     Log.debug (fun k -> k "File %a..." Fpath.pp file);
     incr total_tests;
-    let start_t = Unix.gettimeofday () in
+    let start_t = Unix.gettimeofday () in    
     Fun.protect ~finally:(fun () ->
       if print_statistics then (
         let exec_t = Unix.gettimeofday () -. start_t in
@@ -52,13 +54,33 @@ let run ~debug ~dry ~print_statistics ~no_strict_status ~no_simpls ~timeout
       in
       match ast with
       | Ok _ when dry -> state
-      | Ok ast -> Some (Interpret.start ?state ast ~no_strict_status ~timeout)
+      | Ok ast ->
+        let old_handler = ref Sys.Signal_default in
+        let timeout_sec = float_of_int timeout /. 1000. in
+        Fun.protect ~finally:(fun () ->
+          ignore (Unix.setitimer Unix.ITIMER_REAL { it_value = 0.; it_interval = 0. });
+          ignore (Sys.signal Sys.sigalrm !old_handler);
+        )
+        @@ fun () ->
+        old_handler := Sys.signal Sys.sigalrm (Sys.Signal_handle (fun _ -> raise Timeout));
+        if timeout_sec > 0. then (
+          ignore (Unix.setitimer Unix.ITIMER_REAL { it_value = timeout_sec; it_interval = 0. })
+        );
+        Some (Interpret.start ?state ast ~no_strict_status ~timeout)
+
       | Error (`Parsing_error ((fpath, err_msg) as err)) ->
         Log.err (fun k -> k "%a: %s" Fpath.pp fpath err_msg);
         incr exception_count;
         exception_log := err :: !exception_log;
-        state
-    with ex ->
+        state    
+    with 
+    | Timeout ->
+      let err_msg = Printf.sprintf "Timeout during interpretation after %d ms" timeout in
+      Log.err (fun k -> k "File %a: %s" Fpath.pp file err_msg);
+      incr exception_count;
+      exception_log := (file, err_msg) :: !exception_log;
+      state
+    | ex ->
       let err_msg = Printexc.to_string ex in
       Log.err (fun k ->
         k "Unhandled exception processing file %a: %s" Fpath.pp file err_msg );
@@ -66,6 +88,7 @@ let run ~debug ~dry ~print_statistics ~no_strict_status ~no_simpls ~timeout
       exception_log := (file, err_msg) :: !exception_log;
       state
   in
+
   let run_dir prev_state d =
     let result =
       Bos.OS.Dir.fold_contents ~traverse:`Any

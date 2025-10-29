@@ -53,7 +53,7 @@ let no_strict_status =
   Arg.(value & flag & info [ "no-strict-status" ] ~doc)
 
 let timeout =
-  let doc = "Set a timeout (in seconds) for each SMT solver call" in
+  let doc = "Set a timeout (in milliseconds) for each SMT solver call" in
   Arg.(value & opt int 0 & info [ "t"; "timeout" ] ~doc)
 
 let no_simpls =
