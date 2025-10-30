@@ -1,178 +1,136 @@
 import Mathlib
 
--- Unary operators
--- ¬(¬x) = x
-lemma simplification_unop_000001 (x : Bool) :
-  ¬(¬x) = x :=
+lemma simplification_unop_000001 {_ty : Type}  (x : Bool) :
+  ¬¬x ↔ x :=
 by simp
 
--- ¬(e1 ≠ e2) → e1 = e2
-lemma simplification_unop_000002 {α : Type} [DecidableEq α] (e1 e2 : α) :
-  ¬(e1 ≠ e2) → e1 = e2 :=
+lemma simplification_unop_000002 {_ty : Type}  (x : _ty) :
+  ¬¬x = x :=
 by simp
 
--- ¬(e1 = e2) → e1 ≠ e2
-lemma simplification_unop_000003 {α : Type} [DecidableEq α] (e1 e2 : α) :
-  ¬(e1 = e2) → e1 ≠ e2 :=
+lemma simplification_unop_000003 {ty : Type} [DecidableEq ty] (e2 e1 : ty) :
+  ¬((e1) ≠ (e2)) ↔ ((e1) = (e2)) :=
 by simp
 
--- ¬(e1 < e2) → e2 ≤ e1
-lemma simplification_unop_000004 {α : Type} [LinearOrder α] (e1 e2 : α) :
-  ¬(e1 < e2) → e2 ≤ e1 :=
+lemma simplification_unop_000004 {ty : Type} [DecidableEq ty] (e2 e1 : ty) :
+  ¬((e1) = (e2)) ↔ ((e1) ≠ (e2)) :=
 by simp
 
--- ¬(e1 ≤ e2) → e2 < e1
-lemma simplification_unop_000005 {α : Type} [LinearOrder α] (e1 e2 : α) :
-  ¬(e1 ≤ e2) → e2 < e1 :=
+lemma simplification_unop_000005 {ty : Type} [LinearOrder ty] (e2 e1 : ty) :
+  ¬((e1) < (e2)) ↔ ((e2) ≤ (e1)) :=
 by simp
 
--- ¬(e1 > e2) → e1 ≤ e2
-lemma simplification_unop_000006 {α : Type} [LinearOrder α] (e1 e2 : α) :
-  ¬(e1 > e2) → e1 ≤ e2 :=
+lemma simplification_unop_000006 {ty : Type} [LinearOrder ty] (e2 e1 : ty) :
+  ¬((e1) ≤ (e2)) ↔ ((e2) < (e1)) :=
 by simp
 
--- ¬(e1 ≥ e1) → e1 < e2
-lemma simplification_unop_000007 {α : Type} [LinearOrder α] (e1 e2 : α) :
-  ¬(e1 ≥ e2) → e1 < e2 :=
+lemma simplification_unop_000007 {ty : Type} [LinearOrder ty] (e2 e1 : ty) :
+  ¬((e1) > (e2)) ↔ ((e1) ≤ (e2)) :=
 by simp
 
--- length([x1, ..., xn]) = n
-lemma simplification_unop_000008 {α : Type} (x : α) (n : Nat) :
-  List.length (List.replicate n x) = n :=
+lemma simplification_unop_000008 {ty : Type} [LinearOrder ty] (e2 e1 : ty) :
+  ¬((e1) ≥ (e2)) ↔ ((e1) < (e2)) :=
 by simp
 
-lemma simplification_unop_000009 : List.reverse (List.reverse x) = x := by simp
-
-
--- Binary operators
-
--- True ∧ x = x
-lemma simplification_binop_000001 (x : Bool) :
-  True ∧ x = x :=
+lemma simplification_unop_000010 {_ty : Type}  (l : List _ty) :
+  List.reverse (List.reverse (l)) = l :=
 by simp
 
--- (0 + x) = x
-lemma simplification_binop_000002 (x : Int) :
-  (0 + x) = x :=
+lemma simplification_binop_000012 {_ty : Type}  (hte : _ty) :
+  (True) ∧ (hte) = hte :=
 by simp
 
--- (x + c1) + c2 = x + (c1 + c2)
-lemma simplification_binop_000003 (x : Int) (c1 c2 : Int) :
-  (x + c1) + c2 = x + (c1 + c2) :=
-by exact Int.add_assoc x c1 c2
+lemma simplification_binop_000014  {w : Nat} (hte2 bv : BitVec w) :
+  (bv = 0) →
+  (bv) + (hte2) = hte2 :=
+by intro h; simp [h]
 
--- (x - c1) - c2 = x - (c1 + c2)
-lemma simplification_binop_000004 (x : Int) (c1 c2 : Int) :
-  (x - c1) - c2 = x - (c1 + c2) :=
-by exact Int.sub_sub x c1 c2
+lemma simplification_binop_000015  {w : Nat} (hte2 bv : BitVec w) :
+  (bv = 0) →
+  (bv) ||| (hte2) = hte2 :=
+by intro h; simp [h]
 
--- (x ⋅ c1) ⋅ c2 = x ⋅ (c1 ⋅ c2)
-lemma simplification_binop_000005 (x : Int) (c1 c2 : Int) :
-  (x * c1) * c2 = x * (c1 * c2) :=
-by grind
+lemma simplification_binop_000016  {w : Nat} (hte1 bv : BitVec w) :
+  (bv = 0) →
+  (hte1) + (bv) = hte1 :=
+by intro h; simp [h]
 
--- c1 + (x + c2) → (c1 + c2) + x
-lemma simplification_binop_000006 (x : Int) (c1 c2 : Int) :
-  c1 + (x + c2) = (c1 + c2) + x :=
-by ring_nf
+lemma simplification_binop_000017  {w : Nat} (hte1 bv : BitVec w) :
+  (bv = 0) →
+  (hte1) ||| (bv) = hte1 :=
+by intro h; simp [h]
 
--- c1 ⋅ (x ⋅ c2) = (c1 ⋅ c2) ⋅ x
-lemma simplification_binop_000007 (x : Int) (c1 c2 : Int) :
-  c1 * (x * c2) = (c1 * c2) * x :=
-by grind
+lemma simplification_binop_000018  {w : Nat} (_hte bv : BitVec w) :
+  (bv = 0) →
+  (bv) &&& (_hte) = 0 :=
+by intro h; simp [h]
 
-lemma simplification_binop_000008 (x : Real) (c1 c2 : Real) :
-  (x + c1) + c2 = x + (c1 + c2) :=
+lemma simplification_binop_000019  {w : Nat} (_hte bv : BitVec w) :
+  (bv = 0) →
+  (bv) * (_hte) = 0 :=
+by intro h; simp [h]
+
+lemma simplification_binop_000020  {w : Nat} (_hte bv : BitVec w) :
+  (bv = 0) →
+  (_hte) &&& (bv) = 0 :=
+by intro h; simp [h]
+
+lemma simplification_binop_000021  {w : Nat} (_hte bv : BitVec w) :
+  (bv = 0) →
+  (_hte) * (bv) = 0 :=
+by intro h; simp [h]
+
+lemma simplification_binop_000022  {w : Nat} (hte2 bv : BitVec w) :
+  (bv = 1) →
+  (bv) * (hte2) = hte2 :=
+by intro h; simp [h]
+
+lemma simplification_binop_000023  {w : Nat} (hte1 bv : BitVec w) :
+  (bv = 1) →
+  (hte1) * (bv) = hte1 :=
+by intro h; simp [h]
+
+lemma simplification_binop_000024 {ty : Type} [Ring ty] (v1 x v2 : ty) :
+  ((x) + (v1)) + (v2) = (x) + ((v1) + (v2)) :=
+by apply add_assoc
+
+lemma simplification_binop_000025 {ty : Type} [Ring ty] (v1 x v2 : ty) :
+  ((x) - (v1)) - (v2) = (x) - ((v1) + (v2)) :=
+by abel
+
+lemma simplification_binop_000026 {ty : Type} [Ring ty] (v1 x v2 : ty) :
+  ((x) * (v1)) * (v2) = (x) * ((v1) * (v2)) :=
+by apply mul_assoc
+
+lemma simplification_binop_000027 {ty : Type} [Ring ty] (v1 x v2 : ty) :
+  (v1) + ((x) + (v2)) = ((v1) + (v2)) + (x) :=
+by abel
+
+lemma simplification_binop_000028 {ty : Type} [CommRing ty] (v1 x v2 : ty) :
+  (v1) * ((x) * (v2)) = ((v1) * (v2)) * (x) :=
 by ring
 
--- 0 ||| e1 = e1
-lemma simplification_binop_000009 {w : Nat} (e1 : BitVec w) :
-  (0 ||| e1) = e1 :=
+lemma simplification_triop_000034 {_ty : Type}  (_e2 e1 : _ty) :
+  (if True then e1 else _e2) = e1 :=
 by simp
 
--- e1 ||| 0 = e1
-lemma simplification_binop_000010 {w : Nat} (e1 : BitVec w) :
-  (e1 ||| 0) = e1 :=
+lemma simplification_triop_000035 {_ty : Type}  (e2 _e1 : _ty) :
+  (if False then _e1 else e2) = e2 :=
 by simp
 
--- e1 + 0 = e1
-lemma simplification_binop_000011 {w : Nat} (e1 : BitVec w) :
-  (e1 + 0) = e1 :=
-by simp
-
--- 0 + e1 = e1
-lemma simplification_binop_000012 {w : Nat} (e1 : BitVec w) :
-  (0 + e1) = e1 :=
-by simp
-
--- e1 &&& 0 = 0
-lemma simplification_binop_000013 {w : Nat} (e1 : BitVec w) :
-  (e1 &&& 0) = 0 :=
-by simp
-
--- 0 &&& e1 = 0
-lemma simplification_binop_000014 {w : Nat} (e1 : BitVec w) :
-  (0 &&& e1) = 0 :=
-by simp
-
--- e1 * 0 = 0
-lemma simplification_binop_000015 {w : Nat} (e1 : BitVec w) :
-  (e1 * 0) = 0 :=
-by simp
-
--- e1 * 1 = e1
-lemma simplification_binop_000016 {w : Nat} (e1 : BitVec w) :
-  (e1 * 1) = e1 :=
-by simp
-
--- 1 * e1 = e1
-lemma simplification_binop_000017 {w : Nat} (e1 : BitVec w) :
-  (1 * e1) = e1 :=
-by simp
-
--- Ternary Operators
-
--- ite(True, x, y) = x
-lemma simplification_triop_000001 {α : Sort u} (x y : α) :
-  ite True x y = x :=
-by apply ite_true
-
--- ite(False, x, y) = y
-lemma simplification_triop_000002 {α : Sort u} (x y : α) :
-  ite False x y = y :=
-by apply ite_false
-
-/-
-    ite(cond1, ite(cond2, r1, r2), ite(cond3, r3, r4))
-      = ite(cond1 ∧ cond2, r1, ite(cond1, r2, ite(cond3, r3, r4)))
--/
-lemma simplification_triop_000003 {α : Sort u} {cond1 cond2 cond3 : Prop}
-  [Decidable cond1] [Decidable cond2] [Decidable cond3]
-  (r1 r2 r3 r4 : α) :
-  ite cond1 (ite cond2 r1 r2) (ite cond3 r3 r4)
-    = ite (cond1 ∧ cond2) r1 (ite cond1 r2 (ite cond3 r3 r4)) :=
+lemma simplification_triop_0000369 {ty : Type}  (c3 c2 c1 : Prop) (e4 e3 e2 e1 : ty)
+  [Decidable c1] [Decidable c2] [Decidable c3] :
+  (if c1 then (if c2 then e1 else e2) else (if c3 then e3 else e4)) = (if (c1) ∧ (c2) then e1 else (if c1 then e2 else (if c3 then e3 else e4))) :=
 by grind
 
--- BitVec.extractLsb h l n = n, if h < w, 0 ≤ l, and (w : ℤ) = h - l + 1
-lemma simplification_triop_000004
-  {w : Nat}
-  {h l : Int}
-  (n : BitVec w)
-  (_ : h < w)
-  (_ : 0 ≤ l)
-  (size_eq : (w : ℤ) = h - l + 1) :
-  BitVec.extractLsb h l n = size_eq ▸ n :=
-by sorry
-
--- Nary Operators
-lemma simplification_naryop_000001 (l1 l2 : List String) :
-  String.join [String.join l1, String.join l2] = String.join (l1 ++ l2) :=
+lemma simplification_naryop_000001  (l2 l1 : List String)  :
+  (String.join ([(String.join l1), (String.join l2)])) = (String.join ((l1 ++ l2))) :=
 by simp [String.join_eq]
 
-lemma simplification_naryop_000002 (s : String) (l : List String) :
-  String.join [String.join l, s] = String.join (l ++ [s]) :=
+lemma simplification_naryop_000002  (htes : List String) (hte : String)  :
+  (String.join ([(String.join htes), hte])) = (String.join ((htes ++ [hte]))) :=
 by simp [String.join_eq]
 
-lemma simplification_naryop_000003 (s : String) (l : List String) :
-  String.join [s, String.join l] = String.join ([s] ++ l) :=
+lemma simplification_naryop_000003  (htes : List String) (hte : String)  :
+  (String.join ([hte, (String.join htes)])) = (String.join ((hte :: htes))) :=
 by simp [String.join_eq]
