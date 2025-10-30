@@ -172,6 +172,6 @@ let run ~debug ~dry ~print_statistics ~no_strict_status ~no_simpls ~timeout
   | Error (`Msg err) ->
     Log.warn (fun k -> k "Could not write excptions log: %s" err)
   | Ok None -> ()
-  | Ok (Some fpath) ->
+  | Ok (Some _) ->
     Log.app (fun k ->
-      k "Exception log successfully written to: %a" Fpath.pp fpath )
+      k "Exception log successfully written to temporary file." )

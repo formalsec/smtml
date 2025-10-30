@@ -115,10 +115,8 @@ Test uninterpreted:
 Test status tracking:
   $ smtml run test_set_info_status.smt2
   sat
-  smtml: internal error, uncaught exception:
-         Failure("Expected status: unsat, but solver returned sat")
-         
-  [125]
+  smtml: [ERROR] Unhandled exception processing file test_set_info_status.smt2: Failure("Expected status: unsat, but solver returned sat")
+  Exception log successfully written to temporary file.
 
   $ smtml run --no-strict-status test_set_info_status.smt2
   sat
