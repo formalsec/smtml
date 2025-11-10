@@ -1,7 +1,15 @@
 # Changelog
 
+## 0.14.0 - 2025-11-10
+
+- 2025-10-31 WIP: Add a simple Smtml.Expr.t -> smt2 pretty printer
+- 2025-10-29 Bring back collections-c benchmarking as a test
+- 2025-10-29 Add new datasets directory
+- 2025-10-29 Remove old datasets dir
+
 ## 0.13.0 - 2025-10-27
 
+- 2025-10-27 Release 0.13.0
 - 2025-10-24 Bump ocamlformat 0.27.0 -> 0.28.1
 - 2025-10-24 Expose solver mappings to declare non-parametric datatypes
 - 2025-10-24 Use the the hex format to print and parse floats
