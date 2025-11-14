@@ -65,6 +65,10 @@ module Base (M : Mappings_intf.S) = struct
         (* Should never happen *)
         assert false )
     | (`Unsat | `Unknown) as no_model -> no_model
+
+  let cache_hits () = 0
+
+  let cache_misses () = !solver_count
 end
 
 module Incremental (M : Mappings_intf.S) : Solver_intf.S =

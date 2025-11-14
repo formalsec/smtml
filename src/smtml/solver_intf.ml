@@ -111,6 +111,13 @@ module type S = sig
     -> t
     -> Expr.Set.t
     -> [ `Model of Model.t | `Unsat | `Unknown ]
+
+  (** [cache_hits ()] Returns the number of hits that have already occurred in
+      the cache for the Cached module, returns 0 for other modules *)
+  val cache_hits : unit -> int
+
+  (** [cache_misses ()] Same as [cache_hits] but for misses *)
+  val cache_misses : unit -> int
 end
 
 (** The [Intf] module type defines the interface for creating and working with
@@ -136,17 +143,7 @@ module type Intf = sig
 
       (Experimental) Similar to the Batch mode, but queries are cached for
       improved performance. *)
-  module Cached (_ : Mappings_intf.S) : sig
-    (** Include the core solver interface. *)
-    include S
-
-    (** [cache_hits ()] Returns the number of hits that have already occurred in
-        the cache *)
-    val cache_hits : unit -> int
-
-    (** [cache_misses ()] Same as [cache_hits] but for misses *)
-    val cache_misses : unit -> int
-  end
+  module Cached (_ : Mappings_intf.S) : S
 
   (** {1 Incremental Mode}
 
