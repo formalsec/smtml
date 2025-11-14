@@ -52,6 +52,8 @@ module Z3 :
       ?symbols:Smtml.Symbol.t list ->
       t ->
       Smtml.Expr.Set.t -> [ `Model of Smtml.Model.t | `Unknown | `Unsat ]
+    val cache_hits : unit -> int
+    val cache_misses : unit -> int
   end
 # let solver = Z3.create ();;
 val solver : Z3.t = <abstr>
