@@ -71,6 +71,7 @@
   patricia-tree
   scfg
   smtml.prelude
+  threads
   yojson
   mtime.clock
   zarith
@@ -90,7 +91,7 @@
   (select
    bitwuzla_mappings.ml
    from
-   (threads bitwuzla-cxx -> bitwuzla_mappings.default.ml)
+   (bitwuzla-cxx -> bitwuzla_mappings.default.ml)
    (-> bitwuzla_mappings.nop.ml))
   (select
    z3_mappings.ml
