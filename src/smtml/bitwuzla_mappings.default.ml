@@ -552,8 +552,7 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
       (* does nothing *)
       ()
 
-    let get_statistics _ =
-      Fmt.failwith "Bitwuzla_mappings: Solver.get_statistics not implemented"
+    let get_statistics _ = Statistics.Map.empty
 
     let pp_statistics fmt solver = Solver.pp_statistics fmt solver
   end

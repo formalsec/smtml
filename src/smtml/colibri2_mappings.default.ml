@@ -206,8 +206,7 @@ module M = struct
 
       let interrupt _ = ()
 
-      let get_statistics _ =
-        Fmt.failwith "Colibri2_mappings: Solver.get_statistics not implemented"
+      let get_statistics _ = Statistics.Map.empty
 
       let pp_statistics _fmt _solver = ()
     end

@@ -561,11 +561,9 @@ module Fresh_cvc5 () = struct
 
     let interrupt _ = ()
 
-    let get_statistics _ =
-      Fmt.failwith "Cvc5_mappings: Solver.get_statistics not implemented!"
+    let get_statistics _ = Statistics.Map.empty
 
-    let pp_statistics _ =
-      Fmt.failwith "Cvc5_mappings: Solver.pp_statistics not implemented!"
+    let pp_statistics _ _ = ()
   end
 
   (* Not supported *)

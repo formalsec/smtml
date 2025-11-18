@@ -44,12 +44,20 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let solver = Cached.create ~logic:LIA () in
     let x = Infix.symbol "x" Ty_int in
     let c = Infix.(Int.(x >= int 0)) in
-    assert (Cached.cache_hits () = 0);
+    let get_stat key =
+      let stats = Cached.get_statistics solver in
+      let stat = Statistics.Map.find_opt key stats in
+      match stat with
+      (* we're using this for cache hitrate so it's always `Int *)
+      | Some (`Int s) -> s
+      | _ -> Fmt.failwith "%s should exist and be an int in stats" key
+    in
+    assert (get_stat "cache hits" = 0);
     assert_sat (Cached.check_set solver @@ Expr.Set.singleton c);
     assert_sat (Cached.check_set solver @@ Expr.Set.singleton c);
     assert_sat (Cached.check_set solver @@ Expr.Set.singleton c);
-    assert (Cached.cache_misses () = 1);
-    assert (Cached.cache_hits () = 2)
+    assert (get_stat "cache misses" = 1);
+    assert (get_stat "cache hits" = 2)
 
   let test_cache_get_model _ =
     let open Infix in

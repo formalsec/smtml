@@ -143,8 +143,6 @@ module Z3 :
     val get_sat_model :
       ?symbols:Symbol.t list ->
       t -> Expr.Set.t -> [ `Model of Model.t | `Unknown | `Unsat ]
-    val cache_hits : unit -> int
-    val cache_misses : unit -> int
   end
 # let solver = Z3.create ();;
 val solver : Z3.t = <abstr>
