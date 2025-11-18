@@ -111,13 +111,6 @@ module type S = sig
     -> t
     -> Expr.Set.t
     -> [ `Model of Model.t | `Unsat | `Unknown ]
-
-  (** [cache_hits ()] Returns the number of hits that have already occurred in
-      the cache for the Cached module, returns 0 for other modules *)
-  val cache_hits : unit -> int
-
-  (** [cache_misses ()] Same as [cache_hits] but for misses *)
-  val cache_misses : unit -> int
 end
 
 (** The [Intf] module type defines the interface for creating and working with
