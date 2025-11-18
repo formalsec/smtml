@@ -66,6 +66,10 @@ module type S = sig
       an error if the expression is not a relational operation. *)
   val negate_relop : t -> t
 
+  (** [inline_symbol_values symbol_map e] replaces each symbol [e] expressions
+      of [set] by its image in [symbol_map]. *)
+  val inline_symbol_values : t Symbol.Map.t -> t -> t
+
   (** {1 Pretty Printing} *)
 
   (** [pp fmt term] prints a term in a human-readable format using the formatter
@@ -420,6 +424,9 @@ module type S = sig
         of {!to_int}. *)
     val iter : (elt -> unit) -> t -> unit
 
+    (** [map f set] maps all elements of [set] to their image by [f]. *)
+    val map : (elt -> elt) -> t -> t
+
     (** [filter f set] is the subset of [set] that only contains the elements
         that satisfy [f]. [f] is called in the unsigned order of {!to_int}. *)
     val filter : (elt -> bool) -> t -> t
@@ -518,6 +525,10 @@ module type S = sig
     (** [get_symbols exprs] extracts all symbolic variables from a list of
         expressions. *)
     val get_symbols : t -> Symbol.t list
+
+    (** [inline_symbol_values symbol_map set] replaces each symbol in all
+        expressions of [set] by its image in [symbol_map]. *)
+    val inline_symbol_values : elt Symbol.Map.t -> t -> t
   end
 
   (** {1 Bitvectors} *)

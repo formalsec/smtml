@@ -650,6 +650,36 @@ let test_simplify =
   ; "test_simplify_ptr" >:: test_simplify_ptr
   ]
 
+let test_inline_symbol_values_empty (_ : test_ctxt) =
+  let symbol_map = Symbol.Map.empty in
+  let e =
+    let ty = Ty.Ty_bitv 32 in
+    Infix.symbol "x" ty
+  in
+  let e' = Expr.inline_symbol_values symbol_map e in
+  (* We should not have changed the symbol value, and it should even stay physically equal to its original value. *)
+  assert (e == e')
+
+let test_inline_symbol_values_replace_one (_ : test_ctxt) =
+  let n = Infix.int 42 in
+  let e' =
+    let x =
+      let ty = Ty.Ty_bitv 32 in
+      Symbol.make ty "x"
+    in
+    let symbol_map = Symbol.Map.add x n Symbol.Map.empty in
+    let e = Expr.symbol x in
+    Expr.inline_symbol_values symbol_map e
+  in
+  (* e should now be equal to n because symbol x should have been replaced by n *)
+  assert (e' == n)
+
+let test_inline_symbol_values =
+  [ "test_inline_symbol_values_empty" >:: test_inline_symbol_values_empty
+  ; "test_inline_symbol_values_replace_one"
+    >:: test_inline_symbol_values_replace_one
+  ]
+
 let test_suite =
   "Expression unit tests"
   >::: [ "test_hc" >:: test_hc
@@ -660,6 +690,7 @@ let test_suite =
        ; "test_cvtop" >::: test_cvtop
        ; "test_naryop" >::: test_naryop
        ; "test_simplify" >::: test_simplify
+       ; "test_inline_symbol_values" >::: test_inline_symbol_values
        ]
 
 let () = run_test_tt_main test_suite
