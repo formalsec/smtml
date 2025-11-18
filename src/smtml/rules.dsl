@@ -1,0 +1,42 @@
+Not(Not(x)) ==> x
+Neg(Neg(x)) ==> x
+Not(Ne(e1, e2)) ==> Eq(e1, e2)
+Not(Eq(e1, e2)) ==> Ne(e1, e2)
+Not(Lt(e1, e2)) ==> Le(e2, e1)
+Not(Le(e1, e2)) ==> Lt(e2, e1)
+Not(Gt(e1, e2)) ==> Le(e1, e2)
+Not(Ge(e1, e2)) ==> Lt(e1, e2)
+Reverse(List l) ==> List (List.rev l) when (concrete(List l))
+Reverse(Reverse(l)) ==> l
+(* Head(List l) ==> List (List.hd l) when (concrete(List l)) *)
+(* Tail(List l) ==> List (List.tl l) when (concrete(List l)) *)
+Length(List l) ==> Int(List.length l) when (concrete(List l))
+And(True, hte) ==> hte
+And(hte, True) ==> hte
+Add(Bitv(bv), hte2) ==> hte2 when (Bitvector.eqz bv)
+Or(Bitv(bv), hte2) ==> hte2 when (Bitvector.eqz bv)
+Add(hte1, Bitv(bv)) ==> hte1 when (Bitvector.eqz bv)
+Or(hte1, Bitv(bv)) ==> hte1 when (Bitvector.eqz bv)
+And(Bitv(bv), _) ==> Bitv(bv) when (Bitvector.eqz bv)
+Mul(Bitv(bv), _) ==> Bitv(bv) when (Bitvector.eqz bv)
+And(_, Bitv(bv)) ==> Bitv(bv) when (Bitvector.eqz bv)
+Mul(_, Bitv(bv)) ==> Bitv(bv) when (Bitvector.eqz bv)
+Mul(Bitv(bv), hte2) ==> hte2 when (Bitvector.eq_one bv)
+Mul(hte1, Bitv(bv)) ==> hte1 when (Bitvector.eq_one bv)
+Add(Add(x, Val(v1)), Val(v2)) ==> Add(x, eval(Add, v1, v2))
+Sub(Sub(x, Val(v1)), Val(v2)) ==> Sub(x, eval(Add, v1, v2))
+Mul(Mul(x, Val(v1)), Val(v2)) ==> Mul(x, eval(Mul, v1, v2))
+Add(Val(v1), Add(x, Val(v2))) ==> Add(eval(Add, v1, v2), x)
+Mul(Val(v1), Mul(x, Val(v2))) ==> Mul(eval(Mul, v1, v2), x)
+(* At(List es, Int(n)) ==> List.nth es n when (concrete(List es)) *)
+List_cons(hte1, List l) ==> List (List.cons hte1 l) when (concrete(List l))
+List_append(List l0, List []) ==> List l0 when (concrete(List l0))
+List_append(List [], List l1) ==> List l1 when (concrete(List l1))
+List_append(List l0, List l1) ==> List (List.append l0 l1) when (concrete(List l0) && concrete(List l1))
+Ite(True, e1, _) ==> e1
+Ite(False, _, e2) ==> e2
+Ite(c1, Ite(c2, e1, e2), Ite(c3, e3, e4)) ==> Ite(And(c1, c2), e1, Ite(c1, e2, Ite(c3, e3, e4)))
+Extract(bv, h, l) ==> bv when (h < size(bv) && (l >= 0) && (size(bv) == (h - l + 1)))
+Concat([Concat(l1), Concat(l2)]) ==> Concat(List.append l1 l2)
+Concat([Concat(htes), hte]) ==> Concat(List.append htes [hte])
+Concat([hte, Concat(htes)]) ==> Concat(List.cons hte htes)

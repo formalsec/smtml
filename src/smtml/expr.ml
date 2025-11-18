@@ -6,36 +6,6 @@ include Base_expr
 
 let symbol s = make (Symbol s)
 
-(** The return type of an expression *)
-let rec ty (hte : t) : Ty.t =
-  match view hte with
-  | Val x -> Value.type_of x
-  | Ptr _ -> Ty_bitv 32
-  | Loc _ -> Ty_app
-  | Symbol x -> Symbol.type_of x
-  | List _ -> Ty_list
-  | App (sym, _) -> begin match sym.ty with Ty_none -> Ty_app | ty -> ty end
-  | Unop (ty, _, _) -> ty
-  | Binop (ty, _, _, _) -> ty
-  | Triop (_, Ite, _, hte1, hte2) ->
-    let ty1 = ty hte1 in
-    let ty2 = ty hte2 in
-    assert (Ty.equal ty1 ty2);
-    ty1
-  | Triop (ty, _, _, _, _) -> ty
-  | Relop (ty, _, _, _) -> ty
-  | Cvtop (_, (Zero_extend m | Sign_extend m), hte) -> (
-    match ty hte with Ty_bitv n -> Ty_bitv (n + m) | _ -> assert false )
-  | Cvtop (ty, _, _) -> ty
-  | Naryop (ty, _, _) -> ty
-  | Extract (_, h, l) -> Ty_bitv (h - l + 1)
-  | Concat (e1, e2) -> (
-    match (ty e1, ty e2) with
-    | Ty_bitv n1, Ty_bitv n2 -> Ty_bitv (n1 + n2)
-    | t1, t2 ->
-      Fmt.failwith "Invalid concat of (%a) with (%a)" Ty.pp t1 Ty.pp t2 )
-  | Binder (_, _, e) -> ty e
-
 module TyTbl = Hashtbl.Make (Expr)
 
 let memoize_ty (hte : t) : Ty.t =
@@ -79,25 +49,6 @@ let memoize_ty (hte : t) : Ty.t =
       ty
   in
   aux hte
-
-let rec is_symbolic (v : t) : bool =
-  match view v with
-  | Val _ -> false
-  | Symbol _ -> true
-  | Loc _ -> false
-  | Ptr { offset; _ } -> is_symbolic offset
-  | List vs -> List.exists is_symbolic vs
-  | App (_, vs) -> List.exists is_symbolic vs
-  | Unop (_, _, v) -> is_symbolic v
-  | Binop (_, _, v1, v2) -> is_symbolic v1 || is_symbolic v2
-  | Triop (_, _, v1, v2, v3) ->
-    is_symbolic v1 || is_symbolic v2 || is_symbolic v3
-  | Cvtop (_, _, v) -> is_symbolic v
-  | Relop (_, _, v1, v2) -> is_symbolic v1 || is_symbolic v2
-  | Naryop (_, _, vs) -> List.exists is_symbolic vs
-  | Extract (e, _, _) -> is_symbolic e
-  | Concat (e1, e2) -> is_symbolic e1 || is_symbolic e2
-  | Binder (_, _, e) -> is_symbolic e
 
 let get_symbols (hte : t list) =
   let tbl = Hashtbl.create 64 in
