@@ -5,6 +5,12 @@
  (modules parser)
  (flags --table))
 
+(ocamllex
+ (modules simplifier_lexer))
+
+(menhir
+ (modules simplifier_parser))
+
 (library
  (name smtml)
  (public_name smtml)
@@ -132,16 +138,18 @@
   (pps ppx_deriving.std ppx_deriving.show ppx_enumerate)))
 
 (executable
- (name build_simplifier)
- (modules build_simplifier)
- (libraries sexplib fmt fpath bos))
+ (name simplifier_dsl)
+ (modules simplifier_ast simplifier_lexer simplifier_parser simplifier_dsl)
+ (libraries fmt fpath bos menhirLib))
 
 (rule
  (targets simplifier.ml)
- (deps rules.ssn build_simplifier.exe)
+ (deps rules.dsl simplifier_dsl.exe)
  (action
-  (with-stdout-to %{targets}
-    (run %{dep:build_simplifier.exe}))))
+  (with-stdout-to
+   %{targets}
+   (run %{dep:simplifier_dsl.exe}))))
+
 
 (rule
  (targets
