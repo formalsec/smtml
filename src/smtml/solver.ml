@@ -65,10 +65,6 @@ module Base (M : Mappings_intf.S) = struct
         (* Should never happen *)
         assert false )
     | (`Unsat | `Unknown) as no_model -> no_model
-
-  let cache_hits () = 0
-
-  let cache_misses () = !solver_count
 end
 
 module Incremental (M : Mappings_intf.S) : Solver_intf.S =
@@ -155,10 +151,6 @@ module Cached (Mappings_ : Mappings.S) = struct
 
     let cache = Cache.create 256
 
-    let cache_hits () = Cache.hits cache
-
-    let cache_misses () = Cache.misses cache
-
     let pp_statistics fmt s = pp_statistics fmt s.solver
 
     let create ?params ?logic () =
@@ -199,7 +191,13 @@ module Cached (Mappings_ : Mappings.S) = struct
 
     let get_assertions (s : t) : Expr.t list = Expr.Set.to_list s.top [@@inline]
 
-    let get_statistics (s : t) : Statistics.t = get_statistics s.solver
+    let get_statistics (s : t) : Statistics.t =
+      let stats = get_statistics s.solver in
+      let cache_hits = Cache.hits cache in
+      let cache_misses = Cache.misses cache in
+      stats
+      |> Statistics.Map.add "cache misses" (`Int cache_misses)
+      |> Statistics.Map.add "cache hits" (`Int cache_hits)
 
     let get_sat_model ?symbols s set =
       let assert_ = Expr.Set.union set s.top in
