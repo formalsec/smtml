@@ -224,8 +224,7 @@ module M = struct
       let interrupt _ =
         Fmt.failwith "Altergo_mappings: interrupt is not implemented"
 
-      let get_statistics _ =
-        Fmt.failwith "Altergo_mappings: get_statistics is not implemented"
+      let get_statistics _ = Statistics.Map.empty
 
       let pp_statistics _fmt _solver = ()
     end
