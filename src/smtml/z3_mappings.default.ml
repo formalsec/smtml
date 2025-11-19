@@ -551,7 +551,7 @@ module M = struct
       | Num_threads ->
         Z3.set_global_param "parallel.threads.max" (string_of_int v)
       | Debug -> ()
-      | Random_seed -> if Option.is_none v then () else
+      | Random_seed ->
           Z3.set_global_param "sat.random_seed" (string_of_int v);
           Z3.set_global_param "sls.random_seed" (string_of_int v);
           Z3.set_global_param "smt.random_seed" (string_of_int v);
