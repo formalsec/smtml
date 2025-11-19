@@ -552,10 +552,10 @@ module M = struct
         Z3.set_global_param "parallel.threads.max" (string_of_int v)
       | Debug -> ()
       | Random_seed -> if Option.is_none v then () else
-          Z3.set_global_param "sat.random_seed" (string_of_int (Option.get v));
-          Z3.set_global_param "sls.random_seed" (string_of_int (Option.get v));
-          Z3.set_global_param "smt.random_seed" (string_of_int (Option.get v));
-          Z3.set_global_param "fp.spacer.random_seed" (string_of_int (Option.get v))
+          Z3.set_global_param "sat.random_seed" (string_of_int v);
+          Z3.set_global_param "sls.random_seed" (string_of_int v);
+          Z3.set_global_param "smt.random_seed" (string_of_int v);
+          Z3.set_global_param "fp.spacer.random_seed" (string_of_int v)
 
     let set_params (params : Params.t) =
       List.iter (fun (Params.P (p, v)) -> set_param p v) (Params.to_list params)
