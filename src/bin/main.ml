@@ -21,7 +21,7 @@ let cli =
   let cmd_run = Cmd.v Cli.info_run Cli.cmd_run in
   let cmd_to_smt2 = Cmd.v Cli.info_to_smt2 Cli.cmd_to_smt2 in
   let cmd_to_smtml = Cmd.v Cli.info_to_smtml Cli.cmd_to_smtml in
-  let info = Cmd.info "smtml" ~version:"%%VERSION%%" in
+  let info = Cmd.info "smtml" in
   Cmd.group info [ cmd_run; cmd_to_smt2; cmd_to_smtml ]
 
 let returncode =
