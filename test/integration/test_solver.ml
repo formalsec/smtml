@@ -19,8 +19,8 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     assert_equal (Params.default_value Timeout) Int32.(to_int max_int);
     assert_equal (Params.default_value Model) true;
     assert_equal (Params.default_value Unsat_core) false;
-
-    assert_equal (Params.default_value Ematching) true
+    assert_equal (Params.default_value Ematching) true;
+    assert_equal (Params.default_value Random_seed) 0
 
   let test_solver_params solver_module =
     let module Solver = (val solver_module : Solver_intf.S) in
@@ -28,7 +28,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
       Params.(
         default () $ (Timeout, 900) $ (Model, false) $ (Unsat_core, true)
         $ (Ematching, false) $ (Parallel, true) $ (Num_threads, 1)
-        $ (Debug, false) )
+        $ (Debug, false) $ (Random_seed, 1227))
     in
     assert (Params.get params Unsat_core);
     let _ : Solver.t = Solver.create ~params () in

@@ -72,6 +72,7 @@ module M = struct
         | Parallel -> ()
         | Num_threads -> ()
         | Debug -> Colibri2_stdlib.Debug.set_info_flags v
+        | Random_seed -> ()
 
       let set_params (params : Params.t) =
         List.iter
