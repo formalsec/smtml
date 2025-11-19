@@ -519,7 +519,7 @@ module Fresh_cvc5 () = struct
       | Unsat_core ->
         Solver.set_option slv "produce-unsat-cores" (string_of_bool v)
       | Ematching -> Solver.set_option slv "e-matching" (string_of_bool v)
-      | Parallel | Num_threads | Debug -> ()
+      | Parallel | Num_threads | Debug | Random_seed -> ()
 
     let set_params slv params =
       List.iter

@@ -10,6 +10,7 @@ type _ param =
   | Parallel : bool param
   | Num_threads : int param
   | Debug : bool param
+  | Random_seed : int param
 
 let discr : type a. a param -> int = function
   | Timeout -> 0
@@ -19,6 +20,7 @@ let discr : type a. a param -> int = function
   | Parallel -> 4
   | Num_threads -> 5
   | Debug -> 6
+  | Random_seed -> 7
 
 module Key = struct
   type t = K : 'a param -> t
@@ -50,6 +52,8 @@ let default_num_threads = 1
 
 let default_debug = false
 
+let default_random_seed = 0
+
 let default_value (type a) (param : a param) : a =
   match param with
   | Timeout -> default_timeout
@@ -59,6 +63,7 @@ let default_value (type a) (param : a param) : a =
   | Parallel -> default_parallel
   | Num_threads -> default_num_threads
   | Debug -> default_debug
+  | Random_seed -> default_random_seed
 
 let default () =
   Pmap.empty
@@ -86,7 +91,8 @@ let get (type a) (params : t) (param : a param) : a =
   | Parallel, Some (P (Parallel, v)) -> v
   | Num_threads, Some (P (Num_threads, v)) -> v
   | Debug, Some (P (Debug, v)) -> v
-  | ( (Timeout | Model | Unsat_core | Ematching | Parallel | Num_threads | Debug)
+  | Random_seed, Some (P (Random_seed, v)) -> v
+  | ( (Timeout | Model | Unsat_core | Ematching | Parallel | Num_threads | Debug | Random_seed)
     , _ ) ->
     assert false
 
