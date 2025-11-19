@@ -92,7 +92,8 @@ let get (type a) (params : t) (param : a param) : a =
   | Num_threads, Some (P (Num_threads, v)) -> v
   | Debug, Some (P (Debug, v)) -> v
   | Random_seed, Some (P (Random_seed, v)) -> v
-  | ( (Timeout | Model | Unsat_core | Ematching | Parallel | Num_threads | Debug | Random_seed)
+  | ( ( Timeout | Model | Unsat_core | Ematching | Parallel | Num_threads
+      | Debug | Random_seed )
     , _ ) ->
     assert false
 
