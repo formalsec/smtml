@@ -32,13 +32,7 @@ let assert_type_error f =
   try
     f ();
     assert_bool "raise TypeError" false
-  with Eval.TypeError _ -> ()
-
-let assert_parse_error f =
-  try
-    f ();
-    assert_bool "raise Invalid_argument" false
-  with Invalid_argument _ -> ()
+  with Eval.Eval_error (`Type_error _) -> ()
 
 module Int_test = struct
   (* Unary operators *)
@@ -305,7 +299,7 @@ module Real_test = struct
       assert_equal (str "42.") result
     in
     let test_of_string_error _ =
-      assert_parse_error @@ fun () ->
+      assert_raises (Eval.Eval_error `Invalid_format_conversion) @@ fun () ->
       let _ = Eval.cvtop Ty_real OfString (str "not_a_real") in
       ()
     in
@@ -406,7 +400,7 @@ module Str_test = struct
         let result = Eval.binop Ty_str At (str "abc") (int 0) in
         assert_equal (str "a") result )
     ; ( "test_index_out_of_bounds_error" >:: fun _ ->
-        assert_raises Eval.Index_out_of_bounds @@ fun () ->
+        assert_raises Eval.(Eval_error `Index_out_of_bounds) @@ fun () ->
         let result = Eval.binop Ty_str At (str "abc") (int 4) in
         assert_equal (str "a") result )
     ; ( "test_string_prefix" >:: fun _ ->
@@ -469,7 +463,7 @@ module Str_test = struct
         let result = Eval.cvtop Ty_str String_to_int (str "98") in
         assert_equal (int 98) result )
     ; ( "test_string_to_int_raises" >:: fun _ ->
-        assert_parse_error @@ fun () ->
+        assert_raises (Eval.Eval_error `Invalid_format_conversion) @@ fun () ->
         let _ = Eval.cvtop Ty_str String_to_int (str "not_an_int") in
         () )
     ; ( "test_string_from_int" >:: fun _ ->
@@ -479,7 +473,7 @@ module Str_test = struct
         let result = Eval.cvtop Ty_str String_to_float (str "98") in
         assert_equal (real 98.) result )
     ; ( "test_string_to_float_raises" >:: fun _ ->
-        assert_parse_error @@ fun () ->
+        assert_raises (Eval.Eval_error `Invalid_format_conversion) @@ fun () ->
         let _ = Eval.cvtop Ty_str String_to_float (str "not_a_real") in
         () )
     ]
