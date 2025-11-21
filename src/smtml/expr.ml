@@ -882,3 +882,11 @@ let rec split_conjunctions (e : t) : Set.t =
     let s2 = split_conjunctions e2 in
     Set.union s1 s2
   | _ -> Set.singleton e
+
+let rec split_disjunctions (e : t) : Set.t =
+  match view e with
+  | Binop (Ty_bool, Or, e1, e2) ->
+    let s1 = split_disjunctions e1 in
+    let s2 = split_disjunctions e2 in
+    Set.union s1 s2
+  | _ -> Set.singleton e
