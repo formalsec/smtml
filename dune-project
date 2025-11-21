@@ -15,7 +15,7 @@
  "João Pereira <joaomhmpereira@tecnico.ulisboa.pt>"
  "Filipe Marques <filipe.s.marques@tecnico.ulisboa.pt>"
  "Hichem Rami Ait El Hara <hra@ocamlpro.com>"
- "Léo Andrès <contact@ndrs.fr>"
+ "redianthus <redopam@pm.me>"
  "Arthur Carcano <arthur.carcano@ocamlpro.com>"
  "Pierre Chambart <pierre.chambart@ocamlpro.com>"
  "José Fragoso Santos <jose.fragoso@tecnico.ulisboa.pt>")
@@ -31,20 +31,11 @@
 (package
  (name smtml)
  (synopsis "An SMT solver frontend for OCaml")
- (description "Smt.ml is an SMT solver frontend for OCaml that simplifies \
-              integration with various solvers through a consistent interface. \
-              Its parametric encoding facilitates the easy addition of new \
-              solver backends, while optimisations like formula simplification, \
-              result caching, and detailed error feedback enhance performance \
-              and usability.")
+ (description
+  "Smt.ml is an SMT solver frontend for OCaml that simplifies integration with various solvers through a consistent interface. Its parametric encoding facilitates the easy addition of new solver backends, while optimisations like formula simplification, result caching, and detailed error feedback enhance performance and usability.")
  ; Optional solver dependencies
  ; Change here sould be mirrored in "conflicts"
- (depopts
-  alt-ergo-lib
-  bitwuzla-cxx
-  colibri2
-  cvc5
-  z3)
+ (depopts alt-ergo-lib bitwuzla-cxx colibri2 cvc5 z3)
  (conflicts
   (bitwuzla-cxx
    (< "0.6.0"))
@@ -85,16 +76,14 @@
   (scfg
    (>= "0.5"))
   (mtime
-    (>= "2.0.0"))
+   (>= "2.0.0"))
   (yojson
    (>= "1.6.0"))
   (zarith
    (>= "1.5"))
   ;; Doc dependencies
-  (odoc
-   :with-doc)
-  (sherlodoc
-   :with-doc)
+  (odoc :with-doc)
+  (sherlodoc :with-doc)
   ;; Test dependencies
   (bisect_ppx
    (and
@@ -106,26 +95,17 @@
    (and
     :with-dev-setup
     (= "dev")))
-  (ocamlformat
-   :with-dev-setup)
+  (ocamlformat :with-dev-setup)
   (ppxlib
    (and
     (>= "0.35.0")
     (< "0.36.0")
     :with-dev-setup))
-  (cohttp
-   :with-dev-setup)
-  (cohttp-lwt-unix
-   :with-dev-setup)
-  (extunix
-   :with-dev-setup)
-  (dune-glob
-   :with-dev-setup)
-  (lwt
-   :with-dev-setup)
-  (mdx
-   :with-test)
-  (sexplib
-   :with-dev-setup)
-  (tls-lwt
-   :with-dev-setup)))
+  (cohttp :with-dev-setup)
+  (cohttp-lwt-unix :with-dev-setup)
+  (extunix :with-dev-setup)
+  (dune-glob :with-dev-setup)
+  (lwt :with-dev-setup)
+  (mdx :with-test)
+  (sexplib :with-dev-setup)
+  (tls-lwt :with-dev-setup)))
