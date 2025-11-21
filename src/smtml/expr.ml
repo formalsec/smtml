@@ -874,3 +874,11 @@ module Set = struct
   let inline_symbol_values symbol_map set =
     map (inline_symbol_values symbol_map) set
 end
+
+let rec split_conjunctions (e : t) : Set.t =
+  match view e with
+  | Binop (Ty_bool, And, e1, e2) ->
+    let s1 = split_conjunctions e1 in
+    let s2 = split_conjunctions e2 in
+    Set.union s1 s2
+  | _ -> Set.singleton e
