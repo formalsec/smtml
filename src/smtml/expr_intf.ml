@@ -553,4 +553,9 @@ module type S = sig
     (** Floating-point operations for 64-bit floats. *)
     module F64 : Constructors_intf.Infix with type elt := float and type t := t
   end
+
+  (** {1. Simplifications bis } *)
+
+  (** [split_conjunctions e] when [e] is ((P & Q) & R) is { P; Q; R }. That is, it splits an expressions into a set of subformulas whose conjunctions is equivalent to the original expression. *)
+  val split_conjunctions : t -> Set.t
 end
