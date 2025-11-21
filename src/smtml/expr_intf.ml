@@ -559,6 +559,6 @@ module type S = sig
   (** [split_conjunctions e] when [e] is ((P & Q) & R) is { P; Q; R }. That is, it splits an expressions into a set of subformulas whose conjunctions is equivalent to the original expression. *)
   val split_conjunctions : t -> Set.t
 
-  (** [split_disjunctions e] when [e] is ((P & Q) & R) is { P; Q; R }  That is, it splits an expressions into a set of subformulas whose disjunctions is equivalent to the original expression.*)
+  (** [split_disjunctions e] when [e] is ((P || Q) || R) is { P; Q; R }  That is, it splits an expressions into a set of subformulas whose disjunctions is equivalent to the original expression.*)
   val split_disjunctions : t -> Set.t
 end
