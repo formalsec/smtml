@@ -21,34 +21,37 @@ type op_type =
 
 (** {1 Exceptions} *)
 
-(** Exception raised when a division by zero occurs during evaluation. *)
-exception DivideByZero
-(* FIXME: use snake case instead *)
+(** Context payload for type errors *)
+type type_error_info =
+  { index : int  (** The position of the erroneous value. *)
+  ; value : Value.t  (** The actual value that caused the error. *)
+  ; ty : Ty.t  (** The expected type. *)
+  ; op : op_type  (** The operation that led to the error. *)
+  ; msg : string
+  }
 
-exception Conversion_to_integer
+(** Classification of errors that can occur during evaluation. *)
+type error_kind =
+  [ `Divide_by_zero
+  | `Conversion_to_integer
+  | `Integer_overflow
+  | `Index_out_of_bounds
+  | `Invalid_format_conversion
+  | `Unsupported_operator of op_type * Ty.t
+  | `Unsupported_theory of Ty.t
+  | `Type_error of type_error_info
+  ]
 
-exception Integer_overflow
-
-exception Index_out_of_bounds
+(** Exception raised when an error occurs during concrete evaluation. *)
+exception Eval_error of error_kind
 
 (** Exception raised when an invalid value is encountered during evaluation. *)
 exception Value of Ty.t
 
-(** Exception raised when a type error occurs during evaluation. *)
-exception
-  TypeError of
-    { index : int  (** The position of the erroneous value in the operation. *)
-    ; value : Value.t  (** The actual value that caused the error. *)
-    ; ty : Ty.t  (** The expected type. *)
-    ; op : op_type  (** The operation that led to the error. *)
-    ; msg : string
-    }
-(* FIXME: use snake case instead *)
-
 (** {1 Evaluation Functions} *)
 
 (** [unop ty op v] applies a unary operation [op] on the value [v] of type [ty].
-    Raises [TypeError] if the value does not match the expected type. *)
+    Raises [Type_error] if the value does not match the expected type. *)
 val unop : Ty.t -> Ty.Unop.t -> Value.t -> Value.t
 
 (** [binop ty op v1 v2] applies a binary operation [op] on the values [v1] and
