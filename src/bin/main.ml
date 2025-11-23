@@ -15,22 +15,15 @@
 (* You should have received a copy of the GNU General Public License       *)
 (* along with this program.  If not, see <https://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
-open Cmdliner
-
-let cli =
-  let cmd_run = Cmd.v Cli.info_run Cli.cmd_run in
-  let cmd_to_smt2 = Cmd.v Cli.info_to_smt2 Cli.cmd_to_smt2 in
-  let cmd_to_smtml = Cmd.v Cli.info_to_smtml Cli.cmd_to_smtml in
-  let info = Cmd.info "smtml" in
-  Cmd.group info [ cmd_run; cmd_to_smt2; cmd_to_smtml ]
 
 let returncode =
-  match Cmdliner.Cmd.eval_value cli with
-  | Ok (`Help | `Version | `Ok ()) -> Cmd.Exit.ok
-  | Error e -> (
+  match Cmdliner.Cmd.eval_value Cli.commands with
+  | Ok (`Help | `Version | `Ok ()) -> Cmdliner.Cmd.Exit.ok
+  | Error e -> begin
     match e with
-    | `Term -> Cmd.Exit.some_error
-    | `Parse -> Cmd.Exit.cli_error
-    | `Exn -> Cmd.Exit.internal_error )
+    | `Term -> Cmdliner.Cmd.Exit.some_error
+    | `Parse -> Cmdliner.Cmd.Exit.cli_error
+    | `Exn -> Cmdliner.Cmd.Exit.internal_error
+  end
 
 let () = exit returncode

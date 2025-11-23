@@ -21,6 +21,7 @@ depends: [
   "bos"
   "cmdliner" {>= "1.3.0"}
   "dune" {>= "3.19"}
+  "dune-build-info"
   "dolmen" {= "0.10"}
   "dolmen_type" {= "0.10"}
   "dolmen_model" {= "0.10"}
