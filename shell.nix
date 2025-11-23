@@ -22,6 +22,7 @@ pkgs.mkShell {
   buildInputs = with pkgs.ocamlPackages; [
     bos
     cmdliner
+    dune-build-info
     dolmen_model
     dolmen_type
     fpath
