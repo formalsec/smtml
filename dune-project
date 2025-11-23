@@ -50,6 +50,7 @@
   (cmdliner
    (>= "1.3.0"))
   dune
+  dune-build-info
   (dolmen
    (= "0.10"))
   (dolmen_type

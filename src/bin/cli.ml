@@ -60,39 +60,64 @@ let from_file =
   Arg.(
     value & opt (some fpath) None & info [ "F"; "from-file" ] ~doc ~docv:"VAL" )
 
-let info_run =
-  let doc = "Runs one or more scripts using. Also supports directory inputs" in
-  Cmd.info "run" ~doc
+let version = Cmd_version.version
 
 let cmd_run =
-  let open Term.Syntax in
-  let+ debug
-  and+ dry
-  and+ print_statistics
-  and+ no_strict_status
-  and+ solver_type
-  and+ solver_mode
-  and+ from_file
-  and+ filenames in
-  Cmd_run.run ~debug ~dry ~print_statistics ~no_strict_status ~solver_type
-    ~solver_mode ~from_file ~filenames
-
-let info_to_smt2 =
-  let doc = "Convert .smtml into .smt2" in
-  Cmd.info "to-smt2" ~doc
+  let info =
+    let doc =
+      "Runs one or more scripts using. Also supports directory inputs"
+    in
+    Cmd.info ~version "run" ~doc
+  in
+  let term =
+    let open Term.Syntax in
+    let+ debug
+    and+ dry
+    and+ print_statistics
+    and+ no_strict_status
+    and+ solver_type
+    and+ solver_mode
+    and+ from_file
+    and+ filenames in
+    Cmd_run.run ~debug ~dry ~print_statistics ~no_strict_status ~solver_type
+      ~solver_mode ~from_file ~filenames
+  in
+  Cmd.v info term
 
 let cmd_to_smt2 =
-  let open Term.Syntax in
-  let+ debug
-  and+ solver_type
-  and+ filename in
-  Cmd_to_smt2.run ~debug ~solver_type ~filename
-
-let info_to_smtml =
-  let doc = "Print/Format the content of an .smtml file" in
-  Cmd.info "to-smtml" ~doc
+  let info =
+    let doc = "Convert .smtml into .smt2" in
+    Cmd.info ~version "to-smt2" ~doc
+  in
+  let term =
+    let open Term.Syntax in
+    let+ debug
+    and+ solver_type
+    and+ filename in
+    Cmd_to_smt2.run ~debug ~solver_type ~filename
+  in
+  Cmd.v info term
 
 let cmd_to_smtml =
-  let open Term.Syntax in
-  let+ filename in
-  Cmd_to_smt2.run_to_smtml ~filename
+  let info =
+    let doc = "Print/Format the content of an .smtml file" in
+    Cmd.info ~version "to-smtml" ~doc
+  in
+  let term =
+    let open Term.Syntax in
+    let+ filename in
+    Cmd_to_smt2.run_to_smtml ~filename
+  in
+  Cmd.v info term
+
+let cmd_version =
+  let info =
+    let doc = "Print smtml version and linked libraries" in
+    Cmd.info ~version "version" ~doc
+  in
+  let term = Term.(const Cmd_version.run $ const ()) in
+  Cmd.v info term
+
+let commands =
+  let info = Cmd.info ~version "smtml" in
+  Cmd.group info [ cmd_run; cmd_to_smt2; cmd_to_smtml; cmd_version ]

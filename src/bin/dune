@@ -2,6 +2,6 @@
  (package smtml)
  (name main)
  (public_name smtml)
- (libraries cmdliner smtml)
+ (libraries cmdliner dune-build-info smtml)
  (instrumentation
   (backend bisect_ppx)))
