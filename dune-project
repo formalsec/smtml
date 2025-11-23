@@ -6,10 +6,13 @@
 
 (name smtml)
 
+(version 0.14.0)
+
 (generate_opam_files true)
 
-(source
- (github formalsec/smtml))
+(source (github formalsec/smtml))
+
+(license "MIT")
 
 (authors
  "João Pereira <joaomhmpereira@tecnico.ulisboa.pt>"
@@ -25,8 +28,6 @@
 (maintenance_intent "(latest)" "(latest).(latest-1).(any)")
 
 (documentation "https://formalsec.github.io/smtml/smtml/index.html")
-
-(license "MIT")
 
 (package
  (name smtml)
