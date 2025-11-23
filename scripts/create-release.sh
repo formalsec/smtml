@@ -26,10 +26,19 @@ else
   TAG="$MAJOR.$MINOR.$PATCH"
 fi
 
+# Create branch
 BRANCH="release/v$TAG"
 git switch -c $BRANCH
+
+# Update CHANGES.md
 git-cliff -c cliff.toml -t $TAG -o CHANGES.md
 git add CHANGES.md
+
+# Update version
+sed -i "s/(version .*)/(version $TAG)/" dune-project
+sed -i "s/^version: \".*\"/version: \"$TAG\"/" smtml.opam
+git add dune-project smtml.opam
+
 git commit -m "Release $TAG"
 git push -u origin $BRANCH
 
