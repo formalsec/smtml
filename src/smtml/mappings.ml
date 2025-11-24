@@ -911,7 +911,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
               M.Solver.check s.solver ~ctx ~assumptions:encoded_assuptions
             in
             let usage_after = Mtime_clock.count usage_before in
-            Utils.write assumptions (Mtime.Span.to_uint64_ns usage_after);
+            Utils.write M.Internals.name assumptions
+              (Mtime.Span.to_uint64_ns usage_after);
             res
           | None -> M.Solver.check s.solver ~ctx ~assumptions:encoded_assuptions
           )

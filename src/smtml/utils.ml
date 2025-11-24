@@ -28,9 +28,9 @@ let[@inline never] protect m f =
    all queries sent to the solver (with their timestamps) to the given file *)
 let write =
   match query_log_path with
-  | None -> fun _ _ -> ()
+  | None -> fun _ _ _ -> ()
   | Some path ->
-    let log_entries : (Expr.t list * int64) list ref = ref [] in
+    let log_entries : (string * Expr.t list * int64) list ref = ref [] in
     let close () =
       let entries = List.rev !log_entries in
       let bytes = Marshal.to_string entries [] in
@@ -42,6 +42,6 @@ let write =
     Sys.set_signal Sys.sigterm (Sys.Signal_handle (fun _ -> close ()));
     (* write *)
     let mutex = Mutex.create () in
-    fun assumptions time ->
-      let entry = (assumptions, time) in
+    fun solver_name assumptions time ->
+      let entry = (solver_name, assumptions, time) in
       protect mutex (fun () -> log_entries := entry :: !log_entries)
