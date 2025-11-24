@@ -14,7 +14,7 @@ jobs:
       OPAMCONFIRMLEVEL: unsafe-yes
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup OCaml
         uses: ocaml/setup-ocaml@v3
@@ -40,7 +40,7 @@ jobs:
       OPAMCONFIRMLEVEL: unsafe-yes
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
         # Removes ·git to prevent opam from checking out submodueles
       - name: Remove .git
@@ -73,7 +73,7 @@ jobs:
       OPAMCONFIRMLEVEL: unsafe-yes
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
         # Removes ·git to prevent opam from checking out submodueles
       - name: Remove .git
