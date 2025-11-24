@@ -8,6 +8,8 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
   open B
 
   module Internals = struct
+    let name = "Bitwuzla"
+
     let caches_consts = false
 
     let is_available = true

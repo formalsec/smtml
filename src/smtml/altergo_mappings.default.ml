@@ -46,6 +46,7 @@ module M = struct
     include Dolmenexpr_to_expr.DolmenIntf
 
     module Internals = struct
+      let name = "Alt-Ergo"
       let caches_consts = false
 
       let is_available = true

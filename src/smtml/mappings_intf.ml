@@ -91,6 +91,10 @@ module type M = sig
   val exists : term list -> term -> term
 
   module Internals : sig
+    (** [name] indicates the name of the solver for query logging and debugging
+        purposes. *)
+    val name : string
+
     (** [is_available] indicates whether the module is available for use. *)
     val is_available : bool
 

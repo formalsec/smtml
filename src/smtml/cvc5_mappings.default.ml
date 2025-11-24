@@ -7,6 +7,8 @@ include Mappings_intf
 
 module Fresh_cvc5 () = struct
   module Internals = struct
+    let name = "cvc5"
+
     let caches_consts = false
 
     let is_available = true

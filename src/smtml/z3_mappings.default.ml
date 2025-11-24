@@ -9,6 +9,8 @@ include Mappings_intf
 module M = struct
   module Make () = struct
     module Internals = struct
+      let name = "Z3"
+
       let caches_consts = true
 
       let is_available = true
