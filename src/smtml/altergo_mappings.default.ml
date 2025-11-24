@@ -47,6 +47,7 @@ module M = struct
 
     module Internals = struct
       let name = "Alt-Ergo"
+
       let caches_consts = false
 
       let is_available = true
