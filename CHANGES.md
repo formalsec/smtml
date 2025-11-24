@@ -1,7 +1,32 @@
 # Changelog
 
+## 0.15.0 - 2025-11-24
+
+- 2025-11-23 Update `shell.nix`
+- 2025-11-23 Add version stanza to dune-project ([#454](https://github.com/formalsec/smtml/issues/454))
+- 2025-11-23 Add version command ([#454](https://github.com/formalsec/smtml/issues/454))
+- 2025-11-23 Refactor exception handling in operator evaluation
+- 2025-11-21 Update src/smtml/expr_intf.ml
+- 2025-11-21 Add `Expr.split_disjunctions`
+- 2025-11-21 Add `Expr.split_conjunctions`
+- 2025-11-21 Add functions to map symbols to values in an expression or in a set
+- 2025-11-21 Update metadata and fmt dune-project
+- 2025-11-20 Feat: random_seed for cvc5
+- 2025-11-20 Fix: formatting
+- 2025-11-20 Fix: oops tests
+- 2025-11-20 Fix: oops tests
+- 2025-11-20 Fix: version template
+- 2025-11-20 Feat: random_seed
+- 2025-11-19 Fix cache hits test
+- 2025-11-19 Put the cache info (hits/misses) in solver stats
+- 2025-11-18 Add basic Nix CI
+- 2025-11-18 Add `shell.nix`
+- 2025-11-18 Correct capitalization in README.md
+- 2025-11-18 Update README with logo and project details
+
 ## 0.14.0 - 2025-11-17
 
+- 2025-11-17 Release 0.14.0
 - 2025-11-17 Add `threads` to smtml's libraries stanza
 - 2025-11-17 Add draft smtml logo
 - 2025-11-14 Promote tests
