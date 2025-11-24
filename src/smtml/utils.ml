@@ -32,18 +32,19 @@ let write =
   | Some path ->
     let log_entries : (string * Expr.t list * int64) list ref = ref [] in
     let close () =
-      try
-        let oc =
-          (* open with wr/r/r rights, create if it does not exit and append to
+      if not (List.is_empty !log_entries) then
+        try
+          let oc =
+            (* open with wr/r/r rights, create if it does not exit and append to
             it if it exists. *)
-          Out_channel.open_gen
-            [ Open_creat; Open_binary; Open_append ]
-            0o644 (Fpath.to_string path)
-        in
-        Marshal.to_channel oc !log_entries [];
-        Out_channel.close oc
-      with e ->
-        Fmt.failwith "Failed to write log: %s@." (Printexc.to_string e)
+            Out_channel.open_gen
+              [ Open_creat; Open_binary; Open_append ]
+              0o644 (Fpath.to_string path)
+          in
+          Marshal.to_channel oc !log_entries [];
+          Out_channel.close oc
+        with e ->
+          Fmt.failwith "Failed to write log: %s@." (Printexc.to_string e)
     in
     at_exit close;
     Sys.set_signal Sys.sigterm (Sys.Signal_handle (fun _ -> close ()));
