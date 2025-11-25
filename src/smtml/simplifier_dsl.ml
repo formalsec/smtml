@@ -367,11 +367,280 @@ module CodeGen = struct
       (String.concat "\n" rules) raw_fallback ending
 end
 
+module LeanGen = struct
+  open Dsl_ast
+
+  exception UnsupportedLean of string
+
+  let _lean_ty_constructor (ty_str : string) : string =
+    match ty_str with
+    | "Ty_int" -> "Int"
+    | "Ty_str" -> "String"
+    | "Ty_bool" -> "Bool"
+    | "Ty_bitv" -> "Bitvec"
+    | "Int" -> "Int"
+    | "String" -> "String"
+    | "Bool" -> "Bool"
+    | "Prop" -> "Prop"
+    | _ -> ty_str
+
+  let is_variable (s : string) : bool =
+    if String.length s = 0 then false
+    else
+      let c = String.get s 0 in
+      (c >= 'a' && c <= 'z') || c = '_'
+
+  let rec has_bitv (p : lhs_pattern) : bool =
+    match p with
+    | LVar _ -> false
+    | LConstructor ("Bitv", _) -> true
+    | LConstructor (_, args) -> List.exists has_bitv args
+    | LList items -> List.exists has_bitv items
+    | _ -> false
+
+  let rec infer_var_types (vars : (string, string) Hashtbl.t)
+    (current_ty : string) (p : lhs_pattern) : unit =
+    let get_elem_ty ty =
+      if String.starts_with ~prefix:"List " ty then
+        String.sub ty 5 (String.length ty - 5)
+      else "ty"
+    in
+    match p with
+    | LVar "_" ->
+      if not (Hashtbl.mem vars "_a") then Hashtbl.add vars "_a" current_ty
+    | LVar v when is_variable v ->
+      if not (Hashtbl.mem vars v) then Hashtbl.add vars v current_ty
+    | LList items ->
+      List.iter (infer_var_types vars (get_elem_ty current_ty)) items
+    | LConstructor ("Bitv", [ arg ]) -> infer_var_types vars "BitVec" arg
+    | LConstructor ("Int", [ arg ]) -> infer_var_types vars "Int" arg
+    | LConstructor ("True", []) -> ()
+    | LConstructor ("False", []) -> ()
+    | LConstructor ("List", [ arg ]) ->
+      infer_var_types vars (Fmt.str "List %s" current_ty) arg
+    | LConstructor ("Ite", [ c; t; e ]) ->
+      infer_var_types vars "Prop" c;
+      infer_var_types vars current_ty t;
+      infer_var_types vars current_ty e
+    | LConstructor ("Extract", [ a1; a2; a3 ]) ->
+      infer_var_types vars "BitVec" a1;
+      infer_var_types vars "Int" a2;
+      infer_var_types vars "Int" a3
+    | LConstructor ("Not", [ arg ]) -> infer_var_types vars "Prop" arg
+    | LConstructor (("Eq" | "Ne" | "Lt" | "Le" | "Gt" | "Ge"), [ a1; a2 ]) ->
+      let arg_ty = if current_ty = "Prop" then "ty" else current_ty in
+      let final_ty = if has_bitv a1 || has_bitv a2 then "BitVec" else arg_ty in
+      infer_var_types vars final_ty a1;
+      infer_var_types vars final_ty a2
+    | LConstructor (("Add" | "Sub" | "Mul" | "Or" | "And"), [ a1; a2 ]) ->
+      let final_ty =
+        if has_bitv a1 || has_bitv a2 then "BitVec" else current_ty
+      in
+      infer_var_types vars final_ty a1;
+      infer_var_types vars final_ty a2
+    | LConstructor ("Reverse", [ arg ]) ->
+      (* if current_ty already has List, then don't add it again *)
+      if String.contains current_ty ' ' then infer_var_types vars current_ty arg
+      else infer_var_types vars (Fmt.str "List %s" current_ty) arg
+    | LConstructor ("Concat", [ arg1; arg2 ]) ->
+      infer_var_types vars (Fmt.str "List %s" current_ty) arg1;
+      infer_var_types vars (Fmt.str "List %s" current_ty) arg2
+    | LConstructor ("Concat", [ arg ]) -> infer_var_types vars "List String" arg
+    | LConstructor (_, args) -> List.iter (infer_var_types vars current_ty) args
+    | LInt _ -> ()
+    | _ -> ()
+
+  let rec cond_to_lean (e : cond_expr) (vars_tbl : (string, string) Hashtbl.t) :
+    string =
+    match e with
+    | CVar s -> s
+    | CInt i -> string_of_int i
+    | CPat (LVar v) -> v
+    | CApp ("size", _) -> "w" (* w represents the bitvector width *)
+    | CNamespacedApp ("Bitvector", "eqz", [ arg ]) ->
+      Fmt.str "(%s = 0)" (cond_to_lean arg vars_tbl)
+    | CNamespacedApp ("Bitvector", "eq_one", [ arg ]) ->
+      Fmt.str "(%s = 1)" (cond_to_lean arg vars_tbl)
+    | CInfix (a1, op, a2) ->
+      let op_str = match op with "==" -> "=" | "!=" -> "≠" | _ -> op in
+      Fmt.str "(%s %s %s)" (cond_to_lean a1 vars_tbl) op_str
+        (cond_to_lean a2 vars_tbl)
+    | CAnd (a1, a2) ->
+      Fmt.str "(%s ∧ %s)" (cond_to_lean a1 vars_tbl) (cond_to_lean a2 vars_tbl)
+    | COr (a1, a2) ->
+      Fmt.str "(%s ∨ %s)" (cond_to_lean a1 vars_tbl) (cond_to_lean a2 vars_tbl)
+    | CNot a -> Fmt.str "(¬%s)" (cond_to_lean a vars_tbl)
+    | _ -> raise (UnsupportedLean "Unsupported condition expr")
+
+  let rec to_lean (p : lhs_pattern) (vars_tbl : (string, string) Hashtbl.t) :
+    string =
+    let get_ty_of_arg p =
+      (* Hashtbl.iter (fun k v -> Fmt.epr "%s -> %s\n" k v) vars_tbl; *)
+      match p with
+      | LVar v ->
+        let v = if v = "_" then "_a" else v in
+        Hashtbl.find_opt vars_tbl v |> Option.value ~default:"ty"
+      | _ -> "ty"
+    in
+    match p with
+    | LVar v -> if v = "_" then "_a" else v
+    | LInt i -> string_of_int i
+    | LConstructor ("True", []) -> "True"
+    | LConstructor ("False", []) -> "False"
+    | LConstructor ("Int", [ arg ]) -> to_lean arg vars_tbl
+    | LConstructor ("Bitv", [ arg ]) -> to_lean arg vars_tbl
+    | LConstructor ("Val", [ arg ]) -> to_lean arg vars_tbl
+    | LConstructor ("List", [ arg ]) -> to_lean arg vars_tbl
+    | LList items ->
+      Fmt.str "[%s]"
+        (List.map (fun i -> to_lean i vars_tbl) items |> String.concat ", ")
+    | LConstructor ("Not", [ arg ]) -> Fmt.str "¬%s" (to_lean arg vars_tbl)
+    | LConstructor ("Neg", [ arg ]) -> Fmt.str "¬%s" (to_lean arg vars_tbl)
+    | LConstructor ("Add", [ a1; a2 ]) ->
+      Fmt.str "(%s) + (%s)" (to_lean a1 vars_tbl) (to_lean a2 vars_tbl)
+    | LConstructor ("Sub", [ a1; a2 ]) ->
+      Fmt.str "(%s) - (%s)" (to_lean a1 vars_tbl) (to_lean a2 vars_tbl)
+    | LConstructor ("Mul", [ a1; a2 ]) ->
+      Fmt.str "(%s) * (%s)" (to_lean a1 vars_tbl) (to_lean a2 vars_tbl)
+    | LConstructor ("And", [ a1; a2 ]) ->
+      let ty1 = get_ty_of_arg a1 in
+      let ty2 = get_ty_of_arg a2 in
+      if ty1 = "BitVec" || ty2 = "BitVec" then
+        Fmt.str "(%s) &&& (%s)" (to_lean a1 vars_tbl) (to_lean a2 vars_tbl)
+      else Fmt.str "(%s) ∧ (%s)" (to_lean a1 vars_tbl) (to_lean a2 vars_tbl)
+    | LConstructor ("Or", [ a1; a2 ]) ->
+      let ty1 = get_ty_of_arg a1 in
+      let ty2 = get_ty_of_arg a2 in
+      if ty1 = "BitVec" || ty2 = "BitVec" then
+        Fmt.str "(%s) ||| (%s)" (to_lean a1 vars_tbl) (to_lean a2 vars_tbl)
+      else Fmt.str "(%s) ∨ (%s)" (to_lean a1 vars_tbl) (to_lean a2 vars_tbl)
+    | LConstructor ("Eq", [ a1; a2 ]) ->
+      Fmt.str "((%s) = (%s))" (to_lean a1 vars_tbl) (to_lean a2 vars_tbl)
+    | LConstructor ("Ne", [ a1; a2 ]) ->
+      Fmt.str "((%s) ≠ (%s))" (to_lean a1 vars_tbl) (to_lean a2 vars_tbl)
+    | LConstructor ("Lt", [ a1; a2 ]) ->
+      Fmt.str "((%s) < (%s))" (to_lean a1 vars_tbl) (to_lean a2 vars_tbl)
+    | LConstructor ("Le", [ a1; a2 ]) ->
+      Fmt.str "((%s) ≤ (%s))" (to_lean a1 vars_tbl) (to_lean a2 vars_tbl)
+    | LConstructor ("Gt", [ a1; a2 ]) ->
+      Fmt.str "((%s) > (%s))" (to_lean a1 vars_tbl) (to_lean a2 vars_tbl)
+    | LConstructor ("Ge", [ a1; a2 ]) ->
+      Fmt.str "((%s) ≥ (%s))" (to_lean a1 vars_tbl) (to_lean a2 vars_tbl)
+    | LConstructor ("Ite", [ c; t; e ]) ->
+      Fmt.str "(if %s then %s else %s)" (to_lean c vars_tbl)
+        (to_lean t vars_tbl) (to_lean e vars_tbl)
+    | LConstructor ("Reverse", [ arg ]) ->
+      Fmt.str "List.reverse (%s)" (to_lean arg vars_tbl)
+    | LConstructor ("Concat", [ arg ]) ->
+      Fmt.str "(String.join %s)" (to_lean arg vars_tbl)
+    | LConstructor (name, _) ->
+      raise
+        (UnsupportedLean (Fmt.str "to_lean: unsupported constructor %s" name))
+
+  let rec rhs_to_lean (e : rhs_expr) (vars_tbl : (string, string) Hashtbl.t) :
+    string =
+    match e with
+    | RVar v -> v
+    | RInt i -> string_of_int i
+    | RList items ->
+      Fmt.str "[%s]"
+        (List.map (fun i -> rhs_to_lean i vars_tbl) items |> String.concat ", ")
+    | RConstructor ("List", [ arg ]) -> rhs_to_lean arg vars_tbl
+    | RConstructor (name, args) ->
+      let fake_lhs_args =
+        List.map (fun a -> LVar (rhs_to_lean a vars_tbl)) args
+      in
+      to_lean (LConstructor (name, fake_lhs_args)) vars_tbl
+    | RNamespacedFuncall ("List", "append", [ a1; a2 ]) ->
+      Fmt.str "(%s ++ %s)" (rhs_to_lean a1 vars_tbl) (rhs_to_lean a2 vars_tbl)
+    | RNamespacedFuncall ("List", "cons", [ a1; a2 ]) ->
+      Fmt.str "(%s :: %s)" (rhs_to_lean a1 vars_tbl) (rhs_to_lean a2 vars_tbl)
+    | RFuncall ("eval", [ RConstructor (op, []); v1; v2 ]) ->
+      let op_map =
+        match op with
+        | "Add" -> "+"
+        | "Sub" -> "-"
+        | "Mul" -> "*"
+        | _ -> raise (UnsupportedLean ("eval op " ^ op))
+      in
+      Fmt.str "(%s) %s (%s)" (rhs_to_lean v1 vars_tbl) op_map
+        (rhs_to_lean v2 vars_tbl)
+    | _ -> raise (UnsupportedLean "Unsupported RHS expression")
+
+  let generate_theorem (r : rule) (idx : int) : string option =
+    try
+      let vars_tbl = Hashtbl.create 8 in
+      infer_var_types vars_tbl "ty" r.lhs;
+      let classes = ref [] in
+      let rec detect_classes p =
+        match p with
+        | LConstructor (("Eq" | "Ne"), _) ->
+          classes := "DecidableEq ty" :: !classes
+        | LConstructor (("Add" | "Sub" | "Mul"), _) ->
+          classes := "CommRing ty" :: !classes
+        | LConstructor (("Lt" | "Le" | "Gt" | "Ge"), _) ->
+          classes := "LinearOrder ty" :: !classes
+        | LConstructor (_, args) -> List.iter detect_classes args
+        | LList items -> List.iter detect_classes items
+        | _ -> ()
+      in
+      detect_classes r.lhs;
+      let has_bitvec =
+        Hashtbl.fold (fun _ t acc -> acc || t = "BitVec") vars_tbl false
+      in
+      let generics =
+        if has_bitvec then "{w : Nat} "
+        else
+          "{ty : Type} "
+          ^ String.concat " "
+              (List.map
+                 (fun c -> "[" ^ c ^ "]")
+                 (List.sort_uniq String.compare !classes) )
+      in
+      let params =
+        Hashtbl.fold
+          (fun v t acc ->
+            let t_str = if t = "BitVec" then "BitVec w" else t in
+            acc ^ Fmt.str "(%s : %s) " v t_str )
+          vars_tbl ""
+      in
+
+      let decidable_constraints =
+        Hashtbl.fold
+          (fun var ty acc ->
+            if ty = "Prop" then Fmt.str "[Decidable %s]" var :: acc else acc )
+          vars_tbl []
+        |> String.concat " "
+      in
+
+      let lhs_str = to_lean r.lhs vars_tbl in
+      let rhs_str = rhs_to_lean r.rhs vars_tbl in
+      let relation =
+        match r.lhs with
+        | LConstructor (("Eq" | "Ne" | "Lt" | "Le" | "Gt" | "Ge" | "Not"), _) ->
+          "↔"
+        | _ -> "="
+      in
+      let stmt =
+        match r.cond with
+        | None -> Fmt.str "%s %s %s" lhs_str relation rhs_str
+        | Some cond ->
+          Fmt.str "%s →\n %s %s %s"
+            (cond_to_lean cond vars_tbl)
+            lhs_str relation rhs_str
+      in
+      Some
+        (Fmt.str "lemma simplification_%06d %s %s %s :\n  %s := \nby sorry\n"
+           idx generics params decidable_constraints stmt )
+    with UnsupportedLean _ | Failure _ -> None
+end
+
 let () =
   let in_file = "rules.dsl" in
   let out_ml = "simplifier.ml" in
+  let out_lean = "simplifier_theorems.lean" in
 
-  Fmt.epr "Parsing rules from %s...\n" in_file;
+  (* Fmt.epr "Parsing rules from %s...\n" in_file; *)
   let raw_content =
     match Bos.OS.File.read (Fpath.v in_file) with
     | Ok c -> c
@@ -388,7 +657,7 @@ let () =
         (pos.Lexing.pos_cnum - pos.Lexing.pos_bol)
         (Printexc.to_string e) (Lexing.lexeme lexbuf)
   in
-  Fmt.epr "Found %d DSL rules.\n" (List.length dsl_rules);
+  (* Fmt.epr "Found %d DSL rules.\n" (List.length dsl_rules); *)
 
   let parsed_rules = List.map CodeGen.generate_match_arm dsl_rules in
 
@@ -420,4 +689,18 @@ let () =
   output_string oc content;
   close_out oc;
 
-  Fmt.epr "Successfully generated %s\n" out_ml
+  (* Fmt.epr "Successfully generated %s\n" out_ml; *)
+
+  (* Fmt.epr "Generating Lean theorems at %s...\n" out_lean; *)
+  let lean_thms =
+    List.mapi (fun i r -> LeanGen.generate_theorem r (i + 1)) dsl_rules
+    |> List.filter_map (fun x -> x)
+  in
+  let lean_content =
+    "-- THIS FILE IS AUTOGENERATED --\nimport Mathlib\n\n"
+    ^ String.concat "\n" lean_thms
+  in
+  let oc_lean = open_out out_lean in
+  output_string oc_lean lean_content;
+  close_out oc_lean
+(* Fmt.epr "Successfully generated %s\n" out_lean *)
