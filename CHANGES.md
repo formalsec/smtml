@@ -1,7 +1,19 @@
 # Changelog
 
+## 0.16.0 - 2025-12-01
+
+- 2025-12-01 Use default opam-repositories in CI
+- 2025-12-01 Don't use List.is_empty
+- 2025-12-01 Bring back ocaml 4.14 CI
+- 2025-11-25 Do not write anything into the log file when there are no queries to log
+- 2025-11-24 Append to the query logging file instead of truncating it.
+- 2025-11-24 Fmt
+- 2025-11-24 Add the names of SMT solvers to their mappings (and log them with SMT queries)
+- 2025-11-24 Bump actions/checkout from 5 to 6
+
 ## 0.15.0 - 2025-11-24
 
+- 2025-11-24 Release 0.15.0
 - 2025-11-23 Update `shell.nix`
 - 2025-11-23 Add version stanza to dune-project ([#454](https://github.com/formalsec/smtml/issues/454))
 - 2025-11-23 Add version command ([#454](https://github.com/formalsec/smtml/issues/454))
