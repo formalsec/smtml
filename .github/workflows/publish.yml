@@ -22,6 +22,7 @@ jobs:
         uses: ocaml/setup-ocaml@v3
         with:
           ocaml-compiler: "5.3"
+          opam-repositories: "default: https://opam.ocaml.org"
 
       - name: Install dependencies
         run: opam install opam-publish
