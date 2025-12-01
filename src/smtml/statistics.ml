@@ -37,3 +37,7 @@ let pp =
           ~sep:(fun fmt () -> Fmt.pf fmt "@\n")
           (fun f m -> Map.iter (fun a b -> f (a, b)) m)
           (Fmt.parens (Fmt.pair ~sep:Fmt.sp Fmt.string pp_entry)) ) )
+
+let to_json (s : t) : Yojson.Basic.t =
+  let jsoned = Map.map (function `Int v -> `Int v | `Float v -> `Float v) s in
+  `Assoc (Map.to_list jsoned)
