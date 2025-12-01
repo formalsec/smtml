@@ -44,3 +44,7 @@ val pp_entry : entry Fmt.t
 (** [pp fmt stats] pretty-prints the statistics map [stats] using the formatter
     [fmt]. *)
 val pp : t Fmt.t
+
+(** [to_json stats] converts the statistics map [stats] into a JSON
+    representation. *)
+val to_json : t -> Yojson.Basic.t
