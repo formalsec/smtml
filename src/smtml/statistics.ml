@@ -40,4 +40,4 @@ let pp =
 
 let to_json (s : t) : Yojson.Basic.t =
   let jsoned = Map.map (function `Int v -> `Int v | `Float v -> `Float v) s in
-  `Assoc (Map.to_list jsoned)
+  `Assoc (Map.bindings jsoned)
