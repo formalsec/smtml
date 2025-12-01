@@ -39,5 +39,4 @@ let pp =
           (Fmt.parens (Fmt.pair ~sep:Fmt.sp Fmt.string pp_entry)) ) )
 
 let to_json (s : t) : Yojson.Basic.t =
-  let jsoned = Map.map (function `Int v -> `Int v | `Float v -> `Float v) s in
-  `Assoc (Map.bindings jsoned)
+  `Assoc (Map.bindings (s :> Yojson.Basic.t Map.t))
