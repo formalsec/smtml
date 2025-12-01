@@ -32,7 +32,7 @@ let write =
   | Some path ->
     let log_entries : (string * Expr.t list * int64) list ref = ref [] in
     let close () =
-      if not (List.is_empty !log_entries) then
+      if List.compare_length_with !log_entries 0 <> 0 then
         try
           let oc =
             (* open with wr/r/r rights, create if it does not exit and append to
