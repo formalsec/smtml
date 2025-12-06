@@ -409,9 +409,9 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Cvtop.WrapI64 -> Bitv.extract e ~high:(bitwidth - 1) ~low:0
         | Sign_extend n -> Bitv.sign_extend n e
         | Zero_extend n -> Bitv.zero_extend n e
-        | TruncSF32 | TruncSF64 ->
+        | TruncSF32 | TruncSF64 | Trunc_sat_f32_s | Trunc_sat_f64_s ->
           Float.to_sbv bitwidth ~rm:Float.Rounding_mode.rtz e
-        | TruncUF32 | TruncUF64 ->
+        | TruncUF32 | TruncUF64 | Trunc_sat_f32_u | Trunc_sat_f64_u ->
           Float.to_ubv bitwidth ~rm:Float.Rounding_mode.rtz e
         | Reinterpret_float -> to_ieee_bv e
         | ToBool -> M.distinct [ e; v @@ Ixx.of_int 0 ]
