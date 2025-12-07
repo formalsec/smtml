@@ -17,6 +17,7 @@ let keywords =
      ; ("real", TYPE (Ty_real))
      ; ("bool", TYPE (Ty_bool))
      ; ("str" , TYPE (Ty_str))
+     ; ("i8" , TYPE (Ty_bitv 8))
      ; ("i32" , TYPE (Ty_bitv 32))
      ; ("i64" , TYPE (Ty_bitv 64))
      ; ("f32" , TYPE (Ty_fp 32))
