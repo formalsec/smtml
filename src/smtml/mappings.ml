@@ -66,7 +66,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Ty_roundingMode -> M.Types.roundingMode
       | Ty_regexp -> M.Types.regexp
       | (Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none) as ty ->
-        Fmt.failwith "Unsupported theory: %a@." Ty.pp ty
+        Fmt.failwith "Trying to use unsupported theory: %a@." Ty.pp ty
 
     let make_symbol (ctx : symbol_ctx) (s : Symbol.t) : symbol_ctx * M.term =
       let name = match s.name with Simple name -> name | _ -> assert false in
@@ -88,7 +88,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       let unop = function
         | Unop.Not -> M.not_
         | op ->
-          Fmt.failwith {|Bool: Unsupported Z3 unop operator "%a"|} Unop.pp op
+          Fmt.failwith {|Bool: Unsupported unary operator "%a"|} Unop.pp op
 
       let binop = function
         | Binop.And -> M.and_
@@ -96,29 +96,30 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Xor -> M.xor
         | Implies -> M.implies
         | op ->
-          Fmt.failwith {|Bool: Unsupported Z3 binop operator "%a"|} Binop.pp op
+          Fmt.failwith {|Bool: Unsupported binary operator "%a"|} Binop.pp op
 
       let triop = function
         | Triop.Ite -> M.ite
         | op ->
-          Fmt.failwith {|Bool: Unsupported Z3 triop operator "%a"|} Triop.pp op
+          Fmt.failwith {|Bool: Unsupported ternary operator "%a"|} Triop.pp op
 
       let relop op e1 e2 =
         match op with
         | Relop.Eq -> M.eq e1 e2
         | Ne -> M.distinct [ e1; e2 ]
         | _ ->
-          Fmt.failwith {|Bool: Unsupported Z3 relop operator "%a"|} Relop.pp op
+          Fmt.failwith {|Bool: Unsupported relational operator "%a"|} Relop.pp
+            op
 
       let naryop op l =
         match op with
         | Naryop.Logand -> M.logand l
         | Logor -> M.logor l
         | _ ->
-          Fmt.failwith {|Bool: Unsupported Z3 naryop operator "%a"|} Naryop.pp
-            op
+          Fmt.failwith {|Bool: Unsupported n-ary operator "%a"|} Naryop.pp op
 
-      let cvtop _op _e = assert false
+      let cvtop op _e =
+        Fmt.failwith {|Bool: Unsupported convert operator "%a"|} Cvtop.pp op
     end
 
     module Int_impl = struct
@@ -416,7 +417,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Reinterpret_float -> to_ieee_bv e
         | ToBool -> M.distinct [ e; v @@ Ixx.of_int 0 ]
         | OfBool -> ite e (v @@ Ixx.of_int 1) (v @@ Ixx.of_int 0)
-        | _ -> assert false
+        | _ ->
+          Fmt.failwith {|Bitv: Unsupported convert operator "%a"|} Cvtop.pp op
     end
 
     module I8 = Bitv_impl (struct
@@ -426,7 +428,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let bitwidth = 8
 
-      let to_ieee_bv _ = assert false
+      let to_ieee_bv _ =
+        Fmt.failwith {|Bitv: Unsupported operator "to_ieee_bv" for Float8|}
 
       module Ixx = struct
         let of_int i = i [@@inline]
@@ -499,7 +502,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Floor -> Float.round_to_integral ~rm:Float.Rounding_mode.rtn e
         | Trunc -> Float.round_to_integral ~rm:Float.Rounding_mode.rtz e
         | Nearest -> Float.round_to_integral ~rm:Float.Rounding_mode.rne e
-        | _ -> Fmt.failwith {|Fp: Unsupported unary operator "%a"|} Unop.pp op
+        | _ -> Fmt.failwith {|FPA: Unsupported unary operator "%a"|} Unop.pp op
 
       let binop op e1 e2 =
         match op with
@@ -513,10 +516,10 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Copysign ->
           let abs_float = Float.abs e1 in
           M.ite (Float.ge e2 (F.zero ())) abs_float (Float.neg abs_float)
-        | _ -> Fmt.failwith {|Fp: Unsupported binop operator "%a"|} Binop.pp op
+        | _ -> Fmt.failwith {|FPA: Unsupported binop operator "%a"|} Binop.pp op
 
       let triop op _ =
-        Fmt.failwith {|Fp: Unsupported triop operator "%a"|} Triop.pp op
+        Fmt.failwith {|FPA: Unsupported triop operator "%a"|} Triop.pp op
 
       let relop op e1 e2 =
         match op with
@@ -526,7 +529,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Le -> Float.le e1 e2
         | Gt -> Float.gt e1 e2
         | Ge -> Float.ge e1 e2
-        | _ -> Fmt.failwith {|Fp: Unsupported relop operator "%a"|} Relop.pp op
+        | _ -> Fmt.failwith {|FPA: Unsupported relop operator "%a"|} Relop.pp op
 
       let cvtop op e =
         match op with
@@ -539,11 +542,11 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Reinterpret_int -> Float.of_ieee_bv eb sb e
         | ToString ->
           (* TODO: FuncDecl.apply to_string [ e ] *)
-          assert false
+          Fmt.failwith "FPA: TODO(ToString)"
         | OfString ->
           (* TODO: FuncDecl.apply of_string [ e ] *)
-          assert false
-        | _ -> Fmt.failwith {|Fp: Unsupported cvtop operator "%a"|} Cvtop.pp op
+          Fmt.failwith "FPA: TODO(OfString)"
+        | _ -> Fmt.failwith {|FPA: Unsupported cvtop operator "%a"|} Cvtop.pp op
     end
 
     module Float32_impl = Float_impl (struct
@@ -591,84 +594,91 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Num (F32 x) -> Float32_impl.v x
       | Num (F64 x) -> Float64_impl.v x
       | Bitv bv -> M.Bitv.v (Bitvector.to_string bv) (Bitvector.numbits bv)
-      | List _ | App _ | Unit | Nothing -> assert false
+      | (List _ | App _ | Unit | Nothing) as v ->
+        Fmt.failwith "Unsupported encoding of value '%a'" Value.pp v
 
     let unop = function
       | Ty.Ty_int -> Int_impl.unop
-      | Ty.Ty_real -> Real_impl.unop
-      | Ty.Ty_bool -> Bool_impl.unop
-      | Ty.Ty_str -> String_impl.unop
-      | Ty.Ty_regexp -> Regexp_impl.unop
-      | Ty.Ty_bitv 8 -> I8.unop
-      | Ty.Ty_bitv 32 -> I32.unop
-      | Ty.Ty_bitv 64 -> I64.unop
-      | Ty.Ty_fp 32 -> Float32_impl.unop
-      | Ty.Ty_fp 64 -> Float64_impl.unop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none
-      | Ty_roundingMode ->
-        assert false
+      | Ty_real -> Real_impl.unop
+      | Ty_bool -> Bool_impl.unop
+      | Ty_str -> String_impl.unop
+      | Ty_regexp -> Regexp_impl.unop
+      | Ty_bitv 8 -> I8.unop
+      | Ty_bitv 32 -> I32.unop
+      | Ty_bitv 64 -> I64.unop
+      | Ty_fp 32 -> Float32_impl.unop
+      | Ty_fp 64 -> Float64_impl.unop
+      | ( Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none
+        | Ty_roundingMode ) as ty ->
+        Fmt.failwith "Unsupported encoding of unary operators for theory '%a'"
+          Ty.pp ty
 
     let binop = function
       | Ty.Ty_int -> Int_impl.binop
-      | Ty.Ty_real -> Real_impl.binop
-      | Ty.Ty_bool -> Bool_impl.binop
-      | Ty.Ty_str -> String_impl.binop
-      | Ty.Ty_regexp -> Regexp_impl.binop
-      | Ty.Ty_bitv 8 -> I8.binop
-      | Ty.Ty_bitv 32 -> I32.binop
-      | Ty.Ty_bitv 64 -> I64.binop
-      | Ty.Ty_fp 32 -> Float32_impl.binop
-      | Ty.Ty_fp 64 -> Float64_impl.binop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none
-      | Ty_roundingMode ->
-        assert false
+      | Ty_real -> Real_impl.binop
+      | Ty_bool -> Bool_impl.binop
+      | Ty_str -> String_impl.binop
+      | Ty_regexp -> Regexp_impl.binop
+      | Ty_bitv 8 -> I8.binop
+      | Ty_bitv 32 -> I32.binop
+      | Ty_bitv 64 -> I64.binop
+      | Ty_fp 32 -> Float32_impl.binop
+      | Ty_fp 64 -> Float64_impl.binop
+      | ( Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none
+        | Ty_roundingMode ) as ty ->
+        Fmt.failwith "Unsupported encoding of binary operators for theory '%a'"
+          Ty.pp ty
 
     let triop = function
-      | Ty.Ty_int | Ty.Ty_real -> assert false
       | Ty.Ty_bool -> Bool_impl.triop
-      | Ty.Ty_str -> String_impl.triop
-      | Ty.Ty_bitv 8 -> I8.triop
-      | Ty.Ty_bitv 32 -> I32.triop
-      | Ty.Ty_bitv 64 -> I64.triop
-      | Ty.Ty_fp 32 -> Float32_impl.triop
-      | Ty.Ty_fp 64 -> Float64_impl.triop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none
-      | Ty_regexp | Ty_roundingMode ->
-        assert false
+      | Ty_str -> String_impl.triop
+      | Ty_bitv 8 -> I8.triop
+      | Ty_bitv 32 -> I32.triop
+      | Ty_bitv 64 -> I64.triop
+      | Ty_fp 32 -> Float32_impl.triop
+      | Ty_fp 64 -> Float64_impl.triop
+      | ( Ty_int | Ty_real | Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit
+        | Ty_none | Ty_regexp | Ty_roundingMode ) as ty ->
+        Fmt.failwith "Unsupported encoding of ternary operators for theory '%a'"
+          Ty.pp ty
 
     let relop = function
       | Ty.Ty_int -> Int_impl.relop
-      | Ty.Ty_real -> Real_impl.relop
-      | Ty.Ty_bool -> Bool_impl.relop
-      | Ty.Ty_str -> String_impl.relop
-      | Ty.Ty_bitv 8 -> I8.relop
-      | Ty.Ty_bitv 32 -> I32.relop
-      | Ty.Ty_bitv 64 -> I64.relop
-      | Ty.Ty_fp 32 -> Float32_impl.relop
-      | Ty.Ty_fp 64 -> Float64_impl.relop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none
-      | Ty_regexp | Ty_roundingMode ->
-        assert false
+      | Ty_real -> Real_impl.relop
+      | Ty_bool -> Bool_impl.relop
+      | Ty_str -> String_impl.relop
+      | Ty_bitv 8 -> I8.relop
+      | Ty_bitv 32 -> I32.relop
+      | Ty_bitv 64 -> I64.relop
+      | Ty_fp 32 -> Float32_impl.relop
+      | Ty_fp 64 -> Float64_impl.relop
+      | ( Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp
+        | Ty_roundingMode ) as ty ->
+        Fmt.failwith "Unsupported encoding of relop operators for theory '%a'"
+          Ty.pp ty
 
     let cvtop = function
       | Ty.Ty_int -> Int_impl.cvtop
-      | Ty.Ty_real -> Real_impl.cvtop
-      | Ty.Ty_bool -> Bool_impl.cvtop
-      | Ty.Ty_str -> String_impl.cvtop
-      | Ty.Ty_bitv 8 -> I8.cvtop
-      | Ty.Ty_bitv 32 -> I32.cvtop
-      | Ty.Ty_bitv 64 -> I64.cvtop
-      | Ty.Ty_fp 32 -> Float32_impl.cvtop
-      | Ty.Ty_fp 64 -> Float64_impl.cvtop
-      | Ty.Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none
-      | Ty_regexp | Ty_roundingMode ->
-        assert false
+      | Ty_real -> Real_impl.cvtop
+      | Ty_bool -> Bool_impl.cvtop
+      | Ty_str -> String_impl.cvtop
+      | Ty_bitv 8 -> I8.cvtop
+      | Ty_bitv 32 -> I32.cvtop
+      | Ty_bitv 64 -> I64.cvtop
+      | Ty_fp 32 -> Float32_impl.cvtop
+      | Ty_fp 64 -> Float64_impl.cvtop
+      | ( Ty_bitv _ | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp
+        | Ty_roundingMode ) as ty ->
+        Fmt.failwith "Unsupported encoding of convert operators for theory '%a'"
+          Ty.pp ty
 
     let naryop = function
       | Ty.Ty_str -> String_impl.naryop
-      | Ty.Ty_bool -> Bool_impl.naryop
-      | Ty.Ty_regexp -> Regexp_impl.naryop
-      | ty -> Fmt.failwith "Naryop for type \"%a\" not implemented" Ty.pp ty
+      | Ty_bool -> Bool_impl.naryop
+      | Ty_regexp -> Regexp_impl.naryop
+      | ty ->
+        Fmt.failwith "Unsupported encoding of n-ary operators for theory '%a'"
+          Ty.pp ty ty
 
     let get_rounding_mode ctx rm =
       match Expr.view rm with
@@ -805,8 +815,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
     let value_of_term ?ctx model ty term =
       let v =
         match M.Model.eval ?ctx ~completion:true model term with
-        | None -> assert false
         | Some v -> v
+        | None -> Fmt.failwith "value_of_term: unable to fetch solver value"
       in
       match ty with
       | Ty_int -> Value.Int (M.Interp.to_int v)
@@ -830,7 +840,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         Value.Num (F64 (Int64.bits_of_float float))
       | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp
       | Ty_roundingMode ->
-        assert false
+        Fmt.failwith
+          "value_of_term: unsupported model completion for theory '%a'" Ty.pp ty
 
     let value ({ model = m; ctx } : model) (c : Expr.t) : Value.t =
       let ctx, e = encode_expr ctx c in
@@ -873,14 +884,14 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let push { solver; ctx; _ } =
         match Stack.top_opt ctx with
-        | None -> assert false
+        | None -> Fmt.failwith "Solver.push: invalid solver stack state"
         | Some top ->
           Stack.push top ctx;
           M.Solver.push solver
 
       let pop { solver; ctx; _ } n =
         match Stack.pop_opt ctx with
-        | None -> assert false
+        | None -> Fmt.failwith "Solver.pop: stack is empty"
         | Some _ -> M.Solver.pop solver n
 
       let reset (s : solver) =
@@ -891,7 +902,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let add (s : solver) (exprs : Expr.t list) =
         match Stack.pop_opt s.ctx with
-        | None -> assert false
+        | None -> Fmt.failwith "Solver.add: current solver context not found"
         | Some ctx ->
           let ctx, exprs = encode_exprs ctx exprs in
           Stack.push ctx s.ctx;
@@ -899,7 +910,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let check (s : solver) ~assumptions =
         match Stack.top_opt s.ctx with
-        | None -> assert false
+        | None -> Fmt.failwith "Solver.check: invalid solver stack state"
         | Some ctx -> (
           let ctx, encoded_assuptions = encode_exprs ctx assumptions in
           s.last_ctx <- Some ctx;
@@ -944,7 +955,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let add (o : optimize) exprs =
         match Stack.pop_opt o.ctx with
-        | None -> assert false
+        | None -> Fmt.failwith "Solver.add: current solver context not found"
         | Some ctx ->
           let ctx, exprs = encode_exprs ctx exprs in
           Stack.push ctx o.ctx;
@@ -954,13 +965,13 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let model { opt; ctx } =
         match Stack.top_opt ctx with
-        | None -> assert false
+        | None -> Fmt.failwith "Solver.add: current solver context not found"
         | Some ctx ->
           M.Optimizer.model opt |> Option.map (fun m -> { model = m; ctx })
 
       let maximize (o : optimize) (expr : Expr.t) =
         match Stack.pop_opt o.ctx with
-        | None -> assert false
+        | None -> Fmt.failwith "Solver.add: current solver context not found"
         | Some ctx ->
           let ctx, expr = encode_expr ctx expr in
           Stack.push ctx o.ctx;
@@ -968,7 +979,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let minimize (o : optimize) (expr : Expr.t) =
         match Stack.pop_opt o.ctx with
-        | None -> assert false
+        | None -> Fmt.failwith "Solver.add: current solver context not found"
         | Some ctx ->
           let ctx, expr = encode_expr ctx expr in
           Stack.push ctx o.ctx;
