@@ -173,15 +173,26 @@ let test_binop_real_exact _ =
   let real r = real (Exact r) in
   let open Q in
   check (Expr.binop ty Add (real zero) (real (of_int 42))) (real (of_int 42));
-  check (Expr.binop ty Add (real (of_string "2/3")) (real (of_string "1/3"))) (real one);
+  check
+    (Expr.binop ty Add (real (of_string "2/3")) (real (of_string "1/3")))
+    (real one);
   check (Expr.binop ty Sub (real zero) (real one)) (real (neg one));
-  check (Expr.binop ty Mul (real (of_int 2)) (real (of_int 21))) (real (of_int 42));
-  check (Expr.binop ty Mul (real (of_string "1/3")) (real (of_int 2))) (real (of_string "2/3"));
-  check (Expr.binop ty Div (real (of_int 84)) (real (of_int 2))) (real (of_int 42));
+  check
+    (Expr.binop ty Mul (real (of_int 2)) (real (of_int 21)))
+    (real (of_int 42));
+  check
+    (Expr.binop ty Mul (real (of_string "1/3")) (real (of_int 2)))
+    (real (of_string "2/3"));
+  check
+    (Expr.binop ty Div (real (of_int 84)) (real (of_int 2)))
+    (real (of_int 42));
   check (Expr.binop ty Rem (real zero) (real one)) (real zero);
-  check (Expr.binop ty Min (real (of_int 2)) (real (of_int 4))) (real (of_int 2));
-  check (Expr.binop ty Max (real (of_int 2)) (real (of_int 4))) (real (of_int 4))
-
+  check
+    (Expr.binop ty Min (real (of_int 2)) (real (of_int 4)))
+    (real (of_int 2));
+  check
+    (Expr.binop ty Max (real (of_int 2)) (real (of_int 4)))
+    (real (of_int 4))
 
 let test_binop_string _ =
   let open Infix in

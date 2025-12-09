@@ -398,14 +398,12 @@ let rec relop ty op hte1 hte2 =
     if Float.is_nan v || Float.is_infinite v then value True
     else raw_relop ty op hte1 hte2
   | Ty.Relop.Ne, Val (Real (Exact v)), _ | Ne, _, Val (Real (Exact v)) ->
-    if Fun.negate Q.is_real v then value True
-    else raw_relop ty op hte1 hte2
+    if Fun.negate Q.is_real v then value True else raw_relop ty op hte1 hte2
   | _, Val (Real (Approx v)), _ | _, _, Val (Real (Approx v)) ->
     if Float.is_nan v || Float.is_infinite v then value False
     else raw_relop ty op hte1 hte2
   | _, Val (Real (Exact v)), _ | _, _, Val (Real (Exact v)) ->
-    if Fun.negate Q.is_real v then value False
-    else raw_relop ty op hte1 hte2
+    if Fun.negate Q.is_real v then value False else raw_relop ty op hte1 hte2
   | Eq, _, Val Nothing | Eq, Val Nothing, _ -> value False
   | Ne, _, Val Nothing | Ne, Val Nothing, _ -> value True
   | Eq, _, Val (App (`Op "symbol", [ Str _ ]))

@@ -4,7 +4,9 @@
 
 open Ty
 
-type real = Exact of Q.t | Approx of float
+type real =
+  | Exact of Q.t
+  | Approx of float
 
 type t =
   | True
@@ -126,7 +128,7 @@ let of_string (cast : Ty.t) v =
     | Some n -> Ok (Int n) )
   | Ty_real -> (
     try Ok (Real (Exact (Q.of_string v)))
-    with | _ -> Fmt.error_msg "invalid value %s, expected real" v)
+    with _ -> Fmt.error_msg "invalid value %s, expected real" v )
   | Ty_str -> Ok (Str v)
   | Ty_app | Ty_list | Ty_none | Ty_unit | Ty_regexp | Ty_roundingMode ->
     Fmt.error_msg "unsupported parsing values of type %a" Ty.pp cast
@@ -138,9 +140,9 @@ let rec to_json (v : t) : Yojson.Basic.t =
   | Unit -> `String "unit"
   | Int int -> `Int int
   | Real (Exact r) ->
-      let num = r |> Q.num |> Z.to_int in
-      let den = r |> Q.den |> Z.to_int in
-      `Assoc ["num", `Int num; "den", `Int den]
+    let num = r |> Q.num |> Z.to_int in
+    let den = r |> Q.den |> Z.to_int in
+    `Assoc [ ("num", `Int num); ("den", `Int den) ]
   | Real (Approx r) -> `Float r
   | Str str -> `String str
   | Num n -> Num.to_json n

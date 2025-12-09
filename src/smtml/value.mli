@@ -9,8 +9,11 @@
 
 (** {1 Value Types} *)
 
-(** The type [real] represents either an exact rational, or an approximate float. *)
-type real = Exact of Q.t | Approx of float
+(** The type [real] represents either an exact rational, or an approximate
+    float. *)
+type real =
+  | Exact of Q.t
+  | Approx of float
 
 (** The type [t] represents concrete values. *)
 type t =
