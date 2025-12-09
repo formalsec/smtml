@@ -185,21 +185,21 @@ module Real_test = struct
     in
     let test_nearest _ =
       assert_equal (real (Approx 4.)) (Eval.unop Ty_real Nearest (real (Approx 4.2)));
-      assert_equal (real (Exact (Q.of_int 4))) (Eval.unop Ty_real Nearest (real (Exact (Q.of_float 4.2))));
+      assert_equal (real (Exact (Q.of_int 4))) (Eval.unop Ty_real Nearest (real (Exact (Q.of_string "42/10"))));
       assert_equal (real (Approx 5.)) (Eval.unop Ty_real Nearest (real (Approx 4.6)));
-      assert_equal (real (Exact (Q.of_float 5.))) (Eval.unop Ty_real Nearest (real (Exact (Q.of_float 4.6))))
+      assert_equal (real (Exact (Q.of_int 5))) (Eval.unop Ty_real Nearest (real (Exact (Q.of_string "46/10"))))
     in
     let test_ceil _ =
       let result = Eval.unop Ty_real Ceil (real (Approx 4.2)) in
       assert_equal (real (Approx 5.)) result;
-      let result = Eval.unop Ty_real Ceil (real (Exact (Q.of_float 4.2))) in
-      assert_equal (real (Exact (Q.of_float 5.))) result
+      let result = Eval.unop Ty_real Ceil (real (Exact (Q.of_string "42/10"))) in
+      assert_equal (real (Exact (Q.of_int 5))) result
     in
     let test_floor _ =
       let result = Eval.unop Ty_real Floor (real (Approx 4.2)) in
       assert_equal (real (Approx 4.)) result;
-      let result = Eval.unop Ty_real Floor (real (Exact (Q.of_float 4.2))) in
-      assert_equal (real (Exact (Q.of_float 4.2))) result
+      let result = Eval.unop Ty_real Floor (real (Exact (Q.of_string "42/10"))) in
+      assert_equal (real (Exact (Q.of_int 4))) result
     in
     let test_trunc _ =
       let result = Eval.unop Ty_real Trunc (real (Approx Float.pi)) in
@@ -230,42 +230,81 @@ module Real_test = struct
 
   (* Binary operators *)
   let binop =
-    let real r = real (Approx r) in
     let test_add _ =
-      let result = Eval.binop Ty_real Add (real 2.) (real 3.) in
-      assert_equal (real 5.) result
+      let result = Eval.binop Ty_real Add (real (Approx 2.)) (real (Approx 3.)) in
+      assert_equal (real (Approx 5.)) result;
+      let result = Eval.binop Ty_real Add (real (Exact (Q.of_int 2))) (real (Exact (Q.of_int 3))) in
+      assert_equal (real (Exact (Q.of_int 5))) result;
+      let result = Eval.binop Ty_real Add (real (Exact (Q.of_string "2/3"))) (real (Exact (Q.of_string "1/3"))) in
+      assert_equal (real (Exact (Q.one))) result
     in
     let test_sub _ =
-      let result = Eval.binop Ty_real Sub (real 3.) (real 2.) in
-      assert_equal (real 1.) result
+      let result = Eval.binop Ty_real Sub (real (Approx 3.)) (real (Approx 2.)) in
+      assert_equal (real (Approx 1.)) result;
+      let result = Eval.binop Ty_real Sub (real (Exact (Q.of_int 3))) (real (Exact (Q.of_int 2))) in
+      assert_equal (real (Exact Q.one)) result;
+      let result = Eval.binop Ty_real Sub (real (Exact (Q.of_int 1))) (real (Exact (Q.of_string "1/3"))) in
+      assert_equal (real (Exact (Q.of_string "2/3"))) result
     in
     let test_mul _ =
-      let result = Eval.binop Ty_real Mul (real 3.) (real 3.) in
-      assert_equal (real 9.) result
+      let result = Eval.binop Ty_real Mul (real (Approx 3.)) (real (Approx 3.)) in
+      assert_equal (real (Approx 9.)) result;
+      let result = Eval.binop Ty_real Mul (real (Exact (Q.of_int 3))) (real (Exact (Q.of_int 3))) in
+      assert_equal (real (Exact (Q.of_int 9))) result;
+      let result = Eval.binop Ty_real Mul (real (Exact (Q.of_string "2/3"))) (real (Exact (Q.of_int 2))) in
+      assert_equal (real (Exact (Q.of_string "4/3"))) result
     in
     let test_div _ =
-      let result = Eval.binop Ty_real Div (real 6.) (real 3.) in
-      assert_equal (real 2.) result
+      let result = Eval.binop Ty_real Div (real (Approx 6.)) (real (Approx 3.)) in
+      assert_equal (real (Approx 2.)) result;
+      let result = Eval.binop Ty_real Div (real (Exact (Q.of_int 6))) (real (Exact (Q.of_int 3))) in
+      assert_equal (real (Exact (Q.of_int 2))) result;
+      let result = Eval.binop Ty_real Div (real (Exact (Q.of_string "4/3"))) (real (Exact (Q.of_int 2))) in
+      assert_equal (real (Exact (Q.of_string "2/3"))) result
     in
     let test_divide_by_zero _ =
-      let result = Eval.binop Ty_real Div (real 1.) (real 0.) in
-      assert_equal (real Float.infinity) result
+      let result = Eval.binop Ty_real Div (real (Approx 1.)) (real (Approx 0.)) in
+      assert_equal (real (Approx Float.infinity)) result;
+      let result = Eval.binop Ty_real Div (real (Exact Q.one)) (real (Exact Q.zero)) in
+      assert_equal (real (Exact Q.inf)) result;
+      let result = Eval.binop Ty_real Div (real (Exact (Q.of_string "2/3"))) (real (Exact (Q.of_string "0/5"))) in
+      assert_equal (real (Exact Q.inf)) result
     in
     let test_rem _ =
-      let result = Eval.binop Ty_real Rem (real 6.) (real 3.) in
-      assert_equal (real 0.) result
+      let result = Eval.binop Ty_real Rem (real (Approx 6.)) (real (Approx 3.)) in
+      assert_equal (real (Approx 0.)) result;
+      let result = Eval.binop Ty_real Rem (real (Exact (Q.of_int 6))) (real (Exact (Q.of_int 3))) in
+      assert_equal (real (Exact Q.zero)) result;
+      let result = Eval.binop Ty_real Rem (real (Exact (Q.of_string "7/3"))) (real (Exact (Q.of_string "2/3"))) in
+      assert_equal (real (Exact (Q.of_string "1/3"))) result;
+      let result = Eval.binop Ty_real Rem (real (Exact (Q.of_string "-7/3"))) (real (Exact (Q.of_string "2/3"))) in
+      assert_equal (real (Exact (Q.of_string "-1/3"))) result;
+      let result = Eval.binop Ty_real Rem (real (Exact (Q.of_string "5/2"))) (real (Exact (Q.of_string "1/2"))) in
+      assert_equal (real (Exact (Q.of_string "0/1"))) result;
+      let result = Eval.binop Ty_real Rem (real (Exact (Q.of_string "5/2"))) (real (Exact (Q.of_string "1/3"))) in
+      assert_equal (real (Exact (Q.of_string "1/6"))) result;
+      let result = Eval.binop Ty_real Rem (real (Exact (Q.of_string "-5/2"))) (real (Exact (Q.of_string "1/3"))) in
+      assert_equal (real (Exact (Q.of_string "-1/6"))) result
     in
     let test_pow _ =
-      let result = Eval.binop Ty_real Pow (real 2.) (real 3.) in
-      assert_equal (real 8.) result
+      let result = Eval.binop Ty_real Pow (real (Approx 2.)) (real (Approx 3.)) in
+      assert_equal (real (Approx 8.)) result;
+      let result = Eval.binop Ty_real Pow (real (Exact (Q.of_int 2))) (real (Exact (Q.of_int 3))) in
+      assert_equal (real (Approx 8.)) result
     in
     let test_min_max _ =
-      let a = real 42. in
-      let b = real 1337. in
-      let result = Eval.binop Ty_real Max a b in
-      assert_equal (real 1337.) result;
-      let result = Eval.binop Ty_real Min a b in
-      assert_equal (real 42.) result
+      let a_f = real (Approx 42.) in
+      let b_f = real (Approx 1337.) in
+      let a_q = real (Exact (Q.of_int 42)) in
+      let b_q = real (Exact (Q.of_int 1337)) in
+      let result = Eval.binop Ty_real Max a_f b_f in
+      assert_equal b_f result;
+      let result = Eval.binop Ty_real Max a_q b_q in
+      assert_equal b_q result;
+      let result = Eval.binop Ty_real Min a_f b_f in
+      assert_equal a_f result;
+      let result = Eval.binop Ty_real Min a_q b_q in
+      assert_equal a_q result
     in
     [ "test_add" >:: test_add
     ; "test_sub" >:: test_sub
