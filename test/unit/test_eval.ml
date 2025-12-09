@@ -318,28 +318,41 @@ module Real_test = struct
 
   (* Relational operators *)
   let relop =
-    let real r = real (Approx r) in
     let test_eq _ =
-      assert_bool "0 = 0" (Eval.relop Ty_real Eq (real 0.0) (real 0.0));
+      assert_bool "0.0 = 0.0" (Eval.relop Ty_real Eq (real (Approx 0.0)) (real (Approx 0.0)));
+      assert_bool "0 = 0" (Eval.relop Ty_real Eq (real (Exact Q.zero)) (real (Exact Q.zero)));
       assert_bool "nan != nan"
-        (not (Eval.relop Ty_real Eq (real Float.nan) (real Float.nan)))
+        (not (Eval.relop Ty_real Eq (real (Approx Float.nan)) (real (Approx Float.nan))));
+      assert_bool "undef != undef"
+        (not (Eval.relop Ty_real Eq (real (Exact Q.undef)) (real (Exact Q.undef))))
     in
     let test_ne _ =
-      assert_bool "0 = 0" (not (Eval.relop Ty_real Ne (real 0.0) (real 0.0)));
+      assert_bool "0.0 = 0.0" (not (Eval.relop Ty_real Ne (real (Approx 0.0)) (real (Approx 0.0))));
+      assert_bool "0 = 0" (not (Eval.relop Ty_real Ne (real (Exact Q.zero)) (real (Exact Q.zero))));
       assert_bool "nan != nan"
-        (Eval.relop Ty_real Ne (real Float.nan) (real Float.nan))
+        (Eval.relop Ty_real Ne (real (Approx Float.nan)) (real (Approx Float.nan)));
+      assert_bool "undef != undef"
+        (Eval.relop Ty_real Ne (real (Exact Q.undef)) (real (Exact Q.undef)))
     in
     let test_lt _ =
-      assert_bool "2 < 3" (Eval.relop Ty_real Lt (real 2.) (real 3.))
+      assert_bool "2.0 < 3.0" (Eval.relop Ty_real Lt (real (Approx 2.)) (real (Approx 3.)));
+      assert_bool "2 < 3" (Eval.relop Ty_real Lt (real (Exact (Q.of_int 2))) (real (Exact (Q.of_int 3))));
+      assert_bool "2/3 < 3/3" (Eval.relop Ty_real Lt (real (Exact (Q.of_string "2/3"))) (real (Exact (Q.of_string "3/3"))))
     in
     let test_le _ =
-      assert_bool "2 <= 3" (Eval.relop Ty_real Le (real 3.) (real 3.))
+      assert_bool "2.0 <= 3.0" (Eval.relop Ty_real Le (real (Approx 2.)) (real (Approx 3.)));
+      assert_bool "2 <= 3" (Eval.relop Ty_real Le (real (Exact (Q.of_int 2))) (real (Exact (Q.of_int 3))));
+      assert_bool "2/3 <= 3/3" (Eval.relop Ty_real Le (real (Exact (Q.of_string "2/3"))) (real (Exact (Q.of_string "3/3"))))
     in
     let test_gt _ =
-      assert_bool "4 > 4" (Eval.relop Ty_real Gt (real 4.) (real 3.))
+      assert_bool "4.0 > 3.0" (Eval.relop Ty_real Gt (real (Approx 4.)) (real (Approx 3.)));
+      assert_bool "4 > 3" (Eval.relop Ty_real Gt (real (Exact (Q.of_int 4))) (real (Exact (Q.of_int 3))));
+      assert_bool "1/3 > 1/4" (Eval.relop Ty_real Gt (real (Exact (Q.of_string "1/3"))) (real (Exact (Q.of_string "1/4"))))
     in
     let test_ge _ =
-      assert_bool "4 >= 4" (Eval.relop Ty_real Ge (real 4.) (real 4.))
+      assert_bool "4.0 >= 3.0" (Eval.relop Ty_real Ge (real (Approx 4.)) (real (Approx 3.)));
+      assert_bool "4 >= 3" (Eval.relop Ty_real Ge (real (Exact (Q.of_int 4))) (real (Exact (Q.of_int 3))));
+      assert_bool "1/3 >= 1/4" (Eval.relop Ty_real Ge (real (Exact (Q.of_string "1/3"))) (real (Exact (Q.of_string "1/4"))))
     in
 
     [ "test_eq" >:: test_eq
