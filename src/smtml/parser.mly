@@ -88,7 +88,7 @@ let paren_op :=
 
 let spec_constant :=
   | x = NUM; { Int x }
-  | x = DEC; { Real x }
+  | x = DEC; { Real (Approx x) }
   | x = STR; { Str x }
   | x = BOOL; { if x then True else False }
   | LPAREN; ty = TYPE; x = NUM; RPAREN;

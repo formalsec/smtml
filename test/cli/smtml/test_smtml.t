@@ -17,8 +17,8 @@ Test boolean parsing:
   $ smtml run test_lra.smtml
   sat
   (model
-    (x real 2.)
-    (y real 4.))
+    (x real 2)
+    (y real 4))
 
  Test fp parsing:
   $ smtml run test_qf_fp.smtml

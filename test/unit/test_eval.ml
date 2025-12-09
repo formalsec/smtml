@@ -150,7 +150,7 @@ module Int_test = struct
       assert_equal (int 1) result
     in
     let test_reinterpret_float _ =
-      let result = Eval.cvtop Ty_int Reinterpret_float (real 42.0) in
+      let result = Eval.cvtop Ty_int Reinterpret_float (real (Approx 42.0)) in
       assert_equal (int 42) result
     in
     [ "test_of_bool" >:: test_of_bool
@@ -162,36 +162,57 @@ module Real_test = struct
   (* Unary operators *)
   let unop =
     let test_neg _ =
-      let result = Eval.unop Ty_real Neg (real 5.) in
-      assert_equal (real (-5.)) result
+      let result = Eval.unop Ty_real Neg (real (Approx 5.)) in
+      assert_equal (real (Approx (-5.))) result;
+      let result = Eval.unop Ty_real Neg (real (Exact (Q.of_int 5))) in
+      assert_equal (real (Exact (Q.neg @@ Q.of_int 5))) result
     in
     let test_abs _ =
-      let result = Eval.unop Ty_real Abs (real (-7.)) in
-      assert_equal (real 7.) result
+      let result = Eval.unop Ty_real Abs (real (Approx (-7.))) in
+      assert_equal (real (Approx 7.)) result;
+      let result = Eval.unop Ty_real Abs (real (Exact (Q.neg @@ Q.of_int 7))) in
+      assert_equal (real (Exact (Q.of_int 7))) result;
+      let result = Eval.unop Ty_real Abs (real (Exact (Q.neg @@ Q.of_string "5/2"))) in
+      assert_equal (real (Exact (Q.of_string "5/2"))) result
     in
     let test_sqrt _ =
-      let result = Eval.unop Ty_real Sqrt (real 9.) in
-      assert_equal (real 3.) result
+      let result = Eval.unop Ty_real Sqrt (real (Approx 9.0)) in
+      assert_equal (real (Approx 3.)) result;
+      let result = Eval.unop Ty_real Sqrt (real (Exact (Q.of_int 9))) in
+      assert_equal (real (Exact (Q.of_int 3))) result;
+      let result = Eval.unop Ty_real Sqrt (real (Exact (Q.of_string "25/4"))) in
+      assert_equal (real (Exact (Q.of_string "5/2"))) result
     in
     let test_nearest _ =
-      assert_equal (real 4.) (Eval.unop Ty_real Nearest (real 4.2));
-      assert_equal (real 5.) (Eval.unop Ty_real Nearest (real 4.6))
+      assert_equal (real (Approx 4.)) (Eval.unop Ty_real Nearest (real (Approx 4.2)));
+      assert_equal (real (Exact (Q.of_int 4))) (Eval.unop Ty_real Nearest (real (Exact (Q.of_float 4.2))));
+      assert_equal (real (Approx 5.)) (Eval.unop Ty_real Nearest (real (Approx 4.6)));
+      assert_equal (real (Exact (Q.of_float 5.))) (Eval.unop Ty_real Nearest (real (Exact (Q.of_float 4.6))))
     in
     let test_ceil _ =
-      let result = Eval.unop Ty_real Ceil (real 4.2) in
-      assert_equal (real 5.) result
+      let result = Eval.unop Ty_real Ceil (real (Approx 4.2)) in
+      assert_equal (real (Approx 5.)) result;
+      let result = Eval.unop Ty_real Ceil (real (Exact (Q.of_float 4.2))) in
+      assert_equal (real (Exact (Q.of_float 5.))) result
     in
     let test_floor _ =
-      let result = Eval.unop Ty_real Floor (real 4.2) in
-      assert_equal (real 4.) result
+      let result = Eval.unop Ty_real Floor (real (Approx 4.2)) in
+      assert_equal (real (Approx 4.)) result;
+      let result = Eval.unop Ty_real Floor (real (Exact (Q.of_float 4.2))) in
+      assert_equal (real (Exact (Q.of_float 4.2))) result
     in
     let test_trunc _ =
-      let result = Eval.unop Ty_real Trunc (real Float.pi) in
-      assert_equal (real 3.) result
+      let result = Eval.unop Ty_real Trunc (real (Approx Float.pi)) in
+      assert_equal (real (Approx 3.)) result;
+      let result = Eval.unop Ty_real Trunc (real (Exact (Q.of_string "3.141592"))) in
+      assert_equal (real (Exact (Q.of_int 3))) result
+
     in
     let test_is_nan _ =
-      assert_equal (Eval.unop Ty_real Is_nan (real Float.nan)) true_;
-      assert_equal (Eval.unop Ty_real Is_nan (real 42.)) false_
+      assert_equal (Eval.unop Ty_real Is_nan (real (Approx Float.nan))) true_;
+      assert_equal (Eval.unop Ty_real Is_nan (real (Exact Q.undef))) true_;
+      assert_equal (Eval.unop Ty_real Is_nan (real (Approx 42.))) false_;
+      assert_equal (Eval.unop Ty_real Is_nan (real (Exact (Q.of_int 4)))) false_
     in
     let test_type_error _ =
       assert_type_error @@ fun () -> ignore @@ Eval.unop Ty_real Neg (str "hi")
@@ -209,6 +230,7 @@ module Real_test = struct
 
   (* Binary operators *)
   let binop =
+    let real r = real (Approx r) in
     let test_add _ =
       let result = Eval.binop Ty_real Add (real 2.) (real 3.) in
       assert_equal (real 5.) result
@@ -257,6 +279,7 @@ module Real_test = struct
 
   (* Relational operators *)
   let relop =
+    let real r = real (Approx r) in
     let test_eq _ =
       assert_bool "0 = 0" (Eval.relop Ty_real Eq (real 0.0) (real 0.0));
       assert_bool "nan != nan"
@@ -292,11 +315,15 @@ module Real_test = struct
   let cvtop =
     let test_of_string _ =
       let result = Eval.cvtop Ty_real OfString (str "42.") in
-      assert_equal (real 42.) result
+      assert_equal (real (Approx 42.)) result;
+      let result = Eval.cvtop Ty_real OfString (str "42") in
+      assert_equal (real (Exact (Q.of_int 42))) result
     in
     let test_to_string _ =
-      let result = Eval.cvtop Ty_real ToString (real 42.) in
-      assert_equal (str "42.") result
+      let result = Eval.cvtop Ty_real ToString (real (Approx 42.)) in
+      assert_equal (str "42.") result;
+      let result = Eval.cvtop Ty_real ToString (real (Exact (Q.of_int 42))) in
+      assert_equal (str "42") result
     in
     let test_of_string_error _ =
       assert_raises (Eval.Eval_error `Invalid_format_conversion) @@ fun () ->
@@ -305,10 +332,10 @@ module Real_test = struct
     in
     let test_reinterpret_int _ =
       let result = Eval.cvtop Ty_real Reinterpret_int (int 42) in
-      assert_equal (real 42.) result
+      assert_equal (real (Exact (Q.of_int 42))) result
     in
     let test_reinterpret_float _ =
-      let result = Eval.cvtop Ty_real Reinterpret_float (real 42.) in
+      let result = Eval.cvtop Ty_real Reinterpret_float (real (Approx 42.)) in
       assert_equal (int 42) result
     in
     [ "test_to_string" >:: test_to_string
@@ -471,7 +498,7 @@ module Str_test = struct
         assert_equal (str "97") result )
     ; ( "test_string_to_float" >:: fun _ ->
         let result = Eval.cvtop Ty_str String_to_float (str "98") in
-        assert_equal (real 98.) result )
+        assert_equal (real (Approx 98.)) result )
     ; ( "test_string_to_float_raises" >:: fun _ ->
         assert_raises (Eval.Eval_error `Invalid_format_conversion) @@ fun () ->
         let _ = Eval.cvtop Ty_str String_to_float (str "not_a_real") in

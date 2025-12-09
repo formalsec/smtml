@@ -38,6 +38,7 @@ type error_kind =
   | `Integer_overflow
   | `Index_out_of_bounds
   | `Invalid_format_conversion
+  | `Negative_sqrt
   | `Unsupported_operator of op_type * Ty.t
   | `Unsupported_theory of Ty.t
   | `Type_error of type_error_info
@@ -194,63 +195,151 @@ module Int = struct
   let cvtop (op : Ty.Cvtop.t) (v : Value.t) : Value.t =
     match op with
     | OfBool -> to_int (of_bool v)
-    | Reinterpret_float -> Int (Int.of_float (of_real 1 (`Cvtop op) v))
+    | Reinterpret_float -> Int begin
+      match (of_real 1 (`Cvtop op) v) with
+        | Exact v -> Q.to_int v
+        | Approx v -> Int.of_float v
+    end
     | _ -> eval_error (`Unsupported_operator (`Cvtop op, Ty_int))
 end
 
 module Real = struct
   let unop (op : Ty.Unop.t) (v : Value.t) : Value.t =
     let v = of_real 1 (`Unop op) v in
-    match op with
-    | Neg -> to_real @@ Float.neg v
-    | Abs -> to_real @@ Float.abs v
-    | Sqrt -> to_real @@ Float.sqrt v
-    | Nearest -> to_real @@ Float.round v
-    | Ceil -> to_real @@ Float.ceil v
-    | Floor -> to_real @@ Float.floor v
-    | Trunc -> to_real @@ Float.trunc v
-    | Is_nan -> if Float.is_nan v then Value.True else Value.False
-    | _ -> eval_error (`Unsupported_operator (`Unop op, Ty_real))
+    let sqrt_q (q : Q.t) =
+      let n = Q.num q in
+      let d = Q.den q in
+      if Z.sign n < 0
+        then eval_error (`Negative_sqrt)
+      else
+        let (n_root, n_rem) = Z.sqrt_rem n in
+        let (d_root, d_rem) = Z.sqrt_rem d in
+        if Z.equal n_rem Z.zero && Z.equal d_rem Z.zero then
+          to_real (Exact (Q.make n_root d_root))
+        else
+          to_real (Approx (Q.to_float q |> sqrt)) in
+    let nearest_q (q : Q.t) =
+      let n = Q.num q in
+      let d = Q.den q in
+      let near = if Z.geq n Z.zero
+        then Z.div (Z.add n (Z.div d (Z.of_int 2))) d
+        else Z.div (Z.sub n (Z.div d (Z.of_int 2))) d in
+      to_real (Exact (Q.of_bigint near)) in
+    let approx_ops = fun v ->
+      let to_real v = to_real (Approx v) in
+      match op with
+      | Neg -> to_real @@ Float.neg v
+      | Abs -> to_real @@ Float.abs v
+      | Sqrt -> to_real @@ Float.sqrt v
+      | Nearest -> to_real @@ Float.round v
+      | Ceil -> to_real @@ Float.ceil v
+      | Floor -> to_real @@ Float.floor v
+      | Trunc -> to_real @@ Float.trunc v
+      | Is_nan -> if Float.is_nan v then Value.True else Value.False
+      | _ -> eval_error (`Unsupported_operator (`Unop op, Ty_real)) in
+    let exact_ops = fun v ->
+      let to_real v = to_real (Exact v) in
+      match op with
+      | Neg -> to_real @@ Q.neg v
+      | Abs -> to_real @@ Q.abs v
+      | Sqrt -> sqrt_q v
+      | Nearest -> nearest_q v
+      | Ceil -> to_real @@ Q.of_bigint @@ Z.cdiv (Q.num v) (Q.den v)
+      | Floor -> to_real @@ Q.of_bigint @@ Z.fdiv (Q.num v) (Q.den v)
+      | Trunc -> to_real @@ Q.of_bigint @@ Z.div (Q.num v) (Q.den v)
+      | Is_nan -> (match Q.classify v with
+        | Q.UNDEF -> Value.True
+        | _ -> Value.False)
+      | _ -> eval_error (`Unsupported_operator (`Unop op, Ty_real)) in
+    match v with
+      | Exact v -> exact_ops v
+      | Approx v -> approx_ops v
 
   let binop (op : Ty.Binop.t) (v1 : Value.t) (v2 : Value.t) : Value.t =
-    let f =
-      match op with
-      | Add -> Float.add
-      | Sub -> Float.sub
-      | Mul -> Float.mul
-      | Div -> Float.div
-      | Rem -> Float.rem
-      | Min -> Float.min
-      | Max -> Float.max
-      | Pow -> Float.pow
-      | _ -> eval_error (`Unsupported_operator (`Binop op, Ty_real))
-    in
-    to_real (f (of_real 1 (`Binop op) v1) (of_real 2 (`Binop op) v2))
+    let rem_q (a : Q.t) (b : Q.t) : Q.t =
+      if Q.equal b Q.zero then eval_error (`Divide_by_zero);
+      let div = Q.div a b in
+      let k = Q.of_bigint (Z.div (Q.num div) (Q.den div)) in
+      Q.sub a (Q.mul b k) in
+    let approx_op v1 v2 : Value.real = match op with
+      | Add -> Approx (Float.add v1 v2)
+      | Sub -> Approx (Float.sub v1 v2)
+      | Mul -> Approx (Float.mul v1 v2)
+      | Div -> Approx (Float.div v1 v2)
+      | Rem -> Approx (Float.rem v1 v2)
+      | Min -> Approx (Float.min v1 v2)
+      | Max -> Approx (Float.max v1 v2)
+      | Pow -> Approx (Float.pow v1 v2)
+      | _ -> eval_error (`Unsupported_operator (`Binop op, Ty_real)) in
+    let exact_op v1 v2 : Value.real = match op with
+      | Add -> Exact (Q.add v1 v2)
+      | Sub -> Exact (Q.sub v1 v2)
+      | Mul -> Exact (Q.mul v1 v2)
+      | Div -> Exact (Q.div v1 v2)
+      | Rem -> Exact (rem_q v1 v2)
+      | Min -> Exact (Q.min v1 v2)
+      | Max -> Exact (Q.max v1 v2)
+      | Pow -> Approx (Float.pow (Q.to_float v1) (Q.to_float v2))
+      | _ -> eval_error (`Unsupported_operator (`Binop op, Ty_real)) in
+    let push_approx_op (v1 : Value.real) (v2 : Value.real) =
+      match (v1, v2) with
+      | Exact v1, Exact v2 -> exact_op v1 v2
+      | Exact v1, Approx v2 -> approx_op (Q.to_float v1) v2
+      | Approx v1, Exact v2 -> approx_op v1 (Q.to_float v2)
+      | Approx v1, Approx v2 -> approx_op v1 v2 in
+    to_real (push_approx_op (of_real 1 (`Binop op) v1) (of_real 2 (`Binop op) v2))
 
   let relop (op : Ty.Relop.t) (v1 : Value.t) (v2 : Value.t) : bool =
-    let f =
-      match op with
+    let approx_op = match op with
       | Lt -> Float.Infix.( < )
       | Le -> Float.Infix.( <= )
       | Gt -> Float.Infix.( > )
       | Ge -> Float.Infix.( >= )
       | Eq -> Float.Infix.( = )
       | Ne -> Float.Infix.( <> )
-      | _ -> eval_error (`Unsupported_operator (`Relop op, Ty_real))
-    in
-    f (of_real 1 (`Relop op) v1) (of_real 2 (`Relop op) v2)
+      | _ -> eval_error (`Unsupported_operator (`Relop op, Ty_real)) in
+    let exact_op = match op with
+      | Lt -> Q.lt
+      | Le -> Q.leq
+      | Gt -> Q.gt
+      | Ge -> Q.geq
+      | Eq -> Q.equal
+      | Ne -> fun v1 v2 -> Fun.negate (Q.equal v1) v2
+      | _ -> eval_error (`Unsupported_operator (`Relop op, Ty_real)) in
+    let push_approx_op (v1 : Value.real) (v2 : Value.real) =
+      match (v1, v2) with
+      | Exact v1, Exact v2 -> exact_op v1 v2
+      | Exact v1, Approx v2 -> approx_op (Q.to_float v1) v2
+      | Approx v1, Exact v2 -> approx_op v1 (Q.to_float v2)
+      | Approx v1, Approx v2 -> approx_op v1 v2 in
+    push_approx_op (of_real 1 (`Relop op) v1) (of_real 2 (`Relop op) v2)
 
   let cvtop (op : Ty.Cvtop.t) (v : Value.t) : Value.t =
     let op' = `Cvtop op in
     match op with
-    | ToString -> Str (Float.to_string (of_real 1 op' v))
-    | OfString -> begin
-      match float_of_string_opt (of_str 1 op' v) with
-      | None -> eval_error `Invalid_format_conversion
-      | Some v -> to_real v
+    | ToString -> Str begin
+      match (of_real 1 op' v) with
+        | Exact v -> Q.to_string v
+        | Approx v -> Float.to_string v
     end
-    | Reinterpret_int -> to_real (float_of_int (of_int 1 op' v))
-    | Reinterpret_float -> to_int (Float.to_int (of_real 1 op' v))
+    | OfString -> begin
+      match (of_str 1 op' v) with
+        | float_str when String.contains float_str '.' -> begin
+          match (Float.of_string_opt float_str) with
+            | Some f -> to_real (Approx f)
+            | None -> eval_error `Invalid_format_conversion
+        end
+        | q_str -> begin
+          try to_real (Exact (Q.of_string q_str))
+          with | _ -> eval_error `Invalid_format_conversion
+        end
+    end
+    | Reinterpret_int -> to_real (Exact (Q.of_int @@ of_int 1 op' v))
+    | Reinterpret_float -> to_int begin
+      match (of_real 1 op' v) with
+        | Exact v -> Q.to_int v
+        | Approx v -> Float.to_int v
+    end
     | _ -> eval_error (`Unsupported_operator (op', Ty_real))
 end
 
@@ -408,7 +497,7 @@ module Str = struct
       let s = of_str 1 op' v in
       match float_of_string_opt s with
       | None -> eval_error `Invalid_format_conversion
-      | Some f -> to_real f
+      | Some f -> to_real (Approx f)
     end
     | _ -> eval_error (`Unsupported_operator (`Cvtop op, Ty_str))
 

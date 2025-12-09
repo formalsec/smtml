@@ -162,8 +162,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         let open M in
         match op with
         | Unop.Neg -> Real.neg e
-        | Abs -> ite (Real.gt e (real 0.)) e (Real.neg e)
-        | Sqrt -> Real.pow e (v 0.5)
+        | Abs -> ite (Real.gt e (real (Exact Q.zero))) e (Real.neg e)
+        | Sqrt -> Real.pow e (v (Exact (Q.make (Z.of_int 1) (Z.of_int 2))))
         | Ceil ->
           let x_int = M.Real.to_int e in
           ite (eq (Int.to_real x_int) e) x_int (Int.add x_int (int 1))
