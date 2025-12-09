@@ -33,8 +33,8 @@ Test Real parsing:
   $ smtml run test_lra.smt2
   sat
   (model
-    (x real 2.)
-    (y real 4.))
+    (x real 2)
+    (y real 4))
 
 Test String parsing:
   $ smtml run test_string_all.smt2
@@ -88,8 +88,8 @@ Tests smt2 with the --from-file argument:
   sat
   sat
   (model
-    (x real 2.)
-    (y real 4.))
+    (x real 2)
+    (y real 4))
   sat
   sat
   (model
@@ -117,7 +117,7 @@ Test status tracking:
   sat
   smtml: internal error, uncaught exception:
          Failure("Expected status: unsat, but solver returned sat")
-         
+
   [125]
 
   $ smtml run --no-strict-status test_set_info_status.smt2
