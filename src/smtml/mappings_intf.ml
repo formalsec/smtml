@@ -100,6 +100,9 @@ module type M = sig
 
     (** [caches_consts] indicates whether the solver caches constants. *)
     val caches_consts : bool
+
+    (** [was_interrupted] indicates if the solver was interrupted. *)
+    val was_interrupted : bool ref
   end
 
   (** {2 Type Handling} *)

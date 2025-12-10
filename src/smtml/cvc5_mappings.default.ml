@@ -12,6 +12,8 @@ module Fresh_cvc5 () = struct
     let caches_consts = false
 
     let is_available = true
+
+    let was_interrupted = ref false
   end
 
   type ty = Sort.sort
