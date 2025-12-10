@@ -10,6 +10,8 @@ module Nop = struct
       let caches_consts = false
 
       let is_available = false
+
+      let was_interrupted = ref false
     end
 
     type ty = [ `Ty ]

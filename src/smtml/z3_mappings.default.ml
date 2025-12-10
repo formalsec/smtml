@@ -14,6 +14,8 @@ module M = struct
       let caches_consts = true
 
       let is_available = true
+
+      let was_interrupted = ref false
     end
 
     type ty = Z3.Sort.sort
@@ -602,7 +604,9 @@ module M = struct
         Z3.Simplifier.and_then ctx simplify solver_eqs then_
         |> Z3.Solver.add_simplifier ctx solver
 
-      let interrupt () = Z3.Tactic.interrupt ctx
+      let interrupt () =
+        Internals.was_interrupted := true;
+        Z3.Tactic.interrupt ctx
 
       let get_statistics solver =
         get_statistics (Z3.Solver.get_statistics solver)

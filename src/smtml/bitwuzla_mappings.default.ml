@@ -13,6 +13,8 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     let caches_consts = false
 
     let is_available = true
+
+    let was_interrupted = ref false
   end
 
   type ty = Sort.t
