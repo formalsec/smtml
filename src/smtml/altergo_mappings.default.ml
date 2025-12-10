@@ -224,8 +224,7 @@ module M = struct
 
       let add_simplifier s = s
 
-      let interrupt _ =
-        Fmt.failwith "Altergo_mappings: interrupt is not implemented"
+      let interrupt _ = ()
 
       let get_statistics _ = Statistics.Map.empty
 
