@@ -314,6 +314,39 @@ let unop ty op hte =
   | Length, List es -> value (Int (List.length es))
   | _ -> raw_unop ty op hte
 
+let raw_naryop ty op es = make (Naryop (ty, op, es)) [@@inline]
+
+let is_diff e v1 =
+  match e with
+  | Relop (_, Ne, _, { node = Val v2; _ }) when not (Value.equal v1 v2) -> true
+  | Relop (_, Ne, { node = Val v2; _ }, _) when not (Value.equal v1 v2) -> true
+  | _ -> false
+
+let all_diffs ls v = List.fold_left (fun acc e -> acc && is_diff e v) true ls
+
+let naryop ty op es =
+  if List.for_all (fun e -> match view e with Val _ -> true | _ -> false) es
+  then
+    let vs =
+      List.map (fun e -> match view e with Val v -> v | _ -> assert false) es
+    in
+    value (Eval.naryop ty op vs)
+  else
+    match (ty, op, List.map view es) with
+    | ( Ty_str
+      , Concat
+      , [ Naryop (Ty_str, Concat, l1); Naryop (Ty_str, Concat, l2) ] ) ->
+      raw_naryop Ty_str Concat (l1 @ l2)
+    | Ty_str, Concat, [ Naryop (Ty_str, Concat, htes); hte ] ->
+      raw_naryop Ty_str Concat (htes @ [ make hte ])
+    | Ty_str, Concat, [ hte; Naryop (Ty_str, Concat, htes) ] ->
+      raw_naryop Ty_str Concat (make hte :: htes)
+    | _, Logand, [ hte; Naryop (_, Logand, htes) ] ->
+      raw_naryop ty Logand (List.cons (make hte) htes)
+    | _, Logand, [ Naryop (_, Logand, htes); hte ] ->
+      raw_naryop ty Logand (List.append htes [ make hte ])
+    | _ -> raw_naryop ty op es
+
 let raw_binop ty op hte1 hte2 = make (Binop (ty, op, hte1, hte2)) [@@inline]
 
 let rec binop ty op hte1 hte2 =
@@ -323,6 +356,26 @@ let rec binop ty op hte1 hte2 =
   | Sub, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
     if Bitvector.equal b1 b2 then binop ty Sub os1 os2
     else raw_binop ty op hte1 hte2
+  | And, Binop (_, And, e1, e2), _ ->
+    naryop ty Ty.Naryop.Logand [ e1; e2; hte2 ]
+  | And, _, Binop (_, And, e1, e2) ->
+    naryop ty Ty.Naryop.Logand [ hte1; e1; e2 ]
+  | And, Relop (_, Eq, _, { node = Val v1; _ }), Naryop (_, Logand, ls)
+    when all_diffs (List.map view ls) v1 ->
+    hte1
+  | And, Naryop (_, Logand, ls), Relop (_, Eq, _, { node = Val v1; _ })
+    when all_diffs (List.map view ls) v1 ->
+    hte2
+  | ( And
+    , Relop (_, Eq, _, { node = Val v1; _ })
+    , Relop (_, Ne, _, { node = Val v2; _ }) )
+    when Value.equal v1 v2 ->
+    hte1
+  | ( And
+    , Relop (_, Ne, _, { node = Val v1; _ })
+    , Relop (_, Eq, _, { node = Val v2; _ }) )
+    when Value.equal v1 v2 ->
+    hte2
   | Add, Ptr { base; offset }, _ ->
     let m = Bitvector.numbits base in
     make (Ptr { base; offset = binop (Ty_bitv m) Add offset hte2 })
@@ -480,27 +533,6 @@ let rec cvtop theory op hte =
     assert (Ty.equal theory (ty hte) && Ty.equal theory (Ty_bitv 32));
     hte
   | _ -> raw_cvtop theory op hte
-
-let raw_naryop ty op es = make (Naryop (ty, op, es)) [@@inline]
-
-let naryop ty op es =
-  if List.for_all (fun e -> match view e with Val _ -> true | _ -> false) es
-  then
-    let vs =
-      List.map (fun e -> match view e with Val v -> v | _ -> assert false) es
-    in
-    value (Eval.naryop ty op vs)
-  else
-    match (ty, op, List.map view es) with
-    | ( Ty_str
-      , Concat
-      , [ Naryop (Ty_str, Concat, l1); Naryop (Ty_str, Concat, l2) ] ) ->
-      raw_naryop Ty_str Concat (l1 @ l2)
-    | Ty_str, Concat, [ Naryop (Ty_str, Concat, htes); hte ] ->
-      raw_naryop Ty_str Concat (htes @ [ make hte ])
-    | Ty_str, Concat, [ hte; Naryop (Ty_str, Concat, htes) ] ->
-      raw_naryop Ty_str Concat (make hte :: htes)
-    | _ -> raw_naryop ty op es
 
 let[@inline] raw_extract (hte : t) ~(high : int) ~(low : int) : t =
   make (Extract (hte, high, low))
