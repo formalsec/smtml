@@ -376,6 +376,10 @@ let rec binop ty op hte1 hte2 =
     , Relop (_, Eq, _, { node = Val v2; _ }) )
     when Value.equal v1 v2 ->
     hte2
+  | And, _, Naryop (_, Logand, ls) ->
+    naryop ty Ty.Naryop.Logand (List.append ls [ hte1 ])
+  | And, Naryop (_, Logand, ls), _ ->
+    naryop ty Ty.Naryop.Logand (List.append ls [ hte2 ])
   | Add, Ptr { base; offset }, _ ->
     let m = Bitvector.numbits base in
     make (Ptr { base; offset = binop (Ty_bitv m) Add offset hte2 })
