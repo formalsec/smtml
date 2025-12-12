@@ -37,6 +37,7 @@ type error_kind =
   | `Integer_overflow
   | `Index_out_of_bounds
   | `Invalid_format_conversion
+  | `Negative_sqrt
   | `Unsupported_operator of op_type * Ty.t
   | `Unsupported_theory of Ty.t
   | `Type_error of type_error_info

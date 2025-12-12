@@ -107,9 +107,8 @@ module Term = struct
     | None -> Fmt.failwith "%ainvalid int" pp_loc loc
 
   let real ?loc (x : string) =
-    match float_of_string_opt x with
-    | Some x -> Expr.value (Real x)
-    | None -> Fmt.failwith "%ainvalid real" pp_loc loc
+    try Expr.value (Real (Exact (Q.of_string x)))
+    with _ -> Fmt.failwith "%ainvalid real" pp_loc loc
 
   let hexa ?loc:_ (h : string) =
     let len = String.length h in

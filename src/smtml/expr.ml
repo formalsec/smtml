@@ -277,7 +277,7 @@ let normalize_eq_or_ne op (ty', e1, e2) =
       make_relop binop zero
     | Ty_real ->
       let binop = make (Binop (ty1, Sub, e1, e2)) in
-      let zero = make (Val (Real 0.)) in
+      let zero = make (Val (Real (Exact Q.zero))) in
       make_relop binop zero
     | _ -> make_relop e1 e2
   end
@@ -394,12 +394,16 @@ let raw_relop ty op hte1 hte2 = make (Relop (ty, op, hte1, hte2)) [@@inline]
 let rec relop ty op hte1 hte2 =
   match (op, view hte1, view hte2) with
   | op, Val v1, Val v2 -> value (if Eval.relop ty op v1 v2 then True else False)
-  | Ty.Relop.Ne, Val (Real v), _ | Ne, _, Val (Real v) ->
+  | Ty.Relop.Ne, Val (Real (Approx v)), _ | Ne, _, Val (Real (Approx v)) ->
     if Float.is_nan v || Float.is_infinite v then value True
     else raw_relop ty op hte1 hte2
-  | _, Val (Real v), _ | _, _, Val (Real v) ->
+  | Ty.Relop.Ne, Val (Real (Exact v)), _ | Ne, _, Val (Real (Exact v)) ->
+    if Fun.negate Q.is_real v then value True else raw_relop ty op hte1 hte2
+  | _, Val (Real (Approx v)), _ | _, _, Val (Real (Approx v)) ->
     if Float.is_nan v || Float.is_infinite v then value False
     else raw_relop ty op hte1 hte2
+  | _, Val (Real (Exact v)), _ | _, _, Val (Real (Exact v)) ->
+    if Fun.negate Q.is_real v then value False else raw_relop ty op hte1 hte2
   | Eq, _, Val Nothing | Eq, Val Nothing, _ -> value False
   | Ne, _, Val Nothing | Ne, Val Nothing, _ -> value True
   | Eq, _, Val (App (`Op "symbol", [ Str _ ]))

@@ -9,13 +9,19 @@
 
 (** {1 Value Types} *)
 
+(** The type [real] represents either an exact rational, or an approximate
+    float. *)
+type real =
+  | Exact of Q.t
+  | Approx of float
+
 (** The type [t] represents concrete values. *)
 type t =
   | True  (** Boolean true. *)
   | False  (** Boolean false. *)
   | Unit  (** Unit value. *)
   | Int of int  (** Integer value. *)
-  | Real of float  (** Real number value. *)
+  | Real of real  (** Real number value. *)
   | Str of string  (** String value. *)
   | Num of Num.t  (** Numeric value. *)
   | Bitv of Bitvector.t  (** Bitvector value. *)

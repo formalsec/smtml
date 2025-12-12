@@ -42,7 +42,11 @@ module M = struct
 
     let int i = Z3.Arithmetic.Integer.mk_numeral_i ctx i
 
-    let real f = Z3.Arithmetic.Real.mk_numeral_s ctx (Float.to_string f)
+    let real (f : Value.real) =
+      let str =
+        match f with Exact q -> Q.to_string q | Approx f -> Float.to_string f
+      in
+      Z3.Arithmetic.Real.mk_numeral_s ctx str
 
     let const sym ty = Z3.Expr.mk_const_s ctx sym ty
 
@@ -110,7 +114,8 @@ module M = struct
     module Interp = struct
       let to_int interp = Z.to_int @@ Z3.Arithmetic.Integer.get_big_int interp
 
-      let to_real interp = Q.to_float @@ Z3.Arithmetic.Real.get_ratio interp
+      let to_real interp : Value.real =
+        Exact (Z3.Arithmetic.Real.get_ratio interp)
 
       let to_bool interp =
         match Z3.Boolean.get_bool_value interp with

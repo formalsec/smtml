@@ -4,12 +4,16 @@
 
 open Ty
 
+type real =
+  | Exact of Q.t
+  | Approx of float
+
 type t =
   | True
   | False
   | Unit
   | Int of int
-  | Real of float
+  | Real of real
   | Str of string
   | Num of Num.t
   | Bitv of Bitvector.t
@@ -49,7 +53,10 @@ let rec compare (a : t) (b : t) : int =
   | False, True -> -1
   | True, False -> 1
   | Int a, Int b -> Int.compare a b
-  | Real a, Real b -> Float.compare a b
+  | Real (Exact a), Real (Exact b) -> Q.compare a b
+  | Real (Approx a), Real (Approx b) -> Float.compare a b
+  | Real (Approx _), Real (Exact _) -> -1
+  | Real (Exact _), Real (Approx _) -> 1
   | Str a, Str b -> String.compare a b
   | Num a, Num b -> Num.compare a b
   | Bitv a, Bitv b -> Bitvector.compare a b
@@ -67,7 +74,9 @@ let rec equal (v1 : t) (v2 : t) : bool =
   match (v1, v2) with
   | True, True | False, False | Unit, Unit | Nothing, Nothing -> true
   | Int a, Int b -> Int.equal a b
-  | Real a, Real b -> Float.equal a b
+  | Real (Exact a), Real (Exact b) -> Q.equal a b
+  | Real (Approx a), Real (Approx b) -> Float.equal a b
+  | Real (Approx _), Real (Exact _) | Real (Exact _), Real (Approx _) -> false
   | Str a, Str b -> String.equal a b
   | Num a, Num b -> Num.equal a b
   | Bitv a, Bitv b -> Bitvector.equal a b
@@ -88,7 +97,8 @@ let rec pp fmt = function
   | False -> Fmt.string fmt "false"
   | Unit -> Fmt.string fmt "unit"
   | Int x -> Fmt.int fmt x
-  | Real x -> Fmt.pf fmt "%F" x
+  | Real (Exact x) -> Q.pp_print fmt x
+  | Real (Approx x) -> Fmt.pf fmt "%F" x
   | Num x -> Num.pp fmt x
   | Bitv bv -> Bitvector.pp fmt bv
   | Str x -> Fmt.pf fmt "%S" x
@@ -117,9 +127,8 @@ let of_string (cast : Ty.t) v =
     | None -> Fmt.error_msg "invalid value %s, expected integer" v
     | Some n -> Ok (Int n) )
   | Ty_real -> (
-    match float_of_string_opt v with
-    | None -> Fmt.error_msg "invalid value %s, expected real" v
-    | Some n -> Ok (Real n) )
+    try Ok (Real (Exact (Q.of_string v)))
+    with _ -> Fmt.error_msg "invalid value %s, expected real" v )
   | Ty_str -> Ok (Str v)
   | Ty_app | Ty_list | Ty_none | Ty_unit | Ty_regexp | Ty_roundingMode ->
     Fmt.error_msg "unsupported parsing values of type %a" Ty.pp cast
@@ -130,7 +139,11 @@ let rec to_json (v : t) : Yojson.Basic.t =
   | False -> `Bool false
   | Unit -> `String "unit"
   | Int int -> `Int int
-  | Real real -> `Float real
+  | Real (Exact r) ->
+    let num = r |> Q.num |> Z.to_int in
+    let den = r |> Q.den |> Z.to_int in
+    `Assoc [ ("num", `Int num); ("den", `Int den) ]
+  | Real (Approx r) -> `Float r
   | Str str -> `String str
   | Num n -> Num.to_json n
   | Bitv bv -> Bitvector.to_json bv
@@ -143,7 +156,8 @@ module Smtlib = struct
     | True -> Fmt.string fmt "true"
     | False -> Fmt.string fmt "false"
     | Int x -> Fmt.int fmt x
-    | Real x -> Fmt.pf fmt "%F" x
+    | Real (Exact x) -> Q.pp_print fmt x
+    | Real (Approx x) -> Fmt.pf fmt "%F" x
     | Num x -> Num.pp fmt x
     | Bitv bv -> Bitvector.pp fmt bv
     | Str x -> Fmt.pf fmt "%S" x

@@ -44,9 +44,10 @@ let test_unop_int _ =
   let x = symbol "x" ty in
   check (Expr.unop ty Neg (Expr.unop ty Neg x)) x
 
-let test_unop_real _ =
+let test_unop_real_approx _ =
   let open Infix in
   let ty = Ty.Ty_real in
+  let real r = real (Approx r) in
   check (Expr.unop ty Neg (real 1.0)) (real (-1.0));
   check (Expr.unop ty Abs (real 1.0)) (real 1.0);
   check (Expr.unop ty Sqrt (real 4.0)) (real 2.0);
@@ -55,6 +56,20 @@ let test_unop_real _ =
   check (Expr.unop ty Floor (real 0.7)) (real 0.0);
   check (Expr.unop ty Trunc (real 1.504)) (real 1.0);
   check (Expr.unop ty Is_nan (real Float.nan)) true_
+
+let test_unop_real_exact _ =
+  let open Infix in
+  let ty = Ty.Ty_real in
+  let real r = real (Exact r) in
+  let open Q in
+  check (Expr.unop ty Neg (real one)) (real (neg one));
+  check (Expr.unop ty Abs (real one)) (real one);
+  check (Expr.unop ty Sqrt (real (of_int 4))) (real (of_int 2));
+  check (Expr.unop ty Nearest (real (of_float 0.504))) (real one);
+  check (Expr.unop ty Ceil (real (of_float 0.3))) (real one);
+  check (Expr.unop ty Floor (real (of_float 0.7))) (real zero);
+  check (Expr.unop ty Trunc (real (of_float 1.504))) (real one);
+  check (Expr.unop ty Is_nan (real Q.undef)) true_
 
 let test_unop_string _ =
   let open Infix in
@@ -110,7 +125,8 @@ let test_unop_f64 _ =
 
 let test_unop =
   [ "test_unop_int" >:: test_unop_int
-  ; "test_unop_real" >:: test_unop_real
+  ; "test_unop_real_exact" >:: test_unop_real_exact
+  ; "test_unop_real_approx" >:: test_unop_real_approx
   ; "test_unop_stri" >:: test_unop_string
   ; "test_unop_bool" >:: test_unop_bool
   ; "test_unop_list" >:: test_unop_list
@@ -139,9 +155,10 @@ let test_binop_int _ =
   check (Expr.binop ty ShrA (int (-4)) (int 2)) (int (-1))
 (* check (Expr.binop ty ShrL (int (-4)) (int 2)) (int (-1)) *)
 
-let test_binop_real _ =
+let test_binop_real_approx _ =
   let open Infix in
   let ty = Ty.Ty_real in
+  let real r = real (Approx r) in
   check (Expr.binop ty Add (real 0.0) (real 42.0)) (real 42.0);
   check (Expr.binop ty Sub (real 0.0) (real 1.0)) (real (-1.0));
   check (Expr.binop ty Mul (real 2.0) (real 21.0)) (real 42.0);
@@ -149,6 +166,33 @@ let test_binop_real _ =
   check (Expr.binop ty Rem (real 0.0) (real 1.0)) (real 0.0);
   check (Expr.binop ty Min (real 2.0) (real 4.0)) (real 2.0);
   check (Expr.binop ty Max (real 2.0) (real 4.0)) (real 4.0)
+
+let test_binop_real_exact _ =
+  let open Infix in
+  let ty = Ty.Ty_real in
+  let real r = real (Exact r) in
+  let open Q in
+  check (Expr.binop ty Add (real zero) (real (of_int 42))) (real (of_int 42));
+  check
+    (Expr.binop ty Add (real (of_string "2/3")) (real (of_string "1/3")))
+    (real one);
+  check (Expr.binop ty Sub (real zero) (real one)) (real (neg one));
+  check
+    (Expr.binop ty Mul (real (of_int 2)) (real (of_int 21)))
+    (real (of_int 42));
+  check
+    (Expr.binop ty Mul (real (of_string "1/3")) (real (of_int 2)))
+    (real (of_string "2/3"));
+  check
+    (Expr.binop ty Div (real (of_int 84)) (real (of_int 2)))
+    (real (of_int 42));
+  check (Expr.binop ty Rem (real zero) (real one)) (real zero);
+  check
+    (Expr.binop ty Min (real (of_int 2)) (real (of_int 4)))
+    (real (of_int 2));
+  check
+    (Expr.binop ty Max (real (of_int 2)) (real (of_int 4)))
+    (real (of_int 4))
 
 let test_binop_string _ =
   let open Infix in
@@ -261,7 +305,8 @@ let test_binop_simplifications _ =
 
 let test_binop =
   [ "test_binop_int" >:: test_binop_int
-  ; "test_binop_real" >:: test_binop_real
+  ; "test_binop_real_exact" >:: test_binop_real_exact
+  ; "test_binop_real_approx" >:: test_binop_real_approx
   ; "test_binop_string" >:: test_binop_string
   ; "test_binop_list" >:: test_binop_list
   ; "test_binop_i32" >:: test_binop_i32
@@ -277,8 +322,8 @@ let test_relop_bool _ =
   let ty = Ty.Ty_bool in
   check (Expr.relop ty Eq (int 0) (int 0)) true_;
   check (Expr.relop ty Ne (int 0) (int 0)) false_;
-  check (Expr.relop ty Eq (real 0.0) (real 0.0)) true_;
-  check (Expr.relop ty Ne (real 0.0) (real 0.0)) false_;
+  check (Expr.relop ty Eq (real (Exact Q.zero)) (real (Exact Q.zero))) true_;
+  check (Expr.relop ty Ne (real (Exact Q.zero)) (real (Exact Q.zero))) false_;
   check (Expr.relop ty Eq (int32 0l) (int32 0l)) true_;
   check (Expr.relop ty Ne (int32 0l) (int32 0l)) false_;
   check (Expr.relop ty Eq (int64 0L) (int64 0L)) true_;
@@ -292,16 +337,30 @@ let test_relop_int _ =
   check (Expr.relop ty Gt (int 0) (int 1)) false_;
   check (Expr.relop ty Ge (int 0) (int 1)) false_
 
-let test_relop_real _ =
+let test_relop_real_approx _ =
   let open Infix in
   let ty = Ty.Ty_real in
   let x = symbol "x" ty in
+  let real r = real (Approx r) in
   check (Expr.relop Ty_bool Ne (real Float.nan) x) true_;
   check (Expr.relop Ty_bool Eq x (real Float.nan)) false_;
   check (Expr.relop ty Lt (real 0.0) (real 1.0)) true_;
   check (Expr.relop ty Le (real 0.0) (real 1.0)) true_;
   check (Expr.relop ty Gt (real 0.0) (real 1.0)) false_;
   check (Expr.relop ty Ge (real 0.0) (real 1.0)) false_
+
+let test_relop_real_exact _ =
+  let open Infix in
+  let ty = Ty.Ty_real in
+  let x = symbol "x" ty in
+  let real r = real (Exact r) in
+  let open Q in
+  check (Expr.relop Ty_bool Ne (real Q.undef) x) true_;
+  check (Expr.relop Ty_bool Eq x (real Q.undef)) false_;
+  check (Expr.relop ty Lt (real zero) (real one)) true_;
+  check (Expr.relop ty Le (real zero) (real one)) true_;
+  check (Expr.relop ty Gt (real zero) (real one)) false_;
+  check (Expr.relop ty Ge (real zero) (real one)) false_
 
 let test_relop_string _ =
   let open Infix in
@@ -398,7 +457,8 @@ let test_relop_eq _ =
 let test_relop =
   [ "test_relop_bool" >:: test_relop_bool
   ; "test_relop_int" >:: test_relop_int
-  ; "test_relop_real" >:: test_relop_real
+  ; "test_relop_real_exact" >:: test_relop_real_exact
+  ; "test_relop_real_approx" >:: test_relop_real_approx
   ; "test_relop_string" >:: test_relop_string
   ; "test_relop_i32" >:: test_relop_i32
   ; "test_relop_i64" >:: test_relop_i64
@@ -446,14 +506,16 @@ let test_cvtop_int _ =
   let ty = Ty.Ty_int in
   check (Expr.cvtop ty OfBool true_) (int 1);
   check (Expr.cvtop ty OfBool false_) (int 0);
-  check (Expr.cvtop ty Reinterpret_float (real 1.)) (int 1)
+  check (Expr.cvtop ty Reinterpret_float (real (Exact Q.one))) (int 1)
 
 let test_cvtop_real _ =
   let open Infix in
   let ty = Ty.Ty_real in
-  check (Expr.cvtop ty ToString (real 1.)) (string "1.");
-  check (Expr.cvtop ty OfString (string "1.")) (real 1.);
-  check (Expr.cvtop ty Reinterpret_int (int 1)) (real 1.)
+  check (Expr.cvtop ty ToString (real (Exact Q.one))) (string "1");
+  check (Expr.cvtop ty ToString (real (Approx 1.))) (string "1.");
+  check (Expr.cvtop ty OfString (string "1.")) (real (Approx 1.));
+  check (Expr.cvtop ty OfString (string "1")) (real (Exact Q.one));
+  check (Expr.cvtop ty Reinterpret_int (int 1)) (real (Exact Q.one))
 
 let test_cvtop_string _ =
   let open Infix in
@@ -462,7 +524,8 @@ let test_cvtop_string _ =
   check (Expr.cvtop ty String_from_code (int 97)) (string "a");
   check (Expr.cvtop ty String_to_int (string "42")) (int 42);
   check (Expr.cvtop ty String_from_int (int 42)) (string "42");
-  check (Expr.cvtop ty String_to_float (string "1.")) (real 1.)
+  check (Expr.cvtop ty String_to_float (string "1.")) (real (Approx 1.));
+  check (Expr.cvtop ty String_to_float (string "1")) (real (Approx 1.))
 
 let test_cvtop_i32 _ =
   let open Infix in

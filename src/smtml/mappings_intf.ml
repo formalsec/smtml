@@ -47,7 +47,7 @@ module type M = sig
   val int : int -> term
 
   (** [real f] constructs a real number term from the given float [f]. *)
-  val real : float -> term
+  val real : Value.real -> term
 
   (** [const name ty] constructs a constant term with the given name and type.
   *)
@@ -146,7 +146,7 @@ module type M = sig
     val to_int : interp -> int
 
     (** [to_real interp] converts an interpretation to a real number. *)
-    val to_real : interp -> float
+    val to_real : interp -> Value.real
 
     (** [to_bool interp] converts an interpretation to a Boolean. *)
     val to_bool : interp -> bool
