@@ -391,32 +391,10 @@ module type S = sig
         complexity. *)
     val cardinal : t -> int
 
-    (** [is_singleton set] is [Some (Any elt)] if [set] is [singleton elt] and
-        [None] otherwise. *)
-    val is_singleton : t -> elt option
-
     (** [remove elt set] returns a set containing all elements of [set] except
         [elt]. Returns a value physically equal to [set] if [elt] is not
         present. *)
     val remove : elt -> t -> t
-
-    (** The minimal element (according to the unsigned order on {!to_int}) if
-        non empty. raises Not_found *)
-    val unsigned_min_elt : t -> elt
-
-    (** The maximal element (according to the unsigned order on {!to_int}) if
-        non empty. raises Not_found *)
-    val unsigned_max_elt : t -> elt
-
-    (** [pop_unsigned_minimum s] is [Some (elt, s')] where
-        [elt = unsigned_min_elt s] and [s' = remove elt s] if [s] is non empty.
-        Uses the unsigned order on {!to_int}. *)
-    val pop_unsigned_minimum : t -> (elt * t) option
-
-    (** [pop_unsigned_maximum s] is [Some (elt, s')] where
-        [elt = unsigned_max_elt s] and [s' = remove elt s] if [s] is non empty.
-        Uses the unsigned order on {!to_int}. *)
-    val pop_unsigned_maximum : t -> (elt * t) option
 
     (** {1 Iterators} *)
 
@@ -470,20 +448,6 @@ module type S = sig
         @since v0.11.0 *)
     val diff : t -> t -> t
 
-    (** [min_elt_inter s1 s2] is {!unsigned_min_elt} of {{!inter}[inter s1 s2]},
-        but faster as it does not require computing the whole intersection.
-        Returns [None] when the intersection is empty.
-
-        @since v0.11.0 *)
-    val min_elt_inter : t -> t -> elt option
-
-    (** [max_elt_inter s1 s2] is {!unsigned_max_elt} of {{!inter}[inter s1 s2]},
-        but faster as it does not require computing the whole intersection.
-        Returns [None] when the intersection is empty.
-
-        @since v0.11.0 *)
-    val max_elt_inter : t -> t -> elt option
-
     (** {1 Conversion functions} *)
 
     (** [to_seq st] iterates the whole set, in increasing unsigned order of
@@ -512,9 +476,6 @@ module type S = sig
 
     (** [hash set] computes the hash of a set. *)
     val hash : t -> int
-
-    (** [to_int set] converts a set to an integer. *)
-    val to_int : t -> int
 
     (** [equal set1 set2] compares two sets for equality. *)
     val equal : t -> t -> bool
