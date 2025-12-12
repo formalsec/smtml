@@ -356,16 +356,17 @@ let rec binop ty op hte1 hte2 =
   | Sub, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
     if Bitvector.equal b1 b2 then binop ty Sub os1 os2
     else raw_binop ty op hte1 hte2
-  | And, Binop (_, And, e1, e2), _ ->
-    naryop ty Ty.Naryop.Logand [ e1; e2; hte2 ]
-  | And, _, Binop (_, And, e1, e2) ->
-    naryop ty Ty.Naryop.Logand [ hte1; e1; e2 ]
   | And, Relop (_, Eq, _, { node = Val v1; _ }), Naryop (_, Logand, ls)
     when all_diffs (List.map view ls) v1 ->
     hte1
   | And, Naryop (_, Logand, ls), Relop (_, Eq, _, { node = Val v1; _ })
     when all_diffs (List.map view ls) v1 ->
+    (* Fmt.pr "called2 @."; *)
     hte2
+  | And, Binop (_, And, e1, e2), _ ->
+    naryop ty Ty.Naryop.Logand [ e1; e2; hte2 ]
+  | And, _, Binop (_, And, e1, e2) ->
+    naryop ty Ty.Naryop.Logand [ hte1; e1; e2 ]
   | ( And
     , Relop (_, Eq, _, { node = Val v1; _ })
     , Relop (_, Ne, _, { node = Val v2; _ }) )
@@ -431,6 +432,7 @@ let rec binop ty op hte1 hte2 =
   | List_append, List l0, Val (List l1) -> make (List (l0 @ List.map value l1))
   | List_append, Val (List l0), List l1 -> make (List (List.map value l0 @ l1))
   | List_append, List l0, List l1 -> make (List (l0 @ l1))
+  | And, _, _ -> raw_naryop ty Ty.Naryop.Logand [ hte1; hte2 ]
   | _ -> raw_binop ty op hte1 hte2
 
 let raw_triop ty op e1 e2 e3 = make (Triop (ty, op, e1, e2, e3)) [@@inline]
