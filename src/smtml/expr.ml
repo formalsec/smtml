@@ -345,6 +345,7 @@ let naryop ty op es =
       raw_naryop ty Logand (List.cons (make hte) htes)
     | _, Logand, [ Naryop (_, Logand, htes); hte ] ->
       raw_naryop ty Logand (List.append htes [ make hte ])
+    | _, Logand, hd :: [] -> make hd
     | _ -> raw_naryop ty op es
 
 let raw_binop ty op hte1 hte2 = make (Binop (ty, op, hte1, hte2)) [@@inline]
@@ -370,12 +371,12 @@ let rec binop ty op hte1 hte2 =
   | ( And
     , Relop (_, Eq, _, { node = Val v1; _ })
     , Relop (_, Ne, _, { node = Val v2; _ }) )
-    when Value.equal v1 v2 ->
+    when not (Value.equal v1 v2) ->
     hte1
   | ( And
     , Relop (_, Ne, _, { node = Val v1; _ })
     , Relop (_, Eq, _, { node = Val v2; _ }) )
-    when Value.equal v1 v2 ->
+    when not (Value.equal v1 v2) ->
     hte2
   | And, _, Naryop (_, Logand, ls) ->
     naryop ty Ty.Naryop.Logand (List.append ls [ hte1 ])
