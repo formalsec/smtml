@@ -346,6 +346,11 @@ let naryop ty op es =
     | _, Logand, [ Naryop (_, Logand, htes); hte ] ->
       raw_naryop ty Logand (List.append htes [ make hte ])
     | _, Logand, hd :: [] -> make hd
+    | _, Logor, [ hte; Naryop (_, Logor, htes) ] ->
+      raw_naryop ty Logor (List.cons (make hte) htes)
+    | _, Logor, [ Naryop (_, Logor, htes); hte ] ->
+      raw_naryop ty Logor (List.append htes [ make hte ])
+    | _, Logor, hd :: [] -> make hd
     | _ -> raw_naryop ty op es
 
 let raw_binop ty op hte1 hte2 = make (Binop (ty, op, hte1, hte2)) [@@inline]
@@ -362,7 +367,6 @@ let rec binop ty op hte1 hte2 =
     hte1
   | And, Naryop (_, Logand, ls), Relop (_, Eq, _, { node = Val v1; _ })
     when all_diffs (List.map view ls) v1 ->
-    (* Fmt.pr "called2 @."; *)
     hte2
   | And, Binop (_, And, e1, e2), _ ->
     naryop ty Ty.Naryop.Logand [ e1; e2; hte2 ]
@@ -382,6 +386,10 @@ let rec binop ty op hte1 hte2 =
     naryop ty Ty.Naryop.Logand (List.append ls [ hte1 ])
   | And, Naryop (_, Logand, ls), _ ->
     naryop ty Ty.Naryop.Logand (List.append ls [ hte2 ])
+  | Or, _, Naryop (_, Logor, ls) ->
+    naryop ty Ty.Naryop.Logor (List.append ls [ hte1 ])
+  | Or, Naryop (_, Logor, ls), _ ->
+    naryop ty Ty.Naryop.Logor (List.append ls [ hte2 ])
   | Add, Ptr { base; offset }, _ ->
     let m = Bitvector.numbits base in
     make (Ptr { base; offset = binop (Ty_bitv m) Add offset hte2 })
@@ -434,13 +442,16 @@ let rec binop ty op hte1 hte2 =
   | List_append, Val (List l0), List l1 -> make (List (List.map value l0 @ l1))
   | List_append, List l0, List l1 -> make (List (l0 @ l1))
   | And, _, _ -> raw_naryop ty Ty.Naryop.Logand [ hte1; hte2 ]
+  | Or, _, _ -> raw_naryop ty Ty.Naryop.Logor [ hte1; hte2 ]
   | _ -> raw_binop ty op hte1 hte2
 
 let raw_triop ty op e1 e2 e3 = make (Triop (ty, op, e1, e2, e3)) [@@inline]
 
 let triop ty op e1 e2 e3 =
   match (op, view e1, view e2, view e3) with
-  | Ty.Triop.Ite, Val True, _, _ -> e2
+  | Ty.Triop.Ite, _, Val True, Val False -> e1
+  | Ite, _, Val True, _ -> binop ty Ty.Binop.Or e1 e3
+  | Ite, Val True, _, _ -> e2
   | Ite, Val False, _, _ -> e3
   | op, Val v1, Val v2, Val v3 -> value (Eval.triop ty op v1 v2 v3)
   | Ite, _, Triop (_, Ite, c2, r1, r2), Triop (_, Ite, _, _, _) ->
