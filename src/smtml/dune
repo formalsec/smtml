@@ -68,7 +68,6 @@
   fpath
   menhirLib
   ocaml_intrinsics
-  patricia-tree
   scfg
   smtml.prelude
   threads

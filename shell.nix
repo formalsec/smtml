@@ -30,7 +30,6 @@ pkgs.mkShell {
     menhirLib
     mtime
     ocaml_intrinsics
-    patricia-tree
     prelude
     scfg
     sexplib
