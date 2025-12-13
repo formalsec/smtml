@@ -391,15 +391,28 @@ let triop ty op e1 e2 e3 =
 
 let raw_relop ty op hte1 hte2 = make (Relop (ty, op, hte1, hte2)) [@@inline]
 
-let rec relop ty op hte1 hte2 =
+let rec relop ty (op : Ty.Relop.t) hte1 hte2 =
+  let both_phys_eq = phys_equal hte1 hte2 in
+  let can_be_shortcuted =
+    match ty with
+    | Ty.Ty_bool | Ty_bitv _ | Ty_int | Ty_unit -> both_phys_eq
+    | Ty_fp _ | Ty_app | Ty_list | Ty_real | Ty_regexp | Ty_roundingMode
+    | Ty_none | Ty_str ->
+      false
+  in
   match (op, view hte1, view hte2) with
+  | (Eq | Le | Ge | LeU | GeU), _, _ when can_be_shortcuted -> value True
+  | (Ne | Lt | Gt | LtU | GtU), _, _ when can_be_shortcuted -> value False
   | op, Val v1, Val v2 -> value (if Eval.relop ty op v1 v2 then True else False)
-  | Ty.Relop.Ne, Val (Real v), _ | Ne, _, Val (Real v) ->
+  | Ne, Val (Real v), _ | Ne, _, Val (Real v) ->
     if Float.is_nan v || Float.is_infinite v then value True
+    else if both_phys_eq then value False
     else raw_relop ty op hte1 hte2
   | _, Val (Real v), _ | _, _, Val (Real v) ->
     if Float.is_nan v || Float.is_infinite v then value False
-    else raw_relop ty op hte1 hte2
+    else
+      (* TODO: it is possible to add a shortcut when `both_phys_eq` *)
+      raw_relop ty op hte1 hte2
   | Eq, _, Val Nothing | Eq, Val Nothing, _ -> value False
   | Ne, _, Val Nothing | Ne, Val Nothing, _ -> value True
   | Eq, _, Val (App (`Op "symbol", [ Str _ ]))
@@ -411,16 +424,21 @@ let rec relop ty op hte1 hte2 =
   | ( Eq
     , Symbol ({ ty = Ty_fp prec1; _ } as s1)
     , Symbol ({ ty = Ty_fp prec2; _ } as s2) )
-    when prec1 = prec2 && Symbol.equal s1 s2 ->
+    when both_phys_eq || (prec1 = prec2 && Symbol.equal s1 s2) ->
     raw_unop Ty_bool Not (raw_unop (Ty_fp prec1) Is_nan hte1)
   | Eq, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
-    if Bitvector.equal b1 b2 then relop Ty_bool Eq os1 os2 else value False
+    if both_phys_eq then value True
+    else if Bitvector.equal b1 b2 then relop Ty_bool Eq os1 os2
+    else value False
   | Ne, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
-    if Bitvector.equal b1 b2 then relop Ty_bool Ne os1 os2 else value True
+    if both_phys_eq then value False
+    else if Bitvector.equal b1 b2 then relop Ty_bool Ne os1 os2
+    else value True
   | ( (LtU | LeU)
     , Ptr { base = b1; offset = os1 }
     , Ptr { base = b2; offset = os2 } ) ->
-    if Bitvector.equal b1 b2 then relop ty op os1 os2
+    if both_phys_eq then value True
+    else if Bitvector.equal b1 b2 then relop ty op os1 os2
     else
       let b1 = Value.Bitv b1 in
       let b2 = Value.Bitv b2 in
