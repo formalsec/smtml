@@ -96,6 +96,8 @@ module Key = struct
   type nonrec t = t
 
   let to_int hte = hash hte
+
+  let compare x y = compare (to_int x) (to_int y)
 end
 
 let[@inline] make e = Hc.hashcons e
@@ -840,13 +842,15 @@ let inline_symbol_values map e =
   aux e
 
 module Set = struct
-  include PatriciaTree.MakeHashconsedSet (Key) ()
+  include Set.Make (Key)
 
-  let hash = to_int
+  type key = Key.t
+
+  let hash = Hashtbl.hash
 
   let pp fmt v =
     Fmt.pf fmt "@[<hov 1>%a@]"
-      (pretty ~pp_sep:(fun fmt () -> Fmt.pf fmt "@;") pp)
+      (Fmt.iter iter ~sep:(fun fmt () -> Fmt.pf fmt "@;") pp)
       v
 
   let get_symbols (set : t) =
