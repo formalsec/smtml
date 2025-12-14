@@ -47,6 +47,9 @@ val map : t -> (t -> t) -> t
 (** [let+ v f] is a convenience operator for applying [f] to [v]. *)
 val ( let+ ) : t -> (t -> t) -> t
 
+(** [default_of_type ty] returns the default value for type [ty]. *)
+val default_of_type : Ty.t -> t
+
 (** {1 Pretty Printing} *)
 
 (** [pp fmt v] pretty-prints the value [v] using the formatter [fmt]. *)
