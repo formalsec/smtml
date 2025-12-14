@@ -83,6 +83,20 @@ let map v f = match v with Nothing -> Nothing | _ -> f v
 
 let ( let+ ) = map
 
+let default_of_type = function
+  | Ty.Ty_bool -> False
+  | Ty_int -> Int 0
+  | Ty_real -> Real 0.0
+  | Ty_str -> Str ""
+  | Ty_bitv m -> Bitv (Bitvector.make Z.zero m)
+  | Ty_fp 32 -> Num (F32 0l)
+  | Ty_fp 64 -> Num (F64 0L)
+  | Ty_list -> List []
+  | Ty_unit -> Unit
+  | Ty_none -> Nothing
+  | (Ty_fp _ | Ty_app | Ty_regexp | Ty_roundingMode) as ty ->
+    Fmt.failwith "No default value for type %a" Ty.pp ty
+
 let rec pp fmt = function
   | True -> Fmt.string fmt "true"
   | False -> Fmt.string fmt "false"
