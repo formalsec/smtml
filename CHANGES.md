@@ -1,7 +1,23 @@
 # Changelog
 
+## 0.17.0 - 2025-12-15
+
+- 2025-12-13 Add some shortcuts on relop based on physical equality
+- 2025-12-12 Fix incorrect odoc documentation syntax usage
+- 2025-12-12 Rename directory `doc` -> `docs`
+- 2025-12-11 Add a was_interrupted ref that indicates if Solver.interrupt was called on a solver or not
+- 2025-12-10 Make `Solver.interrupt` do nothing for Alt-Ergo
+- 2025-12-07 Remove opam-repositories from CI as it is no longer needed
+- 2025-12-07 Use `failwith` instead of assert for unsupported cases
+- 2025-12-07 Encode `Trunc_sat_fXX` operators
+- 2025-12-07 Parse i8 (8-bit integers/bit-vectors)
+- 2025-12-01 Use a coercion from entry to Yojson.Basic.t to avoid runtime conversion
+- 2025-12-01 Fix: use Map.bindings for backwards compatibility
+- 2025-12-01 Feat: Statistics.to_json
+
 ## 0.16.0 - 2025-12-01
 
+- 2025-12-01 Release 0.16.0
 - 2025-12-01 Use default opam-repositories in CI
 - 2025-12-01 Don't use List.is_empty
 - 2025-12-01 Bring back ocaml 4.14 CI
