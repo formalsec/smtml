@@ -848,6 +848,8 @@ module Set = struct
 
   let hash = Hashtbl.hash
 
+  let to_list s = elements s
+
   let pp fmt v =
     Fmt.pf fmt "@[<hov 1>%a@]"
       (Fmt.iter iter ~sep:(fun fmt () -> Fmt.pf fmt "@;") pp)
