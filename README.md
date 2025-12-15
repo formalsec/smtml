@@ -1,7 +1,7 @@
 
 <div align="center">
   <a href="https://formalsec.github.io/formalsec/formalsec">
-    <img src="doc/assets/smtml-logo.png" width=300 alt="Smt.ml logo"/>
+    <img src="docs/assets/smtml-logo.png" width=300 alt="Smt.ml logo"/>
   </a>
   <br />
   <strong>Smt.ml: A Multi-Backend Frontend for SMT Solvers in OCaml</strong>
@@ -9,10 +9,10 @@
 
 <div align="center">
 <br />
-  
-[![Build badge](https://github.com/formalsec/smtml/actions/workflows/build.yml/badge.svg)](https://github.com/formalsec/smtml/actions) 
-[![Coverage Status](https://coveralls.io/repos/github/formalsec/smtml/badge.svg)](https://coveralls.io/github/formalsec/smtml) 
-[![MIT](https://img.shields.io/github/license/formalsec/smtml)](LICENSE) 
+
+[![Build badge](https://github.com/formalsec/smtml/actions/workflows/build.yml/badge.svg)](https://github.com/formalsec/smtml/actions)
+[![Coverage Status](https://coveralls.io/repos/github/formalsec/smtml/badge.svg)](https://coveralls.io/github/formalsec/smtml)
+[![MIT](https://img.shields.io/github/license/formalsec/smtml)](LICENSE)
 ![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos-lightgrey)
 
 </div>
