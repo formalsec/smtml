@@ -70,11 +70,8 @@
   (ocaml
    (>= "4.14.0"))
   ocaml_intrinsics
-  (patricia-tree
-   (>= "0.11.0"))
   (prelude
    (>= "0.5"))
-  rusage
   (scfg
    (>= "0.5"))
   (mtime
