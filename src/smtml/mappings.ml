@@ -962,7 +962,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
               M.Solver.model solver |> Option.map (fun m -> { model = m; ctx }) )
             M.Internals.name (List.rev assumptions)
         | None ->
-          Fmt.failwith "model: Trying to fetch model berfore check-sat call"
+          Fmt.failwith "model: Trying to fetch model before check-sat call"
 
       let add_simplifier s =
         { s with solver = M.Solver.add_simplifier s.solver }
