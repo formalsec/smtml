@@ -167,6 +167,11 @@ Track solver performance:
 Explore comprehensive usage scenarios:
 - {{!examples}Optimizer} - Using optimizers
 
+{1 Publications}
+
+Explore the publications related to Smt.ml:
+- {i Smt.ml: A Multi-Backend Frontend for SMT Solvers in OCaml}. João Madeira Pereira, Filipe Marques, Pedro Adão, Hichem Rami Ait-El-Hara, Léo Andrès, Arthur Carcano, Pierre Chambart, Petar Maksimović, Nuno Santos, and José Fragoso Santos. In Tools and Algorithms for the Construction and Analysis of Systems (TACAS'26). [{{:https://joaomhmpereira.github.io/assets/pdf/smtml.pdf}pdf}]
+
 {1:contrib Contributing}
 
 Smtml is open source! Report issues and contribute at:

@@ -251,6 +251,12 @@ is named `smtml` and can be imported into OCaml projects by:
   (libraries smtml))
 ```
 
+### Publications
+
+- _Smt.ml: A Multi-Backend Frontend for SMT Solvers in OCaml._ João Madeira Pereira, Filipe Marques, Pedro Adão, Hichem Rami Ait-El-Hara, Léo Andrès, Arthur Carcano, Pierre Chambart, Petar Maksimović, Nuno Santos, and José Fragoso Santos. In Tools and Algorithms for the Construction and Analysis of Systems (TACAS'26). \[[pdf]\]
+
+[pdf]: https://joaomhmpereira.github.io/assets/pdf/smtml.pdf
+
 ### Changelog
 
 See [CHANGES]
