@@ -1,7 +1,12 @@
 # Changelog
 
+## 0.18.0 - 2025-12-22
+
+- 2025-12-21 Add SOP on how to create a new release ([#404](https://github.com/formalsec/smtml/issues/404))
+
 ## 0.17.0 - 2025-12-15
 
+- 2025-12-15 Release 0.17.0
 - 2025-12-15 Remove unused dependencies
 - 2025-12-15 Fix README.md logo path
 - 2025-12-15 Add function `Value.default_of_type` ([#483](https://github.com/formalsec/smtml/issues/483))
