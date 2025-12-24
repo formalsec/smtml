@@ -535,6 +535,17 @@ module Bitv = struct
     | GeU -> Bitvector.ge_u bv1 bv2
     | Eq -> Bitvector.equal bv1 bv2
     | Ne -> not @@ Bitvector.equal bv1 bv2
+
+  let cvtop op bv =
+    let bv = of_bitv 1 (`Cvtop op) bv in
+    to_bitv
+    @@
+    match op with
+    | Ty.Cvtop.Sign_extend m -> Bitvector.sign_extend m bv
+    | Ty.Cvtop.Zero_extend m -> Bitvector.zero_extend m bv
+    | _ ->
+      eval_error
+        (`Unsupported_operator (`Cvtop op, Ty_bitv (Bitvector.numbits bv)))
 end
 
 module F32 = struct
@@ -988,6 +999,8 @@ let cvtop = function
   | Ty_str -> Str.cvtop
   | Ty_bitv 32 -> I32CvtOp.cvtop
   | Ty_bitv 64 -> I64CvtOp.cvtop
+  (* Remaining fall into arbitrary-width bv cvtop operations *)
+  | Ty_bitv _m -> Bitv.cvtop
   | Ty_fp 32 -> F32CvtOp.cvtop
   | Ty_fp 64 -> F64CvtOp.cvtop
   | ty -> eval_error (`Unsupported_theory ty)
