@@ -25,11 +25,12 @@ let parse_file filename =
   in
   List.rev files
 
-let run ~debug ~dry ~print_statistics ~no_strict_status ~solver_type
-  ~solver_mode ~from_file ~filenames =
-  if debug then Logs.Src.set_level Log.src (Some Logs.Debug);
+let run (s : Settings.Run.t) =
+  (* ~debug ~dry ~print_statistics ~no_strict_status ~solver_type *)
+  (*   ~solver_mode ~from_file ~filenames = *)
+  if s.debug then Logs.Src.set_level Log.src (Some Logs.Debug);
   Logs.set_reporter @@ Logs.format_reporter ();
-  let module Solver = (val get_solver debug solver_type solver_mode) in
+  let module Solver = (val get_solver s.debug s.solver_type s.solver_mode) in
   let module Interpret = Interpret.Make (Solver) in
   let total_tests = ref 0 in
   let total_t = ref 0. in
@@ -40,7 +41,7 @@ let run ~debug ~dry ~print_statistics ~no_strict_status ~solver_type
     incr total_tests;
     let start_t = Unix.gettimeofday () in
     Fun.protect ~finally:(fun () ->
-      if print_statistics then (
+      if s.print_statistics then (
         let exec_t = Unix.gettimeofday () -. start_t in
         total_t := !total_t +. exec_t;
         Log.app (fun m -> m "Run %a in %.06f" Fpath.pp file exec_t) ) )
@@ -50,8 +51,9 @@ let run ~debug ~dry ~print_statistics ~no_strict_status ~solver_type
       with Parse.Syntax_error err -> Error (`Parsing_error (file, err))
     in
     match ast with
-    | Ok _ when dry -> state
-    | Ok ast -> Some (Interpret.start ?state ast ~no_strict_status)
+    | Ok _ when s.dry -> state
+    | Ok ast ->
+      Some (Interpret.start ?state ast ~no_strict_status:s.no_strict_status)
     | Error (`Parsing_error ((fpath, err_msg) as err)) ->
       Log.err (fun k -> k "%a: %s" Fpath.pp fpath err_msg);
       incr exception_count;
@@ -83,8 +85,8 @@ let run ~debug ~dry ~print_statistics ~no_strict_status ~solver_type
         prev_state )
   in
   let _ =
-    match from_file with
-    | None -> List.fold_left run_path None filenames
+    match s.from_file with
+    | None -> List.fold_left run_path None s.filenames
     | Some file -> (
       match parse_file file with
       | Error (`Msg err) ->
@@ -92,7 +94,7 @@ let run ~debug ~dry ~print_statistics ~no_strict_status ~solver_type
         None
       | Ok files -> List.fold_left run_file None files )
   in
-  if print_statistics then Log.app (fun k -> k "total time: %.06f" !total_t);
+  if s.print_statistics then Log.app (fun k -> k "total time: %.06f" !total_t);
   let write_exception_log =
     let open Smtml_prelude.Result in
     function
