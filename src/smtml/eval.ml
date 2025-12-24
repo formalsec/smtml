@@ -15,14 +15,7 @@ type op_type =
   | `Cvtop of Ty.Cvtop.t
   | `Naryop of Ty.Naryop.t
   ]
-
-let pp_op_type fmt = function
-  | `Unop op -> Fmt.pf fmt "unop '%a'" Ty.Unop.pp op
-  | `Binop op -> Fmt.pf fmt "binop '%a'" Ty.Binop.pp op
-  | `Relop op -> Fmt.pf fmt "relop '%a'" Ty.Relop.pp op
-  | `Triop op -> Fmt.pf fmt "triop '%a'" Ty.Triop.pp op
-  | `Cvtop op -> Fmt.pf fmt "cvtop '%a'" Ty.Cvtop.pp op
-  | `Naryop op -> Fmt.pf fmt "naryop '%a'" Ty.Naryop.pp op
+[@@deriving show]
 
 type type_error_info =
   { index : int
@@ -31,6 +24,7 @@ type type_error_info =
   ; op : op_type
   ; msg : string
   }
+[@@deriving show]
 
 type error_kind =
   [ `Divide_by_zero
@@ -42,6 +36,7 @@ type error_kind =
   | `Unsupported_theory of Ty.t
   | `Type_error of type_error_info
   ]
+[@@deriving show]
 
 exception Eval_error of error_kind
 

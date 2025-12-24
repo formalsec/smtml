@@ -111,7 +111,7 @@
   (backend bisect_ppx --exclusions src/smtml/bisect.exclude)
   (deps bisect.exclude))
  (preprocess
-  (pps ppx_deriving.std)))
+  (pps ppx_deriving.std ppx_deriving.show)))
 
 (rule
  (targets

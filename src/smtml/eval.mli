@@ -42,6 +42,8 @@ type error_kind =
   | `Type_error of type_error_info
   ]
 
+val pp_error_kind : error_kind Fmt.t
+
 (** Exception raised when an error occurs during concrete evaluation. *)
 exception Eval_error of error_kind
 
