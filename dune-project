@@ -70,6 +70,7 @@
   (ocaml
    (>= "4.14.0"))
   ocaml_intrinsics
+  ppx_deriving
   (prelude
    (>= "0.5"))
   (scfg

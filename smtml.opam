@@ -32,6 +32,7 @@ depends: [
   "menhir" {build & >= "20220210"}
   "ocaml" {>= "4.14.0"}
   "ocaml_intrinsics"
+  "ppx_deriving"
   "prelude" {>= "0.5"}
   "scfg" {>= "0.5"}
   "mtime" {>= "2.0.0"}
