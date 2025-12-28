@@ -36,7 +36,27 @@ type error_kind =
   | `Unsupported_theory of Ty.t
   | `Type_error of type_error_info
   ]
-[@@deriving show]
+
+let pp_error_kind fmt err =
+  match err with
+  | `Divide_by_zero -> Fmt.string fmt "Division by zero"
+  | `Conversion_to_integer ->
+    Fmt.string fmt "Failed to convert value to integer"
+  | `Integer_overflow ->
+    Fmt.string fmt "Integer overflow: result is outside the representable range"
+  | `Index_out_of_bounds -> Fmt.string fmt "Index out of bounds"
+  | `Invalid_format_conversion ->
+    Fmt.string fmt "Invalid format conversion string"
+  | `Unsupported_operator (op, ty) ->
+    Fmt.pf fmt "The operator '%a' is not supported for type '%a'" pp_op_type op
+      Ty.pp ty
+  | `Unsupported_theory ty ->
+    Fmt.pf fmt "The theory for type '%a' is not currently supported" Ty.pp ty
+  | `Type_error { index; value; ty; op; _ } ->
+    Fmt.pf fmt
+      "@[<h>Type error: Argument %d of operation '%a' expected type '%a', but \
+       received value '%a' instead.@]"
+      index pp_op_type op Ty.pp ty Value.pp value
 
 exception Eval_error of error_kind
 
