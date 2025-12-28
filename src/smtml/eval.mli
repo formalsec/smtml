@@ -19,6 +19,8 @@ type op_type =
   | `Naryop of Ty.Naryop.t  (** N-ary operation. *)
   ]
 
+val pp_op_type : op_type Fmt.t
+
 (** {1 Exceptions} *)
 
 (** Context payload for type errors *)
@@ -29,6 +31,8 @@ type type_error_info =
   ; op : op_type  (** The operation that led to the error. *)
   ; msg : string
   }
+
+val pp_type_error_info : type_error_info Fmt.t
 
 (** Classification of errors that can occur during evaluation. *)
 type error_kind =
