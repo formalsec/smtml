@@ -29,7 +29,7 @@ jobs:
           cargo install git-cliff --locked
 
       - name: Authenticate GitHub CLI
-        run: gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
+        run: gh auth login --with-token <<< "${{ secrets.PR_RELEASE_TOKEN }}"
 
       - name: Run release PR script
         run: ./scripts/create-release.sh
