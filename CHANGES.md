@@ -1,7 +1,23 @@
 # Changelog
 
+## 0.18.0 - 2025-12-29
+
+- 2025-12-29 Use fine-grained token to create release PR
+- 2025-12-28 Improve error messages in the error_kind printer
+- 2025-12-26 Add Eval.pp_error_kind function
+- 2025-12-26 Support convert operators for all bitvetor widths
+- 2025-12-26 Add ppx_deriving dependency
+- 2025-12-26 Catch Eval_error exception when parsing files
+- 2025-12-26 Make settings of cli commands a concrete type
+- 2025-12-26 Remove extunix pin to 0.4.3
+- 2025-12-23 Typo
+- 2025-12-23 Log information on whether or not a query is used for model generation
+- 2025-12-22 Add publications sections to docs and README.md
+- 2025-12-21 Add SOP on how to create a new release ([#404](https://github.com/formalsec/smtml/issues/404))
+
 ## 0.17.0 - 2025-12-15
 
+- 2025-12-15 Release 0.17.0
 - 2025-12-15 Remove unused dependencies
 - 2025-12-15 Fix README.md logo path
 - 2025-12-15 Add function `Value.default_of_type` ([#483](https://github.com/formalsec/smtml/issues/483))
