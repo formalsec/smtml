@@ -321,6 +321,11 @@ let raw_binop ty op hte1 hte2 = make (Binop (ty, op, hte1, hte2)) [@@inline]
 let rec binop ty op hte1 hte2 =
   match (op, view hte1, view hte2) with
   | Ty.Binop.(String_in_re | Regexp_range), _, _ -> raw_binop ty op hte1 hte2
+  | ( ( Ty.Binop.String_contains | Ty.Binop.String_prefix
+      | Ty.Binop.String_suffix )
+    , _
+    , Val (Str "") ) ->
+    make (Val True)
   | op, Val v1, Val v2 -> value (Eval.binop ty op v1 v2)
   | Sub, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
     if Bitvector.equal b1 b2 then binop ty Sub os1 os2
@@ -348,7 +353,21 @@ let rec binop ty op hte1 hte2 =
     when Bitvector.eqz bv ->
     hte1
   | (Add | Or), _, Val (Bitv bv) when Bitvector.eqz bv -> hte1
+  | Add, _, Val (Real -0.) -> hte1
+  | Add, Val (Real -0.), _ -> hte2
+  | Add, _, Val (Num (F32 -0l)) -> hte1
+  | Add, Val (Num (F32 -0l)), _ -> hte2
+  | Add, _, Val (Num (F64 -0L)) -> hte1
+  | Add, Val (Num (F64 -0L)), _ -> hte2
   | (And | Mul), _, Val (Bitv bv) when Bitvector.eqz bv -> hte2
+  | And, Val True, _ -> hte2
+  | And, _, Val True -> hte1
+  | And, Val False, _ -> hte1
+  | And, _, Val False -> hte2
+  | Or, Val True, _ -> hte1
+  | Or, _, Val True -> hte2
+  | Or, Val False, _ -> hte2
+  | Or, _, Val False -> hte1
   | Add, Binop (ty, Add, x, { node = Val v1; _ }), Val v2 ->
     let v = value (Eval.binop ty Add v1 v2) in
     raw_binop ty Add x v
@@ -384,6 +403,7 @@ let triop ty op e1 e2 e3 =
   match (op, view e1, view e2, view e3) with
   | Ty.Triop.Ite, Val True, _, _ -> e2
   | Ite, Val False, _, _ -> e3
+  | Ite, _, _, _ when equal e2 e3 -> e2
   | op, Val v1, Val v2, Val v3 -> value (Eval.triop ty op v1 v2 v3)
   | Ite, _, Triop (_, Ite, c2, r1, r2), Triop (_, Ite, _, _, _) ->
     let else_ = raw_triop ty Ite e1 r2 e3 in
@@ -483,10 +503,23 @@ let raw_cvtop ty op hte = make (Cvtop (ty, op, hte)) [@@inline]
 
 let rec cvtop theory op hte =
   match (op, view hte) with
+  | Ty.Cvtop.Reinterpret_float, Cvtop (Ty_fp n, Reinterpret_int, e) ->
+    assert (match theory with Ty.Ty_bitv m -> n = m | _ -> false);
+    e
+  | Reinterpret_int, Cvtop (Ty_int, Reinterpret_float, e1) -> e1
+  | Reinterpret_int, Cvtop (Ty.Ty_bitv m, Reinterpret_float, e) ->
+    assert (match theory with Ty_fp n -> n = m | _ -> false);
+    e
+  | ToString, Cvtop (_, OfString, e1) -> e1
+  | ToBool, Cvtop (_, OfBool, e1) -> e1
+  | Zero_extend 0, _ -> hte
+  | Sign_extend 0, _ -> hte
+  | String_from_code, Cvtop (_, String_to_code, e1) -> e1
+  | String_to_code, Cvtop (_, String_from_code, e1) -> e1
   | Ty.Cvtop.String_to_re, _ -> raw_cvtop theory op hte
   | _, Val v -> value (Eval.cvtop theory op v)
   | String_to_float, Cvtop (Ty_real, ToString, hte) -> hte
-  | ( Reinterpret_float
+  | ( Ty.Cvtop.Reinterpret_float
     , Cvtop (Ty_real, Reinterpret_int, { node = Symbol { ty = Ty_int; _ }; _ })
     ) ->
     hte
