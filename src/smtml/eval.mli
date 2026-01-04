@@ -56,6 +56,72 @@ exception Value of Ty.t
 
 (** {1 Evaluation Functions} *)
 
+module Int : sig
+  val unop : Ty.Unop.t -> Value.t -> Value.t
+
+  val binop : Ty.Binop.t -> Value.t -> Value.t -> Value.t
+
+  val relop : Ty.Relop.t -> Value.t -> Value.t -> bool
+
+  val cvtop : Ty.Cvtop.t -> Value.t -> Value.t
+end
+
+module Real : sig
+  val unop : Ty.Unop.t -> Value.t -> Value.t
+
+  val binop : Ty.Binop.t -> Value.t -> Value.t -> Value.t
+
+  val relop : Ty.Relop.t -> Value.t -> Value.t -> bool
+
+  val cvtop : Ty.Cvtop.t -> Value.t -> Value.t
+end
+
+module Bool : sig
+  val unop : Ty.Unop.t -> Value.t -> Value.t
+
+  val binop : Ty.Binop.t -> Value.t -> Value.t -> Value.t
+
+  val triop : Ty.Triop.t -> Value.t -> Value.t -> Value.t -> Value.t
+
+  val relop : Ty.Relop.t -> Value.t -> Value.t -> bool
+
+  val naryop : Ty.Naryop.t -> Value.t list -> Value.t
+end
+
+module Str : sig
+  val unop : Ty.Unop.t -> Value.t -> Value.t
+
+  val binop : Ty.Binop.t -> Value.t -> Value.t -> Value.t
+
+  val triop : Ty.Triop.t -> Value.t -> Value.t -> Value.t -> Value.t
+
+  val relop : Ty.Relop.t -> Value.t -> Value.t -> bool
+
+  val cvtop : Ty.Cvtop.t -> Value.t -> Value.t
+
+  val naryop : Ty.Naryop.t -> Value.t list -> Value.t
+end
+
+module Lst : sig
+  val unop : Ty.Unop.t -> Value.t -> Value.t
+
+  val binop : Ty.Binop.t -> Value.t -> Value.t -> Value.t
+
+  val triop : Ty.Triop.t -> Value.t -> Value.t -> Value.t -> Value.t
+
+  val naryop : Ty.Naryop.t -> Value.t list -> Value.t
+end
+
+module Bitv : sig
+  val unop : Ty.Unop.t -> Value.t -> Value.t
+
+  val binop : Ty.Binop.t -> Value.t -> Value.t -> Value.t
+
+  val relop : Ty.Relop.t -> Value.t -> Value.t -> bool
+
+  val cvtop : Ty.Cvtop.t -> Value.t -> Value.t
+end
+
 (** [unop ty op v] applies a unary operation [op] on the value [v] of type [ty].
     Raises [Type_error] if the value does not match the expected type. *)
 val unop : Ty.t -> Ty.Unop.t -> Value.t -> Value.t
