@@ -25,6 +25,11 @@ let of_int32 v = make (Z.of_int32 v) 32
 
 let of_int64 v = make (Z.of_int64 v) 64
 
+(* Optimized mixer (DJB2 variant). Inlines to simple arithmetic. *)
+let[@inline] combine h v = (h * 33) + v
+
+let hash a = combine (Z.hash a.value) a.width
+
 let equal a b = Z.equal a.value b.value && a.width = b.width
 
 let eqz v = Z.equal Z.zero v.value

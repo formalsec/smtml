@@ -29,6 +29,8 @@ val type_of : t -> Ty.t
 
 (** {1 Comparison} *)
 
+val hash : t -> int
+
 (** [compare v1 v2] provides a total ordering over values of type [t]. It
     returns a negative integer if [v1] is less than [v2], zero if they are
     equal, and a positive integer if [v1] is greater than [v2]. *)

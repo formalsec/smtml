@@ -43,6 +43,26 @@ let discr = function
   | App _ -> 9
   | Nothing -> 10
 
+(* Optimized mixer (DJB2 variant). Inlines to simple arithmetic. *)
+let[@inline] combine h v = (h * 33) + v
+
+let rec hash v =
+  match v with
+  | True -> 1
+  | False -> 2
+  | Unit -> 3
+  | Int i -> combine 4 i
+  | Real f -> combine 5 (Hashtbl.hash f)
+  | Str s -> combine 6 (Hashtbl.hash s)
+  | Num n -> combine 7 (Hashtbl.hash n)
+  | Bitv b -> combine 8 (Bitvector.hash b)
+  | List l -> List.fold_left (fun acc v -> combine acc (hash v)) 9 l
+  | App (`Op s, args) ->
+    let h = combine 10 (Hashtbl.hash s) in
+    List.fold_left (fun acc v -> combine acc (hash v)) h args
+  | Nothing -> 11
+  | App _ -> assert false
+
 let rec compare (a : t) (b : t) : int =
   match (a, b) with
   | True, True | False, False | Unit, Unit | Nothing, Nothing -> 0
