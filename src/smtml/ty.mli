@@ -34,6 +34,8 @@ type t =
 
 (** {1 Type Comparison} *)
 
+val hash : t -> int
+
 (** [compare t1 t2] performs a total order comparison of types [t1] and [t2]. *)
 val compare : t -> t -> int
 
@@ -97,6 +99,8 @@ module Unop : sig
     | Regexp_comp  (** Complement. *)
   [@@deriving ord]
 
+  val hash : t -> int
+
   (** [equal op1 op2] checks if unary operations [op1] and [op2] are equal. *)
   val equal : t -> t -> bool
 
@@ -149,6 +153,8 @@ module Binop : sig
     | Regexp_diff  (** Difference of regular expressions. *)
   [@@deriving ord]
 
+  val hash : t -> int
+
   (** [equal op1 op2] checks if binary operations [op1] and [op2] are equal. *)
   val equal : t -> t -> bool
 
@@ -173,6 +179,8 @@ module Relop : sig
     | Ge  (** Greater than or equal. *)
     | GeU  (** Unsigned greater than or equal. *)
   [@@deriving ord]
+
+  val hash : t -> int
 
   (** [equal op1 op2] checks if relational operations [op1] and [op2] are equal.
   *)
@@ -206,6 +214,8 @@ module Triop : sig
       (** Replace all occurrences using a regular expression.
           (str.replace_re_all String RegLan String) *)
   [@@deriving ord]
+
+  val hash : t -> int
 
   (** [equal op1 op2] checks if ternary operations [op1] and [op2] are equal. *)
   val equal : t -> t -> bool
@@ -254,6 +264,8 @@ module Cvtop : sig
     | String_to_re  (** Convert string to regular expression. *)
   [@@deriving ord]
 
+  val hash : t -> int
+
   (** [equal op1 op2] checks if conversion operations [op1] and [op2] are equal.
   *)
   val equal : t -> t -> bool
@@ -273,6 +285,8 @@ module Naryop : sig
     | Concat  (** Concatenation. *)
     | Regexp_union  (** Union of regular expressions. *)
   [@@deriving ord]
+
+  val hash : t -> int
 
   (** [equal op1 op2] checks if n-ary operations [op1] and [op2] are equal. *)
   val equal : t -> t -> bool

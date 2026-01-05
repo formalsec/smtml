@@ -44,6 +44,24 @@ let namespace { namespace; _ } = namespace
 
 let discr_namespace = function Attr -> 0 | Sort -> 1 | Term -> 2 | Var -> 3
 
+(* Optimized mixer (DJB2 variant). Inlines to simple arithmetic. *)
+let[@inline] combine h v = (h * 33) + v
+
+let hash_name n =
+  match n with
+  | Simple s ->
+    (* Hashtbl.hash is fine for strings (it's a C primitive) *)
+    combine 0 (Hashtbl.hash s)
+  | Indexed { basename; indices } ->
+    let h = combine 1 (Hashtbl.hash basename) in
+    (* Fold over indices to avoid list allocation *)
+    List.fold_left (fun acc s -> combine acc (Hashtbl.hash s)) h indices
+
+let hash { ty; name; namespace } =
+  let h = Ty.hash ty in
+  let h = combine h (hash_name name) in
+  combine h (discr_namespace namespace)
+
 let compare_namespace a b = compare (discr_namespace a) (discr_namespace b)
 
 let compare_name a b =

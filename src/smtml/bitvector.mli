@@ -18,6 +18,8 @@ val to_int64 : t -> Int64.t
 
 val numbits : t -> int
 
+val hash : t -> int
+
 val equal : t -> t -> bool
 
 val compare : t -> t -> int

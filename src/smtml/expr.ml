@@ -66,24 +66,56 @@ module Expr = struct
       , _ ) ->
       false
 
+  (* Optimized mixer (DJB2 variant). Inlines to simple arithmetic. *)
+  let[@inline] combine h v = (h * 33) + v
+
   let hash (e : expr) : int =
-    let h x = Hashtbl.hash x in
     match e with
-    | Val v -> h v
-    | Ptr { base; offset } -> h (base, offset.tag)
-    | Loc l -> h l
-    | Symbol s -> h s
-    | List v -> h v
-    | App (x, es) -> h (x, es)
-    | Unop (ty, op, e) -> h (ty, op, e.tag)
-    | Cvtop (ty, op, e) -> h (ty, op, e.tag)
-    | Binop (ty, op, e1, e2) -> h (ty, op, e1.tag, e2.tag)
-    | Relop (ty, op, e1, e2) -> h (ty, op, e1.tag, e2.tag)
-    | Triop (ty, op, e1, e2, e3) -> h (ty, op, e1.tag, e2.tag, e3.tag)
-    | Naryop (ty, op, es) -> h (ty, op, es)
-    | Extract (e, hi, lo) -> h (e.tag, hi, lo)
-    | Concat (e1, e2) -> h (e1.tag, e2.tag)
-    | Binder (b, vars, e) -> h (b, vars, e.tag)
+    | Val v -> Value.hash v
+    | Ptr { base; offset } -> combine (Bitvector.hash base) offset.tag
+    | Loc l -> Loc.hash l
+    | Symbol s -> Symbol.hash s
+    | List l -> List.fold_left (fun acc x -> combine acc x.Hc.tag) 0 l
+    | App (s, es) ->
+      let h_s = Symbol.hash s in
+      List.fold_left (fun acc x -> combine acc x.Hc.tag) h_s es
+    | Unop (ty, op, e) ->
+      let h1 = Ty.hash ty in
+      let h2 = combine h1 (Ty.Unop.hash op) in
+      combine h2 e.tag
+    | Binop (ty, op, e1, e2) ->
+      let h = Ty.hash ty in
+      let h = combine h (Ty.Binop.hash op) in
+      let h = combine h e1.tag in
+      combine h e2.tag
+    | Triop (ty, op, e1, e2, e3) ->
+      let h = Ty.hash ty in
+      let h = combine h (Ty.Triop.hash op) in
+      let h = combine h e1.tag in
+      let h = combine h e2.tag in
+      combine h e3.tag
+    | Relop (ty, op, e1, e2) ->
+      let h = Ty.hash ty in
+      let h = combine h (Ty.Relop.hash op) in
+      let h = combine h e1.tag in
+      combine h e2.tag
+    | Cvtop (ty, op, e) ->
+      let h = Ty.hash ty in
+      let h = combine h (Ty.Cvtop.hash op) in
+      combine h e.tag
+    | Naryop (ty, op, es) ->
+      let h = Ty.hash ty in
+      let h = combine h (Ty.Naryop.hash op) in
+      List.fold_left (fun acc x -> combine acc x.Hc.tag) h es
+    | Extract (e, hi, lo) ->
+      let h = e.tag in
+      let h = combine h hi in
+      combine h lo
+    | Concat (e1, e2) -> combine e1.tag e2.tag
+    | Binder (b, vars, e) ->
+      let h = Hashtbl.hash b in
+      let h_vars = List.fold_left (fun acc x -> combine acc x.Hc.tag) h vars in
+      combine h_vars e.tag
 end
 
 module Hc = Hc.Make [@inlined hint] (Expr)

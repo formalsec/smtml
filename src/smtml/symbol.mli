@@ -86,6 +86,8 @@ val type_of : t -> Ty.t
 
 (** {1 Comparison} *)
 
+val hash : t -> int
+
 (** [compare sym1 sym2] performs a total order comparison of [sym1] and [sym2].
 *)
 val compare : t -> t -> int

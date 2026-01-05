@@ -35,6 +35,23 @@ let discr = function
   | Ty_bitv n -> 10 + n
   | Ty_fp n -> 11 + n
 
+(* Optimized mixer (DJB2 variant). Inlines to simple arithmetic. *)
+let[@inline] combine h v = (h * 33) + v
+
+let hash = function
+  | Ty_app -> 1
+  | Ty_bitv width -> combine 2 width
+  | Ty_bool -> 3
+  | Ty_fp width -> combine 4 width
+  | Ty_int -> 5
+  | Ty_list -> 6
+  | Ty_none -> 7
+  | Ty_real -> 8
+  | Ty_str -> 9
+  | Ty_unit -> 10
+  | Ty_regexp -> 11
+  | Ty_roundingMode -> 12
+
 let compare t1 t2 = compare (discr t1) (discr t2)
 
 let equal t1 t2 = compare t1 t2 = 0
@@ -127,6 +144,42 @@ module Unop = struct
     | Regexp_opt
     | Regexp_comp
   [@@deriving ord]
+
+  let hash = function
+    | Neg -> 0
+    | Not -> 1
+    | Clz -> 2
+    | Ctz -> 3
+    | Popcnt -> 4
+    (* Float *)
+    | Abs -> 5
+    | Sqrt -> 6
+    | Is_normal -> 7
+    | Is_subnormal -> 8
+    | Is_negative -> 9
+    | Is_positive -> 10
+    | Is_infinite -> 11
+    | Is_nan -> 12
+    | Is_zero -> 13
+    | Ceil -> 14
+    | Floor -> 15
+    | Trunc -> 16
+    | Nearest -> 17
+    | Head -> 18
+    | Tail -> 19
+    | Reverse -> 20
+    | Length -> 21
+    (* String *)
+    | Trim -> 22
+    (* RegExp *)
+    | Regexp_star -> 23
+    | Regexp_loop (min, max) ->
+      let h = 24 in
+      let h = combine h min in
+      combine h max
+    | Regexp_plus -> 25
+    | Regexp_opt -> 26
+    | Regexp_comp -> 27
 
   let equal o1 o2 =
     match (o1, o2) with
@@ -235,6 +288,41 @@ module Binop = struct
     | Regexp_diff
   [@@deriving ord]
 
+  let hash = function
+    | Add -> 0
+    | Sub -> 1
+    | Mul -> 2
+    | Div -> 3
+    | DivU -> 4
+    | Rem -> 5
+    | RemU -> 6
+    | Shl -> 7
+    | ShrA -> 8
+    | ShrL -> 9
+    | And -> 10
+    | Or -> 11
+    | Xor -> 12
+    | Implies -> 13
+    | Pow -> 14
+    | Min -> 15
+    | Max -> 16
+    | Copysign -> 17
+    | Rotl -> 18
+    | Rotr -> 19
+    | At -> 20
+    | List_cons -> 21
+    | List_append -> 22
+    (* String *)
+    | String_prefix -> 23
+    | String_suffix -> 24
+    | String_contains -> 25
+    | String_last_index -> 26
+    | String_in_re -> 27
+    (* Regexp *)
+    | Regexp_range -> 28
+    | Regexp_inter -> 29
+    | Regexp_diff -> 30
+
   let equal o1 o2 =
     match (o1, o2) with
     | Add, Add
@@ -325,6 +413,18 @@ module Relop = struct
     | GeU
   [@@deriving ord]
 
+  let hash = function
+    | Eq -> 0
+    | Ne -> 1
+    | Lt -> 2
+    | LtU -> 3
+    | Gt -> 4
+    | GtU -> 5
+    | Le -> 6
+    | LeU -> 7
+    | Ge -> 8
+    | GeU -> 9
+
   let equal op1 op2 =
     match (op1, op2) with
     | Eq, Eq
@@ -365,6 +465,17 @@ module Triop = struct
     | String_replace_re
     | String_replace_re_all
   [@@deriving ord]
+
+  let hash = function
+    | Ite -> 0
+    | List_set -> 1
+    (* String *)
+    | String_extract -> 2
+    | String_replace -> 3
+    | String_index -> 4
+    | String_replace_all -> 5
+    | String_replace_re -> 6
+    | String_replace_re_all -> 7
 
   let equal op1 op2 =
     match (op1, op2) with
@@ -426,6 +537,38 @@ module Cvtop = struct
     | String_to_float
     | String_to_re
   [@@deriving ord]
+
+  let hash = function
+    | ToString -> 0
+    | OfString -> 1
+    | ToBool -> 2
+    | OfBool -> 3
+    | Reinterpret_int -> 4
+    | Reinterpret_float -> 5
+    | DemoteF64 -> 6
+    | PromoteF32 -> 7
+    | ConvertSI32 -> 8
+    | ConvertUI32 -> 9
+    | ConvertSI64 -> 10
+    | ConvertUI64 -> 11
+    | TruncSF32 -> 12
+    | TruncUF32 -> 13
+    | TruncSF64 -> 14
+    | TruncUF64 -> 15
+    | Trunc_sat_f32_s -> 16
+    | Trunc_sat_f32_u -> 17
+    | Trunc_sat_f64_s -> 18
+    | Trunc_sat_f64_u -> 19
+    | WrapI64 -> 20
+    | Sign_extend i -> combine 21 i
+    | Zero_extend i -> combine 22 i
+    (* String *)
+    | String_to_code -> 23
+    | String_from_code -> 24
+    | String_to_int -> 25
+    | String_from_int -> 26
+    | String_to_float -> 27
+    | String_to_re -> 28
 
   let equal op1 op2 =
     match (op1, op2) with
@@ -507,6 +650,12 @@ module Naryop = struct
     | Concat
     | Regexp_union
   [@@deriving ord]
+
+  let hash = function
+    | Logand -> 0
+    | Logor -> 1
+    | Concat -> 2
+    | Regexp_union -> 3
 
   let equal op1 op2 =
     match (op1, op2) with
