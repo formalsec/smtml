@@ -954,13 +954,14 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
               M.Solver.check s.solver ~ctx ~assumptions:encoded_assuptions )
             M.Internals.name (List.rev assumptions)
 
-      let model { solver; last_ctx; assumptions; _ } =
+      let model { solver; last_ctx; assumptions; last_assumptions; _ } =
         match last_ctx with
         | Some ctx ->
           Utils.run_and_log_query ~model:true
             (fun () ->
               M.Solver.model solver |> Option.map (fun m -> { model = m; ctx }) )
-            M.Internals.name (List.rev assumptions)
+            M.Internals.name
+            (List.rev_append assumptions (List.rev last_assumptions))
         | None ->
           Fmt.failwith "model: Trying to fetch model before check-sat call"
 
