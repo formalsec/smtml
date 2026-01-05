@@ -1,7 +1,15 @@
 # Changelog
 
+## 0.19.0 - 2026-01-05
+
+- 2026-01-05 Reduce allocations in hashconsing hash function
+- 2026-01-05 Fix logging of queries after model generation
+- 2026-01-04 Export individual modules in Eval
+- 2026-01-04 Reduce allocations in the hot path of value evals
+
 ## 0.18.0 - 2025-12-29
 
+- 2025-12-29 Release 0.18.0
 - 2025-12-29 Use fine-grained token to create release PR
 - 2025-12-28 Improve error messages in the error_kind printer
 - 2025-12-26 Add Eval.pp_error_kind function
