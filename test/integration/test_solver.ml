@@ -168,10 +168,24 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     assert_sat ~f:"test_bv_32" (Solver.check solver []);
     assert (match Solver.model solver with None -> false | Some _m -> true)
 
+  let test_arbitrary_bv solver_module =
+    let open Infix in
+    let module Solver = (val solver_module : Solver_intf.S) in
+    let solver = Solver.create ~params:(Params.default ()) ~logic:QF_BVFP () in
+    for i = 1 to 64 do
+      let ty = Ty.Ty_bitv i in
+      let x = symbol ("x" ^ string_of_int i) ty in
+      Solver.add solver
+        [ Expr.relop ty Eq x (Expr.value (Bitv (Bitvector.make (Z.of_int i) i)))
+        ]
+    done;
+    assert_sat ~f:"test_arbitrary_bv" (Solver.check solver [])
+
   let test_bv =
     "test_bv"
     >::: [ "test_bv_8" >:: with_solver test_bv_8
          ; "test_bv_32" >:: with_solver test_bv_32
+         ; "test_arbitrary_bv" >:: with_solver test_arbitrary_bv
          ]
 
   let test_fp_get_value32 solver_module =
