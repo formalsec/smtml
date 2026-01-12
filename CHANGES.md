@@ -1,7 +1,12 @@
 # Changelog
 
+## 0.20.0 - 2026-01-12
+
+- 2026-01-08 Add minimal smtml logo
+
 ## 0.19.0 - 2026-01-05
 
+- 2026-01-05 Release 0.19.0
 - 2026-01-05 Reduce allocations in hashconsing hash function
 - 2026-01-05 Fix logging of queries after model generation
 - 2026-01-04 Export individual modules in Eval
