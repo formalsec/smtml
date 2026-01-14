@@ -6,3 +6,11 @@
    (not %{lib-available:bitwuzla-cxx})
    (not %{lib-available:colibri2.core})
    (not %{lib-available:cvc5}))))
+
+(env
+ (release
+  (ocamlopt_flags
+   (:standard -O3)))
+ (benchmark
+  (ocamlopt_flags
+   (:standard -O3 -unsafe -noassert))))
