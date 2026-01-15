@@ -229,11 +229,7 @@ module Term = struct
       | "bvsge", [ a; b ] -> Expr.raw_relop Ty_none Ge a b
       | "bvuge", [ a; b ] -> Expr.raw_relop Ty_none GeU a b
       | "concat", [ a; b ] -> Expr.raw_concat a b
-      | ( "fp"
-        , [ { node = Val (Bitv sign); _ }
-          ; { node = Val (Bitv eb); _ }
-          ; { node = Val (Bitv i); _ }
-          ] ) ->
+      | "fp", [ Val (Bitv sign); Val (Bitv eb); Val (Bitv i) ] ->
         let fp = Bitvector.(concat sign (concat eb i)) in
         let fp_sz = Bitvector.numbits fp in
         if fp_sz = 32 then Expr.value (Num (F32 (Bitvector.to_int32 fp)))
@@ -252,10 +248,8 @@ module Term = struct
       | "fp.sub", [ rm; a; b ] -> make_fp_binop symbol Sub rm a b
       | "fp.mul", [ rm; a; b ] -> make_fp_binop symbol Mul rm a b
       | "fp.div", [ rm; a; b ] -> make_fp_binop symbol Div rm a b
-      | ( "fp.sqrt"
-        , [ { node = Symbol { name = Simple "roundNearestTiesToEven"; _ }; _ }
-          ; a
-          ] ) ->
+      | "fp.sqrt", [ Symbol { name = Simple "roundNearestTiesToEven"; _ }; a ]
+        ->
         Expr.raw_unop Ty_none Sqrt a
       | "fp.rem", [ a; b ] -> Expr.raw_binop Ty_none Rem a b
       | "fp.roundToIntegral", [ rm; a ] -> begin
@@ -315,12 +309,8 @@ module Term = struct
         Expr.raw_unop Ty_regexp (Regexp_loop (i1, i2)) a
       | ( "to_fp"
         , [ "11"; "53" ]
-        , [ { node =
-                Symbol { name = Simple ("roundNearestTiesToEven" | "RNE"); _ }
-            ; _
-            }
-          ; a
-          ] ) ->
+        , [ Symbol { name = Simple ("roundNearestTiesToEven" | "RNE"); _ }; a ]
+        ) ->
         Expr.raw_cvtop (Ty_fp 64) PromoteF32 a
       | _ ->
         Fmt.failwith "%acould not parse indexed app: %a" pp_loc loc Expr.pp id

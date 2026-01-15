@@ -12,7 +12,7 @@ module type S = sig
   (** {1 Expression Types} *)
 
   (** A term in the abstract syntax tree. *)
-  type t = expr Hc.hash_consed
+  type t = expr
 
   (** The different types of expressions. *)
   and expr = private
@@ -313,16 +313,16 @@ module type S = sig
 
   (** {1 Hash-Consing Module} *)
 
-  module Hc : sig
-    (** [clear ()] clears the hash-consing table. *)
-    val clear : unit -> unit
+  (*module Hc : sig *)
+  (*  (1** [clear ()] clears the hash-consing table. *1) *)
+  (*  val clear : unit -> unit *)
 
-    (** [stats ()] returns statistics about the hash-consing table. *)
-    val stats : unit -> Hashtbl.statistics
+  (*  (1** [stats ()] returns statistics about the hash-consing table. *1) *)
+  (*  val stats : unit -> Hashtbl.statistics *)
 
-    (** [length ()] returns the number of entries in the hash-consing table. *)
-    val length : unit -> int
-  end
+  (*  (1** [length ()] returns the number of entries in the hash-consing table. *1) *)
+  (*  val length : unit -> int *)
+  (*end *)
 
   (** {1 Boolean Expressions} *)
 

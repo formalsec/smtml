@@ -2,7 +2,7 @@
 (* Copyright (C) 2023-2024 formalsec *)
 (* Written by the Smtml programmers *)
 
-type t = expr Hc.hash_consed
+type t = expr
 
 and expr =
   | Val of Value.t
@@ -24,105 +24,92 @@ and expr =
   | Concat of t * t
   | Binder of Binder.t * t list * t
 
-module Expr = struct
-  type t = expr
+let rec equal (e1 : t) (e2 : t) : bool =
+  match (e1, e2) with
+  | Val v1, Val v2 -> Value.equal v1 v2
+  | Loc a, Loc b -> Loc.compare a b = 0
+  | Ptr { base = b1; offset = o1 }, Ptr { base = b2; offset = o2 } ->
+    Bitvector.equal b1 b2 && equal o1 o2
+  | Symbol s1, Symbol s2 -> Symbol.equal s1 s2
+  | List l1, List l2 -> list_eq l1 l2
+  | App (s1, l1), App (s2, l2) -> Symbol.equal s1 s2 && list_eq l1 l2
+  | Unop (t1, op1, e1), Unop (t2, op2, e2) ->
+    Ty.equal t1 t2 && Ty.Unop.equal op1 op2 && equal e1 e2
+  | Binop (t1, op1, e1, e3), Binop (t2, op2, e2, e4) ->
+    Ty.equal t1 t2 && Ty.Binop.equal op1 op2 && equal e1 e2 && equal e3 e4
+  | Relop (t1, op1, e1, e3), Relop (t2, op2, e2, e4) ->
+    Ty.equal t1 t2 && Ty.Relop.equal op1 op2 && equal e1 e2 && equal e3 e4
+  | Triop (t1, op1, e1, e3, e5), Triop (t2, op2, e2, e4, e6) ->
+    Ty.equal t1 t2 && Ty.Triop.equal op1 op2 && equal e1 e2 && equal e3 e4
+    && equal e5 e6
+  | Cvtop (t1, op1, e1), Cvtop (t2, op2, e2) ->
+    Ty.equal t1 t2 && Ty.Cvtop.equal op1 op2 && equal e1 e2
+  | Naryop (t1, op1, l1), Naryop (t2, op2, l2) ->
+    Ty.equal t1 t2 && Ty.Naryop.equal op1 op2 && list_eq l1 l2
+  | Extract (e1, h1, l1), Extract (e2, h2, l2) ->
+    equal e1 e2 && h1 = h2 && l1 = l2
+  | Concat (e1, e3), Concat (e2, e4) -> equal e1 e2 && equal e3 e4
+  | Binder (binder1, vars1, e1), Binder (binder2, vars2, e2) ->
+    Binder.equal binder1 binder2 && list_eq vars1 vars2 && equal e1 e2
+  | ( ( Val _ | Ptr _ | Loc _ | Symbol _ | List _ | App _ | Unop _ | Binop _
+      | Triop _ | Relop _ | Cvtop _ | Naryop _ | Extract _ | Concat _ | Binder _
+        )
+    , _ ) ->
+    false
 
-  let list_eq (l1 : 'a list) (l2 : 'a list) : bool =
-    if List.compare_lengths l1 l2 = 0 then List.for_all2 phys_equal l1 l2
-    else false
+and list_eq (l1 : 'a list) (l2 : 'a list) : bool =
+  if List.compare_lengths l1 l2 = 0 then List.for_all2 equal l1 l2 else false
 
-  let equal (e1 : expr) (e2 : expr) : bool =
-    match (e1, e2) with
-    | Val v1, Val v2 -> Value.equal v1 v2
-    | Loc a, Loc b -> Loc.compare a b = 0
-    | Ptr { base = b1; offset = o1 }, Ptr { base = b2; offset = o2 } ->
-      Bitvector.equal b1 b2 && phys_equal o1 o2
-    | Symbol s1, Symbol s2 -> Symbol.equal s1 s2
-    | List l1, List l2 -> list_eq l1 l2
-    | App (s1, l1), App (s2, l2) -> Symbol.equal s1 s2 && list_eq l1 l2
-    | Unop (t1, op1, e1), Unop (t2, op2, e2) ->
-      Ty.equal t1 t2 && Ty.Unop.equal op1 op2 && phys_equal e1 e2
-    | Binop (t1, op1, e1, e3), Binop (t2, op2, e2, e4) ->
-      Ty.equal t1 t2 && Ty.Binop.equal op1 op2 && phys_equal e1 e2
-      && phys_equal e3 e4
-    | Relop (t1, op1, e1, e3), Relop (t2, op2, e2, e4) ->
-      Ty.equal t1 t2 && Ty.Relop.equal op1 op2 && phys_equal e1 e2
-      && phys_equal e3 e4
-    | Triop (t1, op1, e1, e3, e5), Triop (t2, op2, e2, e4, e6) ->
-      Ty.equal t1 t2 && Ty.Triop.equal op1 op2 && phys_equal e1 e2
-      && phys_equal e3 e4 && phys_equal e5 e6
-    | Cvtop (t1, op1, e1), Cvtop (t2, op2, e2) ->
-      Ty.equal t1 t2 && Ty.Cvtop.equal op1 op2 && phys_equal e1 e2
-    | Naryop (t1, op1, l1), Naryop (t2, op2, l2) ->
-      Ty.equal t1 t2 && Ty.Naryop.equal op1 op2 && list_eq l1 l2
-    | Extract (e1, h1, l1), Extract (e2, h2, l2) ->
-      phys_equal e1 e2 && h1 = h2 && l1 = l2
-    | Concat (e1, e3), Concat (e2, e4) -> phys_equal e1 e2 && phys_equal e3 e4
-    | Binder (binder1, vars1, e1), Binder (binder2, vars2, e2) ->
-      Binder.equal binder1 binder2 && list_eq vars1 vars2 && phys_equal e1 e2
-    | ( ( Val _ | Ptr _ | Loc _ | Symbol _ | List _ | App _ | Unop _ | Binop _
-        | Triop _ | Relop _ | Cvtop _ | Naryop _ | Extract _ | Concat _
-        | Binder _ )
-      , _ ) ->
-      false
+(* Optimized mixer (DJB2 variant). Inlines to simple arithmetic. *)
+let[@inline] combine h v = (h * 33) + v
 
-  (* Optimized mixer (DJB2 variant). Inlines to simple arithmetic. *)
-  let[@inline] combine h v = (h * 33) + v
-
-  let hash (e : expr) : int =
-    match e with
-    | Val v -> Value.hash v
-    | Ptr { base; offset } -> combine (Bitvector.hash base) offset.tag
-    | Loc l -> Loc.hash l
-    | Symbol s -> Symbol.hash s
-    | List l -> List.fold_left (fun acc x -> combine acc x.Hc.tag) 0 l
-    | App (s, es) ->
-      let h_s = Symbol.hash s in
-      List.fold_left (fun acc x -> combine acc x.Hc.tag) h_s es
-    | Unop (ty, op, e) ->
-      let h1 = Ty.hash ty in
-      let h2 = combine h1 (Ty.Unop.hash op) in
-      combine h2 e.tag
-    | Binop (ty, op, e1, e2) ->
-      let h = Ty.hash ty in
-      let h = combine h (Ty.Binop.hash op) in
-      let h = combine h e1.tag in
-      combine h e2.tag
-    | Triop (ty, op, e1, e2, e3) ->
-      let h = Ty.hash ty in
-      let h = combine h (Ty.Triop.hash op) in
-      let h = combine h e1.tag in
-      let h = combine h e2.tag in
-      combine h e3.tag
-    | Relop (ty, op, e1, e2) ->
-      let h = Ty.hash ty in
-      let h = combine h (Ty.Relop.hash op) in
-      let h = combine h e1.tag in
-      combine h e2.tag
-    | Cvtop (ty, op, e) ->
-      let h = Ty.hash ty in
-      let h = combine h (Ty.Cvtop.hash op) in
-      combine h e.tag
-    | Naryop (ty, op, es) ->
-      let h = Ty.hash ty in
-      let h = combine h (Ty.Naryop.hash op) in
-      List.fold_left (fun acc x -> combine acc x.Hc.tag) h es
-    | Extract (e, hi, lo) ->
-      let h = e.tag in
-      let h = combine h hi in
-      combine h lo
-    | Concat (e1, e2) -> combine e1.tag e2.tag
-    | Binder (b, vars, e) ->
-      let h = Hashtbl.hash b in
-      let h_vars = List.fold_left (fun acc x -> combine acc x.Hc.tag) h vars in
-      combine h_vars e.tag
-end
-
-module Hc = Hc.Make [@inlined hint] (Expr)
-
-let equal (hte1 : t) (hte2 : t) = phys_equal hte1 hte2 [@@inline]
-
-let hash (hte : t) = hte.tag [@@inline]
+let rec hash (e : expr) : int =
+  match e with
+  | Val v -> Value.hash v
+  | Ptr { base; offset } -> combine (Bitvector.hash base) (hash offset)
+  | Loc l -> Loc.hash l
+  | Symbol s -> Symbol.hash s
+  | List l -> List.fold_left (fun acc x -> combine acc (hash x)) 0 l
+  | App (s, es) ->
+    let h_s = Symbol.hash s in
+    List.fold_left (fun acc x -> combine acc (hash x)) h_s es
+  | Unop (ty, op, e) ->
+    let h1 = Ty.hash ty in
+    let h2 = combine h1 (Ty.Unop.hash op) in
+    combine h2 (hash e)
+  | Binop (ty, op, e1, e2) ->
+    let h = Ty.hash ty in
+    let h = combine h (Ty.Binop.hash op) in
+    let h = combine h (hash e1) in
+    combine h (hash e2)
+  | Triop (ty, op, e1, e2, e3) ->
+    let h = Ty.hash ty in
+    let h = combine h (Ty.Triop.hash op) in
+    let h = combine h (hash e1) in
+    let h = combine h (hash e2) in
+    combine h (hash e3)
+  | Relop (ty, op, e1, e2) ->
+    let h = Ty.hash ty in
+    let h = combine h (Ty.Relop.hash op) in
+    let h = combine h (hash e1) in
+    combine h (hash e2)
+  | Cvtop (ty, op, e) ->
+    let h = Ty.hash ty in
+    let h = combine h (Ty.Cvtop.hash op) in
+    combine h (hash e)
+  | Naryop (ty, op, es) ->
+    let h = Ty.hash ty in
+    let h = combine h (Ty.Naryop.hash op) in
+    List.fold_left (fun acc x -> combine acc (hash x)) h es
+  | Extract (e, hi, lo) ->
+    let h = hash e in
+    let h = combine h hi in
+    combine h lo
+  | Concat (e1, e2) -> combine (hash e1) (hash e2)
+  | Binder (b, vars, e) ->
+    let h = Hashtbl.hash b in
+    let h_vars = List.fold_left (fun acc x -> combine acc (hash x)) h vars in
+    combine h_vars (hash e)
 
 module Key = struct
   type nonrec t = t
@@ -132,11 +119,11 @@ module Key = struct
   let compare x y = compare (to_int x) (to_int y)
 end
 
-let[@inline] make e = Hc.hashcons e
+let[@inline] make e = e
 
-let[@inline] view (hte : t) = hte.node
+let[@inline] view (e : t) = e
 
-let[@inline] compare (hte1 : t) (hte2 : t) = compare hte1.tag hte2.tag
+let[@inline] compare (a : t) (b : t) = Key.compare a b
 
 let symbol s = make (Symbol s)
 
@@ -381,21 +368,21 @@ let rec binop ty op hte1 hte2 =
     hte1
   | (Add | Or), _, Val (Bitv bv) when Bitvector.eqz bv -> hte1
   | (And | Mul), _, Val (Bitv bv) when Bitvector.eqz bv -> hte2
-  | Add, Binop (ty, Add, x, { node = Val v1; _ }), Val v2 ->
+  | Add, Binop (ty, Add, x, Val v1), Val v2 ->
     let v = value (Eval.binop ty Add v1 v2) in
     raw_binop ty Add x v
-  | Sub, Binop (ty, Sub, x, { node = Val v1; _ }), Val v2 ->
+  | Sub, Binop (ty, Sub, x, Val v1), Val v2 ->
     let v = value (Eval.binop ty Add v1 v2) in
     raw_binop ty Sub x v
   | Mul, Val (Bitv bv), _ when Bitvector.eq_one bv -> hte2
   | Mul, _, Val (Bitv bv) when Bitvector.eq_one bv -> hte1
-  | Mul, Binop (ty, Mul, x, { node = Val v1; _ }), Val v2 ->
+  | Mul, Binop (ty, Mul, x, Val v1), Val v2 ->
     let v = value (Eval.binop ty Mul v1 v2) in
     raw_binop ty Mul x v
-  | Add, Val v1, Binop (ty, Add, x, { node = Val v2; _ }) ->
+  | Add, Val v1, Binop (ty, Add, x, Val v2) ->
     let v = value (Eval.binop ty Add v1 v2) in
     raw_binop ty Add v x
-  | Mul, Val v1, Binop (ty, Mul, x, { node = Val v2; _ }) ->
+  | Mul, Val v1, Binop (ty, Mul, x, Val v2) ->
     let v = value (Eval.binop ty Mul v1 v2) in
     raw_binop ty Mul v x
   | At, List es, Val (Int n) ->
@@ -426,7 +413,7 @@ let triop ty op e1 e2 e3 =
 let raw_relop ty op hte1 hte2 = make (Relop (ty, op, hte1, hte2)) [@@inline]
 
 let rec relop ty (op : Ty.Relop.t) hte1 hte2 =
-  let both_phys_eq = phys_equal hte1 hte2 in
+  let both_phys_eq = equal hte1 hte2 in
   let can_be_shortcuted =
     match ty with
     | Ty.Ty_bool | Ty_bitv _ | Ty_int | Ty_unit -> both_phys_eq
@@ -477,13 +464,10 @@ let rec relop ty (op : Ty.Relop.t) hte1 hte2 =
       let b1 = Value.Bitv b1 in
       let b2 = Value.Bitv b2 in
       value (if Eval.relop ty op b1 b2 then True else False)
-  | ( op
-    , Val (Bitv _ as n)
-    , Ptr { base; offset = { node = Val (Bitv _ as o); _ } } ) ->
+  | op, Val (Bitv _ as n), Ptr { base; offset = Val (Bitv _ as o) } ->
     let base = Eval.binop (Ty_bitv 32) Add (Bitv base) o in
     value (if Eval.relop ty op n base then True else False)
-  | op, Ptr { base; offset = { node = Val (Bitv _ as o); _ } }, Val (Bitv _ as n)
-    ->
+  | op, Ptr { base; offset = Val (Bitv _ as o) }, Val (Bitv _ as n) ->
     let base = Eval.binop (Ty_bitv 32) Add (Bitv base) o in
     value (if Eval.relop ty op base n then True else False)
   | op, List l1, List l2 -> relop_list op l1 l2
@@ -519,8 +503,7 @@ let rec cvtop theory op hte =
   | _, Val v -> value (Eval.cvtop theory op v)
   | String_to_float, Cvtop (Ty_real, ToString, hte) -> hte
   | ( Reinterpret_float
-    , Cvtop (Ty_real, Reinterpret_int, { node = Symbol { ty = Ty_int; _ }; _ })
-    ) ->
+    , Cvtop (Ty_real, Reinterpret_int, Symbol { ty = Ty_int; _ }) ) ->
     hte
   | Zero_extend n, Ptr { base; offset } ->
     let offset = cvtop theory op offset in
@@ -566,7 +549,7 @@ let extract (hte : t) ~(high : int) ~(low : int) : t =
   | ( Cvtop
         ( _
         , (Zero_extend 24 | Sign_extend 24)
-        , ({ node = Symbol { ty = Ty_bitv 8; _ }; _ } as sym) )
+        , (Symbol { ty = Ty_bitv 8; _ } as sym) )
     , 1
     , 0 ) ->
     sym
@@ -581,11 +564,11 @@ let raw_concat (msb : t) (lsb : t) : t = make (Concat (msb, lsb)) [@@inline]
 let rec concat (msb : t) (lsb : t) : t =
   match (view msb, view lsb) with
   | Val (Bitv a), Val (Bitv b) -> value (Bitv (Bitvector.concat a b))
-  | Val (Bitv _), Concat (({ node = Val (Bitv _); _ } as b), se) ->
+  | Val (Bitv _), Concat ((Val (Bitv _) as b), se) ->
     raw_concat (concat msb b) se
   | Extract (s1, h, m1), Extract (s2, m2, l) when equal s1 s2 && m1 = m2 ->
     if h - l = Ty.size (ty s1) then s1 else raw_extract s1 ~high:h ~low:l
-  | Extract (_, _, _), Concat (({ node = Extract (_, _, _); _ } as e2), e3) ->
+  | Extract (_, _, _), Concat ((Extract (_, _, _) as e2), e3) ->
     raw_concat (concat msb e2) e3
   | _ -> raw_concat msb lsb
 
