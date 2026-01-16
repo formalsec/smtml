@@ -26,6 +26,7 @@
   expr
   expr_raw
   expr_intf
+  feature_extraction
   interpret
   interpret_intf
   lexer
