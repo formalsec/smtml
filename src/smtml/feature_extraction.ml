@@ -471,7 +471,7 @@ let cmd directory output_csv =
           (String.cat (String.concat "," final_names) "\n");
         List.iter
           (fun (solver_name, exprs, model, t) ->
-            if not (List.is_empty exprs) then
+            if List.compare_lengths exprs [] > 0 then
               let feats = extract_feats_wtime exprs t in
               let row =
                 List.map
