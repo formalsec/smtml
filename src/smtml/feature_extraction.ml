@@ -492,34 +492,3 @@ let cmd directory output_csv =
   match Rresult.R.join res with
   | Error (`Msg m) -> Fmt.failwith "%s" m
   | Ok () -> Fmt.pr "Done writing to %a\n%!" Fpath.pp output_csv
-
-(* let cmd directory output_csv =
-  let directory = Fpath.to_string directory in
-  let output_csv = Fpath.to_string output_csv in
-  let entries = read_marshalled_file directory in
-  let oc = open_out output_csv in
-
-  (* en-tête CSV *)
-  output_string oc (String.concat "," final_names ^ "\n");
-
-  List.iter
-    (fun (solver_name, exprs, model, t) ->
-      if not (List.is_empty exprs) then
-        let feats = extract_feats_wtime exprs t in
-        let row =
-          List.map
-            (fun name ->
-              if String.equal name "solver" then solver_name
-              else if String.equal name "model" then Bool.to_string model
-              else
-                let count = StringMap.find_def0 name feats in
-                string_of_int count )
-            final_names
-        in
-        let row = String.concat "," row ^ "\n" in
-        (* Fmt.epr "pp row: %s@." row; *)
-        output_string oc row )
-    entries;
-
-  close_out oc;
-  Fmt.pr "Done writing to %s\n%!" output_csv *)
