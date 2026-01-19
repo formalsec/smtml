@@ -687,126 +687,145 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           Ty.pp ty ty
 
     let get_rounding_mode ctx rm =
-      match Expr.view rm with
-      | Symbol { name = Simple ("roundNearestTiesToEven" | "RNE"); _ } ->
+      match rm with
+      | Expr.Sym
+          { node =
+              Symbol { name = Simple ("roundNearestTiesToEven" | "RNE"); _ }
+          ; _
+          } ->
         (ctx, M.Float.Rounding_mode.rne)
-      | Symbol { name = Simple ("roundNearestTiesToAway" | "RNA"); _ } ->
+      | Sym
+          { node =
+              Symbol { name = Simple ("roundNearestTiesToAway" | "RNA"); _ }
+          ; _
+          } ->
         (ctx, M.Float.Rounding_mode.rna)
-      | Symbol { name = Simple ("roundTowardPositive" | "RTP"); _ } ->
+      | Sym
+          { node = Symbol { name = Simple ("roundTowardPositive" | "RTP"); _ }
+          ; _
+          } ->
         (ctx, M.Float.Rounding_mode.rtp)
-      | Symbol { name = Simple ("roundTowardNegative" | "RTN"); _ } ->
+      | Sym
+          { node = Symbol { name = Simple ("roundTowardNegative" | "RTN"); _ }
+          ; _
+          } ->
         (ctx, M.Float.Rounding_mode.rtn)
-      | Symbol { name = Simple ("roundTowardZero" | "RTZ"); _ } ->
+      | Sym
+          { node = Symbol { name = Simple ("roundTowardZero" | "RTZ"); _ }; _ }
+        ->
         (ctx, M.Float.Rounding_mode.rtz)
-      | Symbol rm -> make_symbol ctx rm
+      | Sym { node = Symbol rm; _ } -> make_symbol ctx rm
       | _ -> Fmt.failwith "unknown rouding mode: %a" Expr.pp rm
 
-    let rec encode_expr ctx (hte : Expr.t) : symbol_ctx * M.term =
-      match Expr.view hte with
-      | Val value -> (ctx, v value)
-      | Ptr { base; offset } ->
-        let base = v (Bitv base) in
-        let ctx, offset = encode_expr ctx offset in
-        (ctx, I32.binop Add base offset)
-      | Symbol { name = Simple "re.all"; _ } -> (ctx, M.Re.all ())
-      | Symbol { name = Simple "re.none"; _ } -> (ctx, M.Re.none ())
-      | Symbol { name = Simple "re.allchar"; _ } -> (ctx, M.Re.allchar ())
-      | Symbol sym -> make_symbol ctx sym
-      (* FIXME: add a way to support building these expressions without apps *)
-      | App ({ name = Simple "fp.add"; _ }, [ rm; a; b ]) ->
-        let ctx, a = encode_expr ctx a in
-        let ctx, b = encode_expr ctx b in
-        let ctx, rm = get_rounding_mode ctx rm in
-        (ctx, M.Float.add ~rm a b)
-      | App ({ name = Simple "fp.sub"; _ }, [ rm; a; b ]) ->
-        let ctx, a = encode_expr ctx a in
-        let ctx, b = encode_expr ctx b in
-        let ctx, rm = get_rounding_mode ctx rm in
-        (ctx, M.Float.sub ~rm a b)
-      | App ({ name = Simple "fp.mul"; _ }, [ rm; a; b ]) ->
-        let ctx, a = encode_expr ctx a in
-        let ctx, b = encode_expr ctx b in
-        let ctx, rm = get_rounding_mode ctx rm in
-        (ctx, M.Float.mul ~rm a b)
-      | App ({ name = Simple "fp.div"; _ }, [ rm; a; b ]) ->
-        let ctx, a = encode_expr ctx a in
-        let ctx, b = encode_expr ctx b in
-        let ctx, rm = get_rounding_mode ctx rm in
-        (ctx, M.Float.div ~rm a b)
-      | App ({ name = Simple "fp.fma"; _ }, [ rm; a; b; c ]) ->
-        let ctx, a = encode_expr ctx a in
-        let ctx, b = encode_expr ctx b in
-        let ctx, c = encode_expr ctx c in
-        let ctx, rm = get_rounding_mode ctx rm in
-        (ctx, M.Float.fma ~rm a b c)
-      | App ({ name = Simple "fp.sqrt"; _ }, [ rm; a ]) ->
-        let ctx, a = encode_expr ctx a in
-        let ctx, rm = get_rounding_mode ctx rm in
-        (ctx, M.Float.sqrt ~rm a)
-      | App ({ name = Simple "fp.roundToIntegral"; _ }, [ rm; a ]) ->
-        let ctx, a = encode_expr ctx a in
-        let ctx, rm = get_rounding_mode ctx rm in
-        (ctx, M.Float.round_to_integral ~rm a)
-      | App (sym, args) ->
-        let name =
-          match Symbol.name sym with
-          | Simple name -> name
-          | Indexed _ ->
-            Fmt.failwith "Unsupported uninterpreted application of: %a"
-              Symbol.pp sym
-        in
-        let ty = get_type @@ Symbol.type_of sym in
-        let tys = List.map (fun e -> get_type @@ Expr.ty e) args in
-        let ctx, arguments = encode_exprs ctx args in
-        let sym = M.Func.make name tys ty in
-        (ctx, M.Func.apply sym arguments)
-      | Unop (ty, op, e) ->
-        let ctx, e = encode_expr ctx e in
-        (ctx, unop ty op e)
-      | Binop (ty, op, e1, e2) ->
-        let ctx, e1 = encode_expr ctx e1 in
-        let ctx, e2 = encode_expr ctx e2 in
-        (ctx, binop ty op e1 e2)
-      | Triop (ty, op, e1, e2, e3) ->
-        let ctx, e1 = encode_expr ctx e1 in
-        let ctx, e2 = encode_expr ctx e2 in
-        let ctx, e3 = encode_expr ctx e3 in
-        (ctx, triop ty op e1 e2 e3)
-      | Relop (ty, op, e1, e2) ->
-        let ctx, e1 = encode_expr ctx e1 in
-        let ctx, e2 = encode_expr ctx e2 in
-        (ctx, relop ty op e1 e2)
-      | Cvtop (ty, op, e) ->
-        let ctx, e = encode_expr ctx e in
-        (ctx, cvtop ty op e)
-      | Naryop (ty, op, es) ->
-        let ctx, es =
-          List.fold_left
-            (fun (ctx, es) e ->
-              let ctx, e = encode_expr ctx e in
-              (ctx, e :: es) )
-            (ctx, []) es
-        in
-        (* This is needed so arguments don't end up out of order in the operator *)
-        let es = List.rev es in
-        (ctx, naryop ty op es)
-      | Extract (e, h, l) ->
-        let ctx, e = encode_expr ctx e in
-        (ctx, M.Bitv.extract e ~high:((h * 8) - 1) ~low:(l * 8))
-      | Concat (e1, e2) ->
-        let ctx, e1 = encode_expr ctx e1 in
-        let ctx, e2 = encode_expr ctx e2 in
-        (ctx, M.Bitv.concat e1 e2)
-      | Binder (Forall, vars, body) ->
-        let ctx, vars = encode_exprs ctx vars in
-        let ctx, body = encode_expr ctx body in
-        (ctx, M.forall vars body)
-      | Binder (Exists, vars, body) ->
-        let ctx, vars = encode_exprs ctx vars in
-        let ctx, body = encode_expr ctx body in
-        (ctx, M.exists vars body)
-      | List _ | Binder _ | Loc _ ->
-        Fmt.failwith "Cannot encode expression: %a" Expr.pp hte
+    let rec encode_expr ctx (e : Expr.t) : symbol_ctx * M.term =
+      match e with
+      | Imm value -> (ctx, v value)
+      | Sym hte -> begin
+        match Expr.view hte with
+        | Ptr { base; offset } ->
+          let base = v (Bitv base) in
+          let ctx, offset = encode_expr ctx offset in
+          (ctx, I32.binop Add base offset)
+        | Symbol { name = Simple "re.all"; _ } -> (ctx, M.Re.all ())
+        | Symbol { name = Simple "re.none"; _ } -> (ctx, M.Re.none ())
+        | Symbol { name = Simple "re.allchar"; _ } -> (ctx, M.Re.allchar ())
+        | Symbol sym -> make_symbol ctx sym
+        (* FIXME: add a way to support building these expressions without apps *)
+        | App ({ name = Simple "fp.add"; _ }, [ rm; a; b ]) ->
+          let ctx, a = encode_expr ctx a in
+          let ctx, b = encode_expr ctx b in
+          let ctx, rm = get_rounding_mode ctx rm in
+          (ctx, M.Float.add ~rm a b)
+        | App ({ name = Simple "fp.sub"; _ }, [ rm; a; b ]) ->
+          let ctx, a = encode_expr ctx a in
+          let ctx, b = encode_expr ctx b in
+          let ctx, rm = get_rounding_mode ctx rm in
+          (ctx, M.Float.sub ~rm a b)
+        | App ({ name = Simple "fp.mul"; _ }, [ rm; a; b ]) ->
+          let ctx, a = encode_expr ctx a in
+          let ctx, b = encode_expr ctx b in
+          let ctx, rm = get_rounding_mode ctx rm in
+          (ctx, M.Float.mul ~rm a b)
+        | App ({ name = Simple "fp.div"; _ }, [ rm; a; b ]) ->
+          let ctx, a = encode_expr ctx a in
+          let ctx, b = encode_expr ctx b in
+          let ctx, rm = get_rounding_mode ctx rm in
+          (ctx, M.Float.div ~rm a b)
+        | App ({ name = Simple "fp.fma"; _ }, [ rm; a; b; c ]) ->
+          let ctx, a = encode_expr ctx a in
+          let ctx, b = encode_expr ctx b in
+          let ctx, c = encode_expr ctx c in
+          let ctx, rm = get_rounding_mode ctx rm in
+          (ctx, M.Float.fma ~rm a b c)
+        | App ({ name = Simple "fp.sqrt"; _ }, [ rm; a ]) ->
+          let ctx, a = encode_expr ctx a in
+          let ctx, rm = get_rounding_mode ctx rm in
+          (ctx, M.Float.sqrt ~rm a)
+        | App ({ name = Simple "fp.roundToIntegral"; _ }, [ rm; a ]) ->
+          let ctx, a = encode_expr ctx a in
+          let ctx, rm = get_rounding_mode ctx rm in
+          (ctx, M.Float.round_to_integral ~rm a)
+        | App (sym, args) ->
+          let name =
+            match Symbol.name sym with
+            | Simple name -> name
+            | Indexed _ ->
+              Fmt.failwith "Unsupported uninterpreted application of: %a"
+                Symbol.pp sym
+          in
+          let ty = get_type @@ Symbol.type_of sym in
+          let tys = List.map (fun e -> get_type @@ Expr.ty e) args in
+          let ctx, arguments = encode_exprs ctx args in
+          let sym = M.Func.make name tys ty in
+          (ctx, M.Func.apply sym arguments)
+        | Unop (ty, op, e) ->
+          let ctx, e = encode_expr ctx e in
+          (ctx, unop ty op e)
+        | Binop (ty, op, e1, e2) ->
+          let ctx, e1 = encode_expr ctx e1 in
+          let ctx, e2 = encode_expr ctx e2 in
+          (ctx, binop ty op e1 e2)
+        | Triop (ty, op, e1, e2, e3) ->
+          let ctx, e1 = encode_expr ctx e1 in
+          let ctx, e2 = encode_expr ctx e2 in
+          let ctx, e3 = encode_expr ctx e3 in
+          (ctx, triop ty op e1 e2 e3)
+        | Relop (ty, op, e1, e2) ->
+          let ctx, e1 = encode_expr ctx e1 in
+          let ctx, e2 = encode_expr ctx e2 in
+          (ctx, relop ty op e1 e2)
+        | Cvtop (ty, op, e) ->
+          let ctx, e = encode_expr ctx e in
+          (ctx, cvtop ty op e)
+        | Naryop (ty, op, es) ->
+          let ctx, es =
+            List.fold_left
+              (fun (ctx, es) e ->
+                let ctx, e = encode_expr ctx e in
+                (ctx, e :: es) )
+              (ctx, []) es
+          in
+          (* This is needed so arguments don't end up out of order in the operator *)
+          let es = List.rev es in
+          (ctx, naryop ty op es)
+        | Extract (e, h, l) ->
+          let ctx, e = encode_expr ctx e in
+          (ctx, M.Bitv.extract e ~high:((h * 8) - 1) ~low:(l * 8))
+        | Concat (e1, e2) ->
+          let ctx, e1 = encode_expr ctx e1 in
+          let ctx, e2 = encode_expr ctx e2 in
+          (ctx, M.Bitv.concat e1 e2)
+        | Binder (Forall, vars, body) ->
+          let ctx, vars = encode_exprs ctx vars in
+          let ctx, body = encode_expr ctx body in
+          (ctx, M.forall vars body)
+        | Binder (Exists, vars, body) ->
+          let ctx, vars = encode_exprs ctx vars in
+          let ctx, body = encode_expr ctx body in
+          (ctx, M.exists vars body)
+        | List _ | Binder _ ->
+          Fmt.failwith "Cannot encode expression: %a" Expr.pp e
+      end
 
     and encode_exprs ctx (es : Expr.t list) : symbol_ctx * M.term list =
       let ctx, exprs =

@@ -21,15 +21,21 @@ let test_hc _ =
   let open Infix in
   let length0 = Expr.Hc.length () in
   let ty = Ty.Ty_bitv 32 in
-  assert (symbol "x" ty == symbol "x" ty);
-  assert (symbol "x" ty != symbol "y" ty);
+  assert (
+    match (symbol "x" ty, symbol "x" ty) with
+    | Sym a, Sym b -> a == b
+    | _ -> false );
+  assert (
+    match (symbol "x" ty, symbol "y" ty) with
+    | Sym a, Sym b -> a != b
+    | _ -> false );
   let left_a = symbol "x" ty in
   let right_a = symbol "y" ty in
   let left_b = symbol "x" ty in
   let right_b = symbol "y" ty in
   let a = Expr.binop ty Add left_a right_a in
   let b = Expr.binop ty Add left_b right_b in
-  assert (a == b);
+  assert (match (a, b) with Sym a, Sym b -> a == b | _ -> false);
   (* There should be only 3 elements added in the hashcons table: *)
   (*   1. x *)
   (*   2. y *)
@@ -257,7 +263,7 @@ let test_binop_simplifications _ =
     (binop32 Mul x (int32 4l));
   check
     (binop32 Mul (int32 2l) (binop32 Mul x (int32 2l)))
-    (binop32 Mul (int32 4l) x)
+    (binop32 Mul x (int32 4l))
 
 let test_binop =
   [ "test_binop_int" >:: test_binop_int
@@ -533,7 +539,7 @@ let test_simplify_assoc _ =
   check (Expr.simplify sym) (Expr.raw_binop Ty_int Add x (int 13));
   let binary = Expr.raw_binop Ty_int Add x (int 10) in
   let sym = Expr.raw_binop Ty_int Add (int 3) binary in
-  check (Expr.simplify sym) (Expr.raw_binop Ty_int Add (int 13) x)
+  check (Expr.simplify sym) (Expr.raw_binop Ty_int Add x (int 13))
 
 let test_simplify_extract_i8 _ =
   let open Infix in
