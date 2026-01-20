@@ -156,7 +156,6 @@ let string_of_expr_kind (e : Expr.expr) _ty : string =
   match e with
   | Val _ -> "Val"
   | Ptr _ -> "Ptr"
-  | Loc _ -> "Loc"
   | Symbol _ -> "Symbol"
   | List _ -> "List"
   | App _ -> "App"
@@ -410,7 +409,6 @@ let extract_feats : Expr.t -> int StringMap.t =
           (Int.max depth depth', feats) )
         (depth + 1, feats)
         (t :: lst)
-    | Loc _ -> assert false
   in
   fun expr ->
     let depth, feats = visit 1 StringMap.empty expr in
