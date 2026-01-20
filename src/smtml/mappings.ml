@@ -805,7 +805,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         let ctx, vars = encode_exprs ctx vars in
         let ctx, body = encode_expr ctx body in
         (ctx, M.exists vars body)
-      | List _ | Binder _ | Loc _ ->
+      | List _ | Binder _ ->
         Fmt.failwith "Cannot encode expression: %a" Expr.pp hte
 
     and encode_exprs ctx (es : Expr.t list) : symbol_ctx * M.term list =

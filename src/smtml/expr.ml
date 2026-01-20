@@ -10,7 +10,6 @@ and expr =
       { base : Bitvector.t
       ; offset : t
       }
-  | Loc of Loc.t
   | Symbol of Symbol.t
   | List of t list
   | App of Symbol.t * t list
@@ -34,7 +33,6 @@ module Expr = struct
   let equal (e1 : expr) (e2 : expr) : bool =
     match (e1, e2) with
     | Val v1, Val v2 -> Value.equal v1 v2
-    | Loc a, Loc b -> Loc.compare a b = 0
     | Ptr { base = b1; offset = o1 }, Ptr { base = b2; offset = o2 } ->
       Bitvector.equal b1 b2 && phys_equal o1 o2
     | Symbol s1, Symbol s2 -> Symbol.equal s1 s2
@@ -60,9 +58,8 @@ module Expr = struct
     | Concat (e1, e3), Concat (e2, e4) -> phys_equal e1 e2 && phys_equal e3 e4
     | Binder (binder1, vars1, e1), Binder (binder2, vars2, e2) ->
       Binder.equal binder1 binder2 && list_eq vars1 vars2 && phys_equal e1 e2
-    | ( ( Val _ | Ptr _ | Loc _ | Symbol _ | List _ | App _ | Unop _ | Binop _
-        | Triop _ | Relop _ | Cvtop _ | Naryop _ | Extract _ | Concat _
-        | Binder _ )
+    | ( ( Val _ | Ptr _ | Symbol _ | List _ | App _ | Unop _ | Binop _ | Triop _
+        | Relop _ | Cvtop _ | Naryop _ | Extract _ | Concat _ | Binder _ )
       , _ ) ->
       false
 
@@ -73,7 +70,6 @@ module Expr = struct
     match e with
     | Val v -> Value.hash v
     | Ptr { base; offset } -> combine (Bitvector.hash base) offset.tag
-    | Loc l -> Loc.hash l
     | Symbol s -> Symbol.hash s
     | List l -> List.fold_left (fun acc x -> combine acc x.Hc.tag) 0 l
     | App (s, es) ->
@@ -145,7 +141,6 @@ let rec ty (hte : t) : Ty.t =
   match view hte with
   | Val x -> Value.type_of x
   | Ptr _ -> Ty_bitv 32
-  | Loc _ -> Ty_app
   | Symbol x -> Symbol.type_of x
   | List _ -> Ty_list
   | App (sym, _) -> begin match sym.ty with Ty_none -> Ty_app | ty -> ty end
@@ -174,7 +169,7 @@ let rec ty (hte : t) : Ty.t =
 
 let rec is_symbolic (v : t) : bool =
   match view v with
-  | Val _ | Loc _ -> false
+  | Val _ -> false
   | Symbol _ -> true
   | Ptr { offset; _ } -> is_symbolic offset
   | Unop (_, _, v) | Cvtop (_, _, v) | Extract (v, _, _) | Binder (_, _, v) ->
@@ -189,7 +184,7 @@ let get_symbols (hte : t list) =
   let tbl = Hashtbl.create 64 in
   let rec symbols (hte : t) =
     match view hte with
-    | Val _ | Loc _ -> ()
+    | Val _ -> ()
     | Ptr { offset; _ } -> symbols offset
     | Symbol s -> Hashtbl.replace tbl s ()
     | List es -> List.iter symbols es
@@ -222,7 +217,6 @@ let rec pp fmt (hte : t) =
   match view hte with
   | Val v -> Value.pp fmt v
   | Ptr { base; offset } -> Fmt.pf fmt "(Ptr %a %a)" Bitvector.pp base pp offset
-  | Loc l -> Fmt.pf fmt "(loc %a)" Loc.pp l
   | Symbol s -> Fmt.pf fmt "@[<hov 1>%a@]" Symbol.pp s
   | List v -> Fmt.pf fmt "@[<hov 1>[%a]@]" (Fmt.list ~sep:Fmt.comma pp) v
   | App (s, v) ->
@@ -278,8 +272,6 @@ let to_string e = Fmt.str "%a" pp e
 let value (v : Value.t) : t = make (Val v) [@@inline]
 
 let ptr base offset = make (Ptr { base = Bitvector.of_int32 base; offset })
-
-let loc l = make (Loc l)
 
 let list l = make (List l)
 
@@ -591,7 +583,7 @@ let rec concat (msb : t) (lsb : t) : t =
 
 let rec simplify_expr ?(in_relop = false) (hte : t) : t =
   match view hte with
-  | Val _ | Symbol _ | Loc _ -> hte
+  | Val _ | Symbol _ -> hte
   | Ptr { base; offset } ->
     let offset = simplify_expr ~in_relop offset in
     if not in_relop then make (Ptr { base; offset })
@@ -804,7 +796,6 @@ module Smtlib = struct
     match view hte with
     | Val v -> Value.Smtlib.pp fmt v
     | Ptr _ -> assert false
-    | Loc _ -> assert false
     | Symbol s -> Fmt.pf fmt "@[<hov 1>%a@]" Symbol.pp s
     | List _ -> assert false
     | App _ -> assert false
@@ -827,7 +818,7 @@ end
 let inline_symbol_values map e =
   let rec aux e =
     match view e with
-    | Val _ | Loc _ -> e
+    | Val _ -> e
     | Symbol symbol -> Option.value ~default:e (Symbol.Map.find_opt symbol map)
     | Ptr e ->
       let offset = aux e.offset in
@@ -891,7 +882,7 @@ module Set = struct
     let tbl = Hashtbl.create 64 in
     let rec symbols hte =
       match view hte with
-      | Val _ | Loc _ -> ()
+      | Val _ -> ()
       | Ptr { offset; _ } -> symbols offset
       | Symbol s -> Hashtbl.replace tbl s ()
       | List es -> List.iter symbols es
