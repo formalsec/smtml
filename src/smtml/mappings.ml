@@ -317,8 +317,6 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       module Ixx : sig
         val of_int : int -> elt
-
-        val shift_left : elt -> int -> elt
       end
     end
 
@@ -326,31 +324,35 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       open M
       include B
 
-      (* Stolen from @krtab in OCamlPro/owi#195 *)
-      let clz n =
-        let rec loop (lb : int) (ub : int) =
-          if ub = lb + 1 then v @@ Ixx.of_int (bitwidth - ub)
+      let clo n =
+        let rec loop (next : int) expr =
+          if Prelude.Int.equal next 0 then expr
           else
-            let mid = (lb + ub) / 2 in
-            let pow_two_mid = v Ixx.(shift_left (of_int 1) mid) in
-            ite (Bitv.lt_u n pow_two_mid) (loop lb mid) (loop mid ub)
+            let shift = next in
+            let shifted = Bitv.lshr n (v @@ Ixx.of_int shift) in
+            let bit = Bitv.rem_u shifted (v @@ Ixx.of_int 2) in
+            let expr = Bitv.add bit (Bitv.mul bit expr) in
+            let next = pred next in
+            loop next expr
         in
-        ite
-          (eq n (v @@ Ixx.of_int 0))
-          (v @@ Ixx.of_int bitwidth)
-          (loop 0 bitwidth)
+        loop bitwidth (v @@ Ixx.of_int 1)
 
-      (* Stolen from @krtab in OCamlPro/owi #195 *)
-      let ctz n =
-        let zero = v (Ixx.of_int 0) in
-        let rec loop (lb : int) (ub : int) =
-          if ub = lb + 1 then v (Ixx.of_int lb)
+      let clz n = clo @@ Bitv.lognot n
+
+      let cto n =
+        let rec loop (next : int) expr =
+          if Prelude.Int.equal next bitwidth then expr
           else
-            let mid = (lb + ub) / 2 in
-            let pow_two_mid = v Ixx.(shift_left (of_int 1) mid) in
-            M.ite (eq (Bitv.rem n pow_two_mid) zero) (loop mid ub) (loop lb mid)
+            let shift = bitwidth - next - 1 in
+            let shifted = Bitv.lshr n (v @@ Ixx.of_int shift) in
+            let bit = Bitv.rem_u shifted (v @@ Ixx.of_int 2) in
+            let expr = Bitv.add bit (Bitv.mul bit expr) in
+            let next = succ next in
+            loop next expr
         in
-        ite (eq n zero) (v @@ Ixx.of_int bitwidth) (loop 0 bitwidth)
+        loop 0 (v @@ Ixx.of_int 1)
+
+      let ctz n = cto @@ Bitv.lognot n
 
       let popcnt n =
         let rec loop (next : int) count =
@@ -439,8 +441,6 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       module Ixx = struct
         let of_int i = i [@@inline]
-
-        let shift_left v i = v lsl i [@@inline]
       end
     end)
 
