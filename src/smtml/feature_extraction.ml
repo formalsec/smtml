@@ -152,23 +152,25 @@ let string_of_naryop (naryop : Ty.Naryop.t) : string =
   | Concat -> "Concat"
   | Regexp_union -> "Regexp_union"
 
-let string_of_expr_kind (e : Expr.expr) _ty : string =
+let string_of_expr_kind (e : Expr.t) _ty : string =
   match e with
-  | Val _ -> "Val"
-  | Ptr _ -> "Ptr"
-  | Loc _ -> "Loc"
-  | Symbol _ -> "Symbol"
-  | List _ -> "List"
-  | App _ -> "App"
-  | Unop _ -> "Unop"
-  | Binop _ -> "Binop"
-  | Triop _ -> "Triop"
-  | Relop _ -> "Relop"
-  | Cvtop _ -> "Cvtop"
-  | Naryop _ -> "Naryop"
-  | Extract _ -> "Extract"
-  | Concat _ -> "Concat"
-  | Binder _ -> "Binder"
+  | Imm _ -> "Val"
+  | Sym hte -> begin
+    match Expr.view hte with
+    | Ptr _ -> "Ptr"
+    | Symbol _ -> "Symbol"
+    | List _ -> "List"
+    | App _ -> "App"
+    | Unop _ -> "Unop"
+    | Binop _ -> "Binop"
+    | Triop _ -> "Triop"
+    | Relop _ -> "Relop"
+    | Cvtop _ -> "Cvtop"
+    | Naryop _ -> "Naryop"
+    | Extract _ -> "Extract"
+    | Concat _ -> "Concat"
+    | Binder _ -> "Binder"
+  end
 
 (* Define all constructors you want to track *)
 let ctor_names =
@@ -344,73 +346,76 @@ let extract_feats : Expr.t -> int StringMap.t =
       feats
   in
   let rec visit depth feats (e : Expr.t) =
-    let feats = incr_feat feats (string_of_expr_kind e.node (Expr.ty e)) in
-    match e.node with
-    | Val _ | Symbol _ -> (depth, feats)
-    | Ptr { offset; _ } -> visit (depth + 1) feats offset
-    | List lst ->
-      List.fold_left
-        (fun (depth, feats) e ->
-          let depth', feats = visit depth feats e in
-          (Int.max depth depth', feats) )
-        (depth + 1, feats)
-        lst
-    | Naryop (ty, naryop, lst) ->
-      let feats = incr_feat feats (string_of_ty ty) in
-      let feats = incr_feat feats (string_of_naryop naryop) in
-      List.fold_left
-        (fun (depth, feats) e ->
-          let depth', feats = visit depth feats e in
-          (Int.max depth depth', feats) )
-        (depth + 1, feats)
-        lst
-    | App (_, lst) ->
-      List.fold_left
-        (fun (depth, feats) e ->
-          let depth', feats = visit depth feats e in
-          (Int.max depth depth', feats) )
-        (depth + 1, feats)
-        lst
-    | Unop (ty, unop, t) ->
-      let feats = incr_feat feats (string_of_ty ty) in
-      let feats = incr_feat feats (string_of_unop unop) in
-      visit (depth + 1) feats t
-    | Cvtop (ty, cvtop, t) ->
-      let feats = incr_feat feats (string_of_ty ty) in
-      let feats = incr_feat feats (string_of_cvtop cvtop) in
-      visit (depth + 1) feats t
-    | Extract (t, _, _) -> visit (depth + 1) feats t
-    | Binop (ty, binop, e1, e2) ->
-      let feats = incr_feat feats (string_of_ty ty) in
-      let feats = incr_feat feats (string_of_binop binop) in
-      let depth1, feats = visit (depth + 1) feats e1 in
-      let depth2, feats = visit (depth + 1) feats e2 in
-      (Int.max depth1 depth2, feats)
-    | Relop (ty, relop, e1, e2) ->
-      let feats = incr_feat feats (string_of_ty ty) in
-      let feats = incr_feat feats (string_of_relop relop) in
-      let depth1, feats = visit (depth + 1) feats e1 in
-      let depth2, feats = visit (depth + 1) feats e2 in
-      (Int.max depth1 depth2, feats)
-    | Concat (e1, e2) ->
-      let depth1, feats = visit (depth + 1) feats e1 in
-      let depth2, feats = visit (depth + 1) feats e2 in
-      (Int.max depth1 depth2, feats)
-    | Triop (ty, triop, e1, e2, e3) ->
-      let feats = incr_feat feats (string_of_ty ty) in
-      let feats = incr_feat feats (string_of_triop triop) in
-      let depth1, feats = visit (depth + 1) feats e1 in
-      let depth2, feats = visit (depth + 1) feats e2 in
-      let depth3, feats = visit (depth + 1) feats e3 in
-      (Int.max (Int.max depth1 depth2) depth3, feats)
-    | Binder (_, lst, t) ->
-      List.fold_left
-        (fun (depth, feats) e ->
-          let depth', feats = visit depth feats e in
-          (Int.max depth depth', feats) )
-        (depth + 1, feats)
-        (t :: lst)
-    | Loc _ -> assert false
+    let feats = incr_feat feats (string_of_expr_kind e (Expr.ty e)) in
+    match e with
+    | Imm _ -> (depth, feats)
+    | Sym hte -> begin
+      match Expr.view hte with
+      | Symbol _ -> (depth, feats)
+      | Ptr { offset; _ } -> visit (depth + 1) feats offset
+      | List lst ->
+        List.fold_left
+          (fun (depth, feats) e ->
+            let depth', feats = visit depth feats e in
+            (Int.max depth depth', feats) )
+          (depth + 1, feats)
+          lst
+      | Naryop (ty, naryop, lst) ->
+        let feats = incr_feat feats (string_of_ty ty) in
+        let feats = incr_feat feats (string_of_naryop naryop) in
+        List.fold_left
+          (fun (depth, feats) e ->
+            let depth', feats = visit depth feats e in
+            (Int.max depth depth', feats) )
+          (depth + 1, feats)
+          lst
+      | App (_, lst) ->
+        List.fold_left
+          (fun (depth, feats) e ->
+            let depth', feats = visit depth feats e in
+            (Int.max depth depth', feats) )
+          (depth + 1, feats)
+          lst
+      | Unop (ty, unop, t) ->
+        let feats = incr_feat feats (string_of_ty ty) in
+        let feats = incr_feat feats (string_of_unop unop) in
+        visit (depth + 1) feats t
+      | Cvtop (ty, cvtop, t) ->
+        let feats = incr_feat feats (string_of_ty ty) in
+        let feats = incr_feat feats (string_of_cvtop cvtop) in
+        visit (depth + 1) feats t
+      | Extract (t, _, _) -> visit (depth + 1) feats t
+      | Binop (ty, binop, e1, e2) ->
+        let feats = incr_feat feats (string_of_ty ty) in
+        let feats = incr_feat feats (string_of_binop binop) in
+        let depth1, feats = visit (depth + 1) feats e1 in
+        let depth2, feats = visit (depth + 1) feats e2 in
+        (Int.max depth1 depth2, feats)
+      | Relop (ty, relop, e1, e2) ->
+        let feats = incr_feat feats (string_of_ty ty) in
+        let feats = incr_feat feats (string_of_relop relop) in
+        let depth1, feats = visit (depth + 1) feats e1 in
+        let depth2, feats = visit (depth + 1) feats e2 in
+        (Int.max depth1 depth2, feats)
+      | Concat (e1, e2) ->
+        let depth1, feats = visit (depth + 1) feats e1 in
+        let depth2, feats = visit (depth + 1) feats e2 in
+        (Int.max depth1 depth2, feats)
+      | Triop (ty, triop, e1, e2, e3) ->
+        let feats = incr_feat feats (string_of_ty ty) in
+        let feats = incr_feat feats (string_of_triop triop) in
+        let depth1, feats = visit (depth + 1) feats e1 in
+        let depth2, feats = visit (depth + 1) feats e2 in
+        let depth3, feats = visit (depth + 1) feats e3 in
+        (Int.max (Int.max depth1 depth2) depth3, feats)
+      | Binder (_, lst, t) ->
+        List.fold_left
+          (fun (depth, feats) e ->
+            let depth', feats = visit depth feats e in
+            (Int.max depth depth', feats) )
+          (depth + 1, feats)
+          (t :: lst)
+    end
   in
   fun expr ->
     let depth, feats = visit 1 StringMap.empty expr in

@@ -12,16 +12,16 @@ module type S = sig
   (** {1 Expression Types} *)
 
   (** A term in the abstract syntax tree. *)
-  type t = expr Hc.hash_consed
+  type t =
+    | Imm of Value.t  (** A constant value. *)
+    | Sym of expr Hc.hash_consed
 
   (** The different types of expressions. *)
   and expr = private
-    | Val of Value.t  (** A constant value. *)
     | Ptr of
         { base : Bitvector.t  (** Base address. *)
         ; offset : t  (** Offset from base. *)
         }
-    | Loc of Loc.t  (** Abstract location *)
     | Symbol of Symbol.t  (** A symbolic variable. *)
     | List of t list  (** A list of expressions. *)
     | App of Symbol.t * t list  (** Function application. *)
@@ -38,7 +38,7 @@ module type S = sig
   (** {1 Constructors and Accessors} *)
 
   (** [view term] extracts the underlying expression from a term. *)
-  val view : t -> expr
+  val view : expr Hc.hash_consed -> expr
 
   (** [hash term] computes the hash of a term. *)
   val hash : t -> int
@@ -95,9 +95,6 @@ module type S = sig
   (** [ptr base offset] constructs a pointer expression with the given base
       address and offset. *)
   val ptr : int32 -> t -> t
-
-  (** [loc l] constructs an abstract location *)
-  val loc : Loc.t -> t
 
   (** [list l] constructs a list expression with the given list of expressions
   *)

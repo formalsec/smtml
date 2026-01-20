@@ -84,12 +84,12 @@ module Make (Solver : Solver_intf.S) = struct
       loop (eval stmt { state with stmts } ~no_strict_status) ~no_strict_status
 
   let parse_status (t : Expr.t) : [ `Sat | `Unsat | `Unknown ] option =
-    match Expr.view t with
-    | App ({ name = Simple ":status"; _ }, [ st ]) -> (
-      match Expr.view st with
-      | Symbol { name = Simple "sat"; _ } -> Some `Sat
-      | Symbol { name = Simple "unsat"; _ } -> Some `Unsat
-      | Symbol { name = Simple "unknown"; _ } -> Some `Unknown
+    match t with
+    | Expr.Sym { node = App ({ name = Simple ":status"; _ }, [ st ]); _ } -> (
+      match st with
+      | Sym { node = Symbol { name = Simple "sat"; _ }; _ } -> Some `Sat
+      | Sym { node = Symbol { name = Simple "unsat"; _ }; _ } -> Some `Unsat
+      | Sym { node = Symbol { name = Simple "unknown"; _ }; _ } -> Some `Unknown
       | _ ->
         Log.debug (fun k -> k "Unrecognised status value: %a" Expr.pp st);
         None )

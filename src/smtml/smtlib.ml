@@ -129,8 +129,8 @@ module Term = struct
     Expr.value (Bitv (Bitvector.make int (len - 2)))
 
   let colon ?loc (symbol : t) (term : t) : t =
-    match Expr.view symbol with
-    | Symbol s ->
+    match symbol with
+    | Expr.Sym { node = Symbol s; _ } ->
       (* Hack: var bindings are 1 argument lambdas *)
       Log.debug (fun k -> k "colon: unknown '%a' making app" Expr.pp symbol);
       Expr.app s [ term ]
@@ -139,14 +139,18 @@ module Term = struct
         Expr.pp term
 
   let make_fp_binop symbol (op : Ty.Binop.t) rm a b =
-    match Expr.view rm with
-    | Symbol { name = Simple "roundNearestTiesToEven"; _ } ->
+    match rm with
+    | Expr.Sym
+        { node = Symbol { name = Simple "roundNearestTiesToEven"; _ }; _ } ->
       Expr.raw_binop Ty_none op a b
     | _ -> Expr.app symbol [ rm; a; b ]
 
   let apply ?loc (id : t) (args : t list) : t =
-    match Expr.view id with
-    | Symbol ({ namespace = Term; name = Simple name; _ } as symbol) -> begin
+    match id with
+    | Expr.Sym
+        { node = Symbol ({ namespace = Term; name = Simple name; _ } as symbol)
+        ; _
+        } -> begin
       match (name, args) with
       | "-", [ a ] -> Expr.raw_unop Ty_none Neg a
       | "not", [ a ] -> Expr.raw_unop Ty_bool Not a
@@ -229,11 +233,7 @@ module Term = struct
       | "bvsge", [ a; b ] -> Expr.raw_relop Ty_none Ge a b
       | "bvuge", [ a; b ] -> Expr.raw_relop Ty_none GeU a b
       | "concat", [ a; b ] -> Expr.raw_concat a b
-      | ( "fp"
-        , [ { node = Val (Bitv sign); _ }
-          ; { node = Val (Bitv eb); _ }
-          ; { node = Val (Bitv i); _ }
-          ] ) ->
+      | "fp", [ Imm (Bitv sign); Imm (Bitv eb); Imm (Bitv i) ] ->
         let fp = Bitvector.(concat sign (concat eb i)) in
         let fp_sz = Bitvector.numbits fp in
         if fp_sz = 32 then Expr.value (Num (F32 (Bitvector.to_int32 fp)))
@@ -253,12 +253,13 @@ module Term = struct
       | "fp.mul", [ rm; a; b ] -> make_fp_binop symbol Mul rm a b
       | "fp.div", [ rm; a; b ] -> make_fp_binop symbol Div rm a b
       | ( "fp.sqrt"
-        , [ { node = Symbol { name = Simple "roundNearestTiesToEven"; _ }; _ }
+        , [ Sym
+              { node = Symbol { name = Simple "roundNearestTiesToEven"; _ }; _ }
           ; a
           ] ) ->
         Expr.raw_unop Ty_none Sqrt a
       | "fp.rem", [ a; b ] -> Expr.raw_binop Ty_none Rem a b
-      | "fp.roundToIntegral", [ rm; a ] -> begin
+      | "fp.roundToIntegral", [ Sym rm; a ] -> begin
         match Expr.view rm with
         | Symbol { name = Simple "roundNearestTiesToEven"; _ } ->
           Expr.raw_unop Ty_none Nearest a
@@ -281,10 +282,13 @@ module Term = struct
         Log.debug (fun k -> k "apply: unknown %a making app" Symbol.pp symbol);
         Expr.app symbol args
     end
-    | Symbol ({ name = Simple _; namespace = Attr; _ } as attr) ->
+    | Sym
+        { node = Symbol ({ name = Simple _; namespace = Attr; _ } as attr); _ }
+      ->
       Log.debug (fun k -> k "apply: unknown %a making app" Symbol.pp attr);
       Expr.app attr args
-    | Symbol { name = Indexed { basename; indices }; _ } -> begin
+    | Sym { node = Symbol { name = Indexed { basename; indices }; _ }; _ } ->
+      begin
       match (basename, indices, args) with
       | "extract", [ h; l ], [ a ] ->
         let high =
@@ -315,17 +319,18 @@ module Term = struct
         Expr.raw_unop Ty_regexp (Regexp_loop (i1, i2)) a
       | ( "to_fp"
         , [ "11"; "53" ]
-        , [ { node =
-                Symbol { name = Simple ("roundNearestTiesToEven" | "RNE"); _ }
-            ; _
-            }
+        , [ Sym
+              { node =
+                  Symbol { name = Simple ("roundNearestTiesToEven" | "RNE"); _ }
+              ; _
+              }
           ; a
           ] ) ->
         Expr.raw_cvtop (Ty_fp 64) PromoteF32 a
       | _ ->
         Fmt.failwith "%acould not parse indexed app: %a" pp_loc loc Expr.pp id
     end
-    | Symbol id ->
+    | Sym { node = Symbol id; _ } ->
       Log.debug (fun k -> k "apply: unknown %a making app" Symbol.pp id);
       Expr.app id args
     | _ ->
@@ -372,12 +377,16 @@ module Statement = struct
   let datatypes ?loc:_ = assert false
 
   let fun_decl ?loc id ts1 ts2 return_sort =
-    match (id, ts1, ts2, Expr.view return_sort) with
-    | id, [], [], Symbol sort -> Declare_const { id; sort }
-    | id, [], args, Symbol sort ->
+    match (id, ts1, ts2, return_sort) with
+    | id, [], [], Expr.Sym { node = Symbol sort; _ } ->
+      Declare_const { id; sort }
+    | id, [], args, Sym { node = Symbol sort; _ } ->
       let args =
         List.map
-          (fun e -> match Expr.view e with Symbol s -> s | _ -> assert false)
+          (fun e ->
+            match e with
+            | Expr.Sym { node = Symbol s; _ } -> s
+            | _ -> assert false )
           args
       in
       Declare_fun { id; args; sort }
