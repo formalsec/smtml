@@ -325,14 +325,16 @@ let negate_relop (hte : t) : t =
   in
   make e
 
-let unop ty op hte =
+let rec unop ty op hte =
   match (op, view hte) with
   | Ty.Unop.(Regexp_loop _ | Regexp_star), _ -> raw_unop ty op hte
   | _, Val v -> value (Eval.unop ty op v)
   | Not, Unop (_, Not, hte') -> hte'
+  | Neg, Unop (_, Neg, hte') -> hte'
+  | Not, Binop (inner_ty, Or, a, b) ->
+    make (Binop (inner_ty, And, unop ty Not a, unop ty Not b))
   | Not, Relop (Ty_fp _, _, _, _) -> raw_unop ty op hte
   | Not, Relop (_, _, _, _) -> negate_relop hte
-  | Neg, Unop (_, Neg, hte') -> hte'
   | Trim, Cvtop (Ty_real, ToString, _) -> hte
   | Head, List (hd :: _) -> hd
   | Tail, List (_ :: tl) -> make (List tl)
