@@ -642,12 +642,33 @@ let test_simplify_ptr _ =
   let real = Expr.cvtop (Ty_bitv 32) WrapI64 ptr in
   check expected real
 
+let test_simplify_unop =
+  [ ( "test_simplify_not_bool_or" >:: fun _ ->
+      let open Infix in
+      let ty = Ty.Ty_bool in
+      let x = symbol "x" ty in
+      let y = symbol "y" ty in
+      let expected =
+        Expr.binop ty And (Expr.unop ty Not x) (Expr.unop ty Not y)
+      in
+      let real = Expr.unop ty Not (Expr.binop ty Or x y) in
+      check expected real )
+  ; ( "test_simplify_not_bitv_or" >:: fun _ ->
+      let open Infix in
+      let ty = Ty.Ty_bitv 32 in
+      let x = symbol "x" ty in
+      let expected = Expr.binop ty And (int32 65535l) (Expr.unop ty Not x) in
+      let real = Expr.unop ty Not (Expr.binop ty Or (int32 0xffff0000l) x) in
+      check expected real )
+  ]
+
 let test_simplify =
   [ "test_simplify_assoc" >:: test_simplify_assoc
   ; "test_fp_nan_not_geffects" >:: test_fp_nan_not_geffects
   ; "test_simplify_extract" >::: test_simplify_extract
   ; "test_simplify_concat" >::: test_simplify_concat
   ; "test_simplify_ptr" >:: test_simplify_ptr
+  ; "test_simplify_unop" >::: test_simplify_unop
   ]
 
 let test_inline_symbol_values_empty (_ : test_ctxt) =
