@@ -511,6 +511,7 @@ let rec cvtop theory op hte =
   match (op, view hte) with
   | Ty.Cvtop.String_to_re, _ -> raw_cvtop theory op hte
   | _, Val v -> value (Eval.cvtop theory op v)
+  | ToBool, Cvtop (_, OfBool, hte) -> hte
   | String_to_float, Cvtop (Ty_real, ToString, hte) -> hte
   | ( Reinterpret_float
     , Cvtop (Ty_real, Reinterpret_int, { node = Symbol { ty = Ty_int; _ }; _ })
