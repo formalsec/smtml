@@ -21,6 +21,9 @@ type t =
     and [q2] are equal. *)
 val equal : t -> t -> bool
 
+(** An unseeded hash function. *)
+val hash : t -> int
+
 (** {1 Pretty Printing} *)
 
 (** Pretty-printer for quantifiers and let-bindings. Formats a value of type [t]

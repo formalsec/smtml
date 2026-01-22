@@ -52,13 +52,13 @@ let rec hash v =
   | False -> 2
   | Unit -> 3
   | Int i -> combine 4 i
-  | Real f -> combine 5 (Hashtbl.hash f)
-  | Str s -> combine 6 (Hashtbl.hash s)
-  | Num n -> combine 7 (Hashtbl.hash n)
+  | Real f -> combine 5 (Float.hash f)
+  | Str s -> combine 6 (String.hash s)
+  | Num n -> combine 7 (Num.hash n)
   | Bitv b -> combine 8 (Bitvector.hash b)
   | List l -> List.fold_left (fun acc v -> combine acc (hash v)) 9 l
   | App (`Op s, args) ->
-    let h = combine 10 (Hashtbl.hash s) in
+    let h = combine 10 (String.hash s) in
     List.fold_left (fun acc v -> combine acc (hash v)) h args
   | Nothing -> 11
   | App _ -> assert false

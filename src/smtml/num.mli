@@ -33,6 +33,9 @@ val compare : t -> t -> int
 *)
 val equal : t -> t -> bool
 
+(* An unseeded hash function. *)
+val hash : t -> int
+
 (** {1 Pretty Printing} *)
 
 (** [set_default_printer p] sets the default printer format for displaying

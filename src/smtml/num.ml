@@ -15,6 +15,13 @@ type printer =
 let type_of (n : t) =
   match n with F32 _ -> Ty.(Ty_fp 32) | F64 _ -> Ty.(Ty_fp 64)
 
+(* Optimized mixer (DJB2 variant). Inlines to simple arithmetic. *)
+let[@inline] combine h v = (h * 33) + v
+
+let hash = function
+  | F32 n -> combine 1 (Int32.hash n)
+  | F64 n -> combine 2 (Int64.hash n)
+
 let compare n1 n2 =
   match (n1, n2) with
   | F32 i1, F32 i2 ->
