@@ -109,7 +109,7 @@ module Expr = struct
       combine h lo
     | Concat (e1, e2) -> combine e1.tag e2.tag
     | Binder (b, vars, e) ->
-      let h = Hashtbl.hash b in
+      let h = Binder.hash b in
       let h_vars = List.fold_left (fun acc x -> combine acc x.Hc.tag) h vars in
       combine h_vars e.tag
 end

@@ -49,13 +49,11 @@ let[@inline] combine h v = (h * 33) + v
 
 let hash_name n =
   match n with
-  | Simple s ->
-    (* Hashtbl.hash is fine for strings (it's a C primitive) *)
-    combine 0 (Hashtbl.hash s)
+  | Simple s -> combine 0 (String.hash s)
   | Indexed { basename; indices } ->
-    let h = combine 1 (Hashtbl.hash basename) in
+    let h = combine 1 (String.hash basename) in
     (* Fold over indices to avoid list allocation *)
-    List.fold_left (fun acc s -> combine acc (Hashtbl.hash s)) h indices
+    List.fold_left (fun acc s -> combine acc (String.hash s)) h indices
 
 let hash { ty; name; namespace } =
   let h = Ty.hash ty in
