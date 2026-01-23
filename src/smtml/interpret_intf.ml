@@ -23,7 +23,11 @@ module type S = sig
 
   (** Initializes execution with an optional state *)
   val start :
-    ?state:exec_state -> Ast.Script.t -> no_strict_status:bool -> exec_state
+       ?state:exec_state
+    -> ?quiet:bool
+    -> no_strict_status:bool
+    -> Ast.Script.t
+    -> exec_state
 end
 
 (** {2 Interpreter functor interface} *)
