@@ -7,25 +7,32 @@ include Prelude
 module Option = struct
   include Option
 
-  let ( let* ) v f = bind v f
+  module Syntax = struct
+    let ( let* ) v f = bind v f
 
-  let ( let+ ) v f = map f v
+    let ( let+ ) v f = map f v
+  end
 end
 
 module Result = struct
   include Result
 
-  let ( let* ) v f = Result.bind v f
+  module Syntax = struct
+    let ( let* ) v f = Result.bind v f
 
-  let ( let+ ) v f = Result.map f v
+    let ( let+ ) v f = Result.map f v
+  end
 
-  let rec list_iter f = function
+  let rec list_iter f =
+    let open Syntax in
+    function
     | [] -> Ok ()
     | hd :: tl ->
       let* () = f hd in
       list_iter f tl
 
   let list_map f v =
+    let open Syntax in
     let rec list_map_cps f v k =
       match v with
       | [] -> k (Ok [])
@@ -38,6 +45,7 @@ module Result = struct
     list_map_cps f v Fun.id
 
   let list_filter_map f v =
+    let open Syntax in
     let rec list_filter_map_cps f v k =
       match v with
       | [] -> k (Ok [])

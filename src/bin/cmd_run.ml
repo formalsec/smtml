@@ -12,7 +12,7 @@ let get_solver debug solver_type solver_mode =
 
 (* FIXME: this function has a sad name *)
 let parse_file filename =
-  let open Smtml_prelude.Result in
+  let open Smtml_prelude.Result.Syntax in
   let+ lines = Bos.OS.File.read_lines filename in
   (* FIXME: this can be improved *)
   let files =
@@ -107,7 +107,7 @@ let run (s : Settings.Run.t) =
 
   if s.print_statistics then Log.app (fun k -> k "total time: %.06f" !total_t);
   let write_exception_log =
-    let open Smtml_prelude.Result in
+    let open Smtml_prelude.Result.Syntax in
     function
     | [] -> Ok None
     | exns ->

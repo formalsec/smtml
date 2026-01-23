@@ -135,7 +135,7 @@ let rec pp fmt = function
 let to_string (v : t) : string = Fmt.str "%a" pp v
 
 let of_string (cast : Ty.t) v =
-  let open Result in
+  let open Result.Syntax in
   match cast with
   | Ty_bitv m -> Ok (Bitv (Bitvector.make (Z.of_string v) m))
   | Ty_fp _ ->
