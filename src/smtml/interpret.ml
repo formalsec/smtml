@@ -4,6 +4,31 @@
 
 include Interpret_intf
 
+module Status = struct
+  let pp fmt = function
+    | `Sat -> Fmt.pf fmt "sat"
+    | `Unsat -> Fmt.pf fmt "unsat"
+    | `Unknown -> Fmt.pf fmt "unknown"
+
+  let is_valid expected real =
+    match (expected, real) with
+    | `Unknown, _ -> true
+    | `Sat, `Sat | `Unsat, `Unsat -> true
+    | `Sat, `Unsat | `Unsat, `Sat | (`Sat | `Unsat), `Unknown -> false
+
+  let of_expr (t : Expr.t) : [ `Sat | `Unsat | `Unknown ] option =
+    match Expr.view t with
+    | App ({ name = Simple ":status"; _ }, [ st ]) -> (
+      match Expr.view st with
+      | Symbol { name = Simple "sat"; _ } -> Some `Sat
+      | Symbol { name = Simple "unsat"; _ } -> Some `Unsat
+      | Symbol { name = Simple "unknown"; _ } -> Some `Unknown
+      | _ ->
+        Log.debug (fun k -> k "Unrecognised status value: %a" Expr.pp st);
+        None )
+    | _ -> None
+end
+
 module Make (Solver : Solver_intf.S) = struct
   open Ast
 
@@ -17,45 +42,45 @@ module Make (Solver : Solver_intf.S) = struct
     Solver.push solver;
     { stmts; smap = Hashtbl.create 16; solver; expected_status }
 
-  let eval stmt (state : exec_state) ~no_strict_status : exec_state =
-    let { solver; _ } = state in
+  let eval stmt (state : exec_state) ~no_strict_status ~quiet : exec_state =
+    let { solver; expected_status; _ } = state in
     match stmt with
     | Assert e ->
       Log.debug (fun k -> k "assert: %a" Expr.pp e);
       Solver.add solver [ e ];
       state
-    | Check_sat assumptions ->
+    | Check_sat assumptions -> begin
       Log.debug (fun k -> k "check-sat: %a" Expr.pp_list assumptions);
-      let actual = Solver.check solver assumptions in
-      ( match actual with
-      | `Sat -> Fmt.pr "sat@."
-      | `Unsat -> Fmt.pr "unsat@."
-      | `Unknown -> Fmt.pr "unknown@." );
-      ( match (state.expected_status, actual) with
-      | Some `Sat, `Unsat ->
-        if no_strict_status then
-          Log.warn (fun k ->
-            k "Expected status: sat, but solver returned unsat" )
-        else Fmt.failwith "Expected status: sat, but solver returned unsat"
-      | Some `Unsat, `Sat ->
-        if no_strict_status then
-          Log.err (fun k ->
-            k "Expected status: unsat, but solver returned sat" )
-        else Fmt.failwith "Expected status: unsat, but solver returned sat"
-      | _ -> () (* Unknown or matching cases are fine *) );
+      let status = Solver.check solver assumptions in
+      if not quiet then Fmt.pr "%a@." Status.pp status;
+      begin match expected_status with
+      | None -> ()
+      | Some expected_status ->
+        if not (Status.is_valid expected_status status) then
+          if no_strict_status then
+            Log.err (fun k ->
+              k "Expected status: %a, but solver returned %a" Status.pp
+                expected_status Status.pp status )
+          else
+            Fmt.failwith "Expected status: %a, but solver returned %a" Status.pp
+              expected_status Status.pp status
+      end;
       state
+    end
     | Declare_const _x -> state
     | Declare_fun _x -> state
     | Echo x ->
-      Fmt.pr "%a" Fmt.string x;
+      if not quiet then Fmt.pr "%a" Fmt.string x;
       state
     | Exit -> { state with stmts = [] }
     | Get_model ->
       assert (
-        (function `Sat -> true | `Unsat | `Unknown -> false)
-          (Solver.check solver []) );
+        match Solver.check solver [] with
+        | `Sat -> true
+        | `Unsat | `Unknown -> false );
       let model = Solver.model solver in
-      Fmt.pr "%a@." (Fmt.option (Model.pp ~no_values:false)) model;
+      if not quiet then
+        Fmt.pr "%a@." (Fmt.option (Model.pp ~no_values:false)) model;
       state
     | Push _n ->
       Solver.push solver;
@@ -77,32 +102,23 @@ module Make (Solver : Solver_intf.S) = struct
       Log.debug (fun k -> k "Unsupported: %a" Ast.pp stmt);
       state
 
-  let rec loop (state : exec_state) ~no_strict_status : exec_state =
+  let rec loop (state : exec_state) ~no_strict_status ~quiet : exec_state =
     match state.stmts with
     | [] -> state
     | stmt :: stmts ->
-      loop (eval stmt { state with stmts } ~no_strict_status) ~no_strict_status
-
-  let parse_status (t : Expr.t) : [ `Sat | `Unsat | `Unknown ] option =
-    match Expr.view t with
-    | App ({ name = Simple ":status"; _ }, [ st ]) -> (
-      match Expr.view st with
-      | Symbol { name = Simple "sat"; _ } -> Some `Sat
-      | Symbol { name = Simple "unsat"; _ } -> Some `Unsat
-      | Symbol { name = Simple "unknown"; _ } -> Some `Unknown
-      | _ ->
-        Log.debug (fun k -> k "Unrecognised status value: %a" Expr.pp st);
-        None )
-    | _ -> None
+      loop
+        (eval stmt { state with stmts } ~no_strict_status ~quiet)
+        ~no_strict_status ~quiet
 
   let find_expected_status (script : Ast.Script.t) :
     [ `Sat | `Unsat | `Unknown ] option =
     List.find_map
       (fun cmd ->
-        match cmd with Ast.Set_info term -> parse_status term | _ -> None )
+        match cmd with Ast.Set_info expr -> Status.of_expr expr | _ -> None )
       script
 
-  let start ?state (stmts : Ast.Script.t) ~no_strict_status : exec_state =
+  let start ?state ?(quiet = false) ~no_strict_status (stmts : Ast.Script.t) :
+    exec_state =
     Log.debug (fun k -> k "Starting interpreter...");
     let expected_status = find_expected_status stmts in
     let st =
@@ -113,5 +129,5 @@ module Make (Solver : Solver_intf.S) = struct
         Solver.push st.solver;
         { st with stmts; expected_status }
     in
-    loop st ~no_strict_status
+    loop st ~no_strict_status ~quiet
 end
