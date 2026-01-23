@@ -91,11 +91,12 @@
     (>= "2.5.0")))
   (ounit2 :with-test)
   ;; Dev dependencies
+  (ocamlformat :with-dev-setup)
+  (ocaml-lsp-server :with-dev-setup)
   (benchpress
    (and
     :with-dev-setup
     (= "dev")))
-  (ocamlformat :with-dev-setup)
   (cohttp :with-dev-setup)
   (cohttp-lwt-unix :with-dev-setup)
   (extunix :with-dev-setup)
