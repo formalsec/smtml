@@ -9,11 +9,11 @@
  (enabled_if
   (< %{ocaml_version} 5.0.0))
  (action
-  (copy string_hash_fallback.ml string_hash.ml)))
+  (copy# string_hash_fallback.ml string_hash.ml)))
 
 (rule
  (target string_hash.ml)
  (enabled_if
   (>= %{ocaml_version} 5.0.0))
  (action
-  (copy string_hash_optimized.ml string_hash.ml)))
+  (copy# string_hash_optimized.ml string_hash.ml)))
