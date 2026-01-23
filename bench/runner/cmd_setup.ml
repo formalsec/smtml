@@ -3,7 +3,7 @@ let debug = true
 let debug k = if debug then k Fmt.epr
 
 let init ~datasets_dir =
-  let open Result in
+  let open Result.Syntax in
   let* dir_exists = Bos.OS.Dir.create ~path:true datasets_dir in
   if not dir_exists then debug (fun epr -> epr "Datasets dir already exists@.");
   Ok ()
@@ -16,7 +16,7 @@ let parse_conf fpath =
   { datasets }
 
 let file_exists ?hash fpath =
-  let open Result in
+  let open Result.Syntax in
   let* file_exists = Bos.OS.File.exists fpath in
   if not file_exists then Ok false
   else begin
@@ -58,7 +58,7 @@ let setup ~datasets_dir { datasets } =
     datasets
 
 let main ~datasets_dir ~file =
-  let open Result in
+  let open Result.Syntax in
   debug (fun epr -> epr "Using config: '%a'@." Fpath.pp file);
   let* () = init ~datasets_dir in
   let conf = parse_conf file in

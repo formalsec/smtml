@@ -105,7 +105,7 @@ let to_smtlib_string model =
 
 module Parse = struct
   module Json = struct
-    open Result
+    open Result.Syntax
     module Json = Yojson.Basic
 
     let from_json json =
@@ -142,7 +142,7 @@ module Parse = struct
   end
 
   module Scfg = struct
-    open Result
+    open Result.Syntax
 
     let from_scfg v =
       match Scfg.Query.get_dir "model" v with

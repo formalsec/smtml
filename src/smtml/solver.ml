@@ -204,7 +204,7 @@ module Cached (Mappings_ : Mappings.S) = struct
       get_sat_model ?symbols s.solver assert_
 
     let model ?(symbols : Symbol.t list option) (s : t) : Model.t option =
-      let open Option in
+      let open Option.Syntax in
       let* last_check = s.last_check in
       (* We need to explicitly check_set because we don't want a cached response *)
       match check_set s.solver last_check with
