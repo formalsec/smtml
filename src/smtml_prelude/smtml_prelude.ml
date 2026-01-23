@@ -4,6 +4,26 @@
 
 include Prelude
 
+module String = struct
+  include String
+
+  let hash x = String_hash.seeded_hash 0 x
+end
+
+module Int32 = struct
+  include Int32
+
+  (* As they are defined in the stdlib *)
+  let hash x = Hashtbl.seeded_hash_param 10 100 0 x
+end
+
+module Int64 = struct
+  include Int64
+
+  (* As they are defined in the stdlib *)
+  let hash x = Hashtbl.seeded_hash_param 10 100 0 x
+end
+
 module Option = struct
   include Option
 
