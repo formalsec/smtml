@@ -38,8 +38,8 @@ let tar_extract archive output_dir =
   Bos.Cmd.(v "tar" % "-xf" % p archive % "-C" % p output_dir)
 
 let setup ~datasets_dir { datasets } =
-  let open Result in
-  list_iter
+  let open Result.Syntax in
+  Result.list_iter
     (fun { Dataset.name; url; md5sum } ->
       let this_dataset_dir = Fpath.(datasets_dir / name) in
       let* _ = Bos.OS.Dir.create this_dataset_dir in
