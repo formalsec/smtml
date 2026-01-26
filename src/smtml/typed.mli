@@ -47,6 +47,10 @@ module Types : sig
   (** [string] represents the string type. *)
   val string : string ty
 
+  val bitv8 : bitv8 ty
+
+  val bitv16 : bitv16 ty
+
   val bitv32 : bitv32 ty
 
   val bitv64 : bitv64 ty
@@ -292,7 +296,11 @@ module Bitv : sig
 
     val zero : t
 
+    val one : t
+
     val v : Bitvector.t -> t
+
+    val of_int : int -> t
 
     val symbol : Symbol.t -> t
 
@@ -383,7 +391,7 @@ module Bitv16 : Bitv.S with type w = bitv16
 module Bitv32 : sig
   include Bitv.S with type w = bitv32
 
-  val of_int32 : int32 -> t
+  val of_int32 : Int32.t -> t
 
   val of_int8_s : bitv8 expr -> t
 
@@ -433,7 +441,7 @@ end
 module Bitv64 : sig
   include Bitv.S with type w = bitv64
 
-  val of_int64 : int64 -> t
+  val of_int64 : Int64.t -> t
 
   val of_int32 : bitv32 expr -> t
 
@@ -485,6 +493,8 @@ module Bitv128 : sig
 
   val to_i32x4 : t -> bitv32 expr * bitv32 expr * bitv32 expr * bitv32 expr
 
+  val of_int64x2 : Int64.t -> Int64.t -> t
+
   val of_i64x2 : bitv64 expr -> bitv64 expr -> t
 
   val to_i64x2 : t -> bitv64 expr * bitv64 expr
@@ -492,6 +502,8 @@ end
 
 module Float32 : sig
   type t = float32 expr
+
+  val zero : t
 
   val v : int32 -> t
 
@@ -606,6 +618,8 @@ end
 
 module Float64 : sig
   type t = float64 expr
+
+  val zero : t
 
   (** [v f e s] constructs a floating-point term from the float [f] with
       exponent width [e] and significand width [s]. *)

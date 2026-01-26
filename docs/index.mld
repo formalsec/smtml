@@ -85,27 +85,25 @@ Key operations (see {!module:Smtml.Solver_intf}):
 
 Construct type-safe SMT expressions using:
 
-- {!module:Smtml.Symbol} for creating variables
-- {!module:Smtml.Expr} combinators
-- {!module:Smtml.Ty} for type annotations
+- {!module:Smtml.Typed} combinators
 
 Example: Bitvector arithmetic
 {@ocaml[
 # open Smtml;;
 # let cond =
-  let x = Expr.symbol (Symbol.make (Ty_bitv 8) "x") in
-  let y = Expr.symbol (Symbol.make (Ty_bitv 8) "y") in
-  let sum = Expr.binop (Ty_bitv 8) Add x y in
-  let num = Expr.value (Bitv (Bitvector.of_int8 42)) in
-  Expr.relop Ty_bool Eq sum num;;
-val cond : Expr.t = (bool.eq (i8.add x y) 42)
+  let x = Typed.symbol Typed.Types.bitv8 "x" in
+  let y = Typed.symbol Typed.Types.bitv8 "y" in
+  let sum = Typed.Bitv8.add x y in
+  let num = Typed.Bitv8.v (Bitvector.of_int8 42) in
+  Typed.Bitv8.eq sum num;;
+val cond : bool Typed.expr = (bool.eq (i8.add x y) 42)
 ]}
 
 {1:checking Checking Satisfiability}
 
 Add constraints and check satisfiability:
 {@ocaml[
-# Z3.add solver [ cond ];;
+# Z3.add solver [ Typed.Unsafe.unwrap cond ];;
 - : unit = ()
 # match Z3.check solver [] with
   | `Sat -> "Satisfiable"
@@ -125,7 +123,7 @@ val model : Model.t = (model
 # let x_val =
   let x = Symbol.make (Ty_bitv 8) "x" in
   Model.evaluate model x;;
-val x_val : Value.t option = Some (Smtml.Value.Bitv <abstr>)
+val x_val : Value.t option = Some (Value.Bitv <abstr>)
 ]}
 
 {1:advanced Advanced Features}

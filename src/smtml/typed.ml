@@ -52,7 +52,11 @@ module Bitv = struct
 
     val zero : t
 
+    val one : t
+
     val v : Bitvector.t -> t
+
+    val of_int : int -> t
 
     val symbol : Symbol.t -> t
 
@@ -147,7 +151,24 @@ module Bitv = struct
         (* This would be absurd *)
         assert false
 
+    let one =
+      match ty with
+      | Ty.Ty_bitv m -> Expr.value (Bitv (Bitvector.make Z.one m))
+      | _ ->
+        (* This would be absurd *)
+        assert false
+
     let v x = Expr.value (Bitv x)
+
+    let of_int =
+      let m =
+        match ty with
+        | Ty.Ty_bitv m -> m
+        | _ ->
+          (* This would be absurd *)
+          assert false
+      in
+      fun x -> Expr.value (Bitv (Bitvector.make (Z.of_int x) m))
 
     let symbol x = Expr.symbol x
 
@@ -403,6 +424,11 @@ module Bitv128 = struct
     let d = extract v ~low:0 ~high:4 in
     (a, b, c, d)
 
+  let of_int64x2 a b =
+    let low = Bitvector.of_int64 b in
+    let high = Bitvector.of_int64 a in
+    Expr.value (Bitv (Bitvector.concat high low))
+
   let of_i64x2 a b = Bitv64.concat a b
 
   let to_i64x2 v =
@@ -419,6 +445,10 @@ module Types = struct
   let bool : bool ty = Ty_bool
 
   let string : string ty = Ty_str
+
+  let bitv8 : Bitv8.w ty = Bitv8.ty
+
+  let bitv16 : Bitv16.w ty = Bitv16.ty
 
   let bitv32 : Bitv32.w ty = Bitv32.ty
 
@@ -595,6 +625,8 @@ end
 module Float32 = struct
   type t = float32 expr
 
+  let zero = Expr.value (Num (F32 0l))
+
   let[@inline] v f = Expr.value (Num (F32 f))
 
   let[@inline] of_float x = v (Int32.bits_of_float x)
@@ -678,6 +710,8 @@ end
 
 module Float64 = struct
   type t = float64 expr
+
+  let zero = Expr.value (Num (F64 0L))
 
   let[@inline] v f = Expr.value (Num (F64 f))
 
