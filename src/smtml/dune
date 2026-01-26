@@ -18,7 +18,6 @@
   cache_intf
   colibri2_mappings
   compile
-  constructors_intf
   cvc5_mappings
   dolmenexpr_to_expr
   eval

@@ -488,29 +488,6 @@ module type S = sig
     val inline_symbol_values : elt Symbol.Map.t -> t -> t
   end
 
-  (** {1 Bitvectors} *)
-
-  module Bitv : sig
-    (** Bitvector operations for 8-bit integers. *)
-    module I8 : Constructors_intf.Infix with type elt := int and type t := t
-
-    (** Bitvector operations for 32-bit integers. *)
-    module I32 : Constructors_intf.Infix with type elt := int32 and type t := t
-
-    (** Bitvector operations for 64-bit integers. *)
-    module I64 : Constructors_intf.Infix with type elt := int64 and type t := t
-  end
-
-  (** {1 Floating-Points} *)
-
-  module Fpa : sig
-    (** Floating-point operations for 32-bit floats. *)
-    module F32 : Constructors_intf.Infix with type elt := float and type t := t
-
-    (** Floating-point operations for 64-bit floats. *)
-    module F64 : Constructors_intf.Infix with type elt := float and type t := t
-  end
-
   (** {1 Simplifications bis} *)
 
   (** [split_conjunctions e] when [e] is ((P & Q) & R) is [{ P; Q; R }]. That
