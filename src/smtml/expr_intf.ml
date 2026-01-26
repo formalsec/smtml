@@ -394,31 +394,27 @@ module type S = sig
 
     (** {1 Iterators} *)
 
-    (** [iter f set] calls [f] on all elements of [set], in the unsigned order
-        of {!to_int}. *)
+    (** [iter f set] calls [f] on all elements of [set]. *)
     val iter : (elt -> unit) -> t -> unit
 
     (** [map f set] maps all elements of [set] to their image by [f]. *)
     val map : (elt -> elt) -> t -> t
 
     (** [filter f set] is the subset of [set] that only contains the elements
-        that satisfy [f]. [f] is called in the unsigned order of {!to_int}. *)
+        that satisfy [f]. *)
     val filter : (elt -> bool) -> t -> t
 
     (** [for_all f set] is [true] if [f] is [true] on all elements of [set].
-        Short-circuits on first [false]. [f] is called in the unsigned order of
-        {!to_int}. *)
+        Short-circuits on first [false]. *)
     val for_all : (elt -> bool) -> t -> bool
 
     (** [fold f set acc] returns [f elt_n (... (f elt_1 acc) ...)], where
-        [elt_1, ..., elt_n] are the elements of [set], in increasing unsigned
-        order of {!to_int} *)
+        [elt_1, ..., elt_n] are the elements of [set]. *)
     val fold : (elt -> 'acc -> 'acc) -> t -> 'acc -> 'acc
 
     (** [split elt set] returns [s_lt, present, s_gt] where [s_lt] contains all
         elements of [set] smaller than [elt], [s_gt] all those greater than
-        [elt], and [present] is [true] if [elt] is in [set]. Uses the unsigned
-        order on {!to_int}.*)
+        [elt], and [present] is [true] if [elt] is in [set]. *)
     val split : elt -> t -> t * bool * t
 
     (** Pretty prints the set, *)
@@ -446,12 +442,10 @@ module type S = sig
 
     (** {1 Conversion functions} *)
 
-    (** [to_seq st] iterates the whole set, in increasing unsigned order of
-        {!to_int} *)
+    (** [to_seq st] iterates the whole set. *)
     val to_seq : t -> elt Seq.t
 
-    (** [to_rev_seq st] iterates the whole set, in decreasing unsigned order of
-        {!to_int} *)
+    (** [to_rev_seq st] iterates the whole set. *)
     val to_rev_seq : t -> elt Seq.t
 
     (** [add_seq s st] adds all elements of the sequence [s] to [st] in order.
@@ -464,8 +458,7 @@ module type S = sig
     (** [of_list l] creates a new set from the elements of [l]. *)
     val of_list : elt list -> t
 
-    (** [to_list s] returns the elements of [s] as a list, in increasing
-        unsigned order of {!to_int} *)
+    (** [to_list s] returns the elements of [s] as a list. *)
     val to_list : t -> elt list
 
     (** {1 Smtml Specific} *)
