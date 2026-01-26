@@ -70,34 +70,35 @@ module Z3 = Optimizer.Z3
 
 let read_int () = Scanf.scanf " %d" (fun x -> x)
 
-let int x = Expr.value (Int x)
+let int x = Typed.Int.v x
 
-let symbol x = Expr.symbol Symbol.(x @: Ty_int)
+let symbol x = Typed.symbol Typed.Types.int x
 
-let ( = ) i1 i2 = Expr.relop Ty_bool Eq i1 i2
+let ( = ) x y = Typed.Int.eq x y
 
-let ( >= ) i1 i2 = Expr.relop Ty_int Ge i1 i2
+let ( >= ) x y = Typed.Int.ge x y
 
-let ( <= ) i1 i2 = Expr.relop Ty_int Le i1 i2
+let ( <= ) x y = Typed.Int.le x y
 
-let ( + ) i1 i2 = Expr.binop Ty_int Add i1 i2
+let ( + ) x y = Typed.Int.add x y
 
-let ( * ) i1 i2 = Expr.binop Ty_int Mul i1 i2
+let ( * ) x y = Typed.Int.mul x y
 
-let ( && ) b1 b2 = Expr.binop Ty_bool And b1 b2
+let ( && ) x y = Typed.Bool.and_ x y
 
-let sum (lst : Expr.t list) : Expr.t = List.fold_left ( + ) (int 0) lst
+let sum (lst : Typed.Int.t list) : Typed.Int.t =
+  List.fold_left ( + ) (int 0) lst
 
 type toy =
-  { var : Expr.t
-  ; profit : Expr.t
-  ; prod_capacity : Expr.t
-  ; mutable in_packs : Expr.t list
+  { var : Typed.Int.t
+  ; profit : Typed.Int.t
+  ; prod_capacity : Typed.Int.t
+  ; mutable in_packs : Typed.Int.t list
   }
 
 type pack =
-  { var : Expr.t
-  ; profit : Expr.t
+  { var : Typed.Int.t
+  ; profit : Typed.Int.t
   }
 
 let toy (i : int) : toy =
@@ -132,7 +133,7 @@ let solve (toys : toy list) (packs : pack list) (daily_max : int) =
         t.var >= zero && t.var + sum t.in_packs <= t.prod_capacity )
       toys
   in
-  Z3.add opt (pack_quantity @ toy_quantity);
+  Z3.add opt (List.map Typed.Unsafe.unwrap (pack_quantity @ toy_quantity));
 
   (* C1: Constrain maximum daily production capacity *)
   let cap =
@@ -140,7 +141,7 @@ let solve (toys : toy list) (packs : pack list) (daily_max : int) =
     + sum (List.map (fun (p : pack) -> p.var * int 3) packs)
     <= int daily_max
   in
-  Z3.add opt [ cap ];
+  Z3.add opt [ Typed.Unsafe.unwrap cap ];
 
   (* Objective: maximum profit *)
   let profit = symbol "profit" in
@@ -149,10 +150,10 @@ let solve (toys : toy list) (packs : pack list) (daily_max : int) =
     + sum (List.map (fun (p : pack) -> p.var * p.profit) packs)
     = profit
   in
-  Z3.add opt [ objective ];
+  Z3.add opt [ Typed.Unsafe.unwrap objective ];
 
   (* Maximise *)
-  match Z3.maximize opt profit with
+  match Z3.maximize opt (Typed.Unsafe.unwrap profit) with
   | Some v -> Fmt.pr "%a@." Value.pp v
   | None -> Fmt.pr "Unfeasible@."
 

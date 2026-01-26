@@ -171,18 +171,32 @@ val cond : Expr.t = (bool.and a (bool.not b))
 ...
 ```
 
+### Typed API
+
+```ocaml
+# let cond =
+    let two = Typed.Int.v 2 in
+    let x = Typed.symbol Typed.Types.int "x" in
+    let y = Typed.symbol Typed.Types.string "y" in
+    Typed.Int.ge (Typed.Int.add x two) y
+Line 5, characters 40-41:
+Error: The value y has type string Typed.expr
+       but an expression was expected of type Typed.Int.t = int Typed.expr
+       Type string is not compatible with type int
+```
+
 ### Bitvector Arithmetic
 
 ```ocaml
 # let cond =
-    let x = Expr.Bitv.I32.sym "x" in
-    let y = Expr.Bitv.I32.v 0xdeadbeefl in
-    let sum = Expr.(binop (Ty_bitv 32) Add x y) in
-    Expr.(relop Ty_bool Eq sum (Expr.Bitv.I32.v 0xffffffffl));;
-val cond : Expr.t = (bool.eq (i32.add x -559038737) -1)
+    let x = Typed.symbol Typed.Types.bitv32 "x" in
+    let y = Typed.Bitv32.v (Bitvector.of_int32 0xdeadbeefl) in
+    let sum = Typed.Bitv32.add x y in
+    Typed.Bitv32.eq sum (Typed.Bitv32.v (Bitvector.of_int32 0xffffffffl))
+val cond : bool Typed.expr = (bool.eq (i32.add x -559038737) -1)
 
 # let model =
-    let () = Z3.add solver [ cond ] in
+    let () = Z3.add solver [ Typed.Unsafe.unwrap cond ] in
     let _ = Z3.check solver [] in
     Z3.model solver
 val model : Model.t option = Some (model
