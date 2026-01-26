@@ -1,7 +1,46 @@
 # Changelog
 
+## 0.20.0 - 2026-01-26
+
+- 2026-01-26 Add missing documentation to typed.mli
+- 2026-01-26 Fix documentation
+- 2026-01-26 Promote tests
+- 2026-01-26 Update documentation
+- 2026-01-26 Remove unecessary constructors in expr.ml
+- 2026-01-26 Add zero-cost typed interface using phantom types
+- 2026-01-25 Removed duplicates, And with cst
+- 2026-01-25 Update src/smtml/expr.ml
+- 2026-01-25 Resolving conversations
+- 2026-01-25 Adding reviews of zapashcanon and filipe
+- 2026-01-25 Adding unit test for simplification
+- 2026-01-25 Adding reviews changes
+- 2026-01-25 Simplification of conversions
+- 2026-01-25 Adding convertion simplifications
+- 2026-01-25 Adding atomic simplifications
+- 2026-01-25 Some fixes from #524
+- 2026-01-25 Move collections-c into test/benchmarks
+- 2026-01-25 Refactor interpret and add quiet flag
+- 2026-01-25 Move bench/datasets into test/benchmarks
+- 2026-01-23 Use caml_string_hash when compiling with ocaml >= 5
+- 2026-01-23 Add syntax module to smtml for compatability ocaml 5
+- 2026-01-23 Add ocaml-lsp-server as a dev dependency
+- 2026-01-23 Improves hashing
+- 2026-01-21 Simplify `i32.of_bool(i32.to_bool(c)) = c`
+- 2026-01-21 Simplify `i32.to_bool(i32.of_bool(c)) = c`
+- 2026-01-21 Normalize `not (a || b)` -> `not a && not b` ([#517](https://github.com/formalsec/smtml/issues/517))
+- 2026-01-21 Support arbitrary width bitvectors in mappings.ml
+- 2026-01-20 Remove axioms.ml
+- 2026-01-20 Remove Loc expression
+- 2026-01-19 Cleanup
+- 2026-01-19 Compatibility with ocaml 4
+- 2026-01-19 Add missing csv header
+- 2026-01-19 Extract fetures from smtml expressions
+- 2026-01-15 Add ocamlopt flags
+- 2026-01-08 Add minimal smtml logo
+
 ## 0.19.0 - 2026-01-05
 
+- 2026-01-05 Release 0.19.0
 - 2026-01-05 Reduce allocations in hashconsing hash function
 - 2026-01-05 Fix logging of queries after model generation
 - 2026-01-04 Export individual modules in Eval
