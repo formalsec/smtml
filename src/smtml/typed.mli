@@ -915,3 +915,47 @@ module Float64 : sig
 
   val pp : t Fmt.t
 end
+
+(** Typed function builders for SMT usage.
+
+    This module provides a GADT-based combinator library to define SMT functions
+    with OCaml-native typing. It uses right-associative operators to preserve
+    argument ordering. *)
+module Func : sig
+  (** [('fn, 'ret) t] represents a function signature specification.
+
+      - ['fn]: The resulting OCaml function type (e.g.,
+        [int expr -> bool expr]).
+      - ['ret]: The SMT return type (e.g., [bool]). *)
+  type ('fn, 'ret) t
+
+  (** [ret ty] defines the end of a signature and specifies the return type.
+
+      Example: [ret Types.bool] creates a signature that results in a
+      [bool expr]. *)
+  val ret : 'r ty -> ('r expr, 'r) t
+
+  (** [arg_ty @-> next_sig] prepends an argument to the function signature.
+
+      This operator is {b Right-Associative}.
+
+      Example: [Types.int @-> Types.real @-> returning Types.bool]
+
+      Creates a signature for: [int expr -> real expr -> bool expr]. *)
+  val ( @-> ) : 'a ty -> ('fn, 'r) t -> ('a expr -> 'fn, 'r) t
+
+  (** [make name signature] constructs the typed OCaml function.
+
+      It accepts a name for the SMT function and a signature specification. It
+      returns a curried OCaml function that builds the SMT application term.
+
+      Usage:
+      {@ocaml[
+        let f = Func.make "f" @@ Types.int @-> returning Types.bool
+
+        let x = symbol Types.int "x"
+
+        let res : bool expr = f x
+      ]} *)
+  val make : string -> ('fn, 'r) t -> 'fn
+end
