@@ -10,10 +10,18 @@
 <div align="center">
 <br />
 
-[![Build badge](https://github.com/formalsec/smtml/actions/workflows/build.yml/badge.svg)](https://github.com/formalsec/smtml/actions)
-[![Coverage Status](https://coveralls.io/repos/github/formalsec/smtml/badge.svg)](https://coveralls.io/github/formalsec/smtml)
-[![MIT](https://img.shields.io/github/license/formalsec/smtml)](LICENSE)
-![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos-lightgrey)
+[![build-badge]][build-status]
+[![coverage-badge]][coverage-status]
+[![license-badge]][license]
+[💬 zulip]
+
+[build-badge]: https://github.com/formalsec/smtml/actions/workflows/build.yml/badge.svg
+[build-status]: https://github.com/formalsec/smtml/actions
+[coverage-badge]: https://coveralls.io/repos/github/formalsec/smtml/badge.svg
+[coverage-status]: https://coveralls.io/github/formalsec/smtml
+[license-badge]: https://img.shields.io/github/license/formalsec/smtml
+[license]: LICENSE
+[💬 zulip]: https://owi.zulipchat.com/login/#narrow/channel/486273-Smt.2Eml
 
 </div>
 
