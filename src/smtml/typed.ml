@@ -19,9 +19,9 @@ type float32
 type float64
 
 module Unsafe = struct
-  let[@inline] wrap (x : Expr.t) : 'a expr = x
+  external wrap : Expr.t -> 'a expr = "%identity"
 
-  let[@inline] unwrap (x : 'a expr) : Expr.t = x
+  external unwrap : 'a expr -> Expr.t = "%identity"
 end
 
 let[@inline] view (x : 'a expr) : Expr.expr = Expr.view x
@@ -790,4 +790,22 @@ module Float64 = struct
   let[@inline] reinterpret_i64 x = Expr.cvtop Types.float64 Reinterpret_int x
 
   let[@inline] to_bv x = Expr.cvtop Types.bitv64 Reinterpret_float x
+end
+
+module Func = struct
+  type ('fn, 'r) t =
+    | Ret : 'r ty -> ('r expr, 'r) t
+    | Arg : 'a ty * ('fn, 'r) t -> ('a expr -> 'fn, 'r) t
+
+  let ret ret = Ret ret
+
+  let ( @-> ) ty next = Arg (ty, next)
+
+  let rec compile : type fn r. (fn, r) t -> string -> Expr.t list -> fn =
+   fun (spec : (fn, r) t) name args ->
+    match spec with
+    | Ret ret_ty -> Expr.app (Symbol.make ret_ty name) (List.rev args)
+    | Arg (_arg_ty, next) -> fun arg -> compile next name (arg :: args)
+
+  let make name spec = compile spec name []
 end
