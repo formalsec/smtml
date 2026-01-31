@@ -172,12 +172,8 @@ module Relop : sig
     | Ne  (** Inequality. *)
     | Lt  (** Less than. *)
     | LtU  (** Unsigned less than. *)
-    | Gt  (** Greater than. *)
-    | GtU  (** Unsigned greater than. *)
     | Le  (** Less than or equal. *)
     | LeU  (** Unsigned less than or equal. *)
-    | Ge  (** Greater than or equal. *)
-    | GeU  (** Unsigned greater than or equal. *)
   [@@deriving ord]
 
   val hash : t -> int

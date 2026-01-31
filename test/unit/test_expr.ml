@@ -289,8 +289,8 @@ let test_relop_int _ =
   let ty = Ty.Ty_int in
   check (Expr.relop ty Lt (int 0) (int 1)) true_;
   check (Expr.relop ty Le (int 0) (int 1)) true_;
-  check (Expr.relop ty Gt (int 0) (int 1)) false_;
-  check (Expr.relop ty Ge (int 0) (int 1)) false_
+  check (Expr.relop ty Lt (int 1) (int 0)) false_;
+  check (Expr.relop ty Le (int 1) (int 0)) false_
 
 let test_relop_real _ =
   let open Infix in
@@ -300,16 +300,16 @@ let test_relop_real _ =
   check (Expr.relop Ty_bool Eq x (real Float.nan)) false_;
   check (Expr.relop ty Lt (real 0.0) (real 1.0)) true_;
   check (Expr.relop ty Le (real 0.0) (real 1.0)) true_;
-  check (Expr.relop ty Gt (real 0.0) (real 1.0)) false_;
-  check (Expr.relop ty Ge (real 0.0) (real 1.0)) false_
+  check (Expr.relop ty Lt (real 1.0) (real 0.0)) false_;
+  check (Expr.relop ty Le (real 1.0) (real 0.0)) false_
 
 let test_relop_string _ =
   let open Infix in
   let ty = Ty.Ty_str in
   check (Expr.relop ty Lt (string "a") (string "b")) true_;
   check (Expr.relop ty Le (string "a") (string "b")) true_;
-  check (Expr.relop ty Gt (string "a") (string "b")) false_;
-  check (Expr.relop ty Ge (string "a") (string "b")) false_;
+  check (Expr.relop ty Lt (string "b") (string "a")) false_;
+  check (Expr.relop ty Le (string "b") (string "a")) false_;
   check (Expr.relop ty Eq (string "a") (string "a")) true_;
   check (Expr.relop ty Ne (string "a") (string "a")) false_;
   check (Expr.relop ty Eq (string "a") (string "b")) false_;
@@ -322,10 +322,10 @@ let test_relop_i32 _ =
   check (Expr.relop ty LtU (int32 (-1l)) (int32 0l)) false_;
   check (Expr.relop ty Le (int32 0l) (int32 1l)) true_;
   check (Expr.relop ty LeU (int32 (-1l)) (int32 0l)) false_;
-  check (Expr.relop ty Gt (int32 1l) (int32 0l)) true_;
-  check (Expr.relop ty GtU (int32 0l) (int32 (-1l))) false_;
-  check (Expr.relop ty Ge (int32 1l) (int32 0l)) true_;
-  check (Expr.relop ty GeU (int32 0l) (int32 (-1l))) false_
+  check (Expr.relop ty Lt (int32 0l) (int32 1l)) true_;
+  check (Expr.relop ty LtU (int32 (-1l)) (int32 0l)) false_;
+  check (Expr.relop ty Le (int32 0l) (int32 1l)) true_;
+  check (Expr.relop ty LeU (int32 (-1l)) (int32 0l)) false_
 
 let test_relop_i64 _ =
   let open Infix in
@@ -334,10 +334,10 @@ let test_relop_i64 _ =
   check (Expr.relop ty LtU (int64 (-1L)) (int64 0L)) false_;
   check (Expr.relop ty Le (int64 0L) (int64 1L)) true_;
   check (Expr.relop ty LeU (int64 (-1L)) (int64 0L)) false_;
-  check (Expr.relop ty Gt (int64 1L) (int64 0L)) true_;
-  check (Expr.relop ty GtU (int64 0L) (int64 (-1L))) false_;
-  check (Expr.relop ty Ge (int64 1L) (int64 0L)) true_;
-  check (Expr.relop ty GeU (int64 0L) (int64 (-1L))) false_
+  check (Expr.relop ty Lt (int64 0L) (int64 1L)) true_;
+  check (Expr.relop ty LtU (int64 (-1L)) (int64 0L)) false_;
+  check (Expr.relop ty Le (int64 0L) (int64 1L)) true_;
+  check (Expr.relop ty LeU (int64 (-1L)) (int64 0L)) false_
 
 let test_relop_f32 _ =
   let open Infix in
@@ -350,16 +350,16 @@ let test_relop_f32 _ =
   check (Expr.relop ty Eq nan0 nan1) false_;
   check (Expr.relop ty Lt (float32 0.0) (float32 1.0)) true_;
   check (Expr.relop ty Le (float32 0.0) (float32 1.0)) true_;
-  check (Expr.relop ty Gt (float32 0.0) (float32 1.0)) false_;
-  check (Expr.relop ty Ge (float32 0.0) (float32 1.0)) false_
+  check (Expr.relop ty Lt (float32 1.0) (float32 0.0)) false_;
+  check (Expr.relop ty Le (float32 1.0) (float32 0.0)) false_
 
 let test_relop_f64 _ =
   let open Infix in
   let ty = Ty.Ty_fp 64 in
   check (Expr.relop ty Lt (float64 0.0) (float64 1.0)) true_;
   check (Expr.relop ty Le (float64 0.0) (float64 1.0)) true_;
-  check (Expr.relop ty Gt (float64 0.0) (float64 1.0)) false_;
-  check (Expr.relop ty Ge (float64 0.0) (float64 1.0)) false_
+  check (Expr.relop ty Lt (float64 1.0) (float64 0.0)) false_;
+  check (Expr.relop ty Le (float64 1.0) (float64 0.0)) false_
 
 let test_relop_app _ =
   let open Infix in
@@ -384,12 +384,12 @@ let test_relop_ptr _ =
   check (Expr.relop Ty_bool Ne p0 p1) true_;
   check (Expr.relop ty LtU p0 p0) false_;
   check (Expr.relop ty LeU p0 p1) true_;
-  check (Expr.relop ty GeU p0 p0) true_;
-  check (Expr.relop ty GtU p0 p1) false_;
+  check (Expr.relop ty LeU p0 p0) true_;
+  check (Expr.relop ty LtU p1 p0) false_;
   check (Expr.relop ty Le p0 (int32 4l)) true_;
   check (Expr.relop ty Lt (int32 4l) p0) false_;
-  check (Expr.relop ty Gt p1 (int32 4l)) false_;
-  check (Expr.relop ty Ge (int32 4l) p1) true_
+  check (Expr.relop ty Lt (int32 4l) p1) false_;
+  check (Expr.relop ty Le p1 (int32 4l)) true_
 
 let test_relop_eq _ =
   let open Infix in
@@ -624,7 +624,7 @@ let test_fp_nan_not_geffects _ =
   let x = symbol "x" ty in
   let y = symbol "y" ty in
   (* x != x makes isNaN(x) *)
-  let expr = Expr.unop Ty_bool Not (Expr.relop ty Ge x y) in
+  let expr = Expr.unop Ty_bool Not (Expr.relop ty Le y x) in
   let expected = Expr.unop Ty_bool Not (Expr.relop ty Le y x) in
   check expr expected
 

@@ -156,9 +156,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Relop.Eq -> M.eq t1 t2
         | Ne -> M.distinct [ t1; t2 ]
         | Lt -> M.Int.lt t1 t2
-        | Gt -> M.Int.gt t1 t2
         | Le -> M.Int.le t1 t2
-        | Ge -> M.Int.ge t1 t2
         | op ->
           Fmt.failwith {|Int: Unsupported relop operator "%a"|} Relop.pp op
 
@@ -202,9 +200,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Relop.Eq -> M.eq e1 e2
         | Ne -> M.distinct [ e1; e2 ]
         | Lt -> M.Real.lt e1 e2
-        | Gt -> M.Real.gt e1 e2
         | Le -> M.Real.le e1 e2
-        | Ge -> M.Real.ge e1 e2
         | _ ->
           Fmt.failwith {|Real: Unsupported relop operator "%a"|} Relop.pp op
 
@@ -419,10 +415,6 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | LtU -> Bitv.lt_u e1 e2
         | Le -> Bitv.le e1 e2
         | LeU -> Bitv.le_u e1 e2
-        | Gt -> Bitv.gt e1 e2
-        | GtU -> Bitv.gt_u e1 e2
-        | Ge -> Bitv.ge e1 e2
-        | GeU -> Bitv.ge_u e1 e2
 
       let to_ieee_bv bitwidth t =
         match M.Float.to_ieee_bv with
@@ -515,8 +507,6 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Ne -> not_ @@ Float.eq e1 e2
         | Lt -> Float.lt e1 e2
         | Le -> Float.le e1 e2
-        | Gt -> Float.gt e1 e2
-        | Ge -> Float.ge e1 e2
         | _ -> Fmt.failwith {|FPA: Unsupported relop operator "%a"|} Relop.pp op
 
       let cvtop op e =

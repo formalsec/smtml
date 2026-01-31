@@ -75,11 +75,7 @@ module Infix = struct
 
     let ( < ) i1 i2 = relop Ty_int Lt i1 i2
 
-    let ( > ) i1 i2 = relop Ty_int Gt i1 i2
-
     let ( <= ) i1 i2 = relop Ty_int Le i1 i2
-
-    let ( >= ) i1 i2 = relop Ty_int Ge i1 i2
 
     let to_real i = cvtop Ty_real Reinterpret_int i
   end

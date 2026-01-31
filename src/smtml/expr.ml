@@ -296,10 +296,6 @@ let negate_relop (hte : t) : t =
     | Relop (ty, LtU, e1, e2) -> Relop (ty, LeU, e2, e1)
     | Relop (ty, Le, e1, e2) -> Relop (ty, Lt, e2, e1)
     | Relop (ty, LeU, e1, e2) -> Relop (ty, LtU, e2, e1)
-    | Relop (ty, Gt, e1, e2) -> Relop (ty, Le, e1, e2)
-    | Relop (ty, GtU, e1, e2) -> Relop (ty, LeU, e1, e2)
-    | Relop (ty, Ge, e1, e2) -> Relop (ty, Lt, e1, e2)
-    | Relop (ty, GeU, e1, e2) -> Relop (ty, LtU, e1, e2)
     | _ -> Fmt.failwith "negate_relop: not a relop."
   in
   make e
@@ -425,8 +421,8 @@ let rec relop ty (op : Ty.Relop.t) hte1 hte2 =
       false
   in
   match (op, view hte1, view hte2) with
-  | (Eq | Le | Ge | LeU | GeU), _, _ when can_be_shortcuted -> value True
-  | (Ne | Lt | Gt | LtU | GtU), _, _ when can_be_shortcuted -> value False
+  | (Eq | Le | LeU), _, _ when can_be_shortcuted -> value True
+  | (Ne | Lt | LtU), _, _ when can_be_shortcuted -> value False
   | op, Val v1, Val v2 -> value (if Eval.relop ty op v1 v2 then True else False)
   | Ne, Val (Real v), _ | Ne, _, Val (Real v) ->
     if Float.is_nan v || Float.is_infinite v then value True
@@ -477,10 +473,6 @@ let rec relop ty (op : Ty.Relop.t) hte1 hte2 =
     let base = Eval.binop (Ty_bitv 32) Add (Bitv base) o in
     value (if Eval.relop ty op base n then True else False)
   | op, List l1, List l2 -> relop_list op l1 l2
-  | Gt, _, _ -> relop ty Lt hte2 hte1
-  | GtU, _, _ -> relop ty LtU hte2 hte1
-  | Ge, _, _ -> relop ty Le hte2 hte1
-  | GeU, _, _ -> relop ty LeU hte2 hte1
   | _, _, _ -> raw_relop ty op hte1 hte2
 
 and relop_list op l1 l2 =
@@ -499,7 +491,7 @@ and relop_list op l1 l2 =
           | _ -> relop Ty_bool Eq a b )
         (value True) l1 l2
   | Ne, _, _ -> unop Ty_bool Not @@ relop_list Eq l1 l2
-  | (Lt | LtU | Gt | GtU | Le | LeU | Ge | GeU), _, _ -> assert false
+  | (Lt | LtU | Le | LeU), _, _ -> assert false
 
 let raw_cvtop ty op hte = make (Cvtop (ty, op, hte)) [@@inline]
 
