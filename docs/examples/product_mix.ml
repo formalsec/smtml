@@ -9,8 +9,6 @@ let symbol x = Typed.symbol Typed.Types.int x
 
 let ( = ) x y = Typed.Int.eq x y
 
-let ( >= ) x y = Typed.Int.ge x y
-
 let ( <= ) x y = Typed.Int.le x y
 
 let ( + ) x y = Typed.Int.add x y
@@ -58,12 +56,12 @@ let solve (toys : toy list) (packs : pack list) (daily_max : int) =
   (* C0: Constrain capacity of each toy and pack *)
   (* Pack quantity is non-zero *)
   let zero = int 0 in
-  let pack_quantity = List.map (fun (p : pack) -> p.var >= zero) packs in
+  let pack_quantity = List.map (fun (p : pack) -> zero <= p.var) packs in
   (* Toy quantity is non-zero and does not exceed prod_capacity *)
   let toy_quantity =
     List.map
       (fun (t : toy) ->
-        t.var >= zero && t.var + sum t.in_packs <= t.prod_capacity )
+        zero <= t.var && t.var + sum t.in_packs <= t.prod_capacity )
       toys
   in
   Z3.add opt (List.map Typed.Unsafe.unwrap (pack_quantity @ toy_quantity));
