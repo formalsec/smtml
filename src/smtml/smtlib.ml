@@ -166,8 +166,6 @@ module Term = struct
       | "ite", [ a; b; c ] -> Expr.triop Ty_bool Ite a b c
       | "=", [ a; b ] -> Expr.raw_relop Ty_bool Eq a b
       | "distinct", [ a; b ] -> Expr.raw_relop Ty_bool Ne a b
-      | ">", [ a; b ] -> Expr.raw_relop Ty_none Gt a b
-      | ">=", [ a; b ] -> Expr.raw_relop Ty_none Ge a b
       | "<", [ a; b ] -> Expr.raw_relop Ty_none Lt a b
       | "<=", [ a; b ] -> Expr.raw_relop Ty_none Le a b
       | "to_real", [ a ] -> Expr.raw_cvtop Ty_real Reinterpret_int a
@@ -224,10 +222,6 @@ module Term = struct
       | "bvult", [ a; b ] -> Expr.raw_relop Ty_none LtU a b
       | "bvsle", [ a; b ] -> Expr.raw_relop Ty_none Le a b
       | "bvule", [ a; b ] -> Expr.raw_relop Ty_none LeU a b
-      | "bvsgt", [ a; b ] -> Expr.raw_relop Ty_none Gt a b
-      | "bvugt", [ a; b ] -> Expr.raw_relop Ty_none GtU a b
-      | "bvsge", [ a; b ] -> Expr.raw_relop Ty_none Ge a b
-      | "bvuge", [ a; b ] -> Expr.raw_relop Ty_none GeU a b
       | "concat", [ a; b ] -> Expr.raw_concat a b
       | ( "fp"
         , [ { node = Val (Bitv sign); _ }
@@ -274,8 +268,6 @@ module Term = struct
       | "fp.max", [ a; b ] -> Expr.raw_binop Ty_none Max a b
       | "fp.leq", [ a; b ] -> Expr.raw_relop Ty_none Le a b
       | "fp.lt", [ a; b ] -> Expr.raw_relop Ty_none Lt a b
-      | "fp.geq", [ a; b ] -> Expr.raw_relop Ty_none Ge a b
-      | "fp.gt", [ a; b ] -> Expr.raw_relop Ty_none Gt a b
       | "fp.eq", [ a; b ] -> Expr.raw_relop Ty_none Eq a b
       | _ ->
         Log.debug (fun k -> k "apply: unknown %a making app" Symbol.pp symbol);

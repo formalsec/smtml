@@ -179,13 +179,6 @@ module Int : sig
       [t2]. *)
   val le : t -> t -> bool expr
 
-  (** [gt t1 t2] constructs the greater-than relation between [t1] and [t2]. *)
-  val gt : t -> t -> bool expr
-
-  (** [ge t1 t2] constructs the greater-than-or-equal relation between [t1] and
-      [t2]. *)
-  val ge : t -> t -> bool expr
-
   (** [to_real t] converts the integer term [t] to a real number int t. *)
   val to_real : t -> real expr
 
@@ -230,13 +223,6 @@ module Real : sig
   (** [le t1 t2] constructs the less-than-or-equal relation between [t1] and
       [t2]. *)
   val le : t -> t -> bool expr
-
-  (** [gt t1 t2] constructs the greater-than relation between [t1] and [t2]. *)
-  val gt : t -> t -> bool expr
-
-  (** [ge t1 t2] constructs the greater-than-or-equal relation between [t1] and
-      [t2]. *)
-  val ge : t -> t -> bool expr
 
   (** [to_int t] converts the real number term [t] to an integer term. *)
   val to_int : t -> int expr
@@ -425,18 +411,6 @@ module Bitv : sig
 
     (** [le t1 t2] is unsigned less-than-or-equal. *)
     val le_u : t -> t -> bool expr
-
-    (** [gt t1 t2] is signed greater-than. *)
-    val gt : t -> t -> bool expr
-
-    (** [gt t1 t2] is unsigned greater-than. *)
-    val gt_u : t -> t -> bool expr
-
-    (** [ge t1 t2] is signed greater-than-or-equal. *)
-    val ge : t -> t -> bool expr
-
-    (** [ge t1 t2] is unsigned greater-than-or-equal. *)
-    val ge_u : t -> t -> bool expr
 
     (** [concat t1 t2] concatenates [t1] (high bits) and [t2] (low bits).
 
@@ -759,12 +733,6 @@ module Float32 : sig
   (** [le t1 t2] performs IEEE-754 less-than-or-equal comparison. *)
   val le : t -> t -> bool expr
 
-  (** [gt t1 t2] performs IEEE-754 greater-than comparison. *)
-  val gt : t -> t -> bool expr
-
-  (** [ge t1 t2] performs IEEE-754 greater-than-or-equal comparison. *)
-  val ge : t -> t -> bool expr
-
   (** [convert_i32_s t] converts a signed 32-bit integer to float32. *)
   val convert_i32_s : bitv32 expr -> t
 
@@ -884,12 +852,6 @@ module Float64 : sig
 
   (** [le t1 t2] performs IEEE-754 less-than-or-equal comparison. *)
   val le : t -> t -> bool expr
-
-  (** [gt t1 t2] performs IEEE-754 greater-than comparison. *)
-  val gt : t -> t -> bool expr
-
-  (** [ge t1 t2] performs IEEE-754 greater-than-or-equal comparison. *)
-  val ge : t -> t -> bool expr
 
   (** [convert_i32_s t] converts a signed 32-bit integer to float64. *)
   val convert_i32_s : bitv32 expr -> t

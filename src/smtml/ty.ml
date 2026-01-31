@@ -405,12 +405,8 @@ module Relop = struct
     | Ne
     | Lt
     | LtU
-    | Gt
-    | GtU
     | Le
     | LeU
-    | Ge
-    | GeU
   [@@deriving ord]
 
   let hash = function
@@ -418,39 +414,21 @@ module Relop = struct
     | Ne -> 1
     | Lt -> 2
     | LtU -> 3
-    | Gt -> 4
-    | GtU -> 5
-    | Le -> 6
-    | LeU -> 7
-    | Ge -> 8
-    | GeU -> 9
+    | Le -> 4
+    | LeU -> 5
 
   let equal op1 op2 =
     match (op1, op2) with
-    | Eq, Eq
-    | Ne, Ne
-    | Lt, Lt
-    | LtU, LtU
-    | Gt, Gt
-    | GtU, GtU
-    | Le, Le
-    | LeU, LeU
-    | Ge, Ge
-    | GeU, GeU ->
-      true
-    | (Eq | Ne | Lt | LtU | Gt | GtU | Le | LeU | Ge | GeU), _ -> false
+    | Eq, Eq | Ne, Ne | Lt, Lt | LtU, LtU | Le, Le | LeU, LeU -> true
+    | (Eq | Ne | Lt | LtU | Le | LeU), _ -> false
 
   let pp fmt = function
     | Eq -> Fmt.string fmt "eq"
     | Ne -> Fmt.string fmt "ne"
     | Lt -> Fmt.string fmt "lt_s"
     | LtU -> Fmt.string fmt "lt_u"
-    | Gt -> Fmt.string fmt "gt_s"
-    | GtU -> Fmt.string fmt "gt_u"
     | Le -> Fmt.string fmt "le_s"
     | LeU -> Fmt.string fmt "le_u"
-    | Ge -> Fmt.string fmt "ge_s"
-    | GeU -> Fmt.string fmt "ge_u"
 end
 
 module Triop = struct
@@ -712,14 +690,6 @@ module Smtlib = struct
     | Ty_fp _, Eq -> Fmt.string fmt "fp.eq"
     | _, Eq -> Fmt.string fmt "="
     | _, Ne -> assert false
-    | Ty_bitv _, Gt -> Fmt.string fmt "bvsgt"
-    | _, Gt -> Fmt.string fmt ">"
-    | Ty_bitv _, GtU -> Fmt.string fmt "bvugt"
-    | _, GtU -> Fmt.string fmt ">"
-    | Ty_bitv _, Ge -> Fmt.string fmt "bvsge"
-    | _, Ge -> Fmt.string fmt ">="
-    | Ty_bitv _, GeU -> Fmt.string fmt "bvuge"
-    | _, GeU -> Fmt.string fmt ">="
     | Ty_str, Lt -> Fmt.string fmt "str.<"
     | Ty_bitv _, Lt -> Fmt.string fmt "bvslt"
     | _, Lt -> Fmt.string fmt "<"

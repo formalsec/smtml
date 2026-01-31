@@ -43,7 +43,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
   let test_cache_hits _ =
     let solver = Cached.create ~logic:LIA () in
     let x = Infix.symbol "x" Ty_int in
-    let c = Infix.(Int.(x >= int 0)) in
+    let c = Infix.(Int.(int 0 <= x)) in
     let get_stat key =
       let stats = Cached.get_statistics solver in
       let stat = Statistics.Map.find_opt key stats in
@@ -63,7 +63,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let open Infix in
     let solver = Cached.create ~logic:LIA () in
     let x = symbol "x" Ty_int in
-    let set = Expr.Set.of_list Int.[ x >= int 0; x < int 10 ] in
+    let set = Expr.Set.of_list Int.[ int 0 <= x; x < int 10 ] in
     assert (
       match Cached.get_sat_model solver set with
       | `Model _ -> true
@@ -84,7 +84,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     assert_sat ~f:"test" (Solver.check solver []);
 
     Solver.push solver;
-    Solver.add solver Int.[ x >= int 0 ];
+    Solver.add solver Int.[ int 0 <= x ];
     assert_sat (Solver.check solver []);
     check (Solver.get_value solver x) (int 0);
     Solver.pop solver 1;
@@ -96,7 +96,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     Solver.pop solver 1;
 
     Solver.push solver;
-    Solver.add solver Int.[ x >= int 0 || x < int 0 ];
+    Solver.add solver Int.[ int 0 <= x || x < int 0 ];
     assert_sat ~f:"test" (Solver.check solver []);
     (* necessary, otherwise the solver doesn't know x and can't produce a model
        for it *)
@@ -148,7 +148,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let ty = Ty.Ty_bitv 8 in
     let x = symbol "h" ty in
     Solver.add solver
-      [ Expr.relop ty Gt x (int8 0); Expr.relop ty Lt x (int8 2) ];
+      [ Expr.relop ty Lt (int8 0) x; Expr.relop ty Lt x (int8 2) ];
     assert_sat ~f:"test_bv_8" (Solver.check solver []);
     check (Solver.get_value solver x) (int8 1)
 
@@ -162,7 +162,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let z = symbol "z" ty in
     let w = symbol "w" ty in
     Solver.add solver
-      [ Expr.relop ty Gt x (int32 0l) && Expr.relop ty Lt w (int32 5l)
+      [ Expr.relop ty Lt (int32 0l) x && Expr.relop ty Lt w (int32 5l)
       ; Expr.relop ty Lt x y && Expr.relop ty Lt y z && Expr.relop ty Lt z w
       ];
     assert_sat ~f:"test_bv_32" (Solver.check solver []);
@@ -229,7 +229,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let x = symbol "x" ty in
     let y = symbol "y" ty in
     Solver.add solver
-      [ Expr.relop ty Gt x (float32 0.0) && Expr.relop ty Lt y (float32 0.0)
+      [ Expr.relop ty Lt (float32 0.0) x && Expr.relop ty Lt y (float32 0.0)
       ; Expr.relop ty Lt (Expr.binop ty Copysign x y) (float32 0.0)
       ];
     assert_sat ~f:"test_copysign32" (Solver.check solver [])
@@ -242,7 +242,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let x = symbol "x" ty in
     let y = symbol "y" ty in
     Solver.add solver
-      [ Expr.relop ty Gt x (float64 0.0) && Expr.relop ty Lt y (float64 0.0)
+      [ Expr.relop ty Lt (float64 0.0) x && Expr.relop ty Lt y (float64 0.0)
       ; Expr.relop ty Lt (Expr.binop ty Copysign x y) (float64 0.0)
       ];
     assert_sat ~f:"test_copysign64" (Solver.check solver [])

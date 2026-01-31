@@ -186,8 +186,6 @@ module Int = struct
     match op with
     | Lt -> a < b
     | Le -> a <= b
-    | Gt -> a > b
-    | Ge -> a >= b
     | Eq -> Int.equal a b
     | Ne -> not (Int.equal a b)
     | _ -> eval_error (`Unsupported_operator (`Relop op, Ty_int))
@@ -236,8 +234,6 @@ module Real = struct
     match op with
     | Lt -> Float.Infix.(a < b)
     | Le -> Float.Infix.(a <= b)
-    | Gt -> Float.Infix.(a > b)
-    | Ge -> Float.Infix.(a >= b)
     | Eq -> Float.Infix.(a = b)
     | Ne -> Float.Infix.(a <> b)
     | _ -> eval_error (`Unsupported_operator (`Relop op, Ty_real))
@@ -395,8 +391,6 @@ module Str = struct
     match op with
     | Lt -> cmp < 0
     | Le -> cmp <= 0
-    | Gt -> cmp > 0
-    | Ge -> cmp >= 0
     | Eq -> cmp = 0
     | Ne -> cmp <> 0
     | _ -> eval_error (`Unsupported_operator (`Relop op, Ty_str))
@@ -546,10 +540,6 @@ module Bitv = struct
     | LtU -> Bitvector.lt_u bv1 bv2
     | Le -> Bitvector.le bv1 bv2
     | LeU -> Bitvector.le_u bv1 bv2
-    | Gt -> Bitvector.gt bv1 bv2
-    | GtU -> Bitvector.gt_u bv1 bv2
-    | Ge -> Bitvector.ge bv1 bv2
-    | GeU -> Bitvector.ge_u bv1 bv2
     | Eq -> Bitvector.equal bv1 bv2
     | Ne -> not @@ Bitvector.equal bv1 bv2
 
@@ -611,8 +601,6 @@ module F32 = struct
     | Ne -> Float.Infix.(a <> b)
     | Lt -> Float.Infix.(a < b)
     | Le -> Float.Infix.(a <= b)
-    | Gt -> Float.Infix.(a > b)
-    | Ge -> Float.Infix.(a >= b)
     | _ -> eval_error (`Unsupported_operator (`Relop op, Ty_fp 32))
 end
 
@@ -662,8 +650,6 @@ module F64 = struct
     | Ne -> Float.Infix.(a <> b)
     | Lt -> Float.Infix.(a < b)
     | Le -> Float.Infix.(a <= b)
-    | Gt -> Float.Infix.(a > b)
-    | Ge -> Float.Infix.(a >= b)
     | _ -> eval_error (`Unsupported_operator (`Relop op, Ty_fp 64))
 end
 

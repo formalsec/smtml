@@ -131,10 +131,10 @@ module Int_test = struct
       assert_bool "2 <= 3" (Eval.relop Ty_int Le (int 3) (int 3))
     in
     let test_gt _ =
-      assert_bool "4 > 4" (Eval.relop Ty_int Gt (int 4) (int 3))
+      assert_bool "4 > 4" (Eval.relop Ty_int Lt (int 3) (int 4))
     in
     let test_ge _ =
-      assert_bool "4 >= 4" (Eval.relop Ty_int Ge (int 4) (int 4))
+      assert_bool "4 >= 4" (Eval.relop Ty_int Le (int 4) (int 4))
     in
 
     [ "test_lt" >:: test_lt
@@ -274,10 +274,10 @@ module Real_test = struct
       assert_bool "2 <= 3" (Eval.relop Ty_real Le (real 3.) (real 3.))
     in
     let test_gt _ =
-      assert_bool "4 > 4" (Eval.relop Ty_real Gt (real 4.) (real 3.))
+      assert_bool "3 < 4" (Eval.relop Ty_real Lt (real 3.) (real 4.))
     in
     let test_ge _ =
-      assert_bool "4 >= 4" (Eval.relop Ty_real Ge (real 4.) (real 4.))
+      assert_bool "4 <= 4" (Eval.relop Ty_real Le (real 4.) (real 4.))
     in
 
     [ "test_eq" >:: test_eq
@@ -441,9 +441,9 @@ module Str_test = struct
     ; ( "test_le" >:: fun _ ->
         assert_bool "a <= a" (Eval.relop Ty_str Le (str "a") (str "a")) )
     ; ( "test_gt" >:: fun _ ->
-        assert_bool "b > a" (Eval.relop Ty_str Gt (str "b") (str "a")) )
+        assert_bool "a < b" (Eval.relop Ty_str Lt (str "a") (str "b")) )
     ; ( "test_ge" >:: fun _ ->
-        assert_bool "a >= a" (Eval.relop Ty_str Ge (str "a") (str "a")) )
+        assert_bool "a <= a" (Eval.relop Ty_str Le (str "a") (str "a")) )
     ; ( "test_eq" >:: fun _ ->
         assert_bool "hello = hello"
           (Eval.relop Ty_str Eq (str "hello") (str "hello")) )
@@ -601,8 +601,8 @@ struct
     in
     let test_lt _ = assert_bool "2 < 3" (Eval.relop ty Lt (v 2.) (v 3.)) in
     let test_le _ = assert_bool "2 <= 3" (Eval.relop ty Le (v 3.) (v 3.)) in
-    let test_gt _ = assert_bool "4 > 4" (Eval.relop ty Gt (v 4.) (v 3.)) in
-    let test_ge _ = assert_bool "4 >= 4" (Eval.relop ty Ge (v 4.) (v 4.)) in
+    let test_gt _ = assert_bool "3 < 4" (Eval.relop ty Lt (v 3.) (v 4.)) in
+    let test_ge _ = assert_bool "4 <= 4" (Eval.relop ty Le (v 4.) (v 4.)) in
 
     [ "test_eq" >:: test_eq
     ; "test_ne" >:: test_ne

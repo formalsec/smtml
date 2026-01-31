@@ -90,12 +90,8 @@ let string_of_relop (relop : Ty.Relop.t) : string =
   | Ne -> "Ne"
   | Lt -> "Lt"
   | LtU -> "LtU"
-  | Gt -> "Gt"
-  | GtU -> "GtU"
   | Le -> "Le"
   | LeU -> "LeU"
-  | Ge -> "Ge"
-  | GeU -> "GeU"
 
 let string_of_cvtop (cvtop : Ty.Cvtop.t) : string =
   match cvtop with
@@ -267,9 +263,7 @@ let ctor_names =
       ; String_replace_re_all
       ]
   in
-  let relops =
-    List.map string_of_relop [ Eq; Ne; Lt; LtU; Gt; GtU; Le; LeU; Ge; GeU ]
-  in
+  let relops = List.map string_of_relop [ Eq; Ne; Lt; LtU; Le; LeU ] in
   let cvtops =
     List.map string_of_cvtop
       [ ToString

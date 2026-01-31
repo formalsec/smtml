@@ -114,14 +114,6 @@ module Bitv = struct
 
     val le_u : t -> t -> bool expr
 
-    val gt : t -> t -> bool expr
-
-    val gt_u : t -> t -> bool expr
-
-    val ge : t -> t -> bool expr
-
-    val ge_u : t -> t -> bool expr
-
     val concat : 'a expr -> 'b expr -> 'c expr
 
     val extract : t -> high:int -> low:int -> 'a expr
@@ -225,14 +217,6 @@ module Bitv = struct
     let[@inline] le x y = Expr.relop ty Le x y
 
     let[@inline] le_u x y = Expr.relop ty LeU x y
-
-    let[@inline] gt x y = Expr.relop ty Gt x y
-
-    let[@inline] gt_u x y = Expr.relop ty GtU x y
-
-    let[@inline] ge x y = Expr.relop ty Ge x y
-
-    let[@inline] ge_u x y = Expr.relop ty GeU x y
 
     let[@inline] concat x y = Expr.concat x y
 
@@ -532,10 +516,6 @@ module Int = struct
   let[@inline] lt x y = Expr.relop Types.int Lt x y
 
   let[@inline] le x y = Expr.relop Types.int Le x y
-
-  let[@inline] gt x y = Expr.relop Types.int Gt x y
-
-  let[@inline] ge x y = Expr.relop Types.int Ge x y
 end
 
 module Real = struct
@@ -566,10 +546,6 @@ module Real = struct
   let[@inline] lt x y = Expr.relop Types.real Lt x y
 
   let[@inline] le x y = Expr.relop Types.real Le x y
-
-  let[@inline] gt x y = Expr.relop Types.real Gt x y
-
-  let[@inline] ge x y = Expr.relop Types.real Ge x y
 end
 
 module String = struct
@@ -689,10 +665,6 @@ module Float32 = struct
 
   let[@inline] le x y = Expr.relop Types.float32 Le x y
 
-  let[@inline] gt x y = Expr.relop Types.float32 Gt x y
-
-  let[@inline] ge x y = Expr.relop Types.float32 Ge x y
-
   let[@inline] convert_i32_s x = Expr.cvtop Types.float32 ConvertSI32 x
 
   let[@inline] convert_i32_u x = Expr.cvtop Types.float32 ConvertUI32 x
@@ -772,10 +744,6 @@ module Float64 = struct
   let[@inline] lt x y = Expr.relop Types.float64 Lt x y
 
   let[@inline] le x y = Expr.relop Types.float64 Le x y
-
-  let[@inline] gt x y = Expr.relop Types.float64 Gt x y
-
-  let[@inline] ge x y = Expr.relop Types.float64 Ge x y
 
   let[@inline] convert_i32_s x = Expr.cvtop Types.float64 ConvertSI32 x
 
