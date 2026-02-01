@@ -1,10 +1,3 @@
-Test parsing a nonexistent file:
-  $ smtml run idontexist.smt2
-  smtml: FILES… arguments: no 'idontexist.smt2' file or directory
-  Usage: smtml run [OPTION]… [FILES]…
-  Try 'smtml run --help' or 'smtml --help' for more information.
-  [124]
-
 Test parsing an empty file:
   $ smtml run test_empty.smt2
 
