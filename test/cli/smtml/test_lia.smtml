@@ -2,7 +2,7 @@
 (let-const x int)
 (let-const y int)
 (let-const z int)
-(assert (int.gt x 0))
+(assert (int.lt 0 x))
 (assert (int.le x 10))
 (assert (= (int.sub (int.add x y) y) x))
 (assert (= (int.div (int.mul x y) y) x))
