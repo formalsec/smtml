@@ -186,8 +186,8 @@ val cond : Expr.t = (bool.and a (bool.not b))
     let two = Typed.Int.v 2 in
     let x = Typed.symbol Typed.Types.int "x" in
     let y = Typed.symbol Typed.Types.string "y" in
-    Typed.Int.ge (Typed.Int.add x two) y
-Line 5, characters 40-41:
+    Typed.Int.le y (Typed.Int.add x two)
+Line 5, characters 18-19:
 Error: The value y has type string Typed.expr
        but an expression was expected of type Typed.Int.t = int Typed.expr
        Type string is not compatible with type int

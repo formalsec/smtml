@@ -1,12 +1,12 @@
 (let-const symbol_0 f32)
 (assert
-  (f32.gt
+  (f32.lt
+    (f32 0.)
     (f32.reinterpret_int
       (i32.reinterpret_float
         (f32.div
           (f32.reinterpret_int (i32.reinterpret_float symbol_0))
-          (f32 2.))))
-    (f32 0.)))
+          (f32 2.))))))
 (assert
   (f32.lt
     (f32.abs
