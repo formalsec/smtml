@@ -1,7 +1,13 @@
 # Changelog
 
+## 0.21.0 - 2026-02-02
+
+- 2026-01-27 Refactor badges and add Zulip chat link
+- 2026-01-27 Expose type-safe API to create uninterpreted functions
+
 ## 0.20.0 - 2026-01-26
 
+- 2026-01-26 Release 0.20.0
 - 2026-01-26 Add missing documentation to typed.mli
 - 2026-01-26 Fix documentation
 - 2026-01-26 Promote tests
