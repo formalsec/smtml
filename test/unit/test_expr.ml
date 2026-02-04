@@ -824,7 +824,7 @@ let test_inline_symbol_values_empty (_ : test_ctxt) =
   assert (e == e')
 
 let test_inline_symbol_values_replace_one (_ : test_ctxt) =
-  let n = Infix.int 42 in
+  let n = Value.Bitv (Bitvector.of_int32 42l) in
   let e' =
     let x =
       let ty = Ty.Ty_bitv 32 in
@@ -834,6 +834,7 @@ let test_inline_symbol_values_replace_one (_ : test_ctxt) =
     let e = Expr.symbol x in
     Expr.inline_symbol_values symbol_map e
   in
+  let n = Expr.value n in
   (* e should now be equal to n because symbol x should have been replaced by n *)
   assert (e' == n)
 

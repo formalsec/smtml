@@ -67,7 +67,7 @@ module type S = sig
 
   (** [inline_symbol_values symbol_map e] replaces each symbol [e] expressions
       of [set] by its image in [symbol_map]. *)
-  val inline_symbol_values : t Symbol.Map.t -> t -> t
+  val inline_symbol_values : Value.t Symbol.Map.t -> t -> t
 
   (** {1 Pretty Printing} *)
 
@@ -478,7 +478,7 @@ module type S = sig
 
     (** [inline_symbol_values symbol_map set] replaces each symbol in all
         expressions of [set] by its image in [symbol_map]. *)
-    val inline_symbol_values : elt Symbol.Map.t -> t -> t
+    val inline_symbol_values : Value.t Symbol.Map.t -> t -> t
   end
 
   (** {1 Simplifications bis} *)

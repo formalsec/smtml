@@ -732,7 +732,9 @@ let inline_symbol_values map e =
   let rec aux e =
     match view e with
     | Val _ -> e
-    | Symbol symbol -> Option.value ~default:e (Symbol.Map.find_opt symbol map)
+    | Symbol symbol -> begin
+      match Symbol.Map.find_opt symbol map with None -> e | Some v -> value v
+    end
     | Ptr e ->
       let offset = aux e.offset in
       make @@ Ptr { e with offset }
