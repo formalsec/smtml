@@ -22,17 +22,22 @@ pkgs.mkShell {
   buildInputs = with pkgs.ocamlPackages; [
     bos
     cmdliner
+    cohttp-lwt-unix
     dune-build-info
     dolmen_model
     dolmen_type
+    extunix
     fpath
     hc
+    logs
+    lwt
     menhirLib
     mtime
     ocaml_intrinsics
     prelude
     scfg
     sexplib
+    tls-lwt
     yojson
     z3
     zarith
