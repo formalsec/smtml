@@ -40,6 +40,7 @@ let get_bind x = Hashtbl.find_opt varmap x
 %token <Logic.t> LOGIC
 
 %start <Ast.t list> script
+%start <Expr.t> s_expr
 %%
 
 let script := stmts = list(stmt); EOF; { stmts }
@@ -60,7 +61,7 @@ let stmt :=
 let s_expr :=
   | x = SYMBOL; {
     match get_bind x with
-    | None -> assert false
+    | None -> Expr.symbol (Symbol.make Ty_none x)
     | Some v -> Expr.symbol (Symbol.make v x)
   }
   | c = spec_constant; { value c }

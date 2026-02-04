@@ -14,11 +14,17 @@ exception Syntax_error of string
 (** {1 Smt.ml Parsing} *)
 
 module Smtml : sig
-  (** [from_file file] parses an SMT-ML script from the given [file]. *)
-  val from_file : Fpath.t -> Ast.Script.t
+  module Script : sig
+    (** [from_file file] parses an SMT-ML script from the given [file]. *)
+    val from_file : Fpath.t -> Ast.Script.t
 
-  (** [from_string s] parses an SMT-ML script from the given string [s]. *)
-  val from_string : string -> Ast.Script.t
+    (** [from_string s] parses an SMT-ML script from the given string [s]. *)
+    val from_string : string -> Ast.Script.t
+  end
+
+  module Expr : sig
+    val from_string : string -> Expr.t
+  end
 end
 
 (** {1 SMT-LIB Parsing} *)

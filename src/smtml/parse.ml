@@ -13,26 +13,34 @@ module Smtml = struct
     Fmt.pf fmt "%s:%d:%d" pos.pos_fname pos.pos_lnum
       (pos.pos_cnum - pos.pos_bol + 1)
 
-  let parse_with_error lexbuf =
-    try Parser.script Lexer.token lexbuf with
+  let parse_with_error f lexbuf =
+    try f Lexer.token lexbuf with
     | SyntaxError msg ->
       raise (Syntax_error (Fmt.str "%a: %s" pp_pos lexbuf msg))
     | Parser.Error ->
       raise (Syntax_error (Fmt.str "%a: syntax error" pp_pos lexbuf))
 
-  let from_file filename =
-    let res =
-      Bos.OS.File.with_ic filename
-        (fun chan () ->
-          let lexbuf = Lexing.from_channel chan in
-          lexbuf.lex_curr_p <-
-            { lexbuf.lex_curr_p with pos_fname = Fpath.to_string filename };
-          parse_with_error lexbuf )
-        ()
-    in
-    match res with Error (`Msg e) -> Fmt.failwith "%s" e | Ok v -> v
+  module Script = struct
+    let from_file filename =
+      let res =
+        Bos.OS.File.with_ic filename
+          (fun chan () ->
+            let lexbuf = Lexing.from_channel chan in
+            lexbuf.lex_curr_p <-
+              { lexbuf.lex_curr_p with pos_fname = Fpath.to_string filename };
+            parse_with_error Parser.script lexbuf )
+          ()
+      in
+      match res with Error (`Msg e) -> Fmt.failwith "%s" e | Ok v -> v
 
-  let from_string contents = parse_with_error (Lexing.from_string contents)
+    let from_string contents =
+      parse_with_error Parser.script (Lexing.from_string contents)
+  end
+
+  module Expr = struct
+    let from_string contents =
+      parse_with_error Parser.s_expr (Lexing.from_string contents)
+  end
 end
 
 module Smtlib = struct
@@ -55,10 +63,10 @@ end
 
 let from_file filename =
   match Fpath.split_ext filename with
-  | _, ".smtml" -> Smtml.from_file filename
+  | _, ".smtml" -> Smtml.Script.from_file filename
   | _, ".smt2" -> Smtlib.from_file filename
   | fname, ext -> (
     (* FIXME: I don't like this *)
     match Fpath.to_string fname with
-    | "-" -> Smtml.from_file filename
+    | "-" -> Smtml.Script.from_file filename
     | _ -> Fmt.failwith "Unsupported script type with extension '%s'" ext )

@@ -803,6 +803,43 @@ let test_simplify_unop =
       check expected real )
   ]
 
+let test_simplify_issue_529 _ =
+  let e =
+    Parse.Smtml.Expr.from_string
+      {|(bool.ne
+       (i32.add
+        (i32.add
+         (i32.add (i32.sub symbol_0 (i32 6))
+          (i32.add (i32.sub symbol_0 (i32 7))
+           (i32.sub symbol_0 (i32 6))))
+         (i32.add
+          (i32.add (i32.sub symbol_0 (i32 7))
+           (i32.sub symbol_0 (i32 6)))
+          (i32.add (i32.sub symbol_0 (i32 6))
+           (i32.add (i32.sub symbol_0 (i32 7))
+            (i32.sub symbol_0 (i32 6))))))
+        (i32.add
+         (i32.add
+          (i32.add (i32.sub symbol_0 (i32 7))
+           (i32.sub symbol_0 (i32 6)))
+          (i32.add (i32.sub symbol_0 (i32 6))
+           (i32.add (i32.sub symbol_0 (i32 7))
+            (i32.sub symbol_0 (i32 6)))))
+         (i32.add
+          (i32.add (i32.sub symbol_0 (i32 6))
+           (i32.add (i32.sub symbol_0 (i32 7))
+            (i32.sub symbol_0 (i32 6))))
+          (i32.add
+           (i32.add (i32.sub symbol_0 (i32 7))
+            (i32.sub symbol_0 (i32 6)))
+           (i32.add (i32.sub symbol_0 (i32 6))
+            (i32.add (i32.sub symbol_0 (i32 7))
+             (i32.sub symbol_0 (i32 6)))))))) (i32 13))
+      |}
+  in
+  let e' = Expr.simplify e in
+  Fmt.pr "@.@.%a@.@." Expr.pp e'
+
 let test_simplify =
   [ "test_simplify_assoc" >:: test_simplify_assoc
   ; "test_fp_nan_not_geffects" >:: test_fp_nan_not_geffects
@@ -811,6 +848,7 @@ let test_simplify =
   ; "test_simplify_ptr" >:: test_simplify_ptr
   ; "test_simplify_unop" >::: test_simplify_unop
   ; "test_simplify_normalize" >::: test_simplify_normalize
+  ; "test_simplify_issue_529" >:: test_simplify_issue_529
   ]
 
 let test_inline_symbol_values_empty (_ : test_ctxt) =
