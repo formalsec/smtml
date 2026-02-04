@@ -737,8 +737,14 @@ module I32CvtOp = struct
     | Reinterpret_float -> bitv_of_int32 (of_fp32 1 op' v)
     | Sign_extend n -> to_bitv (Bitvector.sign_extend n (of_bitv 1 op' v))
     | Zero_extend n -> to_bitv (Bitvector.zero_extend n (of_bitv 1 op' v))
-    | OfBool -> v (* v is already a number here *)
-    | ToBool | _ -> eval_error (`Unsupported_operator (op', Ty_bitv 32))
+    | OfBool ->
+      let b = of_bool 1 (`Cvtop OfBool) v in
+      if b then to_bitv (Bitvector.make Z.one 32)
+      else to_bitv (Bitvector.make Z.zero 32)
+    | ToBool ->
+      let bv = of_bitv 1 (`Cvtop ToBool) v in
+      if not (Bitvector.eqz bv) then Value.True else False
+    | _ -> eval_error (`Unsupported_operator (op', Ty_bitv 32))
 end
 
 module I64CvtOp = struct
