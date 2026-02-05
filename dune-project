@@ -103,5 +103,6 @@
   (dune-glob :with-dev-setup)
   (lwt :with-dev-setup)
   (mdx :with-test)
+  (re :with-dev-setup)
   (sexplib :with-dev-setup)
   (tls-lwt :with-dev-setup)))
