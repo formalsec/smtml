@@ -8,12 +8,12 @@ let files_to_run d =
   | Error (`Msg err) -> Fmt.failwith "%s" err
 
 let parse_status =
-  let re = Dune_re.(compile @@ Perl.re {|^(sat|unsat|unknown)|}) in
+  let re = Re.(compile @@ Perl.re {|^(sat|unsat|unknown)|}) in
   fun stdout ->
-    match Dune_re.exec_opt re stdout with
+    match Re.exec_opt re stdout with
     | None -> `Unknown
     | Some group -> (
-      match Dune_re.Group.get group 1 with
+      match Re.Group.get group 1 with
       | "sat" -> `Sat
       | "unsat" -> `Unsat
       | "unknown" -> `Unknown
