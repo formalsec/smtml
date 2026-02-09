@@ -1,7 +1,22 @@
 # Changelog
 
+## 0.21.0 - 2026-02-09
+
+- 2026-02-09 Chore: extend maintenance intent
+- 2026-02-06 Use Re instead of Dune_re
+- 2026-02-06 Update shell.nix
+- 2026-02-06 Change the type of `inline_symbol_values` to take a map from symbols to
+- 2026-02-04 Fix: Add i32.{to_bool, of_bool} cvtop evaluation functions ([#531](https://github.com/formalsec/smtml/issues/531))
+- 2026-02-02 Remove test that fails with cmdliner 2.1.0
+- 2026-02-02 Fix tests and doc
+- 2026-02-02 Bring back greater-than{-or-equal} in SMT-LIB
+- 2026-02-02 Remove all > operators and enforce the use of < instead
+- 2026-01-27 Refactor badges and add Zulip chat link
+- 2026-01-27 Expose type-safe API to create uninterpreted functions
+
 ## 0.20.0 - 2026-01-26
 
+- 2026-01-26 Release 0.20.0
 - 2026-01-26 Add missing documentation to typed.mli
 - 2026-01-26 Fix documentation
 - 2026-01-26 Promote tests
