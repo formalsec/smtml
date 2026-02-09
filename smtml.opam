@@ -76,7 +76,13 @@ build: [
   ]
 ]
 dev-repo: "git+https://github.com/formalsec/smtml.git"
-x-maintenance-intent: ["(latest)" "(latest).(latest-1).(any)"]
+x-maintenance-intent: [
+  "(latest).(latest).(any)"
+  "(latest).(latest-1).(latest)"
+  "(latest).(latest-2).(latest)"
+  "(latest).(latest-3).(latest)"
+  "(latest).(latest-4).(latest)"
+]
 available: arch != "arm32" & arch != "x86_32"
 pin-depends: [
   ["colibri2.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#4ba26c9e1d031765e799251480166af720638e6e"]

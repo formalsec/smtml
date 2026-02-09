@@ -25,7 +25,12 @@
 
 (maintainers "Filipe Marques <filipe.s.marques@tecnico.ulisboa.pt>")
 
-(maintenance_intent "(latest)" "(latest).(latest-1).(any)")
+(maintenance_intent
+  "(latest).(latest).(any)"
+  "(latest).(latest-1).(latest)"
+  "(latest).(latest-2).(latest)"
+  "(latest).(latest-3).(latest)"
+  "(latest).(latest-4).(latest)")
 
 (documentation "https://formalsec.github.io/smtml/smtml/index.html")
 
