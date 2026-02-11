@@ -35,7 +35,7 @@ jobs:
         uses: actions/configure-pages@v5
 
       - name: Install Dependencies
-        run: opam install -y . --deps-only --with-doc --with-test
+        run: opam install -y . --deps-only --with-doc --with-dev-setup
 
       - name: Build doc
         run: opam exec -- dune build @doc
