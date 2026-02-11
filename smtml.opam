@@ -40,8 +40,8 @@ depends: [
   "zarith" {>= "1.5"}
   "odoc" {with-doc}
   "sherlodoc" {with-doc}
-  "bisect_ppx" {with-test & >= "2.5.0"}
   "ounit2" {with-test}
+  "bisect_ppx" {with-dev-setup & >= "2.5.0"}
   "ocamlformat" {with-dev-setup}
   "ocaml-lsp-server" {with-dev-setup}
   "benchpress" {with-dev-setup & = "dev"}

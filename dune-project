@@ -90,11 +90,11 @@
   (odoc :with-doc)
   (sherlodoc :with-doc)
   ;; Test dependencies
+  (ounit2 :with-test)
   (bisect_ppx
    (and
-    :with-test
+    :with-dev-setup
     (>= "2.5.0")))
-  (ounit2 :with-test)
   ;; Dev dependencies
   (ocamlformat :with-dev-setup)
   (ocaml-lsp-server :with-dev-setup)
