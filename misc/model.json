@@ -1,0 +1,784 @@
+{
+  "Z3": {
+    "gradient_boost": false,
+    "model": {
+      "feature": "Lt",
+      "threshold": 13.5,
+      "left": {
+        "feature": "ConvertSI32",
+        "threshold": 0.5,
+        "left": {
+          "feature": "Eq",
+          "threshold": 0.5,
+          "left": {
+            "feature": "Ty_bitv",
+            "threshold": 0.5,
+            "left": {
+              "feature": "Ty_fp",
+              "threshold": 0.5,
+              "left": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 36768502.5
+                },
+                "right": {
+                  "value": 36768502.5
+                }
+              },
+              "right": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 36768502.5
+                },
+                "right": {
+                  "value": 36768502.5
+                }
+              }
+            },
+            "right": {
+              "feature": "Div",
+              "threshold": 1.5,
+              "left": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 36768502.5
+                },
+                "right": {
+                  "value": 36768502.5
+                }
+              },
+              "right": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 36768502.5
+                },
+                "right": {
+                  "value": 36768502.5
+                }
+              }
+            }
+          },
+          "right": {
+            "feature": "Lt",
+            "threshold": 10.5,
+            "left": {
+              "feature": "And",
+              "threshold": 3450.5,
+              "left": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 36768502.5
+                },
+                "right": {
+                  "value": 36768502.5
+                }
+              },
+              "right": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 36768502.5
+                },
+                "right": {
+                  "value": 36768502.5
+                }
+              }
+            },
+            "right": {
+              "feature": "Mul",
+              "threshold": 3.0,
+              "left": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 36768502.5
+                },
+                "right": {
+                  "value": 36768502.5
+                }
+              },
+              "right": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 36768502.5
+                },
+                "right": {
+                  "value": 36768502.5
+                }
+              }
+            }
+          }
+        },
+        "right": {
+          "feature": "Unop",
+          "threshold": 0.5,
+          "left": {
+            "feature": "Xor",
+            "threshold": 0.5,
+            "left": {
+              "feature": "Ty_regexp",
+              "threshold": -2.0,
+              "left": {
+                "value": 36768502.5
+              },
+              "right": {
+                "value": 36768502.5
+              }
+            },
+            "right": {
+              "feature": "Ty_regexp",
+              "threshold": -2.0,
+              "left": {
+                "value": 36768502.5
+              },
+              "right": {
+                "value": 36768502.5
+              }
+            }
+          },
+          "right": {
+            "feature": "Eq",
+            "threshold": 0.5,
+            "left": {
+              "feature": "Ty_regexp",
+              "threshold": -2.0,
+              "left": {
+                "value": 36768502.5
+              },
+              "right": {
+                "value": 36768502.5
+              }
+            },
+            "right": {
+              "feature": "Ty_regexp",
+              "threshold": -2.0,
+              "left": {
+                "value": 36768502.5
+              },
+              "right": {
+                "value": 36768502.5
+              }
+            }
+          }
+        }
+      },
+      "right": {
+        "feature": "Mul",
+        "threshold": 3.5,
+        "left": {
+          "feature": "Mul",
+          "threshold": 0.5,
+          "left": {
+            "feature": "Extract",
+            "threshold": 35.5,
+            "left": {
+              "feature": "nb_queries",
+              "threshold": 85.5,
+              "left": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 36768502.5
+                },
+                "right": {
+                  "value": 36768502.5
+                }
+              },
+              "right": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 36768502.5
+                },
+                "right": {
+                  "value": 36768502.5
+                }
+              }
+            },
+            "right": {
+              "feature": "Eq",
+              "threshold": 0.5,
+              "left": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 36768502.5
+                },
+                "right": {
+                  "value": 36768502.5
+                }
+              },
+              "right": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 36768502.5
+                },
+                "right": {
+                  "value": 36768502.5
+                }
+              }
+            }
+          },
+          "right": {
+            "feature": "Lt",
+            "threshold": 19.5,
+            "left": {
+              "feature": "Lt",
+              "threshold": 14.5,
+              "left": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 36768502.5
+                },
+                "right": {
+                  "value": 36768502.5
+                }
+              },
+              "right": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 36768502.5
+                },
+                "right": {
+                  "value": 36768502.5
+                }
+              }
+            },
+            "right": {
+              "feature": "Zero_extend",
+              "threshold": 3.0,
+              "left": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 36768502.5
+                },
+                "right": {
+                  "value": 36768502.5
+                }
+              },
+              "right": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 36768502.5
+                },
+                "right": {
+                  "value": 36768502.5
+                }
+              }
+            }
+          }
+        },
+        "right": {
+          "feature": "Sign_extend",
+          "threshold": 84.0,
+          "left": {
+            "feature": "Shl",
+            "threshold": 0.5,
+            "left": {
+              "feature": "Eq",
+              "threshold": 1.5,
+              "left": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 36768502.5
+                },
+                "right": {
+                  "value": 36768502.5
+                }
+              },
+              "right": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 36768502.5
+                },
+                "right": {
+                  "value": 36768502.5
+                }
+              }
+            },
+            "right": {
+              "feature": "Binop",
+              "threshold": 10.0,
+              "left": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 36768502.5
+                },
+                "right": {
+                  "value": 36768502.5
+                }
+              },
+              "right": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 36768502.5
+                },
+                "right": {
+                  "value": 36768502.5
+                }
+              }
+            }
+          },
+          "right": {
+            "feature": "Symbol",
+            "threshold": 99.5,
+            "left": {
+              "feature": "Ty_bitv",
+              "threshold": 185.5,
+              "left": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 36768502.5
+                },
+                "right": {
+                  "value": 36768502.5
+                }
+              },
+              "right": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 36768502.5
+                },
+                "right": {
+                  "value": 36768502.5
+                }
+              }
+            },
+            "right": {
+              "feature": "Val",
+              "threshold": 504.0,
+              "left": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 36768502.5
+                },
+                "right": {
+                  "value": 36768502.5
+                }
+              },
+              "right": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 36768502.5
+                },
+                "right": {
+                  "value": 36768502.5
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "Bitwuzla": {
+    "gradient_boost": false,
+    "model": {
+      "feature": "Zero_extend",
+      "threshold": 29.5,
+      "left": {
+        "feature": "ShrA",
+        "threshold": 11.0,
+        "left": {
+          "feature": "Binop",
+          "threshold": 4.5,
+          "left": {
+            "feature": "ConvertSI32",
+            "threshold": 0.5,
+            "left": {
+              "feature": "Eq",
+              "threshold": 0.5,
+              "left": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 61403449.333333336
+                },
+                "right": {
+                  "value": 61403449.333333336
+                }
+              },
+              "right": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 61403449.333333336
+                },
+                "right": {
+                  "value": 61403449.333333336
+                }
+              }
+            },
+            "right": {
+              "feature": "Ty_bool",
+              "threshold": 0.5,
+              "left": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 61403449.333333336
+                },
+                "right": {
+                  "value": 61403449.333333336
+                }
+              },
+              "right": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 61403449.333333336
+                },
+                "right": {
+                  "value": 61403449.333333336
+                }
+              }
+            }
+          },
+          "right": {
+            "feature": "Ty_bitv",
+            "threshold": 4.5,
+            "left": {
+              "feature": "Binop",
+              "threshold": 10.0,
+              "left": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 61403449.333333336
+                },
+                "right": {
+                  "value": 61403449.333333336
+                }
+              },
+              "right": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 61403449.333333336
+                },
+                "right": {
+                  "value": 61403449.333333336
+                }
+              }
+            },
+            "right": {
+              "feature": "And",
+              "threshold": 4452.0,
+              "left": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 61403449.333333336
+                },
+                "right": {
+                  "value": 61403449.333333336
+                }
+              },
+              "right": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 61403449.333333336
+                },
+                "right": {
+                  "value": 61403449.333333336
+                }
+              }
+            }
+          }
+        },
+        "right": {
+          "feature": "Eq",
+          "threshold": 5.5,
+          "left": {
+            "feature": "Val",
+            "threshold": 40.0,
+            "left": {
+              "feature": "Ty_regexp",
+              "threshold": -2.0,
+              "left": {
+                "value": 61403449.333333336
+              },
+              "right": {
+                "value": 61403449.333333336
+              }
+            },
+            "right": {
+              "feature": "Ty_regexp",
+              "threshold": -2.0,
+              "left": {
+                "value": 61403449.333333336
+              },
+              "right": {
+                "value": 61403449.333333336
+              }
+            }
+          },
+          "right": {
+            "feature": "Ne",
+            "threshold": 49.5,
+            "left": {
+              "feature": "Xor",
+              "threshold": 6.5,
+              "left": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 61403449.333333336
+                },
+                "right": {
+                  "value": 61403449.333333336
+                }
+              },
+              "right": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 61403449.333333336
+                },
+                "right": {
+                  "value": 61403449.333333336
+                }
+              }
+            },
+            "right": {
+              "feature": "Ty_regexp",
+              "threshold": -2.0,
+              "left": {
+                "value": 61403449.333333336
+              },
+              "right": {
+                "value": 61403449.333333336
+              }
+            }
+          }
+        }
+      },
+      "right": {
+        "feature": "Add",
+        "threshold": 2.5,
+        "left": {
+          "feature": "Or",
+          "threshold": 1.0,
+          "left": {
+            "feature": "Unop",
+            "threshold": 1.5,
+            "left": {
+              "feature": "nb_queries",
+              "threshold": 51.5,
+              "left": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 61403449.333333336
+                },
+                "right": {
+                  "value": 61403449.333333336
+                }
+              },
+              "right": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 61403449.333333336
+                },
+                "right": {
+                  "value": 61403449.333333336
+                }
+              }
+            },
+            "right": {
+              "feature": "Eq",
+              "threshold": 7.5,
+              "left": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 61403449.333333336
+                },
+                "right": {
+                  "value": 61403449.333333336
+                }
+              },
+              "right": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 61403449.333333336
+                },
+                "right": {
+                  "value": 61403449.333333336
+                }
+              }
+            }
+          },
+          "right": {
+            "feature": "Extract",
+            "threshold": 59.5,
+            "left": {
+              "feature": "Sign_extend",
+              "threshold": 26.5,
+              "left": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 61403449.333333336
+                },
+                "right": {
+                  "value": 61403449.333333336
+                }
+              },
+              "right": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 61403449.333333336
+                },
+                "right": {
+                  "value": 61403449.333333336
+                }
+              }
+            },
+            "right": {
+              "feature": "Not",
+              "threshold": 0.5,
+              "left": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 61403449.333333336
+                },
+                "right": {
+                  "value": 61403449.333333336
+                }
+              },
+              "right": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 61403449.333333336
+                },
+                "right": {
+                  "value": 61403449.333333336
+                }
+              }
+            }
+          }
+        },
+        "right": {
+          "feature": "Extract",
+          "threshold": 249.0,
+          "left": {
+            "feature": "Eq",
+            "threshold": 7.0,
+            "left": {
+              "feature": "LtU",
+              "threshold": 2.5,
+              "left": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 61403449.333333336
+                },
+                "right": {
+                  "value": 61403449.333333336
+                }
+              },
+              "right": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 61403449.333333336
+                },
+                "right": {
+                  "value": 61403449.333333336
+                }
+              }
+            },
+            "right": {
+              "feature": "Eq",
+              "threshold": 17.5,
+              "left": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 61403449.333333336
+                },
+                "right": {
+                  "value": 61403449.333333336
+                }
+              },
+              "right": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 61403449.333333336
+                },
+                "right": {
+                  "value": 61403449.333333336
+                }
+              }
+            }
+          },
+          "right": {
+            "feature": "Ne",
+            "threshold": 1.5,
+            "left": {
+              "feature": "Ty_regexp",
+              "threshold": -2.0,
+              "left": {
+                "value": 61403449.333333336
+              },
+              "right": {
+                "value": 61403449.333333336
+              }
+            },
+            "right": {
+              "feature": "Binop",
+              "threshold": 236.0,
+              "left": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 61403449.333333336
+                },
+                "right": {
+                  "value": 61403449.333333336
+                }
+              },
+              "right": {
+                "feature": "Ty_regexp",
+                "threshold": -2.0,
+                "left": {
+                  "value": 61403449.333333336
+                },
+                "right": {
+                  "value": 61403449.333333336
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

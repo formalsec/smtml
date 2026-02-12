@@ -40,8 +40,10 @@
   params
   parse
   parser
+  regression_model
   rewrite
   smtlib
+  smtzilla
   solver
   solver_dispatcher
   solver_intf

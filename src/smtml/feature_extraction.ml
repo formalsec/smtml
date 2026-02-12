@@ -2,6 +2,14 @@
 (* Copyright (C) 2023-2024 formalsec *)
 (* Written by the Smtml programmers *)
 
+module FeatMap = struct
+  include Map.Make (String)
+
+  let find_def0 k m = match find_opt k m with Some n -> n | None -> 0
+end
+
+type features = int FeatMap.t
+
 let string_of_unop (unop : Ty.Unop.t) : string =
   match unop with
   | Neg -> "Neg"
@@ -322,17 +330,11 @@ let final_names =
   "solver" :: "model" :: "max_depth" :: "mean_depth" :: "nb_queries" :: "time"
   :: ctor_names
 
-module StringMap = struct
-  include Map.Make (String)
-
-  let find_def0 k m = match find_opt k m with Some n -> n | None -> 0
-end
-
 (* initialize feature map with all zeros *)
 
-let extract_feats : Expr.t -> int StringMap.t =
+let extract_feats_aux : Expr.t -> int FeatMap.t =
   let incr_feat feats key =
-    StringMap.update key
+    FeatMap.update key
       (function None -> Some 1 | Some c -> Some (c + 1))
       feats
   in
@@ -405,8 +407,8 @@ let extract_feats : Expr.t -> int StringMap.t =
         (t :: lst)
   in
   fun expr ->
-    let depth, feats = visit 1 StringMap.empty expr in
-    StringMap.add "depth" depth feats
+    let depth, feats = visit 1 FeatMap.empty expr in
+    FeatMap.add "depth" depth feats
 
 let read_marshalled_file path : (string * Expr.t list * bool * int64) list =
   let results = ref [] in
@@ -427,14 +429,14 @@ let read_marshalled_file path : (string * Expr.t list * bool * int64) list =
     Fmt.epr "Failed to read %s\nBecause %s\n%!" path (Printexc.to_string e);
     []
 
-let extract_feats_wtime assertions runtime =
+let extract_feats assertions =
   let feats, depth_acc =
     List.fold_left
       (fun (feats_acc, depth_acc) expr ->
-        let feats = extract_feats expr in
-        let depth_acc = depth_acc + StringMap.find_def0 "depth" feats in
+        let feats = extract_feats_aux expr in
+        let depth_acc = depth_acc + FeatMap.find_def0 "depth" feats in
         let feats_acc =
-          StringMap.union
+          FeatMap.union
             (fun key v1 v2 ->
               match key with
               | "depth" -> Some (Int.max v1 v2) (* actually max_depth *)
@@ -442,17 +444,19 @@ let extract_feats_wtime assertions runtime =
             feats feats_acc
         in
         (feats_acc, depth_acc) )
-      (StringMap.empty, 0) assertions
+      (FeatMap.empty, 0) assertions
   in
   let nb_exprs = List.length assertions in
-  StringMap.add "nb_queries" nb_exprs
-  @@ StringMap.add "time" (Int64.to_int runtime)
-  @@ StringMap.add "mean_depth" (depth_acc / nb_exprs)
-  @@ StringMap.add "max_depth"
-       ( match StringMap.find_opt "depth" feats with
+  FeatMap.add "nb_queries" nb_exprs
+  @@ FeatMap.add "mean_depth" (depth_acc / nb_exprs)
+  @@ FeatMap.add "max_depth"
+       ( match FeatMap.find_opt "depth" feats with
        | None -> assert false
        | Some v -> v )
-       (StringMap.remove "depth" feats)
+       (FeatMap.remove "depth" feats)
+
+let extract_feats_wtime assertions runtime =
+  FeatMap.add "time" (Int64.to_int runtime) (extract_feats assertions)
 
 let cmd directory output_csv =
   let entries = read_marshalled_file (Fpath.to_string directory) in
@@ -471,7 +475,7 @@ let cmd directory output_csv =
                     if String.equal name "solver" then solver_name
                     else if String.equal name "model" then Bool.to_string model
                     else
-                      let count = StringMap.find_def0 name feats in
+                      let count = FeatMap.find_def0 name feats in
                       string_of_int count )
                   final_names
               in

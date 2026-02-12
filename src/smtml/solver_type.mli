@@ -15,6 +15,7 @@ type t =
   | Colibri2_solver  (** Represents the Colibri2 solver. *)
   | Cvc5_solver  (** Represents the CVC5 solver. *)
   | Altergo_solver  (** Represents the Alt-Ergo solver. *)
+  | Smtzilla_solver  (** Represents the SMTZilla solver. *)
 
 (** {1 Parsing} *)
 
