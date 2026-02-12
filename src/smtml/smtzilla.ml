@@ -40,7 +40,7 @@ module Fresh = struct
 
       let add s exprs = s.exprs <- s.exprs @ exprs
 
-      let get_best_solver exprs =
+      let get_best_solver exprs : string * (module Mappings.S_with_fresh) =
         let feats = Feature_extraction.extract_feats exprs in
         let scores =
           List.map
@@ -51,22 +51,22 @@ module Fresh = struct
         in
         match List.sort (fun (a, _) (b, _) -> Float.compare a b) scores with
         | [] | [ _ ] -> assert false
-        | (_, name) :: _ ->
+        | (_, name) :: _ -> (
           Log.info (fun k -> k "Selected solver %s" name);
-          name
+          match name with
+          | "Z3" | "z3" -> (name, (module Z3_mappings))
+          | "Bitwuzla" | "bitwuzla" -> (name, (module Bitwuzla_mappings))
+          | _ -> Fmt.failwith "SMTZilla: Unknown solver %s" name )
+      (* TODO: Need to move some declarations around to be able to use
+         `Solver_type.t` instead of strings, mayba SMTZilla should not be
+         one of the solver types? *)
 
       let check s ~assumptions =
         let all_exprs = s.exprs @ assumptions in
-        let best_solver = get_best_solver all_exprs in
-        let (module Best) : (module Mappings.S_with_fresh) =
-          match best_solver with
-          | "Z3" | "z3" -> (module Z3_mappings)
-          | "Bitwuzla" | "bitwuzla" -> (module Bitwuzla_mappings)
-          | _ -> Fmt.failwith "SMTZilla: Unknown solver %s" best_solver
-        in
-        s.last_solver <- Some best_solver;
+        let best_solver_name, (module Best) = get_best_solver all_exprs in
+        s.last_solver <- Some best_solver_name;
         let solver_inst = Best.Solver.make () in
-        Hashtbl.add s.solver_instances best_solver
+        Hashtbl.add s.solver_instances best_solver_name
           (SolverInst ((module Best), solver_inst));
         let solver_inst = Best.Solver.make () in
         Best.Solver.add solver_inst s.exprs;
