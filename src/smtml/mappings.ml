@@ -13,6 +13,798 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
     type symbol_ctx = M.term Smap.t
 
+    module Encoder = struct
+      let i8 = M.Types.bitv 8
+
+      let i32 = M.Types.bitv 32
+
+      let i64 = M.Types.bitv 64
+
+      let f32 = M.Types.float 8 24
+
+      let f64 = M.Types.float 11 53
+
+      let real2str =
+        M.Func.make "real_to_string " [ M.Types.real ] M.Types.string
+
+      let str2real =
+        M.Func.make "string_to_real" [ M.Types.string ] M.Types.real
+
+      let str_trim = M.Func.make "string_trim" [ M.Types.string ] M.Types.string
+
+      let f32_to_i32 = M.Func.make "f32_to_i32" [ f32 ] i32
+
+      let f64_to_i64 = M.Func.make "f64_to_i64" [ f64 ] i64
+
+      let[@inline] get_type ty =
+        match ty with
+        | Ty_int -> M.Types.int
+        | Ty_real -> M.Types.real
+        | Ty_bool -> M.Types.bool
+        | Ty_str -> M.Types.string
+        | Ty_bitv 8 -> i8
+        | Ty_bitv 32 -> i32
+        | Ty_bitv 64 -> i64
+        | Ty_bitv n -> M.Types.bitv n
+        | Ty_fp 32 -> f32
+        | Ty_fp 64 -> f64
+        | Ty_roundingMode -> M.Types.roundingMode
+        | Ty_regexp -> M.Types.regexp
+        | (Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none) as ty ->
+          Fmt.failwith "Trying to use unsupported theory: %a@." Ty.pp ty
+
+      let make_symbol (ctx : symbol_ctx) (s : Symbol.t) : symbol_ctx * M.term =
+        let name =
+          match s.name with Simple name -> name | _ -> assert false
+        in
+        if M.Internals.caches_consts then
+          let sym = M.const name (get_type s.ty) in
+          (Smap.add s sym ctx, sym)
+        else
+          match Smap.find_opt s ctx with
+          | Some sym -> (ctx, sym)
+          | None ->
+            let sym = M.const name (get_type s.ty) in
+            (Smap.add s sym ctx, sym)
+
+      module Bool_impl = struct
+        let true_ = M.true_
+
+        let false_ = M.false_
+
+        let[@inline] unop op t =
+          match op with
+          | Unop.Not -> M.not_ t
+          | op ->
+            Fmt.failwith {|Bool: Unsupported unary operator "%a"|} Unop.pp op
+
+        let binop op t1 t2 =
+          match op with
+          | Binop.And -> M.and_ t1 t2
+          | Or -> M.or_ t1 t2
+          | Xor -> M.xor t1 t2
+          | Implies -> M.implies t1 t2
+          | op ->
+            Fmt.failwith {|Bool: Unsupported binary operator "%a"|} Binop.pp op
+
+        let triop op t1 t2 t3 =
+          match op with
+          | Triop.Ite -> M.ite t1 t2 t3
+          | op ->
+            Fmt.failwith {|Bool: Unsupported ternary operator "%a"|} Triop.pp op
+
+        let relop op e1 e2 =
+          match op with
+          | Relop.Eq -> M.eq e1 e2
+          | Ne -> M.distinct [ e1; e2 ]
+          | _ ->
+            Fmt.failwith {|Bool: Unsupported relational operator "%a"|} Relop.pp
+              op
+
+        let naryop op l =
+          match op with
+          | Naryop.Logand -> M.logand l
+          | Logor -> M.logor l
+          | _ ->
+            Fmt.failwith {|Bool: Unsupported n-ary operator "%a"|} Naryop.pp op
+
+        let cvtop op _e =
+          Fmt.failwith {|Bool: Unsupported convert operator "%a"|} Cvtop.pp op
+      end
+
+      module Int_impl = struct
+        let v i = M.int i [@@inline]
+
+        let unop op t =
+          match op with
+          | Unop.Neg -> M.Int.neg t
+          | op ->
+            Fmt.failwith {|Int: Unsupported unop operator "%a"|} Unop.pp op
+
+        let binop op t1 t2 =
+          match op with
+          | Binop.Add -> M.Int.add t1 t2
+          | Sub -> M.Int.sub t1 t2
+          | Mul -> M.Int.mul t1 t2
+          | Div -> M.Int.div t1 t2
+          | Rem -> M.Int.rem t1 t2
+          | Pow -> M.Int.pow t1 t2
+          | op ->
+            Fmt.failwith {|Int: Unsupported binop operator "%a"|} Binop.pp op
+
+        let relop op t1 t2 =
+          match op with
+          | Relop.Eq -> M.eq t1 t2
+          | Ne -> M.distinct [ t1; t2 ]
+          | Lt -> M.Int.lt t1 t2
+          | Le -> M.Int.le t1 t2
+          | op ->
+            Fmt.failwith {|Int: Unsupported relop operator "%a"|} Relop.pp op
+
+        let cvtop op e =
+          match op with
+          | Cvtop.Reinterpret_float -> M.Real.to_int e
+          | op ->
+            Fmt.failwith {|Int: Unsupported cvtop operator "%a"|} Cvtop.pp op
+      end
+
+      module Real_impl = struct
+        let v f = M.real f [@@inline]
+
+        let unop op e =
+          let open M in
+          match op with
+          | Unop.Neg -> Real.neg e
+          | Abs -> ite (Real.gt e (real 0.)) e (Real.neg e)
+          | Sqrt -> Real.pow e (v 0.5)
+          | Ceil ->
+            let x_int = M.Real.to_int e in
+            ite (eq (Int.to_real x_int) e) x_int (Int.add x_int (int 1))
+          | Floor -> Real.to_int e
+          | Nearest | Is_nan | _ ->
+            Fmt.failwith {|Real: Unsupported unop operator "%a"|} Unop.pp op
+
+        let binop op e1 e2 =
+          match op with
+          | Binop.Add -> M.Real.add e1 e2
+          | Sub -> M.Real.sub e1 e2
+          | Mul -> M.Real.mul e1 e2
+          | Div -> M.Real.div e1 e2
+          | Pow -> M.Real.pow e1 e2
+          | Min -> M.ite (M.Real.le e1 e2) e1 e2
+          | Max -> M.ite (M.Real.ge e1 e2) e1 e2
+          | _ ->
+            Fmt.failwith {|Real: Unsupported binop operator "%a"|} Binop.pp op
+
+        let relop op e1 e2 =
+          match op with
+          | Relop.Eq -> M.eq e1 e2
+          | Ne -> M.distinct [ e1; e2 ]
+          | Lt -> M.Real.lt e1 e2
+          | Le -> M.Real.le e1 e2
+          | _ ->
+            Fmt.failwith {|Real: Unsupported relop operator "%a"|} Relop.pp op
+
+        let cvtop op e =
+          match op with
+          | Cvtop.ToString -> M.Func.apply real2str [ e ]
+          | OfString -> M.Func.apply str2real [ e ]
+          | Reinterpret_int -> M.Int.to_real e
+          | op ->
+            Fmt.failwith {|Real: Unsupported cvtop operator "%a"|} Cvtop.pp op
+      end
+
+      module String_impl = struct
+        let v s = M.String.v s [@@inline]
+
+        let unop op e =
+          match op with
+          | Unop.Length -> M.String.length e
+          | Trim -> M.Func.apply str_trim [ e ]
+          | op ->
+            Fmt.failwith {|String: Unsupported unop operator "%a"|} Unop.pp op
+
+        let binop op e1 e2 =
+          match op with
+          | Binop.At -> M.String.at e1 ~pos:e2
+          | String_contains -> M.String.contains e1 ~sub:e2
+          | String_prefix -> M.String.is_prefix e1 ~prefix:e2
+          | String_suffix -> M.String.is_suffix e1 ~suffix:e2
+          | String_in_re -> M.String.in_re e1 e2
+          | _ ->
+            Fmt.failwith {|String: Unsupported binop operator "%a"|} Binop.pp op
+
+        let triop op e1 e2 e3 =
+          match op with
+          | Triop.String_extract -> M.String.sub e1 ~pos:e2 ~len:e3
+          | String_index -> M.String.index_of e1 ~sub:e2 ~pos:e3
+          | String_replace -> M.String.replace e1 ~pattern:e2 ~with_:e3
+          | String_replace_all -> M.String.replace_all e1 ~pattern:e2 ~with_:e3
+          | String_replace_re -> M.String.replace_re e1 ~pattern:e2 ~with_:e3
+          | String_replace_re_all ->
+            M.String.replace_re_all e1 ~pattern:e2 ~with_:e3
+          | _ ->
+            Fmt.failwith {|String: Unsupported triop operator "%a"|} Triop.pp op
+
+        let relop op e1 e2 =
+          match op with
+          | Relop.Eq -> M.eq e1 e2
+          | Ne -> M.distinct [ e1; e2 ]
+          | Lt -> M.String.lt e1 e2
+          | Le -> M.String.le e1 e2
+          | _ ->
+            Fmt.failwith {|String: Unsupported relop operator "%a"|} Relop.pp op
+
+        let cvtop = function
+          | Cvtop.String_to_code -> M.String.to_code
+          | String_from_code -> M.String.of_code
+          | String_to_int -> M.String.to_int
+          | String_from_int -> M.String.of_int
+          | String_to_re -> M.String.to_re
+          | op ->
+            Fmt.failwith {|String: Unsupported cvtop operator "%a"|} Cvtop.pp op
+
+        let naryop op es =
+          match op with
+          | Naryop.Concat -> M.String.concat es
+          | _ ->
+            Fmt.failwith {|String: Unsupported naryop operator "%a"|} Naryop.pp
+              op
+      end
+
+      module Regexp_impl = struct
+        let unop op e =
+          match op with
+          | Unop.Regexp_star -> M.Re.star e
+          | Regexp_plus -> M.Re.plus e
+          | Regexp_opt -> M.Re.opt e
+          | Regexp_comp -> M.Re.comp e
+          | Regexp_loop (i1, i2) -> M.Re.loop e i1 i2
+          | op ->
+            Fmt.failwith {|Regexp: Unsupported unop operator "%a"|} Unop.pp op
+
+        let binop op e1 e2 =
+          match op with
+          | Binop.Regexp_range -> M.Re.range e1 e2
+          | Regexp_inter -> M.Re.inter e1 e2
+          | Regexp_diff -> M.Re.diff e1 e2
+          | op ->
+            Fmt.failwith {|Regexp: Unsupported binop operator "%a"|} Binop.pp op
+
+        let _triop _ = function
+          | op ->
+            Fmt.failwith {|Regexp: Unsupported triop operator "%a"|} Triop.pp op
+
+        let _relop _ _ = function
+          | op ->
+            Fmt.failwith {|Regexp: Unsupported relop operator "%a"|} Relop.pp op
+
+        let _cvtop = function
+          | op ->
+            Fmt.failwith {|Regexp: Unsupported cvtop operator "%a"|} Cvtop.pp op
+
+        let naryop op es =
+          match op with
+          | Naryop.Concat -> M.Re.concat es
+          | Regexp_union -> M.Re.union es
+          | op ->
+            Fmt.failwith {|Regexp: Unsupported naryop operator "%a"|} Naryop.pp
+              op
+      end
+
+      module Bitv_impl = struct
+        open M
+
+        let v bv =
+          let numbits = Bitvector.numbits bv in
+          Bitv.v (Bitvector.to_string bv) numbits
+
+        (* Stolen from @krtab in OCamlPro/owi#195 *)
+        let clz bitwidth n =
+          let rec loop (lb : int) (ub : int) =
+            if ub = lb + 1 then
+              v @@ Bitvector.make (Z.of_int (bitwidth - ub)) bitwidth
+            else
+              let mid = (lb + ub) / 2 in
+              let pow_two_mid =
+                Bitvector.shl
+                  (Bitvector.make Z.one bitwidth)
+                  (Bitvector.make (Z.of_int mid) bitwidth)
+              in
+              ite (Bitv.lt_u n (v pow_two_mid)) (loop lb mid) (loop mid ub)
+          in
+          M.ite
+            (M.eq n (v @@ Bitvector.make Z.zero bitwidth))
+            (v @@ Bitvector.make (Z.of_int bitwidth) bitwidth)
+            (loop 0 bitwidth)
+
+        (* Stolen from @krtab in OCamlPro/owi #195 *)
+        let ctz bitwidth n =
+          let zero = v @@ Bitvector.make Z.zero bitwidth in
+          let rec loop (lb : int) (ub : int) =
+            if ub = lb + 1 then v (Bitvector.make (Z.of_int lb) bitwidth)
+            else
+              let mid = (lb + ub) / 2 in
+              let pow_two_mid =
+                Bitvector.shl
+                  (Bitvector.make Z.one bitwidth)
+                  (Bitvector.make (Z.of_int mid) bitwidth)
+              in
+              M.ite
+                (eq (Bitv.rem n (v pow_two_mid)) zero)
+                (loop mid ub) (loop lb mid)
+          in
+          ite (eq n zero)
+            (v (Bitvector.make (Z.of_int bitwidth) bitwidth))
+            (loop 0 bitwidth)
+
+        let popcnt bitwidth n =
+          let rec loop (next : int) count =
+            if next = bitwidth then count
+            else
+              (* We shift the original number so that the current bit to test is on the right. *)
+              let shifted =
+                Bitv.lshr n (v @@ Bitvector.make (Z.of_int next) bitwidth)
+              in
+              (* We compute the remainder of the shifted number *)
+              let remainder =
+                Bitv.rem_u shifted (v @@ Bitvector.make (Z.of_int 2) bitwidth)
+              in
+              (* The remainder is either 0 or 1, we add it directly to the count *)
+              let count = Bitv.add count remainder in
+              let next = succ next in
+              loop next count
+          in
+          loop 0 (v @@ Bitvector.make Z.zero bitwidth)
+
+        let unop bitwidth op t =
+          match op with
+          | Unop.Clz -> clz bitwidth t
+          | Ctz -> ctz bitwidth t
+          | Popcnt -> popcnt bitwidth t
+          | Neg -> Bitv.neg t
+          | Not -> Bitv.lognot t
+          | op ->
+            Fmt.failwith {|Bitv: Unsupported unary operator "%a"|} Unop.pp op
+
+        let binop op t1 t2 =
+          match op with
+          | Binop.Add -> Bitv.add t1 t2
+          | Sub -> Bitv.sub t1 t2
+          | Mul -> Bitv.mul t1 t2
+          | Div -> Bitv.div t1 t2
+          | DivU -> Bitv.div_u t1 t2
+          | And -> Bitv.logand t1 t2
+          | Xor -> Bitv.logxor t1 t2
+          | Or -> Bitv.logor t1 t2
+          | Shl -> Bitv.shl t1 t2
+          | ShrA -> Bitv.ashr t1 t2
+          | ShrL -> Bitv.lshr t1 t2
+          | Rem -> Bitv.rem t1 t2
+          | RemU -> Bitv.rem_u t1 t2
+          | Rotl -> Bitv.rotate_left t1 t2
+          | Rotr -> Bitv.rotate_right t1 t2
+          | op ->
+            Fmt.failwith {|Bitv: Unsupported binary operator "%a"|} Binop.pp op
+
+        let triop op _ _ _ =
+          Fmt.failwith {|Bitv: Unsupported triop operator "%a"|} Triop.pp op
+
+        let relop op e1 e2 =
+          match op with
+          | Relop.Eq -> M.eq e1 e2
+          | Ne -> M.distinct [ e1; e2 ]
+          | Lt -> Bitv.lt e1 e2
+          | LtU -> Bitv.lt_u e1 e2
+          | Le -> Bitv.le e1 e2
+          | LeU -> Bitv.le_u e1 e2
+
+        let to_ieee_bv bitwidth t =
+          match M.Float.to_ieee_bv with
+          | Some to_ieee_bv -> to_ieee_bv t
+          | None -> begin
+            match bitwidth with
+            | 32 -> Func.apply f32_to_i32 [ t ]
+            | 64 -> Func.apply f64_to_i64 [ t ]
+            | _ ->
+              Fmt.failwith "to_ieee_bv: unsupported bitwidth size of '%d'"
+                bitwidth
+          end
+
+        let cvtop bitwidth op e =
+          match op with
+          | Cvtop.WrapI64 -> Bitv.extract e ~high:(bitwidth - 1) ~low:0
+          | Sign_extend n -> Bitv.sign_extend n e
+          | Zero_extend n -> Bitv.zero_extend n e
+          | TruncSF32 | TruncSF64 | Trunc_sat_f32_s | Trunc_sat_f64_s ->
+            Float.to_sbv bitwidth ~rm:Float.Rounding_mode.rtz e
+          | TruncUF32 | TruncUF64 | Trunc_sat_f32_u | Trunc_sat_f64_u ->
+            Float.to_ubv bitwidth ~rm:Float.Rounding_mode.rtz e
+          | Reinterpret_float -> to_ieee_bv bitwidth e
+          | ToBool -> M.distinct [ e; v @@ Bitvector.make Z.zero bitwidth ]
+          | OfBool ->
+            M.ite e
+              (v @@ Bitvector.make Z.one bitwidth)
+              (v @@ Bitvector.make Z.zero bitwidth)
+          | _ ->
+            Fmt.failwith {|Bitv: Unsupported convert operator "%a"|} Cvtop.pp op
+      end
+
+      module type Float_sig = sig
+        type elt
+
+        val eb : int
+
+        val sb : int
+
+        val zero : unit -> M.term
+
+        val v : elt -> M.term
+        (* TODO: *)
+        (* val to_string : Z3.FuncDecl.func_decl *)
+        (* val of_string : Z3.FuncDecl.func_decl *)
+      end
+
+      module Float_impl (F : Float_sig) = struct
+        open M
+        include F
+
+        let unop op e =
+          match op with
+          | Unop.Neg -> Float.neg e
+          | Abs -> Float.abs e
+          | Sqrt -> Float.sqrt ~rm:Float.Rounding_mode.rne e
+          | Is_normal -> Float.is_normal e
+          | Is_subnormal -> Float.is_subnormal e
+          | Is_negative -> Float.is_negative e
+          | Is_positive -> Float.is_positive e
+          | Is_infinite -> Float.is_infinite e
+          | Is_nan -> Float.is_nan e
+          | Is_zero -> Float.is_zero e
+          | Ceil -> Float.round_to_integral ~rm:Float.Rounding_mode.rtp e
+          | Floor -> Float.round_to_integral ~rm:Float.Rounding_mode.rtn e
+          | Trunc -> Float.round_to_integral ~rm:Float.Rounding_mode.rtz e
+          | Nearest -> Float.round_to_integral ~rm:Float.Rounding_mode.rne e
+          | _ ->
+            Fmt.failwith {|FPA: Unsupported unary operator "%a"|} Unop.pp op
+
+        let binop op e1 e2 =
+          match op with
+          | Binop.Add -> Float.add ~rm:Float.Rounding_mode.rne e1 e2
+          | Sub -> Float.sub ~rm:Float.Rounding_mode.rne e1 e2
+          | Mul -> Float.mul ~rm:Float.Rounding_mode.rne e1 e2
+          | Div -> Float.div ~rm:Float.Rounding_mode.rne e1 e2
+          | Min -> Float.min e1 e2
+          | Max -> Float.max e1 e2
+          | Rem -> Float.rem e1 e2
+          | Copysign ->
+            let abs_float = Float.abs e1 in
+            M.ite (Float.ge e2 (F.zero ())) abs_float (Float.neg abs_float)
+          | _ ->
+            Fmt.failwith {|FPA: Unsupported binop operator "%a"|} Binop.pp op
+
+        let triop op _ _ _ =
+          Fmt.failwith {|FPA: Unsupported triop operator "%a"|} Triop.pp op
+
+        let relop op e1 e2 =
+          match op with
+          | Relop.Eq -> Float.eq e1 e2
+          | Ne -> not_ @@ Float.eq e1 e2
+          | Lt -> Float.lt e1 e2
+          | Le -> Float.le e1 e2
+          | _ ->
+            Fmt.failwith {|FPA: Unsupported relop operator "%a"|} Relop.pp op
+
+        let cvtop op e =
+          match op with
+          | Cvtop.PromoteF32 | DemoteF64 ->
+            Float.to_fp eb sb ~rm:Float.Rounding_mode.rne e
+          | ConvertSI32 | ConvertSI64 ->
+            Float.sbv_to_fp eb sb ~rm:Float.Rounding_mode.rne e
+          | ConvertUI32 | ConvertUI64 ->
+            Float.ubv_to_fp eb sb ~rm:Float.Rounding_mode.rne e
+          | Reinterpret_int -> Float.of_ieee_bv eb sb e
+          | ToString ->
+            (* TODO: FuncDecl.apply to_string [ e ] *)
+            Fmt.failwith "FPA: TODO(ToString)"
+          | OfString ->
+            (* TODO: FuncDecl.apply of_string [ e ] *)
+            Fmt.failwith "FPA: TODO(OfString)"
+          | _ ->
+            Fmt.failwith {|FPA: Unsupported cvtop operator "%a"|} Cvtop.pp op
+      end
+
+      module Float32_impl = Float_impl (struct
+        type elt = int32
+
+        let eb = 8
+
+        let sb = 24
+
+        let v f = M.Float.v (Int32.float_of_bits f) eb sb
+
+        let zero () = v (Int32.bits_of_float 0.0)
+
+        (* TODO: *)
+        (* let to_string = *)
+        (*   Z3.FuncDecl.mk_func_decl_s ctx "F32ToString" [ fp32_sort ] str_sort *)
+        (* let of_string = *)
+        (*   Z3.FuncDecl.mk_func_decl_s ctx "StringToF32" [ str_sort ] fp32_sort *)
+      end)
+
+      module Float64_impl = Float_impl (struct
+        type elt = int64
+
+        let eb = 11
+
+        let sb = 53
+
+        let v f = M.Float.v (Int64.float_of_bits f) eb sb
+
+        let zero () = v (Int64.bits_of_float 0.0)
+
+        (* TODO: *)
+        (* let to_string = *)
+        (*   Z3.FuncDecl.mk_func_decl_s ctx "F64ToString" [ fp64_sort ] str_sort *)
+        (* let of_string = *)
+        (*   Z3.FuncDecl.mk_func_decl_s ctx "StringToF64" [ str_sort ] fp64_sort *)
+      end)
+
+      let v (value : Value.t) : M.term =
+        match value with
+        | True -> Bool_impl.true_
+        | False -> Bool_impl.false_
+        | Int v -> Int_impl.v v
+        | Real v -> Real_impl.v v
+        | Str v -> String_impl.v v
+        | Num (F32 x) -> Float32_impl.v x
+        | Num (F64 x) -> Float64_impl.v x
+        | Bitv bv -> M.Bitv.v (Bitvector.to_string bv) (Bitvector.numbits bv)
+        | List _ | App _ | Unit | Nothing ->
+          Fmt.failwith "Unsupported encoding of value '%a'" Value.pp value
+
+      let unop ty op t =
+        match ty with
+        | Ty.Ty_int -> Int_impl.unop op t
+        | Ty_real -> Real_impl.unop op t
+        | Ty_bool -> Bool_impl.unop op t
+        | Ty_str -> String_impl.unop op t
+        | Ty_regexp -> Regexp_impl.unop op t
+        | Ty_bitv bitwidth -> Bitv_impl.unop bitwidth op t
+        | Ty_fp 32 -> Float32_impl.unop op t
+        | Ty_fp 64 -> Float64_impl.unop op t
+        | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_roundingMode ->
+          Fmt.failwith "Unsupported encoding of unary operators for theory '%a'"
+            Ty.pp ty
+
+      let binop ty op t1 t2 =
+        match ty with
+        | Ty.Ty_int -> Int_impl.binop op t1 t2
+        | Ty_real -> Real_impl.binop op t1 t2
+        | Ty_bool -> Bool_impl.binop op t1 t2
+        | Ty_str -> String_impl.binop op t1 t2
+        | Ty_regexp -> Regexp_impl.binop op t1 t2
+        | Ty_bitv _bitwidth -> Bitv_impl.binop op t1 t2
+        | Ty_fp 32 -> Float32_impl.binop op t1 t2
+        | Ty_fp 64 -> Float64_impl.binop op t1 t2
+        | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_roundingMode ->
+          Fmt.failwith
+            "Unsupported encoding of binary operators for theory '%a'" Ty.pp ty
+
+      let triop ty op t1 t2 t3 =
+        match ty with
+        | Ty.Ty_bool -> Bool_impl.triop op t1 t2 t3
+        | Ty_str -> String_impl.triop op t1 t2 t3
+        | Ty_bitv _bitwidth -> Bitv_impl.triop op t1 t2 t3
+        | Ty_fp 32 -> Float32_impl.triop op t1 t2 t3
+        | Ty_fp 64 -> Float64_impl.triop op t1 t2 t3
+        | Ty_int | Ty_real | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none
+        | Ty_regexp | Ty_roundingMode ->
+          Fmt.failwith
+            "Unsupported encoding of ternary operators for theory '%a'" Ty.pp ty
+
+      let relop ty op t1 t2 =
+        match ty with
+        | Ty.Ty_int -> Int_impl.relop op t1 t2
+        | Ty_real -> Real_impl.relop op t1 t2
+        | Ty_bool -> Bool_impl.relop op t1 t2
+        | Ty_str -> String_impl.relop op t1 t2
+        | Ty_bitv _bitwidth -> Bitv_impl.relop op t1 t2
+        | Ty_fp 32 -> Float32_impl.relop op t1 t2
+        | Ty_fp 64 -> Float64_impl.relop op t1 t2
+        | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp
+        | Ty_roundingMode ->
+          Fmt.failwith "Unsupported encoding of relop operators for theory '%a'"
+            Ty.pp ty
+
+      let cvtop ty op t =
+        match ty with
+        | Ty.Ty_int -> Int_impl.cvtop op t
+        | Ty_real -> Real_impl.cvtop op t
+        | Ty_bool -> Bool_impl.cvtop op t
+        | Ty_str -> String_impl.cvtop op t
+        | Ty_bitv bitwidth -> Bitv_impl.cvtop bitwidth op t
+        | Ty_fp 32 -> Float32_impl.cvtop op t
+        | Ty_fp 64 -> Float64_impl.cvtop op t
+        | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp
+        | Ty_roundingMode ->
+          Fmt.failwith
+            "Unsupported encoding of convert operators for theory '%a'" Ty.pp ty
+
+      let naryop ty op ts =
+        match ty with
+        | Ty.Ty_str -> String_impl.naryop op ts
+        | Ty_bool -> Bool_impl.naryop op ts
+        | Ty_regexp -> Regexp_impl.naryop op ts
+        | ty ->
+          Fmt.failwith "Unsupported encoding of n-ary operators for theory '%a'"
+            Ty.pp ty ty
+
+      let get_rounding_mode ctx rm =
+        match Expr.view rm with
+        | Symbol { name = Simple ("roundNearestTiesToEven" | "RNE"); _ } ->
+          (ctx, M.Float.Rounding_mode.rne)
+        | Symbol { name = Simple ("roundNearestTiesToAway" | "RNA"); _ } ->
+          (ctx, M.Float.Rounding_mode.rna)
+        | Symbol { name = Simple ("roundTowardPositive" | "RTP"); _ } ->
+          (ctx, M.Float.Rounding_mode.rtp)
+        | Symbol { name = Simple ("roundTowardNegative" | "RTN"); _ } ->
+          (ctx, M.Float.Rounding_mode.rtn)
+        | Symbol { name = Simple ("roundTowardZero" | "RTZ"); _ } ->
+          (ctx, M.Float.Rounding_mode.rtz)
+        | Symbol rm -> make_symbol ctx rm
+        | _ -> Fmt.failwith "unknown rouding mode: %a" Expr.pp rm
+
+      let rec encode_expr ctx (hte : Expr.t) : symbol_ctx * M.term =
+        match Expr.view hte with
+        | Val value -> (ctx, v value)
+        | Ptr { base; offset } ->
+          let base = v (Bitv base) in
+          let ctx, offset = encode_expr ctx offset in
+          (ctx, binop (Ty_bitv 32) Add base offset)
+        | Symbol { name = Simple "re.all"; _ } -> (ctx, M.Re.all ())
+        | Symbol { name = Simple "re.none"; _ } -> (ctx, M.Re.none ())
+        | Symbol { name = Simple "re.allchar"; _ } -> (ctx, M.Re.allchar ())
+        | Symbol sym -> make_symbol ctx sym
+        (* FIXME: add a way to support building these expressions without apps *)
+        | App ({ name = Simple "fp.add"; _ }, [ rm; a; b ]) ->
+          let ctx, a = encode_expr ctx a in
+          let ctx, b = encode_expr ctx b in
+          let ctx, rm = get_rounding_mode ctx rm in
+          (ctx, M.Float.add ~rm a b)
+        | App ({ name = Simple "fp.sub"; _ }, [ rm; a; b ]) ->
+          let ctx, a = encode_expr ctx a in
+          let ctx, b = encode_expr ctx b in
+          let ctx, rm = get_rounding_mode ctx rm in
+          (ctx, M.Float.sub ~rm a b)
+        | App ({ name = Simple "fp.mul"; _ }, [ rm; a; b ]) ->
+          let ctx, a = encode_expr ctx a in
+          let ctx, b = encode_expr ctx b in
+          let ctx, rm = get_rounding_mode ctx rm in
+          (ctx, M.Float.mul ~rm a b)
+        | App ({ name = Simple "fp.div"; _ }, [ rm; a; b ]) ->
+          let ctx, a = encode_expr ctx a in
+          let ctx, b = encode_expr ctx b in
+          let ctx, rm = get_rounding_mode ctx rm in
+          (ctx, M.Float.div ~rm a b)
+        | App ({ name = Simple "fp.fma"; _ }, [ rm; a; b; c ]) ->
+          let ctx, a = encode_expr ctx a in
+          let ctx, b = encode_expr ctx b in
+          let ctx, c = encode_expr ctx c in
+          let ctx, rm = get_rounding_mode ctx rm in
+          (ctx, M.Float.fma ~rm a b c)
+        | App ({ name = Simple "fp.sqrt"; _ }, [ rm; a ]) ->
+          let ctx, a = encode_expr ctx a in
+          let ctx, rm = get_rounding_mode ctx rm in
+          (ctx, M.Float.sqrt ~rm a)
+        | App ({ name = Simple "fp.roundToIntegral"; _ }, [ rm; a ]) ->
+          let ctx, a = encode_expr ctx a in
+          let ctx, rm = get_rounding_mode ctx rm in
+          (ctx, M.Float.round_to_integral ~rm a)
+        | App (sym, args) ->
+          let name =
+            match Symbol.name sym with
+            | Simple name -> name
+            | Indexed _ ->
+              Fmt.failwith "Unsupported uninterpreted application of: %a"
+                Symbol.pp sym
+          in
+          let ty = get_type @@ Symbol.type_of sym in
+          let tys = List.map (fun e -> get_type @@ Expr.ty e) args in
+          let ctx, arguments = encode_exprs ctx args in
+          let sym = M.Func.make name tys ty in
+          (ctx, M.Func.apply sym arguments)
+        | Unop (ty, op, e) ->
+          let ctx, e = encode_expr ctx e in
+          (ctx, unop ty op e)
+        | Binop (ty, op, e1, e2) ->
+          let ctx, e1 = encode_expr ctx e1 in
+          let ctx, e2 = encode_expr ctx e2 in
+          (ctx, binop ty op e1 e2)
+        | Triop (ty, op, e1, e2, e3) ->
+          let ctx, e1 = encode_expr ctx e1 in
+          let ctx, e2 = encode_expr ctx e2 in
+          let ctx, e3 = encode_expr ctx e3 in
+          (ctx, triop ty op e1 e2 e3)
+        | Relop (ty, op, e1, e2) ->
+          let ctx, e1 = encode_expr ctx e1 in
+          let ctx, e2 = encode_expr ctx e2 in
+          (ctx, relop ty op e1 e2)
+        | Cvtop (ty, op, e) ->
+          let ctx, e = encode_expr ctx e in
+          (ctx, cvtop ty op e)
+        | Naryop (ty, op, es) ->
+          let ctx, es =
+            List.fold_left
+              (fun (ctx, es) e ->
+                let ctx, e = encode_expr ctx e in
+                (ctx, e :: es) )
+              (ctx, []) es
+          in
+          (* This is needed so arguments don't end up out of order in the operator *)
+          let es = List.rev es in
+          (ctx, naryop ty op es)
+        | Extract (e, h, l) ->
+          let ctx, e = encode_expr ctx e in
+          (ctx, M.Bitv.extract e ~high:((h * 8) - 1) ~low:(l * 8))
+        | Concat (e1, e2) ->
+          let ctx, e1 = encode_expr ctx e1 in
+          let ctx, e2 = encode_expr ctx e2 in
+          (ctx, M.Bitv.concat e1 e2)
+        | Binder (Forall, vars, body) ->
+          let ctx, vars = encode_exprs ctx vars in
+          let ctx, body = encode_expr ctx body in
+          (ctx, M.forall vars body)
+        | Binder (Exists, vars, body) ->
+          let ctx, vars = encode_exprs ctx vars in
+          let ctx, body = encode_expr ctx body in
+          (ctx, M.exists vars body)
+        | List _ | Binder _ ->
+          Fmt.failwith "Cannot encode expression: %a" Expr.pp hte
+
+      and encode_exprs ctx (es : Expr.t list) : symbol_ctx * M.term list =
+        let ctx, exprs =
+          List.fold_left
+            (fun (ctx, es) e ->
+              let ctx, e = encode_expr ctx e in
+              (ctx, e :: es) )
+            (ctx, []) es
+        in
+        (ctx, List.rev exprs)
+
+      let value_of_term ?ctx model ty term =
+        let v =
+          match M.Model.eval ?ctx ~completion:true model term with
+          | Some v -> v
+          | None -> Fmt.failwith "value_of_term: unable to fetch solver value"
+        in
+        match ty with
+        | Ty_int -> Value.Int (M.Interp.to_int v)
+        | Ty_real -> Value.Real (M.Interp.to_real v)
+        | Ty_bool -> if M.Interp.to_bool v then Value.True else Value.False
+        | Ty_str ->
+          let str = M.Interp.to_string v in
+          Value.Str str
+        | Ty_bitv 1 ->
+          let b = M.Interp.to_bitv v 1 in
+          if Z.equal b Z.one then Value.True
+          else (
+            assert (Z.equal b Z.zero);
+            Value.False )
+        | Ty_bitv m -> Value.Bitv (Bitvector.make (M.Interp.to_bitv v m) m)
+        | Ty_fp 32 ->
+          let float = M.Interp.to_float v 8 24 in
+          Value.Num (F32 (Int32.bits_of_float float))
+        | Ty_fp 64 ->
+          let float = M.Interp.to_float v 11 53 in
+          Value.Num (F64 (Int64.bits_of_float float))
+        | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp
+        | Ty_roundingMode ->
+          Fmt.failwith
+            "value_of_term: unsupported model completion for theory '%a'" Ty.pp
+            ty
+    end
+
     type model =
       { model : M.model
       ; ctx : symbol_ctx
@@ -38,787 +830,9 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       ; ctx : symbol_ctx Stack.t
       }
 
-    let i8 = M.Types.bitv 8
-
-    let i32 = M.Types.bitv 32
-
-    let i64 = M.Types.bitv 64
-
-    let f32 = M.Types.float 8 24
-
-    let f64 = M.Types.float 11 53
-
-    let real2str = M.Func.make "real_to_string " [ M.Types.real ] M.Types.string
-
-    let str2real = M.Func.make "string_to_real" [ M.Types.string ] M.Types.real
-
-    let str_trim = M.Func.make "string_trim" [ M.Types.string ] M.Types.string
-
-    let f32_to_i32 = M.Func.make "f32_to_i32" [ f32 ] i32
-
-    let f64_to_i64 = M.Func.make "f64_to_i64" [ f64 ] i64
-
-    let[@inline] get_type ty =
-      match ty with
-      | Ty_int -> M.Types.int
-      | Ty_real -> M.Types.real
-      | Ty_bool -> M.Types.bool
-      | Ty_str -> M.Types.string
-      | Ty_bitv 8 -> i8
-      | Ty_bitv 32 -> i32
-      | Ty_bitv 64 -> i64
-      | Ty_bitv n -> M.Types.bitv n
-      | Ty_fp 32 -> f32
-      | Ty_fp 64 -> f64
-      | Ty_roundingMode -> M.Types.roundingMode
-      | Ty_regexp -> M.Types.regexp
-      | (Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none) as ty ->
-        Fmt.failwith "Trying to use unsupported theory: %a@." Ty.pp ty
-
-    let make_symbol (ctx : symbol_ctx) (s : Symbol.t) : symbol_ctx * M.term =
-      let name = match s.name with Simple name -> name | _ -> assert false in
-      if M.Internals.caches_consts then
-        let sym = M.const name (get_type s.ty) in
-        (Smap.add s sym ctx, sym)
-      else
-        match Smap.find_opt s ctx with
-        | Some sym -> (ctx, sym)
-        | None ->
-          let sym = M.const name (get_type s.ty) in
-          (Smap.add s sym ctx, sym)
-
-    module Bool_impl = struct
-      let true_ = M.true_
-
-      let false_ = M.false_
-
-      let[@inline] unop op t =
-        match op with
-        | Unop.Not -> M.not_ t
-        | op ->
-          Fmt.failwith {|Bool: Unsupported unary operator "%a"|} Unop.pp op
-
-      let binop op t1 t2 =
-        match op with
-        | Binop.And -> M.and_ t1 t2
-        | Or -> M.or_ t1 t2
-        | Xor -> M.xor t1 t2
-        | Implies -> M.implies t1 t2
-        | op ->
-          Fmt.failwith {|Bool: Unsupported binary operator "%a"|} Binop.pp op
-
-      let triop op t1 t2 t3 =
-        match op with
-        | Triop.Ite -> M.ite t1 t2 t3
-        | op ->
-          Fmt.failwith {|Bool: Unsupported ternary operator "%a"|} Triop.pp op
-
-      let relop op e1 e2 =
-        match op with
-        | Relop.Eq -> M.eq e1 e2
-        | Ne -> M.distinct [ e1; e2 ]
-        | _ ->
-          Fmt.failwith {|Bool: Unsupported relational operator "%a"|} Relop.pp
-            op
-
-      let naryop op l =
-        match op with
-        | Naryop.Logand -> M.logand l
-        | Logor -> M.logor l
-        | _ ->
-          Fmt.failwith {|Bool: Unsupported n-ary operator "%a"|} Naryop.pp op
-
-      let cvtop op _e =
-        Fmt.failwith {|Bool: Unsupported convert operator "%a"|} Cvtop.pp op
-    end
-
-    module Int_impl = struct
-      let v i = M.int i [@@inline]
-
-      let unop op t =
-        match op with
-        | Unop.Neg -> M.Int.neg t
-        | op -> Fmt.failwith {|Int: Unsupported unop operator "%a"|} Unop.pp op
-
-      let binop op t1 t2 =
-        match op with
-        | Binop.Add -> M.Int.add t1 t2
-        | Sub -> M.Int.sub t1 t2
-        | Mul -> M.Int.mul t1 t2
-        | Div -> M.Int.div t1 t2
-        | Rem -> M.Int.rem t1 t2
-        | Pow -> M.Int.pow t1 t2
-        | op ->
-          Fmt.failwith {|Int: Unsupported binop operator "%a"|} Binop.pp op
-
-      let relop op t1 t2 =
-        match op with
-        | Relop.Eq -> M.eq t1 t2
-        | Ne -> M.distinct [ t1; t2 ]
-        | Lt -> M.Int.lt t1 t2
-        | Le -> M.Int.le t1 t2
-        | op ->
-          Fmt.failwith {|Int: Unsupported relop operator "%a"|} Relop.pp op
-
-      let cvtop op e =
-        match op with
-        | Cvtop.Reinterpret_float -> M.Real.to_int e
-        | op ->
-          Fmt.failwith {|Int: Unsupported cvtop operator "%a"|} Cvtop.pp op
-    end
-
-    module Real_impl = struct
-      let v f = M.real f [@@inline]
-
-      let unop op e =
-        let open M in
-        match op with
-        | Unop.Neg -> Real.neg e
-        | Abs -> ite (Real.gt e (real 0.)) e (Real.neg e)
-        | Sqrt -> Real.pow e (v 0.5)
-        | Ceil ->
-          let x_int = M.Real.to_int e in
-          ite (eq (Int.to_real x_int) e) x_int (Int.add x_int (int 1))
-        | Floor -> Real.to_int e
-        | Nearest | Is_nan | _ ->
-          Fmt.failwith {|Real: Unsupported unop operator "%a"|} Unop.pp op
-
-      let binop op e1 e2 =
-        match op with
-        | Binop.Add -> M.Real.add e1 e2
-        | Sub -> M.Real.sub e1 e2
-        | Mul -> M.Real.mul e1 e2
-        | Div -> M.Real.div e1 e2
-        | Pow -> M.Real.pow e1 e2
-        | Min -> M.ite (M.Real.le e1 e2) e1 e2
-        | Max -> M.ite (M.Real.ge e1 e2) e1 e2
-        | _ ->
-          Fmt.failwith {|Real: Unsupported binop operator "%a"|} Binop.pp op
-
-      let relop op e1 e2 =
-        match op with
-        | Relop.Eq -> M.eq e1 e2
-        | Ne -> M.distinct [ e1; e2 ]
-        | Lt -> M.Real.lt e1 e2
-        | Le -> M.Real.le e1 e2
-        | _ ->
-          Fmt.failwith {|Real: Unsupported relop operator "%a"|} Relop.pp op
-
-      let cvtop op e =
-        match op with
-        | Cvtop.ToString -> M.Func.apply real2str [ e ]
-        | OfString -> M.Func.apply str2real [ e ]
-        | Reinterpret_int -> M.Int.to_real e
-        | op ->
-          Fmt.failwith {|Real: Unsupported cvtop operator "%a"|} Cvtop.pp op
-    end
-
-    module String_impl = struct
-      let v s = M.String.v s [@@inline]
-
-      let unop op e =
-        match op with
-        | Unop.Length -> M.String.length e
-        | Trim -> M.Func.apply str_trim [ e ]
-        | op ->
-          Fmt.failwith {|String: Unsupported unop operator "%a"|} Unop.pp op
-
-      let binop op e1 e2 =
-        match op with
-        | Binop.At -> M.String.at e1 ~pos:e2
-        | String_contains -> M.String.contains e1 ~sub:e2
-        | String_prefix -> M.String.is_prefix e1 ~prefix:e2
-        | String_suffix -> M.String.is_suffix e1 ~suffix:e2
-        | String_in_re -> M.String.in_re e1 e2
-        | _ ->
-          Fmt.failwith {|String: Unsupported binop operator "%a"|} Binop.pp op
-
-      let triop op e1 e2 e3 =
-        match op with
-        | Triop.String_extract -> M.String.sub e1 ~pos:e2 ~len:e3
-        | String_index -> M.String.index_of e1 ~sub:e2 ~pos:e3
-        | String_replace -> M.String.replace e1 ~pattern:e2 ~with_:e3
-        | String_replace_all -> M.String.replace_all e1 ~pattern:e2 ~with_:e3
-        | String_replace_re -> M.String.replace_re e1 ~pattern:e2 ~with_:e3
-        | String_replace_re_all ->
-          M.String.replace_re_all e1 ~pattern:e2 ~with_:e3
-        | _ ->
-          Fmt.failwith {|String: Unsupported triop operator "%a"|} Triop.pp op
-
-      let relop op e1 e2 =
-        match op with
-        | Relop.Eq -> M.eq e1 e2
-        | Ne -> M.distinct [ e1; e2 ]
-        | Lt -> M.String.lt e1 e2
-        | Le -> M.String.le e1 e2
-        | _ ->
-          Fmt.failwith {|String: Unsupported relop operator "%a"|} Relop.pp op
-
-      let cvtop = function
-        | Cvtop.String_to_code -> M.String.to_code
-        | String_from_code -> M.String.of_code
-        | String_to_int -> M.String.to_int
-        | String_from_int -> M.String.of_int
-        | String_to_re -> M.String.to_re
-        | op ->
-          Fmt.failwith {|String: Unsupported cvtop operator "%a"|} Cvtop.pp op
-
-      let naryop op es =
-        match op with
-        | Naryop.Concat -> M.String.concat es
-        | _ ->
-          Fmt.failwith {|String: Unsupported naryop operator "%a"|} Naryop.pp op
-    end
-
-    module Regexp_impl = struct
-      let unop op e =
-        match op with
-        | Unop.Regexp_star -> M.Re.star e
-        | Regexp_plus -> M.Re.plus e
-        | Regexp_opt -> M.Re.opt e
-        | Regexp_comp -> M.Re.comp e
-        | Regexp_loop (i1, i2) -> M.Re.loop e i1 i2
-        | op ->
-          Fmt.failwith {|Regexp: Unsupported unop operator "%a"|} Unop.pp op
-
-      let binop op e1 e2 =
-        match op with
-        | Binop.Regexp_range -> M.Re.range e1 e2
-        | Regexp_inter -> M.Re.inter e1 e2
-        | Regexp_diff -> M.Re.diff e1 e2
-        | op ->
-          Fmt.failwith {|Regexp: Unsupported binop operator "%a"|} Binop.pp op
-
-      let _triop _ = function
-        | op ->
-          Fmt.failwith {|Regexp: Unsupported triop operator "%a"|} Triop.pp op
-
-      let _relop _ _ = function
-        | op ->
-          Fmt.failwith {|Regexp: Unsupported relop operator "%a"|} Relop.pp op
-
-      let _cvtop = function
-        | op ->
-          Fmt.failwith {|Regexp: Unsupported cvtop operator "%a"|} Cvtop.pp op
-
-      let naryop op es =
-        match op with
-        | Naryop.Concat -> M.Re.concat es
-        | Regexp_union -> M.Re.union es
-        | op ->
-          Fmt.failwith {|Regexp: Unsupported naryop operator "%a"|} Naryop.pp op
-    end
-
-    module Bitv_impl = struct
-      open M
-
-      let v bv =
-        let numbits = Bitvector.numbits bv in
-        Bitv.v (Bitvector.to_string bv) numbits
-
-      (* Stolen from @krtab in OCamlPro/owi#195 *)
-      let clz bitwidth n =
-        let rec loop (lb : int) (ub : int) =
-          if ub = lb + 1 then
-            v @@ Bitvector.make (Z.of_int (bitwidth - ub)) bitwidth
-          else
-            let mid = (lb + ub) / 2 in
-            let pow_two_mid =
-              Bitvector.shl
-                (Bitvector.make Z.one bitwidth)
-                (Bitvector.make (Z.of_int mid) bitwidth)
-            in
-            ite (Bitv.lt_u n (v pow_two_mid)) (loop lb mid) (loop mid ub)
-        in
-        M.ite
-          (M.eq n (v @@ Bitvector.make Z.zero bitwidth))
-          (v @@ Bitvector.make (Z.of_int bitwidth) bitwidth)
-          (loop 0 bitwidth)
-
-      (* Stolen from @krtab in OCamlPro/owi #195 *)
-      let ctz bitwidth n =
-        let zero = v @@ Bitvector.make Z.zero bitwidth in
-        let rec loop (lb : int) (ub : int) =
-          if ub = lb + 1 then v (Bitvector.make (Z.of_int lb) bitwidth)
-          else
-            let mid = (lb + ub) / 2 in
-            let pow_two_mid =
-              Bitvector.shl
-                (Bitvector.make Z.one bitwidth)
-                (Bitvector.make (Z.of_int mid) bitwidth)
-            in
-            M.ite
-              (eq (Bitv.rem n (v pow_two_mid)) zero)
-              (loop mid ub) (loop lb mid)
-        in
-        ite (eq n zero)
-          (v (Bitvector.make (Z.of_int bitwidth) bitwidth))
-          (loop 0 bitwidth)
-
-      let popcnt bitwidth n =
-        let rec loop (next : int) count =
-          if next = bitwidth then count
-          else
-            (* We shift the original number so that the current bit to test is on the right. *)
-            let shifted =
-              Bitv.lshr n (v @@ Bitvector.make (Z.of_int next) bitwidth)
-            in
-            (* We compute the remainder of the shifted number *)
-            let remainder =
-              Bitv.rem_u shifted (v @@ Bitvector.make (Z.of_int 2) bitwidth)
-            in
-            (* The remainder is either 0 or 1, we add it directly to the count *)
-            let count = Bitv.add count remainder in
-            let next = succ next in
-            loop next count
-        in
-        loop 0 (v @@ Bitvector.make Z.zero bitwidth)
-
-      let unop bitwidth op t =
-        match op with
-        | Unop.Clz -> clz bitwidth t
-        | Ctz -> ctz bitwidth t
-        | Popcnt -> popcnt bitwidth t
-        | Neg -> Bitv.neg t
-        | Not -> Bitv.lognot t
-        | op ->
-          Fmt.failwith {|Bitv: Unsupported unary operator "%a"|} Unop.pp op
-
-      let binop op t1 t2 =
-        match op with
-        | Binop.Add -> Bitv.add t1 t2
-        | Sub -> Bitv.sub t1 t2
-        | Mul -> Bitv.mul t1 t2
-        | Div -> Bitv.div t1 t2
-        | DivU -> Bitv.div_u t1 t2
-        | And -> Bitv.logand t1 t2
-        | Xor -> Bitv.logxor t1 t2
-        | Or -> Bitv.logor t1 t2
-        | Shl -> Bitv.shl t1 t2
-        | ShrA -> Bitv.ashr t1 t2
-        | ShrL -> Bitv.lshr t1 t2
-        | Rem -> Bitv.rem t1 t2
-        | RemU -> Bitv.rem_u t1 t2
-        | Rotl -> Bitv.rotate_left t1 t2
-        | Rotr -> Bitv.rotate_right t1 t2
-        | op ->
-          Fmt.failwith {|Bitv: Unsupported binary operator "%a"|} Binop.pp op
-
-      let triop op _ _ _ =
-        Fmt.failwith {|Bitv: Unsupported triop operator "%a"|} Triop.pp op
-
-      let relop op e1 e2 =
-        match op with
-        | Relop.Eq -> M.eq e1 e2
-        | Ne -> M.distinct [ e1; e2 ]
-        | Lt -> Bitv.lt e1 e2
-        | LtU -> Bitv.lt_u e1 e2
-        | Le -> Bitv.le e1 e2
-        | LeU -> Bitv.le_u e1 e2
-
-      let to_ieee_bv bitwidth t =
-        match M.Float.to_ieee_bv with
-        | Some to_ieee_bv -> to_ieee_bv t
-        | None -> begin
-          match bitwidth with
-          | 32 -> Func.apply f32_to_i32 [ t ]
-          | 64 -> Func.apply f64_to_i64 [ t ]
-          | _ ->
-            Fmt.failwith "to_ieee_bv: unsupported bitwidth size of '%d'"
-              bitwidth
-        end
-
-      let cvtop bitwidth op e =
-        match op with
-        | Cvtop.WrapI64 -> Bitv.extract e ~high:(bitwidth - 1) ~low:0
-        | Sign_extend n -> Bitv.sign_extend n e
-        | Zero_extend n -> Bitv.zero_extend n e
-        | TruncSF32 | TruncSF64 | Trunc_sat_f32_s | Trunc_sat_f64_s ->
-          Float.to_sbv bitwidth ~rm:Float.Rounding_mode.rtz e
-        | TruncUF32 | TruncUF64 | Trunc_sat_f32_u | Trunc_sat_f64_u ->
-          Float.to_ubv bitwidth ~rm:Float.Rounding_mode.rtz e
-        | Reinterpret_float -> to_ieee_bv bitwidth e
-        | ToBool -> M.distinct [ e; v @@ Bitvector.make Z.zero bitwidth ]
-        | OfBool ->
-          M.ite e
-            (v @@ Bitvector.make Z.one bitwidth)
-            (v @@ Bitvector.make Z.zero bitwidth)
-        | _ ->
-          Fmt.failwith {|Bitv: Unsupported convert operator "%a"|} Cvtop.pp op
-    end
-
-    module type Float_sig = sig
-      type elt
-
-      val eb : int
-
-      val sb : int
-
-      val zero : unit -> M.term
-
-      val v : elt -> M.term
-      (* TODO: *)
-      (* val to_string : Z3.FuncDecl.func_decl *)
-      (* val of_string : Z3.FuncDecl.func_decl *)
-    end
-
-    module Float_impl (F : Float_sig) = struct
-      open M
-      include F
-
-      let unop op e =
-        match op with
-        | Unop.Neg -> Float.neg e
-        | Abs -> Float.abs e
-        | Sqrt -> Float.sqrt ~rm:Float.Rounding_mode.rne e
-        | Is_normal -> Float.is_normal e
-        | Is_subnormal -> Float.is_subnormal e
-        | Is_negative -> Float.is_negative e
-        | Is_positive -> Float.is_positive e
-        | Is_infinite -> Float.is_infinite e
-        | Is_nan -> Float.is_nan e
-        | Is_zero -> Float.is_zero e
-        | Ceil -> Float.round_to_integral ~rm:Float.Rounding_mode.rtp e
-        | Floor -> Float.round_to_integral ~rm:Float.Rounding_mode.rtn e
-        | Trunc -> Float.round_to_integral ~rm:Float.Rounding_mode.rtz e
-        | Nearest -> Float.round_to_integral ~rm:Float.Rounding_mode.rne e
-        | _ -> Fmt.failwith {|FPA: Unsupported unary operator "%a"|} Unop.pp op
-
-      let binop op e1 e2 =
-        match op with
-        | Binop.Add -> Float.add ~rm:Float.Rounding_mode.rne e1 e2
-        | Sub -> Float.sub ~rm:Float.Rounding_mode.rne e1 e2
-        | Mul -> Float.mul ~rm:Float.Rounding_mode.rne e1 e2
-        | Div -> Float.div ~rm:Float.Rounding_mode.rne e1 e2
-        | Min -> Float.min e1 e2
-        | Max -> Float.max e1 e2
-        | Rem -> Float.rem e1 e2
-        | Copysign ->
-          let abs_float = Float.abs e1 in
-          M.ite (Float.ge e2 (F.zero ())) abs_float (Float.neg abs_float)
-        | _ -> Fmt.failwith {|FPA: Unsupported binop operator "%a"|} Binop.pp op
-
-      let triop op _ _ _ =
-        Fmt.failwith {|FPA: Unsupported triop operator "%a"|} Triop.pp op
-
-      let relop op e1 e2 =
-        match op with
-        | Relop.Eq -> Float.eq e1 e2
-        | Ne -> not_ @@ Float.eq e1 e2
-        | Lt -> Float.lt e1 e2
-        | Le -> Float.le e1 e2
-        | _ -> Fmt.failwith {|FPA: Unsupported relop operator "%a"|} Relop.pp op
-
-      let cvtop op e =
-        match op with
-        | Cvtop.PromoteF32 | DemoteF64 ->
-          Float.to_fp eb sb ~rm:Float.Rounding_mode.rne e
-        | ConvertSI32 | ConvertSI64 ->
-          Float.sbv_to_fp eb sb ~rm:Float.Rounding_mode.rne e
-        | ConvertUI32 | ConvertUI64 ->
-          Float.ubv_to_fp eb sb ~rm:Float.Rounding_mode.rne e
-        | Reinterpret_int -> Float.of_ieee_bv eb sb e
-        | ToString ->
-          (* TODO: FuncDecl.apply to_string [ e ] *)
-          Fmt.failwith "FPA: TODO(ToString)"
-        | OfString ->
-          (* TODO: FuncDecl.apply of_string [ e ] *)
-          Fmt.failwith "FPA: TODO(OfString)"
-        | _ -> Fmt.failwith {|FPA: Unsupported cvtop operator "%a"|} Cvtop.pp op
-    end
-
-    module Float32_impl = Float_impl (struct
-      type elt = int32
-
-      let eb = 8
-
-      let sb = 24
-
-      let v f = M.Float.v (Int32.float_of_bits f) eb sb
-
-      let zero () = v (Int32.bits_of_float 0.0)
-
-      (* TODO: *)
-      (* let to_string = *)
-      (*   Z3.FuncDecl.mk_func_decl_s ctx "F32ToString" [ fp32_sort ] str_sort *)
-      (* let of_string = *)
-      (*   Z3.FuncDecl.mk_func_decl_s ctx "StringToF32" [ str_sort ] fp32_sort *)
-    end)
-
-    module Float64_impl = Float_impl (struct
-      type elt = int64
-
-      let eb = 11
-
-      let sb = 53
-
-      let v f = M.Float.v (Int64.float_of_bits f) eb sb
-
-      let zero () = v (Int64.bits_of_float 0.0)
-
-      (* TODO: *)
-      (* let to_string = *)
-      (*   Z3.FuncDecl.mk_func_decl_s ctx "F64ToString" [ fp64_sort ] str_sort *)
-      (* let of_string = *)
-      (*   Z3.FuncDecl.mk_func_decl_s ctx "StringToF64" [ str_sort ] fp64_sort *)
-    end)
-
-    let v (value : Value.t) : M.term =
-      match value with
-      | True -> Bool_impl.true_
-      | False -> Bool_impl.false_
-      | Int v -> Int_impl.v v
-      | Real v -> Real_impl.v v
-      | Str v -> String_impl.v v
-      | Num (F32 x) -> Float32_impl.v x
-      | Num (F64 x) -> Float64_impl.v x
-      | Bitv bv -> M.Bitv.v (Bitvector.to_string bv) (Bitvector.numbits bv)
-      | List _ | App _ | Unit | Nothing ->
-        Fmt.failwith "Unsupported encoding of value '%a'" Value.pp value
-
-    let unop ty op t =
-      match ty with
-      | Ty.Ty_int -> Int_impl.unop op t
-      | Ty_real -> Real_impl.unop op t
-      | Ty_bool -> Bool_impl.unop op t
-      | Ty_str -> String_impl.unop op t
-      | Ty_regexp -> Regexp_impl.unop op t
-      | Ty_bitv bitwidth -> Bitv_impl.unop bitwidth op t
-      | Ty_fp 32 -> Float32_impl.unop op t
-      | Ty_fp 64 -> Float64_impl.unop op t
-      | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_roundingMode ->
-        Fmt.failwith "Unsupported encoding of unary operators for theory '%a'"
-          Ty.pp ty
-
-    let binop ty op t1 t2 =
-      match ty with
-      | Ty.Ty_int -> Int_impl.binop op t1 t2
-      | Ty_real -> Real_impl.binop op t1 t2
-      | Ty_bool -> Bool_impl.binop op t1 t2
-      | Ty_str -> String_impl.binop op t1 t2
-      | Ty_regexp -> Regexp_impl.binop op t1 t2
-      | Ty_bitv _bitwidth -> Bitv_impl.binop op t1 t2
-      | Ty_fp 32 -> Float32_impl.binop op t1 t2
-      | Ty_fp 64 -> Float64_impl.binop op t1 t2
-      | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_roundingMode ->
-        Fmt.failwith "Unsupported encoding of binary operators for theory '%a'"
-          Ty.pp ty
-
-    let triop ty op t1 t2 t3 =
-      match ty with
-      | Ty.Ty_bool -> Bool_impl.triop op t1 t2 t3
-      | Ty_str -> String_impl.triop op t1 t2 t3
-      | Ty_bitv _bitwidth -> Bitv_impl.triop op t1 t2 t3
-      | Ty_fp 32 -> Float32_impl.triop op t1 t2 t3
-      | Ty_fp 64 -> Float64_impl.triop op t1 t2 t3
-      | Ty_int | Ty_real | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none
-      | Ty_regexp | Ty_roundingMode ->
-        Fmt.failwith "Unsupported encoding of ternary operators for theory '%a'"
-          Ty.pp ty
-
-    let relop ty op t1 t2 =
-      match ty with
-      | Ty.Ty_int -> Int_impl.relop op t1 t2
-      | Ty_real -> Real_impl.relop op t1 t2
-      | Ty_bool -> Bool_impl.relop op t1 t2
-      | Ty_str -> String_impl.relop op t1 t2
-      | Ty_bitv _bitwidth -> Bitv_impl.relop op t1 t2
-      | Ty_fp 32 -> Float32_impl.relop op t1 t2
-      | Ty_fp 64 -> Float64_impl.relop op t1 t2
-      | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp
-      | Ty_roundingMode ->
-        Fmt.failwith "Unsupported encoding of relop operators for theory '%a'"
-          Ty.pp ty
-
-    let cvtop ty op t =
-      match ty with
-      | Ty.Ty_int -> Int_impl.cvtop op t
-      | Ty_real -> Real_impl.cvtop op t
-      | Ty_bool -> Bool_impl.cvtop op t
-      | Ty_str -> String_impl.cvtop op t
-      | Ty_bitv bitwidth -> Bitv_impl.cvtop bitwidth op t
-      | Ty_fp 32 -> Float32_impl.cvtop op t
-      | Ty_fp 64 -> Float64_impl.cvtop op t
-      | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp
-      | Ty_roundingMode ->
-        Fmt.failwith "Unsupported encoding of convert operators for theory '%a'"
-          Ty.pp ty
-
-    let naryop ty op ts =
-      match ty with
-      | Ty.Ty_str -> String_impl.naryop op ts
-      | Ty_bool -> Bool_impl.naryop op ts
-      | Ty_regexp -> Regexp_impl.naryop op ts
-      | ty ->
-        Fmt.failwith "Unsupported encoding of n-ary operators for theory '%a'"
-          Ty.pp ty ty
-
-    let get_rounding_mode ctx rm =
-      match Expr.view rm with
-      | Symbol { name = Simple ("roundNearestTiesToEven" | "RNE"); _ } ->
-        (ctx, M.Float.Rounding_mode.rne)
-      | Symbol { name = Simple ("roundNearestTiesToAway" | "RNA"); _ } ->
-        (ctx, M.Float.Rounding_mode.rna)
-      | Symbol { name = Simple ("roundTowardPositive" | "RTP"); _ } ->
-        (ctx, M.Float.Rounding_mode.rtp)
-      | Symbol { name = Simple ("roundTowardNegative" | "RTN"); _ } ->
-        (ctx, M.Float.Rounding_mode.rtn)
-      | Symbol { name = Simple ("roundTowardZero" | "RTZ"); _ } ->
-        (ctx, M.Float.Rounding_mode.rtz)
-      | Symbol rm -> make_symbol ctx rm
-      | _ -> Fmt.failwith "unknown rouding mode: %a" Expr.pp rm
-
-    let rec encode_expr ctx (hte : Expr.t) : symbol_ctx * M.term =
-      match Expr.view hte with
-      | Val value -> (ctx, v value)
-      | Ptr { base; offset } ->
-        let base = v (Bitv base) in
-        let ctx, offset = encode_expr ctx offset in
-        (ctx, binop (Ty_bitv 32) Add base offset)
-      | Symbol { name = Simple "re.all"; _ } -> (ctx, M.Re.all ())
-      | Symbol { name = Simple "re.none"; _ } -> (ctx, M.Re.none ())
-      | Symbol { name = Simple "re.allchar"; _ } -> (ctx, M.Re.allchar ())
-      | Symbol sym -> make_symbol ctx sym
-      (* FIXME: add a way to support building these expressions without apps *)
-      | App ({ name = Simple "fp.add"; _ }, [ rm; a; b ]) ->
-        let ctx, a = encode_expr ctx a in
-        let ctx, b = encode_expr ctx b in
-        let ctx, rm = get_rounding_mode ctx rm in
-        (ctx, M.Float.add ~rm a b)
-      | App ({ name = Simple "fp.sub"; _ }, [ rm; a; b ]) ->
-        let ctx, a = encode_expr ctx a in
-        let ctx, b = encode_expr ctx b in
-        let ctx, rm = get_rounding_mode ctx rm in
-        (ctx, M.Float.sub ~rm a b)
-      | App ({ name = Simple "fp.mul"; _ }, [ rm; a; b ]) ->
-        let ctx, a = encode_expr ctx a in
-        let ctx, b = encode_expr ctx b in
-        let ctx, rm = get_rounding_mode ctx rm in
-        (ctx, M.Float.mul ~rm a b)
-      | App ({ name = Simple "fp.div"; _ }, [ rm; a; b ]) ->
-        let ctx, a = encode_expr ctx a in
-        let ctx, b = encode_expr ctx b in
-        let ctx, rm = get_rounding_mode ctx rm in
-        (ctx, M.Float.div ~rm a b)
-      | App ({ name = Simple "fp.fma"; _ }, [ rm; a; b; c ]) ->
-        let ctx, a = encode_expr ctx a in
-        let ctx, b = encode_expr ctx b in
-        let ctx, c = encode_expr ctx c in
-        let ctx, rm = get_rounding_mode ctx rm in
-        (ctx, M.Float.fma ~rm a b c)
-      | App ({ name = Simple "fp.sqrt"; _ }, [ rm; a ]) ->
-        let ctx, a = encode_expr ctx a in
-        let ctx, rm = get_rounding_mode ctx rm in
-        (ctx, M.Float.sqrt ~rm a)
-      | App ({ name = Simple "fp.roundToIntegral"; _ }, [ rm; a ]) ->
-        let ctx, a = encode_expr ctx a in
-        let ctx, rm = get_rounding_mode ctx rm in
-        (ctx, M.Float.round_to_integral ~rm a)
-      | App (sym, args) ->
-        let name =
-          match Symbol.name sym with
-          | Simple name -> name
-          | Indexed _ ->
-            Fmt.failwith "Unsupported uninterpreted application of: %a"
-              Symbol.pp sym
-        in
-        let ty = get_type @@ Symbol.type_of sym in
-        let tys = List.map (fun e -> get_type @@ Expr.ty e) args in
-        let ctx, arguments = encode_exprs ctx args in
-        let sym = M.Func.make name tys ty in
-        (ctx, M.Func.apply sym arguments)
-      | Unop (ty, op, e) ->
-        let ctx, e = encode_expr ctx e in
-        (ctx, unop ty op e)
-      | Binop (ty, op, e1, e2) ->
-        let ctx, e1 = encode_expr ctx e1 in
-        let ctx, e2 = encode_expr ctx e2 in
-        (ctx, binop ty op e1 e2)
-      | Triop (ty, op, e1, e2, e3) ->
-        let ctx, e1 = encode_expr ctx e1 in
-        let ctx, e2 = encode_expr ctx e2 in
-        let ctx, e3 = encode_expr ctx e3 in
-        (ctx, triop ty op e1 e2 e3)
-      | Relop (ty, op, e1, e2) ->
-        let ctx, e1 = encode_expr ctx e1 in
-        let ctx, e2 = encode_expr ctx e2 in
-        (ctx, relop ty op e1 e2)
-      | Cvtop (ty, op, e) ->
-        let ctx, e = encode_expr ctx e in
-        (ctx, cvtop ty op e)
-      | Naryop (ty, op, es) ->
-        let ctx, es =
-          List.fold_left
-            (fun (ctx, es) e ->
-              let ctx, e = encode_expr ctx e in
-              (ctx, e :: es) )
-            (ctx, []) es
-        in
-        (* This is needed so arguments don't end up out of order in the operator *)
-        let es = List.rev es in
-        (ctx, naryop ty op es)
-      | Extract (e, h, l) ->
-        let ctx, e = encode_expr ctx e in
-        (ctx, M.Bitv.extract e ~high:((h * 8) - 1) ~low:(l * 8))
-      | Concat (e1, e2) ->
-        let ctx, e1 = encode_expr ctx e1 in
-        let ctx, e2 = encode_expr ctx e2 in
-        (ctx, M.Bitv.concat e1 e2)
-      | Binder (Forall, vars, body) ->
-        let ctx, vars = encode_exprs ctx vars in
-        let ctx, body = encode_expr ctx body in
-        (ctx, M.forall vars body)
-      | Binder (Exists, vars, body) ->
-        let ctx, vars = encode_exprs ctx vars in
-        let ctx, body = encode_expr ctx body in
-        (ctx, M.exists vars body)
-      | List _ | Binder _ ->
-        Fmt.failwith "Cannot encode expression: %a" Expr.pp hte
-
-    and encode_exprs ctx (es : Expr.t list) : symbol_ctx * M.term list =
-      let ctx, exprs =
-        List.fold_left
-          (fun (ctx, es) e ->
-            let ctx, e = encode_expr ctx e in
-            (ctx, e :: es) )
-          (ctx, []) es
-      in
-      (ctx, List.rev exprs)
-
-    let value_of_term ?ctx model ty term =
-      let v =
-        match M.Model.eval ?ctx ~completion:true model term with
-        | Some v -> v
-        | None -> Fmt.failwith "value_of_term: unable to fetch solver value"
-      in
-      match ty with
-      | Ty_int -> Value.Int (M.Interp.to_int v)
-      | Ty_real -> Value.Real (M.Interp.to_real v)
-      | Ty_bool -> if M.Interp.to_bool v then Value.True else Value.False
-      | Ty_str ->
-        let str = M.Interp.to_string v in
-        Value.Str str
-      | Ty_bitv 1 ->
-        let b = M.Interp.to_bitv v 1 in
-        if Z.equal b Z.one then Value.True
-        else (
-          assert (Z.equal b Z.zero);
-          Value.False )
-      | Ty_bitv m -> Value.Bitv (Bitvector.make (M.Interp.to_bitv v m) m)
-      | Ty_fp 32 ->
-        let float = M.Interp.to_float v 8 24 in
-        Value.Num (F32 (Int32.bits_of_float float))
-      | Ty_fp 64 ->
-        let float = M.Interp.to_float v 11 53 in
-        Value.Num (F64 (Int64.bits_of_float float))
-      | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp
-      | Ty_roundingMode ->
-        Fmt.failwith
-          "value_of_term: unsupported model completion for theory '%a'" Ty.pp ty
-
     let value ({ model = m; ctx } : model) (c : Expr.t) : Value.t =
-      let ctx, e = encode_expr ctx c in
-      value_of_term ~ctx m (Expr.ty c) e
+      let ctx, e = Encoder.encode_expr ctx c in
+      Encoder.value_of_term ~ctx m (Expr.ty c) e
 
     let values_of_model ?symbols ({ model; ctx } as model0) =
       let m = Hashtbl.create 512 in
@@ -832,7 +846,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | None ->
         Smap.iter
           (fun (sym : Symbol.t) term ->
-            let v = value_of_term ~ctx model sym.ty term in
+            let v = Encoder.value_of_term ~ctx model sym.ty term in
             Hashtbl.replace m sym v )
           ctx );
       m
@@ -842,7 +856,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
     module Smtlib = struct
       let pp ?name ?logic ?status fmt htes =
         (* FIXME: I don't know if encoding with the empty map is ok :\ *)
-        let _, terms = encode_exprs Smap.empty htes in
+        let _, terms = Encoder.encode_exprs Smap.empty htes in
         M.Smtlib.pp ?name ?logic ?status fmt terms
     end
 
@@ -902,7 +916,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           if Option.is_some Utils.query_log_path then
             s.unchecked_assumptions <-
               List.rev_append exprs s.unchecked_assumptions;
-          let ctx, exprs = encode_exprs ctx exprs in
+          let ctx, exprs = Encoder.encode_exprs ctx exprs in
           Stack.push ctx s.ctx;
           M.Solver.add s.solver ~ctx exprs
 
@@ -914,7 +928,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
             s.assumptions <- s.unchecked_assumptions @ s.assumptions;
             s.unchecked_assumptions <- [];
             s.last_assumptions <- assumptions );
-          let ctx, encoded_assuptions = encode_exprs ctx assumptions in
+          let ctx, encoded_assuptions = Encoder.encode_exprs ctx assumptions in
           s.last_ctx <- Some ctx;
           Utils.run_and_log_query ~model:false
             (fun () ->
@@ -954,7 +968,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         match Stack.pop_opt o.ctx with
         | None -> Fmt.failwith "Solver.add: current solver context not found"
         | Some ctx ->
-          let ctx, exprs = encode_exprs ctx exprs in
+          let ctx, exprs = Encoder.encode_exprs ctx exprs in
           Stack.push ctx o.ctx;
           M.Optimizer.add o.opt exprs
 
@@ -970,7 +984,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         match Stack.pop_opt o.ctx with
         | None -> Fmt.failwith "Solver.add: current solver context not found"
         | Some ctx ->
-          let ctx, expr = encode_expr ctx expr in
+          let ctx, expr = Encoder.encode_expr ctx expr in
           Stack.push ctx o.ctx;
           M.Optimizer.maximize o.opt expr
 
@@ -978,7 +992,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         match Stack.pop_opt o.ctx with
         | None -> Fmt.failwith "Solver.add: current solver context not found"
         | Some ctx ->
-          let ctx, expr = encode_expr ctx expr in
+          let ctx, expr = Encoder.encode_expr ctx expr in
           Stack.push ctx o.ctx;
           M.Optimizer.minimize o.opt expr
 
