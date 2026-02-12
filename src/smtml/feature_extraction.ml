@@ -7,6 +7,8 @@ module FeatMap = struct
 
   let find_def0 k m = match find_opt k m with Some n -> n | None -> 0
 end
+(* TODO: use ints or an ADT instead of strings for keys, though strings
+         give a convenient practicality. *)
 
 type features = int FeatMap.t
 
