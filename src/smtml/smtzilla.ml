@@ -49,14 +49,12 @@ module Fresh = struct
               (score, name) )
             available_models
         in
-        match List.sort (fun (a, _) (b, _) -> Float.compare a b) scores with
-        | [] | [ _ ] -> assert false
-        | (_, name) :: _ -> (
-          Log.info (fun k -> k "Selected solver %s" name);
-          match name with
-          | "Z3" | "z3" -> (name, (module Z3_mappings))
-          | "Bitwuzla" | "bitwuzla" -> (name, (module Bitwuzla_mappings))
-          | _ -> Fmt.failwith "SMTZilla: Unknown solver %s" name )
+        let name = Regression_model.choose_best scores in
+        Log.info (fun k -> k "Selected solver %s" name);
+        match name with
+        | "Z3" | "z3" -> (name, (module Z3_mappings))
+        | "Bitwuzla" | "bitwuzla" -> (name, (module Bitwuzla_mappings))
+        | _ -> Fmt.failwith "SMTZilla: Unknown solver %s" name
       (* TODO: Need to move some declarations around to be able to use
          `Solver_type.t` instead of strings, mayba SMTZilla should not be
          one of the solver types? *)
