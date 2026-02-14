@@ -103,11 +103,29 @@ module Fresh = struct
 
       let pop _ _ = ()
 
-      let reset s = s.rev_exprs <- []
+      let reset s =
+        Hashtbl.iter
+          (fun _ (SolverInst ((module S), instance)) -> S.Solver.reset instance)
+          s.solver_instances
 
-      let clone s = { s with rev_exprs = s.rev_exprs }
+      let clone s =
+        { s with
+          solver_instances =
+            (let solver_instances = Hashtbl.create 16 in
+             Hashtbl.iter
+               (fun name (SolverInst ((module S), instance)) ->
+                 Hashtbl.add solver_instances name
+                   (SolverInst ((module S), S.Solver.clone instance)) )
+               s.solver_instances;
+             solver_instances )
+        ; rev_exprs = s.rev_exprs
+        }
 
-      let interrupt _ = ()
+      let interrupt s =
+        Hashtbl.iter
+          (fun _ (SolverInst ((module S), instance)) ->
+            S.Solver.interrupt instance )
+          s.solver_instances
 
       let add_simplifier s = s
 

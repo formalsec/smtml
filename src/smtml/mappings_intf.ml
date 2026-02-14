@@ -884,8 +884,6 @@ module type M_with_make = sig
   include M
 end
 
-
-
 (** The [S] module type defines a simplified interface for interacting with SMT
     solvers, focusing on model evaluation, solver interaction, and optimization.
 *)
