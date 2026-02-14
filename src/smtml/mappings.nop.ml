@@ -5,7 +5,7 @@
 module Nop = struct
   module Make () = struct
     module Internals = struct
-      let name = "Nop"
+      let name = "nop"
 
       let caches_consts = false
 
