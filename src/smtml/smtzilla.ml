@@ -182,9 +182,12 @@ end
 let is_available =
   match available_models with
   | [] -> false
-  | [ _ ] ->
-    (* No model should be trained on just one solver *)
-    assert false
+  | [ (name, _) ] ->
+    Fmt.failwith
+      "SMTZilla: the loaded model was only trained on %s, you should either \
+       use a model that is trained on more than one model, or use %s solver \
+       directly"
+      name name
   | _ -> true
 
 include Fresh.Make ()
