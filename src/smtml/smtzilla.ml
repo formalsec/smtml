@@ -52,8 +52,8 @@ module Fresh = struct
         let name = Regression_model.choose_best scores in
         Log.info (fun k -> k "Selected solver %s" name);
         match name with
-        | "Z3" | "z3" -> (name, (module Z3_mappings))
-        | "Bitwuzla" | "bitwuzla" -> (name, (module Bitwuzla_mappings))
+        | "z3" -> (name, (module Z3_mappings))
+        | "bitwuzla" -> (name, (module Bitwuzla_mappings))
         | _ -> Fmt.failwith "SMTZilla: Unknown solver %s" name
       (* TODO: Need to move some declarations around to be able to use
          `Solver_type.t` instead of strings, mayba SMTZilla should not be

@@ -24,7 +24,7 @@ module M = struct
     include Dolmenexpr_to_expr.DolmenIntf
 
     module Internals = struct
-      let name = "Colibri2"
+      let name = "colibri2"
 
       let caches_consts = false
 
