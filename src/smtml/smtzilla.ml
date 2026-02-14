@@ -21,7 +21,7 @@ module Fresh = struct
 
     type solver =
       { solver_instances : (string, solver_instance) Hashtbl.t
-      ; mutable exprs : Expr.t list
+      ; mutable rev_exprs : Expr.t list
       ; mutable last_solver : string option
       }
 
@@ -36,9 +36,17 @@ module Fresh = struct
 
     module Solver = struct
       let make ?params:_ ?logic:_ () =
-        { solver_instances = Hashtbl.create 16; exprs = []; last_solver = None }
+        { solver_instances = Hashtbl.create 16
+        ; rev_exprs = []
+        ; last_solver = None
+        }
 
-      let add s exprs = s.exprs <- s.exprs @ exprs
+      let add s new_exprs =
+        Hashtbl.iter
+          (fun _ (SolverInst ((module S), instance)) ->
+            S.Solver.add instance new_exprs )
+          s.solver_instances;
+        s.rev_exprs <- List.rev_append new_exprs s.rev_exprs
 
       let get_best_solver exprs : string =
         let feats = Feature_extraction.extract_feats exprs in
@@ -63,7 +71,9 @@ module Fresh = struct
             | "bitwuzla" -> (module Bitwuzla_mappings)
             | _ -> Fmt.failwith "SMTZilla: Unknown solver %s" name
           in
-          let solver_inst = SolverInst ((module S), S.Solver.make ()) in
+          let instance = S.Solver.make () in
+          S.Solver.add instance (List.rev s.rev_exprs);
+          let solver_inst = SolverInst ((module S), instance) in
           Hashtbl.add s.solver_instances name solver_inst;
           solver_inst
       (* TODO: Need to move some declarations around to be able to use
@@ -71,16 +81,11 @@ module Fresh = struct
         one of the solver types? *)
 
       let check s ~assumptions =
-        let best_solver_name = get_best_solver (s.exprs @ assumptions) in
+        let best_solver_name = get_best_solver (s.rev_exprs @ assumptions) in
         s.last_solver <- Some best_solver_name;
         let (SolverInst ((module S), solver_inst)) =
           get_solver_instance s best_solver_name
         in
-        (* TODO: addition should only be done if it was not previously done
-          i.e. when a new solver istance is created. When an `add` is called,
-          the added assumptions should be added to all existing solver instances
-        *)
-        S.Solver.add solver_inst s.exprs;
         S.Solver.check solver_inst ~assumptions
 
       let model s =
@@ -98,9 +103,9 @@ module Fresh = struct
 
       let pop _ _ = ()
 
-      let reset s = s.exprs <- []
+      let reset s = s.rev_exprs <- []
 
-      let clone s = { s with exprs = s.exprs }
+      let clone s = { s with rev_exprs = s.rev_exprs }
 
       let interrupt _ = ()
 
