@@ -127,9 +127,19 @@ module Fresh = struct
             S.Solver.interrupt instance )
           s.solver_instances
 
-      let add_simplifier s = s
+      let add_simplifier s =
+        Hashtbl.filter_map_inplace
+          (fun _ (SolverInst ((module S), instance)) ->
+            let instance = S.Solver.add_simplifier instance in
+            Some (SolverInst ((module S), instance)) )
+          s.solver_instances;
+        s
 
-      let get_statistics _ = Statistics.Map.empty
+      let get_statistics s =
+        Hashtbl.fold
+          (fun _ (SolverInst ((module S), instance)) acc ->
+            Statistics.merge (S.Solver.get_statistics instance) acc )
+          s.solver_instances Statistics.Map.empty
     end
 
     let value (Model ((module S), _, m)) expr = S.value m expr
