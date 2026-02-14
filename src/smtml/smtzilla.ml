@@ -40,7 +40,7 @@ module Fresh = struct
 
       let add s exprs = s.exprs <- s.exprs @ exprs
 
-      let get_best_solver exprs : string * (module Mappings.S_with_fresh) =
+      let get_best_solver exprs : string =
         let feats = Feature_extraction.extract_feats exprs in
         let scores =
           List.map
@@ -51,24 +51,37 @@ module Fresh = struct
         in
         let name = Regression_model.choose_best scores in
         Log.info (fun k -> k "Selected solver %s" name);
-        match name with
-        | "z3" -> (name, (module Z3_mappings))
-        | "bitwuzla" -> (name, (module Bitwuzla_mappings))
-        | _ -> Fmt.failwith "SMTZilla: Unknown solver %s" name
+        name
+
+      let get_solver_instance s name =
+        match Hashtbl.find_opt s.solver_instances name with
+        | Some s -> s
+        | None ->
+          let (module S) : (module Mappings.S_with_fresh) =
+            match name with
+            | "z3" -> (module Z3_mappings)
+            | "bitwuzla" -> (module Bitwuzla_mappings)
+            | _ -> Fmt.failwith "SMTZilla: Unknown solver %s" name
+          in
+          let solver_inst = SolverInst ((module S), S.Solver.make ()) in
+          Hashtbl.add s.solver_instances name solver_inst;
+          solver_inst
       (* TODO: Need to move some declarations around to be able to use
-         `Solver_type.t` instead of strings, mayba SMTZilla should not be
-         one of the solver types? *)
+        `Solver_type.t` instead of strings, mayba SMTZilla should not be
+        one of the solver types? *)
 
       let check s ~assumptions =
-        let all_exprs = s.exprs @ assumptions in
-        let best_solver_name, (module Best) = get_best_solver all_exprs in
+        let best_solver_name = get_best_solver (s.exprs @ assumptions) in
         s.last_solver <- Some best_solver_name;
-        let solver_inst = Best.Solver.make () in
-        Hashtbl.add s.solver_instances best_solver_name
-          (SolverInst ((module Best), solver_inst));
-        let solver_inst = Best.Solver.make () in
-        Best.Solver.add solver_inst s.exprs;
-        Best.Solver.check solver_inst ~assumptions
+        let (SolverInst ((module S), solver_inst)) =
+          get_solver_instance s best_solver_name
+        in
+        (* TODO: addition should only be done if it was not previously done
+          i.e. when a new solver istance is created. When an `add` is called,
+          the added assumptions should be added to all existing solver instances
+        *)
+        S.Solver.add solver_inst s.exprs;
+        S.Solver.check solver_inst ~assumptions
 
       let model s =
         match s.last_solver with
