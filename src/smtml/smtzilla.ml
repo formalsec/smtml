@@ -36,7 +36,7 @@ module Fresh = struct
 
     module Solver = struct
       let make ?params:_ ?logic:_ () =
-        { solver_instances = Hashtbl.create 2; exprs = []; last_solver = None }
+        { solver_instances = Hashtbl.create 16; exprs = []; last_solver = None }
 
       let add s exprs = s.exprs <- s.exprs @ exprs
 
