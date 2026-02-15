@@ -7,9 +7,11 @@ module FeatMap = Feature_extraction.FeatMap
 
 type score = float
 
-let score_of_int = float_of_int
+let pp_score fmt f = Fmt.pf fmt "%.17g" f
 
 let compare_score = Float.compare
+
+let score_of_int = float_of_int
 
 let to_score = to_float
 
@@ -33,6 +35,21 @@ type dt_model = tree
 type t =
   | GBModel of gb_model
   | DTModel of dt_model
+
+let rec pp_tree fmt = function
+  | Leaf f -> Fmt.pf fmt "Leaf (%a)" pp_score f
+  | Node { feature; threshold; left; right } ->
+    Fmt.pf fmt "Node { feature = %S; threshold = %a; left = %a; right = %a }"
+      feature pp_score threshold pp_tree left pp_tree right
+
+let pp_gb_model fmt { init_value; trees } =
+  Fmt.pf fmt "{ init_value = %a; trees = [%a] }" pp_score init_value
+    (Fmt.list ~sep:(fun fmt () -> Fmt.pf fmt "; ") pp_tree)
+    trees
+
+let pp fmt = function
+  | GBModel gb -> Fmt.pf fmt "GBModel (%a)" pp_gb_model gb
+  | DTModel dt -> Fmt.pf fmt "DTModel (%a)" pp_tree dt
 
 let rec tree_of_json json =
   match member "value" json with

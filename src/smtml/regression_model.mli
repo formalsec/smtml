@@ -2,9 +2,13 @@
 (* Copyright (C) 2023-2024 formalsec *)
 (* Written by Hichem Rami Ait El Hara *)
 
+type score
+
+val pp_score : score Fmt.t
+
 type t
 
-type score
+val pp : t Fmt.t
 
 val choose_best : (score * 'a) list -> 'a
 
