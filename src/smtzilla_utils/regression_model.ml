@@ -3,15 +3,33 @@
 (* Written by Hichem Rami Ait El Hara *)
 
 open Yojson.Safe.Util
-module FeatMap = Feature_extraction.FeatMap
+
+module FeatMap = struct
+  include Map.Make (String)
+
+  let find_def0 k m = match find_opt k m with Some n -> n | None -> 0
+end
+(* TODO: use ints or an ADT instead of strings for keys, though strings
+         give a convenient practicality. *)
+
+type features = int FeatMap.t
 
 type score = float
 
-let pp_score fmt f = Fmt.pf fmt "%.17g" f
+let pp_float_aux fmt f =
+  if Float.is_integer f then Fmt.pf fmt "%g." f else Fmt.pf fmt "%.17g" f
+
+let pp_float fmt f =
+  if Float.compare f 0. >= 0 then Fmt.pf fmt "%a" pp_float_aux f
+  else Fmt.pf fmt "(%a)" pp_float_aux f
+
+let pp_score fmt f = Fmt.pf fmt "(score_of_float %a)" pp_float f
 
 let compare_score = Float.compare
 
 let score_of_int = float_of_int
+
+let score_of_float (f : float) : score = f
 
 let to_score = to_float
 
@@ -25,8 +43,7 @@ type tree =
       }
 
 type gb_model =
-  { (* n_estimators : int; *)
-    init_value : score
+  { init_value : score
   ; trees : tree list
   }
 

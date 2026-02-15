@@ -1,0 +1,5 @@
+(library
+ (name smtzilla_utils)
+ (public_name smtml.smtzilla_utils)
+ (modules regression_model)
+ (libraries prelude fmt yojson))

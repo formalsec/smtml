@@ -40,7 +40,8 @@
   params
   parse
   parser
-  regression_model
+  ; regression_model
+  regression_model_default
   rewrite
   smtlib
   smtzilla
@@ -58,7 +59,8 @@
   z3_mappings)
  (private_modules lexer parser)
  (flags
-  (:standard -open Smtml_prelude))
+  (:standard -open Smtml_prelude)
+  (:standard -open Smtzilla_utils))
  (libraries
   bos
   cmdliner
@@ -71,6 +73,7 @@
   ocaml_intrinsics
   scfg
   smtml.prelude
+  smtml.smtzilla_utils
   threads
   yojson
   mtime.clock
@@ -154,3 +157,16 @@
      (echo "let solver_name = \"alt-ergo\"\n")
      (echo "let solver_package = solver_name\n")
      (cat %{deps}))))))
+
+(executable
+ (name regression_model_default_gen)
+ (modules regression_model_default_gen)
+ (libraries smtml.smtzilla_utils))
+
+(rule
+ (target regression_model_default.ml)
+ (deps ../../misc/model.json)
+ (action
+  (with-outputs-to
+   %{target}
+   (run ./regression_model_default_gen.exe))))
