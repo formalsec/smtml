@@ -2,17 +2,14 @@
 (* Copyright (C) 2023-2024 formalsec *)
 (* Written by Hichem Rami Ait El Hara *)
 
+open Smtzilla_utils
 open Mappings_intf
 
 let available_models : (string * Regression_model.t) list =
   let env_var = "MODEL_FILE_PATH" in
   match Bos.OS.Env.var env_var with
-  | Some path ->
-    let models = Regression_model.read_models_from_file path in
-    models
-  | None ->
-    let models = Regression_model.read_models_from_file "./misc/model.json" in
-    models
+  | Some path -> Regression_model.read_models_from_file path
+  | None -> Regression_model_default.default_models
 
 module Fresh = struct
   module Make () = struct

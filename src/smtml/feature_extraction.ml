@@ -2,15 +2,7 @@
 (* Copyright (C) 2023-2024 formalsec *)
 (* Written by the Smtml programmers *)
 
-module FeatMap = struct
-  include Map.Make (String)
-
-  let find_def0 k m = match find_opt k m with Some n -> n | None -> 0
-end
-(* TODO: use ints or an ADT instead of strings for keys, though strings
-         give a convenient practicality. *)
-
-type features = int FeatMap.t
+open Regression_model
 
 let string_of_unop (unop : Ty.Unop.t) : string =
   match unop with
