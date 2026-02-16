@@ -16,9 +16,15 @@ module Fresh = struct
     type solver_instance =
       | SolverInst : (module S with type solver = 's) * 's -> solver_instance
 
+    type stmt =
+      | Assertions of Expr.t list
+      | Push
+      | Pop of int
+
     type solver =
       { solver_instances : (string, solver_instance) Hashtbl.t
-      ; mutable rev_exprs : Expr.t list
+      ; mutable expr_acc : Expr.t list
+      ; mutable stmts : stmt list
       ; mutable last_solver : string option
       }
 
@@ -34,7 +40,8 @@ module Fresh = struct
     module Solver = struct
       let make ?params:_ ?logic:_ () =
         { solver_instances = Hashtbl.create 16
-        ; rev_exprs = []
+        ; expr_acc = []
+        ; stmts = []
         ; last_solver = None
         }
 
@@ -43,7 +50,8 @@ module Fresh = struct
           (fun _ (SolverInst ((module S), instance)) ->
             S.Solver.add instance new_exprs )
           s.solver_instances;
-        s.rev_exprs <- List.rev_append new_exprs s.rev_exprs
+        s.expr_acc <- List.rev_append new_exprs s.expr_acc;
+        s.stmts <- Assertions new_exprs :: s.stmts
 
       let get_best_solver exprs : string =
         let feats = Feature_extraction.extract_feats exprs in
@@ -69,7 +77,12 @@ module Fresh = struct
             | _ -> Fmt.failwith "SMTZilla: Unknown solver %s" name
           in
           let instance = S.Solver.make () in
-          S.Solver.add instance (List.rev s.rev_exprs);
+          List.iter
+            (function
+              | Assertions exprs -> S.Solver.add instance exprs
+              | Push -> S.Solver.push instance
+              | Pop n -> S.Solver.pop instance n )
+            (List.rev s.stmts);
           let solver_inst = SolverInst ((module S), instance) in
           Hashtbl.add s.solver_instances name solver_inst;
           solver_inst
@@ -78,7 +91,9 @@ module Fresh = struct
         one of the solver types? *)
 
       let check s ~assumptions =
-        let best_solver_name = get_best_solver (s.rev_exprs @ assumptions) in
+        let best_solver_name = get_best_solver (s.expr_acc @ assumptions) in
+        (* TODO: (s.expr_acc @ assumptions) is not really correct as s.expr_acc
+          does not take into account pushes and pops.  *)
         s.last_solver <- Some best_solver_name;
         let (SolverInst ((module S), solver_inst)) =
           get_solver_instance s best_solver_name
@@ -96,9 +111,17 @@ module Fresh = struct
             | Some m -> Some (Model ((module S), s, m))
             | None -> None ) )
 
-      let push _ = ()
+      let push s =
+        Hashtbl.iter
+          (fun _ (SolverInst ((module S), instance)) -> S.Solver.push instance)
+          s.solver_instances;
+        s.stmts <- Push :: s.stmts
 
-      let pop _ _ = ()
+      let pop s n =
+        Hashtbl.iter
+          (fun _ (SolverInst ((module S), instance)) -> S.Solver.pop instance n)
+          s.solver_instances;
+        s.stmts <- Pop n :: s.stmts
 
       let reset s =
         Hashtbl.iter
@@ -115,7 +138,7 @@ module Fresh = struct
                    (SolverInst ((module S), S.Solver.clone instance)) )
                s.solver_instances;
              solver_instances )
-        ; rev_exprs = s.rev_exprs
+        ; stmts = s.stmts
         }
 
       let interrupt s =
