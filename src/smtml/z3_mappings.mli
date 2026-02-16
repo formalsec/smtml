@@ -7,5 +7,7 @@
     provides functions to translate problems into solver-specific inputs and to
     interpret solver outputs. *)
 
+module M : Mappings_intf.M_with_make
+
 (** @inline *)
 include Mappings_intf.S_with_fresh
