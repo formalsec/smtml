@@ -210,26 +210,26 @@ let requirements_cmd =
     in
     Cmd.info "requirements" ~doc
   in
-  let requirements =
-    Term.const
-      (let reqfile_path =
-         String.concat "/" [ smtzilla_data_dirpath (); __REQFILE_NAME__ ]
-       in
-       let res =
-         Fpath.of_string reqfile_path >>= Bos.OS.File.exists >>= fun exists ->
-         if exists then
-           Fpath.of_string reqfile_path >>= fun f ->
-           Bos.OS.File.with_ic f
-             (fun ic () -> Fmt.epr "%s" (In_channel.input_all ic))
-             ()
-         else
-           Error
-             (`Msg
-                (Fmt.str "The python requirements file does not exist in: %s"
-                   reqfile_path ) )
-       in
-       match res with
-       | Ok () -> ()
-       | Error (`Msg msg) -> Fmt.failwith "Error: %s" msg )
+  let pp_requirements () =
+    let reqfile_path =
+      String.concat "/" [ smtzilla_data_dirpath (); __REQFILE_NAME__ ]
+    in
+    let res =
+      Fpath.of_string reqfile_path >>= Bos.OS.File.exists >>= fun exists ->
+      if exists then
+        Fpath.of_string reqfile_path >>= fun f ->
+        Bos.OS.File.with_ic f
+          (fun ic () -> Fmt.pr "%s" (In_channel.input_all ic))
+          ()
+      else
+        Error
+          (`Msg
+             (Fmt.str "The python requirements file does not exist in: %s"
+                reqfile_path ) )
+    in
+    match res with
+    | Ok () -> ()
+    | Error (`Msg msg) -> Fmt.failwith "Error: %s" msg
   in
+  let requirements = Term.(const pp_requirements $ const ()) in
   Cmd.v requirements_info requirements
