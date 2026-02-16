@@ -1,7 +1,13 @@
 # Changelog
 
+## 0.22.0 - 2026-02-16
+
+- 2026-02-11 Ci: add missing `--with-test` flag to deploy CI
+- 2026-02-11 Test: make bisec_ppx a dev dependency
+
 ## 0.21.0 - 2026-02-09
 
+- 2026-02-09 Release 0.21.0
 - 2026-02-09 Chore: extend maintenance intent
 - 2026-02-06 Use Re instead of Dune_re
 - 2026-02-06 Update shell.nix
