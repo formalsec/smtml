@@ -2,7 +2,7 @@
 (* Copyright (C) 2023-2024 formalsec *)
 (* Written by the Smtml programmers *)
 
-module Nop = struct
+module M = struct
   module Make () = struct
     module Internals = struct
       let name = "nop"
@@ -493,4 +493,4 @@ module Nop = struct
   include Make ()
 end
 
-include Mappings.Make (Nop)
+include Mappings.Make (M)
