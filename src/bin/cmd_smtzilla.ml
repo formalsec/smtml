@@ -1,7 +1,35 @@
 open Cmdliner
 open Term.Syntax
+open Rresult
+
+let __REQFILE_NAME__ = "requirements.txt"
 
 let __SCRIPT_NAME__ = "smtzilla.py"
+
+let smtzilla_data_dirpath () =
+  let dirpath =
+    match Smtzilla_utils.Sites.data with
+    | h :: _ -> h
+    | [] -> Fmt.failwith "Smtzilla_utils.Sites.data is empty"
+  in
+  dirpath
+
+let python_script_path () =
+  let python_script_path =
+    String.concat "/" [ smtzilla_data_dirpath (); __SCRIPT_NAME__ ]
+  in
+  let res =
+    Fpath.of_string python_script_path >>= Bos.OS.File.exists >>= fun exists ->
+    if exists then Ok python_script_path
+    else
+      Error
+        (`Msg
+           (Fmt.str "The python script file does not exist in: %s"
+              python_script_path ) )
+  in
+  match res with
+  | Ok str -> str
+  | Error (`Msg msg) -> Fmt.failwith "Error: %s" msg
 
 let parse_file s =
   match Fpath.of_string s with
@@ -106,7 +134,7 @@ let run_regression ~debug ~gradient_boost ~pp_stats ~run_simulation ~output_json
     else "--no-gradient-boost" :: args
   in
   let args = if debug then "--debug" :: args else args in
-  let cmd = Bos.Cmd.of_list ("python3" :: __SCRIPT_NAME__ :: args) in
+  let cmd = Bos.Cmd.of_list ("python3" :: python_script_path () :: args) in
   Fmt.epr "Running: %a@." Bos.Cmd.pp cmd;
   match Bos.OS.Cmd.run cmd with
   | Ok () -> ()
@@ -182,5 +210,26 @@ let requirements_cmd =
     in
     Cmd.info "requirements" ~doc
   in
-  let requirements = Term.const (Fmt.epr "HERE@.") in
+  let requirements =
+    Term.const
+      (let reqfile_path =
+         String.concat "/" [ smtzilla_data_dirpath (); __REQFILE_NAME__ ]
+       in
+       let res =
+         Fpath.of_string reqfile_path >>= Bos.OS.File.exists >>= fun exists ->
+         if exists then
+           Fpath.of_string reqfile_path >>= fun f ->
+           Bos.OS.File.with_ic f
+             (fun ic () -> Fmt.epr "%s" (In_channel.input_all ic))
+             ()
+         else
+           Error
+             (`Msg
+                (Fmt.str "The python requirements file does not exist in: %s"
+                   reqfile_path ) )
+       in
+       match res with
+       | Ok () -> ()
+       | Error (`Msg msg) -> Fmt.failwith "Error: %s" msg )
+  in
   Cmd.v requirements_info requirements

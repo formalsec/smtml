@@ -3,3 +3,12 @@
  (public_name smtml.smtzilla_utils)
  (modules regression_model)
  (libraries prelude fmt yojson))
+
+(install
+ (package smtzilla_utils)
+ (section
+  (site
+   (smtzilla_utils data)))
+ (files
+  (requirements.txt as requirements.txt)
+  (smtzilla.py as smtzilla.py)))
