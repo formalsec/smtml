@@ -10,6 +10,8 @@ let is_available = function
   | Colibri2_solver -> Colibri2_mappings.is_available
   | Cvc5_solver -> Cvc5_mappings.is_available
   | Altergo_solver -> Altergo_mappings.is_available
+  | Smtzilla_solver ->
+    Z3_mappings.is_available || Bitwuzla_mappings.is_available
 
 let supported_solvers =
   [ Z3_solver; Bitwuzla_solver; Colibri2_solver; Cvc5_solver; Altergo_solver ]
@@ -24,6 +26,7 @@ let mappings_of_solver : Solver_type.t -> (module Mappings.S_with_fresh) =
   | Colibri2_solver -> (module Colibri2_mappings)
   | Cvc5_solver -> (module Cvc5_mappings)
   | Altergo_solver -> (module Altergo_mappings)
+  | Smtzilla_solver -> (module Smtzilla)
 
 let solver =
   match available with

@@ -8,7 +8,7 @@ let is_available =
 let test_suite =
   let module Z3_opt = Test_optimizer.Make (Z3_mappings) in
   let module Z3_solv = Test_solver.Make (Z3_mappings) in
-  let module Z3_bindings = Test_bindings.Make (Z3_mappings.Mappings) in
+  let module Z3_bindings = Test_bindings.Make (Z3_mappings.M) in
   "Z3"
   >::: [ is_available
        ; Z3_opt.test
