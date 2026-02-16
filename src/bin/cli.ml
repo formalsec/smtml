@@ -125,5 +125,16 @@ let commands =
     Cmd.v info term
   in
 
+  let cmd_smtzilla =
+    let info =
+      let doc = "Using machine learning to select SMT solvers" in
+      Cmd.info "smtzilla" ~doc
+    in
+    let default = Term.(ret (const (`Help (`Plain, None)))) in
+    Cmd.group info ~default
+      Cmd_smtzilla.[ extract_cmd; regression_cmd; train_cmd; requirements_cmd ]
+  in
+
   let info = Cmd.info ~version "smtml" in
-  Cmd.group info [ cmd_run; cmd_to_smt2; cmd_to_smtml; cmd_version ]
+  Cmd.group info
+    [ cmd_run; cmd_to_smt2; cmd_to_smtml; cmd_version; cmd_smtzilla ]
