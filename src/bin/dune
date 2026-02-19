@@ -9,5 +9,5 @@
   (backend bisect_ppx)))
 
 (generate_sites_module
- (module smtzilla_utils)
- (sites smtzilla_utils))
+ (module smtml_sites)
+ (sites smtml))
