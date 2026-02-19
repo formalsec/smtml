@@ -58,11 +58,11 @@ let debug =
   let doc = "Print debugging messages." in
   Arg.(value & flag & info [ "debug" ] ~doc)
 
-type perdictor =
+type predictor =
   | GradientBoost
   | DecisionTree
 
-let perdictor_conv =
+let predictor_conv =
   let parse s =
     match String.lowercase_ascii s with
     | "gradient-boost" | "gb" -> Ok GradientBoost
@@ -81,7 +81,7 @@ let gradient_boost =
      gb), which is the default, or a decision tree regressor (decision-tree or \
      dt)."
   in
-  Arg.(value & opt perdictor_conv GradientBoost & info [ "predictor" ] ~doc)
+  Arg.(value & opt predictor_conv GradientBoost & info [ "predictor" ] ~doc)
 
 let pp_stats =
   let doc = "Print statistics on queries." in
