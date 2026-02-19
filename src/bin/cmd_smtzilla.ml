@@ -29,40 +29,28 @@ let python_script_path () =
   R.failwith_error_msg res
 
 let parse_file s =
-  match Fpath.of_string s with
-  | Error _ as e -> e
-  | Ok path -> begin
-    match Bos.OS.File.exists path with
-    | Ok true -> Ok path
-    | Ok false -> Fmt.error_msg "The file '%a' does not exist" Fpath.pp path
-    | Error _ as e -> e
-  end
+  Fpath.of_string s >>= fun path ->
+  Bos.OS.File.exists path >>= fun b ->
+  if b then Ok path
+  else Fmt.error_msg "The file '%a' does not exist" Fpath.pp path
 
 let file_exists_conv = Arg.conv (parse_file, Fpath.pp)
 
 let csv_file_exists_conv =
   let parse_csv_file s =
-    match parse_file s with
-    | Error _ as e -> e
-    | Ok path -> begin
-      match Fpath.has_ext "csv" path with
-      | true -> Ok path
-      | false -> Fmt.error_msg "File '%a' is not a CSV file" Fpath.pp path
-    end
+    Fpath.of_string s >>= fun path ->
+    if Fpath.has_ext "csv" path then Ok path
+    else Fmt.error_msg "File '%a' is not a CSV file" Fpath.pp path
   in
   Arg.conv (parse_csv_file, Fpath.pp)
 
 let existing_parent_dir_conv =
   let parse s =
-    match Fpath.of_string s with
-    | Error _ as e -> e
-    | Ok path -> begin
-      let dir, _ = Fpath.split_base path in
-      match Bos.OS.Dir.exists dir with
-      | Ok true -> Ok path
-      | Ok false -> Fmt.error_msg "No parent directory for '%a'" Fpath.pp path
-      | Error _ as e -> e
-    end
+    Fpath.of_string s >>= fun path ->
+    let dir, _ = Fpath.split_base path in
+    Bos.OS.Dir.exists dir >>= fun b ->
+    if b then Ok path
+    else Fmt.error_msg "No parent directory for '%a'" Fpath.pp path
   in
   Arg.conv (parse, Fpath.pp)
 
