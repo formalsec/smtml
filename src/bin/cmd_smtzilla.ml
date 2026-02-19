@@ -2,7 +2,7 @@ open Cmdliner
 open Term.Syntax
 open Rresult
 
-let __SCRIPT_NAME__ = R.failwith_error_msg (Fpath.of_string "smtzilla.py")
+let script_name = R.failwith_error_msg (Fpath.of_string "smtzilla.py")
 
 let smtzilla_data_dirpath () =
   match Smtml_sites.Sites.data with
@@ -15,8 +15,7 @@ let smtzilla_data_dirpath () =
 
 let python_script_path () =
   let python_script_path =
-    smtzilla_data_dirpath () >>| fun dirpath ->
-    Fpath.(dirpath // __SCRIPT_NAME__)
+    smtzilla_data_dirpath () >>| fun dirpath -> Fpath.(dirpath // script_name)
   in
   let res =
     python_script_path >>= fun script_path ->
@@ -70,8 +69,8 @@ let predictor_conv =
     | _ -> Error (`Msg (Printf.sprintf "Unknown model type: %s" s))
   in
   let print ppf = function
-    | GradientBoost -> Format.fprintf ppf "GradientBoost"
-    | DecisionTree -> Format.fprintf ppf "DecisionTree"
+    | GradientBoost -> Format.fprintf ppf "gradient-boost"
+    | DecisionTree -> Format.fprintf ppf "decision-tree"
   in
   Arg.conv (parse, print)
 
@@ -119,8 +118,6 @@ let output_json =
     & opt (some existing_parent_dir_conv) None
     & info [ "output" ] ~doc ~docv:"JSON" )
 
-let fpath_to_cmd p = Bos.Cmd.v (Fpath.to_string p)
-
 let run_regression ~debug ~gradient_boost ~pp_stats ~run_simulation ~output_json
   ~input_csv =
   let debug = Bos.Cmd.(if debug then v "--debug" else empty) in
@@ -136,16 +133,14 @@ let run_regression ~debug ~gradient_boost ~pp_stats ~run_simulation ~output_json
   in
   let export =
     Bos.Cmd.(
-      match output_json with
-      | Some f -> v "--export" %% fpath_to_cmd f
-      | None -> empty )
+      match output_json with Some f -> v "--export" % p f | None -> empty )
   in
   let cmd =
     Bos.Cmd.(
       v "python3"
-      %% fpath_to_cmd (python_script_path ())
+      % p (python_script_path ())
       %% debug %% gradient_boost %% pp_stats %% run_simulation %% export
-      %% fpath_to_cmd input_csv )
+      % p input_csv )
   in
   Fmt.epr "Running: %a@." Bos.Cmd.pp cmd;
   match Bos.OS.Cmd.run cmd with
