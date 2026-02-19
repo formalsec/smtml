@@ -170,3 +170,12 @@
   (with-outputs-to
    %{target}
    (run ./regression_model_default_gen.exe))))
+
+(install
+ (package smtml)
+ (section
+  (site
+   (smtml data)))
+ (files
+  (../smtzilla_utils/requirements.txt as requirements.txt)
+  (../smtzilla_utils/smtzilla.py as smtzilla.py)))
