@@ -1,0 +1,26 @@
+on: push
+
+jobs:
+  test-z3-native:
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ["ocaml-4.14", "ocaml-5.4", "ocaml-5.4-z3"]
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/formalsec/${{ matrix.image }}:latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Removes ·git to prevent opam from checking out submodueles
+      - name: Remove .git
+        run: rm -rf .git
+
+      - name: Build and test
+        run: |
+          opam update
+          opam install -y . --deps-only --with-test
+          dune build @install
+          dune runtest
