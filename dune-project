@@ -113,8 +113,5 @@
   (mdx :with-test)
   (re :with-dev-setup)
   (sexplib :with-dev-setup)
-  (tls-lwt :with-dev-setup)))
-
-(package
- (name smtzilla_utils)
+  (tls-lwt :with-dev-setup))
  (sites (share data)))

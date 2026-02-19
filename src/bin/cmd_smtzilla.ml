@@ -8,7 +8,7 @@ let __SCRIPT_NAME__ = "smtzilla.py"
 
 let smtzilla_data_dirpath () =
   let dirpath =
-    match Smtzilla_utils.Sites.data with
+    match Smtml_sites.Sites.data with
     | h :: _ -> h
     | [] -> Fmt.failwith "Smtzilla_utils.Sites.data is empty"
   in
