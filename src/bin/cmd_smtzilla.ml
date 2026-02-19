@@ -7,12 +7,13 @@ let __REQFILE_NAME__ = "requirements.txt"
 let __SCRIPT_NAME__ = "smtzilla.py"
 
 let smtzilla_data_dirpath () =
-  let dirpath =
-    match Smtml_sites.Sites.data with
-    | h :: _ -> h
-    | [] -> Fmt.failwith "Smtzilla_utils.Sites.data is empty"
-  in
-  dirpath
+  match Smtml_sites.Sites.data with
+  | [ dirpath ] -> dirpath
+  | _ ->
+    Fmt.failwith
+      "Expected one directory path in Smtzilla_utils.Sites.data, instead got: \
+       %d values"
+      (List.length Smtml_sites.Sites.data)
 
 let python_script_path () =
   let python_script_path =
@@ -22,10 +23,8 @@ let python_script_path () =
     Fpath.of_string python_script_path >>= Bos.OS.File.exists >>= fun exists ->
     if exists then Ok python_script_path
     else
-      Error
-        (`Msg
-           (Fmt.str "The python script file does not exist in: %s"
-              python_script_path ) )
+      Fmt.error_msg "The python script file does not exist in: %s"
+        python_script_path
   in
   match res with
   | Ok str -> str
@@ -222,10 +221,8 @@ let requirements_cmd =
           (fun ic () -> Fmt.pr "%s" (In_channel.input_all ic))
           ()
       else
-        Error
-          (`Msg
-             (Fmt.str "The python requirements file does not exist in: %s"
-                reqfile_path ) )
+        Fmt.error_msg "The python requirements file does not exist in: %s"
+          reqfile_path
     in
     match res with
     | Ok () -> ()
