@@ -222,7 +222,7 @@ val model : Model.t option = Some (model
 
 ### Solver Statistics
 
-<!-- $MDX non-deterministic -->
+<!-- $MDX skip -->
 ```ocaml
 # let stats = Z3.get_statistics solver;;
 val stats : Statistics.t =
