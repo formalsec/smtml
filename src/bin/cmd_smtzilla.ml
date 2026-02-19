@@ -2,31 +2,31 @@ open Cmdliner
 open Term.Syntax
 open Rresult
 
-let __SCRIPT_NAME__ = "smtzilla.py"
+let __SCRIPT_NAME__ = R.failwith_error_msg (Fpath.of_string "smtzilla.py")
 
 let smtzilla_data_dirpath () =
   match Smtml_sites.Sites.data with
-  | [ dirpath ] -> dirpath
+  | [ dirpath ] -> Fpath.of_string dirpath
   | _ ->
-    Fmt.failwith
+    Fmt.error_msg
       "Expected one directory path in Smtzilla_utils.Sites.data, instead got: \
        %d values"
       (List.length Smtml_sites.Sites.data)
 
 let python_script_path () =
   let python_script_path =
-    String.concat "/" [ smtzilla_data_dirpath (); __SCRIPT_NAME__ ]
+    smtzilla_data_dirpath () >>| fun dirpath ->
+    Fpath.(dirpath // __SCRIPT_NAME__)
   in
   let res =
-    Fpath.of_string python_script_path >>= Bos.OS.File.exists >>= fun exists ->
-    if exists then Ok python_script_path
+    python_script_path >>= fun script_path ->
+    Bos.OS.File.exists script_path >>= fun exists ->
+    if exists then Ok script_path
     else
-      Fmt.error_msg "The python script file does not exist in: %s"
-        python_script_path
+      Fmt.error_msg "The python script file does not exist in: %a" Fpath.pp
+        script_path
   in
-  match res with
-  | Ok str -> str
-  | Error (`Msg msg) -> Fmt.failwith "Error: %s" msg
+  R.failwith_error_msg res
 
 let parse_file s =
   match Fpath.of_string s with
@@ -116,22 +116,32 @@ let output_json =
     & opt (some existing_parent_dir_conv) None
     & info [ "output" ] ~doc ~docv:"JSON" )
 
+let fpath_to_cmd p = Bos.Cmd.v (Fpath.to_string p)
+
 let run_regression ~debug ~gradient_boost ~pp_stats ~run_simulation ~output_json
   ~input_csv =
-  let args = [ Fpath.to_string input_csv ] in
-  let args =
-    match output_json with
-    | Some f -> "--export" :: Fpath.to_string f :: args
-    | None -> args
+  let debug = Bos.Cmd.(if debug then v "--debug" else empty) in
+  let gradient_boost =
+    Bos.Cmd.(
+      if gradient_boost then v "--gradient-boost" else v "--no-gradient-boost" )
   in
-  let args = if run_simulation then "--simulation" :: args else args in
-  let args = if pp_stats then "--pp-stats" :: args else args in
-  let args =
-    if gradient_boost then "--gradient-boost" :: args
-    else "--no-gradient-boost" :: args
+  let pp_stats = Bos.Cmd.(if pp_stats then v "--pp-stats" else empty) in
+  let run_simulation =
+    Bos.Cmd.(if run_simulation then v "--simulation" else empty)
   in
-  let args = if debug then "--debug" :: args else args in
-  let cmd = Bos.Cmd.of_list ("python3" :: python_script_path () :: args) in
+  let export =
+    Bos.Cmd.(
+      match output_json with
+      | Some f -> v "--export" %% fpath_to_cmd f
+      | None -> empty )
+  in
+  let cmd =
+    Bos.Cmd.(
+      v "python3"
+      %% fpath_to_cmd (python_script_path ())
+      %% debug %% gradient_boost %% pp_stats %% run_simulation %% export
+      %% fpath_to_cmd input_csv )
+  in
   Fmt.epr "Running: %a@." Bos.Cmd.pp cmd;
   match Bos.OS.Cmd.run cmd with
   | Ok () -> ()
