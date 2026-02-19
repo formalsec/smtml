@@ -58,15 +58,30 @@ let debug =
   let doc = "Print debugging messages." in
   Arg.(value & flag & info [ "debug" ] ~doc)
 
+type perdictor =
+  | GradientBoost
+  | DecisionTree
+
+let perdictor_conv =
+  let parse s =
+    match String.lowercase_ascii s with
+    | "gradient-boost" | "gb" -> Ok GradientBoost
+    | "decision-tree" | "dt" -> Ok DecisionTree
+    | _ -> Error (`Msg (Printf.sprintf "Unknown model type: %s" s))
+  in
+  let print ppf = function
+    | GradientBoost -> Format.fprintf ppf "GradientBoost"
+    | DecisionTree -> Format.fprintf ppf "DecisionTree"
+  in
+  Arg.conv (parse, print)
+
 let gradient_boost =
-  let doc_gb = "Use the gradient-boost regressor. (Default)" in
-  let doc_nogb = "Use the decision tree regressor." in
-  Arg.(
-    value
-    & vflag true
-        [ (true, info [ "gradient-boost" ] ~doc:doc_gb)
-        ; (false, info [ "no-gradient-boost" ] ~doc:doc_nogb)
-        ] )
+  let doc =
+    "Predictor kind, either a gradient boosting regressor (gradient-boost or \
+     gb), which is the default, or a decision tree regressor (decision-tree or \
+     dt)."
+  in
+  Arg.(value & opt perdictor_conv GradientBoost & info [ "predictor" ] ~doc)
 
 let pp_stats =
   let doc = "Print statistics on queries." in
@@ -111,7 +126,9 @@ let run_regression ~debug ~gradient_boost ~pp_stats ~run_simulation ~output_json
   let debug = Bos.Cmd.(if debug then v "--debug" else empty) in
   let gradient_boost =
     Bos.Cmd.(
-      if gradient_boost then v "--gradient-boost" else v "--no-gradient-boost" )
+      match gradient_boost with
+      | GradientBoost -> v "--gradient-boost"
+      | DecisionTree -> v "--no-gradient-boost" )
   in
   let pp_stats = Bos.Cmd.(if pp_stats then v "--pp-stats" else empty) in
   let run_simulation =
