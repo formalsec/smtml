@@ -42,6 +42,7 @@
   parser
   ; regression_model
   regression_model_default
+  requirements
   rewrite
   smtlib
   smtzilla
@@ -177,5 +178,12 @@
   (site
    (smtml data)))
  (files
-  (../smtzilla_utils/requirements.txt as requirements.txt)
   (../smtzilla_utils/smtzilla.py as smtzilla.py)))
+
+(rule
+ (with-stdout-to
+  requirements.ml
+  (progn
+   (echo "let v = {|")
+   (cat ../smtzilla_utils/requirements.txt)
+   (echo "|}"))))
