@@ -123,7 +123,7 @@ val model : Model.t = (model
 # let x_val =
   let x = Symbol.make (Ty_bitv 8) "x" in
   Model.evaluate model x;;
-val x_val : Value.t option = Some (Smtml.Value.Bitv <abstr>)
+val x_val : Value.t option = Some (Value.Bitv <abstr>)
 ]}
 
 {1:advanced Advanced Features}
