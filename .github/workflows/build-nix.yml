@@ -3,9 +3,11 @@ on:
   pull_request:
     branches:
       - main
-  push:
-    branches:
-      - main
+  # Only need to run in PR. No one should commit to main any way
+  # push:
+  #   branches:
+  #     - main
+
 jobs:
   build:
     runs-on: ubuntu-latest

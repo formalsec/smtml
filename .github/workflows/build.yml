@@ -9,20 +9,14 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
-    env:
-      # allow opam depext to yes package manager prompts
-      OPAMCONFIRMLEVEL: unsafe-yes
+    container:
+      image: ghcr.io/formalsec/ocaml-5.4
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup OCaml
-        uses: ocaml/setup-ocaml@v3
-        with:
-          ocaml-compiler: "5.3"
-
       - name: Install dependencies
-        run: opam install -y . --deps-only --with-dev-setup
+        run: opam install -y ocamlformat
 
       - name: Run lint
         run: ./scripts/lint.sh
@@ -32,12 +26,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        ocaml-compiler: ["4.14", "5.3"]
-    runs-on: ${{ matrix.os }}
-    env:
-      # allow opam depext to yes package manager prompts
-      OPAMCONFIRMLEVEL: unsafe-yes
+        ocaml-compiler: ["4.14", "5.4"]
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/formalsec/ocaml-${{ matrix.ocaml-compiler }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -45,32 +37,26 @@ jobs:
         # Removes ·git to prevent opam from checking out submodueles
       - name: Remove .git
         run: rm -rf .git
-
-      - name: Setup OCaml ${{ matrix.ocaml-compiler }}
-        uses: ocaml/setup-ocaml@v3
-        with:
-          ocaml-compiler: ${{ matrix.ocaml-compiler }}
-          dune-cache: true
 
       - name: Install dependencies
         run: opam install -y . --deps-only --with-test
 
       - name: Build
-        run: opam exec -- dune build @install
+        run: dune build @install
 
       - name: Test
-        run: opam exec -- dune runtest
+        run: dune runtest
 
-  test-solver:
+  test-big-solver:
     needs: lint
     name: Test ${{ matrix.solver }}
     strategy:
       fail-fast: false
       matrix:
-        solver: ["alt-ergo-lib", "bitwuzla-cxx", "colibri2", "cvc5", "z3"]
+        solver: ["cvc5", "z3"]
     runs-on: ubuntu-latest
-    env:
-      OPAMCONFIRMLEVEL: unsafe-yes
+    container:
+      image: ghcr.io/formalsec/ocaml-5.4-${{ matrix.solver }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -79,11 +65,32 @@ jobs:
       - name: Remove .git
         run: rm -rf .git
 
-      - name: Setup OCaml 5.3
-        uses: ocaml/setup-ocaml@v3
-        with:
-          ocaml-compiler: "5.3"
-          dune-cache: true
+      - name: Install ${{ matrix.solver }}
+        run: opam install -y . --deps-only --with-test
+
+      - name: Build
+        run: dune build @install
+
+      - name: Test
+        run: dune runtest
+
+  test-small-solver:
+    needs: lint
+    name: Test ${{ matrix.solver }}
+    strategy:
+      fail-fast: false
+      matrix:
+        solver: ["alt-ergo-lib", "bitwuzla-cxx", "colibri2"]
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/formalsec/ocaml-5.4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+        # Removes ·git to prevent opam from checking out submodueles
+      - name: Remove .git
+        run: rm -rf .git
 
       - name: Install ${{ matrix.solver }}
         run: |
@@ -91,7 +98,7 @@ jobs:
           opam install ${{ matrix.solver }}
 
       - name: Build
-        run: opam exec -- dune build @install
+        run: dune build @install
 
       - name: Test
-        run: opam exec -- dune runtest
+        run: dune runtest
