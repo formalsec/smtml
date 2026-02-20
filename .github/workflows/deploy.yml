@@ -17,18 +17,14 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/formalsec/ocaml-4.14:latest
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
       - name: Save .git
         run: mv .git /tmp/gitdir-smtml
-
-      - name: Setup OCaml 5.3
-        uses: ocaml/setup-ocaml@v3
-        with:
-          ocaml-compiler: "5.3"
-          dune-cache: true
 
       - name: Setup Pages
         id: pages

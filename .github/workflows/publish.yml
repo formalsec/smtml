@@ -8,20 +8,14 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    env:
-      # allow opam depext to yes package manager prompts
-      OPAMCONFIRMLEVEL: unsafe-yes
+    container:
+      image: ghcr.io/formalsec/ocaml-4.14:latest
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
           fetch-tags: true
-
-      - name: Setup OCaml
-        uses: ocaml/setup-ocaml@v3
-        with:
-          ocaml-compiler: "5.3"
 
       - name: Install dependencies
         run: opam install opam-publish
