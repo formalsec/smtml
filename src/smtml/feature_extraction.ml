@@ -413,10 +413,10 @@ let read_marshalled_file path : (string * Expr.t list * bool * int64) list =
           let res : (string * Expr.t list * bool * int64) list =
             Marshal.from_channel ic
           in
-          Fmt.pr "Read %d results@." (List.length res);
+          Log.debug (fun k -> k "Read %d results@." (List.length res));
           results := List.rev_append res !results
         done
-      with End_of_file -> Fmt.pr "Finished reading results@." );
+      with End_of_file -> Log.debug (fun k -> k "Finished reading results@.") );
     In_channel.close ic;
     List.rev !results
   with e ->
@@ -481,4 +481,4 @@ let cmd directory output_csv =
   in
   match Rresult.R.join res with
   | Error (`Msg m) -> Fmt.failwith "%s" m
-  | Ok () -> Fmt.pr "Done writing to %a\n%!" Fpath.pp output_csv
+  | Ok () -> Log.debug (fun k -> k "Done writing to %a\n%!" Fpath.pp output_csv)
