@@ -135,23 +135,21 @@ let run_regression ~debug ~gradient_boost ~pp_stats ~run_simulation ~output_json
     Bos.Cmd.(
       match output_json with Some f -> v "--export" % p f | None -> empty )
   in
+  let py_script_path = python_script_path () in
   let cmd =
     Bos.Cmd.(
-      v "python3"
-      % p (python_script_path ())
-      %% debug %% gradient_boost %% pp_stats %% run_simulation %% export
-      % p input_csv )
+      v "python3" % p py_script_path %% debug %% gradient_boost %% pp_stats
+      %% run_simulation %% export % p input_csv )
   in
-  Fmt.epr "Running: %a@." Bos.Cmd.pp cmd;
+  Smtml.Log.debug (fun k -> k "Running: %a@." Bos.Cmd.pp cmd);
   match Bos.OS.Cmd.run cmd with
   | Ok () -> ()
   | Error (`Msg msg) ->
     Fmt.failwith
-      "Run regression failed with error: %s\n\
-       If the error is a python error, ensure that you have installed the \
-       necessary python packages, which can be obtained with `smtml smtzilla \
-       requirements`."
-      msg
+      "Running the python script failed with the error: %s\n\
+       If the error is a python error, make sure that you have installed the \
+       necessary python packages to run the script located at: %a."
+      msg Fpath.pp py_script_path
 
 let extract_cmd =
   let extract_info =
