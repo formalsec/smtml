@@ -242,6 +242,29 @@ val stats : Statistics.t =
    (rlimit count 262))
 ```
 
+### SMTZilla
+
+SMTZilla is a solver that uses a regression model to dispatch every query it
+receives to the best solver for that query. It is usable like any solver in
+smtml through the command `smtml run -s smtzilla ...`.
+
+The default regression model used by SMTZilla is stored at `./misc/model.json`.
+To use a different regression model, place the path to the JSON file where that
+model is stored in the environment variable `MODEL_FILE_PATH`.
+
+Training the regression models can be done through the `smtml smtzilla ...`
+command. Before training a model, one has to generate training data, which can
+be done by setting the environment variable `QUERY_LOG_PATH` to the path of the
+file were queries will be stored. Setting this environment variable tells
+smtml to marshall and store every query it receives, the solver that solved it,
+and the time it took to solve it in the file specified with `QUERY_LOG_PATH`.
+
+The file of marshalled queries in `QUERY_LOG_PATH`, can be used with the command
+`smtml smtzilla train` to generate a CSV file associating to each set of query
+features the runtime with each solver, this CSV file is then passed to a python
+script (available at `./src/smtzilla_utils/smtzilla.py`) which trains the
+regression model and stores is in a JSON file.
+
 ## Supported Solvers
 
 | Solver     | Status  | Opam Package |
