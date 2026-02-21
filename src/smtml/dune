@@ -40,9 +40,7 @@
   params
   parse
   parser
-  ; regression_model
   regression_model_default
-  requirements
   rewrite
   smtlib
   smtzilla
@@ -179,11 +177,3 @@
    (smtml data)))
  (files
   (../smtzilla_utils/smtzilla.py as smtzilla.py)))
-
-(rule
- (with-stdout-to
-  requirements.ml
-  (progn
-   (echo "let v = {|")
-   (cat ../smtzilla_utils/requirements.txt)
-   (echo "|}"))))
