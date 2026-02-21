@@ -208,15 +208,3 @@ let train_cmd =
       ~input_csv:output_csv
   in
   Cmd.v train_info train
-
-let requirements_cmd =
-  let requirements_info =
-    let doc =
-      "Print the list of requirement python packages for the smtzilla training \
-       to work"
-    in
-    Cmd.info "requirements" ~doc
-  in
-  let pp_requirements () = Fmt.pr "%s" Smtml.Requirements.v in
-  let requirements = Term.(const pp_requirements $ const ()) in
-  Cmd.v requirements_info requirements
