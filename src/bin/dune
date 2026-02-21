@@ -2,8 +2,12 @@
  (package smtml)
  (name main)
  (public_name smtml)
- (libraries cmdliner dune-build-info ppx_deriving smtml)
+ (libraries cmdliner dune-build-info ppx_deriving smtml dune-site)
  (preprocess
   (pps ppx_deriving.make))
  (instrumentation
   (backend bisect_ppx)))
+
+(generate_sites_module
+ (module smtml_sites)
+ (sites smtml))

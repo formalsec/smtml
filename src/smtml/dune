@@ -40,7 +40,6 @@
   params
   parse
   parser
-  ; regression_model
   regression_model_default
   rewrite
   smtlib
@@ -170,3 +169,11 @@
   (with-outputs-to
    %{target}
    (run ./regression_model_default_gen.exe))))
+
+(install
+ (package smtml)
+ (section
+  (site
+   (smtml data)))
+ (files
+  (../smtzilla_utils/smtzilla.py as smtzilla.py)))

@@ -4,6 +4,8 @@
 
 (using mdx 0.2)
 
+(using dune_site 0.1)
+
 (name smtml)
 
 (version 0.21.0)
@@ -57,6 +59,7 @@
    (>= "1.3.0"))
   dune
   dune-build-info
+  dune-site
   (dolmen
    (= "0.10"))
   (dolmen_type
@@ -110,4 +113,5 @@
   (mdx :with-test)
   (re :with-dev-setup)
   (sexplib :with-dev-setup)
-  (tls-lwt :with-dev-setup)))
+  (tls-lwt :with-dev-setup))
+ (sites (share data)))
