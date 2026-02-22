@@ -85,7 +85,7 @@ x-maintenance-intent: [
 ]
 available: arch != "arm32" & arch != "x86_32"
 pin-depends: [
-  ["colibri2.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#4ba26c9e1d031765e799251480166af720638e6e"]
-  ["colibrilib.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#4ba26c9e1d031765e799251480166af720638e6e"]
+  ["colibri2.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#d47303b061378d50657abe1c64be3c99717c6337"]
+  ["colibrilib.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#d47303b061378d50657abe1c64be3c99717c6337"]
   ["benchpress.dev" "git+https://github.com/sneeuwballen/benchpress.git#7f44cdd9f0511afcce2c9ad3c04cc9b72919bcff"]
 ]
