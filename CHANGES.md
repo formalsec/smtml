@@ -1,7 +1,29 @@
 # Changelog
 
+## 0.22.0 - 2026-02-23
+
+- 2026-02-20 Start updating CI to use our custom images
+- 2026-02-17 SMTZilla: attempt to support `push` and `pop`
+- 2026-02-17 Fix compilation
+- 2026-02-17 SMTZilla: load default model at compile time
+- 2026-02-17 Add printer for regression model
+- 2026-02-17 Replace more floats with score
+- 2026-02-17 Err msg
+- 2026-02-17 SMTZilla: support add_simplifier and get_statistics
+- 2026-02-17 SMTZilla: support reset, clone and interrupt
+- 2026-02-17 SMTZilla: Fix Solver.add by ensuring that all solver instances receive the expressions
+- 2026-02-17 Only create new instances of solvers, if an instance was not already created
+- 2026-02-17 Init hashtbl with 16
+- 2026-02-17 Lower case solver names (to match what is expected as a cmdline opt)
+- 2026-02-17 Use an abstract type for weights
+- 2026-02-17 Add some TODOs
+- 2026-02-17 Init SMTZilla
+- 2026-02-11 Ci: add missing `--with-test` flag to deploy CI
+- 2026-02-11 Test: make bisec_ppx a dev dependency
+
 ## 0.21.0 - 2026-02-09
 
+- 2026-02-09 Release 0.21.0
 - 2026-02-09 Chore: extend maintenance intent
 - 2026-02-06 Use Re instead of Dune_re
 - 2026-02-06 Update shell.nix
