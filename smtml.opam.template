@@ -2,5 +2,7 @@ available: arch != "arm32" & arch != "x86_32"
 pin-depends: [
   ["colibri2.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#4ba26c9e1d031765e799251480166af720638e6e"]
   ["colibrilib.0.4.0" "git+https://git.frama-c.com/pub/colibrics.git#4ba26c9e1d031765e799251480166af720638e6e"]
+  ["yices2.dev" "git+https://github.com/SRI-CSL/yices2_ocaml_bindings.git"]
+  ["libpoly.dev" "git+https://github.com/SRI-CSL/libpoly_ocaml_bindings.git"]
   ["benchpress.dev" "git+https://github.com/sneeuwballen/benchpress.git#7f44cdd9f0511afcce2c9ad3c04cc9b72919bcff"]
 ]

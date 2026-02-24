@@ -41,7 +41,7 @@
   "Smt.ml is an SMT solver frontend for OCaml that simplifies integration with various solvers through a consistent interface. Its parametric encoding facilitates the easy addition of new solver backends, while optimisations like formula simplification, result caching, and detailed error feedback enhance performance and usability.")
  ; Optional solver dependencies
  ; Change here sould be mirrored in "conflicts"
- (depopts alt-ergo-lib bitwuzla-cxx colibri2 cvc5 z3)
+ (depopts alt-ergo-lib bitwuzla-cxx colibri2 cvc5 z3 yices2)
  (conflicts
   (bitwuzla-cxx
    (< "0.6.0"))

@@ -56,6 +56,7 @@
   typed
   utils
   value
+  yices2_mappings
   z3_mappings)
  (private_modules lexer parser)
  (flags
@@ -78,6 +79,11 @@
   yojson
   mtime.clock
   zarith
+  (select
+   yices2_mappings.ml
+   from
+   (yices2 -> yices2_mappings.default.ml)
+   (-> yices2_mappings.nop.ml))
   (select
    colibri2_mappings.ml
    from
@@ -123,10 +129,17 @@
   bitwuzla_mappings.nop.ml
   cvc5_mappings.nop.ml
   z3_mappings.nop.ml
-  altergo_mappings.nop.ml)
+  altergo_mappings.nop.ml
+  yices2_mappings.nop.ml)
  (deps mappings.nop.ml)
  (action
   (progn
+   (with-stdout-to
+    yices2_mappings.nop.ml
+    (progn
+     (echo "let solver_name = \"Yices2\"\n")
+     (echo "let solver_package = \"yices2\"\n")
+     (cat %{deps})))
    (with-stdout-to
     z3_mappings.nop.ml
     (progn

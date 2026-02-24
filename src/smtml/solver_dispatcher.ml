@@ -10,11 +10,12 @@ let is_available = function
   | Colibri2_solver -> Colibri2_mappings.is_available
   | Cvc5_solver -> Cvc5_mappings.is_available
   | Altergo_solver -> Altergo_mappings.is_available
+  | Yices2_solver -> Yices2_mappings.is_available
   | Smtzilla_solver ->
     Z3_mappings.is_available || Bitwuzla_mappings.is_available
 
 let supported_solvers =
-  [ Z3_solver; Bitwuzla_solver; Colibri2_solver; Cvc5_solver; Altergo_solver ]
+  [ Z3_solver; Bitwuzla_solver; Colibri2_solver; Cvc5_solver; Altergo_solver; Yices2_solver ]
 
 (* FIXME: Find a way to ensure we don't forget to add available solver to this list when we extend the [Solver_type.t]*)
 let available = List.filter is_available supported_solvers
@@ -26,6 +27,7 @@ let mappings_of_solver : Solver_type.t -> (module Mappings.S_with_fresh) =
   | Colibri2_solver -> (module Colibri2_mappings)
   | Cvc5_solver -> (module Cvc5_mappings)
   | Altergo_solver -> (module Altergo_mappings)
+  | Yices2_solver -> (module Yices2_mappings)
   | Smtzilla_solver -> (module Smtzilla)
 
 let solver =

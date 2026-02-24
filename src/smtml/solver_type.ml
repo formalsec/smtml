@@ -9,6 +9,7 @@ type t =
   | Cvc5_solver
   | Altergo_solver
   | Smtzilla_solver
+  | Yices2_solver
 
 let of_string s =
   match String.map Char.lowercase_ascii s with
@@ -18,6 +19,7 @@ let of_string s =
   | "cvc5" -> Ok Cvc5_solver
   | "alt-ergo" -> Ok Altergo_solver
   | "smtzilla" -> Ok Smtzilla_solver
+  | "yices2" -> Ok Yices2_solver
   | s -> Error (`Msg (Fmt.str "unknown solver %s" s))
 
 let pp fmt = function
@@ -27,6 +29,7 @@ let pp fmt = function
   | Cvc5_solver -> Fmt.string fmt "cvc5"
   | Altergo_solver -> Fmt.string fmt "Alt-Ergo"
   | Smtzilla_solver -> Fmt.string fmt "SMTZilla"
+  | Yices2_solver -> Fmt.string fmt "Yices2"
 
 let conv = Cmdliner.Arg.conv (of_string, pp)
 
@@ -36,6 +39,7 @@ let is_available = function
   | Colibri2_solver -> Colibri2_mappings.is_available
   | Cvc5_solver -> Cvc5_mappings.is_available
   | Altergo_solver -> Altergo_mappings.is_available
+  | Yices2_solver -> Yices2_mappings.is_available
   | Smtzilla_solver ->
     Z3_mappings.is_available || Bitwuzla_mappings.is_available
 
@@ -46,3 +50,4 @@ let to_mappings : t -> (module Mappings.S_with_fresh) = function
   | Cvc5_solver -> (module Cvc5_mappings)
   | Altergo_solver -> (module Altergo_mappings)
   | Smtzilla_solver -> (module Smtzilla)
+  | Yices2_solver -> (module Yices2_mappings)

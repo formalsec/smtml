@@ -16,6 +16,7 @@ type t =
   | Cvc5_solver  (** Represents the CVC5 solver. *)
   | Altergo_solver  (** Represents the Alt-Ergo solver. *)
   | Smtzilla_solver  (** Represents the SMTZilla solver. *)
+  | Yices2_solver
 
 (** {1 Parsing} *)
 
