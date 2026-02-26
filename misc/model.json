@@ -1,5 +1,5 @@
 {
-  "Z3": {
+  "z3": {
     "gradient_boost": false,
     "model": {
       "feature": "Lt",
@@ -390,7 +390,7 @@
       }
     }
   },
-  "Bitwuzla": {
+  "bitwuzla": {
     "gradient_boost": false,
     "model": {
       "feature": "Zero_extend",
