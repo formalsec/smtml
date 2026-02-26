@@ -24,6 +24,7 @@ pkgs.mkShell {
     cmdliner
     cohttp-lwt-unix
     dune-build-info
+    dune-site
     dolmen_model
     dolmen_type
     extunix
