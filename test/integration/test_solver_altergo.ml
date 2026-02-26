@@ -15,6 +15,4 @@ let test_suite =
        ; Alt_ergo.test_bv
        ]
 
-let () =
-  Printexc.record_backtrace true;
-  run_test_tt_main test_suite
+let () = run_test_tt_main test_suite
