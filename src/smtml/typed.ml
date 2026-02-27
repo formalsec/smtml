@@ -482,6 +482,11 @@ module Bool = struct
 
   let[@inline] eq (a : 'a expr) (b : 'a expr) = Expr.relop Types.bool Eq a b
 
+  let[@inline] distinct (es : 'a expr list) =
+    (* Typically this encodes a symbolic constraint: (distinct x y z), so no
+       need to waste time trying to simplify. Just use `raw_naryop`. *)
+    Expr.raw_naryop Types.bool Distinct es
+
   let[@inline] ite c (r1 : 'a expr) (r2 : 'a expr) : 'a expr =
     Expr.triop Types.bool Ite c r1 r2
 

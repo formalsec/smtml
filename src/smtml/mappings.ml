@@ -105,6 +105,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           match op with
           | Naryop.Logand -> M.logand l
           | Logor -> M.logor l
+          | Distinct -> M.distinct l
           | _ ->
             Fmt.failwith {|Bool: Unsupported n-ary operator "%a"|} Naryop.pp op
 

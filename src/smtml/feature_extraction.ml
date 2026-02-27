@@ -149,6 +149,7 @@ let string_of_naryop (naryop : Ty.Naryop.t) : string =
   | Logor -> "Logor"
   | Concat -> "Concat"
   | Regexp_union -> "Regexp_union"
+  | Distinct -> "Distinct"
 
 let string_of_expr_kind (e : Expr.expr) _ty : string =
   match e with

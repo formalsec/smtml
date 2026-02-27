@@ -280,6 +280,7 @@ module Naryop : sig
     | Logor  (** Logical OR. *)
     | Concat  (** Concatenation. *)
     | Regexp_union  (** Union of regular expressions. *)
+    | Distinct
   [@@deriving ord]
 
   val hash : t -> int
