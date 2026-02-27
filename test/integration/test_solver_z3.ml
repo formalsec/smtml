@@ -18,6 +18,7 @@ let test_suite =
        ; Z3_solv.test_lra
        ; Z3_solv.test_bv
        ; Z3_solv.test_fp
+       ; Z3_solv.test_regexp
        ; Z3_solv.test_uninterpreted
        ; Z3_bindings.test_adt
        ]

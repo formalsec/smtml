@@ -282,7 +282,7 @@ module DolmenIntf = struct
 
     let inter = DTerm.String.RegLan.inter
 
-    let loop t i1 i2 = DTerm.String.RegLan.loop i1 i2 t
+    let loop ~min ~max t = DTerm.String.RegLan.loop min max t
 
     let union = nary_to_binary DTerm.Const.String.Reg_Lang.union
 

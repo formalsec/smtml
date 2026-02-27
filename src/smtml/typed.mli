@@ -6,6 +6,8 @@ type 'a expr = private Expr.t
 
 type real
 
+type regexp
+
 type bitv8
 
 type bitv16
@@ -236,17 +238,11 @@ module String : sig
   (** [v s] constructs a string term from the string [s]. *)
   val v : string -> t
 
+  (** [symbol sym] constructs a string term from the symbol [sym]. *)
   val symbol : Symbol.t -> t
 
   (** [length t] constructs the length of the string term [t]. *)
   val length : t -> int expr
-
-  (** [to_code t] constructs the Unicode code point of the first character in
-      the string term [t]. *)
-  val to_code : t -> int expr
-
-  (** [of_code t] constructs a string term from the Unicode code point [t]. *)
-  val of_code : int expr -> t
 
   (** [at t ~pos] constructs the character at position [pos] in the string term
       [t]. *)
@@ -295,13 +291,93 @@ module String : sig
       replacing all occurrences of [pattern] with [with_] in [t]. *)
   val replace_all : t -> pattern:t -> with_:t -> t
 
+  (** [replace_re t ~pattern ~with_] constructs the string term resulting from
+      replacing the first occurrence matching the regular expression [pattern]
+      with [with_] in [t]. *)
+  val replace_re : t -> pattern:regexp expr -> with_:t -> t
+
+  (** [replace_re_all t ~pattern ~with_] constructs the string term resulting
+      from replacing all occurrences matching the regular expression [pattern]
+      with [with_] in [t]. *)
+  val replace_re_all : t -> pattern:regexp expr -> with_:t -> t
+
+  (** [to_code t] constructs the Unicode code point of the first character in
+      the string term [t]. *)
+  val to_code : t -> int expr
+
+  (** [of_code t] constructs a string term from the Unicode code point [t]. *)
+  val of_code : int expr -> t
+
   (** [to_int t] converts the string term [t] to an integer term. *)
   val to_int : t -> int expr
 
   (** [of_int t] converts the integer term [t] to a string term. *)
   val of_int : int expr -> t
 
+  (** [to_re t] converts the string term [t] to a regular expression matching
+      that exact string. *)
+  val to_re : t -> regexp expr
+
+  (** [in_re t re] checks if the string term [t] matches the regular expression
+      [re]. *)
+  val in_re : t -> regexp expr -> bool expr
+
   val pp : t Fmt.t
+
+  module Re : sig
+    type t = regexp expr
+
+    (** Regular expression matching nothing. *)
+    val none : t
+
+    (** Regular expression matching everything. *)
+    val all : t
+
+    (** Regular expression matching any single character. *)
+    val allchar : t
+
+    (** [star re] creates a regular expression matching zero or more occurrences
+        of [re]. *)
+    val star : t -> t
+
+    (** [plus re] creates a regular expression matching one or more occurrences
+        of [re]. *)
+    val plus : t -> t
+
+    (** [opt re] creates a regular expression matching zero or one occurrence of
+        [re]. *)
+    val opt : t -> t
+
+    (** [complement re] creates a regular expression matching any string NOT
+        matched by [re]. *)
+    val complement : t -> t
+
+    (** [range re1 re2] creates a regular expression matching any character in
+        the range from [re1] to [re2]. *)
+    val range : string expr -> string expr -> t
+
+    (** [diff re1 re2] creates a regular expression matching any string matched
+        by [re1] but NOT by [re2]. *)
+    val diff : t -> t -> t
+
+    (** [inter re1 re2] creates a regular expression matching any string matched
+        by both [re1] and [re2]. *)
+    val inter : t -> t -> t
+
+    (** [loop ~min ~max re] creates a regular expression matching [re] repeated
+        between [min] and [max] times. *)
+    val loop : min:int -> max:int -> t -> t
+
+    (** [union res] creates a regular expression matching any string matched by
+        any of the regular expressions in [res]. *)
+    val union : t list -> t
+
+    (** [concat res] creates a regular expression matching the concatenation of
+        the regular expressions in [res]. *)
+    val concat : t list -> t
+
+    val pp : t Fmt.t
+  end
 end
 
 module Bitv : sig

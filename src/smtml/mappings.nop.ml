@@ -219,7 +219,7 @@ module M = struct
 
       let inter _ = assert false
 
-      let loop _ = assert false
+      let loop ~min:_ ~max:_ _ = assert false
 
       let union _ = assert false
 

@@ -261,7 +261,8 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
     let inter _ = Fmt.failwith "Bitwuzla_mappings: Re.inter not implemented"
 
-    let loop _ = Fmt.failwith "Bitwuzla_mappings: Re.loop not implemented"
+    let loop ~min:_ ~max:_ _ =
+      Fmt.failwith "Bitwuzla_mappings: Re.loop not implemented"
 
     let union _ = Fmt.failwith "Bitwuzla_mappings: Re.union not implemented"
 

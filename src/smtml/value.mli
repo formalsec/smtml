@@ -22,6 +22,9 @@ type t =
   | List of t list  (** List of values. *)
   | App : [> `Op of string ] * t list -> t
     (** Application of an operator to a list of values. *)
+  | Re_none
+  | Re_all
+  | Re_allchar
   | Nothing  (** Represents an undefined or missing value. *)
 
 (** [type_of v] returns the type of the value [v]. *)
