@@ -701,6 +701,8 @@ module Bool = struct
     | Some true, _ | _, Some true -> true_
     | _ -> binop Ty_bool Or b1 b2
 
+  let implies a b = binop Ty_bool Implies a b
+
   let ite c r1 r2 = triop Ty_bool Ite c r1 r2
 end
 
