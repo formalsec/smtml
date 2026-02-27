@@ -385,9 +385,9 @@ module type M = sig
         terms [t1] and [t2]. *)
     val inter : term -> term -> term
 
-    (** [loop t min max] constructs a regular expression term matching [t]
+    (** [loop ~min ~max t] constructs a regular expression term matching [t]
         repeated between [min] and [max] times. *)
-    val loop : term -> int -> int -> term
+    val loop : min:int -> max:int -> term -> term
 
     (** [union ts] constructs the union of a list of regular expression terms
         [ts]. *)

@@ -269,6 +269,130 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
          ; "test_to_ieee_bv" >:: with_solver test_to_ieee_bv
          ]
 
+  let test_regexp solver_module =
+    let open Typed in
+    let module Solver = (val solver_module : Solver_intf.S) in
+    let solver = Solver.create () in
+    let s = symbol Types.string "s" in
+    let any_char = String.(Re.range (v "a") (v "z")) in
+    Solver.add solver [ (String.in_re s any_char :> Expr.t) ];
+    assert_sat ~f:"test_re_allchar" (Solver.check solver []);
+    let model = Solver.model solver in
+    let val_s =
+      Option.bind model (fun m -> Model.evaluate m (Symbol.make Ty_str "s"))
+    in
+    assert (
+      match val_s with Some (Str s) -> Stdlib.String.length s = 1 | _ -> false )
+
+  let test_regexp_concat solver_module =
+    let open Typed in
+    let module Solver = (val solver_module : Solver_intf.S) in
+    let solver = Solver.create () in
+    let s = symbol Types.string "s" in
+    let re_a = String.(to_re (v "a")) in
+    let re_b = String.(to_re (v "b")) in
+    let re_ab = String.Re.concat [ re_a; re_b ] in
+    Solver.add solver [ (String.in_re s re_ab :> Expr.t) ];
+    assert_sat ~f:"test_re_concat" (Solver.check solver []);
+    let model = Solver.model solver in
+    let val_s =
+      Option.bind model (fun m -> Model.evaluate m (Symbol.make Ty_str "s"))
+    in
+    assert (match val_s with Some (Str "ab") -> true | _ -> false)
+
+  let test_regexp_union solver_module =
+    let open Typed in
+    let module Solver = (val solver_module : Solver_intf.S) in
+    let solver = Solver.create () in
+    let s = symbol Types.string "s" in
+    let re_a = String.(to_re (v "a")) in
+    let re_b = String.(to_re (v "b")) in
+    let re_a_or_b = String.Re.union [ re_a; re_b ] in
+    Solver.add solver [ (String.in_re s re_a_or_b :> Expr.t) ];
+    assert_sat ~f:"test_re_union" (Solver.check solver []);
+    let model = Solver.model solver in
+    let val_s =
+      Option.bind model (fun m -> Model.evaluate m (Symbol.make Ty_str "s"))
+    in
+    assert (
+      match val_s with Some (Str "a") | Some (Str "b") -> true | _ -> false )
+
+  let test_regexp_star solver_module =
+    let open Typed in
+    let module Solver = (val solver_module : Solver_intf.S) in
+    let solver = Solver.create () in
+    let s = symbol Types.string "s" in
+    let re_a = String.(to_re (v "a")) in
+    let re_a_star = String.Re.star re_a in
+    Solver.add solver [ (String.in_re s re_a_star :> Expr.t) ];
+    Solver.add solver [ (Bool.eq (String.length s) (Int.v 3) :> Expr.t) ];
+    assert_sat ~f:"test_re_star" (Solver.check solver []);
+    let model = Solver.model solver in
+    let val_s =
+      Option.bind model (fun m -> Model.evaluate m (Symbol.make Ty_str "s"))
+    in
+    assert (match val_s with Some (Str "aaa") -> true | _ -> false)
+
+  let test_regexp_complex solver_module =
+    let open Typed in
+    let module Solver = (val solver_module : Solver_intf.S) in
+    let solver = Solver.create () in
+    let s = symbol Types.string "s" in
+    let re_a = String.(to_re (v "a")) in
+    let re_b = String.(to_re (v "b")) in
+    (* (a|b)*abb *)
+    let re =
+      String.(
+        Re.concat
+          [ Re.star (Re.union [ re_a; re_b ])
+          ; to_re (v "a")
+          ; to_re (v "b")
+          ; to_re (v "b")
+          ] )
+    in
+    Solver.add solver [ (String.in_re s re :> Expr.t) ];
+    Solver.add solver [ (Bool.eq (String.length s) (Int.v 5) :> Expr.t) ];
+    assert_sat ~f:"test_re_complex" (Solver.check solver []);
+    let model = Solver.model solver in
+    let val_s =
+      Option.bind model (fun m -> Model.evaluate m (Symbol.make Ty_str "s"))
+    in
+    assert (
+      match val_s with
+      | Some (Str s) ->
+        Stdlib.String.length s = 5 && Stdlib.String.ends_with s ~suffix:"abb"
+      | _ -> false )
+
+  let test_regexp_unsat solver_module =
+    let open Typed in
+    let module Solver = (val solver_module : Solver_intf.S) in
+    let solver = Solver.create () in
+    let s = symbol Types.string "s" in
+    let re_a = String.(to_re (v "a")) in
+    let re_b = String.(to_re (v "b")) in
+    Solver.add solver [ (String.in_re s re_a :> Expr.t) ];
+    Solver.add solver [ (String.in_re s re_b :> Expr.t) ];
+    assert_unsat ~f:"test_re_unsat" (Solver.check solver [])
+
+  let test_regexp_none solver_module =
+    let open Typed in
+    let module Solver = (val solver_module : Solver_intf.S) in
+    let solver = Solver.create () in
+    let s = symbol Types.string "s" in
+    Solver.add solver [ (String.(in_re s Re.none) :> Expr.t) ];
+    assert_unsat ~f:"test_re_none" (Solver.check solver [])
+
+  let test_regexp =
+    "test_regexp"
+    >::: [ "test_re" >:: with_solver test_regexp
+         ; "test_re_concat" >:: with_solver test_regexp_concat
+         ; "test_re_union" >:: with_solver test_regexp_union
+         ; "test_re_star" >:: with_solver test_regexp_star
+         ; "test_re_complex" >:: with_solver test_regexp_complex
+         ; "test_re_unsat" >:: with_solver test_regexp_unsat
+         ; "test_re_none" >:: with_solver test_regexp_none
+         ]
+
   let test_uninterpreted =
     "test_uninterpreted_function"
     >::: [ ( "test_int_bool_app"

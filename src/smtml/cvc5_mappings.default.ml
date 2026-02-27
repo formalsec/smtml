@@ -247,8 +247,8 @@ module Fresh_cvc5 () = struct
 
     let inter t1 t2 = Term.mk_term tm Kind.Regexp_inter [| t1; t2 |]
 
-    let loop t i1 i2 =
-      let op = Op.mk_op tm Kind.Regexp_loop [| i1; i2 |] in
+    let loop ~min ~max t =
+      let op = Op.mk_op tm Kind.Regexp_loop [| min; max |] in
       Term.mk_term_op tm op [| t |]
 
     let union ts = Term.mk_term tm Kind.Regexp_union (Array.of_list ts)

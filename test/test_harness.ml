@@ -6,13 +6,21 @@ let pp_sat fmt = function
   | `Unsat -> Fmt.string fmt "unsat"
   | `Unknown -> Fmt.string fmt "unknown"
 
-let assert_sat ?f result =
-  let fail_msg =
-    Fmt.str "%a: expected 'sat' but got '%a'" (Fmt.option Fmt.string) f pp_sat
-      result
+let equal_sat a b =
+  match (a, b) with
+  | `Sat, `Sat | `Unsat, `Unsat | `Unknown, `Unknown -> true
+  | _ -> false
+
+let assert_expected_sat ?f expected result =
+  let pp_diff fmt (expected, result) =
+    Fmt.pf fmt "%a: expected '%a' but got '%a'" (Fmt.option Fmt.string) f pp_sat
+      expected pp_sat result
   in
-  let b = match result with `Sat -> true | `Unsat | `Unknown -> false in
-  OUnit2.assert_bool fail_msg b
+  OUnit2.assert_equal ~cmp:equal_sat ~pp_diff expected result
+
+let assert_sat ?f result = assert_expected_sat ?f `Sat result
+
+let assert_unsat ?f result = assert_expected_sat ?f `Unsat result
 
 let check a b =
   let pp_diff fmt (a, b) =

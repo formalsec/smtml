@@ -15,6 +15,9 @@ type t =
   | Bitv of Bitvector.t
   | List of t list
   | App : [> `Op of string ] * t list -> t
+  | Re_none
+  | Re_all
+  | Re_allchar
   | Nothing
 
 let type_of (v : t) : Ty.t =
@@ -28,6 +31,7 @@ let type_of (v : t) : Ty.t =
   | Bitv bv -> Ty_bitv (Bitvector.numbits bv)
   | List _ -> Ty_list
   | App _ -> Ty_app
+  | Re_none | Re_all | Re_allchar -> Ty_regexp
   | Nothing -> Ty_none
 
 let discr = function
@@ -41,7 +45,10 @@ let discr = function
   | Bitv _ -> 7
   | List _ -> 8
   | App _ -> 9
-  | Nothing -> 10
+  | Re_none -> 10
+  | Re_all -> 11
+  | Re_allchar -> 12
+  | Nothing -> 13
 
 (* Optimized mixer (DJB2 variant). Inlines to simple arithmetic. *)
 let[@inline] combine h v = (h * 33) + v
@@ -60,12 +67,16 @@ let rec hash v =
   | App (`Op s, args) ->
     let h = combine 10 (String.hash s) in
     List.fold_left (fun acc v -> combine acc (hash v)) h args
-  | Nothing -> 11
+  | Re_none -> 11
+  | Re_all -> 12
+  | Re_allchar -> 13
+  | Nothing -> 14
   | App _ -> assert false
 
 let rec compare (a : t) (b : t) : int =
   match (a, b) with
   | True, True | False, False | Unit, Unit | Nothing, Nothing -> 0
+  | Re_none, Re_none | Re_all, Re_all | Re_allchar, Re_allchar -> 0
   | False, True -> -1
   | True, False -> 1
   | Int a, Int b -> Int.compare a b
@@ -78,7 +89,7 @@ let rec compare (a : t) (b : t) : int =
     let c = String.compare op1 op2 in
     if c = 0 then List.compare compare vs1 vs2 else c
   | ( ( True | False | Unit | Int _ | Real _ | Str _ | Num _ | Bitv _ | List _
-      | App _ | Nothing )
+      | App _ | Re_none | Re_all | Re_allchar | Nothing )
     , _ ) ->
     (* TODO: I don't know if this is always semantically correct *)
     Int.compare (discr a) (discr b)
@@ -86,6 +97,7 @@ let rec compare (a : t) (b : t) : int =
 let rec equal (v1 : t) (v2 : t) : bool =
   match (v1, v2) with
   | True, True | False, False | Unit, Unit | Nothing, Nothing -> true
+  | Re_none, Re_none | Re_all, Re_all | Re_allchar, Re_allchar -> true
   | Int a, Int b -> Int.equal a b
   | Real a, Real b -> Float.equal a b
   | Str a, Str b -> String.equal a b
@@ -95,7 +107,7 @@ let rec equal (v1 : t) (v2 : t) : bool =
   | App (`Op op1, vs1), App (`Op op2, vs2) ->
     String.equal op1 op2 && List.equal equal vs1 vs2
   | ( ( True | False | Unit | Int _ | Real _ | Str _ | Num _ | Bitv _ | List _
-      | App _ | Nothing )
+      | App _ | Re_none | Re_all | Re_allchar | Nothing )
     , _ ) ->
     false
 
@@ -114,7 +126,8 @@ let default_of_type = function
   | Ty_list -> List []
   | Ty_unit -> Unit
   | Ty_none -> Nothing
-  | (Ty_fp _ | Ty_app | Ty_regexp | Ty_roundingMode) as ty ->
+  | Ty_regexp -> Re_none
+  | (Ty_fp _ | Ty_app | Ty_roundingMode) as ty ->
     Fmt.failwith "No default value for type %a" Ty.pp ty
 
 let rec pp fmt = function
@@ -129,6 +142,9 @@ let rec pp fmt = function
   | List l -> (Fmt.hovbox ~indent:1 (Fmt.list ~sep:Fmt.comma pp)) fmt l
   | App (`Op op, vs) ->
     Fmt.pf fmt "@[<hov 1>%s(%a)@]" op (Fmt.list ~sep:Fmt.comma pp) vs
+  | Re_none -> Fmt.string fmt "re.none"
+  | Re_all -> Fmt.string fmt "re.all"
+  | Re_allchar -> Fmt.string fmt "re.allchar"
   | Nothing -> Fmt.string fmt "none"
   | App _ -> assert false
 
@@ -155,7 +171,13 @@ let of_string (cast : Ty.t) v =
     | None -> Fmt.error_msg "invalid value %s, expected real" v
     | Some n -> Ok (Real n) )
   | Ty_str -> Ok (Str v)
-  | Ty_app | Ty_list | Ty_none | Ty_unit | Ty_regexp | Ty_roundingMode ->
+  | Ty_regexp -> (
+    match v with
+    | "re.none" -> Ok Re_none
+    | "re.all" -> Ok Re_all
+    | "re.allchar" -> Ok Re_allchar
+    | _ -> Fmt.error_msg "invalid value %s, expected regular expression" v )
+  | Ty_app | Ty_list | Ty_none | Ty_unit | Ty_roundingMode ->
     Fmt.error_msg "unsupported parsing values of type %a" Ty.pp cast
 
 let rec to_json (v : t) : Yojson.Basic.t =
@@ -169,6 +191,9 @@ let rec to_json (v : t) : Yojson.Basic.t =
   | Num n -> Num.to_json n
   | Bitv bv -> Bitvector.to_json bv
   | List l -> `List (List.map to_json l)
+  | Re_none -> `String "re.none"
+  | Re_all -> `String "re.all"
+  | Re_allchar -> `String "re.allchar"
   | Nothing -> `Null
   | App _ -> assert false
 
@@ -181,6 +206,9 @@ module Smtlib = struct
     | Num x -> Num.pp fmt x
     | Bitv bv -> Bitvector.pp fmt bv
     | Str x -> Fmt.pf fmt "%S" x
+    | Re_none -> Fmt.string fmt "re.none"
+    | Re_all -> Fmt.string fmt "re.all"
+    | Re_allchar -> Fmt.string fmt "re.allchar"
     | Unit -> assert false
     | List _ -> assert false
     | App _ -> assert false

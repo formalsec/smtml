@@ -4,6 +4,8 @@ type 'a expr = Expr.t
 
 type real
 
+type regexp
+
 type bitv8
 
 type bitv16
@@ -426,6 +428,8 @@ module Types = struct
 
   let real : real ty = Ty_real
 
+  let regexp : regexp ty = Ty_regexp
+
   let bool : bool ty = Ty_bool
 
   let string : string ty = Ty_str
@@ -551,51 +555,96 @@ end
 module String = struct
   type t = string expr
 
-  let[@inline] v x = Expr.value (Str x)
+  let[@inline] v s = Expr.value (Str s)
 
-  let[@inline] symbol x = Expr.symbol x
+  let[@inline] symbol sym = Expr.symbol sym
 
-  let[@inline] pp fmt x = Expr.pp fmt x
+  let[@inline] pp fmt s = Expr.pp fmt s
 
-  let[@inline] length x = Expr.unop Types.string Length x
+  let[@inline] length s = Expr.unop Types.string Length s
 
-  let[@inline] to_code x = Expr.cvtop Types.string String_to_code x
+  let[@inline] to_code s = Expr.cvtop Types.string String_to_code s
 
-  let[@inline] of_code x = Expr.cvtop Types.string String_from_code x
+  let[@inline] of_code code = Expr.cvtop Types.string String_from_code code
 
-  let[@inline] to_int x = Expr.cvtop Types.string String_to_int x
+  let[@inline] to_int s = Expr.cvtop Types.string String_to_int s
 
-  let[@inline] of_int x = Expr.cvtop Types.string String_from_int x
+  let[@inline] of_int i = Expr.cvtop Types.string String_from_int i
 
-  let[@inline] at x ~pos = Expr.binop Types.string At x pos
+  let[@inline] at s ~pos = Expr.binop Types.string At s pos
 
   let[@inline] concat xs = Expr.naryop Types.string Concat xs
 
-  let[@inline] contains x ~sub = Expr.binop Types.string String_contains x sub
+  let[@inline] contains s ~sub = Expr.binop Types.string String_contains s sub
 
-  let[@inline] is_prefix x ~prefix =
-    Expr.binop Types.string String_prefix x prefix
+  let[@inline] is_prefix s ~prefix =
+    Expr.binop Types.string String_prefix s prefix
 
-  let[@inline] is_suffix x ~suffix =
-    Expr.binop Types.string String_suffix x suffix
+  let[@inline] is_suffix s ~suffix =
+    Expr.binop Types.string String_suffix s suffix
 
   let[@inline] eq a b = Expr.relop Types.bool Eq a b
 
-  let[@inline] lt x y = Expr.relop Types.string Lt x y
+  let[@inline] lt a b = Expr.relop Types.string Lt a b
 
-  let[@inline] le x y = Expr.relop Types.string Le x y
+  let[@inline] le a b = Expr.relop Types.string Le a b
 
-  let[@inline] sub x ~pos ~len =
-    Expr.triop Types.string String_extract x pos len
+  let[@inline] sub s ~pos ~len =
+    Expr.triop Types.string String_extract s pos len
 
-  let[@inline] index_of x ~sub ~pos =
-    Expr.triop Types.string String_index x sub pos
+  let[@inline] index_of s ~sub ~pos =
+    Expr.triop Types.string String_index s sub pos
 
-  let[@inline] replace x ~pattern ~with_ =
-    Expr.triop Types.string String_replace x pattern with_
+  let[@inline] replace s ~pattern ~with_ =
+    Expr.triop Types.string String_replace s pattern with_
 
-  let[@inline] replace_all x ~pattern ~with_ =
-    Expr.triop Types.string String_replace_all x pattern with_
+  let[@inline] replace_all s ~pattern ~with_ =
+    Expr.triop Types.string String_replace_all s pattern with_
+
+  let[@inline] replace_re s ~pattern ~with_ =
+    Expr.triop Types.string String_replace_re s pattern with_
+
+  let[@inline] replace_re_all s ~pattern ~with_ =
+    Expr.triop Types.string String_replace_re_all s pattern with_
+
+  let[@inline] to_re s = Expr.raw_cvtop Types.string String_to_re s
+
+  let[@inline] in_re s re = Expr.raw_binop Types.string String_in_re s re
+
+  module Re = struct
+    type t = regexp expr
+
+    let none = Expr.value Re_none
+
+    let all = Expr.value Re_all
+
+    let allchar = Expr.value Re_allchar
+
+    let[@inline] star re = Expr.raw_unop Types.regexp Regexp_star re
+
+    let[@inline] plus re = Expr.raw_unop Types.regexp Regexp_plus re
+
+    let[@inline] opt re = Expr.raw_unop Types.regexp Regexp_opt re
+
+    let[@inline] complement re = Expr.raw_unop Types.regexp Regexp_comp re
+
+    let[@inline] range re1 re2 =
+      Expr.raw_binop Types.regexp Regexp_range re1 re2
+
+    let[@inline] diff re1 re2 = Expr.raw_binop Types.regexp Regexp_diff re1 re2
+
+    let[@inline] inter re1 re2 =
+      Expr.raw_binop Types.regexp Regexp_inter re1 re2
+
+    let[@inline] loop ~min ~max re =
+      Expr.raw_unop Types.regexp (Regexp_loop (min, max)) re
+
+    let[@inline] union res = Expr.raw_naryop Types.regexp Regexp_union res
+
+    let[@inline] concat res = Expr.raw_naryop Types.regexp Concat res
+
+    let[@inline] pp fmt re = Expr.pp fmt re
+  end
 end
 
 module Float32 = struct

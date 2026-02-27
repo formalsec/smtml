@@ -259,7 +259,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | Regexp_plus -> M.Re.plus e
           | Regexp_opt -> M.Re.opt e
           | Regexp_comp -> M.Re.comp e
-          | Regexp_loop (i1, i2) -> M.Re.loop e i1 i2
+          | Regexp_loop (min, max) -> M.Re.loop ~min ~max e
           | op ->
             Fmt.failwith {|Regexp: Unsupported unop operator "%a"|} Unop.pp op
 
@@ -560,6 +560,9 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Num (F32 x) -> Float32_impl.v x
         | Num (F64 x) -> Float64_impl.v x
         | Bitv bv -> M.Bitv.v (Bitvector.to_string bv) (Bitvector.numbits bv)
+        | Re_none -> M.Re.none ()
+        | Re_all -> M.Re.all ()
+        | Re_allchar -> M.Re.allchar ()
         | List _ | App _ | Unit | Nothing ->
           Fmt.failwith "Unsupported encoding of value '%a'" Value.pp value
 

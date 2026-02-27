@@ -239,7 +239,7 @@ module DolmenIntf : sig
 
     val inter : term -> term -> term
 
-    val loop : term -> int -> int -> term
+    val loop : min:int -> max:int -> term -> term
 
     val union : term list -> term
 

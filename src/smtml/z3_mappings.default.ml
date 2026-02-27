@@ -269,8 +269,7 @@ module M = struct
     end
 
     module Re = struct
-      let allchar () =
-        Z3.Seq.mk_re_full ctx (Z3.Seq.mk_re_sort ctx Types.string)
+      let allchar () = assert false
 
       let all () = Z3.Seq.mk_re_full ctx (Z3.Seq.mk_re_sort ctx Types.string)
 
@@ -290,7 +289,7 @@ module M = struct
 
       let inter e1 e2 = Z3.Seq.mk_re_intersect ctx [ e1; e2 ]
 
-      let loop e i1 i2 = Z3.Seq.mk_re_loop ctx e i1 i2
+      let loop ~min ~max e = Z3.Seq.mk_re_loop ctx e min max
 
       let union es = Z3.Seq.mk_re_union ctx es
 
