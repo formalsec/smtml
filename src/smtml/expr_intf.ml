@@ -347,6 +347,9 @@ module type S = sig
     (** [or_ expr1 expr2] constructs a logical OR expression. *)
     val or_ : t -> t -> t
 
+    (** [implies expr1 expr2] constructs a logical implication. *)
+    val implies : t -> t -> t
+
     (** [ite cond then_ else_] constructs an if-then-else expression. *)
     val ite : t -> t -> t -> t
   end

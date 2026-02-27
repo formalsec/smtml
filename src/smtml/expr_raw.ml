@@ -39,5 +39,7 @@ module Bool = struct
 
   let or_ a b = raw_binop Ty_bool Or a b
 
+  let implies a b = raw_binop Ty_bool Implies a b
+
   let ite a b c = raw_triop Ty_bool Ite a b c
 end

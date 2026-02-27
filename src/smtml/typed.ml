@@ -478,7 +478,7 @@ module Bool = struct
 
   let[@inline] xor a b = Expr.binop Types.bool Xor a b
 
-  let[@inline] implies a b = or_ (not a) b
+  let[@inline] implies a b = Expr.Bool.implies a b
 
   let[@inline] eq (a : 'a expr) (b : 'a expr) = Expr.relop Types.bool Eq a b
 
