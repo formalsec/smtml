@@ -627,6 +627,7 @@ module Naryop = struct
     | Logor
     | Concat
     | Regexp_union
+    | Distinct
   [@@deriving ord]
 
   let hash = function
@@ -634,21 +635,24 @@ module Naryop = struct
     | Logor -> 1
     | Concat -> 2
     | Regexp_union -> 3
+    | Distinct -> 4
 
   let equal op1 op2 =
     match (op1, op2) with
     | Logand, Logand
     | Logor, Logor
     | Concat, Concat
-    | Regexp_union, Regexp_union ->
+    | Regexp_union, Regexp_union
+    | Distinct, Distinct ->
       true
-    | (Logand | Logor | Concat | Regexp_union), _ -> false
+    | (Logand | Logor | Concat | Regexp_union | Distinct), _ -> false
 
   let pp fmt = function
     | Logand -> Fmt.string fmt "and"
     | Logor -> Fmt.string fmt "or"
     | Concat -> Fmt.string fmt "++"
     | Regexp_union -> Fmt.string fmt "union"
+    | Distinct -> Fmt.string fmt "distinct"
 end
 
 module Smtlib = struct

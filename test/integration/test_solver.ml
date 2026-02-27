@@ -111,6 +111,27 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let val_x = Option.bind model (fun m -> Model.evaluate m symbol_x) in
     assert (match val_x with Some v -> Value.equal v (Int 5) | None -> false)
 
+  let test_distinct solver_module =
+    let open Typed in
+    let module Solver = (val solver_module : Solver_intf.S) in
+    let solver = Solver.create ~logic:LIA () in
+    let x = symbol Types.int "x" in
+    let y = symbol Types.int "y" in
+    let z = symbol Types.int "z" in
+    Solver.add solver [ (Bool.distinct [ x; y; z ] :> Expr.t) ];
+    Solver.add solver [ (Bool.eq x (Int.v 1) :> Expr.t) ];
+    Solver.add solver [ (Bool.eq y (Int.v 1) :> Expr.t) ];
+    assert_unsat ~f:"test_distinct_unsat" (Solver.check solver []);
+    Solver.reset solver;
+    let x = symbol Types.int "x" in
+    let y = symbol Types.int "y" in
+    let z = symbol Types.int "z" in
+    Solver.add solver [ (Bool.distinct [ x; y; z ] :> Expr.t) ];
+    Solver.add solver [ (Bool.eq x (Int.v 1) :> Expr.t) ];
+    Solver.add solver [ (Bool.eq y (Int.v 2) :> Expr.t) ];
+    Solver.add solver [ (Bool.eq z (Int.v 3) :> Expr.t) ];
+    assert_sat ~f:"test_distinct_sat" (Solver.check solver [])
+
   let test_lia_1 solver_module =
     let open Infix in
     let module Solver = (val solver_module : Solver_intf.S) in
@@ -123,6 +144,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     "test_lia"
     >::: [ "test_lia_0" >:: with_solver test_lia_0
          ; "test_lia_1" >:: with_solver test_lia_1
+         ; "test_distinct" >:: with_solver test_distinct
          ]
 
   let test_lra =

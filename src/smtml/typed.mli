@@ -127,6 +127,10 @@ module Bool : sig
   (** [eq t1 t2] returns true if [t1] and [t2] are structurally equal. *)
   val eq : 'a expr -> 'a expr -> t
 
+  (** [distinct es] returns true if all expressions in the list [es] are
+      pair-wise distinct. *)
+  val distinct : 'a expr list -> t
+
   (** [ite cond then_ else_] constructs an if-then-else expression. Returns
       [then_] if [cond] evaluates to true, and [else_] otherwise. *)
   val ite : t -> 'a expr -> 'a expr -> 'a expr
