@@ -8,7 +8,7 @@
 
 (name smtml)
 
-(version 0.21.0)
+(version 0.22.0)
 
 (generate_opam_files true)
 

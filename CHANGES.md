@@ -1,7 +1,57 @@
 # Changelog
 
+## 0.22.0 - 2026-03-02
+
+- 2026-02-28 Run regexp tests in cvc5 integration tests
+- 2026-02-28 Add n-ary `distinct` operator ([#553](https://github.com/formalsec/smtml/issues/553))
+- 2026-02-28 Fix inconsistencies with `implies` operator ([#549](https://github.com/formalsec/smtml/issues/549))
+- 2026-02-27 Feat: Add RegLan API in typed interface
+- 2026-02-26 Bump colibri2
+- 2026-02-26 Promote tests
+- 2026-02-26 Update CI to use pre-built images
+- 2026-02-26 Fix Z3 CI
+- 2026-02-26 Add `dune-site` to shell.nix
+- 2026-02-26 Promote test (after backtrace recording activation due to dune-site)
+- 2026-02-26 Remove `record_backtrace` from Alt-Ergo test
+- 2026-02-26 Fix solver names in default model
+- 2026-02-26 SMTZilla: add doc
+- 2026-02-26 SMTZilla: better debug messages
+- 2026-02-26 SMTZilla: remove requirements and example query file
+- 2026-02-26 Refactoring + fix predictor_conv
+- 2026-02-26 Typo
+- 2026-02-26 Rename out1s to example_smtzilla_query_log_file
+- 2026-02-26 Upd model selection cmdline option
+- 2026-02-26 Remove some matches over result types
+- 2026-02-26 Replace more strings with Fpath.t and use better Bos syntax for command creation
+- 2026-02-26 Simplify requirements by using a dune rune instead of loading the file with dune-site
+- 2026-02-26 Better match in `smtzilla_data_dirpath` and use `Fmt.error_msg` instead of `Error (`Msg ...)`
+- 2026-02-26 Use smtml's package for sites and remove the superflous smtzilla_utils package
+- 2026-02-26 Add example bin file
+- 2026-02-26 Fix evaluation of smtzilla requirements
+- 2026-02-26 Setup dune-site for smtzilla training script and requirements
+- 2026-02-26 Add smtzilla training commands and script
+- 2026-02-20 Start updating CI to use our custom images
+- 2026-02-17 SMTZilla: attempt to support `push` and `pop`
+- 2026-02-17 Fix compilation
+- 2026-02-17 SMTZilla: load default model at compile time
+- 2026-02-17 Add printer for regression model
+- 2026-02-17 Replace more floats with score
+- 2026-02-17 Err msg
+- 2026-02-17 SMTZilla: support add_simplifier and get_statistics
+- 2026-02-17 SMTZilla: support reset, clone and interrupt
+- 2026-02-17 SMTZilla: Fix Solver.add by ensuring that all solver instances receive the expressions
+- 2026-02-17 Only create new instances of solvers, if an instance was not already created
+- 2026-02-17 Init hashtbl with 16
+- 2026-02-17 Lower case solver names (to match what is expected as a cmdline opt)
+- 2026-02-17 Use an abstract type for weights
+- 2026-02-17 Add some TODOs
+- 2026-02-17 Init SMTZilla
+- 2026-02-11 Ci: add missing `--with-test` flag to deploy CI
+- 2026-02-11 Test: make bisec_ppx a dev dependency
+
 ## 0.21.0 - 2026-02-09
 
+- 2026-02-09 Release 0.21.0
 - 2026-02-09 Chore: extend maintenance intent
 - 2026-02-06 Use Re instead of Dune_re
 - 2026-02-06 Update shell.nix
