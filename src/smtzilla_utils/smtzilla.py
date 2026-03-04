@@ -66,6 +66,10 @@ delta_col = "delta"
 
 def mk_data(path):
     data = pd.read_csv(path)
+
+    # Drop columns where all values are 0
+    data = data.loc[:, data.any()]
+
     feature_cols = [
         c for c in data.columns if c not in [solver_col, time_col, model_col]
     ]
@@ -77,30 +81,48 @@ def mk_data(path):
     return (data, feature_cols)
 
 
+def rm_negative_thresholds(tree):
+    # Ignore negative thresholds (all features are >= 0)
+    def recurse(node_id):
+        if tree.children_left[node_id] == _tree.TREE_LEAF:
+            return node_id
+        elif tree.threshold[node_id] < 0:
+            return recurse(tree.children_right[node_id])
+        else:
+            tree.children_left[node_id] = recurse(tree.children_left[node_id])
+            tree.children_right[node_id] = recurse(tree.children_right[node_id])
+            return node_id
+
+    recurse(0)
+
+
 def mk_models(data, feature_cols, gradient_boost=True, debug=False):
     # Train one regression model per solver
     models = {}
     for solver in data[solver_col].unique():
         df_solver = data[data[solver_col] == solver]
         X = df_solver[feature_cols]
-        y = df_solver[delta_col]
+        Y = df_solver[delta_col]
 
         if gradient_boost:
             model = GradientBoostingRegressor(
                 n_estimators=5, max_depth=5, random_state=42
             )
+            for _, stage in enumerate(model.estimators_[:, 0]):
+                rm_negative_thresholds(stage.tree_)
         else:
             model = DecisionTreeRegressor(max_depth=5, random_state=42)
+            rm_negative_thresholds(model.tree_)
 
-        model.fit(X, y)
+        model.fit(X, Y)
         models[solver] = model
 
-        # Cross-validation MAE (Mean Absolute Error) for this solver
-        kf = KFold(n_splits=5, shuffle=True, random_state=42)
-        cv_scores = cross_val_score(
-            model, X, y, cv=kf, scoring="neg_mean_absolute_error"
-        )
         if debug:
+            # Cross-validation MAE (Mean Absolute Error) for this solver
+            kf = KFold(n_splits=5, shuffle=True, random_state=42)
+            cv_scores = cross_val_score(
+                model, X, Y, cv=kf, scoring="neg_mean_absolute_error"
+            )
             print(
                 f"[CV] Solver {solver:10} | Average MAE = \
                   {-cv_scores.mean():.2f} ± {cv_scores.std():.2f}\n"
@@ -129,10 +151,6 @@ def pp_stats(data, feature_cols):
               {len(high_dispersion)}"
         )
     print("")
-
-
-# currently not used
-# feature_cols = [c for c in data.columns if c not in [model_col, solver_col, time_col]]
 
 
 def debug_gb(data, models, feature_cols):
@@ -258,6 +276,7 @@ def simulation(data, models, feature_cols):
 
 
 data, feature_cols = mk_data(str(args.path))
+# currently not used
 data.drop("model", axis=1, inplace=True)
 
 if args.pp_stats:
