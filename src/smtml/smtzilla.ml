@@ -25,9 +25,9 @@ module Fresh = struct
 
     type solver =
       { solver_instances : solver_instance String_map.t
-      ; mutable expr_acc : Expr.t list
-      ; mutable stmts : stmt list
-      ; mutable last_solver : string option
+      ; expr_acc : Expr.t list ref
+      ; stmts : stmt list ref
+      ; last_solver : string option ref
       }
 
     type model =
@@ -62,16 +62,19 @@ module Fresh = struct
               String_map.add name instance instances )
             String_map.empty names
         in
+        let expr_acc = ref [] in
+        let stmts = ref [] in
+        let last_solver = ref None in
 
-        { solver_instances; expr_acc = []; stmts = []; last_solver = None }
+        { solver_instances; expr_acc; stmts; last_solver }
 
       let add s new_exprs =
         String_map.iter
           (fun _ (SolverInst ((module S), instance)) ->
             S.Solver.add instance new_exprs )
           s.solver_instances;
-        s.expr_acc <- List.rev_append new_exprs s.expr_acc;
-        s.stmts <- Assertions new_exprs :: s.stmts
+        s.expr_acc := List.rev_append new_exprs !(s.expr_acc);
+        s.stmts := Assertions new_exprs :: !(s.stmts)
 
       let get_best_solver exprs : string =
         let feats = Feature_extraction.extract_feats exprs in
@@ -92,17 +95,17 @@ module Fresh = struct
         | None -> assert false
 
       let check s ~assumptions =
-        let best_solver_name = get_best_solver (s.expr_acc @ assumptions) in
+        let best_solver_name = get_best_solver (!(s.expr_acc) @ assumptions) in
         (* TODO: (s.expr_acc @ assumptions) is not really correct as s.expr_acc
                does not take into account pushes and pops.  *)
-        s.last_solver <- Some best_solver_name;
+        s.last_solver := Some best_solver_name;
         let (SolverInst ((module S), solver_inst)) =
           get_solver_instance s best_solver_name
         in
         S.Solver.check solver_inst ~assumptions
 
       let model s =
-        match s.last_solver with
+        match !(s.last_solver) with
         | Some name -> begin
           match String_map.find_opt name s.solver_instances with
           | Some (SolverInst ((module S), s)) -> begin
@@ -118,13 +121,13 @@ module Fresh = struct
         String_map.iter
           (fun _ (SolverInst ((module S), instance)) -> S.Solver.push instance)
           s.solver_instances;
-        s.stmts <- Push :: s.stmts
+        s.stmts := Push :: !(s.stmts)
 
       let pop s n =
         String_map.iter
           (fun _ (SolverInst ((module S), instance)) -> S.Solver.pop instance n)
           s.solver_instances;
-        s.stmts <- Pop n :: s.stmts
+        s.stmts := Pop n :: !(s.stmts)
 
       let reset s =
         String_map.iter
@@ -138,9 +141,10 @@ module Fresh = struct
               SolverInst ((module S), S.Solver.clone instance) )
             s.solver_instances
         in
-        let stmts = s.stmts in
-
-        { s with solver_instances; stmts }
+        let stmts = ref !(s.stmts) in
+        let expr_acc = ref !(s.expr_acc) in
+        let last_solver = ref !(s.last_solver) in
+        { solver_instances; stmts; expr_acc; last_solver }
 
       let interrupt s =
         String_map.iter
