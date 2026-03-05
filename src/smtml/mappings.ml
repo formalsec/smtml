@@ -955,6 +955,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let interrupt _ = M.Solver.interrupt ()
 
+      let was_interrupted _ = !M.Internals.was_interrupted
+
       let get_statistics { solver; _ } = M.Solver.get_statistics solver
     end
 

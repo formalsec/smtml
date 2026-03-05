@@ -964,6 +964,10 @@ module type S = sig
     (** [interrupt solver] interrupts the current solver operation. *)
     val interrupt : solver -> unit
 
+    (** [was_interrupted solver] return [true] if the solver was interrupted (by
+        calling [interrupt]). *)
+    val was_interrupted : solver -> bool
+
     (** [get_statistics solver] retrieves statistics from the solver [solver].
     *)
     val get_statistics : solver -> Statistics.t
