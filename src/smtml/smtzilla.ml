@@ -11,6 +11,8 @@ let available_models : (string * Regression_model.t) list =
   | Some path -> Regression_model.read_models_from_file path
   | None -> Regression_model_default.default_models
 
+module String_map = Map.Make (String)
+
 module Fresh = struct
   module Make () = struct
     type solver_instance =
@@ -22,7 +24,7 @@ module Fresh = struct
       | Pop of int
 
     type solver =
-      { solver_instances : (string, solver_instance) Hashtbl.t
+      { solver_instances : solver_instance String_map.t
       ; mutable expr_acc : Expr.t list
       ; mutable stmts : stmt list
       ; mutable last_solver : string option
@@ -38,15 +40,33 @@ module Fresh = struct
     type handle = unit
 
     module Solver = struct
+      let make0 name =
+        let (module S) : (module Mappings.S_with_fresh) =
+          match name with
+          | "z3" -> (module Z3_mappings)
+          | "bitwuzla" -> (module Bitwuzla_mappings)
+          | _ -> Fmt.failwith "SMTZilla: Unknown solver %s" name
+        in
+        let instance = S.Solver.make () in
+        SolverInst ((module S), instance)
+      (* TODO: Need to move some declarations around to be able to use
+         `Solver_type.t` instead of strings, mayba SMTZilla should not be
+         one of the solver types? *)
+
       let make ?params:_ ?logic:_ () =
-        { solver_instances = Hashtbl.create 16
-        ; expr_acc = []
-        ; stmts = []
-        ; last_solver = None
-        }
+        let solver_instances =
+          let names = List.map fst available_models in
+          List.fold_left
+            (fun instances name ->
+              let instance = make0 name in
+              String_map.add name instance instances )
+            String_map.empty names
+        in
+
+        { solver_instances; expr_acc = []; stmts = []; last_solver = None }
 
       let add s new_exprs =
-        Hashtbl.iter
+        String_map.iter
           (fun _ (SolverInst ((module S), instance)) ->
             S.Solver.add instance new_exprs )
           s.solver_instances;
@@ -67,33 +87,14 @@ module Fresh = struct
         name
 
       let get_solver_instance s name =
-        match Hashtbl.find_opt s.solver_instances name with
+        match String_map.find_opt name s.solver_instances with
         | Some s -> s
-        | None ->
-          let (module S) : (module Mappings.S_with_fresh) =
-            match name with
-            | "z3" -> (module Z3_mappings)
-            | "bitwuzla" -> (module Bitwuzla_mappings)
-            | _ -> Fmt.failwith "SMTZilla: Unknown solver %s" name
-          in
-          let instance = S.Solver.make () in
-          List.iter
-            (function
-              | Assertions exprs -> S.Solver.add instance exprs
-              | Push -> S.Solver.push instance
-              | Pop n -> S.Solver.pop instance n )
-            (List.rev s.stmts);
-          let solver_inst = SolverInst ((module S), instance) in
-          Hashtbl.add s.solver_instances name solver_inst;
-          solver_inst
-      (* TODO: Need to move some declarations around to be able to use
-        `Solver_type.t` instead of strings, mayba SMTZilla should not be
-        one of the solver types? *)
+        | None -> assert false
 
       let check s ~assumptions =
         let best_solver_name = get_best_solver (s.expr_acc @ assumptions) in
         (* TODO: (s.expr_acc @ assumptions) is not really correct as s.expr_acc
-          does not take into account pushes and pops.  *)
+               does not take into account pushes and pops.  *)
         s.last_solver <- Some best_solver_name;
         let (SolverInst ((module S), solver_inst)) =
           get_solver_instance s best_solver_name
@@ -102,61 +103,63 @@ module Fresh = struct
 
       let model s =
         match s.last_solver with
-        | None -> None
-        | Some name -> (
-          match Hashtbl.find_opt s.solver_instances name with
-          | None -> assert false
-          | Some (SolverInst ((module S), s)) -> (
+        | Some name -> begin
+          match String_map.find_opt name s.solver_instances with
+          | Some (SolverInst ((module S), s)) -> begin
             match S.Solver.model s with
             | Some m -> Some (Model ((module S), s, m))
-            | None -> None ) )
+            | None -> None
+          end
+          | None -> assert false
+        end
+        | None -> None
 
       let push s =
-        Hashtbl.iter
+        String_map.iter
           (fun _ (SolverInst ((module S), instance)) -> S.Solver.push instance)
           s.solver_instances;
         s.stmts <- Push :: s.stmts
 
       let pop s n =
-        Hashtbl.iter
+        String_map.iter
           (fun _ (SolverInst ((module S), instance)) -> S.Solver.pop instance n)
           s.solver_instances;
         s.stmts <- Pop n :: s.stmts
 
       let reset s =
-        Hashtbl.iter
+        String_map.iter
           (fun _ (SolverInst ((module S), instance)) -> S.Solver.reset instance)
           s.solver_instances
 
       let clone s =
-        { s with
-          solver_instances =
-            (let solver_instances = Hashtbl.create 16 in
-             Hashtbl.iter
-               (fun name (SolverInst ((module S), instance)) ->
-                 Hashtbl.add solver_instances name
-                   (SolverInst ((module S), S.Solver.clone instance)) )
-               s.solver_instances;
-             solver_instances )
-        ; stmts = s.stmts
-        }
+        let solver_instances =
+          String_map.map
+            (fun (SolverInst ((module S), instance)) ->
+              SolverInst ((module S), S.Solver.clone instance) )
+            s.solver_instances
+        in
+        let stmts = s.stmts in
+
+        { s with solver_instances; stmts }
 
       let interrupt s =
-        Hashtbl.iter
+        String_map.iter
           (fun _ (SolverInst ((module S), instance)) ->
             S.Solver.interrupt instance )
           s.solver_instances
 
       let add_simplifier s =
-        Hashtbl.filter_map_inplace
-          (fun _ (SolverInst ((module S), instance)) ->
-            let instance = S.Solver.add_simplifier instance in
-            Some (SolverInst ((module S), instance)) )
-          s.solver_instances;
-        s
+        let solver_instances =
+          String_map.map
+            (fun (SolverInst ((module S), instance)) ->
+              let instance = S.Solver.add_simplifier instance in
+              SolverInst ((module S), instance) )
+            s.solver_instances
+        in
+        { s with solver_instances }
 
       let get_statistics s =
-        Hashtbl.fold
+        String_map.fold
           (fun _ (SolverInst ((module S), instance)) acc ->
             Statistics.merge (S.Solver.get_statistics instance) acc )
           s.solver_instances Statistics.Map.empty
