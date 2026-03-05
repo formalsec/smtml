@@ -42,6 +42,10 @@ module type S = sig
   (** [interrupt solver] interrupts the current solver operation. *)
   val interrupt : t -> unit
 
+  (** [was_interrupted solver] returns [true] if the [interrupt solver] was
+      called. *)
+  val was_interrupted : t -> bool
+
   (** [clone solver] creates a copy of the solver [solver]. *)
   val clone : t -> t
 

@@ -147,6 +147,14 @@ module Fresh = struct
             S.Solver.interrupt instance )
           s.solver_instances
 
+      (* TODO: unsure about this, but since only "Z3" supports interrupt,
+         it is the only one for which `was_interrupted` returns `true`.  *)
+      let was_interrupted s =
+        Hashtbl.fold
+          (fun _ (SolverInst ((module S), instance)) b ->
+            b || S.Solver.was_interrupted instance )
+          s.solver_instances false
+
       let add_simplifier s =
         Hashtbl.filter_map_inplace
           (fun _ (SolverInst ((module S), instance)) ->

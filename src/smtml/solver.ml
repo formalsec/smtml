@@ -21,6 +21,8 @@ module Base (M : Mappings_intf.S) = struct
 
   let interrupt solver = M.Solver.interrupt solver
 
+  let was_interrupted solver = M.Solver.was_interrupted solver
+
   let clone (solver : t) : t = M.Solver.clone solver
 
   let push (solver : t) : unit = M.Solver.push solver
@@ -132,6 +134,8 @@ module Batch (Mappings : Mappings.S) = struct
     model ?symbols s.solver
 
   let interrupt { solver; _ } = interrupt solver
+
+  let was_interrupted { solver; _ } = was_interrupted solver
 end
 
 module Cached (Mappings_ : Mappings.S) = struct
@@ -226,6 +230,8 @@ module Cached (Mappings_ : Mappings.S) = struct
     let get_value (solver : t) (e : Expr.t) : Expr.t = get_value solver.solver e
 
     let interrupt { solver; _ } = interrupt solver
+
+    let was_interrupted { solver; _ } = was_interrupted solver
   end
 
   module Fresh () = Make (Mappings_)
