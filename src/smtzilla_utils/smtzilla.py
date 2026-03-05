@@ -81,21 +81,6 @@ def mk_data(path):
     return (data, feature_cols)
 
 
-def rm_negative_thresholds(tree):
-    # Ignore negative thresholds (all features are >= 0)
-    def recurse(node_id):
-        if tree.children_left[node_id] == _tree.TREE_LEAF:
-            return node_id
-        elif tree.threshold[node_id] < 0:
-            return recurse(tree.children_right[node_id])
-        else:
-            tree.children_left[node_id] = recurse(tree.children_left[node_id])
-            tree.children_right[node_id] = recurse(tree.children_right[node_id])
-            return node_id
-
-    recurse(0)
-
-
 def mk_models(data, feature_cols, gradient_boost=True, debug=False):
     # Train one regression model per solver
     models = {}
@@ -108,11 +93,8 @@ def mk_models(data, feature_cols, gradient_boost=True, debug=False):
             model = GradientBoostingRegressor(
                 n_estimators=5, max_depth=5, random_state=42
             )
-            for _, stage in enumerate(model.estimators_[:, 0]):
-                rm_negative_thresholds(stage.tree_)
         else:
             model = DecisionTreeRegressor(max_depth=5, random_state=42)
-            rm_negative_thresholds(model.tree_)
 
         model.fit(X, Y)
         models[solver] = model
