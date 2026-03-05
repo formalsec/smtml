@@ -73,12 +73,17 @@ let rec tree_of_json json =
   | `Float f -> Leaf f
   | `Int i -> Leaf (score_of_int i)
   | `Null ->
-    Node
-      { feature = member "feature" json |> to_string
-      ; threshold = member "threshold" json |> to_score
-      ; left = member "left" json |> tree_of_json
-      ; right = member "right" json |> tree_of_json
-      }
+    let threshold = member "threshold" json |> to_score in
+    (* Negative threshold means that the left branch is never reached *)
+    if compare_score threshold (score_of_int 0) < 0 then
+      member "right" json |> tree_of_json
+    else
+      Node
+        { threshold
+        ; feature = member "feature" json |> to_string
+        ; left = member "left" json |> tree_of_json
+        ; right = member "right" json |> tree_of_json
+        }
   | _ -> Fmt.failwith "Invalid tree structure in JSON"
 
 let model_of_json json =
