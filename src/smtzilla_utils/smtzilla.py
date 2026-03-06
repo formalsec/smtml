@@ -23,8 +23,34 @@ parser.add_argument(
     "--gradient-boost",
     action=argparse.BooleanOptionalAction,
     default=True,
-    help="Use gradient boosting regressor",
+    help="Use gradient boosting regressor (default True)",
 )
+
+
+def str_to_int(f, x: str):
+    i = int(x)
+    if int(i) >= 0:
+        return int(i)
+    else:
+        argparse.ArgumentTypeError(f"{f} must be >= 0")
+
+
+predictor_group = parser.add_argument_group("Predictor parameters")
+
+predictor_group.add_argument(
+    "--n-estimators",
+    type=(lambda x: str_to_int("n_estimators", x)),
+    default=5,
+    help="Number of estimators (only used if gradient-boost is True)",
+)
+
+predictor_group.add_argument(
+    "--max-depth",
+    type=(lambda x: str_to_int("max_depth", x)),
+    default=5,
+    help="Maximum depth of trees",
+)
+
 
 parser.add_argument(
     "-e",
@@ -56,6 +82,7 @@ parser.add_argument(
     help="Print some debugging information",
 )
 
+random_state_const = 42  # for reproductibility
 args = parser.parse_args()
 model_col = "model"
 solver_col = "solver"
@@ -81,7 +108,9 @@ def mk_data(path):
     return (data, feature_cols)
 
 
-def mk_models(data, feature_cols, gradient_boost=True, debug=False):
+def mk_models(
+    data, feature_cols, n_estimators, max_depth, gradient_boost=True, debug=False
+):
     # Train one regression model per solver
     models = {}
     for solver in data[solver_col].unique():
@@ -91,17 +120,21 @@ def mk_models(data, feature_cols, gradient_boost=True, debug=False):
 
         if gradient_boost:
             model = GradientBoostingRegressor(
-                n_estimators=5, max_depth=5, random_state=42
+                n_estimators=n_estimators,
+                max_depth=max_depth,
+                random_state=random_state_const,
             )
         else:
-            model = DecisionTreeRegressor(max_depth=5, random_state=42)
+            model = DecisionTreeRegressor(
+                max_depth=max_depth, random_state=random_state_const
+            )
 
         model.fit(X, Y)
         models[solver] = model
 
         if debug:
             # Cross-validation MAE (Mean Absolute Error) for this solver
-            kf = KFold(n_splits=5, shuffle=True, random_state=42)
+            kf = KFold(n_splits=5, shuffle=True, random_state=random_state_const)
             cv_scores = cross_val_score(
                 model, X, Y, cv=kf, scoring="neg_mean_absolute_error"
             )
@@ -264,7 +297,14 @@ data.drop("model", axis=1, inplace=True)
 if args.pp_stats:
     pp_stats(data, feature_cols)
 
-models = mk_models(data, feature_cols, args.gradient_boost, args.debug)
+models = mk_models(
+    data,
+    feature_cols,
+    args.n_estimators,
+    args.max_depth,
+    args.gradient_boost,
+    args.debug,
+)
 
 if args.debug:
     if args.gradient_boost:

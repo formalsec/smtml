@@ -74,6 +74,24 @@ let predictor_conv =
   in
   Arg.conv (parse, print)
 
+let pos_int =
+  let parser x =
+    match int_of_string_opt x with
+    | Some i when i > 0 -> Ok i
+    | None | Some _ -> Fmt.error_msg "Expected a positive integer"
+  in
+  Arg.conv (parser, Format.pp_print_int)
+
+let n_estimators =
+  let doc =
+    "Number of estimators (must be > 0, used only for gradient-boost)."
+  in
+  Arg.(value & opt pos_int 5 & info [ "n-estimators" ] ~doc)
+
+let max_depth =
+  let doc = "Maximum depth of trees (must be > 0)." in
+  Arg.(value & opt pos_int 5 & info [ "max-depth" ] ~doc)
+
 let gradient_boost =
   let doc =
     "Predictor kind, either a gradient boosting regressor (gradient-boost or \
@@ -118,8 +136,8 @@ let output_json =
     & opt (some existing_parent_dir_conv) None
     & info [ "output" ] ~doc ~docv:"JSON" )
 
-let run_regression ~debug ~gradient_boost ~pp_stats ~run_simulation ~output_json
-  ~input_csv =
+let run_regression ~debug ~gradient_boost ~n_estimators ~max_depth ~pp_stats
+  ~run_simulation ~output_json ~input_csv =
   let debug = Bos.Cmd.(if debug then v "--debug" else empty) in
   let gradient_boost =
     Bos.Cmd.(
@@ -127,6 +145,10 @@ let run_regression ~debug ~gradient_boost ~pp_stats ~run_simulation ~output_json
       | GradientBoost -> v "--gradient-boost"
       | DecisionTree -> v "--no-gradient-boost" )
   in
+  let n_estimators =
+    Bos.Cmd.(v "--n-estimators" % string_of_int n_estimators)
+  in
+  let max_depth = Bos.Cmd.(v "--max-depth" % string_of_int max_depth) in
   let pp_stats = Bos.Cmd.(if pp_stats then v "--pp-stats" else empty) in
   let run_simulation =
     Bos.Cmd.(if run_simulation then v "--simulation" else empty)
@@ -138,8 +160,8 @@ let run_regression ~debug ~gradient_boost ~pp_stats ~run_simulation ~output_json
   let py_script_path = python_script_path () in
   let cmd =
     Bos.Cmd.(
-      v "python3" % p py_script_path %% debug %% gradient_boost %% pp_stats
-      %% run_simulation %% export % p input_csv )
+      v "python3" % p py_script_path %% debug %% gradient_boost %% n_estimators
+      %% max_depth %% pp_stats %% run_simulation %% export % p input_csv )
   in
   Smtml.Log.debug (fun k -> k "Running: %a@." Bos.Cmd.pp cmd);
   match Bos.OS.Cmd.run cmd with
@@ -176,12 +198,14 @@ let regression_cmd =
   let regression =
     let+ debug
     and+ gradient_boost
+    and+ n_estimators
+    and+ max_depth
     and+ pp_stats
     and+ run_simulation
     and+ output_json
     and+ input_csv in
-    run_regression ~debug ~gradient_boost ~pp_stats ~run_simulation ~output_json
-      ~input_csv
+    run_regression ~debug ~gradient_boost ~n_estimators ~max_depth ~pp_stats
+      ~run_simulation ~output_json ~input_csv
   in
   Cmd.v regression_info regression
 
@@ -196,13 +220,15 @@ let train_cmd =
   let train =
     let+ debug
     and+ gradient_boost
+    and+ n_estimators
+    and+ max_depth
     and+ pp_stats
     and+ run_simulation
     and+ output_json
     and+ output_csv
     and+ marshalled_file in
     Smtml.Feature_extraction.cmd marshalled_file output_csv;
-    run_regression ~debug ~gradient_boost ~pp_stats ~run_simulation ~output_json
-      ~input_csv:output_csv
+    run_regression ~debug ~gradient_boost ~n_estimators ~max_depth ~pp_stats
+      ~run_simulation ~output_json ~input_csv:output_csv
   in
   Cmd.v train_info train
