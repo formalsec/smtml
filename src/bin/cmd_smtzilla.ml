@@ -162,11 +162,15 @@ let run_regression ~debug ~gradient_boost ~n_estimators ~max_depth ~pp_stats
   match Bos.OS.Cmd.run cmd with
   | Ok () -> ()
   | Error (`Msg msg) ->
-    Fmt.failwith
-      "Running the python script failed with the error: %s\n\
+    Fmt.epr
+      "SMTZilla: Running the python script failed: \n\
+       %s\n\
        If the error is a python error, make sure that you have installed the \
-       necessary python packages to run the script located at: %a."
-      msg Fpath.pp py_script_path
+       necessary python packages to run the script located at: %a.@."
+      msg Fpath.pp py_script_path;
+    Fmt.failwith "Python script failure"
+(* Going through Fmt.epr because otherwise line breaks are printed as \n with
+   Fmt.failwith *)
 
 let extract_cmd =
   let extract_info =
