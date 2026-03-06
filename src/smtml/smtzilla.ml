@@ -142,8 +142,7 @@ module Fresh = struct
           s.solver_instances
 
       let clone_solver_inst (SolverInst ((module S), _)) =
-        (* For some unknown reason, the line below does not compile *)
-        let module NewS = (val init_solver_instance (module S)) in
+        let (module NewS) = init_solver_instance (module S) in
         let new_inst = NewS.Solver.make () in
         SolverInst ((module NewS), new_inst)
 
