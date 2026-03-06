@@ -129,15 +129,14 @@ let input_csv =
   Arg.(
     required & pos 0 (some csv_file_exists_conv) None (info [] ~doc ~docv:"CSV") )
 
-let output_json =
+let output_json p =
   let doc = "Path to the JSON file to which the model will be exported." in
   Arg.(
-    value
-    & opt (some existing_parent_dir_conv) None
-    & info [ "output" ] ~doc ~docv:"JSON" )
+    required
+    & pos p (some existing_parent_dir_conv) None (info [] ~doc ~docv:"JSON") )
 
 let run_regression ~debug ~gradient_boost ~n_estimators ~max_depth ~pp_stats
-  ~run_simulation ~output_json ~input_csv =
+  ~run_simulation ~input_csv ~output_json =
   let debug = Bos.Cmd.(if debug then v "--debug" else empty) in
   let gradient_boost =
     Bos.Cmd.(
@@ -153,15 +152,11 @@ let run_regression ~debug ~gradient_boost ~n_estimators ~max_depth ~pp_stats
   let run_simulation =
     Bos.Cmd.(if run_simulation then v "--simulation" else empty)
   in
-  let export =
-    Bos.Cmd.(
-      match output_json with Some f -> v "--export" % p f | None -> empty )
-  in
   let py_script_path = python_script_path () in
   let cmd =
     Bos.Cmd.(
       v "python3" % p py_script_path %% debug %% gradient_boost %% n_estimators
-      %% max_depth %% pp_stats %% run_simulation %% export % p input_csv )
+      %% max_depth %% pp_stats %% run_simulation % p input_csv % p output_json )
   in
   Smtml.Log.debug (fun k -> k "Running: %a@." Bos.Cmd.pp cmd);
   match Bos.OS.Cmd.run cmd with
@@ -202,8 +197,8 @@ let regression_cmd =
     and+ max_depth
     and+ pp_stats
     and+ run_simulation
-    and+ output_json
-    and+ input_csv in
+    and+ input_csv
+    and+ output_json = output_json 1 in
     run_regression ~debug ~gradient_boost ~n_estimators ~max_depth ~pp_stats
       ~run_simulation ~output_json ~input_csv
   in
@@ -224,9 +219,9 @@ let train_cmd =
     and+ max_depth
     and+ pp_stats
     and+ run_simulation
-    and+ output_json
+    and+ marshalled_file
     and+ output_csv
-    and+ marshalled_file in
+    and+ output_json = output_json 2 in
     Smtml.Feature_extraction.cmd marshalled_file output_csv;
     run_regression ~debug ~gradient_boost ~n_estimators ~max_depth ~pp_stats
       ~run_simulation ~output_json ~input_csv:output_csv
