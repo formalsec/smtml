@@ -14,7 +14,9 @@ let available_models : (string * Regression_model.t) list =
 module Fresh = struct
   module Make () = struct
     type solver_instance =
-      | SolverInst : (module S with type solver = 's) * 's -> solver_instance
+      | SolverInst :
+          (module S_with_fresh with type solver = 's) * 's
+          -> solver_instance
 
     type stmt =
       | Assertions of Expr.t list
@@ -66,14 +68,25 @@ module Fresh = struct
         Log.info (fun k -> k "Selected solver %s" name);
         name
 
+      let init_solver_instance (module S : Mappings.S_with_fresh) :
+        (module Mappings.S_with_fresh) =
+        let module New = struct
+          module Fresh = S.Fresh
+
+          let is_available = S.is_available
+
+          include S.Fresh.Make ()
+        end in
+        (module New : Mappings.S_with_fresh)
+
       let get_solver_instance s name =
         match Hashtbl.find_opt s.solver_instances name with
         | Some s -> s
         | None ->
           let (module S) : (module Mappings.S_with_fresh) =
             match name with
-            | "z3" -> (module Z3_mappings)
-            | "bitwuzla" -> (module Bitwuzla_mappings)
+            | "z3" -> init_solver_instance (module Z3_mappings)
+            | "bitwuzla" -> init_solver_instance (module Bitwuzla_mappings)
             | _ -> Fmt.failwith "SMTZilla: Unknown solver %s" name
           in
           let instance = S.Solver.make () in
@@ -128,18 +141,33 @@ module Fresh = struct
           (fun _ (SolverInst ((module S), instance)) -> S.Solver.reset instance)
           s.solver_instances
 
+      let clone_solver_inst (SolverInst ((module S), _)) =
+        (* For some unknown reason, the line below does not compile *)
+        (* let module NewS = init_solver_instance (module S) in *)
+        let module NewS = struct
+          include (val init_solver_instance (module S))
+        end in
+        let new_inst = NewS.Solver.make () in
+        SolverInst ((module NewS), new_inst)
+
       let clone s =
-        { s with
-          solver_instances =
-            (let solver_instances = Hashtbl.create 16 in
-             Hashtbl.iter
-               (fun name (SolverInst ((module S), instance)) ->
-                 Hashtbl.add solver_instances name
-                   (SolverInst ((module S), S.Solver.clone instance)) )
-               s.solver_instances;
-             solver_instances )
-        ; stmts = s.stmts
-        }
+        let solver_instances = Hashtbl.create 16 in
+        Hashtbl.iter
+          (fun name (SolverInst ((module S), inst)) ->
+            let (SolverInst ((module NewS), new_inst)) =
+              clone_solver_inst (SolverInst ((module S), inst))
+            in
+            (* Add previously added statements *)
+            List.iter
+              (function
+                | Assertions exprs -> NewS.Solver.add new_inst exprs
+                | Push -> NewS.Solver.push new_inst
+                | Pop n -> NewS.Solver.pop new_inst n )
+              (List.rev s.stmts);
+            Hashtbl.add solver_instances name
+              (SolverInst ((module NewS), new_inst)) )
+          s.solver_instances;
+        { s with solver_instances; stmts = s.stmts }
 
       let interrupt s =
         Hashtbl.iter
