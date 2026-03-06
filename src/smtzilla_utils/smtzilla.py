@@ -14,10 +14,17 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument(
-    "path",
+    "PATH",
     help="Path to a CSV file containing the training data (query features and \
       runtimes by solver)",
 )
+
+parser.add_argument(
+    "JSON",
+    default=None,
+    help="Optional path to a JSON file where the models will be exported",
+)
+
 
 parser.add_argument(
     "--gradient-boost",
@@ -29,35 +36,26 @@ parser.add_argument(
 
 def str_to_int(f, x: str):
     i = int(x)
-    if int(i) >= 0:
+    if int(i) > 0:
         return int(i)
     else:
-        argparse.ArgumentTypeError(f"{f} must be >= 0")
+        argparse.ArgumentTypeError(f"{f} must be > 0")
 
 
-predictor_group = parser.add_argument_group("Predictor parameters")
+predictor_group = parser.add_argument_group("Regressor parameters")
 
 predictor_group.add_argument(
     "--n-estimators",
     type=(lambda x: str_to_int("n_estimators", x)),
     default=5,
-    help="Number of estimators (only used if gradient-boost is True)",
+    help="Number of estimators (must be > 0, only used if gradient-boost is True)",
 )
 
 predictor_group.add_argument(
     "--max-depth",
     type=(lambda x: str_to_int("max_depth", x)),
     default=5,
-    help="Maximum depth of trees",
-)
-
-
-parser.add_argument(
-    "-e",
-    "--export",
-    nargs="?",
-    default=None,
-    help="Optional path to a JSON file where the models will be exported",
+    help="Maximum depth of trees (must be > 0)",
 )
 
 parser.add_argument(
@@ -290,7 +288,7 @@ def simulation(data, models, feature_cols):
     print(f"\nModel overhead vs. oracle: {(regression_total - oracle_total)/1e9:.2f} s")
 
 
-data, feature_cols = mk_data(str(args.path))
+data, feature_cols = mk_data(str(args.PATH))
 # currently not used
 data.drop("model", axis=1, inplace=True)
 
@@ -312,10 +310,10 @@ if args.debug:
     else:
         debug_no_gb(data, models, feature_cols)
 
-if args.export:
+if args.JSON:
     models_json = export_models_to_json(models, feature_cols)
-    print(f"Exporting to: {args.export}")
-    with open(args.export, "w") as f:
+    print(f"Exporting to: {args.JSON}")
+    with open(args.JSON, "w") as f:
         json.dump(models_json, f)
 
 if args.simulation:
