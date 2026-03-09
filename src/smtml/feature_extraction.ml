@@ -406,13 +406,15 @@ let extract_feats_aux : Expr.t -> int FeatMap.t =
     FeatMap.add "depth" depth feats
 
 let read_marshalled_file (path : Fpath.t) :
-  (string * Expr.t list * bool * int64) list =
+  (string * Expr.t list * bool * int64 * [ `Sat | `Unsat | `Unknown ]) list =
   let results = ref [] in
   try
     let ic = In_channel.open_bin (Fpath.to_string path) in
     ( try
         while true do
-          let res : (string * Expr.t list * bool * int64) list =
+          let res :
+            (string * Expr.t list * bool * int64 * [ `Sat | `Unsat | `Unknown ])
+            list =
             Marshal.from_channel ic
           in
           Log.debug (fun k -> k "Read %d results@." (List.length res));
@@ -463,7 +465,7 @@ let cmd marshalled_file output_csv =
         Out_channel.output_string oc
           (String.cat (String.concat "," final_names) "\n");
         List.iter
-          (fun (solver_name, exprs, model, t) ->
+          (fun (solver_name, exprs, model, t, _) ->
             if List.compare_lengths exprs [] > 0 then
               let feats = extract_feats_wtime exprs t in
               let row =

@@ -154,23 +154,30 @@ let set_debug debug =
   if debug then Logs.Src.set_level Smtml.Log.src (Some Logs.Debug);
   Logs.set_reporter @@ Logs.format_reporter ()
 
-let rec extract_queries smt2pp destdir seen cnt l =
+(* type annotation because otherwise the typechecker thinks ?status is ~status *)
+let rec extract_queries
+  (smt2pp :
+       ?name:string
+    -> ?logic:Logic.t
+    -> ?status:[ `Sat | `Unknown | `Unsat ]
+    -> Expr.t list Fmt.t ) destdir seen cnt l =
   match l with
   | [] -> Ok (seen, cnt)
-  | (_, assertions, _, _) :: t ->
+  | (_, assertions, _, _, status) :: t ->
     (* TODO: do better than Hashtbl.hash *)
     let hash = Hashtbl.hash assertions in
     if IntSet.mem hash seen then extract_queries smt2pp destdir seen cnt t
     else
       let file_path = Fpath.(destdir / Fmt.str "query.%d.smt2" cnt) in
       let str =
-        Fmt.str "%a" (smt2pp ?name:None ?logic:None ?status:None) assertions
+        Fmt.str "%a" (smt2pp ?name:None ?logic:None ~status) assertions
       in
       Bos.OS.File.write file_path str >>= fun _ ->
       extract_queries smt2pp destdir (IntSet.add hash seen) (cnt + 1) t
 
 let rec queries_from_ic smt2pp destdir seen cnt ic =
-  let queries : (string * Expr.t list * bool * int64) list =
+  let queries :
+    (string * Expr.t list * bool * int64 * [ `Sat | `Unsat | `Unknown ]) list =
     Marshal.from_channel ic
   in
   extract_queries smt2pp destdir seen cnt queries >>= fun (seen, cnt) ->

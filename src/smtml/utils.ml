@@ -28,9 +28,13 @@ let[@inline never] protect m f =
    all queries sent to the solver (with their timestamps) to the given file *)
 let write =
   match query_log_path with
-  | None -> fun ~model:_ _ _ _ -> ()
+  | None -> fun ~model:_ _ _ _ _ -> ()
   | Some path ->
-    let log_entries : (string * Expr.t list * bool * int64) list ref = ref [] in
+    let log_entries :
+      (string * Expr.t list * bool * int64 * [ `Sat | `Unknown | `Unsat ]) list
+      ref =
+      ref []
+    in
     let close () =
       if List.compare_length_with !log_entries 0 <> 0 then
         try
@@ -50,16 +54,30 @@ let write =
     Sys.set_signal Sys.sigterm (Sys.Signal_handle (fun _ -> close ()));
     (* write *)
     let mutex = Mutex.create () in
-    fun ~model solver_name assumptions time ->
-      let entry = (solver_name, assumptions, model, time) in
+    fun ~model solver_name assumptions time status ->
+      let entry = (solver_name, assumptions, model, time, status) in
       protect mutex (fun () -> log_entries := entry :: !log_entries)
 
-let run_and_log_query ~model f name assumptions =
+let check_log_query (f : unit -> [ `Sat | `Unknown | `Unsat ]) name assumptions
+    =
   match query_log_path with
   | Some _ ->
     let counter = Mtime_clock.counter () in
     let res = f () in
-    write ~model name assumptions
-      (Mtime.Span.to_uint64_ns (Mtime_clock.count counter));
+    write ~model:false name assumptions
+      (Mtime.Span.to_uint64_ns (Mtime_clock.count counter))
+      res;
+    res
+  | None -> f ()
+
+let model_log_query f name assumptions =
+  match query_log_path with
+  | Some _ ->
+    let counter = Mtime_clock.counter () in
+    let res = f () in
+    (* TODO: can no model actually mean `Unsat? *)
+    write ~model:true name assumptions
+      (Mtime.Span.to_uint64_ns (Mtime_clock.count counter))
+      (if Option.is_some res then `Sat else `Unknown);
     res
   | None -> f ()

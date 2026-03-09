@@ -934,7 +934,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
             s.last_assumptions <- assumptions );
           let ctx, encoded_assuptions = Encoder.encode_exprs ctx assumptions in
           s.last_ctx <- Some ctx;
-          Utils.run_and_log_query ~model:false
+          Utils.check_log_query
             (fun () ->
               M.Solver.check s.solver ~ctx ~assumptions:encoded_assuptions )
             M.Internals.name (List.rev assumptions)
@@ -942,7 +942,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       let model { solver; last_ctx; assumptions; last_assumptions; _ } =
         match last_ctx with
         | Some ctx ->
-          Utils.run_and_log_query ~model:true
+          Utils.model_log_query
             (fun () ->
               M.Solver.model solver |> Option.map (fun m -> { model = m; ctx }) )
             M.Internals.name
