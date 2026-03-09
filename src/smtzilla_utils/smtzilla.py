@@ -34,12 +34,14 @@ parser.add_argument(
 )
 
 
-def str_to_int(f, x: str):
-    i = int(x)
-    if int(i) > 0:
-        return int(i)
-    else:
-        argparse.ArgumentTypeError(f"{f} must be > 0")
+def str_to_int(f: str, x: str):
+    try:
+        i = int(x)
+        if i <= 0:
+            raise argparse.ArgumentTypeError(f"{f} must be > 0")
+        return i
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"{f} must be a valid integer")
 
 
 predictor_group = parser.add_argument_group("Regressor parameters")
