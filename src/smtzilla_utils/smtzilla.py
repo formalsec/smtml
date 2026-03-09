@@ -200,12 +200,17 @@ def tree_to_dict(tree, feature_names):
 
     def recurse(node):
         if node != _tree.TREE_LEAF:
-            return {
-                "feature": feature_name[node],
-                "threshold": float(tree.threshold[node]),
-                "left": recurse(tree.children_left[node]),
-                "right": recurse(tree.children_right[node]),
-            }
+            threashold = float(tree.threshold[node])
+            # Remove unreachable branches
+            if threashold < 0:
+                return recurse(tree.children_right[node])
+            else:
+                return {
+                    "feature": feature_name[node],
+                    "threshold": threashold,
+                    "left": recurse(tree.children_left[node]),
+                    "right": recurse(tree.children_right[node]),
+                }
         else:
             return {"value": float(tree.value[node][0, 0])}
 
