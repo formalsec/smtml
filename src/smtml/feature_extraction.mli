@@ -4,7 +4,7 @@
 
 open Regression_model
 
-val read_marshalled_file : string -> (string * Expr.t list * bool * int64) list
+val read_marshalled_file : Fpath.t -> (string * Expr.t list * bool * int64) list
 
 val extract_feats : Expr.t list -> features
 

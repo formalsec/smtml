@@ -1,6 +1,8 @@
 open Cmdliner
 open Term.Syntax
 open Rresult
+open Smtml
+module IntSet = Set.Make (Int)
 
 let script_name = R.failwith_error_msg (Fpath.of_string "smtzilla.py")
 
@@ -42,6 +44,15 @@ let csv_file_exists_conv =
     else Fmt.error_msg "File '%a' is not a CSV file" Fpath.pp path
   in
   Arg.conv (parse_csv_file, Fpath.pp)
+
+let dir_exists_conv =
+  let parse s =
+    Fpath.of_string s >>= fun path ->
+    Bos.OS.Dir.exists path >>= fun b ->
+    if b then Ok path
+    else Fmt.error_msg "The directory '%a' does not exist" Fpath.pp path
+  in
+  Arg.conv (parse, Fpath.pp)
 
 let existing_parent_dir_conv =
   let parse s =
@@ -113,6 +124,10 @@ let marshalled_file =
   Arg.(
     required & pos 0 (some file_exists_conv) None (info [] ~doc ~docv:"INPUT") )
 
+let dest_dir =
+  let doc = "Path to a directory in which to store the exported queries." in
+  Arg.(required & pos 1 (some dir_exists_conv) None (info [] ~doc ~docv:"DIR"))
+
 let output_csv =
   let doc =
     "Path to the output csv file in which to store the query features."
@@ -138,6 +153,62 @@ let output_json p =
 let set_debug debug =
   if debug then Logs.Src.set_level Smtml.Log.src (Some Logs.Debug);
   Logs.set_reporter @@ Logs.format_reporter ()
+
+let rec extract_queries smt2pp destdir seen cnt l =
+  match l with
+  | [] -> Ok (seen, cnt)
+  | (_, assertions, _, _) :: t ->
+    (* TODO: do better than Hashtbl.hash *)
+    let hash = Hashtbl.hash assertions in
+    if IntSet.mem hash seen then extract_queries smt2pp destdir seen cnt t
+    else
+      let file_path = Fpath.(destdir / Fmt.str "query.%d.smt2" cnt) in
+      let str =
+        Fmt.str "%a" (smt2pp ?name:None ?logic:None ?status:None) assertions
+      in
+      Bos.OS.File.write file_path str >>= fun _ ->
+      extract_queries smt2pp destdir (IntSet.add hash seen) (cnt + 1) t
+
+let rec queries_from_ic smt2pp destdir seen cnt ic =
+  let queries : (string * Expr.t list * bool * int64) list =
+    Marshal.from_channel ic
+  in
+  extract_queries smt2pp destdir seen cnt queries >>= fun (seen, cnt) ->
+  queries_from_ic smt2pp destdir seen cnt ic
+
+let extract_queries (path : Fpath.t) (destdir : Fpath.t) =
+  let (module M) = Solver_type.to_mappings Solver_type.Z3_solver in
+  if not M.is_available then
+    Fmt.failwith "Query extraction to smt file depends on Z3";
+  let smt2pp = M.Smtlib.pp in
+  try
+    let ic = In_channel.open_bin (Fpath.to_string path) in
+    try
+      match queries_from_ic smt2pp destdir IntSet.empty 1 ic with
+      | Ok () -> ()
+      | Error (`Msg msg) -> raise (Failure msg)
+    with End_of_file ->
+      Log.debug (fun k -> k "Finished reading results@.");
+      In_channel.close ic
+  with e ->
+    Fmt.failwith "Failed to extract queries from %a\nBecause %s\n%!" Fpath.pp
+      path (Printexc.to_string e)
+
+let extract_queries_cmd =
+  let extract_info =
+    let doc =
+      "Given a file containing marshalled smtml queries, extracts the (unique) \
+       queries into files in a given folder. The files are named \
+       `query.n.smt2` where `n` is the query's number."
+    in
+    Cmd.info "extract-queries" ~doc
+  in
+  let extract =
+    let+ marshalled_file
+    and+ dest_dir in
+    extract_queries marshalled_file dest_dir
+  in
+  Cmd.v extract_info extract
 
 let run_regression ~debug ~gradient_boost ~n_estimators ~max_depth ~pp_stats
   ~run_simulation ~input_csv ~output_json =
@@ -175,7 +246,7 @@ let run_regression ~debug ~gradient_boost ~n_estimators ~max_depth ~pp_stats
         msg Fpath.pp py_script_path );
     Fmt.failwith "Python script failure"
 
-let extract_cmd =
+let extract_features_cmd =
   let extract_info =
     let doc =
       "Given a file containing marshalled smtml queries, extracts features \

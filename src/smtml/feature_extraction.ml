@@ -405,10 +405,11 @@ let extract_feats_aux : Expr.t -> int FeatMap.t =
     let depth, feats = visit 1 FeatMap.empty expr in
     FeatMap.add "depth" depth feats
 
-let read_marshalled_file path : (string * Expr.t list * bool * int64) list =
+let read_marshalled_file (path : Fpath.t) :
+  (string * Expr.t list * bool * int64) list =
   let results = ref [] in
   try
-    let ic = In_channel.open_bin path in
+    let ic = In_channel.open_bin (Fpath.to_string path) in
     ( try
         while true do
           let res : (string * Expr.t list * bool * int64) list =
@@ -421,7 +422,8 @@ let read_marshalled_file path : (string * Expr.t list * bool * int64) list =
     In_channel.close ic;
     List.rev !results
   with e ->
-    Fmt.epr "Failed to read %s\nBecause %s\n%!" path (Printexc.to_string e);
+    Fmt.epr "Failed to read %a\nBecause %s\n%!" Fpath.pp path
+      (Printexc.to_string e);
     []
 
 let extract_feats assertions =
@@ -453,8 +455,8 @@ let extract_feats assertions =
 let extract_feats_wtime assertions runtime =
   FeatMap.add "time" (Int64.to_int runtime) (extract_feats assertions)
 
-let cmd directory output_csv =
-  let entries = read_marshalled_file (Fpath.to_string directory) in
+let cmd marshalled_file output_csv =
+  let entries = read_marshalled_file marshalled_file in
   let res : ((unit, [> Rresult.R.msg ]) result, [> Rresult.R.msg ]) result =
     Bos.OS.File.with_oc output_csv
       (fun oc entries ->
