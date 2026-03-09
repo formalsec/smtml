@@ -40,10 +40,10 @@ sed -i "s/^version: \".*\"/version: \"$TAG\"/" smtml.opam
 git add dune-project smtml.opam
 
 git commit -m "Release $TAG"
-git push -u origin $BRANCH
+git push -f -u origin $BRANCH
 
 gh pr create \
   --base "main" \
   --head "$BRANCH" \
   --title "Release $TAG" \
-  --body "Automated Release $TAG"
+  --body "Automated Release $TAG" || echo "PR already exists, skipping creation."
