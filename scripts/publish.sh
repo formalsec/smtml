@@ -29,8 +29,28 @@ EOF
 # Remove pin depends which are not allowed in opam-repository
 sed -i '/^pin-depends:/,$d' smtml.opam
 
+OUTPUT_FILE=$(mktemp)
+
 opam exec -- opam-publish \
   --tag="$TAG" \
   --msg-file=./shortlog.txt \
   --no-confirmation \
-  --no-browser
+  --no-browser | tee "$OUTPUT_FILE"
+
+PR_LINK=$(tail -n 5 "$OUTPUT_FILE" | grep -oE "https://github.com/ocaml/opam-repository/pull/[0-9]+")
+
+if [ -z "$PR_LINK" ]; then
+  echo "Error: could not find the PR link in the output."
+else
+  echo "Succesfully captured PR: $PR_LINK"
+  if [[ -n "${SLACK_WEBHOOK_URL}" ]]; then
+    echo "Sending notification to Slack ..."
+
+    echo "🚀 *smtml* version *$TAG* has been submitted to opam-repository!\n*PR:* $PR_LINK" | sigh notify "$SLACK_WEBHOOK_URL"
+    echo "Slack notification sent."
+  else
+    echo "Skipping Slack notification: SLACK_WEBHOOK_URL is not defined."
+  fi
+fi
+
+rm "$OUTPUT_FILE"
