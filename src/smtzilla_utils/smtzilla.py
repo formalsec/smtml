@@ -95,7 +95,7 @@ def mk_data(path):
     data = pd.read_csv(path)
 
     # Drop columns where all values are 0
-    data = data.loc[:, data.any()]
+    data = data.loc[:, (data != 0).any(axis=0)]
 
     feature_cols = [
         c for c in data.columns if c not in [solver_col, time_col, model_col]
