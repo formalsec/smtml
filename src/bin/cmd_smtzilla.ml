@@ -135,6 +135,10 @@ let output_json p =
     required
     & pos p (some existing_parent_dir_conv) None (info [] ~doc ~docv:"JSON") )
 
+let set_debug debug =
+  if debug then Logs.Src.set_level Smtml.Log.src (Some Logs.Debug);
+  Logs.set_reporter @@ Logs.format_reporter ()
+
 let run_regression ~debug ~gradient_boost ~n_estimators ~max_depth ~pp_stats
   ~run_simulation ~input_csv ~output_json =
   let debug = Bos.Cmd.(if debug then v "--debug" else empty) in
@@ -162,15 +166,14 @@ let run_regression ~debug ~gradient_boost ~n_estimators ~max_depth ~pp_stats
   match Bos.OS.Cmd.run cmd with
   | Ok () -> ()
   | Error (`Msg msg) ->
-    Fmt.epr
-      "SMTZilla: Running the python script failed: \n\
-       %s\n\
-       If the error is a python error, make sure that you have installed the \
-       necessary python packages to run the script located at: %a.@."
-      msg Fpath.pp py_script_path;
+    Smtml.Log.err (fun k ->
+      k
+        "SMTZilla: Running the python script failed: \n\
+         %s\n\
+         If the error is a python error, make sure that you have installed the \
+         necessary python packages to run the script located at: %a.@."
+        msg Fpath.pp py_script_path );
     Fmt.failwith "Python script failure"
-(* Going through Fmt.epr because otherwise line breaks are printed as \n with
-   Fmt.failwith *)
 
 let extract_cmd =
   let extract_info =
@@ -181,8 +184,10 @@ let extract_cmd =
     Cmd.info "extract-features" ~doc
   in
   let extract =
-    let+ marshalled_file
+    let+ debug
+    and+ marshalled_file
     and+ output_csv in
+    set_debug debug;
     Smtml.Feature_extraction.cmd marshalled_file output_csv
   in
   Cmd.v extract_info extract
@@ -203,6 +208,7 @@ let regression_cmd =
     and+ run_simulation
     and+ input_csv
     and+ output_json = output_json 1 in
+    set_debug debug;
     run_regression ~debug ~gradient_boost ~n_estimators ~max_depth ~pp_stats
       ~run_simulation ~output_json ~input_csv
   in
@@ -226,6 +232,7 @@ let train_cmd =
     and+ marshalled_file
     and+ output_csv
     and+ output_json = output_json 2 in
+    set_debug debug;
     Smtml.Feature_extraction.cmd marshalled_file output_csv;
     run_regression ~debug ~gradient_boost ~n_estimators ~max_depth ~pp_stats
       ~run_simulation ~output_json ~input_csv:output_csv
