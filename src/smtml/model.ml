@@ -35,7 +35,7 @@ let pp ?(no_values = false) fmt model =
 let to_string (model : t) : string = Fmt.str "%a" (pp ~no_values:false) model
 
 let to_json (model : t) : Yojson.t =
-  let combine = Yojson.Basic.Util.combine in
+  let combine = Yojson.Safe.Util.combine in
   let add_assignment sym value assignments =
     let assignment =
       match Symbol.to_json sym with
@@ -106,7 +106,7 @@ let to_smtlib_string model =
 module Parse = struct
   module Json = struct
     open Result.Syntax
-    module Json = Yojson.Basic
+    module Json = Yojson.Safe
 
     let from_json json =
       let symbols = Json.Util.member "model" json |> Json.Util.to_assoc in

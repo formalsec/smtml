@@ -71,4 +71,4 @@ let of_string (cast : Ty.t) value =
     | Some n -> Ok (F64 (Int64.bits_of_float n)) )
   | _ -> Fmt.error_msg "invalid value, expected num"
 
-let to_json (n : t) : Yojson.Basic.t = `String (Fmt.str "%a" pp_no_type n)
+let to_json (n : t) : Yojson.Safe.t = `String (Fmt.str "%a" pp_no_type n)
