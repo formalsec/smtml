@@ -57,9 +57,8 @@ let to_int64 v =
       v.width
 
 type printer =
-  [ `Pretty  (** Human-readable format. *)
-  | `WithType  (** Print with type info. *)
-  ]
+  | Pretty  (** Human-readable format. *)
+  | WithType  (** Print with type info. *)
 
 (** Bitvector pretty printer. By default it prints signed bitvectors. *)
 let pp_bv fmt bv =
@@ -70,13 +69,8 @@ let pp_wtype fmt bv =
   let value = to_signed bv in
   Fmt.pf fmt "(i%d %a)" bv.width Z.pp_print value
 
-let printer = ref pp_bv
-
-let set_default_printer = function
-  | `Pretty -> printer := pp_bv
-  | `WithType -> printer := pp_wtype
-
-let pp fmt e = !printer fmt e
+let pp ~printer fmt e =
+  match printer with Pretty -> pp_bv fmt e | WithType -> pp_wtype fmt e
 
 (* Unop *)
 let neg bv = make (Z.neg bv.value) bv.width
@@ -223,6 +217,6 @@ let sign_extend width bv =
   let extended = Z.logor bv.value sign_mask in
   make extended new_width
 
-let to_string bv = Fmt.str "%a" pp bv
+let to_string bv = Fmt.str "%a" (pp ~printer:Pretty) bv
 
 let to_json bv = `String (to_string bv)

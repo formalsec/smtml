@@ -216,7 +216,10 @@ let get_symbols (hte : t list) =
 let rec pp fmt (hte : t) =
   match view hte with
   | Val v -> Value.pp fmt v
-  | Ptr { base; offset } -> Fmt.pf fmt "(Ptr %a %a)" Bitvector.pp base pp offset
+  | Ptr { base; offset } ->
+    Fmt.pf fmt "(Ptr %a %a)"
+      (Bitvector.pp ~printer:Bitvector.WithType)
+      base pp offset
   | Symbol s -> Fmt.pf fmt "@[<hov 1>%a@]" Symbol.pp s
   | List v -> Fmt.pf fmt "@[<hov 1>[%a]@]" (Fmt.list ~sep:Fmt.comma pp) v
   | App (s, v) ->
@@ -245,9 +248,7 @@ let rec pp fmt (hte : t) =
 let pp_list fmt (es : t list) = Fmt.hovbox (Fmt.list ~sep:Fmt.comma pp) fmt es
 
 let pp_smtml fmt (es : t list) : unit =
-  let def_num_printer = Num.get_default_printer () in
-  Num.set_default_printer `Hexadecimal;
-  Bitvector.set_default_printer `WithType;
+  (* TODO: use Hexadecimal for Num.pp *)
   let pp_symbols fmt syms =
     Fmt.list ~sep:Fmt.cut
       (fun fmt sym ->
@@ -263,9 +264,7 @@ let pp_smtml fmt (es : t list) : unit =
   let syms = get_symbols es in
   if List.length syms > 0 then Fmt.pf fmt "@[<v>%a@]@\n" pp_symbols syms;
   if List.length es > 0 then Fmt.pf fmt "@[<v>%a@]@\n" pp_asserts es;
-  Fmt.string fmt "(check-sat)";
-  Num.set_default_printer def_num_printer;
-  Bitvector.set_default_printer `Pretty
+  Fmt.string fmt "(check-sat)"
 
 let to_string e = Fmt.str "%a" pp e
 

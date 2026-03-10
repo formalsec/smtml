@@ -136,8 +136,8 @@ let rec pp fmt = function
   | Unit -> Fmt.string fmt "unit"
   | Int x -> Fmt.int fmt x
   | Real x -> Fmt.pf fmt "%F" x
-  | Num x -> Num.pp fmt x
-  | Bitv bv -> Bitvector.pp fmt bv
+  | Num x -> Num.pp ~printer:Num.NoType fmt x
+  | Bitv bv -> Bitvector.pp ~printer:Bitvector.Pretty fmt bv
   | Str x -> Fmt.pf fmt "%S" x
   | List l -> (Fmt.hovbox ~indent:1 (Fmt.list ~sep:Fmt.comma pp)) fmt l
   | App (`Op op, vs) ->
@@ -203,8 +203,8 @@ module Smtlib = struct
     | False -> Fmt.string fmt "false"
     | Int x -> Fmt.int fmt x
     | Real x -> Fmt.pf fmt "%F" x
-    | Num x -> Num.pp fmt x
-    | Bitv bv -> Bitvector.pp fmt bv
+    | Num x -> Num.pp ~printer:Num.Hexadecimal fmt x
+    | Bitv bv -> Bitvector.pp ~printer:Bitvector.Pretty fmt bv
     | Str x -> Fmt.pf fmt "%S" x
     | Re_none -> Fmt.string fmt "re.none"
     | Re_all -> Fmt.string fmt "re.all"
