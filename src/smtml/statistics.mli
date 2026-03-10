@@ -47,4 +47,4 @@ val pp : t Fmt.t
 
 (** [to_json stats] converts the statistics map [stats] into a JSON
     representation. *)
-val to_json : t -> Yojson.Basic.t
+val to_json : t -> Yojson.Safe.t

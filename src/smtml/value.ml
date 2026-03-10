@@ -180,7 +180,7 @@ let of_string (cast : Ty.t) v =
   | Ty_app | Ty_list | Ty_none | Ty_unit | Ty_roundingMode ->
     Fmt.error_msg "unsupported parsing values of type %a" Ty.pp cast
 
-let rec to_json (v : t) : Yojson.Basic.t =
+let rec to_json (v : t) : Yojson.Safe.t =
   match v with
   | True -> `Bool true
   | False -> `Bool false

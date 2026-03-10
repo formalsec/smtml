@@ -38,5 +38,5 @@ let pp =
           (fun f m -> Map.iter (fun a b -> f (a, b)) m)
           (Fmt.parens (Fmt.pair ~sep:Fmt.sp Fmt.string pp_entry)) ) )
 
-let to_json (s : t) : Yojson.Basic.t =
-  `Assoc (Map.bindings (s :> Yojson.Basic.t Map.t))
+let to_json (s : t) : Yojson.Safe.t =
+  `Assoc (Map.bindings (s :> Yojson.Safe.t Map.t))

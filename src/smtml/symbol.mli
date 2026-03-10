@@ -110,7 +110,7 @@ val pp : t Fmt.t
 val to_string : t -> string
 
 (** [to_json sym] converts the symbol [sym] to a JSON representation. *)
-val to_json : t -> Yojson.Basic.t
+val to_json : t -> Yojson.Safe.t
 
 module Map : Map.S with type key = t
 

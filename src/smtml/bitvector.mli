@@ -104,6 +104,6 @@ val zero_extend : int -> t -> t
 
 val sign_extend : int -> t -> t
 
-val to_json : t -> Yojson.Basic.t
+val to_json : t -> Yojson.Safe.t
 
 val to_string : t -> string
