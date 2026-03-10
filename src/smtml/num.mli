@@ -16,10 +16,9 @@ type t =
 
 (** Representation options for value printing. *)
 type printer =
-  [ `Pretty  (** Human-readable format. *)
-  | `Hexadecimal  (** Hexadecimal representation. *)
-  | `NoType  (** Human-readable format with no type information. *)
-  ]
+  | Pretty  (** Human-readable format. *)
+  | Hexadecimal  (** Hexadecimal representation. *)
+  | NoType  (** Human-readable format with no type information. *)
 
 (** [type_of v] returns the type of the given value [v]. *)
 val type_of : t -> Ty.t
@@ -38,16 +37,9 @@ val hash : t -> int
 
 (** {1 Pretty Printing} *)
 
-(** [set_default_printer p] sets the default printer format for displaying
-    values. *)
-val set_default_printer : printer -> unit
-
-(** [set_default_printer ()] gets the default printer. *)
-val get_default_printer : unit -> printer
-
 (** [pp] is a formatter for values of type [t], using the currently set printer.
 *)
-val pp : t Fmt.t
+val pp : printer:printer -> t Fmt.t
 
 (** [pp_no_type] is a formatter that prints a value of type [t] without
     displaying its type. *)

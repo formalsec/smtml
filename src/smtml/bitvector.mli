@@ -26,15 +26,10 @@ val compare : t -> t -> int
 
 (** Representation options for value printing. *)
 type printer =
-  [ `Pretty  (** Human-readable format. *)
-  | `WithType  (** Print with type info. *)
-  ]
+  | Pretty  (** Human-readable format. *)
+  | WithType  (** Print with type info. *)
 
-(** [set_default_printer p] sets the default printer format for displaying
-    values. *)
-val set_default_printer : printer -> unit
-
-val pp : t Fmt.t
+val pp : printer:printer -> t Fmt.t
 
 val neg : t -> t
 
