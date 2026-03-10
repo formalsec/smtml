@@ -1,7 +1,27 @@
 # Changelog
 
+## 0.23.0 - 2026-03-10
+
+- 2026-03-10 Add hook to notify Slack of PR when opam-publish CI runs ([#438](https://github.com/formalsec/smtml/issues/438))
+- 2026-03-10 Use Logs in SMTZilla cmds
+- 2026-03-10 Make column drop safer by ensuring they are only dropped when all values are 0
+- 2026-03-10 Update src/smtzilla_utils/smtzilla.py
+- 2026-03-10 SMTZilla: remove unreachable branches in python scripts to decrease the size of exported models
+- 2026-03-10 SMTZilla: better error message
+- 2026-03-10 SMTZilla: Use positional arguments for JSON and CSV files
+- 2026-03-10 Add the n-estimators max-depth as command line options
+- 2026-03-10 SMTZilla: Cleanup decision trees when reading them
+- 2026-03-10 SMTZilla: Cleanup decision trees by removing unreachable branches
+- 2026-03-09 Make create-release.sh script update release PR if it exists
+- 2026-03-06 Cleanup
+- 2026-03-06 Update src/smtml/smtzilla.ml
+- 2026-03-06 SMTZilla: fix solver instatiation and cloning
+- 2026-03-05 Upd docs
+- 2026-03-05 Expose a  `was_interrupted` function
+
 ## 0.22.0 - 2026-03-02
 
+- 2026-03-02 Release 0.22.0
 - 2026-02-28 Run regexp tests in cvc5 integration tests
 - 2026-02-28 Add n-ary `distinct` operator ([#553](https://github.com/formalsec/smtml/issues/553))
 - 2026-02-28 Fix inconsistencies with `implies` operator ([#549](https://github.com/formalsec/smtml/issues/549))
