@@ -169,10 +169,10 @@ let rec extract_queries
     if IntSet.mem hash seen then extract_queries smt2pp destdir seen cnt t
     else
       let file_path = Fpath.(destdir / Fmt.str "query.%d.smt2" cnt) in
-      let str =
-        Fmt.str "%a" (smt2pp ?name:None ?logic:None ~status) assertions
-      in
-      Bos.OS.File.write file_path str >>= fun _ ->
+      Bos.OS.File.writef file_path "%a"
+        (smt2pp ?name:None ?logic:None ~status)
+        assertions
+      >>= fun _ ->
       extract_queries smt2pp destdir (IntSet.add hash seen) (cnt + 1) t
 
 let rec queries_from_ic smt2pp destdir seen cnt ic =
