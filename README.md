@@ -4,7 +4,7 @@
     <img src="docs/assets/smtml-logo.png" width=300 alt="Smt.ml logo"/>
   </a>
   <br />
-  <strong>Smt.ml: A Multi-Backend Frontend for SMT Solvers in OCaml</strong>
+  <strong>Smt.ml: A Multi-Backend Frontend for SMT Solvers in OCaml!</strong>
 </div>
 
 <div align="center">
