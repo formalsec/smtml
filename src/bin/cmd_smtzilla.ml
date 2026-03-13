@@ -154,25 +154,33 @@ let set_debug debug =
   if debug then Logs.Src.set_level Smtml.Log.src (Some Logs.Debug);
   Logs.set_reporter @@ Logs.format_reporter ()
 
+let rec is_trivial_assert e =
+  match Expr.view e with
+  | Val _ | Symbol _ -> true
+  | Relop (_, _, { node = Symbol _ | Val _; _ }, { node = Symbol _ | Val _; _ })
+  | Binop (_, _, { node = Symbol _ | Val _; _ }, { node = Symbol _ | Val _; _ })
+    ->
+    true
+  | Binop (_, _, e1, e2) | Relop (_, _, e1, e2) ->
+    is_trivial_assert e1 || is_trivial_assert e2
+  | Cvtop (_, _, e) | Unop (_, _, e) -> is_trivial_assert e
+  | _ -> false
+
 (* TODO: Ideally, trivial queries should not arrive to the solver at all, but
 doing so properly, while taking into account assertions added with `add` would
 require more effort. *)
 let are_trivial = function
   | [] -> true
-  | [ a ] -> begin
+  | [ a ] when is_trivial_assert a ->
     (* When there is only one assert, which is a relop between a symbol and a
     const, or a unop on a symbol or const, the query is considered as trivial.
     *)
-    match Expr.view a with
-    | Val (False | True)
-    | Relop
-        (_, _, { node = Val _ | Symbol _; _ }, { node = Val _ | Symbol _; _ })
-      ->
-      true
-    | Unop (_, _, { node = Val _ | Symbol _; _ }) -> true
-    | _ -> false
-  end
-  | _ -> false
+    true
+  | l when List.length l < 10 && List.for_all is_trivial_assert l ->
+    (* When there are less than 10 asserts (totally arbitrary) and all asserts
+       are trivial  *)
+    true
+  | _l -> false
 
 (* type annotation because otherwise the typechecker thinks ?status is ~status *)
 let rec extract_queries
