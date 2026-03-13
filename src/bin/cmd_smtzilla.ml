@@ -154,6 +154,26 @@ let set_debug debug =
   if debug then Logs.Src.set_level Smtml.Log.src (Some Logs.Debug);
   Logs.set_reporter @@ Logs.format_reporter ()
 
+(* TODO: Ideally, trivial queries should not arrive to the solver at all, but
+doing so properly, while taking into account assertions added with `add` would
+require more effort. *)
+let are_trivial = function
+  | [] -> true
+  | [ a ] -> begin
+    (* When there is only one assert, which is a relop between a symbol and a
+    const, or a unop on a symbol or const, the query is considered as trivial.
+    *)
+    match Expr.view a with
+    | Val (False | True)
+    | Relop
+        (_, _, { node = Val _ | Symbol _; _ }, { node = Val _ | Symbol _; _ })
+      ->
+      true
+    | Unop (_, _, { node = Val _ | Symbol _; _ }) -> true
+    | _ -> false
+  end
+  | _ -> false
+
 (* type annotation because otherwise the typechecker thinks ?status is ~status *)
 let rec extract_queries
   (smt2pp :
@@ -163,6 +183,8 @@ let rec extract_queries
     -> Expr.t list Fmt.t ) destdir seen cnt l =
   match l with
   | [] -> Ok (seen, cnt)
+  | (_, assertions, _, _, _) :: t when are_trivial assertions ->
+    extract_queries smt2pp destdir seen cnt t
   | (_, assertions, _, _, status) :: t ->
     (* TODO: do better than Hashtbl.hash *)
     let hash = Hashtbl.hash assertions in
@@ -193,7 +215,7 @@ let extract_queries (path : Fpath.t) (destdir : Fpath.t) =
       (fun ic seen ->
         try queries_from_ic smt2pp destdir seen 1 ic >>| fun _ -> ()
         with End_of_file ->
-          Log.debug (fun k -> k "Finished reading results@.");
+          Log.debug (fun k -> k "Finished extracting queries@.");
           Ok () )
       IntSet.empty
   in

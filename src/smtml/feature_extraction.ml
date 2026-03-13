@@ -336,7 +336,7 @@ let extract_feats_aux : Expr.t -> int FeatMap.t =
   in
   let rec visit depth feats (e : Expr.t) =
     let feats = incr_feat feats (string_of_expr_kind e.node (Expr.ty e)) in
-    match e.node with
+    match Expr.view e with
     | Val _ | Symbol _ -> (depth, feats)
     | Ptr { offset; _ } -> visit (depth + 1) feats offset
     | List lst ->
