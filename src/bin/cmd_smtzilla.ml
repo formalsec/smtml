@@ -188,18 +188,20 @@ let extract_queries (path : Fpath.t) (destdir : Fpath.t) =
   if not M.is_available then
     Fmt.failwith "Query extraction to smt file depends on Z3";
   let smt2pp = M.Smtlib.pp in
-  try
-    let ic = In_channel.open_bin (Fpath.to_string path) in
-    try
-      match queries_from_ic smt2pp destdir IntSet.empty 1 ic with
-      | Ok () -> ()
-      | Error (`Msg msg) -> raise (Failure msg)
-    with End_of_file ->
-      Log.debug (fun k -> k "Finished reading results@.");
-      In_channel.close ic
-  with e ->
-    Fmt.failwith "Failed to extract queries from %a\nBecause %s\n%!" Fpath.pp
-      path (Printexc.to_string e)
+  let res =
+    Bos.OS.File.with_ic path
+      (fun ic seen ->
+        try queries_from_ic smt2pp destdir seen 1 ic >>| fun _ -> ()
+        with End_of_file ->
+          Log.debug (fun k -> k "Finished reading results@.");
+          Ok () )
+      IntSet.empty
+  in
+  match Rresult.R.join res with
+  | Ok () -> ()
+  | Error (`Msg msg) ->
+    Fmt.failwith "Failed to extract queries from %a\nBecause of: %s" Fpath.pp
+      path msg
 
 let extract_queries_cmd =
   let extract_info =
