@@ -79,6 +79,7 @@
    (>= "4.14.0"))
   ocaml_intrinsics
   ppx_deriving
+  ppx_enumerate
   (prelude
    (>= "0.5"))
   (scfg

@@ -70,6 +70,7 @@
   fpath
   menhirLib
   ocaml_intrinsics
+  ppx_enumerate
   scfg
   smtml.prelude
   smtml.smtzilla_utils
@@ -114,7 +115,7 @@
   (backend bisect_ppx --exclusions src/smtml/bisect.exclude)
   (deps bisect.exclude))
  (preprocess
-  (pps ppx_deriving.std ppx_deriving.show)))
+  (pps ppx_deriving.std ppx_deriving.show ppx_enumerate)))
 
 (rule
  (targets

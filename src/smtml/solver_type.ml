@@ -9,6 +9,9 @@ type t =
   | Cvc5_solver
   | Altergo_solver
   | Smtzilla_solver
+[@@deriving enumerate]
+
+let supported_solvers = all
 
 let of_string s =
   match String.map Char.lowercase_ascii s with
