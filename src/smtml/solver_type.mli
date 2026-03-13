@@ -17,6 +17,9 @@ type t =
   | Altergo_solver  (** Represents the Alt-Ergo solver. *)
   | Smtzilla_solver  (** Represents the SMTZilla solver. *)
 
+(** [supported_solvers] returns a list of all supported solvers. *)
+val supported_solvers : t list
+
 (** {1 Parsing} *)
 
 (** [of_string s] attempts to convert the string [s] into a solver type. Returns
