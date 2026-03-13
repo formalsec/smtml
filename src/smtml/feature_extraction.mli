@@ -6,7 +6,9 @@ open Regression_model
 
 val read_marshalled_file :
      Fpath.t
-  -> (string * Expr.t list * bool * int64 * [ `Sat | `Unsat | `Unknown ]) list
+  -> ( (string * Expr.t list * bool * int64 * [ `Sat | `Unsat | `Unknown ]) list
+     , Rresult.R.msg )
+     result
 
 val extract_feats : Expr.t list -> features
 

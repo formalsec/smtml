@@ -3,6 +3,7 @@
 (* Written by the Smtml programmers *)
 
 open Regression_model
+open Rresult
 
 let string_of_unop (unop : Ty.Unop.t) : string =
   match unop with
@@ -405,28 +406,26 @@ let extract_feats_aux : Expr.t -> int FeatMap.t =
     let depth, feats = visit 1 FeatMap.empty expr in
     FeatMap.add "depth" depth feats
 
-let read_marshalled_file (path : Fpath.t) :
-  (string * Expr.t list * bool * int64 * [ `Sat | `Unsat | `Unknown ]) list =
+let rec read_marshalled_queries results ic : unit =
+  let res :
+    (string * Expr.t list * bool * int64 * [ `Sat | `Unsat | `Unknown ]) list =
+    Marshal.from_channel ic
+  in
+  Log.debug (fun k -> k "Read %d results@." (List.length res));
+  results := List.rev_append res !results;
+  read_marshalled_queries results ic
+
+let read_marshalled_file (path : Fpath.t) =
   let results = ref [] in
-  try
-    let ic = In_channel.open_bin (Fpath.to_string path) in
-    ( try
-        while true do
-          let res :
-            (string * Expr.t list * bool * int64 * [ `Sat | `Unsat | `Unknown ])
-            list =
-            Marshal.from_channel ic
-          in
-          Log.debug (fun k -> k "Read %d results@." (List.length res));
-          results := List.rev_append res !results
-        done
-      with End_of_file -> Log.debug (fun k -> k "Finished reading results@.") );
-    In_channel.close ic;
-    List.rev !results
-  with e ->
-    Fmt.epr "Failed to read %a\nBecause %s\n%!" Fpath.pp path
-      (Printexc.to_string e);
-    []
+  let res =
+    Bos.OS.File.with_ic path
+      (fun ic () ->
+        try read_marshalled_queries results ic
+        with End_of_file ->
+          Log.debug (fun k -> k "Finished reading results@.") )
+      ()
+  in
+  res >>| fun () -> List.rev !results
 
 let extract_feats assertions =
   let feats, depth_acc =
@@ -458,8 +457,8 @@ let extract_feats_wtime assertions runtime =
   FeatMap.add "time" (Int64.to_int runtime) (extract_feats assertions)
 
 let cmd marshalled_file output_csv =
-  let entries = read_marshalled_file marshalled_file in
-  let res : ((unit, [> Rresult.R.msg ]) result, [> Rresult.R.msg ]) result =
+  let res =
+    read_marshalled_file marshalled_file >>| fun entries ->
     Bos.OS.File.with_oc output_csv
       (fun oc entries ->
         Out_channel.output_string oc
@@ -484,6 +483,6 @@ let cmd marshalled_file output_csv =
         Ok () )
       entries
   in
-  match Rresult.R.join res with
+  match Rresult.R.join (Rresult.R.join res) with
   | Error (`Msg m) -> Fmt.failwith "%s" m
   | Ok () -> Log.debug (fun k -> k "Done writing to %a\n%!" Fpath.pp output_csv)
