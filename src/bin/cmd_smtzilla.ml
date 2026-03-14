@@ -85,6 +85,8 @@ let predictor_conv =
   in
   Arg.conv (parse, print)
 
+let logic_conv = Arg.conv (Logic.of_string, Logic.pp)
+
 let pos_int =
   let parser x =
     match int_of_string_opt x with
@@ -150,6 +152,10 @@ let output_json p =
     required
     & pos p (some existing_parent_dir_conv) None (info [] ~doc ~docv:"JSON") )
 
+let logic =
+  let doc = "Logic to use in the SMT files of the extracted queries." in
+  Arg.(value & opt (some logic_conv) None & info [ "logic" ] ~doc)
+
 let set_debug debug =
   if debug then Logs.Src.set_level Smtml.Log.src (Some Logs.Debug);
   Logs.set_reporter @@ Logs.format_reporter ()
@@ -185,10 +191,8 @@ let are_trivial = function
 (* type annotation because otherwise the typechecker thinks ?status is ~status *)
 let rec extract_queries
   (smt2pp :
-       ?name:string
-    -> ?logic:Logic.t
-    -> ?status:[ `Sat | `Unknown | `Unsat ]
-    -> Expr.t list Fmt.t ) destdir seen cnt l =
+    ?name:string -> ?status:[ `Sat | `Unknown | `Unsat ] -> Expr.t list Fmt.t )
+  destdir seen cnt l =
   match l with
   | [] -> Ok (seen, cnt)
   | (_, assertions, _, time, _) :: t
@@ -202,9 +206,7 @@ let rec extract_queries
     if IntSet.mem hash seen then extract_queries smt2pp destdir seen cnt t
     else
       let file_path = Fpath.(destdir / Fmt.str "query.%d.smt2" cnt) in
-      Bos.OS.File.writef file_path "%a"
-        (smt2pp ?name:None ?logic:None ~status)
-        assertions
+      Bos.OS.File.writef file_path "%a" (smt2pp ?name:None ~status) assertions
       >>= fun _ ->
       extract_queries smt2pp destdir (IntSet.add hash seen) (cnt + 1) t
 
@@ -216,11 +218,11 @@ let rec queries_from_ic smt2pp destdir seen cnt ic =
   extract_queries smt2pp destdir seen cnt queries >>= fun (seen, cnt) ->
   queries_from_ic smt2pp destdir seen cnt ic
 
-let extract_queries (path : Fpath.t) (destdir : Fpath.t) =
+let extract_queries ?logic (path : Fpath.t) (destdir : Fpath.t) =
   let (module M) = Solver_type.to_mappings Solver_type.Z3_solver in
   if not M.is_available then
     Fmt.failwith "Query extraction to smt file depends on Z3";
-  let smt2pp = M.Smtlib.pp in
+  let smt2pp = M.Smtlib.pp ?logic in
   let res =
     Bos.OS.File.with_ic path
       (fun ic seen ->
@@ -247,8 +249,9 @@ let extract_queries_cmd =
   in
   let extract =
     let+ marshalled_file
-    and+ dest_dir in
-    extract_queries marshalled_file dest_dir
+    and+ dest_dir
+    and+ logic in
+    extract_queries ?logic marshalled_file dest_dir
   in
   Cmd.v extract_info extract
 
