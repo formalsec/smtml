@@ -191,7 +191,10 @@ let rec extract_queries
     -> Expr.t list Fmt.t ) destdir seen cnt l =
   match l with
   | [] -> Ok (seen, cnt)
-  | (_, assertions, _, _, _) :: t when are_trivial assertions ->
+  | (_, assertions, _, time, _) :: t
+    when time <= 10_000_000L || are_trivial assertions ->
+    (* Time limit to filter out simple tests that are solver in less than
+      0.01 seconds *)
     extract_queries smt2pp destdir seen cnt t
   | (_, assertions, _, _, status) :: t ->
     (* TODO: do better than Hashtbl.hash *)
