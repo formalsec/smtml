@@ -750,7 +750,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           (ctx, naryop ty op es)
         | Extract (e, h, l) ->
           let ctx, e = encode_expr ctx e in
-          (ctx, M.Bitv.extract e ~high:((h * 8) - 1) ~low:(l * 8))
+          (ctx, M.Bitv.extract e ~high:h ~low:l)
         | Concat (e1, e2) ->
           let ctx, e1 = encode_expr ctx e1 in
           let ctx, e2 = encode_expr ctx e2 in

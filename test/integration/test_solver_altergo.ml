@@ -13,6 +13,8 @@ let test_suite =
        ; Alt_ergo.test_cached
        ; Alt_ergo.test_lia
        ; Alt_ergo.test_bv
+       ; Alt_ergo.test_extract
+       ; Alt_ergo.test_typed_api_consistency
        ]
 
 let () = run_test_tt_main test_suite

@@ -161,7 +161,7 @@ let rec ty (hte : t) : Ty.t =
   | Cvtop (ty, _, _)
   | Naryop (ty, _, _) ->
     ty
-  | Extract (_, h, l) -> Ty_bitv ((h - l) * 8)
+  | Extract (_, h, l) -> Ty_bitv ((h - l) + 1)
   | Concat (e1, e2) -> (
     match (ty e1, ty e2) with
     | Ty_bitv n1, Ty_bitv n2 -> Ty_bitv (n1 + n2)
@@ -583,20 +583,18 @@ let[@inline] raw_extract (hte : t) ~(high : int) ~(low : int) : t =
 let extract (hte : t) ~(high : int) ~(low : int) : t =
   match (view hte, high, low) with
   | Val (Bitv bv), high, low ->
-    let high = (high * 8) - 1 in
-    let low = low * 8 in
     value (Bitv (Bitvector.extract bv ~high ~low))
   | ( Cvtop
         ( _
         , (Zero_extend 24 | Sign_extend 24)
         , ({ node = Symbol { ty = Ty_bitv 8; _ }; _ } as sym) )
-    , 1
+    , 7
     , 0 ) ->
     sym
-  | Concat (_, e), h, l when Ty.size (ty e) = h - l -> e
-  | Concat (e, _), 8, 4 when Ty.size (ty e) = 4 -> e
+  | Concat (_, e), h, l when l=0 && Ty.bitsize (ty e) = h - l + 1 -> e
+  | Concat (e, _), 63, 32 when Ty.bitsize (ty e) = 32 -> e
   | _ ->
-    if high - low = Ty.size (ty hte) then hte else raw_extract hte ~high ~low
+    if high - low + 1 = Ty.bitsize (ty hte) then hte else raw_extract hte ~high ~low
 
 let raw_concat (msb : t) (lsb : t) : t = make (Concat (msb, lsb)) [@@inline]
 
@@ -606,8 +604,8 @@ let rec concat (msb : t) (lsb : t) : t =
   | Val (Bitv a), Val (Bitv b) -> value (Bitv (Bitvector.concat a b))
   | Val (Bitv _), Concat (({ node = Val (Bitv _); _ } as b), se) ->
     raw_concat (concat msb b) se
-  | Extract (s1, h, m1), Extract (s2, m2, l) when equal s1 s2 && m1 = m2 ->
-    if h - l = Ty.size (ty s1) then s1 else raw_extract s1 ~high:h ~low:l
+  | Extract (s1, h, m1), Extract (s2, m2, l) when equal s1 s2 && m1 = m2 + 1 ->
+    if h - l + 1 = Ty.bitsize (ty s1) then s1 else raw_extract s1 ~high:h ~low:l
   | Extract (_, _, _), Concat (({ node = Extract (_, _, _); _ } as e2), e3) ->
     raw_concat (concat msb e2) e3
   | _ -> raw_concat msb lsb

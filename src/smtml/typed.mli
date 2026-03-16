@@ -497,11 +497,10 @@ module Bitv : sig
         Example: [concat (v8 0xAA) (v8 0xBB)] results in [0xAABB] (16-bit). *)
     val concat : 'a expr -> 'b expr -> 'c expr
 
-    (** [extract t ~high ~low] extracts the bytes from index [high] down to
-        [low] (inclusive).
+    (** [extract t ~high ~low] extracts the bits from index [high] down to[low] (inclusive).
 
-        Example: [extract (i32 0xAABBCCDD) ~high:2 ~low:1] results in [0xCC]
-        (1-byte). *)
+        Example:[extract (i32 0xAABBCCDD) ~high:15 ~low:8] results in [0xCC]
+        (8-bit). *)
     val extract : t -> high:int -> low:int -> 'a expr
 
     (** [zero_extend n t] extends [t] to a width of [width(t) + n] by padding
@@ -625,7 +624,7 @@ module Bitv64 : sig
   (** [to_int32 t] extracts the lower 32 bits of [t]. *)
   val to_int32 : t -> bitv32 expr
 
-  (** [to_bytes t] splits the 32-bit vector into 4 bytes (little-endian). *)
+  (** [to_bytes t] splits the 64-bit vector into 8 bytes (little-endian). *)
   val to_bytes : t -> bitv8 expr list
 
   (** Truncate float to signed integer (raises exception on overflow/NaN). *)
