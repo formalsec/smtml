@@ -12,6 +12,8 @@ let test_suite =
        ; Bitwuzla.test_params
        ; Bitwuzla.test_bv
        ; Bitwuzla.test_fp
+       ; Bitwuzla.test_extract
+       ; Bitwuzla.test_typed_api_consistency
        ]
 
 let () = run_test_tt_main test_suite

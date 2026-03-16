@@ -66,8 +66,11 @@ val of_string : string -> (t, [> `Msg of string ]) Result.t
 
 (** {1 Type Size} *)
 
-(** [size t] returns the size (in bits) of the type [t], if applicable. *)
+(** [size t] returns the size (in bytes) of the type [t], if applicable. *)
 val size : t -> int
+
+(** [bitsize t] returns the size (in bits) of the type [t], if applicable. *)
+val bitsize : t -> int
 
 (** {1 Unary Operations} *)
 

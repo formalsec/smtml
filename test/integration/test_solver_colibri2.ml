@@ -14,6 +14,8 @@ let test_suite =
        ; C2.test_bv
        ; C2.test_fp
        ; C2.test_lia
+       ; C2.test_extract
+       ; C2.test_typed_api_consistency
        ]
 
 let () = run_test_tt_main test_suite

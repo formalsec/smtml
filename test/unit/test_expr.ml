@@ -469,7 +469,7 @@ let test_cvtop_i32 _ =
   check (Expr.cvtop (Ty_bitv 32) TruncSF32 (float32 8.5)) (int32 8l);
   check (Expr.cvtop (Ty_bitv 32) TruncSF64 (float64 8.5)) (int32 8l);
   let x = Expr.symbol (Symbol.make (Ty_bitv 32) "x") in
-  let x = Expr.extract x ~high:2 ~low:0 in
+  let x = Expr.extract x ~high:15 ~low:0 in
   assert (Ty.equal (Expr.ty x) (Ty_bitv 16));
   let x = Expr.cvtop (Ty_bitv 32) (Sign_extend 16) x in
   assert (Ty.equal (Expr.ty x) (Ty_bitv 32))
@@ -538,7 +538,7 @@ let test_simplify_assoc _ =
 let test_simplify_extract_i8 _ =
   let open Infix in
   let bv = int32 0xDEADBEEFl in
-  let extracted = Expr.extract bv ~high:1 ~low:0 in
+  let extracted = Expr.extract bv ~high:7 ~low:0 in
   let expected = int8 0xEF in
   check extracted expected
 
@@ -546,14 +546,14 @@ let test_simplify_extract_zero_extend _ =
   let open Infix in
   let x = symbol "x" (Ty_bitv 8) in
   let extended = Expr.cvtop (Ty_bitv 32) (Zero_extend 24) x in
-  let extracted = Expr.extract extended ~high:1 ~low:0 in
+  let extracted = Expr.extract extended ~high:7 ~low:0 in
   check extracted x
 
 let test_simplify_extract_sign_extend _ =
   let open Infix in
   let x = symbol "x" (Ty_bitv 8) in
   let extended = Expr.cvtop (Ty_bitv 32) (Sign_extend 24) x in
-  let extracted = Expr.extract extended ~high:1 ~low:0 in
+  let extracted = Expr.extract extended ~high:7 ~low:0 in
   check extracted x
 
 let test_simplify_extract_i8_symbol _ =
@@ -561,21 +561,21 @@ let test_simplify_extract_i8_symbol _ =
   let x = symbol "x" (Ty_bitv 8) in
   let padding = Expr.value (Bitv (Bitvector.make Z.zero 24)) in
   let concated = Expr.concat padding x in
-  let extracted = Expr.extract concated ~high:1 ~low:0 in
+  let extracted = Expr.extract concated ~high:7 ~low:0 in
   check extracted x
 
 let test_simplify_extract_i32_symbol _ =
   let open Infix in
   let x = symbol "x" (Ty_bitv 32) in
   let concated = Expr.concat (int32 0l) x in
-  let extracted = Expr.extract concated ~high:4 ~low:0 in
+  let extracted = Expr.extract concated ~high:31 ~low:0 in
   check extracted x
 
 (* These two were the simplification leo typically asked for *)
 let test_simplify_extend_i32_of_extracted_i8 _ =
   let open Infix in
   let bv = int32 0l in
-  let extracted = Expr.extract bv ~high:1 ~low:0 in
+  let extracted = Expr.extract bv ~high:7 ~low:0 in
   let extended = Expr.cvtop (Ty_bitv 32) (Sign_extend 24) extracted in
   let expected = bv in
   check extended expected
@@ -583,7 +583,7 @@ let test_simplify_extend_i32_of_extracted_i8 _ =
 let test_simplify_extend_i64_of_extracted_i8 _ =
   let open Infix in
   let bv = int32 0l in
-  let extracted = Expr.extract bv ~high:1 ~low:0 in
+  let extracted = Expr.extract bv ~high:7 ~low:0 in
   let extended = Expr.cvtop (Ty_bitv 64) (Sign_extend 56) extracted in
   let expected = int64 0L in
   check extended expected
@@ -611,10 +611,10 @@ let test_simplify_concat_i32_i32 _ =
 let test_simplify_concat_i32_symbol _ =
   let open Infix in
   let x = symbol "x" (Ty_bitv 32) in
-  let a = Expr.extract x ~high:1 ~low:0 in
-  let b = Expr.extract x ~high:2 ~low:1 in
-  let c = Expr.extract x ~high:3 ~low:2 in
-  let d = Expr.extract x ~high:4 ~low:3 in
+  let a = Expr.extract x ~high:7 ~low:0 in
+  let b = Expr.extract x ~high:15 ~low:8 in
+  let c = Expr.extract x ~high:23 ~low:16 in
+  let d = Expr.extract x ~high:31 ~low:24 in
   let concated = Expr.concat d (Expr.concat c (Expr.concat b a)) in
   check concated x
 

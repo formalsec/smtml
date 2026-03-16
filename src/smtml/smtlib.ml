@@ -290,12 +290,12 @@ module Term = struct
         let high =
           match int_of_string_opt h with
           | None -> assert false
-          | Some h -> (h + 1) / 8
+          | Some h -> h
         in
         let low =
           match int_of_string_opt l with
           | None -> assert false
-          | Some l -> l / 8
+          | Some l -> l
         in
         Expr.raw_extract a ~high ~low
       | "zero_extend", [ bits ], [ a ] ->

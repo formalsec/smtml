@@ -21,6 +21,8 @@ let test_suite =
        ; Z3_solv.test_regexp
        ; Z3_solv.test_uninterpreted
        ; Z3_bindings.test_adt
+       ; Z3_solv.test_extract
+       ; Z3_solv.test_typed_api_consistency
        ]
 
 let () = run_test_tt_main test_suite

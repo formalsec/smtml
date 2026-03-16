@@ -13,6 +13,8 @@ let test_suite =
        ; Cvc5_solv.test_lia
        ; Cvc5_solv.test_bv
        ; Cvc5_solv.test_regexp
+       ; Cvc5_solv.test_extract
+       ; Cvc5_solv.test_typed_api_consistency
        ]
 
 let () = run_test_tt_main test_suite

@@ -107,13 +107,15 @@ let of_string = function
     end
     else Fmt.error_msg "can not parse type %s" s
 
-let size (ty : t) : int =
+let bitsize (ty : t) : int =
   match ty with
-  | Ty_bitv n | Ty_fp n -> n / 8
-  | Ty_int | Ty_bool -> 4
+  | Ty_bitv n | Ty_fp n -> n 
+  | Ty_int | Ty_bool -> 32
   | Ty_real | Ty_str | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp
   | Ty_roundingMode ->
     assert false
+
+let size ty = (bitsize ty) / 8
 
 module Unop = struct
   type t =

@@ -195,6 +195,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let module Solver = (val solver_module : Solver_intf.S) in
     let solver = Solver.create ~params:(Params.default ()) ~logic:QF_BVFP () in
     for i = 1 to 64 do
+      (*Printf.printf "Testing bit-width: %d\n%!" i; (* Linha de debug *)*)
       let ty = Ty.Ty_bitv i in
       let x = symbol ("x" ^ string_of_int i) ty in
       Solver.add solver
@@ -431,4 +432,116 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
                assert_sat ~f:"test_uninterpreted_function"
                  (Solver.check solver []) )
          ]
+
+let test_extract_bit_level solver_module =
+  let open Infix in
+  let module Solver = (val solver_module : Solver_intf.S) in
+  let create_solver () = Solver.create ~params:(Params.default ()) ~logic:QF_BVFP () in
+  
+  (* Test 1: Basic extraction - extract bits 3-0 from 0xAF should give 0xF *)
+  let solver = create_solver () in
+  let x = int8 0xAF in
+  let extracted = Expr.extract x ~high:3 ~low:0 in
+  (* Result type should be 4 bits *)
+  assert_equal (Expr.ty extracted) (Ty.Ty_bitv 4);
+  Solver.add solver [ Expr.relop (Ty_bitv 4) Eq extracted (Expr.value (Bitv (Bitvector.make (Z.of_int 0xF) 4))) ];
+  assert_sat ~f:"test_extract_low_bits" (Solver.check solver []);
+  
+  
+  (* Test 2: Basic extraction 2 - extract bits 7-4 from 0xAF should give 0xA *)
+  let solver = create_solver () in
+  let extracted_high = Expr.extract x ~high:7 ~low:4 in
+  assert_equal (Expr.ty extracted_high) (Ty.Ty_bitv 4);
+  Solver.add solver [ Expr.relop (Ty_bitv 4) Eq extracted_high (Expr.value (Bitv (Bitvector.make (Z.of_int 0xA) 4))) ];
+  assert_sat ~f:"test_extract_high_bits" (Solver.check solver []);
+
+  
+  (* Test 3: Non-byte-aligned extraction - bits 5-2 from 0xAB (10101011) are 1010 = 0xA *)
+  let solver = create_solver () in
+  let y = int8 0xAB in
+  let extracted_mid = Expr.extract y ~high:5 ~low:2 in
+  assert_equal (Expr.ty extracted_mid) (Ty.Ty_bitv 4);
+  Solver.add solver [ Expr.relop (Ty_bitv 4) Eq extracted_mid (Expr.value (Bitv (Bitvector.make (Z.of_int 0xA) 4))) ];
+  assert_sat ~f:"test_extract_non_aligned" (Solver.check solver []);
+  
+  (* Test 4: Single bit extraction - bit 0 from 0xF should be 1 *)
+  let solver = create_solver () in
+  let z = int32 0xFl in
+  let single_bit = Expr.extract z ~high:0 ~low:0 in
+  assert_equal (Expr.ty single_bit) (Ty.Ty_bitv 1);
+  Solver.add solver [ Expr.relop (Ty_bitv 1) Eq single_bit (Expr.value (Bitv (Bitvector.make Z.one 1))) ];
+  assert_sat ~f:"test_extract_single_bit" (Solver.check solver []);
+  
+  (* Test 5: Full 32-bit extraction *)
+  let solver = create_solver () in
+  let w = int32 0xDEADBEEFl in
+  let full_extract = Expr.extract w ~high:31 ~low:0 in
+  assert_equal (Expr.ty full_extract) (Ty.Ty_bitv 32);
+  Solver.add solver [ Expr.relop (Ty_bitv 32) Eq full_extract (int32 0xDEADBEEFl) ];
+  assert_sat ~f:"test_extract_full_width" (Solver.check solver []);
+  
+  (* Test 6: Symbolic extraction with solver verification *)
+  let solver = create_solver () in
+  let sym_x = symbol "bv_x" (Ty_bitv 32) in
+  Solver.add solver [ Expr.relop (Ty_bitv 32) Eq sym_x (int32 0x12345678l) ];
+  let sym_extracted = Expr.extract sym_x ~high:15 ~low:8 in
+  (* Bits 15-8 of 0x12345678 should be 0x56 *)
+  Solver.add solver [ Expr.relop (Ty_bitv 8) Eq sym_extracted (int8 0x56) ];
+  assert_sat ~f:"test_extract_symbolic" (Solver.check solver [])
+
+let test_extract =
+  "test_extract"
+  >::: [ "test_extract_bit_level" >:: with_solver test_extract_bit_level ]
+
+let test_bitv32_to_bytes solver_module =
+  let open Typed in
+  let module Solver = (val solver_module : Solver_intf.S) in
+  let solver = Solver.create ~params:(Params.default ()) ~logic:QF_BVFP () in
+  
+  let bv_val = Bitvector.make (Z.of_int32 0xDEADBEEFl) 32 in
+  let bv = Bitv32.v bv_val in
+  
+  match Bitv32.to_bytes bv with
+  | [b0; b1; b2; b3] ->
+      let v8 i = Bitv8.v (Bitvector.make (Z.of_int i) 8) in
+      Solver.add solver 
+        [ (Bool.eq b0 (v8 0xEF) :> Expr.t)
+        ; (Bool.eq b1 (v8 0xBE) :> Expr.t)
+        ; (Bool.eq b2 (v8 0xAD) :> Expr.t)
+        ; (Bool.eq b3 (v8 0xDE) :> Expr.t)
+        ];
+      assert_sat ~f:"test_bitv32_to_bytes" (Solver.check solver [])
+  | _ -> OUnit2.assert_failure "Bitv32.to_bytes should return exactly 4 bytes"
+
+
+let test_bitv64_to_bytes solver_module =
+  let open Typed in
+  let module Solver = (val solver_module : Solver_intf.S) in
+  let solver = Solver.create ~params:(Params.default ()) ~logic:QF_BVFP () in
+  
+  let bv_val = Bitvector.make (Z.of_int64 0x0123456789ABCDEFL) 64 in
+  let bv = Bitv64.v bv_val in
+  
+  (* Match para extrair os 8 bytes da lista *)
+  match Bitv64.to_bytes bv with
+  | [b0; b1; b2; b3; b4; b5; b6; b7] ->
+      let v8 i = Bitv8.v (Bitvector.make (Z.of_int i) 8) in
+      Solver.add solver
+        [ (Bool.eq b0 (v8 0xEF) :> Expr.t)
+        ; (Bool.eq b1 (v8 0xCD) :> Expr.t)
+        ; (Bool.eq b2 (v8 0xAB) :> Expr.t)
+        ; (Bool.eq b3 (v8 0x89) :> Expr.t)
+        ; (Bool.eq b4 (v8 0x67) :> Expr.t)
+        ; (Bool.eq b5 (v8 0x45) :> Expr.t)
+        ; (Bool.eq b6 (v8 0x23) :> Expr.t)
+        ; (Bool.eq b7 (v8 0x01) :> Expr.t)
+        ];
+      assert_sat ~f:"test_bitv64_to_bytes" (Solver.check solver [])
+  | _ -> OUnit2.assert_failure "Bitv64.to_bytes should return exactly 8 bytes"
+ 
+let test_typed_api_consistency =
+  "test_typed_api_consistency"
+  >::: [ "test_bitv32_to_bytes" >:: with_solver test_bitv32_to_bytes
+       ; "test_bitv64_to_bytes" >:: with_solver test_bitv64_to_bytes
+       ]  
 end
