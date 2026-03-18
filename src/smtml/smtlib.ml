@@ -288,14 +288,10 @@ module Term = struct
       begin match (basename, indices, args) with
       | "extract", [ h; l ], [ a ] ->
         let high =
-          match int_of_string_opt h with
-          | None -> assert false
-          | Some h -> h
+          match int_of_string_opt h with None -> assert false | Some h -> h
         in
         let low =
-          match int_of_string_opt l with
-          | None -> assert false
-          | Some l -> l
+          match int_of_string_opt l with None -> assert false | Some l -> l
         in
         Expr.raw_extract a ~high ~low
       | "zero_extend", [ bits ], [ a ] ->

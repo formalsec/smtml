@@ -497,7 +497,8 @@ module Bitv : sig
         Example: [concat (v8 0xAA) (v8 0xBB)] results in [0xAABB] (16-bit). *)
     val concat : 'a expr -> 'b expr -> 'c expr
 
-    (** [extract t ~high ~low] extracts the bits from index [high] down to[low] (inclusive).
+    (** [extract t ~high ~low] extracts the bits from index [high] down to[low]
+        (inclusive).
 
         Example:[extract (i32 0xAABBCCDD) ~high:15 ~low:8] results in [0xCC]
         (8-bit). *)
