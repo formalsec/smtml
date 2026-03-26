@@ -75,6 +75,12 @@ module type S = sig
       [fmt]. *)
   val pp : t Fmt.t
 
+  (** [pp_safe] is a round-trip safe formatter for expressions. *)
+  val pp_safe : t Fmt.t
+
+  (** [pp_with ~printer] allows explicit selection of the printing format. *)
+  val pp_with : printer:Ty.printer -> t Fmt.t
+
   (** [pp_smt fmt terms] prints a list of terms in the smtml format using the
       formatter [fmt]. *)
   val pp_smtml : t list Fmt.t

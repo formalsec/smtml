@@ -130,23 +130,30 @@ let default_of_type = function
   | (Ty_fp _ | Ty_app | Ty_roundingMode) as ty ->
     Fmt.failwith "No default value for type %a" Ty.pp ty
 
-let rec pp fmt = function
+let rec pp_with ~printer fmt = function
   | True -> Fmt.string fmt "true"
   | False -> Fmt.string fmt "false"
   | Unit -> Fmt.string fmt "unit"
   | Int x -> Fmt.int fmt x
   | Real x -> Fmt.pf fmt "%F" x
-  | Num x -> Num.pp ~printer:Num.NoType fmt x
-  | Bitv bv -> Bitvector.pp ~printer:Bitvector.Pretty fmt bv
+  | Num x -> Num.pp_with ~printer fmt x
+  | Bitv bv -> Bitvector.pp_with ~printer fmt bv
   | Str x -> Fmt.pf fmt "%S" x
-  | List l -> (Fmt.hovbox ~indent:1 (Fmt.list ~sep:Fmt.comma pp)) fmt l
+  | List l ->
+    (Fmt.hovbox ~indent:1 (Fmt.list ~sep:Fmt.comma (pp_with ~printer))) fmt l
   | App (`Op op, vs) ->
-    Fmt.pf fmt "@[<hov 1>%s(%a)@]" op (Fmt.list ~sep:Fmt.comma pp) vs
+    Fmt.pf fmt "@[<hov 1>%s(%a)@]" op
+      (Fmt.list ~sep:Fmt.comma (pp_with ~printer))
+      vs
   | Re_none -> Fmt.string fmt "re.none"
   | Re_all -> Fmt.string fmt "re.all"
   | Re_allchar -> Fmt.string fmt "re.allchar"
   | Nothing -> Fmt.string fmt "none"
   | App _ -> assert false
+
+let pp fmt v = pp_with ~printer:Without_type fmt v
+
+let pp_safe fmt v = pp_with ~printer:With_type_and_hexa_float fmt v
 
 let to_string (v : t) : string = Fmt.str "%a" pp v
 
@@ -203,8 +210,8 @@ module Smtlib = struct
     | False -> Fmt.string fmt "false"
     | Int x -> Fmt.int fmt x
     | Real x -> Fmt.pf fmt "%F" x
-    | Num x -> Num.pp ~printer:Num.Hexadecimal fmt x
-    | Bitv bv -> Bitvector.pp ~printer:Bitvector.Pretty fmt bv
+    | Num x -> Num.pp_safe fmt x
+    | Bitv bv -> Bitvector.pp_safe fmt bv
     | Str x -> Fmt.pf fmt "%S" x
     | Re_none -> Fmt.string fmt "re.none"
     | Re_all -> Fmt.string fmt "re.all"

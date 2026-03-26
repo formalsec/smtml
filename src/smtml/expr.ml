@@ -213,42 +213,56 @@ let get_symbols (hte : t list) =
   List.iter symbols hte;
   Hashtbl.fold (fun k () acc -> k :: acc) tbl []
 
-let rec pp fmt (hte : t) =
+let rec pp_with ~printer fmt (hte : t) =
   match view hte with
-  | Val v -> Value.pp fmt v
+  | Val v -> Value.pp_with ~printer fmt v
   | Ptr { base; offset } ->
     Fmt.pf fmt "(Ptr %a %a)"
-      (Bitvector.pp ~printer:Bitvector.WithType)
-      base pp offset
+      (Bitvector.pp_with ~printer)
+      base (pp_with ~printer) offset
   | Symbol s -> Fmt.pf fmt "@[<hov 1>%a@]" Symbol.pp s
-  | List v -> Fmt.pf fmt "@[<hov 1>[%a]@]" (Fmt.list ~sep:Fmt.comma pp) v
+  | List v ->
+    Fmt.pf fmt "@[<hov 1>[%a]@]" (Fmt.list ~sep:Fmt.comma (pp_with ~printer)) v
   | App (s, v) ->
-    Fmt.pf fmt "@[<hov 1>(%a@ %a)@]" Symbol.pp s (Fmt.list ~sep:Fmt.comma pp) v
+    Fmt.pf fmt "@[<hov 1>(%a@ %a)@]" Symbol.pp s
+      (Fmt.list ~sep:Fmt.comma (pp_with ~printer))
+      v
   | Unop (ty, op, e) ->
-    Fmt.pf fmt "@[<hov 1>(%a.%a@ %a)@]" Ty.pp ty Ty.Unop.pp op pp e
+    Fmt.pf fmt "@[<hov 1>(%a.%a@ %a)@]" Ty.pp ty Ty.Unop.pp op
+      (pp_with ~printer) e
   | Binop (ty, op, e1, e2) ->
-    Fmt.pf fmt "@[<hov 1>(%a.%a@ %a@ %a)@]" Ty.pp ty Ty.Binop.pp op pp e1 pp e2
+    Fmt.pf fmt "@[<hov 1>(%a.%a@ %a@ %a)@]" Ty.pp ty Ty.Binop.pp op
+      (pp_with ~printer) e1 (pp_with ~printer) e2
   | Triop (ty, op, e1, e2, e3) ->
-    Fmt.pf fmt "@[<hov 1>(%a.%a@ %a@ %a@ %a)@]" Ty.pp ty Ty.Triop.pp op pp e1 pp
-      e2 pp e3
+    Fmt.pf fmt "@[<hov 1>(%a.%a@ %a@ %a@ %a)@]" Ty.pp ty Ty.Triop.pp op
+      (pp_with ~printer) e1 (pp_with ~printer) e2 (pp_with ~printer) e3
   | Relop (ty, op, e1, e2) ->
-    Fmt.pf fmt "@[<hov 1>(%a.%a@ %a@ %a)@]" Ty.pp ty Ty.Relop.pp op pp e1 pp e2
+    Fmt.pf fmt "@[<hov 1>(%a.%a@ %a@ %a)@]" Ty.pp ty Ty.Relop.pp op
+      (pp_with ~printer) e1 (pp_with ~printer) e2
   | Cvtop (ty, op, e) ->
-    Fmt.pf fmt "@[<hov 1>(%a.%a@ %a)@]" Ty.pp ty Ty.Cvtop.pp op pp e
+    Fmt.pf fmt "@[<hov 1>(%a.%a@ %a)@]" Ty.pp ty Ty.Cvtop.pp op
+      (pp_with ~printer) e
   | Naryop (ty, op, es) ->
     Fmt.pf fmt "@[<hov 1>(%a.%a@ (%a))@]" Ty.pp ty Ty.Naryop.pp op
-      (Fmt.list ~sep:Fmt.comma pp)
+      (Fmt.list ~sep:Fmt.comma (pp_with ~printer))
       es
-  | Extract (e, h, l) -> Fmt.pf fmt "@[<hov 1>(extract@ %a@ %d@ %d)@]" pp e l h
-  | Concat (e1, e2) -> Fmt.pf fmt "@[<hov 1>(++@ %a@ %a)@]" pp e1 pp e2
+  | Extract (e, h, l) ->
+    Fmt.pf fmt "@[<hov 1>(extract@ %a@ %d@ %d)@]" (pp_with ~printer) e l h
+  | Concat (e1, e2) ->
+    Fmt.pf fmt "@[<hov 1>(++@ %a@ %a)@]" (pp_with ~printer) e1
+      (pp_with ~printer) e2
   | Binder (b, vars, e) ->
-    Fmt.pf fmt "@[<hov 1>(%a@ (%a)@ %a)@]" Binder.pp b (Fmt.list ~sep:Fmt.sp pp)
-      vars pp e
+    Fmt.pf fmt "@[<hov 1>(%a@ (%a)@ %a)@]" Binder.pp b
+      (Fmt.list ~sep:Fmt.sp (pp_with ~printer))
+      vars (pp_with ~printer) e
+
+let pp fmt e = pp_with ~printer:Without_type fmt e
+
+let pp_safe fmt e = pp_with ~printer:With_type_and_hexa_float fmt e
 
 let pp_list fmt (es : t list) = Fmt.hovbox (Fmt.list ~sep:Fmt.comma pp) fmt es
 
 let pp_smtml fmt (es : t list) : unit =
-  (* TODO: use Hexadecimal for Num.pp *)
   let pp_symbols fmt syms =
     Fmt.list ~sep:Fmt.cut
       (fun fmt sym ->
@@ -258,7 +272,7 @@ let pp_smtml fmt (es : t list) : unit =
   in
   let pp_asserts fmt es =
     Fmt.list ~sep:Fmt.cut
-      (fun fmt e -> Fmt.pf fmt "(assert @[<h 2>%a@])" pp e)
+      (fun fmt e -> Fmt.pf fmt "(assert @[<h 2>%a@])" pp_safe e)
       fmt es
   in
   let syms = get_symbols es in

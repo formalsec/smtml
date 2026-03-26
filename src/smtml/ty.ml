@@ -56,6 +56,11 @@ let compare t1 t2 = compare (discr t1) (discr t2)
 
 let equal t1 t2 = compare t1 t2 = 0
 
+type printer =
+  | With_type_and_hexa_float
+  | With_type
+  | Without_type
+
 let pp fmt = function
   | Ty_int -> Fmt.string fmt "int"
   | Ty_real -> Fmt.string fmt "real"
