@@ -60,6 +60,12 @@ val default_of_type : Ty.t -> t
 (** [pp fmt v] pretty-prints the value [v] using the formatter [fmt]. *)
 val pp : t Fmt.t
 
+(** [pp_safe] is a round-trip safe formatter for values of type [t]. *)
+val pp_safe : t Fmt.t
+
+(** [pp_with ~printer] allows explicit selection of the printing format. *)
+val pp_with : printer:Ty.printer -> t Fmt.t
+
 (** {1 Serialization} *)
 
 (** [to_string v] converts the value [v] to a string representation. *)

@@ -6,11 +6,6 @@ type t =
   | F32 of int32
   | F64 of int64
 
-type printer =
-  | Pretty
-  | Hexadecimal
-  | NoType
-
 let type_of (n : t) =
   match n with F32 _ -> Ty.(Ty_fp 32) | F64 _ -> Ty.(Ty_fp 64)
 
@@ -44,13 +39,17 @@ let pp_no_type fmt = function
   | F32 f -> Fmt.pf fmt "%F" (Int32.float_of_bits f)
   | F64 f -> Fmt.pf fmt "%F" (Int64.float_of_bits f)
 
-let pp ~printer fmt v =
+let pp_with ~printer fmt v =
   match printer with
-  | Pretty -> pp_num fmt v
-  | Hexadecimal -> pp_hex fmt v
-  | NoType -> pp_no_type fmt v
+  | Ty.Without_type -> pp_no_type fmt v
+  | With_type -> pp_num fmt v
+  | With_type_and_hexa_float -> pp_hex fmt v
 
-let to_string (n : t) : string = Fmt.str "%a" (pp ~printer:NoType) n
+let pp fmt v = pp_with ~printer:Without_type fmt v
+
+let pp_safe fmt v = pp_with ~printer:With_type_and_hexa_float fmt v
+
+let to_string (n : t) : string = Fmt.str "%a" pp n
 
 let of_string (cast : Ty.t) value =
   match cast with

@@ -14,12 +14,6 @@ type t =
   | F32 of int32  (** 32-bit floating-point value, stored as an [int32]. *)
   | F64 of int64  (** 64-bit floating-point value, stored as an [int64]. *)
 
-(** Representation options for value printing. *)
-type printer =
-  | Pretty  (** Human-readable format. *)
-  | Hexadecimal  (** Hexadecimal representation. *)
-  | NoType  (** Human-readable format with no type information. *)
-
 (** [type_of v] returns the type of the given value [v]. *)
 val type_of : t -> Ty.t
 
@@ -37,9 +31,14 @@ val hash : t -> int
 
 (** {1 Pretty Printing} *)
 
-(** [pp] is a formatter for values of type [t], using the currently set printer.
-*)
-val pp : printer:printer -> t Fmt.t
+(** [pp] is a human-readable formatter for values of type [t]. *)
+val pp : t Fmt.t
+
+(** [pp_safe] is a round-trip safe formatter for values of type [t]. *)
+val pp_safe : t Fmt.t
+
+(** [pp_with ~printer] allows explicit selection of the printing format. *)
+val pp_with : printer:Ty.printer -> t Fmt.t
 
 (** [pp_no_type] is a formatter that prints a value of type [t] without
     displaying its type. *)

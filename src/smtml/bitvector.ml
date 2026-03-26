@@ -56,10 +56,6 @@ let to_int64 v =
     Fmt.failwith "call to Smtml.Bitvector.to_int32 on a bitvector of size %d"
       v.width
 
-type printer =
-  | Pretty  (** Human-readable format. *)
-  | WithType  (** Print with type info. *)
-
 (** Bitvector pretty printer. By default it prints signed bitvectors. *)
 let pp_bv fmt bv =
   let value = to_signed bv in
@@ -69,8 +65,17 @@ let pp_wtype fmt bv =
   let value = to_signed bv in
   Fmt.pf fmt "(i%d %a)" bv.width Z.pp_print value
 
-let pp ~printer fmt e =
-  match printer with Pretty -> pp_bv fmt e | WithType -> pp_wtype fmt e
+let pp_hex fmt bv = Fmt.pf fmt "(i%d 0x%s)" bv.width (Z.format "%x" bv.value)
+
+let pp_with ~printer fmt e =
+  match printer with
+  | Ty.Without_type -> pp_bv fmt e
+  | With_type -> pp_wtype fmt e
+  | With_type_and_hexa_float -> pp_hex fmt e
+
+let pp fmt e = pp_with ~printer:Without_type fmt e
+
+let pp_safe fmt e = pp_with ~printer:With_type_and_hexa_float fmt e
 
 (* Unop *)
 let neg bv = make (Z.neg bv.value) bv.width
@@ -217,6 +222,6 @@ let sign_extend width bv =
   let extended = Z.logor bv.value sign_mask in
   make extended new_width
 
-let to_string bv = Fmt.str "%a" (pp ~printer:Pretty) bv
+let to_string bv = Fmt.str "%a" pp bv
 
 let to_json bv = `String (to_string bv)

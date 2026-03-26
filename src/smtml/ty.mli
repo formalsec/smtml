@@ -44,6 +44,14 @@ val equal : t -> t -> bool
 
 (** {1 Pretty Printing} *)
 
+(** The type [printer] represents the different formats for printing values. *)
+type printer =
+  | With_type_and_hexa_float
+    (** Print with type information and hexadecimal format for floats and
+        bitvectors. *)
+  | With_type  (** Print with type information. *)
+  | Without_type  (** Print without type information. *)
+
 (** [pp fmt t] pretty-prints the type [t] using the formatter [fmt]. *)
 val pp : t Fmt.t
 

@@ -24,12 +24,14 @@ val equal : t -> t -> bool
 
 val compare : t -> t -> int
 
-(** Representation options for value printing. *)
-type printer =
-  | Pretty  (** Human-readable format. *)
-  | WithType  (** Print with type info. *)
+(** [pp] is a human-readable formatter for values of type [t]. *)
+val pp : t Fmt.t
 
-val pp : printer:printer -> t Fmt.t
+(** [pp_safe] is a round-trip safe formatter for values of type [t]. *)
+val pp_safe : t Fmt.t
+
+(** [pp_with ~printer] allows explicit selection of the printing format. *)
+val pp_with : printer:Ty.printer -> t Fmt.t
 
 val neg : t -> t
 
