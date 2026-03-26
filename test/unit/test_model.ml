@@ -78,7 +78,7 @@ let test_rt_json _ =
         && Value.equal y_val (Bitv (Bitvector.of_int64 Int64.max_int))
         && Value.equal z_val (Num (F32 (Int32.bits_of_float 5.0))) )
     | _ -> assert false
-  end
+    end
 
 let test_json =
   [ "test_to_json" >:: test_to_json

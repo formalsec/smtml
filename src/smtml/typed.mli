@@ -993,11 +993,11 @@ module Func : sig
 
       Usage:
       {@ocaml[
-        let f = Func.make "f" @@ Types.int @-> returning Types.bool
+      let f = Func.make "f" @@ Types.int @-> returning Types.bool
 
-        let x = symbol Types.int "x"
+      let x = symbol Types.int "x"
 
-        let res : bool expr = f x
+      let res : bool expr = f x
       ]} *)
   val make : string -> ('fn, 'r) t -> 'fn
 end

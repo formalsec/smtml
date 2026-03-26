@@ -100,7 +100,10 @@
     :with-dev-setup
     (>= "2.5.0")))
   ;; Dev dependencies
-  (ocamlformat :with-dev-setup)
+  (ocamlformat
+    (and
+      (>= "0.29.0")
+      :with-dev-setup))
   (ocaml-lsp-server :with-dev-setup)
   (benchpress
    (and

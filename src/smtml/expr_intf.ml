@@ -172,17 +172,17 @@ module type S = sig
 
       For example:
       {@ocaml[
-        raw_unop Ty_int Neg (value (Int 1))
+      raw_unop Ty_int Neg (value (Int 1))
       ]}
 
       returns the AST node:
       {@ocaml[
-        Unop (Ty_int, Neg, Val (Int 1))
+      Unop (Ty_int, Neg, Val (Int 1))
       ]}
 
       rather than the simplified value:
       {@ocaml[
-        Val (Int (-1))
+      Val (Int (-1))
       ]}
 
       which would typically be the result of the smart constructor [unop]. *)
@@ -199,17 +199,17 @@ module type S = sig
 
       For example:
       {@ocaml[
-        raw_binop Ty_int Add (value (Int 1)) (value (Int 2))
+      raw_binop Ty_int Add (value (Int 1)) (value (Int 2))
       ]}
 
       returns the AST node:
       {@ocaml[
-        Binop (Ty_int, Add, Val (Int 1), Val (Int 2))
+      Binop (Ty_int, Add, Val (Int 1), Val (Int 2))
       ]}
 
       rather than the simplified value:
       {@ocaml[
-        Val (Int 3)
+      Val (Int 3)
       ]}
 
       which would typically be the result of the smart constructor [binop]. *)
@@ -226,17 +226,17 @@ module type S = sig
 
       For example (using a if-then-else operator):
       {@ocaml[
-        raw_triop Ty_bool Ite (value True) (value (Int 1)) (value (Int 2))
+      raw_triop Ty_bool Ite (value True) (value (Int 1)) (value (Int 2))
       ]}
 
       returns the AST node:
       {@ocaml[
-        Triop (Ty_bool, Ite, Val True, Val (Int 1), Val (Int 2))
+      Triop (Ty_bool, Ite, Val True, Val (Int 1), Val (Int 2))
       ]}
 
       rather than the simplified value:
       {@ocaml[
-        Val (Int 1)
+      Val (Int 1)
       ]}
 
       which would typically be the result of the smart constructor [triop]. *)
@@ -253,17 +253,17 @@ module type S = sig
 
       For example:
       {@ocaml[
-        raw_relop Ty_bool Eq (value (Int 1)) (value (Int 2))
+      raw_relop Ty_bool Eq (value (Int 1)) (value (Int 2))
       ]}
 
       returns the AST node:
       {@ocaml[
-        Relop (Ty_bool, Eq, Val (Int 1), Val (Int 2))
+      Relop (Ty_bool, Eq, Val (Int 1), Val (Int 2))
       ]}
 
       rather than the simplified value:
       {@ocaml[
-        Val False
+      Val False
       ]}
 
       which would typically be the result of the smart constructor [relop]. *)
@@ -280,17 +280,17 @@ module type S = sig
 
       For example:
       {@ocaml[
-        raw_cvtop Ty_real Reinterpret_int (value (Int 5))
+      raw_cvtop Ty_real Reinterpret_int (value (Int 5))
       ]}
 
       returns the AST node:
       {@ocaml[
-        Cvtop (Ty_real, Reinterpret_int, Val (Int 5))
+      Cvtop (Ty_real, Reinterpret_int, Val (Int 5))
       ]}
 
       rather than the simplified value:
       {@ocaml[
-        Val (Real 5.0)
+      Val (Real 5.0)
       ]}
 
       which would typically be the result of the smart constructor [cvtop]. *)

@@ -66,7 +66,7 @@ module Make (Solver : Solver_intf.S) = struct
               expected_status Status.pp status
       end;
       state
-    end
+      end
     | Declare_const _x -> state
     | Declare_fun _x -> state
     | Echo x ->

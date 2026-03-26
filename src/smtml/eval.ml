@@ -242,11 +242,11 @@ module Real = struct
     let op' = `Cvtop op in
     match op with
     | ToString -> Str (Float.to_string (of_real 1 op' v))
-    | OfString -> begin
-      match float_of_string_opt (of_str 1 op' v) with
+    | OfString ->
+      begin match float_of_string_opt (of_str 1 op' v) with
       | None -> eval_error `Invalid_format_conversion
       | Some v -> to_real v
-    end
+      end
     | Reinterpret_int -> to_real (float_of_int (of_int 1 op' v))
     | Reinterpret_float -> to_int (Float.to_int (of_real 1 op' v))
     | _ -> eval_error (`Unsupported_operator (op', Ty_real))
@@ -357,7 +357,7 @@ module Str = struct
       let i = of_int 2 op' v2 in
       try to_str (Fmt.str "%c" (String.get str i))
       with Invalid_argument _ -> eval_error `Index_out_of_bounds
-    end
+      end
     | String_prefix ->
       to_bool (String.starts_with ~prefix:str (of_str 2 op' v2))
     | String_suffix -> to_bool (String.ends_with ~suffix:str (of_str 2 op' v2))
@@ -373,7 +373,7 @@ module Str = struct
       let len = of_int 3 op' v3 in
       try to_str (String.sub str i len)
       with Invalid_argument _ -> eval_error `Index_out_of_bounds
-    end
+      end
     | String_replace ->
       let t = of_str 2 op' v2 in
       let t' = of_str 2 op' v3 in
@@ -409,14 +409,14 @@ module Str = struct
       match int_of_string_opt s with
       | None -> eval_error `Invalid_format_conversion
       | Some x -> to_int x
-    end
+      end
     | String_from_int -> to_str (string_of_int (of_int 1 op' v))
     | String_to_float -> begin
       let s = of_str 1 op' v in
       match float_of_string_opt s with
       | None -> eval_error `Invalid_format_conversion
       | Some f -> to_real f
-    end
+      end
     | _ -> eval_error (`Unsupported_operator (`Cvtop op, Ty_str))
 
   let[@inline] naryop (op : Ty.Naryop.t) vs =
@@ -438,18 +438,14 @@ module Lst = struct
   let[@inline] unop (op : Ty.Unop.t) (v : Value.t) : Value.t =
     let lst = of_list 1 (`Unop op) v in
     match op with
-    | Head -> begin
+    | Head ->
       (* FIXME: Exception handling *)
-      match lst with
-      | hd :: _tl -> hd
-      | [] -> assert false
-    end
-    | Tail -> begin
+      begin match lst with hd :: _tl -> hd | [] -> assert false
+      end
+    | Tail ->
       (* FIXME: Exception handling *)
-      match lst with
-      | _hd :: tl -> List tl
-      | [] -> assert false
-    end
+      begin match lst with _hd :: tl -> List tl | [] -> assert false
+      end
     | Length -> to_int (List.length lst)
     | Reverse -> List (List.rev lst)
     | _ -> eval_error (`Unsupported_operator (`Unop op, Ty_list))

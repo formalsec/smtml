@@ -19,11 +19,11 @@
 let returncode =
   match Cmdliner.Cmd.eval_value Cli.commands with
   | Ok (`Help | `Version | `Ok ()) -> Cmdliner.Cmd.Exit.ok
-  | Error e -> begin
-    match e with
+  | Error e ->
+    begin match e with
     | `Term -> Cmdliner.Cmd.Exit.some_error
     | `Parse -> Cmdliner.Cmd.Exit.cli_error
     | `Exn -> Cmdliner.Cmd.Exit.internal_error
-  end
+    end
 
 let () = exit returncode

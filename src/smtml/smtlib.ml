@@ -30,8 +30,8 @@ module Term = struct
 
   let const ?loc (id : Symbol.t) : t =
     match (Symbol.namespace id, Symbol.name id) with
-    | Sort, Simple name -> begin
-      match name with
+    | Sort, Simple name ->
+      begin match name with
       | "Int" -> Expr.symbol { id with ty = Ty_int }
       | "Real" -> Expr.symbol { id with ty = Ty_real }
       | "Bool" -> Expr.symbol { id with ty = Ty_bool }
@@ -40,17 +40,17 @@ module Term = struct
       | "Float64" -> Expr.symbol { id with ty = Ty_fp 64 }
       | "RoundingMode" -> Expr.symbol { id with ty = Ty_roundingMode }
       | "RegLan" -> Expr.symbol { id with ty = Ty_regexp }
-      | _ -> begin
-        match Hashtbl.find_opt custom_sorts name with
+      | _ ->
+        begin match Hashtbl.find_opt custom_sorts name with
         | Some ty -> Expr.symbol { id with ty }
         | None ->
           Log.err (fun k ->
             k "%acould not find sort: %a" pp_loc loc Symbol.pp id );
           Expr.symbol id
+        end
       end
-    end
-    | Sort, Indexed { basename; indices } -> begin
-      match (basename, indices) with
+    | Sort, Indexed { basename; indices } ->
+      begin match (basename, indices) with
       | "BitVec", [ n ] -> (
         match int_of_string_opt n with
         | Some n -> Expr.symbol { id with ty = Ty_bitv n }
@@ -64,9 +64,9 @@ module Term = struct
           Fmt.string basename
           (Fmt.parens (Fmt.list ~sep:Fmt.sp Fmt.string))
           indices
-    end
-    | Term, Simple name -> begin
-      match name with
+      end
+    | Term, Simple name ->
+      begin match name with
       | "true" -> Expr.value True
       | "false" -> Expr.value False
       | "roundNearestTiesToEven" | "RNE" | "roundNearestTiesToAway" | "RNA"
@@ -76,15 +76,15 @@ module Term = struct
       | "re.all" | "re.allchar" | "re.none" ->
         Expr.symbol { id with ty = Ty_regexp }
       | _ -> Expr.symbol id
-    end
-    | Term, Indexed { basename = base; indices } -> begin
-      match (base, indices) with
+      end
+    | Term, Indexed { basename = base; indices } ->
+      begin match (base, indices) with
       | bv, [ numbits ] when String.starts_with ~prefix:"bv" bv -> begin
         let str = String.sub bv 2 (String.length bv - 2) in
         match (z_of_string_opt str, int_of_string_opt numbits) with
         | Some z, Some width -> Expr.value (Bitv (Bitvector.make z width))
         | (None | Some _), _ -> assert false
-      end
+        end
       | "+oo", [ ebits; sbits ] -> fp_of_size Float.infinity ebits sbits
       | "-oo", [ ebits; sbits ] -> fp_of_size Float.neg_infinity ebits sbits
       | "+zero", [ ebits; sbits ] -> fp_of_size Float.zero ebits sbits
@@ -94,7 +94,7 @@ module Term = struct
       | _ ->
         Log.debug (fun k -> k "const: unknown %a making app" Symbol.pp id);
         Expr.symbol id
-    end
+      end
     | Attr, Simple _ -> Expr.symbol id
     | Attr, Indexed _ -> assert false
     | Var, _ -> Fmt.failwith "%acould not parse var: %a" pp_loc loc Symbol.pp id
@@ -146,8 +146,8 @@ module Term = struct
 
   let apply ?loc (id : t) (args : t list) : t =
     match Expr.view id with
-    | Symbol ({ namespace = Term; name = Simple name; _ } as symbol) -> begin
-      match (name, args) with
+    | Symbol ({ namespace = Term; name = Simple name; _ } as symbol) ->
+      begin match (name, args) with
       | "-", [ a ] -> Expr.raw_unop Ty_none Neg a
       | "not", [ a ] -> Expr.raw_unop Ty_bool Not a
       | "and", [ a; b ] -> Expr.raw_binop Ty_bool And a b
@@ -258,8 +258,8 @@ module Term = struct
           ] ) ->
         Expr.raw_unop Ty_none Sqrt a
       | "fp.rem", [ a; b ] -> Expr.raw_binop Ty_none Rem a b
-      | "fp.roundToIntegral", [ rm; a ] -> begin
-        match Expr.view rm with
+      | "fp.roundToIntegral", [ rm; a ] ->
+        begin match Expr.view rm with
         | Symbol { name = Simple "roundNearestTiesToEven"; _ } ->
           Expr.raw_unop Ty_none Nearest a
         | Symbol { name = Simple "roundTowardPositive"; _ } ->
@@ -269,7 +269,7 @@ module Term = struct
         | Symbol { name = Simple "roundTowardZero"; _ } ->
           Expr.raw_unop Ty_none Trunc a
         | _ -> Expr.app symbol args
-      end
+        end
       | "fp.min", [ a; b ] -> Expr.raw_binop Ty_none Min a b
       | "fp.max", [ a; b ] -> Expr.raw_binop Ty_none Max a b
       | "fp.leq", [ a; b ] -> Expr.raw_relop Ty_none Le a b
@@ -280,12 +280,12 @@ module Term = struct
       | _ ->
         Log.debug (fun k -> k "apply: unknown %a making app" Symbol.pp symbol);
         Expr.app symbol args
-    end
+      end
     | Symbol ({ name = Simple _; namespace = Attr; _ } as attr) ->
       Log.debug (fun k -> k "apply: unknown %a making app" Symbol.pp attr);
       Expr.app attr args
-    | Symbol { name = Indexed { basename; indices }; _ } -> begin
-      match (basename, indices, args) with
+    | Symbol { name = Indexed { basename; indices }; _ } ->
+      begin match (basename, indices, args) with
       | "extract", [ h; l ], [ a ] ->
         let high =
           match int_of_string_opt h with
@@ -324,7 +324,7 @@ module Term = struct
         Expr.raw_cvtop (Ty_fp 64) PromoteF32 a
       | _ ->
         Fmt.failwith "%acould not parse indexed app: %a" pp_loc loc Expr.pp id
-    end
+      end
     | Symbol id ->
       Log.debug (fun k -> k "apply: unknown %a making app" Symbol.pp id);
       Expr.app id args
