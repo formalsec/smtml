@@ -62,9 +62,9 @@ let rec rewrite_expr (type_map, expr_map) hte =
   | Ptr { base; offset } ->
     let base = Bitvector.to_int32 base in
     Expr.ptr base (rewrite_expr (type_map, expr_map) offset)
-  | Symbol sym -> begin
+  | Symbol sym ->
     (* Avoid rewriting well-typed symbols already *)
-    if not (Ty.equal Ty_none (Symbol.type_of sym)) then hte
+    begin if not (Ty.equal Ty_none (Symbol.type_of sym)) then hte
     else
       match Symb_map.find_opt sym type_map with
       | None -> (
@@ -72,7 +72,7 @@ let rec rewrite_expr (type_map, expr_map) hte =
         | None -> Fmt.failwith "Undefined symbol: %a" Symbol.pp sym
         | Some expr -> expr )
       | Some ty -> Expr.symbol { sym with ty }
-  end
+    end
   | List htes -> Expr.list (List.map (rewrite_expr (type_map, expr_map)) htes)
   | App
       ( ({ name = Simple ("fp.add" | "fp.sub" | "fp.mul" | "fp.div"); _ } as sym)

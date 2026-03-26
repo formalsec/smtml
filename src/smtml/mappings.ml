@@ -403,14 +403,14 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         let to_ieee_bv bitwidth t =
           match M.Float.to_ieee_bv with
           | Some to_ieee_bv -> to_ieee_bv t
-          | None -> begin
-            match bitwidth with
+          | None ->
+            begin match bitwidth with
             | 32 -> Func.apply f32_to_i32 [ t ]
             | 64 -> Func.apply f64_to_i64 [ t ]
             | _ ->
               Fmt.failwith "to_ieee_bv: unsupported bitwidth size of '%d'"
                 bitwidth
-          end
+            end
 
         let cvtop bitwidth op e =
           match op with

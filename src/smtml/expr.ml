@@ -143,7 +143,9 @@ let rec ty (hte : t) : Ty.t =
   | Ptr _ -> Ty_bitv 32
   | Symbol x -> Symbol.type_of x
   | List _ -> Ty_list
-  | App (sym, _) -> begin match sym.ty with Ty_none -> Ty_app | ty -> ty end
+  | App (sym, _) ->
+    begin match sym.ty with Ty_none -> Ty_app | ty -> ty
+    end
   | Triop (_, Ite, _, hte1, hte2) ->
     let ty1 = ty hte1 in
     assert (
@@ -747,9 +749,11 @@ let inline_symbol_values map e =
   let rec aux e =
     match view e with
     | Val _ -> e
-    | Symbol symbol -> begin
-      match Symbol.Map.find_opt symbol map with None -> e | Some v -> value v
-    end
+    | Symbol symbol ->
+      begin match Symbol.Map.find_opt symbol map with
+      | None -> e
+      | Some v -> value v
+      end
     | Ptr e ->
       let offset = aux e.offset in
       make @@ Ptr { e with offset }
