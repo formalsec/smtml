@@ -1,7 +1,30 @@
 # Changelog
 
+## 0.24.0 - 2026-03-30
+
+- 2026-03-30 Fix invalid input 'tags' in release-pr CI
+- 2026-03-30 Bump actions/configure-pages from 5 to 6
+- 2026-03-30 Bump actions/deploy-pages from 4 to 5
+- 2026-03-26 Bump ocamlformat 0.28.1 -> 0.29.0
+- 2026-03-26 Make API for pretty-printer cleaner and more explicit
+- 2026-03-26 Fix concurrent printing bug
+- 2026-03-22 Add flake.nix
+- 2026-03-14 Add logic to query extraction (to print set-logic in extracted files)
+- 2026-03-14 Add time filter for query extraction (exclude queries solver in less than 0.01 seconds)
+- 2026-03-14 More agressive elimination of trivial queries
+- 2026-03-14 Don't extract trivial queries
+- 2026-03-14 Use `Bos.OS.File.with_ic` instead of `In_channel.open_bin` for feature and query extraction
+- 2026-03-14 Replace `HC.Make` with `HC.Make_strong`
+- 2026-03-14 Use `Bos.OS.File.writef` instead of `Bos.OS.File.write`
+- 2026-03-14 Add status to SMT query logging
+- 2026-03-14 Add query extraction of SMT queries from a marshalled query file
+- 2026-03-13 Use `ppx_enumerate` to fet list of supported solvers
+- 2026-03-11 Disable the compilation of the benchmark runner
+- 2026-03-10 Refactor: Migrate Yojson.Basic to Yojson.Safe ([#469](https://github.com/formalsec/smtml/issues/469))
+
 ## 0.23.0 - 2026-03-10
 
+- 2026-03-10 Release 0.23.0
 - 2026-03-10 Add hook to notify Slack of PR when opam-publish CI runs ([#438](https://github.com/formalsec/smtml/issues/438))
 - 2026-03-10 Use Logs in SMTZilla cmds
 - 2026-03-10 Make column drop safer by ensuring they are only dropped when all values are 0
