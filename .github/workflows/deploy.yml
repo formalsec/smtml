@@ -28,7 +28,7 @@ jobs:
 
       - name: Setup Pages
         id: pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Install Dependencies
         run: opam install -y . --deps-only --with-doc --with-test --with-dev-setup
