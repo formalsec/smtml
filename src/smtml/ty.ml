@@ -247,7 +247,7 @@ module Unop = struct
     | Head -> Fmt.string fmt "head"
     | Tail -> Fmt.string fmt "tail"
     | Reverse -> Fmt.string fmt "reverse"
-    | Length -> Fmt.string fmt "length"
+    | Length -> Fmt.string fmt "len"
     | Trim -> Fmt.string fmt "trim"
     | Regexp_star -> Fmt.string fmt "*"
     | Regexp_loop _ -> Fmt.string fmt "loop"
