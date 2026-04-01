@@ -245,8 +245,8 @@ let rec pp_with ~printer fmt (hte : t) =
     Fmt.pf fmt "@[<hov 1>(%a.%a@ %a)@]" Ty.pp ty Ty.Cvtop.pp op
       (pp_with ~printer) e
   | Naryop (ty, op, es) ->
-    Fmt.pf fmt "@[<hov 1>(%a.%a@ (%a))@]" Ty.pp ty Ty.Naryop.pp op
-      (Fmt.list ~sep:Fmt.comma (pp_with ~printer))
+    Fmt.pf fmt "@[<hov 1>(%a.%a@ %a)@]" Ty.pp ty Ty.Naryop.pp op
+      (Fmt.list ~sep:Fmt.sp (pp_with ~printer))
       es
   | Extract (e, h, l) ->
     Fmt.pf fmt "@[<hov 1>(extract@ %a@ %d@ %d)@]" (pp_with ~printer) e l h
