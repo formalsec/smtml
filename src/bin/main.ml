@@ -1,6 +1,6 @@
 (***************************************************************************)
 (* This file is part of the third-party OCaml library `smtml`.             *)
-(* Copyright (C) 2023-2024 formalsec                                       *)
+(* Copyright (C) 2023-2026 formalsec                                       *)
 (*                                                                         *)
 (* This program is free software: you can redistribute it and/or modify    *)
 (* it under the terms of the GNU General Public License as published by    *)

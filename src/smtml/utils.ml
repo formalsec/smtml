@@ -1,5 +1,5 @@
 (* SPDX-License-Identifier: MIT *)
-(* Copyright (C) 2023-2024 formalsec *)
+(* Copyright (C) 2023-2026 formalsec *)
 (* Written by the Smtml programmers *)
 
 let run_and_time_call ~use f =

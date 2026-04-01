@@ -1,3 +1,7 @@
+(* SPDX-License-Identifier: MIT *)
+(* Copyright (C) 2023-2026 formalsec *)
+(* Written by Hichem Rami Ait El Hara *)
+
 (* Dolmen's binders *)
 type t =
   | Forall

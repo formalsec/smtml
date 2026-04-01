@@ -1,3 +1,7 @@
+(* SPDX-License-Identifier: MIT *)
+(* Copyright (C) 2023-2026 formalsec *)
+(* Written by the Smtml programmers *)
+
 open Cmdliner
 open Term.Syntax
 open Rresult

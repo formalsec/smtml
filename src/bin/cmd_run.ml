@@ -1,3 +1,7 @@
+(* SPDX-License-Identifier: MIT *)
+(* Copyright (C) 2023-2026 formalsec *)
+(* Written by the Smtml programmers *)
+
 open Smtml
 
 let get_solver debug solver_type solver_mode =

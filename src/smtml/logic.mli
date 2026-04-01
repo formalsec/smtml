@@ -1,5 +1,5 @@
 (* SPDX-License-Identifier: MIT *)
-(* Copyright (C) 2023-2024 formalsec *)
+(* Copyright (C) 2023-2026 formalsec *)
 (* Written by the Smtml programmers *)
 
 (** SMT-LIB Logics. This module defines the set of SMT-LIB logics, which specify
