@@ -1,5 +1,5 @@
 (* SPDX-License-Identifier: MIT *)
-(* Copyright (C) 2023-2024 formalsec *)
+(* Copyright (C) 2023-2026 formalsec *)
 (* Written by Hichem Rami Ait El Hara *)
 
 open Smtzilla_utils.Regression_model

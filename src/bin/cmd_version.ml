@@ -1,3 +1,7 @@
+(* SPDX-License-Identifier: MIT *)
+(* Copyright (C) 2023-2026 formalsec *)
+(* Written by the Smtml programmers *)
+
 let version_string v =
   match v with None -> "n/a" | Some v -> Build_info.V1.Version.to_string v
 

@@ -1,5 +1,5 @@
 (* SPDX-License-Identifier: MIT *)
-(* Copyright (C) 2023-2024 formalsec *)
+(* Copyright (C) 2023-2026 formalsec *)
 (* Written by the Smtml programmers *)
 
 (** Quantifiers and Binding Constructs. This module defines types and utilities

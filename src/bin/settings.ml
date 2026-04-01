@@ -1,3 +1,7 @@
+(* SPDX-License-Identifier: MIT *)
+(* Copyright (C) 2023-2026 formalsec *)
+(* Written by the Smtml programmers *)
+
 (* We want these types for settings so that we can derive serializers for yaml/toml as well as cmdliner in the future *)
 
 module Run = struct
