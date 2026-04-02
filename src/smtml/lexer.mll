@@ -291,7 +291,7 @@ and comment = parse
 
 and string buf = parse
   | '"' { STR (Buffer.contents buf) }
-  | '"' '"' { Buffer.add_char buf '"'; string buf lexbuf }
+  | '\\' '"' { Buffer.add_char buf '"'; string buf lexbuf }
   | [^ '"']+
     { Buffer.add_string buf (Lexing.lexeme lexbuf); string buf lexbuf }
   | eof { Fmt.kstr error "nonterminated string" }
