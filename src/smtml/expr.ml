@@ -546,24 +546,36 @@ let rec cvtop theory op hte =
 
 let raw_naryop ty op es = make (Naryop (ty, op, es)) [@@inline]
 
-let naryop ty op es =
-  if List.for_all (fun e -> match view e with Val _ -> true | _ -> false) es
-  then
-    let vs =
-      List.map (fun e -> match view e with Val v -> v | _ -> assert false) es
-    in
-    value (Eval.naryop ty op vs)
-  else
-    match (ty, op, List.map view es) with
-    | ( Ty_str
-      , Concat
-      , [ Naryop (Ty_str, Concat, l1); Naryop (Ty_str, Concat, l2) ] ) ->
-      raw_naryop Ty_str Concat (l1 @ l2)
-    | Ty_str, Concat, [ Naryop (Ty_str, Concat, htes); hte ] ->
-      raw_naryop Ty_str Concat (htes @ [ make hte ])
-    | Ty_str, Concat, [ hte; Naryop (Ty_str, Concat, htes) ] ->
-      raw_naryop Ty_str Concat (make hte :: htes)
-    | _ -> raw_naryop ty op es
+let naryop ty op hexps =
+  (* Get list of value or exit early *)
+  let rec extract_values acc = function
+    | [] -> Some (List.rev acc)
+    | hexp :: remaining ->
+      begin match view hexp with
+      | Val v -> extract_values (v :: acc) remaining
+      | _ -> None
+      end
+  in
+
+  match extract_values [] hexps with
+  | Some vlist -> value (Eval.naryop ty op vlist)
+  | None ->
+    begin match (ty, op) with
+    | Ty_str, Concat ->
+      let rec concat_exprs acc = function
+        | [] -> List.rev acc
+        | hexp :: remainig ->
+          let acc =
+            match view hexp with
+            | Naryop (Ty_str, Concat, inner_hexps) ->
+              List.rev_append inner_hexps acc
+            | _ -> hexp :: acc
+          in
+          concat_exprs acc remainig
+      in
+      raw_naryop ty op (concat_exprs [] hexps)
+    | _ -> raw_naryop ty op hexps
+    end
 
 let[@inline] raw_extract (hte : t) ~(high : int) ~(low : int) : t =
   make (Extract (hte, high, low))
