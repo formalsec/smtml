@@ -34,10 +34,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-        # Removes ·git to prevent opam from checking out submodueles
-      - name: Remove .git
-        run: rm -rf .git
-
       - name: Install dependencies
         run: opam install -y . --deps-only --with-test
 
@@ -60,10 +56,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
-        # Removes ·git to prevent opam from checking out submodueles
-      - name: Remove .git
-        run: rm -rf .git
 
       - name: Install ${{ matrix.solver }}
         run: opam install -y . --deps-only --with-test
@@ -88,10 +80,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-        # Removes ·git to prevent opam from checking out submodueles
-      - name: Remove .git
-        run: rm -rf .git
-
       - name: Install ${{ matrix.solver }}
         run: |
           opam install -y . --deps-only --with-test
@@ -102,3 +90,32 @@ jobs:
 
       - name: Test
         run: dune runtest
+
+  test-benchmarks:
+    needs: lint
+    name: Test ${{ matrix.solver }}
+    strategy:
+      fail-fast: false
+      matrix:
+        solver: ["z3"]
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/formalsec/ocaml-5.4-${{ matrix.solver }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: true
+
+      - name: Install ${{ matrix.solver }}
+        run: opam install -y . --deps-only --with-test
+
+      - name: Build and test
+        run: |
+          dune build @install
+          dune runtest
+
+      - name: Benchmarks
+        run: |
+          cd test/benchmarks/
+          dune exec -- ./test_collections_c.exe
