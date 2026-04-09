@@ -195,7 +195,6 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let module Solver = (val solver_module : Solver_intf.S) in
     let solver = Solver.create ~params:(Params.default ()) ~logic:QF_BVFP () in
     for i = 1 to 64 do
-      (*Printf.printf "Testing bit-width: %d\n%!" i; (* Linha de debug *)*)
       let ty = Ty.Ty_bitv i in
       let x = symbol ("x" ^ string_of_int i) ty in
       Solver.add solver
@@ -443,21 +442,21 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     (* Test 1: Basic extraction - extract bits 3-0 from 0xAF should give 0xF *)
     let solver = create_solver () in
     let x = int8 0xAF in
-    let extracted = Expr.extract x ~high:3 ~low:0 in
+    let extracted = Expr.raw_extract x ~high:3 ~low:0 in
     (* Result type should be 4 bits *)
     assert_equal (Expr.ty extracted) (Ty.Ty_bitv 4);
     Solver.add solver
-      [ Expr.relop (Ty_bitv 4) Eq extracted
+      [ Expr.raw_relop (Ty_bitv 4) Eq extracted
           (Expr.value (Bitv (Bitvector.make (Z.of_int 0xF) 4)))
       ];
     assert_sat ~f:"test_extract_low_bits" (Solver.check solver []);
 
     (* Test 2: Basic extraction 2 - extract bits 7-4 from 0xAF should give 0xA *)
     let solver = create_solver () in
-    let extracted_high = Expr.extract x ~high:7 ~low:4 in
+    let extracted_high = Expr.raw_extract x ~high:7 ~low:4 in
     assert_equal (Expr.ty extracted_high) (Ty.Ty_bitv 4);
     Solver.add solver
-      [ Expr.relop (Ty_bitv 4) Eq extracted_high
+      [ Expr.raw_relop (Ty_bitv 4) Eq extracted_high
           (Expr.value (Bitv (Bitvector.make (Z.of_int 0xA) 4)))
       ];
     assert_sat ~f:"test_extract_high_bits" (Solver.check solver []);
@@ -465,10 +464,10 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     (* Test 3: Non-byte-aligned extraction - bits 5-2 from 0xAB (10101011) are 1010 = 0xA *)
     let solver = create_solver () in
     let y = int8 0xAB in
-    let extracted_mid = Expr.extract y ~high:5 ~low:2 in
+    let extracted_mid = Expr.raw_extract y ~high:5 ~low:2 in
     assert_equal (Expr.ty extracted_mid) (Ty.Ty_bitv 4);
     Solver.add solver
-      [ Expr.relop (Ty_bitv 4) Eq extracted_mid
+      [ Expr.raw_relop (Ty_bitv 4) Eq extracted_mid
           (Expr.value (Bitv (Bitvector.make (Z.of_int 0xA) 4)))
       ];
     assert_sat ~f:"test_extract_non_aligned" (Solver.check solver []);
@@ -476,10 +475,10 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     (* Test 4: Single bit extraction - bit 0 from 0xF should be 1 *)
     let solver = create_solver () in
     let z = int32 0xFl in
-    let single_bit = Expr.extract z ~high:0 ~low:0 in
+    let single_bit = Expr.raw_extract z ~high:0 ~low:0 in
     assert_equal (Expr.ty single_bit) (Ty.Ty_bitv 1);
     Solver.add solver
-      [ Expr.relop (Ty_bitv 1) Eq single_bit
+      [ Expr.raw_relop (Ty_bitv 1) Eq single_bit
           (Expr.value (Bitv (Bitvector.make Z.one 1)))
       ];
     assert_sat ~f:"test_extract_single_bit" (Solver.check solver []);
@@ -487,10 +486,10 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     (* Test 5: Full 32-bit extraction *)
     let solver = create_solver () in
     let w = int32 0xDEADBEEFl in
-    let full_extract = Expr.extract w ~high:31 ~low:0 in
+    let full_extract = Expr.raw_extract w ~high:31 ~low:0 in
     assert_equal (Expr.ty full_extract) (Ty.Ty_bitv 32);
     Solver.add solver
-      [ Expr.relop (Ty_bitv 32) Eq full_extract (int32 0xDEADBEEFl) ];
+      [ Expr.raw_relop (Ty_bitv 32) Eq full_extract (int32 0xDEADBEEFl) ];
     assert_sat ~f:"test_extract_full_width" (Solver.check solver []);
 
     (* Test 6: Symbolic extraction with solver verification *)
