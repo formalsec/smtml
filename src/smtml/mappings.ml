@@ -748,9 +748,9 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           (* This is needed so arguments don't end up out of order in the operator *)
           let es = List.rev es in
           (ctx, naryop ty op es)
-        | Extract (e, h, l) ->
+        | Extract (e, high, low) ->
           let ctx, e = encode_expr ctx e in
-          (ctx, M.Bitv.extract e ~high:h ~low:l)
+          (ctx, M.Bitv.extract e ~high ~low)
         | Concat (e1, e2) ->
           let ctx, e1 = encode_expr ctx e1 in
           let ctx, e2 = encode_expr ctx e2 in
