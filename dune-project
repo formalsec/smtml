@@ -61,11 +61,11 @@
   dune-build-info
   dune-site
   (dolmen
-   (= "0.10"))
+   (>= "0.10"))
   (dolmen_type
-   (= "0.10"))
+   (>= "0.10"))
   (dolmen_model
-   (= "0.10"))
+   (>= "0.10"))
   (fmt
    (>= "0.8.7"))
   fpath
