@@ -18,7 +18,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/formalsec/ocaml-4.14:latest
+      image: ghcr.io/formalsec/ocaml-4.14-z3:latest
     steps:
       - name: Checkout
         uses: actions/checkout@v6
