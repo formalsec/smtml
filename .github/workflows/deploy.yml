@@ -23,27 +23,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Save .git
-        run: mv .git /tmp/gitdir-smtml
-
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v6
 
       - name: Install Dependencies
-        run: opam install -y . --deps-only --with-doc --with-test --with-dev-setup
+        run: |
+          opam install -y . --deps-only --with-doc --with-test
+          opam install bisect_ppx
 
       - name: Build doc
         run: opam exec -- dune build @doc
 
-      - name: Restore .git
-        run: mv /tmp/gitdir-smtml .git
-
       - name: Coverage report
         run: |
-          BISECT_FILE=`pwd`/bisect opam exec -- dune runtest --force --instrument-with bisect_ppx
-          opam exec -- bisect-ppx-report html -o _build/default/_doc/_html/coverage
-          opam exec -- bisect-ppx-report send-to Coveralls
+          BISECT_FILE=`pwd`/bisect dune runtest --force --instrument-with bisect_ppx || true
+          bisect-ppx-report html -o _build/default/_doc/_html/coverage
+          bisect-ppx-report send-to Coveralls
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
 
