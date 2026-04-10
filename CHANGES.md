@@ -1,7 +1,25 @@
 # Changelog
 
+## 0.25.0 - 2026-04-10
+
+- 2026-04-10 Update .github/workflows/deploy.yml
+- 2026-04-10 Deploy with ocaml-4.14-z3 for better coverage statistics
+- 2026-04-10 Minor style adjustments and fix solver tests
+- 2026-04-10 Ran dune fmt to reformat the files
+- 2026-04-10 Fixed byte logic to use bits and created tests
+- 2026-04-09 Fix dolmen hard constraint
+- 2026-04-05 Ci: cleanup CI and add job to run collections-c benchmarks
+- 2026-04-05 Fix: lazier evaluation of naryop and proper symbolic string concat
+- 2026-04-02 Fix: use backslash for char escaping in .smtml format
+- 2026-04-02 Chore: update copyright
+- 2026-04-01 Fix: str.len instead of str.length
+- 2026-04-01 Feat: add API to parse smtml expressions from file/string
+- 2026-04-01 Fix: respect sexp format in Naryop
+- 2026-03-30 Bump hc 0.3 -> 0.5
+
 ## 0.24.0 - 2026-03-30
 
+- 2026-03-30 Release 0.24.0
 - 2026-03-30 Fix invalid input 'tags' in release-pr CI
 - 2026-03-30 Bump actions/configure-pages from 5 to 6
 - 2026-03-30 Bump actions/deploy-pages from 4 to 5
