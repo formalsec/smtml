@@ -229,6 +229,8 @@ module M = struct
     module Bitv = struct
       let v _ = assert false
 
+      let of_z _ = assert false
+
       let neg _ = assert false
 
       let lognot _ = assert false

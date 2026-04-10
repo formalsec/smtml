@@ -307,6 +307,8 @@ module DolmenIntf = struct
       let bv = int_to_bitvector (Z.of_string i) n in
       DTerm.Bitv.mk bv
 
+    let of_z (v : Z.t) (n : int) = DTerm.Bitv.mk (int_to_bitvector v n)
+
     let lognot = DTerm.Bitv.not
 
     let to_int ~signed:_ = DTerm.Bitv.to_nat

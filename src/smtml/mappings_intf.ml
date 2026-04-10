@@ -404,6 +404,8 @@ module type M = sig
     (** [v s n] constructs a bitvector term from the string [s] of width [n]. *)
     val v : string -> int -> term
 
+    val of_z : Z.t -> int -> term
+
     (** [neg t] constructs the negation of the bitvector term [t]. *)
     val neg : term -> term
 

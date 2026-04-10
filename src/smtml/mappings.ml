@@ -296,9 +296,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       module Bitv_impl = struct
         open M
 
-        let v bv =
-          let numbits = Bitvector.numbits bv in
-          Bitv.v (Bitvector.to_string bv) numbits
+        let v bv = Bitv.of_z (Bitvector.to_signed bv) (Bitvector.numbits bv)
 
         (* Stolen from @krtab in OCamlPro/owi#195 *)
         let clz bitwidth n =
@@ -560,7 +558,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Str v -> String_impl.v v
         | Num (F32 x) -> Float32_impl.v x
         | Num (F64 x) -> Float64_impl.v x
-        | Bitv bv -> M.Bitv.v (Bitvector.to_string bv) (Bitvector.numbits bv)
+        | Bitv bv -> Bitv_impl.v bv
         | Re_none -> M.Re.none ()
         | Re_all -> M.Re.all ()
         | Re_allchar -> M.Re.allchar ()
