@@ -249,6 +249,8 @@ module DolmenIntf : sig
   module Bitv : sig
     val v : string -> int -> term
 
+    val of_z : Z.t -> int -> term
+
     val neg : term -> term
 
     val lognot : term -> term

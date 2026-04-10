@@ -272,6 +272,12 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
   module Bitv = struct
     let v str bitwidth = mk_bv_value (Types.bitv bitwidth) str 10
 
+    let of_z v bitwidth =
+      let ty = Types.bitv bitwidth in
+      if Z.fits_int v then mk_bv_value_int ty (Z.to_int v)
+      else if Z.fits_int64 v then mk_bv_value_int64 ty (Z.to_int64 v)
+      else mk_bv_value ty (Z.to_string v) 10
+
     let neg t = mk_term1 Kind.Bv_neg t
 
     let lognot t = mk_term1 Kind.Bv_not t

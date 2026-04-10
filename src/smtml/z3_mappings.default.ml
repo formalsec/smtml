@@ -299,6 +299,11 @@ module M = struct
     module Bitv = struct
       let v bv bitwidth = Z3.BitVector.mk_numeral ctx bv bitwidth
 
+      let of_z v bitwidth =
+        let ty = Types.bitv bitwidth in
+        if Z.fits_int v then Z3.Expr.mk_numeral_int ctx (Z.to_int v) ty
+        else Z3.Expr.mk_numeral_string ctx (Z.to_string v) ty
+
       let neg e = Z3.BitVector.mk_neg ctx e
 
       let lognot e = Z3.BitVector.mk_not ctx e

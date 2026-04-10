@@ -259,6 +259,8 @@ module Fresh_cvc5 () = struct
   module Bitv = struct
     let v v_str bitwidth = Term.mk_bv_s tm bitwidth v_str 10
 
+    let of_z v bitwidth = Term.mk_bv_s tm bitwidth (Z.to_string v) 10
+
     let neg t = Term.mk_term tm Kind.Bitvector_neg [| t |]
 
     let lognot t = Term.mk_term tm Kind.Bitvector_not [| t |]
