@@ -180,38 +180,28 @@ let rec is_symbolic (v : t) : bool =
     is_symbolic v1 || is_symbolic v2 || is_symbolic v3
   | List vs | App (_, vs) | Naryop (_, _, vs) -> List.exists is_symbolic vs
 
+let rec get_symbols_aux acc (hte : t) =
+  match view hte with
+  | Val _ -> acc
+  | Ptr { offset; _ } -> get_symbols_aux acc offset
+  | Symbol s -> s :: acc
+  | List es | App (_, es) | Naryop (_, _, es) ->
+    List.fold_left get_symbols_aux acc es
+  | Unop (_, _, e) | Cvtop (_, _, e) | Extract (e, _, _) ->
+    get_symbols_aux acc e
+  | Binop (_, _, e1, e2) | Relop (_, _, e1, e2) | Concat (e1, e2) ->
+    let acc = get_symbols_aux acc e1 in
+    get_symbols_aux acc e2
+  | Triop (_, _, e1, e2, e3) ->
+    let acc = get_symbols_aux acc e1 in
+    let acc = get_symbols_aux acc e2 in
+    get_symbols_aux acc e3
+  | Binder (_, vars, e) ->
+    let acc = List.fold_left get_symbols_aux acc vars in
+    get_symbols_aux acc e
+
 let get_symbols (hte : t list) =
-  let tbl = Hashtbl.create 64 in
-  let rec symbols (hte : t) =
-    match view hte with
-    | Val _ -> ()
-    | Ptr { offset; _ } -> symbols offset
-    | Symbol s -> Hashtbl.add tbl s ()
-    | List es -> List.iter symbols es
-    | App (_, es) -> List.iter symbols es
-    | Unop (_, _, e1) -> symbols e1
-    | Binop (_, _, e1, e2) ->
-      symbols e1;
-      symbols e2
-    | Triop (_, _, e1, e2, e3) ->
-      symbols e1;
-      symbols e2;
-      symbols e3
-    | Relop (_, _, e1, e2) ->
-      symbols e1;
-      symbols e2
-    | Cvtop (_, _, e) -> symbols e
-    | Naryop (_, _, es) -> List.iter symbols es
-    | Extract (e, _, _) -> symbols e
-    | Concat (e1, e2) ->
-      symbols e1;
-      symbols e2
-    | Binder (_, vars, e) ->
-      List.iter symbols vars;
-      symbols e
-  in
-  List.iter symbols hte;
-  Hashtbl.fold (fun k () acc -> k :: acc) tbl []
+  List.fold_left get_symbols_aux [] hte |> List.sort_uniq Symbol.compare
 
 let rec pp_with ~printer fmt (hte : t) =
   match view hte with
@@ -821,37 +811,8 @@ module Set = struct
       v
 
   let get_symbols (set : t) =
-    let tbl = Hashtbl.create 64 in
-    let rec symbols hte =
-      match view hte with
-      | Val _ -> ()
-      | Ptr { offset; _ } -> symbols offset
-      | Symbol s -> Hashtbl.add tbl s ()
-      | List es -> List.iter symbols es
-      | App (_, es) -> List.iter symbols es
-      | Unop (_, _, e1) -> symbols e1
-      | Binop (_, _, e1, e2) ->
-        symbols e1;
-        symbols e2
-      | Triop (_, _, e1, e2, e3) ->
-        symbols e1;
-        symbols e2;
-        symbols e3
-      | Relop (_, _, e1, e2) ->
-        symbols e1;
-        symbols e2
-      | Cvtop (_, _, e) -> symbols e
-      | Naryop (_, _, es) -> List.iter symbols es
-      | Extract (e, _, _) -> symbols e
-      | Concat (e1, e2) ->
-        symbols e1;
-        symbols e2
-      | Binder (_, vars, e) ->
-        List.iter symbols vars;
-        symbols e
-    in
-    iter symbols set;
-    Hashtbl.fold (fun k () acc -> k :: acc) tbl []
+    fold (fun x acc -> get_symbols_aux acc x) set []
+    |> List.sort_uniq Symbol.compare
 
   let map f set =
     fold
