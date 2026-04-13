@@ -26,9 +26,7 @@ and expr =
 module Expr = struct
   type t = expr
 
-  let list_eq (l1 : 'a list) (l2 : 'a list) : bool =
-    if List.compare_lengths l1 l2 = 0 then List.for_all2 phys_equal l1 l2
-    else false
+  let list_eq (l1 : 'a list) (l2 : 'a list) : bool = List.equal phys_equal l1 l2
 
   let equal (e1 : expr) (e2 : expr) : bool =
     match (e1, e2) with
