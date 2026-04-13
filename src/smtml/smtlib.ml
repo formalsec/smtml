@@ -362,7 +362,7 @@ module Statement = struct
     let name =
       match Symbol.name id with Simple name -> name | _ -> assert false
     in
-    Hashtbl.replace custom_sorts name (Expr.ty t);
+    Hashtbl.add custom_sorts name (Expr.ty t);
     Echo ""
 
   let datatypes ?loc:_ = assert false
