@@ -843,13 +843,13 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         List.iter
           (fun sym ->
             let v = value model0 (Expr.symbol sym) in
-            Hashtbl.replace m sym v )
+            Hashtbl.add m sym v )
           symbols
       | None ->
         Smap.iter
           (fun (sym : Symbol.t) term ->
             let v = Encoder.value_of_term ~ctx model sym.ty term in
-            Hashtbl.replace m sym v )
+            Hashtbl.add m sym v )
           ctx );
       m
 

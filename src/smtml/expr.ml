@@ -188,7 +188,7 @@ let get_symbols (hte : t list) =
     match view hte with
     | Val _ -> ()
     | Ptr { offset; _ } -> symbols offset
-    | Symbol s -> Hashtbl.replace tbl s ()
+    | Symbol s -> Hashtbl.add tbl s ()
     | List es -> List.iter symbols es
     | App (_, es) -> List.iter symbols es
     | Unop (_, _, e1) -> symbols e1
@@ -828,7 +828,7 @@ module Set = struct
       match view hte with
       | Val _ -> ()
       | Ptr { offset; _ } -> symbols offset
-      | Symbol s -> Hashtbl.replace tbl s ()
+      | Symbol s -> Hashtbl.add tbl s ()
       | List es -> List.iter symbols es
       | App (_, es) -> List.iter symbols es
       | Unop (_, _, e1) -> symbols e1
