@@ -2,7 +2,19 @@
  (package smtml)
  (name main)
  (public_name smtml)
- (libraries cmdliner dune-build-info ppx_deriving smtml dune-site)
+ (libraries
+  bos
+  cmdliner
+  dune-build-info
+  dune-site
+  fpath
+  fmt
+  logs
+  ppx_deriving
+  rresult
+  unix
+  smtml
+  smtml.prelude)
  (preprocess
   (pps ppx_deriving.make))
  (instrumentation

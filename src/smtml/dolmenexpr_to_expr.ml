@@ -299,7 +299,9 @@ module DolmenIntf = struct
         if bits = 0 then acc
         else
           let bit = Z.(logand n one |> to_string) in
-          to_bitlist (Prelude.String.cat bit acc) (Z.shift_right n 1) (bits - 1)
+          to_bitlist
+            (Smtml_prelude.String.cat bit acc)
+            (Z.shift_right n 1) (bits - 1)
       in
       to_bitlist "" unsigned_bv bits
 
@@ -383,7 +385,7 @@ module DolmenIntf = struct
 
     let v f e s =
       DTerm.Float.real_to_fp e s DTerm.Float.roundTowardZero
-        (DTerm.Real.mk (Prelude.Float.to_string f))
+        (DTerm.Real.mk (Smtml_prelude.Float.to_string f))
 
     let sqrt ~rm t = DTerm.Float.sqrt rm t
 

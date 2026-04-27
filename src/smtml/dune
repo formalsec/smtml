@@ -64,26 +64,33 @@
   bos
   cmdliner
   dolmen
+  dolmen.std
   dolmen_type
   dolmen_model
   hc
+  fmt
   fpath
+  farith
   menhirLib
+  mtime.clock
+  logs
   ocaml_intrinsics
   ppx_enumerate
   rresult
+  unix
   scfg
   smtml.prelude
   smtml.smtzilla_utils
   threads
   yojson
-  mtime.clock
   zarith
   (select
    colibri2_mappings.ml
    from
    (colibri2.core
+    colibri2.stdlib
     colibri2.solver
+    colibri2.popop_lib
     colibri2.theories.bool
     colibri2.theories.quantifiers
     colibri2.theories.LRA
@@ -162,7 +169,7 @@
 (executable
  (name regression_model_default_gen)
  (modules regression_model_default_gen)
- (libraries smtml.smtzilla_utils))
+ (libraries fmt smtml.smtzilla_utils))
 
 (rule
  (target regression_model_default.ml)

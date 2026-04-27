@@ -1,4 +1,4 @@
-(lang dune 3.19)
+(lang dune 3.20)
 
 (using menhir 2.1)
 
@@ -11,6 +11,8 @@
 (version 0.25.0)
 
 (generate_opam_files true)
+
+(implicit_transitive_deps false-if-hidden-includes-supported)
 
 (source (github formalsec/smtml))
 
@@ -69,6 +71,7 @@
   (fmt
    (>= "0.8.7"))
   fpath
+  farith
   (hc
    (>= "0.5"))
   (menhir
