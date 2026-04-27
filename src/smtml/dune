@@ -71,6 +71,7 @@
   menhirLib
   ocaml_intrinsics
   ppx_enumerate
+  rresult
   scfg
   smtml.prelude
   smtml.smtzilla_utils
