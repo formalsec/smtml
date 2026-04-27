@@ -1,35 +1,35 @@
 (library
  (name smtml_test_solver)
  (modules test_bindings test_solver test_optimizer)
- (libraries smtml smtml_test))
+ (libraries fmt smtml smtml_test ounit2 zarith))
 
 (test
  (name test_solver_z3)
  (modules test_solver_z3)
- (libraries smtml smtml_test_solver)
+ (libraries smtml smtml_test_solver ounit2)
  (build_if %{lib-available:z3}))
 
 (test
  (name test_solver_colibri2)
  (modules test_solver_colibri2)
- (libraries smtml_test smtml_test_solver)
+ (libraries smtml smtml_test smtml_test_solver ounit2)
  (build_if %{lib-available:colibri2.core}))
 
 (test
  (name test_solver_bitwuzla)
  (modules test_solver_bitwuzla)
- (libraries smtml_test smtml_test_solver)
+ (libraries smtml smtml_test smtml_test_solver ounit2)
  (build_if %{lib-available:bitwuzla-cxx}))
 
 (test
  (name test_solver_cvc5)
  (modules test_solver_cvc5)
- (libraries smtml_test smtml_test_solver)
+ (libraries smtml smtml_test smtml_test_solver ounit2)
  (build_if %{lib-available:cvc5}))
 
 (test
  (name test_solver_altergo)
  (modules test_solver_altergo)
- (libraries smtml_test smtml_test_solver)
+ (libraries smtml smtml_test smtml_test_solver ounit2)
  (build_if
   (and %{lib-available:alt-ergo-lib} %{lib-available:dolmen_model})))
