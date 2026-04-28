@@ -212,6 +212,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | String_prefix -> M.String.is_prefix e1 ~prefix:e2
           | String_suffix -> M.String.is_suffix e1 ~suffix:e2
           | String_in_re -> M.String.in_re e1 e2
+          | String_last_index -> M.String.last_index_of e1 ~sub:e2
           | _ ->
             Fmt.failwith {|String: Unsupported binop operator "%a"|} Binop.pp op
 
