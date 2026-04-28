@@ -326,6 +326,10 @@ module type M = sig
         [sub] in [t] starting at [pos]. *)
     val index_of : term -> sub:term -> pos:term -> term
 
+    (** [last_index_of t ~sub] constructs the index of the last occurrence of
+        [sub] in [t]. *)
+    val last_index_of : term -> sub:term -> term
+
     (** [replace t ~pattern ~with_] constructs the string term resulting from
         replacing [pattern] with [with_] in [t]. *)
     val replace : term -> pattern:term -> with_:term -> term

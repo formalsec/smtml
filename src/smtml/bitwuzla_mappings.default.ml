@@ -227,6 +227,9 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     let index_of _ ~sub:_ ~pos:_ =
       Fmt.failwith "Bitwuzla_mappings: String.index_of not implemented"
 
+    let last_index_of _ ~sub:_ =
+      Fmt.failwith "%s:%d: %s not implemented" __FILE__ __LINE__ __FUNCTION__
+
     let replace _ ~pattern:_ ~with_:_ =
       Fmt.failwith "Bitwuzla_mappings: String.replace not implemented"
 

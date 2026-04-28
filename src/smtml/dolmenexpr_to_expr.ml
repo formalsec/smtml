@@ -251,6 +251,9 @@ module DolmenIntf = struct
 
     let index_of t ~sub ~pos = DTerm.String.index_of t sub pos
 
+    let last_index_of _t ~sub:_ =
+      Fmt.failwith "%s:%d: %s not implemented" __FILE__ __LINE__ __FUNCTION__
+
     let replace t ~pattern ~with_ = DTerm.String.replace t pattern with_
 
     let replace_all t ~pattern ~with_ = DTerm.String.replace_all t pattern with_

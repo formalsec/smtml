@@ -213,6 +213,9 @@ module Fresh_cvc5 () = struct
     let index_of t1 ~sub ~pos =
       Term.mk_term tm Kind.String_indexof [| t1; sub; pos |]
 
+    let last_index_of _t ~sub:_ =
+      Fmt.failwith "%s:%d: %s not implemented" __FILE__ __LINE__ __FUNCTION__
+
     let replace t1 ~pattern ~with_ =
       Term.mk_term tm Kind.String_replace [| t1; pattern; with_ |]
 

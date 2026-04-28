@@ -189,6 +189,8 @@ module M = struct
 
       let index_of _ ~sub:_ ~pos:_ = assert false
 
+      let last_index_of _ ~sub:_ = assert false
+
       let replace _ ~pattern:_ ~with_:_ = assert false
 
       let replace_all _ ~pattern:_ ~with_:_ = assert false

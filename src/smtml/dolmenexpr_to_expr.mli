@@ -209,6 +209,8 @@ module DolmenIntf : sig
 
     val index_of : term -> sub:term -> pos:term -> term
 
+    val last_index_of : term -> sub:term -> term
+
     val replace : term -> pattern:term -> with_:term -> term
 
     val replace_all : term -> pattern:term -> with_:term -> term

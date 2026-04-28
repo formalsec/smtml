@@ -253,7 +253,9 @@ module M = struct
 
       let sub str ~pos ~len = Z3.Seq.mk_seq_extract ctx str pos len
 
-      let index_of e1 ~sub ~pos = Z3.Seq.mk_seq_index ctx e1 sub pos
+      let index_of e ~sub ~pos = Z3.Seq.mk_seq_index ctx e sub pos
+
+      let last_index_of e ~sub = Z3.Seq.mk_seq_last_index ctx e sub
 
       let replace e1 ~pattern ~with_ =
         Z3.Seq.mk_seq_replace ctx e1 pattern with_
