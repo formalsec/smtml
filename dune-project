@@ -60,8 +60,10 @@
   (cmdliner
    (>= "1.3.0"))
   dune
-  dune-build-info
-  dune-site
+  (dune-build-info
+   (>= "3.20"))
+  (dune-site
+   (>= "3.20"))
   (dolmen
    (>= "0.10"))
   (dolmen_type
