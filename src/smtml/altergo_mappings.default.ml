@@ -88,7 +88,9 @@ module M = struct
         let used_context = Frontend.init_all_used_context () in
         { used_context; syms = ConstMap.empty; cmds = []; model = None }
 
-      let clone _ = Fmt.failwith "Altergo_mappings: clone is not implemented"
+      let clone _ =
+        Fmt.failwith "%s:%d: %s is not implemented" __MODULE__ __LINE__
+          __FUNCTION__
 
       let push s =
         s.cmds <- C.{ st_decl = C.Push 1; st_loc = AEL.Loc.dummy } :: s.cmds

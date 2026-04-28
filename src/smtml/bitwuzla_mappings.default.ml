@@ -40,9 +40,11 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
   let false_ = mk_false ()
 
-  let int _ = Fmt.failwith "Bitwuzla_mappings: int not implemented"
+  let int _ =
+    Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-  let real _ = Fmt.failwith "Bitwuzla_mappings: real not implemented"
+  let real _ =
+    Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
   let const symbol ty = mk_const ~symbol ty
 
@@ -66,9 +68,11 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
   let ite cond t1 t2 = mk_term3 Kind.Ite cond t1 t2
 
-  let forall _ = Fmt.failwith "Bitwuzla_mappings: forall not implemented"
+  let forall _ =
+    Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-  let exists _ = Fmt.failwith "Bitwuzla_mappings: exists not implemented"
+  let exists _ =
+    Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
   module Types = struct
     let int = mk_bool_sort ()
@@ -89,18 +93,21 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
     let ty t = Term.sort t
 
-    let to_ety _ = Fmt.failwith "Bitwuzla_mappings: to_ety not implemented"
+    let to_ety _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
   end
 
   module Interp = struct
-    let to_int _ = Fmt.failwith "Bitwuzla_mappings: to_int not implemented"
+    let to_int _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let to_real _ = Fmt.failwith "Bitwuzla_mappings: to_real not implemented"
+    let to_real _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let to_bool t = Term.value Term.Bool t
 
     let to_string _ =
-      Fmt.failwith "Bitwuzla_mappings: to_string not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let to_bitv t _bitwidth = Term.value Term.Z t
 
@@ -127,149 +134,191 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
   end
 
   module Int = struct
-    let neg _ = Fmt.failwith "Bitwuzla_mappings: Int.neg not implemented"
+    let neg _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let to_real _ =
-      Fmt.failwith "Bitwuzla_mappings: Int.to_real not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let to_bv _ = Fmt.failwith "Bitwuzla_mappings: Int.to_bv not implemented"
+    let to_bv _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let add _ = Fmt.failwith "Bitwuzla_mappings: Int.add not implemented"
+    let add _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let sub _ = Fmt.failwith "Bitwuzla_mappings: Int.sub not implemented"
+    let sub _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let mul _ = Fmt.failwith "Bitwuzla_mappings: Int.mul not implemented"
+    let mul _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let div _ = Fmt.failwith "Bitwuzla_mappings: Int.div not implemented"
+    let div _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let rem _ = Fmt.failwith "Bitwuzla_mappings: Int.rem not implemented"
+    let rem _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let mod_ _ = Fmt.failwith "Bitwuzla_mappings: Int.mod_ not implemented"
+    let mod_ _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let pow _ = Fmt.failwith "Bitwuzla_mappings: Int.pow not implemented"
+    let pow _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let lt _ = Fmt.failwith "Bitwuzla_mappings: Int.lt not implemented"
+    let lt _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let le _ = Fmt.failwith "Bitwuzla_mappings: Int.le not implemented"
+    let le _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let gt _ = Fmt.failwith "Bitwuzla_mappings: Int.gt not implemented"
+    let gt _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let ge _ = Fmt.failwith "Bitwuzla_mappings: Int.ge not implemented"
+    let ge _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
   end
 
   module Real = struct
-    let neg _ = Fmt.failwith "Bitwuzla_mappings: Real.neg not implemented"
+    let neg _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let to_int _ = Fmt.failwith "Bitwuzla_mappings: Real.to_int not implemented"
+    let to_int _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let add _ = Fmt.failwith "Bitwuzla_mappings: Real.add not implemented"
+    let add _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let sub _ = Fmt.failwith "Bitwuzla_mappings: Real.sub not implemented"
+    let sub _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let mul _ = Fmt.failwith "Bitwuzla_mappings: Real.mul not implemented"
+    let mul _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let div _ = Fmt.failwith "Bitwuzla_mappings: Real.div not implemented"
+    let div _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let pow _ = Fmt.failwith "Bitwuzla_mappings: Real.pow not implemented"
+    let pow _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let lt _ = Fmt.failwith "Bitwuzla_mappings: Real.lt not implemented"
+    let lt _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let le _ = Fmt.failwith "Bitwuzla_mappings: Real.le not implemented"
+    let le _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let gt _ = Fmt.failwith "Bitwuzla_mappings: Real.gt not implemented"
+    let gt _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let ge _ = Fmt.failwith "Bitwuzla_mappings: Real.ge not implemented"
+    let ge _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
   end
 
   module String = struct
-    let v _ = Fmt.failwith "Bitwuzla_mappings: String.v not implemented"
+    let v _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let length _ =
-      Fmt.failwith "Bitwuzla_mappings: String.length not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let to_code _ =
-      Fmt.failwith "Bitwuzla_mappings: String.to_code not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let of_code _ =
-      Fmt.failwith "Bitwuzla_mappings: String.of_code not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let to_int _ =
-      Fmt.failwith "Bitwuzla_mappings: String.to_int not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let of_int _ =
-      Fmt.failwith "Bitwuzla_mappings: String.of_int not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let to_re _ = Fmt.failwith "Bitwuzla_mappings: String.to_re not implemented"
+    let to_re _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let in_re _ = Fmt.failwith "Bitwuzla_mappings: String.in_re not implemented"
+    let in_re _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let at _ = Fmt.failwith "Bitwuzla_mappings: String.at not implemented"
+    let at _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let concat _ =
-      Fmt.failwith "Bitwuzla_mappings: String.concat not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let contains _ ~sub:_ =
-      Fmt.failwith "Bitwuzla_mappings: String.contains not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let is_prefix _ ~prefix:_ =
-      Fmt.failwith "Bitwuzla_mappings: String.is_prefix not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let is_suffix _ ~suffix:_ =
-      Fmt.failwith "Bitwuzla_mappings: String.is_suffix not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let lt _ = Fmt.failwith "Bitwuzla_mappings: String.lt not implemented"
+    let lt _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let le _ = Fmt.failwith "Bitwuzla_mappings: String.le not implemented"
+    let le _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let sub _ ~pos:_ ~len:_ =
-      Fmt.failwith "Bitwuzla_mappings: String.sub not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let index_of _ ~sub:_ ~pos:_ =
-      Fmt.failwith "Bitwuzla_mappings: String.index_of not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let last_index_of _ ~sub:_ =
-      Fmt.failwith "%s:%d: %s not implemented" __FILE__ __LINE__ __FUNCTION__
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let replace _ ~pattern:_ ~with_:_ =
-      Fmt.failwith "Bitwuzla_mappings: String.replace not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let replace_all _ ~pattern:_ ~with_:_ =
-      Fmt.failwith "Bitwuzla_mappings: String.replace_all not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let replace_re _ ~pattern:_ ~with_:_ =
-      Fmt.failwith "Bitwuzla_mappings: String.replace_re not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let replace_re_all _ ~pattern:_ ~with_:_ =
-      Fmt.failwith "Bitwuzla_mappings: String.replace_re_all not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
   end
 
   module Re = struct
-    let allchar _ = Fmt.failwith "Bitwuzla_mappings: Re.allchar not implemented"
+    let allchar _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let all _ = Fmt.failwith "Bitwuzla_mappings: Re.all not implemented"
+    let all _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let none _ = Fmt.failwith "Bitwuzla_mappings: Re.none not implemented"
+    let none _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let star _ = Fmt.failwith "Bitwuzla_mappings: Re.star not implemented"
+    let star _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let plus _ = Fmt.failwith "Bitwuzla_mappings: Re.plus not implemented"
+    let plus _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let opt _ = Fmt.failwith "Bitwuzla_mappings: Re.opt not implemented"
+    let opt _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let comp _ = Fmt.failwith "Bitwuzla_mappings: Re.comp not implemented"
+    let comp _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let range _ = Fmt.failwith "Bitwuzla_mappings: Re.range not implemented"
+    let range _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let diff _ = Fmt.failwith "Bitwuzla_mappings: Re.diff not implemented"
+    let diff _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let inter _ = Fmt.failwith "Bitwuzla_mappings: Re.inter not implemented"
+    let inter _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let loop ~min:_ ~max:_ _ =
-      Fmt.failwith "Bitwuzla_mappings: Re.loop not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let union _ = Fmt.failwith "Bitwuzla_mappings: Re.union not implemented"
+    let union _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let concat _ = Fmt.failwith "Bitwuzla_mappings: Re.concat not implemented"
+    let concat _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
   end
 
   module Bitv = struct
@@ -286,7 +335,7 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     let lognot t = mk_term1 Kind.Bv_not t
 
     let to_int ~signed:_ _t =
-      Fmt.failwith "Bitwuzla_mappings: Bitv.to_int not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let add t1 t2 = mk_term2 Kind.Bv_add t1 t2
 
@@ -504,7 +553,8 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
       type t = [ `Adt_constructor ]
 
       let make _ ~fields:_ =
-        Fmt.failwith "Bitwuzla_mappings: Adt.Cons.make not implemented"
+        Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__
+          __FUNCTION__
     end
 
     type t = [ `Adt ]
@@ -514,18 +564,18 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     let ty _ = assert false
 
     let constructor _ =
-      Fmt.failwith "Bitwuzla_mappings: Adt.get_constructors not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let selector _ =
-      Fmt.failwith "Bitwuzla_mappings: Adt.get_recognizers not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let tester _ =
-      Fmt.failwith "Bitwuzla_mappings: Adt.get_accessors not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
   end
 
   module Model = struct
     let get_symbols _ =
-      Fmt.failwith "Bitwuzla_mappings: get_symbols not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let eval ?ctx:_ ?completion:_ solver term =
       Some (Solver.get_value solver term)
@@ -539,13 +589,15 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     let make ?params ?logic:_ () =
       Bitwuzla_cxx.Options.default () |> update_options params |> Solver.create
 
-    let clone _solver = Fmt.failwith "Bitwuzla_mappings: clone not implemented"
+    let clone _solver =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let push solver = Solver.push solver 1
 
     let pop solver n = Solver.pop solver n
 
-    let reset _ = Fmt.failwith "Bitwuzla_mappings: reset not implemented"
+    let reset _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let add ?ctx:_ solver ts = List.iter (Solver.assert_formula solver) ts
 
@@ -573,40 +625,42 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
   module Optimizer = struct
     let make _ =
-      Fmt.failwith "Bitwuzla_mappings: Optimizer.make not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let push _ =
-      Fmt.failwith "Bitwuzla_mappings: Optimizer.push not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let pop _ = Fmt.failwith "Bitwuzla_mappings: Optimizer.pop not implemented"
+    let pop _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let add _ = Fmt.failwith "Bitwuzla_mappings: Optimizer.add not implemented"
+    let add _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let check _ =
-      Fmt.failwith "Bitwuzla_mappings: Optimizer.check not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let model _ =
-      Fmt.failwith "Bitwuzla_mappings: Optimizer.model not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let maximize _ =
-      Fmt.failwith "Bitwuzla_mappings: Optimizer.maximize not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let minimize _ =
-      Fmt.failwith "Bitwuzla_mappings: Optimizer.minimize not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let interrupt _ =
-      Fmt.failwith "Bitwuzla_mappings: Optimizer.interrupt not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let get_statistics _ =
-      Fmt.failwith "Bitwuzla_mappings: Solver.get_statistics not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let pp_statistics _ =
-      Fmt.failwith "Bitwuzla_mappings: Optimizer.pp_statistics not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
   end
 
   module Smtlib = struct
     let pp ?name:_ ?logic:_ ?status:_ _fmt _ =
-      Fmt.failwith "Bitwuzla_mappings: Smtlib.pp not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
   end
 end
 

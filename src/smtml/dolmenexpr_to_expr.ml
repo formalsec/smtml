@@ -252,7 +252,7 @@ module DolmenIntf = struct
     let index_of t ~sub ~pos = DTerm.String.index_of t sub pos
 
     let last_index_of _t ~sub:_ =
-      Fmt.failwith "%s:%d: %s not implemented" __FILE__ __LINE__ __FUNCTION__
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let replace t ~pattern ~with_ = DTerm.String.replace t pattern with_
 
@@ -342,15 +342,20 @@ module DolmenIntf = struct
 
     let rotate_right t1 t2 = DTerm.Bitv.rotate_right (int_of_term t2) t1
 
-    let nego _ = Fmt.failwith "Dolmenexpr: nego not implemented"
+    let nego _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let addo ~signed:_ = Fmt.failwith "Dolmenexpr: addo not implemented"
+    let addo ~signed:_ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let subo ~signed:_ = Fmt.failwith "Dolmenexpr: subo not implemented"
+    let subo ~signed:_ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let mulo ~signed:_ = Fmt.failwith "Dolmenexpr: mulo not implemented"
+    let mulo ~signed:_ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let divo _ = Fmt.failwith "Dolmenexpr: divo not implemented"
+    let divo _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let lt = DTerm.Bitv.slt
 

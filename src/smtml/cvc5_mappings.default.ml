@@ -64,9 +64,11 @@ module Fresh_cvc5 () = struct
 
   let ite cond t1 t2 = Term.mk_term tm Kind.Ite [| cond; t1; t2 |]
 
-  let forall _ = Fmt.failwith "Cvc5_mappings: forall not implemented"
+  let forall _ =
+    Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-  let exists _ = Fmt.failwith "Cvc5_mappings: exists not implemented"
+  let exists _ =
+    Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
   module Types = struct
     let int = Sort.mk_int_sort tm
@@ -124,7 +126,8 @@ module Fresh_cvc5 () = struct
 
     let to_real t = Term.mk_term tm Kind.To_real [| t |]
 
-    let to_bv _m _t = Fmt.failwith "Cvc5_mappings: Int.to_bv not implemented"
+    let to_bv _m _t =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let add t1 t2 = Term.mk_term tm Kind.Add [| t1; t2 |]
 
@@ -204,9 +207,11 @@ module Fresh_cvc5 () = struct
     let is_suffix t1 ~suffix =
       Term.mk_term tm Kind.String_suffix [| t1; suffix |]
 
-    let lt _ = Fmt.failwith "Cvc5_mappings: String.lt not implemented"
+    let lt _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let le _ = Fmt.failwith "Cvc5_mappings: String.le not implemented"
+    let le _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let sub s ~pos ~len = Term.mk_term tm Kind.String_substr [| s; pos; len |]
 
@@ -214,7 +219,7 @@ module Fresh_cvc5 () = struct
       Term.mk_term tm Kind.String_indexof [| t1; sub; pos |]
 
     let last_index_of _t ~sub:_ =
-      Fmt.failwith "%s:%d: %s not implemented" __FILE__ __LINE__ __FUNCTION__
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let replace t1 ~pattern ~with_ =
       Term.mk_term tm Kind.String_replace [| t1; pattern; with_ |]
@@ -269,7 +274,7 @@ module Fresh_cvc5 () = struct
     let lognot t = Term.mk_term tm Kind.Bitvector_not [| t |]
 
     let to_int ~signed:_ _t =
-      Fmt.failwith "Cvc5_mappings: Int.to_int not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let add t1 t2 = Term.mk_term tm Kind.Bitvector_add [| t1; t2 |]
 
@@ -293,7 +298,8 @@ module Fresh_cvc5 () = struct
 
     let lshr t1 t2 = Term.mk_term tm Kind.Bitvector_lshr [| t1; t2 |]
 
-    let smod _ = Fmt.failwith "Cvc5_mappings: smod not implemented"
+    let smod _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let rem t1 t2 = Term.mk_term tm Kind.Bitvector_srem [| t1; t2 |]
 
@@ -305,15 +311,20 @@ module Fresh_cvc5 () = struct
     let rotate_right t1 t2 =
       Term.mk_term tm Kind.Bitvector_rotate_right [| t1; t2 |]
 
-    let nego _ = Fmt.failwith "Cvc5_mappings: nego not implemented"
+    let nego _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let addo ~signed:_ = Fmt.failwith "Cvc5_mappings: addo not implemented"
+    let addo ~signed:_ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let subo ~signed:_ = Fmt.failwith "Cvc5_mappings: subo not implemented"
+    let subo ~signed:_ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let mulo ~signed:_ = Fmt.failwith "Cvc5_mappings: mulo not implemented"
+    let mulo ~signed:_ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let divo _ = Fmt.failwith "Cvc5_mappings: divo not support not implemented"
+    let divo _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let lt t1 t2 = Term.mk_term tm Kind.Bitvector_slt [| t1; t2 |]
 
@@ -403,7 +414,9 @@ module Fresh_cvc5 () = struct
       match es + eb with
       | 32 -> v32 (Int32.bits_of_float f) es eb
       | 64 -> v64 (Int64.bits_of_float f) es eb
-      | _ -> Fmt.failwith "Cvc5_mappings: Unsupported floating-point size"
+      | _ ->
+        Fmt.failwith "%s:%d: Unsupported floating-point size" __MODULE__
+          __LINE__
 
     let neg t = Term.mk_term tm Kind.Floatingpoint_neg [| t |]
 
@@ -492,7 +505,8 @@ module Fresh_cvc5 () = struct
       type t = [ `Adt_constructor ]
 
       let make _ ~fields:_ =
-        Fmt.failwith "Cvc5_mappings: Adt.Cons.make not implemented"
+        Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__
+          __FUNCTION__
     end
 
     type t = [ `Adt ]
@@ -502,19 +516,19 @@ module Fresh_cvc5 () = struct
     let ty _ = assert false
 
     let constructor _ =
-      Fmt.failwith "Cvc5_mappings: Adt.get_constructors not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let selector _ =
-      Fmt.failwith "Cvc5_mappings: Adt.get_recognizers not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let tester _ =
-      Fmt.failwith "Cvc5_mappings: Adt.get_accessors not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
   end
 
   (* TODO *)
   module Model = struct
     let get_symbols _ =
-      Fmt.failwith "Cvc5_mappings: get_symbols not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let eval ?ctx:_ ?completion:_ solver term =
       Some (Solver.get_value solver term)
@@ -578,37 +592,43 @@ module Fresh_cvc5 () = struct
 
   (* Not supported *)
   module Optimizer = struct
-    let make _ = Fmt.failwith "Cvc5_mappings: Optimizer.make not implemented"
+    let make _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let push _ = Fmt.failwith "Cvc5_mappings: Optimizer.push not implemented"
+    let push _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let pop _ = Fmt.failwith "Cvc5_mappings: Optimizer.pop not implemented"
+    let pop _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let add _ = Fmt.failwith "Cvc5_mappings: Optimizer.add not implemented"
+    let add _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let check _ = Fmt.failwith "Cvc5_mappings: Optimizer.check not implemented"
+    let check _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let model _ = Fmt.failwith "Cvc5_mappings: Optimizer.model not implemented"
+    let model _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let maximize _ =
-      Fmt.failwith "Cvc5_mappings: Optimizer.maximize not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let minimize _ =
-      Fmt.failwith "Cvc5_mappings: Optimizer.minimize not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let interrupt _ =
-      Fmt.failwith "Cvc5_mappings: Optimizer.interrupt not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let pp_statistics _ =
-      Fmt.failwith "Cvc5_mappings: Optimizer.pp_statistics not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let get_statistics _ =
-      Fmt.failwith "Cvc5_mappings: Optimizer.get_statistics not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
   end
 
   module Smtlib = struct
     let pp ?name:_ ?logic:_ ?status:_ _fmt _ =
-      Fmt.failwith "Cvc5_mappings: Smtlib.pp not implemented"
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
   end
 end
 
