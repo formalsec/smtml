@@ -76,7 +76,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           match op with
           | Unop.Not -> M.not_ t
           | op ->
-            Fmt.failwith {|Bool: Unsupported unary operator "%a"|} Unop.pp op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Unop.pp op
 
         let binop op t1 t2 =
           match op with
@@ -85,21 +86,23 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | Xor -> M.xor t1 t2
           | Implies -> M.implies t1 t2
           | op ->
-            Fmt.failwith {|Bool: Unsupported binary operator "%a"|} Binop.pp op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Binop.pp op
 
         let triop op t1 t2 t3 =
           match op with
           | Triop.Ite -> M.ite t1 t2 t3
           | op ->
-            Fmt.failwith {|Bool: Unsupported ternary operator "%a"|} Triop.pp op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Triop.pp op
 
         let relop op e1 e2 =
           match op with
           | Relop.Eq -> M.eq e1 e2
           | Ne -> M.distinct [ e1; e2 ]
           | _ ->
-            Fmt.failwith {|Bool: Unsupported relational operator "%a"|} Relop.pp
-              op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Relop.pp op
 
         let naryop op l =
           match op with
@@ -107,10 +110,12 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | Logor -> M.logor l
           | Distinct -> M.distinct l
           | _ ->
-            Fmt.failwith {|Bool: Unsupported n-ary operator "%a"|} Naryop.pp op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Naryop.pp op
 
         let cvtop op _e =
-          Fmt.failwith {|Bool: Unsupported convert operator "%a"|} Cvtop.pp op
+          Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+            __FUNCTION__ Cvtop.pp op
       end
 
       module Int_impl = struct
@@ -120,7 +125,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           match op with
           | Unop.Neg -> M.Int.neg t
           | op ->
-            Fmt.failwith {|Int: Unsupported unop operator "%a"|} Unop.pp op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Unop.pp op
 
         let binop op t1 t2 =
           match op with
@@ -131,7 +137,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | Rem -> M.Int.rem t1 t2
           | Pow -> M.Int.pow t1 t2
           | op ->
-            Fmt.failwith {|Int: Unsupported binop operator "%a"|} Binop.pp op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Binop.pp op
 
         let relop op t1 t2 =
           match op with
@@ -140,13 +147,15 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | Lt -> M.Int.lt t1 t2
           | Le -> M.Int.le t1 t2
           | op ->
-            Fmt.failwith {|Int: Unsupported relop operator "%a"|} Relop.pp op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Relop.pp op
 
         let cvtop op e =
           match op with
           | Cvtop.Reinterpret_float -> M.Real.to_int e
           | op ->
-            Fmt.failwith {|Int: Unsupported cvtop operator "%a"|} Cvtop.pp op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Cvtop.pp op
       end
 
       module Real_impl = struct
@@ -163,7 +172,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
             ite (eq (Int.to_real x_int) e) x_int (Int.add x_int (int 1))
           | Floor -> Real.to_int e
           | Nearest | Is_nan | _ ->
-            Fmt.failwith {|Real: Unsupported unop operator "%a"|} Unop.pp op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Unop.pp op
 
         let binop op e1 e2 =
           match op with
@@ -175,7 +185,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | Min -> M.ite (M.Real.le e1 e2) e1 e2
           | Max -> M.ite (M.Real.ge e1 e2) e1 e2
           | _ ->
-            Fmt.failwith {|Real: Unsupported binop operator "%a"|} Binop.pp op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Binop.pp op
 
         let relop op e1 e2 =
           match op with
@@ -184,7 +195,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | Lt -> M.Real.lt e1 e2
           | Le -> M.Real.le e1 e2
           | _ ->
-            Fmt.failwith {|Real: Unsupported relop operator "%a"|} Relop.pp op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Relop.pp op
 
         let cvtop op e =
           match op with
@@ -192,7 +204,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | OfString -> M.Func.apply str2real [ e ]
           | Reinterpret_int -> M.Int.to_real e
           | op ->
-            Fmt.failwith {|Real: Unsupported cvtop operator "%a"|} Cvtop.pp op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Cvtop.pp op
       end
 
       module String_impl = struct
@@ -203,7 +216,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | Unop.Length -> M.String.length e
           | Trim -> M.Func.apply str_trim [ e ]
           | op ->
-            Fmt.failwith {|String: Unsupported unop operator "%a"|} Unop.pp op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Unop.pp op
 
         let binop op e1 e2 =
           match op with
@@ -214,7 +228,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | String_in_re -> M.String.in_re e1 e2
           | String_last_index -> M.String.last_index_of e1 ~sub:e2
           | _ ->
-            Fmt.failwith {|String: Unsupported binop operator "%a"|} Binop.pp op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Binop.pp op
 
         let triop op e1 e2 e3 =
           match op with
@@ -226,7 +241,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | String_replace_re_all ->
             M.String.replace_re_all e1 ~pattern:e2 ~with_:e3
           | _ ->
-            Fmt.failwith {|String: Unsupported triop operator "%a"|} Triop.pp op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Triop.pp op
 
         let relop op e1 e2 =
           match op with
@@ -235,7 +251,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | Lt -> M.String.lt e1 e2
           | Le -> M.String.le e1 e2
           | _ ->
-            Fmt.failwith {|String: Unsupported relop operator "%a"|} Relop.pp op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Relop.pp op
 
         let cvtop = function
           | Cvtop.String_to_code -> M.String.to_code
@@ -244,14 +261,15 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | String_from_int -> M.String.of_int
           | String_to_re -> M.String.to_re
           | op ->
-            Fmt.failwith {|String: Unsupported cvtop operator "%a"|} Cvtop.pp op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Cvtop.pp op
 
         let naryop op es =
           match op with
           | Naryop.Concat -> M.String.concat es
           | _ ->
-            Fmt.failwith {|String: Unsupported naryop operator "%a"|} Naryop.pp
-              op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Naryop.pp op
       end
 
       module Regexp_impl = struct
@@ -263,7 +281,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | Regexp_comp -> M.Re.comp e
           | Regexp_loop (min, max) -> M.Re.loop ~min ~max e
           | op ->
-            Fmt.failwith {|Regexp: Unsupported unop operator "%a"|} Unop.pp op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Unop.pp op
 
         let binop op e1 e2 =
           match op with
@@ -271,27 +290,16 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | Regexp_inter -> M.Re.inter e1 e2
           | Regexp_diff -> M.Re.diff e1 e2
           | op ->
-            Fmt.failwith {|Regexp: Unsupported binop operator "%a"|} Binop.pp op
-
-        let _triop _ = function
-          | op ->
-            Fmt.failwith {|Regexp: Unsupported triop operator "%a"|} Triop.pp op
-
-        let _relop _ _ = function
-          | op ->
-            Fmt.failwith {|Regexp: Unsupported relop operator "%a"|} Relop.pp op
-
-        let _cvtop = function
-          | op ->
-            Fmt.failwith {|Regexp: Unsupported cvtop operator "%a"|} Cvtop.pp op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Binop.pp op
 
         let naryop op es =
           match op with
           | Naryop.Concat -> M.Re.concat es
           | Regexp_union -> M.Re.union es
           | op ->
-            Fmt.failwith {|Regexp: Unsupported naryop operator "%a"|} Naryop.pp
-              op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Naryop.pp op
       end
 
       module Bitv_impl = struct
@@ -365,7 +373,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | Neg -> Bitv.neg t
           | Not -> Bitv.lognot t
           | op ->
-            Fmt.failwith {|Bitv: Unsupported unary operator "%a"|} Unop.pp op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Unop.pp op
 
         let binop op t1 t2 =
           match op with
@@ -385,10 +394,12 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | Rotl -> Bitv.rotate_left t1 t2
           | Rotr -> Bitv.rotate_right t1 t2
           | op ->
-            Fmt.failwith {|Bitv: Unsupported binary operator "%a"|} Binop.pp op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Binop.pp op
 
         let triop op _ _ _ =
-          Fmt.failwith {|Bitv: Unsupported triop operator "%a"|} Triop.pp op
+          Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+            __FUNCTION__ Triop.pp op
 
         let relop op e1 e2 =
           match op with
@@ -407,7 +418,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
             | 32 -> Func.apply f32_to_i32 [ t ]
             | 64 -> Func.apply f64_to_i64 [ t ]
             | _ ->
-              Fmt.failwith "to_ieee_bv: unsupported bitwidth size of '%d'"
+              Fmt.failwith "%s: unsupported bitwidth size of '%d'" __FUNCTION__
                 bitwidth
             end
 
@@ -427,7 +438,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
               (v @@ Bitvector.make Z.one bitwidth)
               (v @@ Bitvector.make Z.zero bitwidth)
           | _ ->
-            Fmt.failwith {|Bitv: Unsupported convert operator "%a"|} Cvtop.pp op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Cvtop.pp op
       end
 
       module type Float_sig = sig
@@ -466,7 +478,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | Trunc -> Float.round_to_integral ~rm:Float.Rounding_mode.rtz e
           | Nearest -> Float.round_to_integral ~rm:Float.Rounding_mode.rne e
           | _ ->
-            Fmt.failwith {|FPA: Unsupported unary operator "%a"|} Unop.pp op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Unop.pp op
 
         let binop op e1 e2 =
           match op with
@@ -481,10 +494,12 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
             let abs_float = Float.abs e1 in
             M.ite (Float.ge e2 (F.zero ())) abs_float (Float.neg abs_float)
           | _ ->
-            Fmt.failwith {|FPA: Unsupported binop operator "%a"|} Binop.pp op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Binop.pp op
 
         let triop op _ _ _ =
-          Fmt.failwith {|FPA: Unsupported triop operator "%a"|} Triop.pp op
+          Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+            __FUNCTION__ Triop.pp op
 
         let relop op e1 e2 =
           match op with
@@ -493,7 +508,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | Lt -> Float.lt e1 e2
           | Le -> Float.le e1 e2
           | _ ->
-            Fmt.failwith {|FPA: Unsupported relop operator "%a"|} Relop.pp op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Relop.pp op
 
         let cvtop op e =
           match op with
@@ -506,12 +522,13 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | Reinterpret_int -> Float.of_ieee_bv eb sb e
           | ToString ->
             (* TODO: FuncDecl.apply to_string [ e ] *)
-            Fmt.failwith "FPA: TODO(ToString)"
+            Fmt.failwith {|%s: Unsupported operator "ToString"|} __MODULE__
           | OfString ->
             (* TODO: FuncDecl.apply of_string [ e ] *)
-            Fmt.failwith "FPA: TODO(OfString)"
+            Fmt.failwith {|%s: Unsupported operator "OfString"|} __MODULE__
           | _ ->
-            Fmt.failwith {|FPA: Unsupported cvtop operator "%a"|} Cvtop.pp op
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Cvtop.pp op
       end
 
       module Float32_impl = Float_impl (struct
@@ -971,7 +988,9 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let add (o : optimize) exprs =
         match Stack.pop_opt o.ctx with
-        | None -> Fmt.failwith "Solver.add: current solver context not found"
+        | None ->
+          Fmt.failwith "%s.%s: current solver context not found" __MODULE__
+            __FUNCTION__
         | Some ctx ->
           let ctx, exprs = Encoder.encode_exprs ctx exprs in
           Stack.push ctx o.ctx;
@@ -981,13 +1000,17 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let model { opt; ctx } =
         match Stack.top_opt ctx with
-        | None -> Fmt.failwith "Solver.add: current solver context not found"
+        | None ->
+          Fmt.failwith "%s.%s: current solver context not found" __MODULE__
+            __FUNCTION__
         | Some ctx ->
           M.Optimizer.model opt |> Option.map (fun m -> { model = m; ctx })
 
       let maximize (o : optimize) (expr : Expr.t) =
         match Stack.pop_opt o.ctx with
-        | None -> Fmt.failwith "Solver.add: current solver context not found"
+        | None ->
+          Fmt.failwith "%s.%s: current solver context not found" __MODULE__
+            __FUNCTION__
         | Some ctx ->
           let ctx, expr = Encoder.encode_expr ctx expr in
           Stack.push ctx o.ctx;
@@ -995,7 +1018,9 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let minimize (o : optimize) (expr : Expr.t) =
         match Stack.pop_opt o.ctx with
-        | None -> Fmt.failwith "Solver.add: current solver context not found"
+        | None ->
+          Fmt.failwith "%s.%s: current solver context not found" __MODULE__
+            __FUNCTION__
         | Some ctx ->
           let ctx, expr = Encoder.encode_expr ctx expr in
           Stack.push ctx o.ctx;
