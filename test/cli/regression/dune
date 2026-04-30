@@ -3,6 +3,12 @@
  (deps %{bin:smtml} test_pr_71.smtml))
 
 (cram
+ (applies_to test_pr611)
+ (enabled_if
+  (and %{lib-available:z3} %{lib-available:bitwuzla-cxx}))
+ (deps %{bin:smtml} test_pr611_z3.smt2 test_pr611_bitwuzla.smt2))
+
+(cram
  (applies_to test_issue_183)
  (enabled_if
   (not %{lib-available:colibri2.core})))
