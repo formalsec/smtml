@@ -8,8 +8,8 @@ val read_marshalled_file :
      , [ `Msg of string ] )
      result
 
-val extract_feats : Expr.t list -> Features.t
+val extract_feats : Expr.t list -> Feature_map.t
 
-val extract_feats_wtime : Expr.t list -> int64 -> Features.t
+val extract_feats_wtime : Expr.t list -> int64 -> Feature_map.t
 
 val cmd : Fpath.t -> Fpath.t -> unit
