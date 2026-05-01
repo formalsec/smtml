@@ -2,14 +2,6 @@
 (* Copyright (C) 2023-2026 formalsec *)
 (* Written by Hichem Rami Ait El Hara *)
 
-module FeatMap : sig
-  include Map.S with type key = string
-
-  val find_def0 : key -> int t -> int
-end
-
-type features = int FeatMap.t
-
 type score
 
 val compare_score : score -> score -> int
@@ -44,4 +36,4 @@ val read_models_from_file : string -> (string * t) list
 
 val choose_best : (score * 'a) list -> 'a
 
-val predict : features -> t -> score
+val predict : Features.t -> t -> score
