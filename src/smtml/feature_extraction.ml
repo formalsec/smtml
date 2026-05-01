@@ -3,7 +3,6 @@
 (* Written by the Smtml programmers *)
 
 open Smtml_prelude.Result.Syntax
-open Regression_model
 
 let string_of_unop (unop : Ty.Unop.t) : string =
   match unop with
@@ -328,14 +327,11 @@ let final_names =
 
 (* initialize feature map with all zeros *)
 
-let extract_feats_aux : Expr.t -> int FeatMap.t =
-  let incr_feat feats key =
-    FeatMap.update key
-      (function None -> Some 1 | Some c -> Some (c + 1))
-      feats
-  in
-  let rec visit depth feats (e : Expr.t) =
-    let feats = incr_feat feats (string_of_expr_kind e.node (Expr.ty e)) in
+let extract_feats_aux : Expr.t -> Features.t =
+  let rec visit depth (feats : Features.t) (e : Expr.t) =
+    let feats =
+      Features.incr_feat (string_of_expr_kind e.node (Expr.ty e)) feats
+    in
     match Expr.view e with
     | Val _ | Symbol _ -> (depth, feats)
     | Ptr { offset; _ } -> visit (depth + 1) feats offset
@@ -347,8 +343,8 @@ let extract_feats_aux : Expr.t -> int FeatMap.t =
         (depth + 1, feats)
         lst
     | Naryop (ty, naryop, lst) ->
-      let feats = incr_feat feats (string_of_ty ty) in
-      let feats = incr_feat feats (string_of_naryop naryop) in
+      let feats = Features.incr_feat (string_of_ty ty) feats in
+      let feats = Features.incr_feat (string_of_naryop naryop) feats in
       List.fold_left
         (fun (depth, feats) e ->
           let depth', feats = visit depth feats e in
@@ -363,23 +359,23 @@ let extract_feats_aux : Expr.t -> int FeatMap.t =
         (depth + 1, feats)
         lst
     | Unop (ty, unop, t) ->
-      let feats = incr_feat feats (string_of_ty ty) in
-      let feats = incr_feat feats (string_of_unop unop) in
+      let feats = Features.incr_feat (string_of_ty ty) feats in
+      let feats = Features.incr_feat (string_of_unop unop) feats in
       visit (depth + 1) feats t
     | Cvtop (ty, cvtop, t) ->
-      let feats = incr_feat feats (string_of_ty ty) in
-      let feats = incr_feat feats (string_of_cvtop cvtop) in
+      let feats = Features.incr_feat (string_of_ty ty) feats in
+      let feats = Features.incr_feat (string_of_cvtop cvtop) feats in
       visit (depth + 1) feats t
     | Extract (t, _, _) -> visit (depth + 1) feats t
     | Binop (ty, binop, e1, e2) ->
-      let feats = incr_feat feats (string_of_ty ty) in
-      let feats = incr_feat feats (string_of_binop binop) in
+      let feats = Features.incr_feat (string_of_ty ty) feats in
+      let feats = Features.incr_feat (string_of_binop binop) feats in
       let depth1, feats = visit (depth + 1) feats e1 in
       let depth2, feats = visit (depth + 1) feats e2 in
       (Int.max depth1 depth2, feats)
     | Relop (ty, relop, e1, e2) ->
-      let feats = incr_feat feats (string_of_ty ty) in
-      let feats = incr_feat feats (string_of_relop relop) in
+      let feats = Features.incr_feat (string_of_ty ty) feats in
+      let feats = Features.incr_feat (string_of_relop relop) feats in
       let depth1, feats = visit (depth + 1) feats e1 in
       let depth2, feats = visit (depth + 1) feats e2 in
       (Int.max depth1 depth2, feats)
@@ -388,8 +384,8 @@ let extract_feats_aux : Expr.t -> int FeatMap.t =
       let depth2, feats = visit (depth + 1) feats e2 in
       (Int.max depth1 depth2, feats)
     | Triop (ty, triop, e1, e2, e3) ->
-      let feats = incr_feat feats (string_of_ty ty) in
-      let feats = incr_feat feats (string_of_triop triop) in
+      let feats = Features.incr_feat (string_of_ty ty) feats in
+      let feats = Features.incr_feat (string_of_triop triop) feats in
       let depth1, feats = visit (depth + 1) feats e1 in
       let depth2, feats = visit (depth + 1) feats e2 in
       let depth3, feats = visit (depth + 1) feats e3 in
@@ -403,8 +399,8 @@ let extract_feats_aux : Expr.t -> int FeatMap.t =
         (t :: lst)
   in
   fun expr ->
-    let depth, feats = visit 1 FeatMap.empty expr in
-    FeatMap.add "depth" depth feats
+    let depth, feats = visit 1 Features.empty expr in
+    Features.add_depth depth feats
 
 let rec read_marshalled_queries results ic : unit =
   let res :
@@ -427,34 +423,23 @@ let read_marshalled_file (path : Fpath.t) =
   in
   res >>| fun () -> List.rev !results
 
-let extract_feats assertions =
+let extract_feats assertions : Features.t =
   let feats, depth_acc =
     List.fold_left
       (fun (feats_acc, depth_acc) expr ->
         let feats = extract_feats_aux expr in
-        let depth_acc = depth_acc + FeatMap.find_def0 "depth" feats in
-        let feats_acc =
-          FeatMap.union
-            (fun key v1 v2 ->
-              match key with
-              | "depth" -> Some (Int.max v1 v2) (* actually max_depth *)
-              | _ -> Some (v1 + v2) )
-            feats feats_acc
-        in
+        let depth_acc = depth_acc + Features.get_depth feats in
+        let feats_acc = Features.union feats feats_acc in
         (feats_acc, depth_acc) )
-      (FeatMap.empty, 0) assertions
+      (Features.empty, 0) assertions
   in
   let nb_exprs = List.length assertions in
-  FeatMap.add "nb_queries" nb_exprs
-  @@ FeatMap.add "mean_depth" (depth_acc / nb_exprs)
-  @@ FeatMap.add "max_depth"
-       ( match FeatMap.find_opt "depth" feats with
-       | None -> assert false
-       | Some v -> v )
-       (FeatMap.remove "depth" feats)
+  Features.add_nb_queries nb_exprs
+  @@ Features.add_mean_depth (depth_acc / nb_exprs)
+  @@ Features.rename_depth_to_max_depth feats
 
 let extract_feats_wtime assertions runtime =
-  FeatMap.add "time" (Int64.to_int runtime) (extract_feats assertions)
+  Features.add_time (Int64.to_int runtime) (extract_feats assertions)
 
 let cmd marshalled_file output_csv =
   let res =
@@ -473,7 +458,7 @@ let cmd marshalled_file output_csv =
                     if String.equal name "solver" then solver_name
                     else if String.equal name "model" then Bool.to_string model
                     else
-                      let count = FeatMap.find_def0 name feats in
+                      let count = Features.get_feat name feats in
                       string_of_int count )
                   final_names
               in

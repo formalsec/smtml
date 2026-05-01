@@ -4,16 +4,6 @@
 
 open Yojson.Safe.Util
 
-module FeatMap = struct
-  include Map.Make (String)
-
-  let find_def0 k m = match find_opt k m with Some n -> n | None -> 0
-end
-(* TODO: use ints or an ADT instead of strings for keys, though strings
-         give a convenient practicality. *)
-
-type features = int FeatMap.t
-
 type score = float
 
 let pp_float_aux fmt f =
@@ -103,10 +93,10 @@ let read_models_from_file filename =
   |> List.map (fun (solver_name, solver_json) ->
     (solver_name, model_of_json solver_json) )
 
-let rec eval_tree (feats : int FeatMap.t) = function
+let rec eval_tree (feats : Features.t) = function
   | Leaf v -> v
   | Node { feature; threshold; left; right } ->
-    let value = score_of_int (FeatMap.find_def0 feature feats) in
+    let value = score_of_int (Features.get_feat feature feats) in
     if compare_score value threshold <= 0 then eval_tree feats left
     else eval_tree feats right
 
@@ -115,7 +105,7 @@ let choose_best scores =
   | [] | [ _ ] -> assert false
   | (_, hd) :: _ -> hd
 
-let predict (feats : int FeatMap.t) = function
+let predict (feats : Features.t) = function
   | DTModel t -> eval_tree feats t
   | GBModel gb ->
     let sum =
