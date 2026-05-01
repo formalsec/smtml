@@ -36,4 +36,4 @@ val read_models_from_file : string -> (string * t) list
 
 val choose_best : (score * 'a) list -> 'a
 
-val predict : Features.t -> t -> score
+val predict : Feature_map.t -> t -> score

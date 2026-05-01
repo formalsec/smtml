@@ -93,10 +93,10 @@ let read_models_from_file filename =
   |> List.map (fun (solver_name, solver_json) ->
     (solver_name, model_of_json solver_json) )
 
-let rec eval_tree (feats : Features.t) = function
+let rec eval_tree (feats : Feature_map.t) = function
   | Leaf v -> v
   | Node { feature; threshold; left; right } ->
-    let value = score_of_int (Features.get_feat feature feats) in
+    let value = score_of_int (Feature_map.get_feat feature feats) in
     if compare_score value threshold <= 0 then eval_tree feats left
     else eval_tree feats right
 
@@ -105,7 +105,7 @@ let choose_best scores =
   | [] | [ _ ] -> assert false
   | (_, hd) :: _ -> hd
 
-let predict (feats : Features.t) = function
+let predict (feats : Feature_map.t) = function
   | DTModel t -> eval_tree feats t
   | GBModel gb ->
     let sum =
