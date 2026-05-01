@@ -87,7 +87,6 @@
   ppx_enumerate
   (prelude
    (>= "0.5"))
-  rresult
   (scfg
    (>= "0.5"))
   (mtime

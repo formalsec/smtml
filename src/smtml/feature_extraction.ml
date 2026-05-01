@@ -2,8 +2,8 @@
 (* Copyright (C) 2023-2026 formalsec *)
 (* Written by the Smtml programmers *)
 
+open Smtml_prelude.Result.Syntax
 open Regression_model
-open Rresult
 
 let string_of_unop (unop : Ty.Unop.t) : string =
   match unop with
@@ -483,6 +483,6 @@ let cmd marshalled_file output_csv =
         Ok () )
       entries
   in
-  match Rresult.R.join (Rresult.R.join res) with
+  match Result.join (Result.join res) with
   | Error (`Msg m) -> Fmt.failwith "%s" m
   | Ok () -> Log.debug (fun k -> k "Done writing to %a\n%!" Fpath.pp output_csv)

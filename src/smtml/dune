@@ -76,7 +76,6 @@
   logs
   ocaml_intrinsics
   ppx_enumerate
-  rresult
   unix
   scfg
   smtml.prelude
