@@ -698,6 +698,9 @@ end
 module Bitv128 : sig
   include Bitv.S with type w = bitv128
 
+  (** [to_bytes t] splits the 128-bit vector into 16 bytes (little-endian). *)
+  val to_bytes : t -> bitv8 expr list
+
   (** [of_i32x4 a b c d] constructs a 128-bit vector from four 32-bit lanes. *)
   val of_i32x4 : bitv32 expr -> bitv32 expr -> bitv32 expr -> bitv32 expr -> t
 
