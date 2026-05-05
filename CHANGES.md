@@ -1,7 +1,21 @@
 # Changelog
 
+## 0.27.0 - 2026-05-04
+
+- 2026-05-02 Move feature conversion from feature_extraction.ml to feature.ml
+- 2026-05-02 Renames features.ml to feature_map.ml
+- 2026-05-02 Move features into its own module
+- 2026-05-02 Improve failure info in mappings
+- 2026-05-02 Remove dep on rresult
+- 2026-04-30 Add SMTZilla examples where different solvers are used
+- 2026-04-30 Fix smtzilla python script and model
+- 2026-04-29 Expose raw evaluation of binop and relop in eval.ml
+- 2026-04-28 Connect `String_last_index` to z3 and expose to solver mappings
+- 2026-04-28 Update dune-site and dune-build-info lowerbounds
+
 ## 0.26.0 - 2026-04-27
 
+- 2026-04-27 Release 0.26.0
 - 2026-04-27 Disable implicit transitive deps
 - 2026-04-27 Add rresult to dune-project
 - 2026-04-27 Explicitly depend on rresult
