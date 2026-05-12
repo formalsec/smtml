@@ -391,10 +391,8 @@ let rec binop ty op hte1 hte2 =
   | (String_contains | String_prefix | String_suffix), _, Val (Str "") ->
     value True
   | List_cons, _, List es -> make (List (hte1 :: es))
-  | List_append, List _, (List [] | Val (List [])) -> hte1
-  | List_append, (List [] | Val (List [])), List _ -> hte2
-  | List_append, List l0, Val (List l1) -> make (List (l0 @ List.map value l1))
-  | List_append, Val (List l0), List l1 -> make (List (List.map value l0 @ l1))
+  | List_append, List _, List [] -> hte1
+  | List_append, List [], List _ -> hte2
   | List_append, List l0, List l1 -> make (List (l0 @ l1))
   | _ -> raw_binop ty op hte1 hte2
 

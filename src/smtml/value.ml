@@ -13,7 +13,6 @@ type t =
   | Str of string
   | Num of Num.t
   | Bitv of Bitvector.t
-  | List of t list
   | App : [> `Op of string ] * t list -> t
   | Re_none
   | Re_all
@@ -29,7 +28,6 @@ let type_of (v : t) : Ty.t =
   | Str _ -> Ty_str
   | Num n -> Num.type_of n
   | Bitv bv -> Ty_bitv (Bitvector.numbits bv)
-  | List _ -> Ty_list
   | App _ -> Ty_app
   | Re_none | Re_all | Re_allchar -> Ty_regexp
   | Nothing -> Ty_none
@@ -43,12 +41,11 @@ let discr = function
   | Str _ -> 5
   | Num _ -> 6
   | Bitv _ -> 7
-  | List _ -> 8
-  | App _ -> 9
-  | Re_none -> 10
-  | Re_all -> 11
-  | Re_allchar -> 12
-  | Nothing -> 13
+  | App _ -> 8
+  | Re_none -> 0
+  | Re_all -> 10
+  | Re_allchar -> 11
+  | Nothing -> 12
 
 (* Optimized mixer (DJB2 variant). Inlines to simple arithmetic. *)
 let[@inline] combine h v = (h * 33) + v
@@ -63,7 +60,6 @@ let rec hash v =
   | Str s -> combine 6 (String.hash s)
   | Num n -> combine 7 (Num.hash n)
   | Bitv b -> combine 8 (Bitvector.hash b)
-  | List l -> List.fold_left (fun acc v -> combine acc (hash v)) 9 l
   | App (`Op s, args) ->
     let h = combine 10 (String.hash s) in
     List.fold_left (fun acc v -> combine acc (hash v)) h args
@@ -84,12 +80,11 @@ let rec compare (a : t) (b : t) : int =
   | Str a, Str b -> String.compare a b
   | Num a, Num b -> Num.compare a b
   | Bitv a, Bitv b -> Bitvector.compare a b
-  | List a, List b -> List.compare compare a b
   | App (`Op op1, vs1), App (`Op op2, vs2) ->
     let c = String.compare op1 op2 in
     if c = 0 then List.compare compare vs1 vs2 else c
-  | ( ( True | False | Unit | Int _ | Real _ | Str _ | Num _ | Bitv _ | List _
-      | App _ | Re_none | Re_all | Re_allchar | Nothing )
+  | ( ( True | False | Unit | Int _ | Real _ | Str _ | Num _ | Bitv _ | App _
+      | Re_none | Re_all | Re_allchar | Nothing )
     , _ ) ->
     (* TODO: I don't know if this is always semantically correct *)
     Int.compare (discr a) (discr b)
@@ -103,11 +98,10 @@ let rec equal (v1 : t) (v2 : t) : bool =
   | Str a, Str b -> String.equal a b
   | Num a, Num b -> Num.equal a b
   | Bitv a, Bitv b -> Bitvector.equal a b
-  | List l1, List l2 -> List.equal equal l1 l2
   | App (`Op op1, vs1), App (`Op op2, vs2) ->
     String.equal op1 op2 && List.equal equal vs1 vs2
-  | ( ( True | False | Unit | Int _ | Real _ | Str _ | Num _ | Bitv _ | List _
-      | App _ | Re_none | Re_all | Re_allchar | Nothing )
+  | ( ( True | False | Unit | Int _ | Real _ | Str _ | Num _ | Bitv _ | App _
+      | Re_none | Re_all | Re_allchar | Nothing )
     , _ ) ->
     false
 
@@ -123,11 +117,10 @@ let default_of_type = function
   | Ty_bitv m -> Bitv (Bitvector.make Z.zero m)
   | Ty_fp 32 -> Num (F32 0l)
   | Ty_fp 64 -> Num (F64 0L)
-  | Ty_list -> List []
   | Ty_unit -> Unit
   | Ty_none -> Nothing
   | Ty_regexp -> Re_none
-  | (Ty_fp _ | Ty_app | Ty_roundingMode) as ty ->
+  | (Ty_fp _ | Ty_app | Ty_roundingMode | Ty_list) as ty ->
     Fmt.failwith "No default value for type %a" Ty.pp ty
 
 let rec pp_with ~printer fmt = function
@@ -139,8 +132,6 @@ let rec pp_with ~printer fmt = function
   | Num x -> Num.pp_with ~printer fmt x
   | Bitv bv -> Bitvector.pp_with ~printer fmt bv
   | Str x -> Fmt.pf fmt "%S" x
-  | List l ->
-    (Fmt.hovbox ~indent:1 (Fmt.list ~sep:Fmt.comma (pp_with ~printer))) fmt l
   | App (`Op op, vs) ->
     Fmt.pf fmt "@[<hov 1>%s(%a)@]" op
       (Fmt.list ~sep:Fmt.comma (pp_with ~printer))
@@ -187,7 +178,7 @@ let of_string (cast : Ty.t) v =
   | Ty_app | Ty_list | Ty_none | Ty_unit | Ty_roundingMode ->
     Fmt.error_msg "unsupported parsing values of type %a" Ty.pp cast
 
-let rec to_json (v : t) : Yojson.Safe.t =
+let to_json (v : t) : Yojson.Safe.t =
   match v with
   | True -> `Bool true
   | False -> `Bool false
@@ -197,7 +188,6 @@ let rec to_json (v : t) : Yojson.Safe.t =
   | Str str -> `String str
   | Num n -> Num.to_json n
   | Bitv bv -> Bitvector.to_json bv
-  | List l -> `List (List.map to_json l)
   | Re_none -> `String "re.none"
   | Re_all -> `String "re.all"
   | Re_allchar -> `String "re.allchar"
@@ -217,7 +207,6 @@ module Smtlib = struct
     | Re_all -> Fmt.string fmt "re.all"
     | Re_allchar -> Fmt.string fmt "re.allchar"
     | Unit -> assert false
-    | List _ -> assert false
     | App _ -> assert false
     | Nothing -> assert false
 end

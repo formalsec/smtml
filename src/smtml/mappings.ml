@@ -580,7 +580,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Re_none -> M.Re.none ()
         | Re_all -> M.Re.all ()
         | Re_allchar -> M.Re.allchar ()
-        | List _ | App _ | Unit | Nothing ->
+        | App _ | Unit | Nothing ->
           Fmt.failwith "Unsupported encoding of value '%a'" Value.pp value
 
       let unop ty op t =

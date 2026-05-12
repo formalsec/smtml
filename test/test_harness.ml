@@ -50,8 +50,6 @@ module Infix = struct
 
   let float64 x = value (Num (F64 (Int64.bits_of_float x)))
 
-  let list x = value (List x)
-
   let app x = value (App (x, []))
 
   let symbol name ty = symbol (Symbol.make ty name)

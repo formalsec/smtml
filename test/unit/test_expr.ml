@@ -71,14 +71,9 @@ let test_unop_bool _ =
 let test_unop_list _ =
   let open Infix in
   let ty = Ty.Ty_list in
-  let vlist = list [ Int 1; Int 2; Int 3 ] in
   let x = symbol "x" Ty_int in
   let y = symbol "y" Ty_int in
   let slist = Expr.list [ x; y ] in
-  check (Expr.unop ty Head vlist) (int 1);
-  check (Expr.unop ty Tail vlist) (list [ Int 2; Int 3 ]);
-  check (Expr.unop ty Length vlist) (int 3);
-  check (Expr.unop ty Reverse vlist) (list [ Int 3; Int 2; Int 1 ]);
   check (Expr.unop ty Head slist) x;
   check (Expr.unop ty Tail slist) (Expr.list [ y ]);
   check (Expr.unop ty Length slist) (int 2);
@@ -161,17 +156,9 @@ let test_binop_string _ =
 let test_binop_list _ =
   let open Infix in
   let ty = Ty.Ty_list in
-  let clist = list [ Int 0; Int 1; Int 2 ] in
-  check (Expr.binop Ty_list At clist (int 0)) (int 0);
-  check (Expr.binop Ty_list List_cons (int 0) (list [ Int 1; Int 2 ])) clist;
-  check
-    (Expr.binop Ty_list List_append (list [ Int 0; Int 1 ]) (list [ Int 2 ]))
-    clist;
-  let slist2 = Expr.list [ int 0; int 1 ] in
-  let slist3 = Expr.list [ int 0; int 1; int 2 ] in
-  check (Expr.binop ty At slist3 (int 0)) (int 0);
-  check (Expr.binop ty List_append slist2 (list [ Int 2 ])) slist3;
-  check (Expr.binop ty List_cons (int 0) (Expr.list [ int 1; int 2 ])) slist3
+  let slist = Expr.list [ int 0; int 1; int 2 ] in
+  check (Expr.binop ty At slist (int 0)) (int 0);
+  check (Expr.binop ty List_cons (int 0) (Expr.list [ int 1; int 2 ])) slist
 
 let test_binop_i32 _ =
   let open Infix in
@@ -428,17 +415,9 @@ let test_triop_string _ =
     (Expr.triop ty String_replace (string "abcd") (string "bc") (string "ef"))
     (string "aefd")
 
-let test_triop_list _ =
-  let open Infix in
-  let ty = Ty.Ty_list in
-  check
-    (Expr.triop ty List_set (list [ Int 0; Int 1; Int 2 ]) (int 1) (int 3))
-    (list [ Int 0; Int 3; Int 2 ])
-
 let test_triop =
   [ "test_triop_bool" >:: test_triop_bool
   ; "test_triop_string" >:: test_triop_string
-  ; "test_triop_list" >:: test_triop_list
   ]
 
 let test_cvtop_int _ =

@@ -103,9 +103,6 @@ let[@inline] of_str n op v =
 
 let[@inline] to_str x = Value.Str x
 
-let[@inline] of_list n op v =
-  match v with Value.List x -> x | _ -> raise_type_mismatch n op v Ty_list
-
 let[@inline] of_bitv n op v =
   match v with Value.Bitv x -> x | _ -> raise_type_mismatch n op v (Ty_bitv 0)
 
@@ -450,60 +447,6 @@ module Str = struct
       in
       to_str s
     | _ -> eval_error (`Unsupported_operator (`Naryop op, Ty_str))
-end
-
-module Lst = struct
-  let[@inline] unop (op : Ty.Unop.t) (v : Value.t) : Value.t =
-    let lst = of_list 1 (`Unop op) v in
-    match op with
-    | Head ->
-      (* FIXME: Exception handling *)
-      begin match lst with hd :: _tl -> hd | [] -> assert false
-      end
-    | Tail ->
-      (* FIXME: Exception handling *)
-      begin match lst with _hd :: tl -> List tl | [] -> assert false
-      end
-    | Length -> to_int (List.length lst)
-    | Reverse -> List (List.rev lst)
-    | _ -> eval_error (`Unsupported_operator (`Unop op, Ty_list))
-
-  let[@inline] binop (op : Ty.Binop.t) v1 v2 =
-    let op' = `Binop op in
-    match op with
-    | At ->
-      let lst = of_list 1 op' v1 in
-      let i = of_int 2 op' v2 in
-      (* TODO: change datastructure? *)
-      begin match List.nth_opt lst i with
-      | None -> eval_error `Index_out_of_bounds
-      | Some v -> v
-      end
-    | List_cons -> List (v1 :: of_list 1 op' v2)
-    | List_append -> List (of_list 1 op' v1 @ of_list 2 op' v2)
-    | _ -> eval_error (`Unsupported_operator (`Binop op, Ty_list))
-
-  let[@inline] triop (op : Ty.Triop.t) (v1 : Value.t) (v2 : Value.t)
-    (v3 : Value.t) : Value.t =
-    let op' = `Triop op in
-    match op with
-    | List_set ->
-      let lst = of_list 1 op' v1 in
-      let i = of_int 2 op' v2 in
-      let rec set i lst v acc =
-        match (i, lst) with
-        | 0, _ :: tl -> List.rev_append acc (v :: tl)
-        | i, hd :: tl -> set (i - 1) tl v (hd :: acc)
-        | _, [] -> eval_error `Index_out_of_bounds
-      in
-      List (set i lst v3 [])
-    | _ -> eval_error (`Unsupported_operator (`Triop op, Ty_list))
-
-  let[@inline] naryop (op : Ty.Naryop.t) (vs : Value.t list) : Value.t =
-    let op' = `Naryop op in
-    match op with
-    | Concat -> List (List.concat_map (of_list 0 op') vs)
-    | _ -> eval_error (`Unsupported_operator (`Naryop op, Ty_list))
 end
 
 module I64 = struct
@@ -978,11 +921,11 @@ let unop ty op v =
   | Ty_real -> Real.unop op v
   | Ty_bool -> Bool.unop op v
   | Ty_str -> Str.unop op v
-  | Ty_list -> Lst.unop op v
   | Ty_bitv _ -> Bitv.unop op v
   | Ty_fp 32 -> F32.unop op v
   | Ty_fp 64 -> F64.unop op v
-  | Ty_fp _ | Ty_app | Ty_unit | Ty_none | Ty_regexp | Ty_roundingMode ->
+  | Ty_fp _ | Ty_app | Ty_list | Ty_unit | Ty_none | Ty_regexp | Ty_roundingMode
+    ->
     eval_error (`Unsupported_theory ty)
 
 let binop ty op v1 v2 =
@@ -991,18 +934,17 @@ let binop ty op v1 v2 =
   | Ty_real -> Real.binop op v1 v2
   | Ty_bool -> Bool.binop op v1 v2
   | Ty_str -> Str.binop op v1 v2
-  | Ty_list -> Lst.binop op v1 v2
   | Ty_bitv _ -> Bitv.binop op v1 v2
   | Ty_fp 32 -> F32.binop op v1 v2
   | Ty_fp 64 -> F64.binop op v1 v2
-  | Ty_fp _ | Ty_app | Ty_unit | Ty_none | Ty_regexp | Ty_roundingMode ->
+  | Ty_fp _ | Ty_app | Ty_list | Ty_unit | Ty_none | Ty_regexp | Ty_roundingMode
+    ->
     eval_error (`Unsupported_theory ty)
 
 let triop ty op v1 v2 v3 =
   match ty with
   | Ty.Ty_bool -> Bool.triop op v1 v2 v3
   | Ty_str -> Str.triop op v1 v2 v3
-  | Ty_list -> Lst.triop op v1 v2 v3
   | ty -> eval_error (`Unsupported_theory ty)
 
 let relop ty op v1 v2 =
@@ -1033,5 +975,4 @@ let naryop ty op vs =
   match ty with
   | Ty.Ty_bool -> Bool.naryop op vs
   | Ty_str -> Str.naryop op vs
-  | Ty_list -> Lst.naryop op vs
   | ty -> eval_error (`Unsupported_theory ty)

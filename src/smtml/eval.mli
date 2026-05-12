@@ -112,16 +112,6 @@ module Str : sig
   val naryop : Ty.Naryop.t -> Value.t list -> Value.t
 end
 
-module Lst : sig
-  val unop : Ty.Unop.t -> Value.t -> Value.t
-
-  val binop : Ty.Binop.t -> Value.t -> Value.t -> Value.t
-
-  val triop : Ty.Triop.t -> Value.t -> Value.t -> Value.t -> Value.t
-
-  val naryop : Ty.Naryop.t -> Value.t list -> Value.t
-end
-
 module Bitv : sig
   val unop : Ty.Unop.t -> Value.t -> Value.t
 
