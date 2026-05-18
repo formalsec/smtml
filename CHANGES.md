@@ -2,6 +2,7 @@
 
 ## 0.27.0 - 2026-05-15
 
+- 2026-05-15 Release 0.27.0
 - 2026-05-04 Add `Smtml.Typed.Bitv128.to_bytes`
 - 2026-05-02 Move feature conversion from feature_extraction.ml to feature.ml
 - 2026-05-02 Renames features.ml to feature_map.ml
