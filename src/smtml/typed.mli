@@ -701,20 +701,83 @@ module Bitv128 : sig
   (** [to_bytes t] splits the 128-bit vector into 16 bytes (little-endian). *)
   val to_bytes : t -> bitv8 expr list
 
-  (** [of_i32x4 a b c d] constructs a 128-bit vector from four 32-bit lanes. *)
+  (** [of_i8x16] constructs a 128-bit vector from sixteen 8-bit lanes. *)
+  val of_i8x16 :
+       bitv8 expr
+    -> bitv8 expr
+    -> bitv8 expr
+    -> bitv8 expr
+    -> bitv8 expr
+    -> bitv8 expr
+    -> bitv8 expr
+    -> bitv8 expr
+    -> bitv8 expr
+    -> bitv8 expr
+    -> bitv8 expr
+    -> bitv8 expr
+    -> bitv8 expr
+    -> bitv8 expr
+    -> bitv8 expr
+    -> bitv8 expr
+    -> t
+
+  (** [to_i8x16] splits the 128-bit vector into sixteen 8-bit lanes. *)
+  val to_i8x16 :
+       t
+    -> bitv8 expr
+       * bitv8 expr
+       * bitv8 expr
+       * bitv8 expr
+       * bitv8 expr
+       * bitv8 expr
+       * bitv8 expr
+       * bitv8 expr
+       * bitv8 expr
+       * bitv8 expr
+       * bitv8 expr
+       * bitv8 expr
+       * bitv8 expr
+       * bitv8 expr
+       * bitv8 expr
+       * bitv8 expr
+
+  (** [of_i16x8] constructs a 128-bit vector from eight 16-bit lanes. *)
+  val of_i16x8 :
+       bitv16 expr
+    -> bitv16 expr
+    -> bitv16 expr
+    -> bitv16 expr
+    -> bitv16 expr
+    -> bitv16 expr
+    -> bitv16 expr
+    -> bitv16 expr
+    -> t
+
+  (** [to_i16x8] splits the 128-bit vector into eight 16-bit lanes. *)
+  val to_i16x8 :
+       t
+    -> bitv16 expr
+       * bitv16 expr
+       * bitv16 expr
+       * bitv16 expr
+       * bitv16 expr
+       * bitv16 expr
+       * bitv16 expr
+       * bitv16 expr
+
+  (** [of_i32x4] constructs a 128-bit vector from four 32-bit lanes. *)
   val of_i32x4 : bitv32 expr -> bitv32 expr -> bitv32 expr -> bitv32 expr -> t
 
-  (** [to_i32x4 t] splits the 128-bit vector into four 32-bit lanes. *)
+  (** [to_i32x4] splits the 128-bit vector into four 32-bit lanes. *)
   val to_i32x4 : t -> bitv32 expr * bitv32 expr * bitv32 expr * bitv32 expr
 
-  (** [of_int64x2 high low] constructs a 128-bit vector from two 64-bit
-      integers. *)
+  (** [of_int64x2] constructs a 128-bit vector from two 64-bit integers. *)
   val of_int64x2 : Int64.t -> Int64.t -> t
 
-  (** [of_i64x2 a b] constructs a 128-bit vector from two 64-bit lanes. *)
+  (** [of_i64x2] constructs a 128-bit vector from two 64-bit lanes. *)
   val of_i64x2 : bitv64 expr -> bitv64 expr -> t
 
-  (** [to_i64x2 t] splits the 128-bit vector into two 64-bit terms. *)
+  (** [to_i64x2] splits the 128-bit vector into two 64-bit terms. *)
   val to_i64x2 : t -> bitv64 expr * bitv64 expr
 end
 

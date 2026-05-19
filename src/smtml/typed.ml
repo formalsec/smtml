@@ -420,14 +420,55 @@ module Bitv128 = struct
     ; extract x ~high:127 ~low:120
     ]
 
+  let of_i8x16 a b c d e f g h i j k l m n o p =
+    Bitv64.concat
+      (Bitv32.concat
+         (Bitv16.concat (Bitv8.concat a b) (Bitv8.concat c d))
+         (Bitv16.concat (Bitv8.concat e f) (Bitv8.concat g h)) )
+      (Bitv32.concat
+         (Bitv16.concat (Bitv8.concat i j) (Bitv8.concat k l))
+         (Bitv16.concat (Bitv8.concat m n) (Bitv8.concat o p)) )
+
+  let to_i8x16 x =
+    ( extract x ~high:127 ~low:120
+    , extract x ~high:119 ~low:112
+    , extract x ~high:111 ~low:104
+    , extract x ~high:103 ~low:96
+    , extract x ~high:95 ~low:88
+    , extract x ~high:87 ~low:80
+    , extract x ~high:79 ~low:72
+    , extract x ~high:71 ~low:64
+    , extract x ~high:63 ~low:56
+    , extract x ~high:55 ~low:48
+    , extract x ~high:47 ~low:40
+    , extract x ~high:39 ~low:32
+    , extract x ~high:31 ~low:24
+    , extract x ~high:23 ~low:16
+    , extract x ~high:15 ~low:8
+    , extract x ~high:7 ~low:0 )
+
+  let of_i16x8 a b c d e f g h =
+    Bitv64.concat
+      (Bitv32.concat (Bitv16.concat a b) (Bitv16.concat c d))
+      (Bitv32.concat (Bitv16.concat e f) (Bitv16.concat g h))
+
+  let to_i16x8 x =
+    ( extract x ~high:127 ~low:112
+    , extract x ~high:111 ~low:96
+    , extract x ~high:95 ~low:80
+    , extract x ~high:79 ~low:64
+    , extract x ~high:63 ~low:48
+    , extract x ~high:47 ~low:32
+    , extract x ~high:31 ~low:16
+    , extract x ~high:15 ~low:0 )
+
   let of_i32x4 a b c d = Bitv64.concat (Bitv32.concat a b) (Bitv32.concat c d)
 
   let to_i32x4 v =
-    let a = extract v ~low:96 ~high:127 in
-    let b = extract v ~low:64 ~high:95 in
-    let c = extract v ~low:32 ~high:63 in
-    let d = extract v ~low:0 ~high:31 in
-    (a, b, c, d)
+    ( extract v ~low:96 ~high:127
+    , extract v ~low:64 ~high:95
+    , extract v ~low:32 ~high:63
+    , extract v ~low:0 ~high:31 )
 
   let of_int64x2 a b =
     let low = Bitvector.of_int64 b in
@@ -436,10 +477,7 @@ module Bitv128 = struct
 
   let of_i64x2 a b = Bitv64.concat a b
 
-  let to_i64x2 v =
-    let a = extract v ~low:64 ~high:127 in
-    let b = extract v ~low:0 ~high:63 in
-    (a, b)
+  let to_i64x2 v = (extract v ~low:64 ~high:127, extract v ~low:0 ~high:63)
 end
 
 module Types = struct
