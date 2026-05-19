@@ -140,13 +140,16 @@ let[@inline] fp64_of_float (x : float) = to_fp64 (Int64.bits_of_float x)
 (* Operator evaluation *)
 
 module Int = struct
+  let[@inline] raw_unop (op : Ty.Unop.t) (v : int) : int =
+    match op with
+    | Neg -> Int.neg v
+    | Not -> Int.lognot v
+    | Abs -> Int.abs v
+    | _ -> eval_error (`Unsupported_operator (`Unop op, Ty_int))
+
   let[@inline] unop (op : Ty.Unop.t) (v : Value.t) : Value.t =
     let v = of_int 1 (`Unop op) v in
-    match op with
-    | Neg -> to_int (Int.neg v)
-    | Not -> to_int (Int.lognot v)
-    | Abs -> to_int (Int.abs v)
-    | _ -> eval_error (`Unsupported_operator (`Unop op, Ty_int))
+    to_int (raw_unop op v)
 
   let exp_by_squaring x n =
     let rec exp_by_squaring2 y x n =
@@ -160,35 +163,41 @@ module Int = struct
     in
     exp_by_squaring2 1 x n
 
+  let[@inline] raw_binop (op : Ty.Binop.t) v1 v2 =
+    match op with
+    | Add -> Int.add v1 v2
+    | Sub -> Int.sub v1 v2
+    | Mul -> Int.mul v1 v2
+    | Div -> Int.div v1 v2
+    | Rem -> Int.rem v1 v2
+    | Pow -> exp_by_squaring v1 v2
+    | Min -> Int.min v1 v2
+    | Max -> Int.max v1 v2
+    | And -> Int.logand v1 v2
+    | Or -> Int.logor v1 v2
+    | Xor -> Int.logxor v1 v2
+    | Shl -> Int.shift_left v1 v2
+    | ShrL -> Int.shift_right_logical v1 v2
+    | ShrA -> Int.shift_right v1 v2
+    | _ -> eval_error (`Unsupported_operator (`Binop op, Ty_int))
+
   let[@inline] binop (op : Ty.Binop.t) (v1 : Value.t) (v2 : Value.t) : Value.t =
     let v1 = of_int 1 (`Binop op) v1 in
     let v2 = of_int 2 (`Binop op) v2 in
-    match op with
-    | Add -> to_int (Int.add v1 v2)
-    | Sub -> to_int (Int.sub v1 v2)
-    | Mul -> to_int (Int.mul v1 v2)
-    | Div -> to_int (Int.div v1 v2)
-    | Rem -> to_int (Int.rem v1 v2)
-    | Pow -> to_int (exp_by_squaring v1 v2)
-    | Min -> to_int (Int.min v1 v2)
-    | Max -> to_int (Int.max v1 v2)
-    | And -> to_int (Int.logand v1 v2)
-    | Or -> to_int (Int.logor v1 v2)
-    | Xor -> to_int (Int.logxor v1 v2)
-    | Shl -> to_int (Int.shift_left v1 v2)
-    | ShrL -> to_int (Int.shift_right_logical v1 v2)
-    | ShrA -> to_int (Int.shift_right v1 v2)
-    | _ -> eval_error (`Unsupported_operator (`Binop op, Ty_int))
+    to_int (raw_binop op v1 v2)
 
-  let[@inline] relop (op : Ty.Relop.t) (v1 : Value.t) (v2 : Value.t) : bool =
-    let a = of_int 1 (`Relop op) v1 in
-    let b = of_int 2 (`Relop op) v2 in
+  let[@inline] raw_relop (op : Ty.Relop.t) a b =
     match op with
     | Lt -> a < b
     | Le -> a <= b
     | Eq -> Int.equal a b
     | Ne -> not (Int.equal a b)
     | _ -> eval_error (`Unsupported_operator (`Relop op, Ty_int))
+
+  let[@inline] relop (op : Ty.Relop.t) (v1 : Value.t) (v2 : Value.t) : bool =
+    let a = of_int 1 (`Relop op) v1 in
+    let b = of_int 2 (`Relop op) v2 in
+    raw_relop op a b
 
   let[@inline] int_of_bool v =
     match v with Value.True -> 1 | False -> 0 | _ -> assert false
@@ -214,29 +223,35 @@ module Real = struct
     | Is_nan -> if Float.is_nan v then Value.True else Value.False
     | _ -> eval_error (`Unsupported_operator (`Unop op, Ty_real))
 
+  let[@inline] raw_binop (op : Ty.Binop.t) a b =
+    match op with
+    | Add -> Float.add a b
+    | Sub -> Float.sub a b
+    | Mul -> Float.mul a b
+    | Div -> Float.div a b
+    | Rem -> Float.rem a b
+    | Min -> Float.min a b
+    | Max -> Float.max a b
+    | Pow -> Float.pow a b
+    | _ -> eval_error (`Unsupported_operator (`Binop op, Ty_real))
+
   let[@inline] binop (op : Ty.Binop.t) (v1 : Value.t) (v2 : Value.t) : Value.t =
     let a = of_real 1 (`Binop op) v1 in
     let b = of_real 2 (`Binop op) v2 in
-    match op with
-    | Add -> to_real (Float.add a b)
-    | Sub -> to_real (Float.sub a b)
-    | Mul -> to_real (Float.mul a b)
-    | Div -> to_real (Float.div a b)
-    | Rem -> to_real (Float.rem a b)
-    | Min -> to_real (Float.min a b)
-    | Max -> to_real (Float.max a b)
-    | Pow -> to_real (Float.pow a b)
-    | _ -> eval_error (`Unsupported_operator (`Binop op, Ty_real))
+    to_real (raw_binop op a b)
 
-  let[@inline] relop (op : Ty.Relop.t) (v1 : Value.t) (v2 : Value.t) : bool =
-    let a = of_real 1 (`Relop op) v1 in
-    let b = of_real 2 (`Relop op) v2 in
+  let[@inline] raw_relop (op : Ty.Relop.t) a b =
     match op with
     | Lt -> Float.Infix.(a < b)
     | Le -> Float.Infix.(a <= b)
     | Eq -> Float.Infix.(a = b)
     | Ne -> Float.Infix.(a <> b)
     | _ -> eval_error (`Unsupported_operator (`Relop op, Ty_real))
+
+  let[@inline] relop (op : Ty.Relop.t) (v1 : Value.t) (v2 : Value.t) : bool =
+    let a = of_real 1 (`Relop op) v1 in
+    let b = of_real 2 (`Relop op) v2 in
+    raw_relop op a b
 
   let[@inline] cvtop (op : Ty.Cvtop.t) (v : Value.t) : Value.t =
     let op' = `Cvtop op in
@@ -384,9 +399,7 @@ module Str = struct
       to_int (indexof str t i)
     | _ -> eval_error (`Unsupported_operator (`Triop op, Ty_str))
 
-  let[@inline] relop (op : Ty.Relop.t) v1 v2 =
-    let a = of_str 1 (`Relop op) v1 in
-    let b = of_str 2 (`Relop op) v2 in
+  let[@inline] raw_relop (op : Ty.Relop.t) a b =
     let cmp = String.compare a b in
     match op with
     | Lt -> cmp < 0
@@ -394,6 +407,11 @@ module Str = struct
     | Eq -> cmp = 0
     | Ne -> cmp <> 0
     | _ -> eval_error (`Unsupported_operator (`Relop op, Ty_str))
+
+  let[@inline] relop (op : Ty.Relop.t) v1 v2 =
+    let a = of_str 1 (`Relop op) v1 in
+    let b = of_str 2 (`Relop op) v2 in
+    raw_relop op a b
 
   let[@inline] cvtop (op : Ty.Cvtop.t) v =
     let op' = `Cvtop op in

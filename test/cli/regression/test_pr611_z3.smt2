@@ -1,0 +1,8 @@
+(set-logic QF_BV)
+(declare-const x (_ BitVec 32))
+(declare-const y (_ BitVec 32))
+(declare-const z (_ BitVec 32))
+(assert (= z (bvadd x y)))
+(assert (bvult x z))
+(assert (bvugt x y))
+(check-sat)

@@ -3,12 +3,14 @@
 (* Written by the Smtml programmers *)
 
 open Cmdliner
+open Smtml_prelude.Result.Syntax
 open Term.Syntax
-open Rresult
 open Smtml
 module IntSet = Set.Make (Int)
 
-let script_name = R.failwith_error_msg (Fpath.of_string "smtzilla.py")
+let failwith_error_msg = function Ok v -> v | Error (`Msg m) -> failwith m
+
+let script_name = failwith_error_msg (Fpath.of_string "smtzilla.py")
 
 let smtzilla_data_dirpath () =
   match Smtml_sites.Sites.data with
@@ -31,7 +33,7 @@ let python_script_path () =
       Fmt.error_msg "The python script file does not exist in: %a" Fpath.pp
         script_path
   in
-  R.failwith_error_msg res
+  failwith_error_msg res
 
 let parse_file s =
   Fpath.of_string s >>= fun path ->
@@ -236,7 +238,7 @@ let extract_queries ?logic (path : Fpath.t) (destdir : Fpath.t) =
           Ok () )
       IntSet.empty
   in
-  match Rresult.R.join res with
+  match Result.join res with
   | Ok () -> ()
   | Error (`Msg msg) ->
     Fmt.failwith "Failed to extract queries from %a\nBecause of: %s" Fpath.pp

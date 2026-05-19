@@ -41,6 +41,10 @@ module Result = struct
     let ( let* ) v f = Result.bind v f
 
     let ( let+ ) v f = Result.map f v
+
+    let ( >>= ) = Result.bind
+
+    let ( >>| ) r f = Result.map f r
   end
 
   let rec list_iter f =

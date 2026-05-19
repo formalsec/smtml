@@ -117,7 +117,7 @@ module M = struct
         | Z3enums.L_TRUE -> true
         | L_FALSE -> false
         | L_UNDEF ->
-          Fmt.failwith "Z3_mappings2: to_bool: something went terribly wrong!"
+          Fmt.failwith "Z3_mappings: to_bool: something went terribly wrong!"
 
       let to_string interp = Z3.Seq.get_string ctx interp
 
@@ -253,19 +253,23 @@ module M = struct
 
       let sub str ~pos ~len = Z3.Seq.mk_seq_extract ctx str pos len
 
-      let index_of e1 ~sub ~pos = Z3.Seq.mk_seq_index ctx e1 sub pos
+      let index_of e ~sub ~pos = Z3.Seq.mk_seq_index ctx e sub pos
+
+      let last_index_of e ~sub = Z3.Seq.mk_seq_last_index ctx e sub
 
       let replace e1 ~pattern ~with_ =
         Z3.Seq.mk_seq_replace ctx e1 pattern with_
 
       let replace_all _ ~pattern:_ ~with_:_ =
-        Fmt.failwith "Z3_mappings: String.replace_all not implemented"
+        Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__
+          __FUNCTION__
 
       let replace_re e1 ~pattern ~with_ =
         Z3.Seq.mk_seq_replace ctx e1 pattern with_
 
       let replace_re_all _ ~pattern:_ ~with_:_ =
-        Fmt.failwith "Z3_mappings: String.replace_all_re not implemented"
+        Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__
+          __FUNCTION__
     end
 
     module Re = struct
@@ -285,7 +289,9 @@ module M = struct
 
       let range e1 e2 = Z3.Seq.mk_re_range ctx e1 e2
 
-      let diff _ = Fmt.failwith "Z3_mappings: Re.diff not implemented"
+      let diff _ =
+        Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__
+          __FUNCTION__
 
       let inter e1 e2 = Z3.Seq.mk_re_intersect ctx [ e1; e2 ]
 

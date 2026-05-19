@@ -59,7 +59,11 @@ exception Value of Ty.t
 module Int : sig
   val unop : Ty.Unop.t -> Value.t -> Value.t
 
+  val raw_binop : Ty.Binop.t -> int -> int -> int
+
   val binop : Ty.Binop.t -> Value.t -> Value.t -> Value.t
+
+  val raw_relop : Ty.Relop.t -> int -> int -> bool
 
   val relop : Ty.Relop.t -> Value.t -> Value.t -> bool
 
@@ -69,7 +73,11 @@ end
 module Real : sig
   val unop : Ty.Unop.t -> Value.t -> Value.t
 
+  val raw_binop : Ty.Binop.t -> float -> float -> float
+
   val binop : Ty.Binop.t -> Value.t -> Value.t -> Value.t
+
+  val raw_relop : Ty.Relop.t -> float -> float -> bool
 
   val relop : Ty.Relop.t -> Value.t -> Value.t -> bool
 
@@ -94,6 +102,8 @@ module Str : sig
   val binop : Ty.Binop.t -> Value.t -> Value.t -> Value.t
 
   val triop : Ty.Triop.t -> Value.t -> Value.t -> Value.t -> Value.t
+
+  val raw_relop : Ty.Relop.t -> string -> string -> bool
 
   val relop : Ty.Relop.t -> Value.t -> Value.t -> bool
 

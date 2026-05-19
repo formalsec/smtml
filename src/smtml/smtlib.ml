@@ -428,5 +428,4 @@ module Extension = struct
 end
 
 include
-  Dolmen.Smtlib2.Script.Latest.Make (Loc) (Symbol) (Term) (Statement)
-    (Extension)
+  Dolmen.Smtlib2.Script.V2_6.Make (Loc) (Symbol) (Term) (Statement) (Extension)

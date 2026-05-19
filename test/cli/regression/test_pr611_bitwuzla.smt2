@@ -1,0 +1,12 @@
+(set-logic QF_FP)
+(declare-fun a () Float32)
+(declare-fun b () Float32)
+(declare-fun c () Float32)
+(assert (fp.leq ((_ to_fp 11 53) roundNearestTiesToEven a)
+                ((_ to_fp 11 53) roundNearestTiesToEven b)))
+(assert (fp.leq ((_ to_fp 11 53) roundNearestTiesToEven b)
+                ((_ to_fp 11 53) roundNearestTiesToEven c)))
+(assert (fp.leq ((_ to_fp 11 53) roundNearestTiesToEven c)
+                ((_ to_fp 11 53) roundNearestTiesToEven a)))
+(check-sat)
+

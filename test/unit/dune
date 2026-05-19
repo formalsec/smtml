@@ -7,4 +7,4 @@
   test_model
   test_statistics
   test_smtlib_pp)
- (libraries smtml smtml_test yojson ounit2))
+ (libraries fmt smtml smtml_test yojson ounit2 zarith))

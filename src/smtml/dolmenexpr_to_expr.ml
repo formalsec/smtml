@@ -251,6 +251,9 @@ module DolmenIntf = struct
 
     let index_of t ~sub ~pos = DTerm.String.index_of t sub pos
 
+    let last_index_of _t ~sub:_ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
+
     let replace t ~pattern ~with_ = DTerm.String.replace t pattern with_
 
     let replace_all t ~pattern ~with_ = DTerm.String.replace_all t pattern with_
@@ -299,7 +302,9 @@ module DolmenIntf = struct
         if bits = 0 then acc
         else
           let bit = Z.(logand n one |> to_string) in
-          to_bitlist (Prelude.String.cat bit acc) (Z.shift_right n 1) (bits - 1)
+          to_bitlist
+            (Smtml_prelude.String.cat bit acc)
+            (Z.shift_right n 1) (bits - 1)
       in
       to_bitlist "" unsigned_bv bits
 
@@ -337,15 +342,20 @@ module DolmenIntf = struct
 
     let rotate_right t1 t2 = DTerm.Bitv.rotate_right (int_of_term t2) t1
 
-    let nego _ = Fmt.failwith "Dolmenexpr: nego not implemented"
+    let nego _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let addo ~signed:_ = Fmt.failwith "Dolmenexpr: addo not implemented"
+    let addo ~signed:_ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let subo ~signed:_ = Fmt.failwith "Dolmenexpr: subo not implemented"
+    let subo ~signed:_ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let mulo ~signed:_ = Fmt.failwith "Dolmenexpr: mulo not implemented"
+    let mulo ~signed:_ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
-    let divo _ = Fmt.failwith "Dolmenexpr: divo not implemented"
+    let divo _ =
+      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let lt = DTerm.Bitv.slt
 
@@ -383,7 +393,7 @@ module DolmenIntf = struct
 
     let v f e s =
       DTerm.Float.real_to_fp e s DTerm.Float.roundTowardZero
-        (DTerm.Real.mk (Prelude.Float.to_string f))
+        (DTerm.Real.mk (Smtml_prelude.Float.to_string f))
 
     let sqrt ~rm t = DTerm.Float.sqrt rm t
 

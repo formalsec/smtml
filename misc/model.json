@@ -1,784 +1,1450 @@
 {
-  "z3": {
-    "gradient_boost": false,
+  "bitwuzla": {
+    "gradient_boost": true,
     "model": {
-      "feature": "Lt",
-      "threshold": 13.5,
-      "left": {
-        "feature": "ConvertSI32",
-        "threshold": 0.5,
-        "left": {
-          "feature": "Eq",
+      "n_estimators": 5,
+      "init_value": 1132434.5224362633,
+      "trees": [
+        {
+          "feature": "PromoteF32",
           "threshold": 0.5,
           "left": {
-            "feature": "Ty_bitv",
-            "threshold": 0.5,
+            "feature": "Ty_fp",
+            "threshold": 20.5,
             "left": {
-              "feature": "Ty_fp",
-              "threshold": 0.5,
+              "feature": "ShrA",
+              "threshold": 23.0,
               "left": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
+                "feature": "LtU",
+                "threshold": 109.0,
                 "left": {
-                  "value": 36768502.5
+                  "feature": "ShrA",
+                  "threshold": 19.0,
+                  "left": {
+                    "value": -376152.8563761792
+                  },
+                  "right": {
+                    "value": 1018783217.4775639
+                  }
                 },
                 "right": {
-                  "value": 36768502.5
+                  "feature": "nb_queries",
+                  "threshold": 13.5,
+                  "left": {
+                    "value": 152673218.81685033
+                  },
+                  "right": {
+                    "value": 1643863338.810896
+                  }
                 }
               },
               "right": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
+                "feature": "Eq",
+                "threshold": 11.5,
                 "left": {
-                  "value": 36768502.5
+                  "value": -1132434.5224362633
                 },
                 "right": {
-                  "value": 36768502.5
-                }
-              }
-            },
-            "right": {
-              "feature": "Div",
-              "threshold": 1.5,
-              "left": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
-                "left": {
-                  "value": 36768502.5
-                },
-                "right": {
-                  "value": 36768502.5
-                }
-              },
-              "right": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
-                "left": {
-                  "value": 36768502.5
-                },
-                "right": {
-                  "value": 36768502.5
-                }
-              }
-            }
-          },
-          "right": {
-            "feature": "Lt",
-            "threshold": 10.5,
-            "left": {
-              "feature": "And",
-              "threshold": 3450.5,
-              "left": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
-                "left": {
-                  "value": 36768502.5
-                },
-                "right": {
-                  "value": 36768502.5
-                }
-              },
-              "right": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
-                "left": {
-                  "value": 36768502.5
-                },
-                "right": {
-                  "value": 36768502.5
-                }
-              }
-            },
-            "right": {
-              "feature": "Mul",
-              "threshold": 3.0,
-              "left": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
-                "left": {
-                  "value": 36768502.5
-                },
-                "right": {
-                  "value": 36768502.5
-                }
-              },
-              "right": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
-                "left": {
-                  "value": 36768502.5
-                },
-                "right": {
-                  "value": 36768502.5
-                }
-              }
-            }
-          }
-        },
-        "right": {
-          "feature": "Unop",
-          "threshold": 0.5,
-          "left": {
-            "feature": "Xor",
-            "threshold": 0.5,
-            "left": {
-              "feature": "Ty_regexp",
-              "threshold": -2.0,
-              "left": {
-                "value": 36768502.5
-              },
-              "right": {
-                "value": 36768502.5
-              }
-            },
-            "right": {
-              "feature": "Ty_regexp",
-              "threshold": -2.0,
-              "left": {
-                "value": 36768502.5
-              },
-              "right": {
-                "value": 36768502.5
-              }
-            }
-          },
-          "right": {
-            "feature": "Eq",
-            "threshold": 0.5,
-            "left": {
-              "feature": "Ty_regexp",
-              "threshold": -2.0,
-              "left": {
-                "value": 36768502.5
-              },
-              "right": {
-                "value": 36768502.5
-              }
-            },
-            "right": {
-              "feature": "Ty_regexp",
-              "threshold": -2.0,
-              "left": {
-                "value": 36768502.5
-              },
-              "right": {
-                "value": 36768502.5
-              }
-            }
-          }
-        }
-      },
-      "right": {
-        "feature": "Mul",
-        "threshold": 3.5,
-        "left": {
-          "feature": "Mul",
-          "threshold": 0.5,
-          "left": {
-            "feature": "Extract",
-            "threshold": 35.5,
-            "left": {
-              "feature": "nb_queries",
-              "threshold": 85.5,
-              "left": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
-                "left": {
-                  "value": 36768502.5
-                },
-                "right": {
-                  "value": 36768502.5
-                }
-              },
-              "right": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
-                "left": {
-                  "value": 36768502.5
-                },
-                "right": {
-                  "value": 36768502.5
-                }
-              }
-            },
-            "right": {
-              "feature": "Eq",
-              "threshold": 0.5,
-              "left": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
-                "left": {
-                  "value": 36768502.5
-                },
-                "right": {
-                  "value": 36768502.5
-                }
-              },
-              "right": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
-                "left": {
-                  "value": 36768502.5
-                },
-                "right": {
-                  "value": 36768502.5
-                }
-              }
-            }
-          },
-          "right": {
-            "feature": "Lt",
-            "threshold": 19.5,
-            "left": {
-              "feature": "Lt",
-              "threshold": 14.5,
-              "left": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
-                "left": {
-                  "value": 36768502.5
-                },
-                "right": {
-                  "value": 36768502.5
-                }
-              },
-              "right": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
-                "left": {
-                  "value": 36768502.5
-                },
-                "right": {
-                  "value": 36768502.5
-                }
-              }
-            },
-            "right": {
-              "feature": "Zero_extend",
-              "threshold": 3.0,
-              "left": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
-                "left": {
-                  "value": 36768502.5
-                },
-                "right": {
-                  "value": 36768502.5
-                }
-              },
-              "right": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
-                "left": {
-                  "value": 36768502.5
-                },
-                "right": {
-                  "value": 36768502.5
-                }
-              }
-            }
-          }
-        },
-        "right": {
-          "feature": "Sign_extend",
-          "threshold": 84.0,
-          "left": {
-            "feature": "Shl",
-            "threshold": 0.5,
-            "left": {
-              "feature": "Eq",
-              "threshold": 1.5,
-              "left": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
-                "left": {
-                  "value": 36768502.5
-                },
-                "right": {
-                  "value": 36768502.5
-                }
-              },
-              "right": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
-                "left": {
-                  "value": 36768502.5
-                },
-                "right": {
-                  "value": 36768502.5
-                }
-              }
-            },
-            "right": {
-              "feature": "Binop",
-              "threshold": 10.0,
-              "left": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
-                "left": {
-                  "value": 36768502.5
-                },
-                "right": {
-                  "value": 36768502.5
-                }
-              },
-              "right": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
-                "left": {
-                  "value": 36768502.5
-                },
-                "right": {
-                  "value": 36768502.5
-                }
-              }
-            }
-          },
-          "right": {
-            "feature": "Symbol",
-            "threshold": 99.5,
-            "left": {
-              "feature": "Ty_bitv",
-              "threshold": 185.5,
-              "left": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
-                "left": {
-                  "value": 36768502.5
-                },
-                "right": {
-                  "value": 36768502.5
-                }
-              },
-              "right": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
-                "left": {
-                  "value": 36768502.5
-                },
-                "right": {
-                  "value": 36768502.5
+                  "value": 4707015741.477564
                 }
               }
             },
             "right": {
               "feature": "Val",
-              "threshold": 504.0,
+              "threshold": 13.0,
               "left": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
+                "feature": "Not",
+                "threshold": 0.5,
                 "left": {
-                  "value": 36768502.5
+                  "feature": "Ne",
+                  "threshold": 1.5,
+                  "left": {
+                    "value": 2040614983.5886748
+                  },
+                  "right": {
+                    "value": 129056722.31089707
+                  }
                 },
                 "right": {
-                  "value": 36768502.5
+                  "value": 5959955744.277563
                 }
               },
               "right": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
+                "feature": "Not",
+                "threshold": 0.5,
                 "left": {
-                  "value": 36768502.5
+                  "feature": "max_depth",
+                  "threshold": 15.5,
+                  "left": {
+                    "value": 19101616.092948355
+                  },
+                  "right": {
+                    "value": 77035607.85256377
+                  }
                 },
                 "right": {
-                  "value": 36768502.5
+                  "feature": "Mul",
+                  "threshold": 19.0,
+                  "left": {
+                    "value": 190198678.33470663
+                  },
+                  "right": {
+                    "value": 910555524.7674174
+                  }
                 }
               }
             }
+          },
+          "right": {
+            "feature": "max_depth",
+            "threshold": 13.5,
+            "left": {
+              "feature": "Eq",
+              "threshold": 0.5,
+              "left": {
+                "feature": "Ty_bool",
+                "threshold": 2.5,
+                "left": {
+                  "feature": "OfBool",
+                  "threshold": 1.5,
+                  "left": {
+                    "value": 91037265.22756374
+                  },
+                  "right": {
+                    "value": -1132434.5224362633
+                  }
+                },
+                "right": {
+                  "value": 2045765644.1442306
+                }
+              },
+              "right": {
+                "value": 3475189505.477564
+              }
+            },
+            "right": {
+              "value": 4731487215.644229
+            }
+          }
+        },
+        {
+          "feature": "PromoteF32",
+          "threshold": 0.5,
+          "left": {
+            "feature": "Ty_fp",
+            "threshold": 20.5,
+            "left": {
+              "feature": "ShrA",
+              "threshold": 23.0,
+              "left": {
+                "feature": "LtU",
+                "threshold": 109.0,
+                "left": {
+                  "feature": "ShrA",
+                  "threshold": 19.0,
+                  "left": {
+                    "value": -338537.5707280667
+                  },
+                  "right": {
+                    "value": 916904895.7298071
+                  }
+                },
+                "right": {
+                  "feature": "nb_queries",
+                  "threshold": 13.5,
+                  "left": {
+                    "value": 137405896.93516704
+                  },
+                  "right": {
+                    "value": 1479477004.9298072
+                  }
+                }
+              },
+              "right": {
+                "feature": "Ne",
+                "threshold": 144.5,
+                "left": {
+                  "value": 4236314167.3298073
+                },
+                "right": {
+                  "value": -1019191.0701926369
+                }
+              }
+            },
+            "right": {
+              "feature": "Val",
+              "threshold": 13.0,
+              "left": {
+                "feature": "Unop",
+                "threshold": 0.5,
+                "left": {
+                  "feature": "Ne",
+                  "threshold": 1.5,
+                  "left": {
+                    "value": 1836553485.2298074
+                  },
+                  "right": {
+                    "value": 116151050.07980736
+                  }
+                },
+                "right": {
+                  "value": 5363960169.849808
+                }
+              },
+              "right": {
+                "feature": "Add",
+                "threshold": 14.5,
+                "left": {
+                  "feature": "Mul",
+                  "threshold": 17.5,
+                  "left": {
+                    "value": 181974563.2480622
+                  },
+                  "right": {
+                    "value": 928200644.0314715
+                  }
+                },
+                "right": {
+                  "feature": "mean_depth",
+                  "threshold": 18.5,
+                  "left": {
+                    "value": -2725211.662380145
+                  },
+                  "right": {
+                    "value": 93023007.87544025
+                  }
+                }
+              }
+            }
+          },
+          "right": {
+            "feature": "max_depth",
+            "threshold": 13.5,
+            "left": {
+              "feature": "Eq",
+              "threshold": 0.5,
+              "left": {
+                "feature": "Ty_bool",
+                "threshold": 2.5,
+                "left": {
+                  "feature": "Ty_bool",
+                  "threshold": 1.5,
+                  "left": {
+                    "value": 81933538.70480737
+                  },
+                  "right": {
+                    "value": -1019191.0701926369
+                  }
+                },
+                "right": {
+                  "value": 1841189079.7298076
+                }
+              },
+              "right": {
+                "value": 3127670554.9298077
+              }
+            },
+            "right": {
+              "value": 4258338494.0798073
+            }
+          }
+        },
+        {
+          "feature": "PromoteF32",
+          "threshold": 0.5,
+          "left": {
+            "feature": "Ty_fp",
+            "threshold": 20.5,
+            "left": {
+              "feature": "ShrA",
+              "threshold": 23.0,
+              "left": {
+                "feature": "LtU",
+                "threshold": 109.0,
+                "left": {
+                  "feature": "ShrA",
+                  "threshold": 19.0,
+                  "left": {
+                    "value": -304683.81365805684
+                  },
+                  "right": {
+                    "value": 825214406.1568264
+                  }
+                },
+                "right": {
+                  "feature": "nb_queries",
+                  "threshold": 13.5,
+                  "left": {
+                    "value": 123665307.24164589
+                  },
+                  "right": {
+                    "value": 1331529304.4368262
+                  }
+                }
+              },
+              "right": {
+                "feature": "Eq",
+                "threshold": 11.5,
+                "left": {
+                  "value": -917271.9631733733
+                },
+                "right": {
+                  "value": 3812682750.5968266
+                }
+              }
+            },
+            "right": {
+              "feature": "Val",
+              "threshold": 13.0,
+              "left": {
+                "feature": "Unop",
+                "threshold": 0.5,
+                "left": {
+                  "feature": "Ne",
+                  "threshold": 1.5,
+                  "left": {
+                    "value": 1652898136.7068262
+                  },
+                  "right": {
+                    "value": 104535945.07182665
+                  }
+                },
+                "right": {
+                  "value": 4827564152.864827
+                }
+              },
+              "right": {
+                "feature": "Not",
+                "threshold": 0.5,
+                "left": {
+                  "feature": "Add",
+                  "threshold": 12.5,
+                  "left": {
+                    "value": -44057506.50173402
+                  },
+                  "right": {
+                    "value": 50188452.19992429
+                  }
+                },
+                "right": {
+                  "feature": "Mul",
+                  "threshold": 19.0,
+                  "left": {
+                    "value": 156675349.6746386
+                  },
+                  "right": {
+                    "value": 762991979.024749
+                  }
+                }
+              }
+            }
+          },
+          "right": {
+            "feature": "max_depth",
+            "threshold": 13.5,
+            "left": {
+              "feature": "Eq",
+              "threshold": 0.5,
+              "left": {
+                "feature": "Ty_bool",
+                "threshold": 2.5,
+                "left": {
+                  "feature": "Ty_bitv",
+                  "threshold": 1.5,
+                  "left": {
+                    "value": 73740184.83432662
+                  },
+                  "right": {
+                    "value": -917271.9631733733
+                  }
+                },
+                "right": {
+                  "value": 1657070171.7568264
+                }
+              },
+              "right": {
+                "value": 2814903499.4368267
+              }
+            },
+            "right": {
+              "value": 3832504644.671827
+            }
+          }
+        },
+        {
+          "feature": "PromoteF32",
+          "threshold": 0.5,
+          "left": {
+            "feature": "Ty_fp",
+            "threshold": 16.0,
+            "left": {
+              "feature": "ShrA",
+              "threshold": 23.0,
+              "left": {
+                "feature": "LtU",
+                "threshold": 181.0,
+                "left": {
+                  "feature": "ShrA",
+                  "threshold": 17.0,
+                  "left": {
+                    "value": -267259.12510830234
+                  },
+                  "right": {
+                    "value": 580698826.6080173
+                  }
+                },
+                "right": {
+                  "feature": "max_depth",
+                  "threshold": 55.5,
+                  "left": {
+                    "value": 1198376373.993144
+                  },
+                  "right": {
+                    "value": 122310118.03994943
+                  }
+                }
+              },
+              "right": {
+                "feature": "Eq",
+                "threshold": 11.5,
+                "left": {
+                  "value": -825544.7668560359
+                },
+                "right": {
+                  "value": 3431414475.5371437
+                }
+              }
+            },
+            "right": {
+              "feature": "Val",
+              "threshold": 13.0,
+              "left": {
+                "feature": "Unop",
+                "threshold": 0.5,
+                "left": {
+                  "feature": "Ne",
+                  "threshold": 1.5,
+                  "left": {
+                    "value": 1115978818.8358514
+                  },
+                  "right": {
+                    "value": 62967058.56586484
+                  }
+                },
+                "right": {
+                  "value": 4344807737.578343
+                }
+              },
+              "right": {
+                "feature": "Add",
+                "threshold": 14.5,
+                "left": {
+                  "feature": "Mul",
+                  "threshold": 17.5,
+                  "left": {
+                    "value": 183553712.72270322
+                  },
+                  "right": {
+                    "value": 784869237.5710149
+                  }
+                },
+                "right": {
+                  "feature": "mean_depth",
+                  "threshold": 33.5,
+                  "left": {
+                    "value": 34478312.59273924
+                  },
+                  "right": {
+                    "value": -126245370.89787431
+                  }
+                }
+              }
+            }
+          },
+          "right": {
+            "feature": "max_depth",
+            "threshold": 13.5,
+            "left": {
+              "feature": "Eq",
+              "threshold": 0.5,
+              "left": {
+                "feature": "Not",
+                "threshold": 0.5,
+                "left": {
+                  "feature": "Relop",
+                  "threshold": 4.5,
+                  "left": {
+                    "value": 66366166.350893974
+                  },
+                  "right": {
+                    "value": -825544.7668560359
+                  }
+                },
+                "right": {
+                  "value": 1491363154.581144
+                }
+              },
+              "right": {
+                "value": 2533413149.493144
+              }
+            },
+            "right": {
+              "value": 3449254180.2046447
+            }
+          }
+        },
+        {
+          "feature": "PromoteF32",
+          "threshold": 0.5,
+          "left": {
+            "feature": "Ty_fp",
+            "threshold": 20.5,
+            "left": {
+              "feature": "ShrA",
+              "threshold": 23.0,
+              "left": {
+                "feature": "Eq",
+                "threshold": 526.0,
+                "left": {
+                  "feature": "ShrA",
+                  "threshold": 19.0,
+                  "left": {
+                    "value": -266770.5092064422
+                  },
+                  "right": {
+                    "value": 684623082.8803425
+                  }
+                },
+                "right": {
+                  "feature": "max_depth",
+                  "threshold": 46.5,
+                  "left": {
+                    "value": 530072811.58311373
+                  },
+                  "right": {
+                    "value": 80610893.41360292
+                  }
+                }
+              },
+              "right": {
+                "feature": "Ne",
+                "threshold": 144.5,
+                "left": {
+                  "value": 3088273027.983429
+                },
+                "right": {
+                  "value": -742990.2901704323
+                }
+              }
+            },
+            "right": {
+              "feature": "Val",
+              "threshold": 13.0,
+              "left": {
+                "feature": "Ty_bool",
+                "threshold": 2.5,
+                "left": {
+                  "feature": "Ne",
+                  "threshold": 1.5,
+                  "left": {
+                    "value": 1376010441.1525586
+                  },
+                  "right": {
+                    "value": 87785644.70805748
+                  }
+                },
+                "right": {
+                  "value": 3910326963.8205094
+                }
+              },
+              "right": {
+                "feature": "Not",
+                "threshold": 0.5,
+                "left": {
+                  "feature": "Symbol",
+                  "threshold": 74.0,
+                  "left": {
+                    "value": -92698407.40354124
+                  },
+                  "right": {
+                    "value": 32844150.669337705
+                  }
+                },
+                "right": {
+                  "feature": "Mul",
+                  "threshold": 19.0,
+                  "left": {
+                    "value": 125633951.43750365
+                  },
+                  "right": {
+                    "value": 641297415.5047799
+                  }
+                }
+              }
+            }
+          },
+          "right": {
+            "feature": "max_depth",
+            "threshold": 13.5,
+            "left": {
+              "feature": "Eq",
+              "threshold": 0.5,
+              "left": {
+                "feature": "Unop",
+                "threshold": 0.5,
+                "left": {
+                  "feature": "Lt",
+                  "threshold": 2.5,
+                  "left": {
+                    "value": -742990.2901704323
+                  },
+                  "right": {
+                    "value": 59729549.71580458
+                  }
+                },
+                "right": {
+                  "value": 1342226839.1230295
+                }
+              },
+              "right": {
+                "value": 2280071834.543829
+              }
+            },
+            "right": {
+              "value": 3104328762.18418
+            }
           }
         }
-      }
+      ]
     }
   },
-  "bitwuzla": {
-    "gradient_boost": false,
+  "z3": {
+    "gradient_boost": true,
     "model": {
-      "feature": "Zero_extend",
-      "threshold": 29.5,
-      "left": {
-        "feature": "ShrA",
-        "threshold": 11.0,
-        "left": {
-          "feature": "Binop",
-          "threshold": 4.5,
+      "n_estimators": 5,
+      "init_value": 1243590.7075071903,
+      "trees": [
+        {
+          "feature": "Ty_fp",
+          "threshold": 11.5,
           "left": {
-            "feature": "ConvertSI32",
-            "threshold": 0.5,
+            "feature": "Xor",
+            "threshold": 1087.5,
             "left": {
-              "feature": "Eq",
-              "threshold": 0.5,
+              "feature": "ShrA",
+              "threshold": 25.0,
               "left": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
+                "feature": "Ty_fp",
+                "threshold": 8.5,
                 "left": {
-                  "value": 61403449.333333336
+                  "feature": "WrapI64",
+                  "threshold": 1.5,
+                  "left": {
+                    "value": -473295.8981299969
+                  },
+                  "right": {
+                    "value": 288598603.6258261
+                  }
                 },
                 "right": {
-                  "value": 61403449.333333336
+                  "feature": "Binop",
+                  "threshold": 7.5,
+                  "left": {
+                    "value": 158622767.99249282
+                  },
+                  "right": {
+                    "value": 3408905211.792493
+                  }
                 }
               },
               "right": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
+                "feature": "Ne",
+                "threshold": 169.5,
                 "left": {
-                  "value": 61403449.333333336
+                  "value": 3165800550.6258254
                 },
                 "right": {
-                  "value": 61403449.333333336
+                  "value": -1243590.7075071903
                 }
               }
             },
             "right": {
-              "feature": "Ty_bool",
-              "threshold": 0.5,
+              "feature": "max_depth",
+              "threshold": 40.5,
               "left": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
+                "feature": "Ne",
+                "threshold": 0.5,
                 "left": {
-                  "value": 61403449.333333336
+                  "feature": "Xor",
+                  "threshold": 1224.5,
+                  "left": {
+                    "value": 17839492.29249281
+                  },
+                  "right": {
+                    "value": 22558278.29249281
+                  }
                 },
                 "right": {
-                  "value": 61403449.333333336
+                  "feature": "LtU",
+                  "threshold": 81.0,
+                  "left": {
+                    "value": 8976773925.792492
+                  },
+                  "right": {
+                    "value": 13477843325.292492
+                  }
                 }
               },
               "right": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
+                "feature": "max_depth",
+                "threshold": 48.5,
                 "left": {
-                  "value": 61403449.333333336
+                  "feature": "Ne",
+                  "threshold": 0.5,
+                  "left": {
+                    "value": 24401819.586610455
+                  },
+                  "right": {
+                    "value": 4908162397.625826
+                  }
                 },
                 "right": {
-                  "value": 61403449.333333336
+                  "feature": "Ne",
+                  "threshold": 33.5,
+                  "left": {
+                    "value": 173380959.85379672
+                  },
+                  "right": {
+                    "value": 598609994.4465884
+                  }
                 }
               }
             }
           },
           "right": {
-            "feature": "Ty_bitv",
-            "threshold": 4.5,
+            "feature": "OfBool",
+            "threshold": 2.5,
             "left": {
+              "feature": "Unop",
+              "threshold": 1.5,
+              "left": {
+                "feature": "Sub",
+                "threshold": 1.0,
+                "left": {
+                  "feature": "Cvtop",
+                  "threshold": 2.0,
+                  "left": {
+                    "value": 3380093467.95916
+                  },
+                  "right": {
+                    "value": 4281929966.292494
+                  }
+                },
+                "right": {
+                  "feature": "max_depth",
+                  "threshold": 8.0,
+                  "left": {
+                    "value": 6647281765.292493
+                  },
+                  "right": {
+                    "value": 6100445953.625825
+                  }
+                }
+              },
+              "right": {
+                "value": 9698910338.092493
+              }
+            },
+            "right": {
               "feature": "Binop",
-              "threshold": 10.0,
+              "threshold": 8.0,
               "left": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
+                "feature": "LeU",
+                "threshold": 0.5,
                 "left": {
-                  "value": 61403449.333333336
+                  "feature": "Ne",
+                  "threshold": 1.5,
+                  "left": {
+                    "value": 93890570.2924928
+                  },
+                  "right": {
+                    "value": 119152481.7924928
+                  }
                 },
                 "right": {
-                  "value": 61403449.333333336
+                  "value": 76765926.2924928
                 }
               },
               "right": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
+                "feature": "Eq",
+                "threshold": 1.5,
                 "left": {
-                  "value": 61403449.333333336
+                  "value": 455640941.7924928
                 },
                 "right": {
-                  "value": 61403449.333333336
-                }
-              }
-            },
-            "right": {
-              "feature": "And",
-              "threshold": 4452.0,
-              "left": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
-                "left": {
-                  "value": 61403449.333333336
-                },
-                "right": {
-                  "value": 61403449.333333336
-                }
-              },
-              "right": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
-                "left": {
-                  "value": 61403449.333333336
-                },
-                "right": {
-                  "value": 61403449.333333336
+                  "value": 2741986808.292493
                 }
               }
             }
           }
         },
-        "right": {
-          "feature": "Eq",
-          "threshold": 5.5,
+        {
+          "feature": "Ty_fp",
+          "threshold": 11.5,
           "left": {
-            "feature": "Val",
-            "threshold": 40.0,
+            "feature": "Xor",
+            "threshold": 1087.5,
             "left": {
-              "feature": "Ty_regexp",
-              "threshold": -2.0,
+              "feature": "ShrA",
+              "threshold": 25.0,
               "left": {
-                "value": 61403449.333333336
-              },
-              "right": {
-                "value": 61403449.333333336
-              }
-            },
-            "right": {
-              "feature": "Ty_regexp",
-              "threshold": -2.0,
-              "left": {
-                "value": 61403449.333333336
-              },
-              "right": {
-                "value": 61403449.333333336
-              }
-            }
-          },
-          "right": {
-            "feature": "Ne",
-            "threshold": 49.5,
-            "left": {
-              "feature": "Xor",
-              "threshold": 6.5,
-              "left": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
+                "feature": "Ty_fp",
+                "threshold": 8.5,
                 "left": {
-                  "value": 61403449.333333336
+                  "feature": "WrapI64",
+                  "threshold": 1.5,
+                  "left": {
+                    "value": -425966.30830078514
+                  },
+                  "right": {
+                    "value": 259738743.26324385
+                  }
                 },
                 "right": {
-                  "value": 61403449.333333336
+                  "feature": "Ty_fp",
+                  "threshold": 9.5,
+                  "left": {
+                    "value": 3068014690.613243
+                  },
+                  "right": {
+                    "value": 142760491.1932435
+                  }
                 }
               },
               "right": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
+                "feature": "Ne",
+                "threshold": 169.5,
                 "left": {
-                  "value": 61403449.333333336
+                  "value": 2849220495.5632434
                 },
                 "right": {
-                  "value": 61403449.333333336
+                  "value": -1119231.6367564714
                 }
               }
             },
             "right": {
-              "feature": "Ty_regexp",
-              "threshold": -2.0,
+              "feature": "max_depth",
+              "threshold": 40.5,
               "left": {
-                "value": 61403449.333333336
-              },
-              "right": {
-                "value": 61403449.333333336
-              }
-            }
-          }
-        }
-      },
-      "right": {
-        "feature": "Add",
-        "threshold": 2.5,
-        "left": {
-          "feature": "Or",
-          "threshold": 1.0,
-          "left": {
-            "feature": "Unop",
-            "threshold": 1.5,
-            "left": {
-              "feature": "nb_queries",
-              "threshold": 51.5,
-              "left": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
+                "feature": "Ne",
+                "threshold": 0.5,
                 "left": {
-                  "value": 61403449.333333336
+                  "feature": "Ty_bitv",
+                  "threshold": 18865.0,
+                  "left": {
+                    "value": 16055543.06324353
+                  },
+                  "right": {
+                    "value": 20302450.46324353
+                  }
                 },
                 "right": {
-                  "value": 61403449.333333336
+                  "feature": "Ty_bool",
+                  "threshold": 1870.0,
+                  "left": {
+                    "value": 8079096533.2132435
+                  },
+                  "right": {
+                    "value": 12130058992.763245
+                  }
                 }
               },
               "right": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
+                "feature": "Relop",
+                "threshold": 1195.0,
                 "left": {
-                  "value": 61403449.333333336
+                  "feature": "Sign_extend",
+                  "threshold": 687.0,
+                  "left": {
+                    "value": 80378397.43751156
+                  },
+                  "right": {
+                    "value": 847806424.9545096
+                  }
                 },
                 "right": {
-                  "value": 61403449.333333336
-                }
-              }
-            },
-            "right": {
-              "feature": "Eq",
-              "threshold": 7.5,
-              "left": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
-                "left": {
-                  "value": 61403449.333333336
-                },
-                "right": {
-                  "value": 61403449.333333336
-                }
-              },
-              "right": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
-                "left": {
-                  "value": 61403449.333333336
-                },
-                "right": {
-                  "value": 61403449.333333336
+                  "feature": "mean_depth",
+                  "threshold": 38.5,
+                  "left": {
+                    "value": 2520207486.2443714
+                  },
+                  "right": {
+                    "value": 483729097.1649855
+                  }
                 }
               }
             }
           },
           "right": {
-            "feature": "Extract",
-            "threshold": 59.5,
+            "feature": "Relop",
+            "threshold": 8.0,
             "left": {
-              "feature": "Sign_extend",
-              "threshold": 26.5,
+              "feature": "Unop",
+              "threshold": 1.5,
               "left": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
+                "feature": "Sub",
+                "threshold": 1.0,
                 "left": {
-                  "value": 61403449.333333336
+                  "feature": "max_depth",
+                  "threshold": 7.5,
+                  "left": {
+                    "value": 3853736969.663245
+                  },
+                  "right": {
+                    "value": 3042084121.163244
+                  }
                 },
                 "right": {
-                  "value": 61403449.333333336
+                  "feature": "mean_depth",
+                  "threshold": 6.5,
+                  "left": {
+                    "value": 5490401358.263244
+                  },
+                  "right": {
+                    "value": 5982553588.763244
+                  }
                 }
               },
               "right": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
-                "left": {
-                  "value": 61403449.333333336
-                },
-                "right": {
-                  "value": 61403449.333333336
-                }
+                "value": 8729019304.283245
               }
             },
             "right": {
-              "feature": "Not",
-              "threshold": 0.5,
+              "feature": "Relop",
+              "threshold": 11.0,
               "left": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
+                "feature": "Ne",
+                "threshold": 3.5,
                 "left": {
-                  "value": 61403449.333333336
+                  "value": 2467788127.4632435
                 },
                 "right": {
-                  "value": 61403449.333333336
+                  "value": 410076847.6132435
                 }
               },
               "right": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
+                "feature": "LeU",
+                "threshold": 0.5,
                 "left": {
-                  "value": 61403449.333333336
+                  "feature": "Eq",
+                  "threshold": 2.5,
+                  "left": {
+                    "value": 107237233.61324352
+                  },
+                  "right": {
+                    "value": 84501513.26324353
+                  }
                 },
                 "right": {
-                  "value": 61403449.333333336
+                  "value": 69089333.66324353
                 }
               }
             }
           }
         },
-        "right": {
-          "feature": "Extract",
-          "threshold": 249.0,
+        {
+          "feature": "Ty_fp",
+          "threshold": 11.5,
           "left": {
             "feature": "Eq",
-            "threshold": 7.0,
+            "threshold": 819.5,
             "left": {
-              "feature": "LtU",
-              "threshold": 2.5,
+              "feature": "ShrA",
+              "threshold": 25.0,
               "left": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
+                "feature": "Ty_bool",
+                "threshold": 1264.0,
                 "left": {
-                  "value": 61403449.333333336
+                  "feature": "Ty_fp",
+                  "threshold": 8.5,
+                  "left": {
+                    "value": -390230.78419851896
+                  },
+                  "right": {
+                    "value": 880692664.7819192
+                  }
                 },
                 "right": {
-                  "value": 61403449.333333336
+                  "feature": "max_depth",
+                  "threshold": 40.5,
+                  "left": {
+                    "value": 758336396.9505363
+                  },
+                  "right": {
+                    "value": 91036054.81955053
+                  }
                 }
               },
               "right": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
+                "feature": "Eq",
+                "threshold": 12.5,
                 "left": {
-                  "value": 61403449.333333336
+                  "value": -1007308.4730808242
                 },
                 "right": {
-                  "value": 61403449.333333336
+                  "value": 2564298446.0069194
                 }
               }
             },
             "right": {
-              "feature": "Eq",
-              "threshold": 17.5,
+              "feature": "Ne",
+              "threshold": 0.5,
               "left": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
+                "feature": "max_depth",
+                "threshold": 48.5,
                 "left": {
-                  "value": 61403449.333333336
+                  "feature": "Or",
+                  "threshold": 5448.0,
+                  "left": {
+                    "value": 48995261.80160825
+                  },
+                  "right": {
+                    "value": -241183523.16560537
+                  }
                 },
                 "right": {
-                  "value": 61403449.333333336
+                  "feature": "mean_depth",
+                  "threshold": 197.0,
+                  "left": {
+                    "value": -4780357.773662056
+                  },
+                  "right": {
+                    "value": 131889830.36839233
+                  }
                 }
               },
               "right": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
+                "feature": "max_depth",
+                "threshold": 48.5,
                 "left": {
-                  "value": 61403449.333333336
+                  "feature": "OfBool",
+                  "threshold": 31.0,
+                  "left": {
+                    "value": 4777556998.405473
+                  },
+                  "right": {
+                    "value": 20155637.34646922
+                  }
                 },
                 "right": {
-                  "value": 61403449.333333336
+                  "feature": "LtU",
+                  "threshold": 11.5,
+                  "left": {
+                    "value": 882385488.2838342
+                  },
+                  "right": {
+                    "value": 357150443.8627357
+                  }
                 }
               }
             }
           },
           "right": {
-            "feature": "Ne",
-            "threshold": 1.5,
+            "feature": "Ty_bool",
+            "threshold": 4.5,
             "left": {
-              "feature": "Ty_regexp",
-              "threshold": -2.0,
+              "feature": "Unop",
+              "threshold": 1.5,
               "left": {
-                "value": 61403449.333333336
+                "feature": "Symbol",
+                "threshold": 7.5,
+                "left": {
+                  "feature": "LtU",
+                  "threshold": 0.5,
+                  "left": {
+                    "value": 5384298229.886919
+                  },
+                  "right": {
+                    "value": 4941361222.436919
+                  }
+                },
+                "right": {
+                  "feature": "Lt",
+                  "threshold": 1.5,
+                  "left": {
+                    "value": 3468363272.696919
+                  },
+                  "right": {
+                    "value": 2737875709.0469193
+                  }
+                }
               },
               "right": {
-                "value": 61403449.333333336
+                "value": 7856117373.854918
+              }
+            },
+            "right": {
+              "feature": "Relop",
+              "threshold": 11.0,
+              "left": {
+                "feature": "Eq",
+                "threshold": 1.5,
+                "left": {
+                  "value": 369069162.8519192
+                },
+                "right": {
+                  "value": 2221009314.716919
+                }
+              },
+              "right": {
+                "feature": "LeU",
+                "threshold": 0.5,
+                "left": {
+                  "feature": "Eq",
+                  "threshold": 2.5,
+                  "left": {
+                    "value": 96513510.25191918
+                  },
+                  "right": {
+                    "value": 76051361.93691918
+                  }
+                },
+                "right": {
+                  "value": 62180400.29691917
+                }
+              }
+            }
+          }
+        },
+        {
+          "feature": "Ty_fp",
+          "threshold": 11.5,
+          "left": {
+            "feature": "Xor",
+            "threshold": 1087.5,
+            "left": {
+              "feature": "ShrA",
+              "threshold": 25.0,
+              "left": {
+                "feature": "Ty_fp",
+                "threshold": 8.5,
+                "left": {
+                  "feature": "WrapI64",
+                  "threshold": 1.5,
+                  "left": {
+                    "value": -350318.8427401989
+                  },
+                  "right": {
+                    "value": 233803892.01533917
+                  }
+                },
+                "right": {
+                  "feature": "Lt",
+                  "threshold": 0.5,
+                  "left": {
+                    "value": 2673143955.073727
+                  },
+                  "right": {
+                    "value": 40415175.595727265
+                  }
+                }
+              },
+              "right": {
+                "feature": "Eq",
+                "threshold": 12.5,
+                "left": {
+                  "value": -906577.6257727419
+                },
+                "right": {
+                  "value": 2307868601.4062276
+                }
+              }
+            },
+            "right": {
+              "feature": "max_depth",
+              "threshold": 40.5,
+              "left": {
+                "feature": "Ne",
+                "threshold": 0.5,
+                "left": {
+                  "feature": "Ty_bitv",
+                  "threshold": 18865.0,
+                  "left": {
+                    "value": -61383650.938134454
+                  },
+                  "right": {
+                    "value": -57561434.27813445
+                  }
+                },
+                "right": {
+                  "feature": "Ite",
+                  "threshold": 1477.0,
+                  "left": {
+                    "value": 7195353240.196865
+                  },
+                  "right": {
+                    "value": 10841219453.791866
+                  }
+                }
+              },
+              "right": {
+                "feature": "Relop",
+                "threshold": 647.5,
+                "left": {
+                  "feature": "Rem",
+                  "threshold": 324.0,
+                  "left": {
+                    "value": 16452272.932098947
+                  },
+                  "right": {
+                    "value": 425868014.4975069
+                  }
+                },
+                "right": {
+                  "feature": "Ne",
+                  "threshold": 0.5,
+                  "left": {
+                    "value": -9463711.018509738
+                  },
+                  "right": {
+                    "value": 537412268.080813
+                  }
+                }
+              }
+            }
+          },
+          "right": {
+            "feature": "Ty_bool",
+            "threshold": 4.5,
+            "left": {
+              "feature": "Ty_bool",
+              "threshold": 3.5,
+              "left": {
+                "feature": "Symbol",
+                "threshold": 7.5,
+                "left": {
+                  "feature": "Symbol",
+                  "threshold": 6.0,
+                  "left": {
+                    "value": 4845868406.898228
+                  },
+                  "right": {
+                    "value": 4447225100.193227
+                  }
+                },
+                "right": {
+                  "feature": "Ty_bool",
+                  "threshold": 2.5,
+                  "left": {
+                    "value": 2464088138.1422267
+                  },
+                  "right": {
+                    "value": 3121526945.4272265
+                  }
+                }
+              },
+              "right": {
+                "value": 7070505636.469426
+              }
+            },
+            "right": {
+              "feature": "OfBool",
+              "threshold": 3.5,
+              "left": {
+                "feature": "Ne",
+                "threshold": 3.5,
+                "left": {
+                  "value": 1998908383.2452273
+                },
+                "right": {
+                  "value": 332162246.5667273
+                }
+              },
+              "right": {
+                "feature": "LeU",
+                "threshold": 0.5,
+                "left": {
+                  "feature": "Eq",
+                  "threshold": 2.5,
+                  "left": {
+                    "value": 86862159.22672725
+                  },
+                  "right": {
+                    "value": 68446225.74322726
+                  }
+                },
+                "right": {
+                  "value": 55962360.26722726
+                }
+              }
+            }
+          }
+        },
+        {
+          "feature": "Ty_fp",
+          "threshold": 11.5,
+          "left": {
+            "feature": "Xor",
+            "threshold": 1087.5,
+            "left": {
+              "feature": "ShrA",
+              "threshold": 25.0,
+              "left": {
+                "feature": "Ty_fp",
+                "threshold": 8.5,
+                "left": {
+                  "feature": "ShrA",
+                  "threshold": 19.5,
+                  "left": {
+                    "value": -314081.8053705466
+                  },
+                  "right": {
+                    "value": 289072197.8287711
+                  }
+                },
+                "right": {
+                  "feature": "Ty_bitv",
+                  "threshold": 2.0,
+                  "left": {
+                    "value": 2405829559.5663548
+                  },
+                  "right": {
+                    "value": 36373658.03615452
+                  }
+                }
+              },
+              "right": {
+                "feature": "Eq",
+                "threshold": 12.5,
+                "left": {
+                  "value": -815919.8631954676
+                },
+                "right": {
+                  "value": 2077081741.2656047
+                }
+              }
+            },
+            "right": {
+              "feature": "max_depth",
+              "threshold": 40.5,
+              "left": {
+                "feature": "Ne",
+                "threshold": 0.5,
+                "left": {
+                  "feature": "Ite",
+                  "threshold": 1477.0,
+                  "left": {
+                    "value": -55245285.84432099
+                  },
+                  "right": {
+                    "value": -51805290.85032101
+                  }
+                },
+                "right": {
+                  "feature": "And",
+                  "threshold": 13898.0,
+                  "left": {
+                    "value": 6475817916.177179
+                  },
+                  "right": {
+                    "value": 9757097508.41268
+                  }
+                }
+              },
+              "right": {
+                "feature": "max_depth",
+                "threshold": 48.5,
+                "left": {
+                  "feature": "Ne",
+                  "threshold": 0.5,
+                  "left": {
+                    "value": -92840002.18288125
+                  },
+                  "right": {
+                    "value": 3719814441.6251245
+                  }
+                },
+                "right": {
+                  "feature": "mean_depth",
+                  "threshold": 109.5,
+                  "left": {
+                    "value": 65644494.20392106
+                  },
+                  "right": {
+                    "value": 375277559.9440266
+                  }
+                }
+              }
+            }
+          },
+          "right": {
+            "feature": "Ty_bool",
+            "threshold": 4.5,
+            "left": {
+              "feature": "Ty_bool",
+              "threshold": 3.5,
+              "left": {
+                "feature": "Symbol",
+                "threshold": 7.5,
+                "left": {
+                  "feature": "Symbol",
+                  "threshold": 6.0,
+                  "left": {
+                    "value": 4361281566.208405
+                  },
+                  "right": {
+                    "value": 4002502590.1739044
+                  }
+                },
+                "right": {
+                  "feature": "Val",
+                  "threshold": 13.0,
+                  "left": {
+                    "value": 2217679324.3280044
+                  },
+                  "right": {
+                    "value": 2809374250.8845057
+                  }
+                }
+              },
+              "right": {
+                "value": 6363455072.822484
               }
             },
             "right": {
               "feature": "Binop",
-              "threshold": 236.0,
+              "threshold": 8.0,
               "left": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
+                "feature": "LeU",
+                "threshold": 0.5,
                 "left": {
-                  "value": 61403449.333333336
+                  "feature": "Eq",
+                  "threshold": 2.5,
+                  "left": {
+                    "value": 78175943.30405453
+                  },
+                  "right": {
+                    "value": 61601603.16890453
+                  }
                 },
                 "right": {
-                  "value": 61403449.333333336
+                  "value": 50366124.24050453
                 }
               },
               "right": {
-                "feature": "Ty_regexp",
-                "threshold": -2.0,
+                "feature": "Eq",
+                "threshold": 1.5,
                 "left": {
-                  "value": 61403449.333333336
+                  "value": 298946021.9100545
                 },
                 "right": {
-                  "value": 61403449.333333336
+                  "value": 1799017544.9207044
                 }
               }
             }
           }
         }
-      }
+      ]
     }
   }
 }

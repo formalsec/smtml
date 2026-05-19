@@ -1,4 +1,4 @@
-(lang dune 3.19)
+(lang dune 3.20)
 
 (using menhir 2.1)
 
@@ -8,9 +8,11 @@
 
 (name smtml)
 
-(version 0.25.0)
+(version 0.27.0)
 
 (generate_opam_files true)
+
+(implicit_transitive_deps false-if-hidden-includes-supported)
 
 (source (github formalsec/smtml))
 
@@ -58,8 +60,10 @@
   (cmdliner
    (>= "1.3.0"))
   dune
-  dune-build-info
-  dune-site
+  (dune-build-info
+   (>= "3.20"))
+  (dune-site
+   (>= "3.20"))
   (dolmen
    (>= "0.10"))
   (dolmen_type
@@ -69,6 +73,7 @@
   (fmt
    (>= "0.8.7"))
   fpath
+  farith
   (hc
    (>= "0.5"))
   (menhir

@@ -401,6 +401,25 @@ module Bitv128 = struct
     let ty = Ty.Ty_bitv 128
   end)
 
+  let[@inline] to_bytes x =
+    [ extract x ~high:7 ~low:0
+    ; extract x ~high:15 ~low:8
+    ; extract x ~high:23 ~low:16
+    ; extract x ~high:31 ~low:24
+    ; extract x ~high:39 ~low:32
+    ; extract x ~high:47 ~low:40
+    ; extract x ~high:55 ~low:48
+    ; extract x ~high:63 ~low:56
+    ; extract x ~high:71 ~low:64
+    ; extract x ~high:79 ~low:72
+    ; extract x ~high:87 ~low:80
+    ; extract x ~high:95 ~low:88
+    ; extract x ~high:103 ~low:96
+    ; extract x ~high:111 ~low:104
+    ; extract x ~high:119 ~low:112
+    ; extract x ~high:127 ~low:120
+    ]
+
   let of_i32x4 a b c d = Bitv64.concat (Bitv32.concat a b) (Bitv32.concat c d)
 
   let to_i32x4 v =

@@ -1,7 +1,34 @@
 # Changelog
 
+## 0.27.0 - 2026-05-15
+
+- 2026-05-04 Add `Smtml.Typed.Bitv128.to_bytes`
+- 2026-05-02 Move feature conversion from feature_extraction.ml to feature.ml
+- 2026-05-02 Renames features.ml to feature_map.ml
+- 2026-05-02 Move features into its own module
+- 2026-05-02 Improve failure info in mappings
+- 2026-05-02 Remove dep on rresult
+- 2026-04-30 Add SMTZilla examples where different solvers are used
+- 2026-04-30 Fix smtzilla python script and model
+- 2026-04-29 Expose raw evaluation of binop and relop in eval.ml
+- 2026-04-28 Connect `String_last_index` to z3 and expose to solver mappings
+- 2026-04-28 Update dune-site and dune-build-info lowerbounds
+
+## 0.26.0 - 2026-04-27
+
+- 2026-04-27 Release 0.26.0
+- 2026-04-27 Disable implicit transitive deps
+- 2026-04-27 Add rresult to dune-project
+- 2026-04-27 Explicitly depend on rresult
+- 2026-04-20 Bump actions/upload-pages-artifact from 4 to 5
+- 2026-04-13 Refactor get_symbols to avoid duplication and remove the hastbl
+- 2026-04-13 Use List.equal instead of going through the list twice
+- 2026-04-13 Optimize Hashtbl.replace -> Hashtbl.add
+- 2026-04-13 Optimize bitvector numeral creation in solvers
+
 ## 0.25.0 - 2026-04-10
 
+- 2026-04-10 Release 0.25.0
 - 2026-04-10 Update .github/workflows/deploy.yml
 - 2026-04-10 Deploy with ocaml-4.14-z3 for better coverage statistics
 - 2026-04-10 Minor style adjustments and fix solver tests
