@@ -273,7 +273,10 @@ module M = struct
     end
 
     module Re = struct
-      let allchar () = assert false
+      let allchar () =
+        Z3native.mk_re_allchar (Obj.magic ctx)
+          (Obj.magic (Z3.Seq.mk_re_sort ctx Types.string))
+        |> Obj.magic
 
       let all () = Z3.Seq.mk_re_full ctx (Z3.Seq.mk_re_sort ctx Types.string)
 
@@ -289,9 +292,9 @@ module M = struct
 
       let range e1 e2 = Z3.Seq.mk_re_range ctx e1 e2
 
-      let diff _ =
-        Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__
-          __FUNCTION__
+      let diff e1 e2 =
+        Z3native.mk_re_diff (Obj.magic ctx) (Obj.magic e1) (Obj.magic e2)
+        |> Obj.magic
 
       let inter e1 e2 = Z3.Seq.mk_re_intersect ctx [ e1; e2 ]
 
