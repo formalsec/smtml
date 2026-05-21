@@ -260,16 +260,20 @@ module M = struct
       let replace e1 ~pattern ~with_ =
         Z3.Seq.mk_seq_replace ctx e1 pattern with_
 
-      let replace_all _ ~pattern:_ ~with_:_ =
-        Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__
-          __FUNCTION__
+      let replace_all s ~pattern ~with_ =
+        Z3native.mk_seq_replace_all (Obj.magic ctx) (Obj.magic s)
+          (Obj.magic pattern) (Obj.magic with_)
+        |> Obj.magic
 
-      let replace_re e1 ~pattern ~with_ =
-        Z3.Seq.mk_seq_replace ctx e1 pattern with_
+      let replace_re s ~pattern ~with_ =
+        Z3native.mk_seq_replace_re (Obj.magic ctx) (Obj.magic s)
+          (Obj.magic pattern) (Obj.magic with_)
+        |> Obj.magic
 
-      let replace_re_all _ ~pattern:_ ~with_:_ =
-        Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__
-          __FUNCTION__
+      let replace_re_all s ~pattern ~with_ =
+        Z3native.mk_seq_replace_re_all (Obj.magic ctx) (Obj.magic s)
+          (Obj.magic pattern) (Obj.magic with_)
+        |> Obj.magic
     end
 
     module Re = struct
