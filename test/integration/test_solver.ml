@@ -291,13 +291,13 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
          ; "test_to_ieee_bv" >:: with_solver test_to_ieee_bv
          ]
 
-  let test_regexp solver_module =
+  let test_regexp_allchar solver_module =
     let open Typed in
     let module Solver = (val solver_module : Solver_intf.S) in
     let solver = Solver.create () in
     let s = symbol Types.string "s" in
-    let any_char = String.(Re.range (v "a") (v "z")) in
-    Solver.add solver [ (String.in_re s any_char :> Expr.t) ];
+    let allchar = String.Re.allchar in
+    Solver.add solver [ (String.in_re s allchar :> Expr.t) ];
     assert_sat ~f:"test_re_allchar" (Solver.check solver []);
     let model = Solver.model solver in
     let val_s =
@@ -305,6 +305,35 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     in
     assert (
       match val_s with Some (Str s) -> Stdlib.String.length s = 1 | _ -> false )
+
+  let test_regexp_diff solver_module =
+    let open Typed in
+    let module Solver = (val solver_module : Solver_intf.S) in
+    let solver = Solver.create () in
+    let s = symbol Types.string "s" in
+    let re_az = String.(Re.range (v "a") (v "z")) in
+    let re_a = String.(to_re (v "a")) in
+    let re_not_a = String.Re.diff re_az re_a in
+    Solver.add solver [ (String.in_re s re_not_a :> Expr.t) ];
+    assert_sat ~f:"test_re_diff" (Solver.check solver []);
+    let model = Solver.model solver in
+    let val_s =
+      Option.bind model (fun m -> Model.evaluate m (Symbol.make Ty_str "s"))
+    in
+    assert (
+      match val_s with
+      | Some (Str s) -> Stdlib.String.length s = 1 && s <> "a"
+      | _ -> false )
+
+  let test_regexp_diff_unsat solver_module =
+    let open Typed in
+    let module Solver = (val solver_module : Solver_intf.S) in
+    let solver = Solver.create () in
+    let s = symbol Types.string "s" in
+    let re_a = String.(to_re (v "a")) in
+    let re_diff_a_a = String.Re.diff re_a re_a in
+    Solver.add solver [ (String.in_re s re_diff_a_a :> Expr.t) ];
+    assert_unsat ~f:"test_re_diff_unsat" (Solver.check solver [])
 
   let test_regexp_concat solver_module =
     let open Typed in
@@ -406,7 +435,9 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
 
   let test_regexp =
     "test_regexp"
-    >::: [ "test_re" >:: with_solver test_regexp
+    >::: [ "test_re_allchar" >:: with_solver test_regexp_allchar
+         ; "test_re_diff" >:: with_solver test_regexp_diff
+         ; "test_re_diff_unsat" >:: with_solver test_regexp_diff_unsat
          ; "test_re_concat" >:: with_solver test_regexp_concat
          ; "test_re_union" >:: with_solver test_regexp_union
          ; "test_re_star" >:: with_solver test_regexp_star
