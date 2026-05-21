@@ -136,6 +136,11 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | Div -> M.Int.div t1 t2
           | Rem -> M.Int.rem t1 t2
           | Pow -> M.Int.pow t1 t2
+          | Or ->
+            let t1 = M.Int.to_bv 32 t1 in
+            let t2 = M.Int.to_bv 32 t2 in
+            let t = M.Bitv.logor t1 t2 in
+            M.Bitv.to_int ~signed:true t
           | op ->
             Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
               __FUNCTION__ Binop.pp op
