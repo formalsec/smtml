@@ -1,7 +1,15 @@
 # Changelog
 
+## 0.28.0 - 2026-05-28
+
+- 2026-05-25 [z3] implement remaining String.replace functions
+- 2026-05-22 [z3] add implement `Re.allchar` and `Re.diff` using native API
+- 2026-05-20 Add Bitv128.{of,to}_{i16x8,i8x16}
+- 2026-05-20 Make Expr.get_symbols_aux tail-rec
+
 ## 0.27.0 - 2026-05-15
 
+- 2026-05-15 Release 0.27.0
 - 2026-05-04 Add `Smtml.Typed.Bitv128.to_bytes`
 - 2026-05-02 Move feature conversion from feature_extraction.ml to feature.ml
 - 2026-05-02 Renames features.ml to feature_map.ml
