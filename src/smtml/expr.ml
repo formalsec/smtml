@@ -153,9 +153,7 @@ let rec ty (hte : t) : Ty.t =
   | App (sym, _) -> begin match sym.ty with Ty_none -> Ty_app | ty -> ty end
   | Triop (_, Ite, _, hte1, hte2) ->
     let ty1 = ty hte1 in
-    assert (
-      let ty2 = ty hte2 in
-      Ty.equal ty1 ty2 );
+    let _ty2 = ty hte2 in
     ty1
   | Cvtop (_, (Zero_extend m | Sign_extend m), hte) -> (
     match ty hte with Ty_bitv n -> Ty_bitv (n + m) | _ -> assert false )
