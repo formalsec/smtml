@@ -288,6 +288,7 @@ module Bool = struct
     | And -> to_bool (a && b)
     | Or -> to_bool (a || b)
     | Xor -> to_bool (xor a b)
+    | Implies -> to_bool ( not a || b)
     | _ -> eval_error (`Unsupported_operator (`Binop op, Ty_bool))
 
   let[@inline] triop (op : Ty.Triop.t) c v1 v2 =
