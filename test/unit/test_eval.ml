@@ -347,6 +347,12 @@ module Bool_test = struct
         assert_equal true_ (Eval.binop Ty_bool Xor true_ false_);
         assert_equal true_ (Eval.binop Ty_bool Xor false_ true_);
         assert_equal false_ (Eval.binop Ty_bool Xor false_ false_) )
+    ; (
+        "test_implies" >:: fun _ ->
+        assert_equal true_ (Eval.binop Ty_bool Implies true_ true_);
+        assert_equal false_ (Eval.binop Ty_bool Implies true_ false_);
+        assert_equal true_ (Eval.binop Ty_bool Implies false_ true_);
+        assert_equal true_ (Eval.binop Ty_bool Implies false_ false_) )
     ]
 
   let triop =
