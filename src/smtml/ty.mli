@@ -108,6 +108,8 @@ module Unop : sig
     | Regexp_plus  (** Kleene plus. *)
     | Regexp_opt  (** Optional. *)
     | Regexp_comp  (** Complement. *)
+    | Rotl of int  (** Rotate left. *)
+    | Rotr of int  (** Rotate right. *)
   [@@deriving ord]
 
   val hash : t -> int
@@ -143,8 +145,8 @@ module Binop : sig
     | Min  (** Minimum. *)
     | Max  (** Maximum. *)
     | Copysign  (** Copy sign. *)
-    | Rotl  (** Rotate left. *)
-    | Rotr  (** Rotate right. *)
+    | Ext_rotl  (** Extended Rotate left. *)
+    | Ext_rotr  (** Extended Rotate right. *)
     | At  (** List indexing. *)
     | List_cons  (** List construction. *)
     | List_append  (** List concatenation. *)

@@ -100,9 +100,13 @@ module Bitv = struct
 
     val unsigned_rem : t -> t -> t
 
-    val rotate_left : t -> t -> t
+    val rotate_left : int -> t -> t
 
-    val rotate_right : t -> t -> t
+    val rotate_right : int -> t -> t
+
+    val ext_rotate_left : t -> t -> t
+
+    val ext_rotate_right : t -> t -> t
 
     val eq : t -> t -> bool expr
 
@@ -204,9 +208,13 @@ module Bitv = struct
 
     let[@inline] unsigned_rem x y = Expr.binop ty RemU x y
 
-    let[@inline] rotate_left x y = Expr.binop ty Rotl x y
+    let[@inline] rotate_left n x = Expr.unop ty (Rotl n) x
 
-    let[@inline] rotate_right x y = Expr.binop ty Rotr x y
+    let[@inline] rotate_right n x = Expr.unop ty (Rotr n) x
+
+    let[@inline] ext_rotate_left x y = Expr.binop ty Ext_rotl x y
+
+    let[@inline] ext_rotate_right x y = Expr.binop ty Ext_rotr x y
 
     let[@inline] eq a b = Expr.relop Ty_bool Eq a b
 

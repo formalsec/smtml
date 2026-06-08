@@ -151,6 +151,8 @@ module Unop = struct
     | Regexp_plus
     | Regexp_opt
     | Regexp_comp
+    | Rotl of int
+    | Rotr of int
   [@@deriving ord]
 
   let hash = function
@@ -188,6 +190,8 @@ module Unop = struct
     | Regexp_plus -> 25
     | Regexp_opt -> 26
     | Regexp_comp -> 27
+    | Rotl n -> combine 28 n
+    | Rotr n -> combine 29 n
 
   let equal o1 o2 =
     match (o1, o2) with
@@ -220,11 +224,12 @@ module Unop = struct
     | Regexp_opt, Regexp_opt
     | Regexp_comp, Regexp_comp ->
       true
+    | Rotl a, Rotl b | Rotr a, Rotr b -> a = b
     | ( ( Neg | Not | Clz | Popcnt | Ctz | Abs | Sqrt | Is_normal | Is_subnormal
         | Is_negative | Is_positive | Is_infinite | Is_nan | Is_zero | Ceil
         | Floor | Trunc | Nearest | Head | Tail | Reverse | Length | Trim
         | Regexp_star | Regexp_loop _ | Regexp_plus | Regexp_opt | Regexp_comp
-          )
+        | Rotl _ | Rotr _ )
       , _ ) ->
       false
 
@@ -257,6 +262,8 @@ module Unop = struct
     | Regexp_plus -> Fmt.string fmt "+"
     | Regexp_opt -> Fmt.string fmt "opt"
     | Regexp_comp -> Fmt.string fmt "comp"
+    | Rotl n -> Fmt.pf fmt "(rotl %d)" n
+    | Rotr n -> Fmt.pf fmt "(rotr %d)" n
 end
 
 module Binop = struct
@@ -279,8 +286,8 @@ module Binop = struct
     | Min
     | Max
     | Copysign
-    | Rotl
-    | Rotr
+    | Ext_rotl
+    | Ext_rotr
     | At
     | List_cons
     | List_append
@@ -315,8 +322,8 @@ module Binop = struct
     | Min -> 15
     | Max -> 16
     | Copysign -> 17
-    | Rotl -> 18
-    | Rotr -> 19
+    | Ext_rotl -> 18
+    | Ext_rotr -> 19
     | At -> 20
     | List_cons -> 21
     | List_append -> 22
@@ -351,8 +358,8 @@ module Binop = struct
     | Min, Min
     | Max, Max
     | Copysign, Copysign
-    | Rotl, Rotl
-    | Rotr, Rotr
+    | Ext_rotl, Ext_rotl
+    | Ext_rotr, Ext_rotr
     | At, At
     | List_cons, List_cons
     | List_append, List_append
@@ -366,8 +373,8 @@ module Binop = struct
     | Regexp_diff, Regexp_diff ->
       true
     | ( ( Add | Sub | Mul | Div | DivU | Rem | RemU | Shl | ShrA | ShrL | And
-        | Or | Xor | Implies | Pow | Min | Max | Copysign | Rotl | Rotr | At
-        | List_cons | List_append | String_prefix | String_suffix
+        | Or | Xor | Implies | Pow | Min | Max | Copysign | Ext_rotr | Ext_rotl
+        | At | List_cons | List_append | String_prefix | String_suffix
         | String_contains | String_last_index | String_in_re | Regexp_range
         | Regexp_inter | Regexp_diff )
       , _ ) ->
@@ -392,8 +399,8 @@ module Binop = struct
     | Min -> Fmt.string fmt "min"
     | Max -> Fmt.string fmt "max"
     | Copysign -> Fmt.string fmt "copysign"
-    | Rotl -> Fmt.string fmt "rotl"
-    | Rotr -> Fmt.string fmt "rotr"
+    | Ext_rotl -> Fmt.string fmt "ext_rotl"
+    | Ext_rotr -> Fmt.string fmt "ext_rotr"
     | At -> Fmt.string fmt "at"
     | List_cons -> Fmt.string fmt "cons"
     | List_append -> Fmt.string fmt "append"
