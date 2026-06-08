@@ -13,7 +13,7 @@ val pp_score : score Fmt.t
 type tree =
   | Leaf of score
   | Node of
-      { feature : string
+      { feature : Feature_map.feat
       ; threshold : score
       ; left : tree
       ; right : tree

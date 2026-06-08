@@ -26,7 +26,7 @@ let to_score = to_float
 type tree =
   | Leaf of score
   | Node of
-      { feature : string
+      { feature : Feature_map.feat
       ; threshold : score
       ; left : tree
       ; right : tree
@@ -46,8 +46,11 @@ type t =
 let rec pp_tree fmt = function
   | Leaf f -> Fmt.pf fmt "Leaf (%a)" pp_score f
   | Node { feature; threshold; left; right } ->
-    Fmt.pf fmt "Node { feature = %S; threshold = %a; left = %a; right = %a }"
-      feature pp_score threshold pp_tree left pp_tree right
+    Fmt.pf fmt
+      "Node { feature = (Feature_map.feat_of_string %S); threshold = %a; left \
+       = %a; right = %a }"
+      (Feature_map.feat_to_string feature)
+      pp_score threshold pp_tree left pp_tree right
 
 let pp_gb_model fmt { init_value; trees } =
   Fmt.pf fmt "{ init_value = %a; trees = [%a] }" pp_score init_value
@@ -70,7 +73,8 @@ let rec tree_of_json json =
     else *)
     Node
       { threshold = member "threshold" json |> to_score
-      ; feature = member "feature" json |> to_string
+      ; feature =
+          member "feature" json |> to_string |> Feature_map.feat_of_string
       ; left = member "left" json |> tree_of_json
       ; right = member "right" json |> tree_of_json
       }
