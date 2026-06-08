@@ -382,7 +382,11 @@ module Bool_test = struct
     "test_logical_ops" >:: fun _ ->
     let l = [ true_; false_; true_; false_ ] in
     assert_equal false_ (Eval.naryop Ty_bool Logand l);
-    assert_equal true_ (Eval.naryop Ty_bool Logor l)
+    assert_equal true_ (Eval.naryop Ty_bool Logor l);
+    assert_equal false_ (Eval.naryop Ty_bool Distinct l);
+    assert_equal true_ (Eval.naryop Ty_bool Distinct [ true_; false_ ]);
+    assert_equal true_ (Eval.naryop Ty_bool Distinct [ int 0; int 1; int 2 ]);
+    assert_equal false_ (Eval.naryop Ty_bool Distinct [ int 0; int 1; int 0 ])
 end
 
 module Str_test = struct

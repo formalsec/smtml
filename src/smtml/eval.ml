@@ -326,6 +326,12 @@ module Bool = struct
           vs
       in
       if Option.is_some exists_true then Value.True else Value.False
+    | Distinct ->
+      let rec loop = function
+        | [] -> true
+        | v :: vs -> (not (List.exists (Value.equal v) vs)) && loop vs
+      in
+      to_bool (loop vs)
     | _ -> eval_error (`Unsupported_operator (`Naryop op, Ty_bool))
 end
 
