@@ -167,9 +167,7 @@ let empty = Map.empty
 let union m1 m2 =
   Map.union
     (fun key v1 v2 ->
-      match key with
-      | Depth -> Some (Int.max v1 v2)
-      | _ -> Some (v1 + v2) )
+      match key with Depth -> Some (Int.max v1 v2) | _ -> Some (v1 + v2) )
     m1 m2
 
 let incr_feat key m =
