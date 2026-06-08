@@ -1,7 +1,14 @@
 # Changelog
 
+## 0.29.0 - 2026-06-08
+
+- 2026-06-08 Fmt
+- 2026-06-08 Fix binop in eval
+- 2026-06-08 Add unit test for implication in eval
+
 ## 0.28.0 - 2026-05-28
 
+- 2026-05-28 Release 0.28.0
 - 2026-05-25 [z3] implement remaining String.replace functions
 - 2026-05-22 [z3] add implement `Re.allchar` and `Re.diff` using native API
 - 2026-05-20 Add Bitv128.{of,to}_{i16x8,i8x16}
