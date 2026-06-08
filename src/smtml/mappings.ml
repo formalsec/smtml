@@ -372,6 +372,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | Popcnt -> popcnt bitwidth t
           | Neg -> Bitv.neg t
           | Not -> Bitv.lognot t
+          | Rotl n -> Bitv.rotate_left n t
+          | Rotr n -> Bitv.rotate_right n t
           | op ->
             Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
               __FUNCTION__ Unop.pp op
@@ -391,8 +393,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | ShrL -> Bitv.lshr t1 t2
           | Rem -> Bitv.rem t1 t2
           | RemU -> Bitv.rem_u t1 t2
-          | Rotl -> Bitv.rotate_left t1 t2
-          | Rotr -> Bitv.rotate_right t1 t2
+          | Ext_rotl -> Bitv.ext_rotate_left t1 t2
+          | Ext_rotr -> Bitv.ext_rotate_right t1 t2
           | op ->
             Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
               __FUNCTION__ Binop.pp op

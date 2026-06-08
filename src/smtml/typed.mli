@@ -466,13 +466,19 @@ module Bitv : sig
     (** [unsigned_rem t1 t2] computes the unsigned remainder of [t1 / t2]. *)
     val unsigned_rem : t -> t -> t
 
-    (** [rotate_left t amount] rotates the bits of [t] to the left by [amount].
-    *)
-    val rotate_left : t -> t -> t
+    (** [rotate_left n t] rotates the bits of [t] to the left by [n]. *)
+    val rotate_left : int -> t -> t
 
-    (** [rotate_right t amount] rotates the bits of [t] to the right by
+    (** [rotate_right n t] rotates the bits of [t] to the right by [n]. *)
+    val rotate_right : int -> t -> t
+
+    (** [ext_rotate_left t amount] rotates the bits of [t] to the left by
         [amount]. *)
-    val rotate_right : t -> t -> t
+    val ext_rotate_left : t -> t -> t
+
+    (** [ext_rotate_right t amount] rotates the bits of [t] to the right by
+        [amount]. *)
+    val ext_rotate_right : t -> t -> t
 
     (** Alias for {!Bool.eq}. *)
     val eq : t -> t -> bool expr
