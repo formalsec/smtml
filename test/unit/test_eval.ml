@@ -799,11 +799,32 @@ module F64Cvtop_test = struct
     ]
 end
 
+module Bitv_test = struct
+  let ty = Ty.Ty_bitv 8
+
+  let unop =
+    [ ( "test_rotate_left" >:: fun _ ->
+        assert_equal (int8 0xB1) (Eval.unop ty (Rotl 3) (int8 0x36)) )
+    ; ( "test_rotate_right" >:: fun _ ->
+        assert_equal (int8 0xC6) (Eval.unop ty (Rotr 3) (int8 0x36)) )
+    ]
+
+  let binop =
+    [ ( "test_ext_rotate_left" >:: fun _ ->
+        assert_equal (int8 0xB1) (Eval.binop ty Ext_rotl (int8 0x36) (int8 3))
+      )
+    ; ( "test_ext_rotate_right" >:: fun _ ->
+        assert_equal (int8 0xC6) (Eval.binop ty Ext_rotr (int8 0x36) (int8 3))
+      )
+    ]
+end
+
 let test_unop =
   [ "Int_test.unop" >::: Int_test.unop
   ; "Real_test.unop" >::: Real_test.unop
   ; "Bool_test.unop" >::: Bool_test.unop
   ; "Str_test.unop" >::: Str_test.unop
+  ; "Bitv_test.unop" >::: Bitv_test.unop
   ; "F32_test.unop" >::: F32_test.unop
   ; "F64_test.unop" >::: F64_test.unop
   ]
@@ -813,6 +834,7 @@ let test_binop =
   ; "Real_test.binop" >::: Real_test.binop
   ; "Bool_test.binop" >::: Bool_test.binop
   ; "Str_test.binop" >::: Str_test.binop
+  ; "Bitv_test.binop" >::: Bitv_test.binop
   ; "F32_test.binop" >::: F32_test.binop
   ; "F64_test.binop" >::: F64_test.binop
   ]

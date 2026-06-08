@@ -11,6 +11,8 @@ let test_suite =
   >::: [ is_available
        ; Bitwuzla.test_params
        ; Bitwuzla.test_bv
+       ; "test_bv_ext_rotate"
+         >:: Bitwuzla.with_solver Bitwuzla.test_bv_ext_rotate
        ; Bitwuzla.test_fp
        ; Bitwuzla.test_extract
        ; Bitwuzla.test_typed_api_consistency

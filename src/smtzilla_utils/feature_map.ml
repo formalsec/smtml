@@ -68,6 +68,8 @@ type feat =
   | Copysign
   | Rotl
   | Rotr
+  | Ext_rotl
+  | Ext_rotr
   | At
   | List_cons
   | List_append
@@ -253,6 +255,8 @@ let feat_to_string = function
   | Copysign -> "Copysign"
   | Rotl -> "Rotl"
   | Rotr -> "Rotr"
+  | Ext_rotl -> "Ext_rotl"
+  | Ext_rotr -> "Ext_rotr"
   | At -> "At"
   | List_cons -> "List_cons"
   | List_append -> "List_append"
@@ -392,6 +396,8 @@ let feat_of_string = function
   | "Copysign" -> Copysign
   | "Rotl" -> Rotl
   | "Rotr" -> Rotr
+  | "Ext_rotl" -> Ext_rotl
+  | "Ext_rotr" -> Ext_rotr
   | "At" -> At
   | "List_cons" -> List_cons
   | "List_append" -> List_append

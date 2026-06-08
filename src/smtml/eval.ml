@@ -528,6 +528,12 @@ module Bitv = struct
     | Clz -> to_bitv (Bitvector.clz bv)
     | Ctz -> to_bitv (Bitvector.ctz bv)
     | Popcnt -> to_bitv (Bitvector.popcnt bv)
+    | Rotl n ->
+      let shift_count = Bitvector.make (Z.of_int n) (Bitvector.numbits bv) in
+      to_bitv (Bitvector.rotate_left bv shift_count)
+    | Rotr n ->
+      let shift_count = Bitvector.make (Z.of_int n) (Bitvector.numbits bv) in
+      to_bitv (Bitvector.rotate_right bv shift_count)
     | _ ->
       eval_error
         (`Unsupported_operator (`Unop op, Ty_bitv (Bitvector.numbits bv)))
@@ -549,8 +555,8 @@ module Bitv = struct
     | Shl -> to_bitv (Bitvector.shl bv1 bv2)
     | ShrL -> to_bitv (Bitvector.lshr bv1 bv2)
     | ShrA -> to_bitv (Bitvector.ashr bv1 bv2)
-    | Rotl -> to_bitv (Bitvector.rotate_left bv1 bv2)
-    | Rotr -> to_bitv (Bitvector.rotate_right bv1 bv2)
+    | Ext_rotl -> to_bitv (Bitvector.rotate_left bv1 bv2)
+    | Ext_rotr -> to_bitv (Bitvector.rotate_right bv1 bv2)
     | _ -> eval_error (`Unsupported_operator (`Binop op, Ty_bitv 0))
 
   let[@inline] relop op bv1 bv2 =

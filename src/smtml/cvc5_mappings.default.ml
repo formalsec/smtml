@@ -305,11 +305,21 @@ module Fresh_cvc5 () = struct
 
     let rem_u t1 t2 = Term.mk_term tm Kind.Bitvector_urem [| t1; t2 |]
 
-    let rotate_left t1 t2 =
-      Term.mk_term tm Kind.Bitvector_rotate_left [| t1; t2 |]
+    let rotate_left n t =
+      let op = Op.mk_op tm Kind.Bitvector_rotate_left [| n |] in
+      Term.mk_term_op tm op [| t |]
 
-    let rotate_right t1 t2 =
-      Term.mk_term tm Kind.Bitvector_rotate_right [| t1; t2 |]
+    let rotate_right n t =
+      let op = Op.mk_op tm Kind.Bitvector_rotate_right [| n |] in
+      Term.mk_term_op tm op [| t |]
+
+    let ext_rotate_left _ _ =
+      Fmt.failwith "%s:%d: %s not implemented. Use 'rotate_left' instead"
+        __MODULE__ __LINE__ __FUNCTION__
+
+    let ext_rotate_right _ _ =
+      Fmt.failwith "%s:%d: %s not implemented. Use 'rotate_right' instead"
+        __MODULE__ __LINE__ __FUNCTION__
 
     let nego _ =
       Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
