@@ -68,6 +68,8 @@ type feat =
   | Copysign
   | Rotl
   | Rotr
+  | Ext_rotl
+  | Ext_rotr
   | At
   | List_cons
   | List_append
