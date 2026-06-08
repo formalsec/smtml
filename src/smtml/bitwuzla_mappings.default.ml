@@ -365,9 +365,17 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
     let rem_u t1 t2 = mk_term2 Kind.Bv_urem t1 t2
 
-    let rotate_left t1 t2 = mk_term2 Kind.Bv_rol t1 t2
+    let rotate_left n t =
+      let bitwidth = Sort.bv_size (Term.sort t) in
+      mk_term2 Kind.Bv_rol t (of_z (Z.of_int n) bitwidth)
 
-    let rotate_right t1 t2 = mk_term2 Kind.Bv_ror t1 t2
+    let rotate_right n t =
+      let bitwidth = Sort.bv_size (Term.sort t) in
+      mk_term2 Kind.Bv_ror t (of_z (Z.of_int n) bitwidth)
+
+    let ext_rotate_left t1 t2 = mk_term2 Kind.Bv_rol t1 t2
+
+    let ext_rotate_right t1 t2 = mk_term2 Kind.Bv_ror t1 t2
 
     let nego t = mk_term1 Kind.Bv_nego t
 

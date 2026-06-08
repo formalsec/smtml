@@ -31,6 +31,8 @@ let of_unop (unop : Ty.Unop.t) : string =
   | Regexp_plus -> "Regexp_plus"
   | Regexp_opt -> "Regexp_opt"
   | Regexp_comp -> "Regexp_comp"
+  | Rotl _ -> "Rotl"
+  | Rotr _ -> "Rotr"
 
 let of_binop (binop : Ty.Binop.t) : string =
   match binop with
@@ -52,8 +54,8 @@ let of_binop (binop : Ty.Binop.t) : string =
   | Min -> "Min"
   | Max -> "Max"
   | Copysign -> "Copysign"
-  | Rotl -> "Rotl"
-  | Rotr -> "Rotr"
+  | Ext_rotl -> "Ext_rotl"
+  | Ext_rotr -> "Ext_rotr"
   | At -> "At"
   | List_cons -> "List_cons"
   | List_append -> "List_append"
@@ -211,6 +213,8 @@ let ctor_names =
       ; Regexp_plus
       ; Regexp_opt
       ; Regexp_comp
+      ; Rotl 0
+      ; Rotr 0
       ]
   in
   let binops =
@@ -233,8 +237,8 @@ let ctor_names =
       ; Min
       ; Max
       ; Copysign
-      ; Rotl
-      ; Rotr
+      ; Ext_rotl
+      ; Ext_rotr
       ; At
       ; List_cons
       ; List_append (* String *)

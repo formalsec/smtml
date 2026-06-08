@@ -271,6 +271,10 @@ module M = struct
 
       let rotate_right _ = assert false
 
+      let ext_rotate_left _ = assert false
+
+      let ext_rotate_right _ = assert false
+
       let nego _ = assert false
 
       let addo ~signed:_ = assert false

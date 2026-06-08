@@ -203,11 +203,47 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     done;
     assert_sat ~f:"test_arbitrary_bv" (Solver.check solver [])
 
+  let test_bv_rotate solver_module =
+    let open Typed in
+    let module Solver = (val solver_module : Solver_intf.S) in
+    let solver = Solver.create ~params:(Params.default ()) ~logic:QF_BVFP () in
+    let x = symbol Types.bitv8 "rotate_x" in
+    let input = Bitv8.of_int 0x36 in
+    let rotated_left = Bitv8.rotate_left 3 x in
+    let rotated_right = Bitv8.rotate_right 3 x in
+    Solver.add solver
+      [ (Bool.eq x input :> Expr.t)
+      ; (Bool.eq rotated_left (Bitv8.of_int 0xB1) :> Expr.t)
+      ; (Bool.eq rotated_right (Bitv8.of_int 0xC6) :> Expr.t)
+      ];
+    assert_sat ~f:"test_bv_rotate" (Solver.check solver []);
+    Solver.add solver [ (Bool.eq rotated_left (Bitv8.of_int 0xB0) :> Expr.t) ];
+    assert_unsat ~f:"test_bv_rotate_inconsistent" (Solver.check solver [])
+
+  let test_bv_ext_rotate solver_module =
+    let open Typed in
+    let module Solver = (val solver_module : Solver_intf.S) in
+    let solver = Solver.create ~params:(Params.default ()) ~logic:QF_BVFP () in
+    let x = symbol Types.bitv8 "ext_rotate_x" in
+    let shift = symbol Types.bitv8 "ext_rotate_shift" in
+    let rotated_left = Bitv8.ext_rotate_left x shift in
+    let rotated_right = Bitv8.ext_rotate_right x shift in
+    Solver.add solver
+      [ (Bool.eq x (Bitv8.of_int 0x36) :> Expr.t)
+      ; (Bool.eq shift (Bitv8.of_int 3) :> Expr.t)
+      ; (Bool.eq rotated_left (Bitv8.of_int 0xB1) :> Expr.t)
+      ; (Bool.eq rotated_right (Bitv8.of_int 0xC6) :> Expr.t)
+      ];
+    assert_sat ~f:"test_bv_ext_rotate" (Solver.check solver []);
+    Solver.add solver [ (Bool.eq rotated_right (Bitv8.of_int 0xC7) :> Expr.t) ];
+    assert_unsat ~f:"test_bv_ext_rotate_inconsistent" (Solver.check solver [])
+
   let test_bv =
     "test_bv"
     >::: [ "test_bv_8" >:: with_solver test_bv_8
          ; "test_bv_32" >:: with_solver test_bv_32
          ; "test_arbitrary_bv" >:: with_solver test_arbitrary_bv
+         ; "test_bv_rotate" >:: with_solver test_bv_rotate
          ]
 
   let test_fp_get_value32 solver_module =
