@@ -3,16 +3,12 @@
 (* Written by the Smtml programmers *)
 
 %{
+module Env = Map.Make (String)
 open Value
 open Ty
 open Expr
-
-let varmap = Hashtbl.create 512
-
-let add_bind x t = Hashtbl.replace varmap x t
-let get_bind x = Hashtbl.find_opt varmap x
-
 %}
+
 %token PTR
 %token EXTRACT
 %token CONCAT
@@ -40,52 +36,72 @@ let get_bind x = Hashtbl.find_opt varmap x
 %token <Logic.t> LOGIC
 
 %start <Ast.t list> script
-%start <Expr.t> s_expr
+%start <Expr.t> expression
 %%
 
-let script := stmts = list(stmt); EOF; { stmts }
+let script := stmts = list(stmt); EOF; {
+  let _, stmts =
+    List.fold_left
+      (fun (env, acc) f ->
+        let stmt, env = f env in
+        (env, stmt :: acc) )
+      (Env.empty, []) stmts
+  in
+  List.rev stmts
+}
+
+let expression := e = sexpr_with_decls; EOF; { e Env.empty }
+
+let sexpr_with_decls :=
+  | decl = declaration; e = sexpr_with_decls; { fun env -> e (decl env) }
+  | e = sexpr; { fun env -> e env }
+
+let declaration :=
+  LPAREN; LET_CONST; x = SYMBOL; t = TYPE; RPAREN; { fun env -> Env.add x t env }
 
 let stmt :=
   | LPAREN; LET_CONST; x = SYMBOL; t = TYPE; RPAREN;
     {
-      add_bind x t;
-      Ast.Declare_const { id = (Symbol.make t x); sort = (Symbol.make t x) }
+      fun env ->
+        ( Ast.Declare_const { id = Symbol.make t x; sort = Symbol.make t x }
+        , Env.add x t env )
     }
-  | LPAREN; ASSERT; ~ = s_expr; RPAREN; <Ast.Assert>
-  | LPAREN; CHECK_SAT; RPAREN; { Ast.Check_sat [] }
-  | LPAREN; PUSH; RPAREN; { Ast.Push 1 }
-  | LPAREN; POP; n = NUM; RPAREN; { Ast.Pop n }
-  | LPAREN; GET_MODEL; RPAREN; { Ast.Get_model }
-  | LPAREN; SET_LOGIC; ~ = LOGIC; RPAREN; <Ast.Set_logic>
+  | LPAREN; ASSERT; e = sexpr; RPAREN;
+    { fun env -> (Ast.Assert (e env), env) }
+  | LPAREN; CHECK_SAT; RPAREN; { fun env -> (Ast.Check_sat [], env) }
+  | LPAREN; PUSH; RPAREN; { fun env -> (Ast.Push 1, env) }
+  | LPAREN; POP; n = NUM; RPAREN; { fun env -> (Ast.Pop n, env) }
+  | LPAREN; GET_MODEL; RPAREN; { fun env -> (Ast.Get_model, env) }
+  | LPAREN; SET_LOGIC; l = LOGIC; RPAREN; { fun env -> (Ast.Set_logic l, env) }
 
-let s_expr :=
-  | x = SYMBOL; {
-    match get_bind x with
-    | None -> Expr.symbol (Symbol.make Ty_none x)
-    | Some v -> Expr.symbol (Symbol.make v x)
-  }
-  | c = spec_constant; { value c }
+let sexpr :=
+  | x = SYMBOL;
+    {
+      fun env ->
+        match Env.find_opt x env with
+        | None -> Expr.symbol (Symbol.make Ty_none x)
+        | Some v -> Expr.symbol (Symbol.make v x)
+    }
+  | c = spec_constant; { fun _env -> value c }
   | LPAREN; op = paren_op; RPAREN; { op }
 
 let paren_op :=
-  | PTR; LPAREN; _ = TYPE; x = NUM; RPAREN; offset = s_expr;
-    { Expr.ptr (Int32.of_int x) offset }
-  | (ty, op) = UNARY; e = s_expr;
-    { Expr.unop ty op e }
-  | (ty, op) = BINARY; e1 = s_expr; e2 = s_expr;
-    { Expr.binop ty op e1 e2 }
-  | (ty, op) = TERNARY; e1 = s_expr; e2 = s_expr; e3 = s_expr;
-    { Expr.triop ty op e1 e2 e3 }
-  | (ty, op) = CVTOP; e = s_expr;
-    { Expr.cvtop ty op e }
-  | (ty, op) = RELOP; e1 = s_expr; e2 = s_expr;
-    { Expr.relop ty op e1 e2 }
-  | (ty, op) = NARY; es = list(s_expr);
-    { Expr.naryop ty op es }
-  | EXTRACT; ~ = s_expr; l = NUM; h = NUM;
-    { Expr.extract s_expr ~high:h ~low:l }
-  | CONCAT; e1 = s_expr; e2 = s_expr;
-    { Expr.concat e1 e2 }
+  | PTR; LPAREN; _ = TYPE; x = NUM; RPAREN; offset = sexpr;
+    { fun env -> Expr.ptr (Int32.of_int x) (offset env) }
+  | (ty, op) = UNARY; e = sexpr; { fun env -> Expr.unop ty op (e env) }
+  | (ty, op) = BINARY; e1 = sexpr; e2 = sexpr;
+    { fun env -> Expr.binop ty op (e1 env) (e2 env) }
+  | (ty, op) = TERNARY; e1 = sexpr; e2 = sexpr; e3 = sexpr;
+    { fun env -> Expr.triop ty op (e1 env) (e2 env) (e3 env) }
+  | (ty, op) = CVTOP; e = sexpr; { fun env -> Expr.cvtop ty op (e env) }
+  | (ty, op) = RELOP; e1 = sexpr; e2 = sexpr;
+    { fun env -> Expr.relop ty op (e1 env) (e2 env) }
+  | (ty, op) = NARY; es = list(sexpr);
+    { fun env -> Expr.naryop ty op (List.map (fun e -> e env) es) }
+  | EXTRACT; e = sexpr; l = NUM; h = NUM;
+    { fun env -> Expr.extract (e env) ~high:h ~low:l }
+  | CONCAT; e1 = sexpr; e2 = sexpr;
+    { fun env -> Expr.concat (e1 env) (e2 env) }
 
 let spec_constant :=
   | x = NUM; { Int x }

@@ -45,13 +45,13 @@ module Smtml = struct
             let lexbuf = Lexing.from_channel chan in
             lexbuf.lex_curr_p <-
               { lexbuf.lex_curr_p with pos_fname = Fpath.to_string filename };
-            parse_with_error Parser.s_expr lexbuf )
+            parse_with_error Parser.expression lexbuf )
           ()
       in
       match res with Error (`Msg e) -> Fmt.failwith "%s" e | Ok v -> v
 
     let from_string contents =
-      parse_with_error Parser.s_expr (Lexing.from_string contents)
+      parse_with_error Parser.expression (Lexing.from_string contents)
   end
 end
 
