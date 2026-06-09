@@ -162,7 +162,7 @@ let of_expr_kind (e : Expr.expr) _ty : Feature_map.feat =
   | Concat _ -> Concat
   | Binder _ -> Binder
 
-let all_feats : Feature_map.feat Iarray.t =
+let all_feats : Feature_map.feat array =
   Feature_map.
     [| (* Metadata *)
        Max_depth
@@ -312,14 +312,14 @@ let all_feats : Feature_map.feat Iarray.t =
 
 let all_feature_names =
   "solver" :: "model"
-  :: Iarray.fold_right
+  :: Array.fold_right
        (fun feat acc -> Feature_map.feat_to_string feat :: acc)
        all_feats []
 
 let feats_to_str solver_name model feats =
   let values =
     solver_name :: Bool.to_string model :: "solver" :: "model"
-    :: Iarray.fold_right
+    :: Array.fold_right
          (fun feat acc -> string_of_int (Feature_map.get_feat feat feats) :: acc)
          all_feats []
   in
