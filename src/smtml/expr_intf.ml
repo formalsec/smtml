@@ -71,6 +71,14 @@ module type S = sig
 
   (** {1 Pretty Printing} *)
 
+  module Printer : sig
+    (** [pp_expr] is a printer for expressions that can be parsed back. *)
+    val pp_expr : t Fmt.t
+
+    (** [pp_query] is a printer for a list of expressions in query mode. *)
+    val pp_query : t list Fmt.t
+  end
+
   (** [pp fmt term] prints a term in a human-readable format using the formatter
       [fmt]. *)
   val pp : t Fmt.t

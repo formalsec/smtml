@@ -844,6 +844,24 @@ let test_inline_symbol_values =
     >:: test_inline_symbol_values_replace_one
   ]
 
+let test_printer _ =
+  let ty = Ty.Ty_bitv 32 in
+  let x = Expr.symbol (Symbol.make ty "x") in
+  let y = Expr.symbol (Symbol.make ty "y") in
+  let e = Expr.binop ty Add x y in
+  let serialized = Fmt.str "%a" Expr.Printer.pp_expr e in
+  let parsed = Parse.Smtml.Expr.from_string serialized in
+  check e parsed
+
+let test_printer_query _ =
+  let ty = Ty.Ty_bitv 32 in
+  let x = Expr.symbol (Symbol.make ty "x") in
+  let y = Expr.symbol (Symbol.make ty "y") in
+  let e = Expr.binop ty Add x y in
+  let serialized = Fmt.str "%a" Expr.Printer.pp_query [ e ] in
+  let script = Parse.Smtml.Script.from_string serialized in
+  assert (List.length script = 4)
+
 let test_suite =
   "Expression unit tests"
   >::: [ "test_hc" >:: test_hc
@@ -855,6 +873,8 @@ let test_suite =
        ; "test_naryop" >::: test_naryop
        ; "test_simplify" >::: test_simplify
        ; "test_inline_symbol_values" >::: test_inline_symbol_values
+       ; "test_printer" >:: test_printer
+       ; "test_printer_query" >:: test_printer_query
        ]
 
 let () = run_test_tt_main test_suite

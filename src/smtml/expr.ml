@@ -250,23 +250,32 @@ let pp_safe fmt e = pp_with ~printer:With_type_and_hexa_float fmt e
 
 let pp_list fmt (es : t list) = Fmt.hovbox (Fmt.list ~sep:Fmt.comma pp) fmt es
 
-let pp_smtml fmt (es : t list) : unit =
+module Printer = struct
   let pp_symbols fmt syms =
     Fmt.list ~sep:Fmt.cut
       (fun fmt sym ->
         let t = Symbol.type_of sym in
         Fmt.pf fmt "(let-const %a %a)" Symbol.pp sym Ty.pp t )
       fmt syms
-  in
-  let pp_asserts fmt es =
-    Fmt.list ~sep:Fmt.cut
-      (fun fmt e -> Fmt.pf fmt "(assert @[<h 2>%a@])" pp_safe e)
-      fmt es
-  in
-  let syms = get_symbols es in
-  if List.length syms > 0 then Fmt.pf fmt "@[<v>%a@]@\n" pp_symbols syms;
-  if List.length es > 0 then Fmt.pf fmt "@[<v>%a@]@\n" pp_asserts es;
-  Fmt.string fmt "(check-sat)"
+
+  let pp_expr fmt e =
+    let syms = get_symbols [ e ] in
+    if List.length syms > 0 then Fmt.pf fmt "@[<v>%a@]@\n" pp_symbols syms;
+    pp_safe fmt e
+
+  let pp_query fmt es =
+    let pp_asserts fmt es =
+      Fmt.list ~sep:Fmt.cut
+        (fun fmt e -> Fmt.pf fmt "(assert @[<h 2>%a@])" pp_safe e)
+        fmt es
+    in
+    let syms = get_symbols es in
+    if List.length syms > 0 then Fmt.pf fmt "@[<v>%a@]@\n" pp_symbols syms;
+    if List.length es > 0 then Fmt.pf fmt "@[<v>%a@]@\n" pp_asserts es;
+    Fmt.string fmt "(check-sat)"
+end
+
+let pp_smtml = Printer.pp_query
 
 let to_string e = Fmt.str "%a" pp e
 
