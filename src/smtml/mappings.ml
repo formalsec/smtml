@@ -85,6 +85,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | Or -> M.or_ t1 t2
           | Xor -> M.xor t1 t2
           | Implies -> M.implies t1 t2
+          | String_in_re -> M.String.in_re t1 t2
           | op ->
             Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
               __FUNCTION__ Binop.pp op
@@ -580,6 +581,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Re_none -> M.Re.none ()
         | Re_all -> M.Re.all ()
         | Re_allchar -> M.Re.allchar ()
+        | Re_str s -> M.String.to_re (M.String.v s)
         | List _ | App _ | Unit | Nothing ->
           Fmt.failwith "Unsupported encoding of value '%a'" Value.pp value
 
@@ -612,16 +614,20 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
             "Unsupported encoding of binary operators for theory '%a'" Ty.pp ty
 
       let triop ty op t1 t2 t3 =
-        match ty with
-        | Ty.Ty_bool -> Bool_impl.triop op t1 t2 t3
-        | Ty_str -> String_impl.triop op t1 t2 t3
-        | Ty_bitv _bitwidth -> Bitv_impl.triop op t1 t2 t3
-        | Ty_fp 32 -> Float32_impl.triop op t1 t2 t3
-        | Ty_fp 64 -> Float64_impl.triop op t1 t2 t3
-        | Ty_int | Ty_real | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none
-        | Ty_regexp | Ty_roundingMode ->
-          Fmt.failwith
-            "Unsupported encoding of ternary operators for theory '%a'" Ty.pp ty
+        match op with
+        | Triop.Ite -> M.ite t1 t2 t3
+        | _ -> (
+          match ty with
+          | Ty.Ty_bool -> Bool_impl.triop op t1 t2 t3
+          | Ty_str -> String_impl.triop op t1 t2 t3
+          | Ty_bitv _bitwidth -> Bitv_impl.triop op t1 t2 t3
+          | Ty_fp 32 -> Float32_impl.triop op t1 t2 t3
+          | Ty_fp 64 -> Float64_impl.triop op t1 t2 t3
+          | Ty_int | Ty_real | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none
+          | Ty_regexp | Ty_roundingMode ->
+            Fmt.failwith
+              "Unsupported encoding of ternary operators for theory '%a'" Ty.pp
+              ty )
 
       let relop ty op t1 t2 =
         match ty with
@@ -646,10 +652,17 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Ty_bitv bitwidth -> Bitv_impl.cvtop bitwidth op t
         | Ty_fp 32 -> Float32_impl.cvtop op t
         | Ty_fp 64 -> Float64_impl.cvtop op t
-        | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp
-        | Ty_roundingMode ->
-          Fmt.failwith
-            "Unsupported encoding of convert operators for theory '%a'" Ty.pp ty
+        | Ty_regexp -> (
+          match op with
+          | Cvtop.String_to_re -> String_impl.cvtop op t
+          | op ->
+            Fmt.failwith
+              "Unsupported encoding of convert operators for theory '%a': %a"
+              Ty.pp ty Cvtop.pp op )
+        | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_roundingMode ->
+          Fmt.failwith "Unsupported encoding of convert operators for theory '%a'"
+            Ty.pp ty
+
 
       let naryop ty op ts =
         match ty with

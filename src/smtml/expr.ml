@@ -506,8 +506,8 @@ and relop_list op l1 l2 =
 let raw_cvtop ty op hte = make (Cvtop (ty, op, hte)) [@@inline]
 
 let rec cvtop theory op hte =
+  let open Ty.Cvtop in
   match (op, view hte) with
-  | Ty.Cvtop.String_to_re, _ -> raw_cvtop theory op hte
   | _, Val v -> value (Eval.cvtop theory op v)
   | ToBool, Cvtop (_, OfBool, hte) -> hte
   | OfBool, Cvtop (_, ToBool, hte) -> hte

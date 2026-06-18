@@ -18,6 +18,7 @@ type t =
   | Re_none
   | Re_all
   | Re_allchar
+  | Re_str of string
   | Nothing
 
 let type_of (v : t) : Ty.t =
@@ -31,7 +32,7 @@ let type_of (v : t) : Ty.t =
   | Bitv bv -> Ty_bitv (Bitvector.numbits bv)
   | List _ -> Ty_list
   | App _ -> Ty_app
-  | Re_none | Re_all | Re_allchar -> Ty_regexp
+  | Re_none | Re_all | Re_allchar | Re_str _ -> Ty_regexp
   | Nothing -> Ty_none
 
 let discr = function
@@ -48,7 +49,8 @@ let discr = function
   | Re_none -> 10
   | Re_all -> 11
   | Re_allchar -> 12
-  | Nothing -> 13
+  | Re_str _ -> 13
+  | Nothing -> 14
 
 (* Optimized mixer (DJB2 variant). Inlines to simple arithmetic. *)
 let[@inline] combine h v = (h * 33) + v
@@ -70,13 +72,15 @@ let rec hash v =
   | Re_none -> 11
   | Re_all -> 12
   | Re_allchar -> 13
-  | Nothing -> 14
+  | Re_str s -> combine 14 (String.hash s)
+  | Nothing -> 15
   | App _ -> assert false
 
 let rec compare (a : t) (b : t) : int =
   match (a, b) with
   | True, True | False, False | Unit, Unit | Nothing, Nothing -> 0
   | Re_none, Re_none | Re_all, Re_all | Re_allchar, Re_allchar -> 0
+  | Re_str a, Re_str b -> String.compare a b
   | False, True -> -1
   | True, False -> 1
   | Int a, Int b -> Int.compare a b
@@ -89,7 +93,7 @@ let rec compare (a : t) (b : t) : int =
     let c = String.compare op1 op2 in
     if c = 0 then List.compare compare vs1 vs2 else c
   | ( ( True | False | Unit | Int _ | Real _ | Str _ | Num _ | Bitv _ | List _
-      | App _ | Re_none | Re_all | Re_allchar | Nothing )
+      | App _ | Re_none | Re_all | Re_allchar | Re_str _ | Nothing )
     , _ ) ->
     (* TODO: I don't know if this is always semantically correct *)
     Int.compare (discr a) (discr b)
@@ -98,6 +102,7 @@ let rec equal (v1 : t) (v2 : t) : bool =
   match (v1, v2) with
   | True, True | False, False | Unit, Unit | Nothing, Nothing -> true
   | Re_none, Re_none | Re_all, Re_all | Re_allchar, Re_allchar -> true
+  | Re_str a, Re_str b -> String.equal a b
   | Int a, Int b -> Int.equal a b
   | Real a, Real b -> Float.equal a b
   | Str a, Str b -> String.equal a b
@@ -107,7 +112,7 @@ let rec equal (v1 : t) (v2 : t) : bool =
   | App (`Op op1, vs1), App (`Op op2, vs2) ->
     String.equal op1 op2 && List.equal equal vs1 vs2
   | ( ( True | False | Unit | Int _ | Real _ | Str _ | Num _ | Bitv _ | List _
-      | App _ | Re_none | Re_all | Re_allchar | Nothing )
+      | App _ | Re_none | Re_all | Re_allchar | Re_str _ | Nothing )
     , _ ) ->
     false
 
@@ -148,6 +153,7 @@ let rec pp_with ~printer fmt = function
   | Re_none -> Fmt.string fmt "re.none"
   | Re_all -> Fmt.string fmt "re.all"
   | Re_allchar -> Fmt.string fmt "re.allchar"
+  | Re_str s -> Fmt.pf fmt "(str.to_re %S)" s
   | Nothing -> Fmt.string fmt "none"
   | App _ -> assert false
 
@@ -201,6 +207,7 @@ let rec to_json (v : t) : Yojson.Safe.t =
   | Re_none -> `String "re.none"
   | Re_all -> `String "re.all"
   | Re_allchar -> `String "re.allchar"
+  | Re_str s -> `Assoc [ ("str.to_re", `String s) ]
   | Nothing -> `Null
   | App _ -> assert false
 
@@ -216,6 +223,7 @@ module Smtlib = struct
     | Re_none -> Fmt.string fmt "re.none"
     | Re_all -> Fmt.string fmt "re.all"
     | Re_allchar -> Fmt.string fmt "re.allchar"
+    | Re_str s -> Fmt.pf fmt "(str.to_re %S)" s
     | Unit -> assert false
     | List _ -> assert false
     | App _ -> assert false

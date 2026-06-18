@@ -350,6 +350,21 @@ module Str = struct
     in
     loop 0
 
+  let replace_all s t t' =
+    if String.equal t "" then s
+    else
+      let len_s = String.length s in
+      let len_t = String.length t in
+      let res = Buffer.create len_s in
+      let rec loop i =
+        if i >= len_s then ()
+        else if i + len_t <= len_s && String.equal (String.sub s i len_t) t then
+          (Buffer.add_string res t'; loop (i + len_t))
+        else (Buffer.add_char res s.[i]; loop (i + 1))
+      in
+      loop 0;
+      Buffer.contents res
+
   let indexof s sub start =
     let len_s = String.length s in
     let len_sub = String.length sub in
@@ -400,10 +415,19 @@ module Str = struct
       let t = of_str 2 op' v2 in
       let t' = of_str 2 op' v3 in
       to_str (replace str t t')
+    | String_replace_all ->
+      let t = of_str 2 op' v2 in
+      let t' = of_str 3 op' v3 in
+      to_str (replace_all str t t')
     | String_index ->
       let t = of_str 2 op' v2 in
       let i = of_int 3 op' v3 in
       to_int (indexof str t i)
+    | String_replace_re_all -> (
+      let replacement = of_str 3 op' v3 in
+      match v2 with
+      | Value.Re_str s -> to_str (replace_all str s replacement)
+      | _ -> eval_error (`Unsupported_operator (op', Ty_str)) )
     | _ -> eval_error (`Unsupported_operator (`Triop op, Ty_str))
 
   let[@inline] raw_relop (op : Ty.Relop.t) a b =
@@ -442,6 +466,9 @@ module Str = struct
       | None -> eval_error `Invalid_format_conversion
       | Some f -> to_real f
       end
+    | String_to_re ->
+      let s = of_str 1 op' v in
+      Value.Re_str s
     | _ -> eval_error (`Unsupported_operator (`Cvtop op, Ty_str))
 
   let[@inline] naryop (op : Ty.Naryop.t) vs =
@@ -1034,6 +1061,7 @@ let cvtop ty op v =
   | Ty_bitv _m -> Bitv.cvtop op v
   | Ty_fp 32 -> F32CvtOp.cvtop op v
   | Ty_fp 64 -> F64CvtOp.cvtop op v
+  | Ty_regexp -> Str.cvtop op v
   | ty -> eval_error (`Unsupported_theory ty)
 
 let naryop ty op vs =

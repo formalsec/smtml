@@ -25,7 +25,9 @@ type t =
   | Re_none
   | Re_all
   | Re_allchar
-  | Nothing  (** Represents an undefined or missing value. *)
+  | Re_str of string
+  | Nothing
+  (** Represents an undefined or missing value. *)
 
 (** [type_of v] returns the type of the value [v]. *)
 val type_of : t -> Ty.t
