@@ -239,10 +239,6 @@ let test_to_int32 _ =
   let expected = -1853712862l in
   assert_equal expected actual
 
-let test_to_int64 _ =
-  (* TODO *)
-  ()
-
 let test_suite =
   "Bitvector"
   >::: [ "test_make" >:: test_make
@@ -271,7 +267,6 @@ let test_suite =
        ; "test_extract" >::: test_extract
        ; "test_concat" >::: test_concat
        ; "test_to_int32" >:: test_to_int32
-       ; "test_to_int64" >:: test_to_int64
        ]
 
 let () = run_test_tt_main test_suite

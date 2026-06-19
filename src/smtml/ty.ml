@@ -32,8 +32,8 @@ let discr = function
   | Ty_unit -> 7
   | Ty_regexp -> 8
   | Ty_roundingMode -> 9
-  | Ty_bitv n -> 10 + n
-  | Ty_fp n -> 11 + n
+  | Ty_bitv n -> 10 + (2 * n)
+  | Ty_fp n -> 11 + (2 * n)
 
 (* Optimized mixer (DJB2 variant). Inlines to simple arithmetic. *)
 let[@inline] combine h v = (h * 33) + v
@@ -718,5 +718,5 @@ module Smtlib = struct
     | Ty_bitv _, Le -> Fmt.string fmt "bvsle"
     | _, Le -> Fmt.string fmt "<="
     | Ty_bitv _, LeU -> Fmt.string fmt "bvule"
-    | _, LeU -> Fmt.string fmt ">="
+    | _, LeU -> Fmt.string fmt "<="
 end

@@ -57,7 +57,7 @@ let to_int32 v =
 let to_int64 v =
   if numbits v <= 64 then Z.to_int64 (to_signed v)
   else
-    Fmt.failwith "call to Smtml.Bitvector.to_int32 on a bitvector of size %d"
+    Fmt.failwith "call to Smtml.Bitvector.to_int64 on a bitvector of size %d"
       v.width
 
 (** Bitvector pretty printer. By default it prints signed bitvectors. *)
