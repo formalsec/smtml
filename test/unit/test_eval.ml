@@ -131,10 +131,10 @@ module Int_test = struct
       assert_bool "2 <= 3" (Eval.relop Ty_int Le (int 3) (int 3))
     in
     let test_gt _ =
-      assert_bool "4 > 4" (Eval.relop Ty_int Lt (int 3) (int 4))
+      assert_bool "3 < 4" (Eval.relop Ty_int Lt (int 3) (int 4))
     in
     let test_ge _ =
-      assert_bool "4 >= 4" (Eval.relop Ty_int Le (int 4) (int 4))
+      assert_bool "4 <= 4" (Eval.relop Ty_int Le (int 4) (int 4))
     in
 
     [ "test_lt" >:: test_lt
