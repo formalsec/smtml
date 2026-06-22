@@ -12,7 +12,7 @@ jobs:
       image: ghcr.io/formalsec/ocaml-4.14:latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           fetch-tags: true
