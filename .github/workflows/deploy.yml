@@ -21,7 +21,7 @@ jobs:
       image: ghcr.io/formalsec/ocaml-4.14-z3:latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Pages
         id: pages
