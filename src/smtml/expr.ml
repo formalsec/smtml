@@ -190,7 +190,8 @@ and get_symbols_aux k acc (hte : t) =
   | Val _ -> k acc
   | Ptr { offset; _ } -> get_symbols_aux k acc offset
   | Symbol s -> k (s :: acc)
-  | List es | App (_, es) | Naryop (_, _, es) -> get_symbols_aux_loop k acc es
+  | App (s, es) -> get_symbols_aux_loop k (s :: acc) es
+  | List es | Naryop (_, _, es) -> get_symbols_aux_loop k acc es
   | Unop (_, _, e) | Cvtop (_, _, e) | Extract (e, _, _) ->
     get_symbols_aux k acc e
   | Binop (_, _, e1, e2) | Relop (_, _, e1, e2) | Concat (e1, e2) ->
