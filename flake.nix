@@ -17,12 +17,17 @@
       devShells = forAllSystems (system:
         let
           pkgs = import nixpkgs { inherit system; };
+          pythonWithPkgs = pkgs.python313.withPackages (ps: with ps; [
+            pyparsing
+            tomli
+          ]);
         in
         {
           default = pkgs.mkShell {
             nativeBuildInputs = with pkgs; [
               opam
               pkg-config
+              pythonWithPkgs
             ];
 
             buildInputs = with pkgs; [
@@ -32,6 +37,11 @@
               m4
               flint
             ];
+
+            shellHook = ''
+              export PATH="${pythonWithPkgs}/bin:$PATH"
+              export NIX_PYTHONPATH="${pythonWithPkgs}/lib/python3.13/site-packages"
+            '';
           };
         }
       );
