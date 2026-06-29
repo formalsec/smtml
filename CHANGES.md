@@ -1,7 +1,24 @@
 # Changelog
 
+## 0.29.0 - 2026-06-29
+
+- 2026-06-29 Pin cvc5 to development version that build shared library
+- 2026-06-24 Fix get_symbols ignoring app symbol
+- 2026-06-22 Bump actions/checkout from 6 to 7
+- 2026-06-21 Fix: ty.ml discr collision, LeU SMT-LIB pp, to_int64 error msg, test cleanups
+- 2026-06-10 Add expr printer, fix expr parser, and remove mutable state in parser
+- 2026-06-09 Use array instead of  immutable array for all features
+- 2026-06-09 Use immutable array for list of all features
+- 2026-06-09 Fmt
+- 2026-06-09 Use dedicated feat type
+- 2026-06-08 Add missing boolean Distinct simplification
+- 2026-06-08 Fmt
+- 2026-06-08 Fix binop in eval
+- 2026-06-08 Add unit test for implication in eval
+
 ## 0.28.0 - 2026-05-28
 
+- 2026-05-28 Release 0.28.0
 - 2026-05-25 [z3] implement remaining String.replace functions
 - 2026-05-22 [z3] add implement `Re.allchar` and `Re.diff` using native API
 - 2026-05-20 Add Bitv128.{of,to}_{i16x8,i8x16}
