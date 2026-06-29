@@ -792,6 +792,8 @@ module Bitv128 : sig
     val map2 : (bitv8 expr -> bitv8 expr -> bitv8 expr) -> t -> t -> t
 
     val eq : t -> t -> t
+
+    val splat : bitv8 expr -> t
   end
 
   module I16x8 : sig
@@ -800,6 +802,8 @@ module Bitv128 : sig
     val map2 : (bitv16 expr -> bitv16 expr -> bitv16 expr) -> t -> t -> t
 
     val eq : t -> t -> t
+
+    val splat : bitv16 expr -> t
   end
 
   module I32x4 : sig
@@ -808,6 +812,8 @@ module Bitv128 : sig
     val map2 : (bitv32 expr -> bitv32 expr -> bitv32 expr) -> t -> t -> t
 
     val eq : t -> t -> t
+
+    val splat : bitv32 expr -> t
   end
 
   module I64x2 : sig
@@ -816,6 +822,8 @@ module Bitv128 : sig
     val map2 : (bitv64 expr -> bitv64 expr -> bitv64 expr) -> t -> t -> t
 
     val eq : t -> t -> t
+
+    val splat : bitv64 expr -> t
   end
 end
 
