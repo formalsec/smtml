@@ -786,6 +786,8 @@ module Bitv128 : sig
   (** [to_i64x2] splits the 128-bit vector into two 64-bit terms. *)
   val to_i64x2 : t -> bitv64 expr * bitv64 expr
 
+  val any_true : t -> Bool.t
+
   module I8x16 : sig
     val map : (bitv8 expr -> bitv8 expr) -> t -> t
 

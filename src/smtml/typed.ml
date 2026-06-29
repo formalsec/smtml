@@ -38,6 +38,49 @@ let[@inline] get_symbols (x : 'a expr list) : Symbol.t list = Expr.get_symbols x
 let[@inline] ptr (base : int32) (offset : bitv32 expr) : bitv32 expr =
   Expr.ptr base offset
 
+
+let ty_bool : bool ty = Ty_bool
+
+module Bool = struct
+  type t = bool expr
+
+  let true_ = Expr.value True
+
+  let false_ = Expr.value False
+
+  let of_bool x = if x then true_ else false_
+
+  let[@inline] symbol x = Expr.symbol x
+
+  let[@inline] pp fmt x = Expr.pp fmt x
+
+  let[@inline] not e = Expr.Bool.not e
+
+  let[@inline] and_ a b = Expr.Bool.and_ a b
+
+  let[@inline] or_ a b = Expr.Bool.or_ a b
+
+  let[@inline] logand es = Expr.naryop ty_bool Logand es
+
+  let[@inline] logor es = Expr.naryop ty_bool Logor es
+
+  let[@inline] xor a b = Expr.binop ty_bool Xor a b
+
+  let[@inline] implies a b = Expr.Bool.implies a b
+
+  let[@inline] eq (a : 'a expr) (b : 'a expr) = Expr.relop ty_bool Eq a b
+
+  let[@inline] distinct (es : 'a expr list) =
+    (* Typically this encodes a symbolic constraint: (distinct x y z), so no
+       need to waste time trying to simplify. Just use `raw_naryop`. *)
+    Expr.raw_naryop ty_bool Distinct es
+
+  let[@inline] ite c (r1 : 'a expr) (r2 : 'a expr) : 'a expr =
+    Expr.triop ty_bool Ite c r1 r2
+
+  let[@inline] split_conjunctions x = Expr.split_conjunctions x
+end
+
 module Bitv = struct
   module type Width = sig
     type w
@@ -638,6 +681,8 @@ module Bitv128 = struct
     let add x y = map2 Bitv64.add x y
     let sub x y = map2 Bitv64.sub x y
   end
+
+  let any_true v = Bool.not (eq v zero)
 end
 
 module Types = struct
@@ -647,7 +692,7 @@ module Types = struct
 
   let regexp : regexp ty = Ty_regexp
 
-  let bool : bool ty = Ty_bool
+  let bool : bool ty = ty_bool
 
   let string : string ty = Ty_str
 
@@ -668,46 +713,6 @@ module Types = struct
   let pp fmt ty = Ty.pp fmt ty
 
   let[@inline] to_ty (ty : 'a ty) : Ty.t = ty
-end
-
-module Bool = struct
-  type t = bool expr
-
-  let true_ = Expr.value True
-
-  let false_ = Expr.value False
-
-  let of_bool x = if x then true_ else false_
-
-  let[@inline] symbol x = Expr.symbol x
-
-  let[@inline] pp fmt x = Expr.pp fmt x
-
-  let[@inline] not e = Expr.Bool.not e
-
-  let[@inline] and_ a b = Expr.Bool.and_ a b
-
-  let[@inline] or_ a b = Expr.Bool.or_ a b
-
-  let[@inline] logand es = Expr.naryop Types.bool Logand es
-
-  let[@inline] logor es = Expr.naryop Types.bool Logor es
-
-  let[@inline] xor a b = Expr.binop Types.bool Xor a b
-
-  let[@inline] implies a b = Expr.Bool.implies a b
-
-  let[@inline] eq (a : 'a expr) (b : 'a expr) = Expr.relop Types.bool Eq a b
-
-  let[@inline] distinct (es : 'a expr list) =
-    (* Typically this encodes a symbolic constraint: (distinct x y z), so no
-       need to waste time trying to simplify. Just use `raw_naryop`. *)
-    Expr.raw_naryop Types.bool Distinct es
-
-  let[@inline] ite c (r1 : 'a expr) (r2 : 'a expr) : 'a expr =
-    Expr.triop Types.bool Ite c r1 r2
-
-  let[@inline] split_conjunctions x = Expr.split_conjunctions x
 end
 
 module Int = struct
