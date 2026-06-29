@@ -553,6 +553,9 @@ module Bitv128 = struct
     let eq u v = map2 Bitv8.eq u v
 
     let splat v = of_i8x16 v v v v v v v v v v v v v v v v
+
+    let add x y = map2 Bitv8.add x y
+    let sub x y = map2 Bitv8.sub x y
   end
 
   module I16x8 = struct
@@ -584,6 +587,9 @@ module Bitv128 = struct
     let eq u v = map2 Bitv16.eq u v
 
     let splat v = of_i16x8 v v v v v v v v
+
+    let add x y = map2 Bitv16.add x y
+    let sub x y = map2 Bitv16.sub x y
   end
 
   module I32x4 = struct
@@ -607,6 +613,9 @@ module Bitv128 = struct
     let eq u v = map2 Bitv32.eq u v
 
     let splat v = of_i32x4 v v v v
+
+    let add x y = map2 Bitv32.add x y
+    let sub x y = map2 Bitv32.sub x y
   end
 
   module I64x2 = struct
@@ -626,6 +635,8 @@ module Bitv128 = struct
     let eq u v = map2 Bitv64.eq u v
 
     let splat v = of_i64x2 v v
+    let add x y = map2 Bitv64.add x y
+    let sub x y = map2 Bitv64.sub x y
   end
 end
 

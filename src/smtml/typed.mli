@@ -794,6 +794,10 @@ module Bitv128 : sig
     val eq : t -> t -> t
 
     val splat : bitv8 expr -> t
+
+    val add : t -> t -> t
+
+    val sub : t -> t -> t
   end
 
   module I16x8 : sig
@@ -804,6 +808,10 @@ module Bitv128 : sig
     val eq : t -> t -> t
 
     val splat : bitv16 expr -> t
+
+    val add : t -> t -> t
+
+    val sub : t -> t -> t
   end
 
   module I32x4 : sig
@@ -814,6 +822,10 @@ module Bitv128 : sig
     val eq : t -> t -> t
 
     val splat : bitv32 expr -> t
+
+    val add : t -> t -> t
+
+    val sub : t -> t -> t
   end
 
   module I64x2 : sig
@@ -824,6 +836,10 @@ module Bitv128 : sig
     val eq : t -> t -> t
 
     val splat : bitv64 expr -> t
+
+    val add : t -> t -> t
+
+    val sub : t -> t -> t
   end
 end
 
