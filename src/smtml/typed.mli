@@ -785,6 +785,38 @@ module Bitv128 : sig
 
   (** [to_i64x2] splits the 128-bit vector into two 64-bit terms. *)
   val to_i64x2 : t -> bitv64 expr * bitv64 expr
+
+  module I8x16 : sig
+    val map : (bitv8 expr -> bitv8 expr) -> t -> t
+
+    val map2 : (bitv8 expr -> bitv8 expr -> bitv8 expr) -> t -> t -> t
+
+    val eq : t -> t -> t
+  end
+
+  module I16x8 : sig
+    val map : (bitv16 expr -> bitv16 expr) -> t -> t
+
+    val map2 : (bitv16 expr -> bitv16 expr -> bitv16 expr) -> t -> t -> t
+
+    val eq : t -> t -> t
+  end
+
+  module I32x4 : sig
+    val map : (bitv32 expr -> bitv32 expr) -> t -> t
+
+    val map2 : (bitv32 expr -> bitv32 expr -> bitv32 expr) -> t -> t -> t
+
+    val eq : t -> t -> t
+  end
+
+  module I64x2 : sig
+    val map : (bitv64 expr -> bitv64 expr) -> t -> t
+
+    val map2 : (bitv64 expr -> bitv64 expr -> bitv64 expr) -> t -> t -> t
+
+    val eq : t -> t -> t
+  end
 end
 
 module Float32 : sig

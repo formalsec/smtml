@@ -498,6 +498,127 @@ module Bitv128 = struct
   let of_i64x2 a b = Bitv64.concat a b
 
   let to_i64x2 v = (extract v ~low:64 ~high:127, extract v ~low:0 ~high:63)
+
+  module I8x16 = struct
+    let map f v =
+      let v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16
+          =
+        to_i8x16 v
+      in
+      let v1 = f v1 in
+      let v2 = f v2 in
+      let v3 = f v3 in
+      let v4 = f v4 in
+      let v5 = f v5 in
+      let v6 = f v6 in
+      let v7 = f v7 in
+      let v8 = f v8 in
+      let v9 = f v9 in
+      let v10 = f v10 in
+      let v11 = f v11 in
+      let v12 = f v12 in
+      let v13 = f v13 in
+      let v14 = f v14 in
+      let v15 = f v15 in
+      let v16 = f v16 in
+      of_i8x16 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15 v16
+
+    let map2 f u v =
+      let u1, u2, u3, u4, u5, u6, u7, u8, u9, u10, u11, u12, u13, u14, u15, u16
+          =
+        to_i8x16 u
+      in
+      let v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16
+          =
+        to_i8x16 v
+      in
+      let w1 = f u1 v1 in
+      let w2 = f u2 v2 in
+      let w3 = f u3 v3 in
+      let w4 = f u4 v4 in
+      let w5 = f u5 v5 in
+      let w6 = f u6 v6 in
+      let w7 = f u7 v7 in
+      let w8 = f u8 v8 in
+      let w9 = f u9 v9 in
+      let w10 = f u10 v10 in
+      let w11 = f u11 v11 in
+      let w12 = f u12 v12 in
+      let w13 = f u13 v13 in
+      let w14 = f u14 v14 in
+      let w15 = f u15 v15 in
+      let w16 = f u16 v16 in
+      of_i8x16 w1 w2 w3 w4 w5 w6 w7 w8 w9 w10 w11 w12 w13 w14 w15 w16
+
+    let eq u v = map2 Bitv8.eq u v
+  end
+
+  module I16x8 = struct
+    let map f v =
+      let v1, v2, v3, v4, v5, v6, v7, v8 = to_i16x8 v in
+      let v1 = f v1 in
+      let v2 = f v2 in
+      let v3 = f v3 in
+      let v4 = f v4 in
+      let v5 = f v5 in
+      let v6 = f v6 in
+      let v7 = f v7 in
+      let v8 = f v8 in
+      of_i16x8 v1 v2 v3 v4 v5 v6 v7 v8
+
+    let map2 f u v =
+      let u1, u2, u3, u4, u5, u6, u7, u8 = to_i16x8 u in
+      let v1, v2, v3, v4, v5, v6, v7, v8 = to_i16x8 v in
+      let w1 = f u1 v1 in
+      let w2 = f u2 v2 in
+      let w3 = f u3 v3 in
+      let w4 = f u4 v4 in
+      let w5 = f u5 v5 in
+      let w6 = f u6 v6 in
+      let w7 = f u7 v7 in
+      let w8 = f u8 v8 in
+      of_i16x8 w1 w2 w3 w4 w5 w6 w7 w8
+
+    let eq u v = map2 Bitv16.eq u v
+  end
+
+  module I32x4 = struct
+    let map f v =
+      let v1, v2, v3, v4 = to_i32x4 v in
+      let v1 = f v1 in
+      let v2 = f v2 in
+      let v3 = f v3 in
+      let v4 = f v4 in
+      of_i32x4 v1 v2 v3 v4
+
+    let map2 f u v =
+      let u1, u2, u3, u4 = to_i32x4 u in
+      let v1, v2, v3, v4 = to_i32x4 v in
+      let w1 = f u1 v1 in
+      let w2 = f u2 v2 in
+      let w3 = f u3 v3 in
+      let w4 = f u4 v4 in
+      of_i32x4 w1 w2 w3 w4
+
+    let eq u v = map2 Bitv32.eq u v
+  end
+
+  module I64x2 = struct
+    let map f v =
+      let v1, v2 = to_i64x2 v in
+      let v1 = f v1 in
+      let v2 = f v2 in
+      of_i64x2 v1 v2
+
+    let map2 f u v =
+      let u1, u2 = to_i64x2 u in
+      let v1, v2 = to_i64x2 v in
+      let w1 = f u1 v1 in
+      let w2 = f u2 v2 in
+      of_i64x2 w1 w2
+
+    let eq u v = map2 Bitv64.eq u v
+  end
 end
 
 module Types = struct
