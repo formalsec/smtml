@@ -38,7 +38,6 @@ let[@inline] get_symbols (x : 'a expr list) : Symbol.t list = Expr.get_symbols x
 let[@inline] ptr (base : int32) (offset : bitv32 expr) : bitv32 expr =
   Expr.ptr base offset
 
-
 let ty_bool : bool ty = Ty_bool
 
 module Bool = struct
@@ -593,11 +592,16 @@ module Bitv128 = struct
       let w16 = f u16 v16 in
       of_i8x16 w1 w2 w3 w4 w5 w6 w7 w8 w9 w10 w11 w12 w13 w14 w15 w16
 
-    let eq u v = map2 Bitv8.eq u v
+    let eq u v =
+      map2
+        (fun x y ->
+          Bool.ite (Bitv8.eq x y) (Bitv8.of_int 0xFF) (Bitv8.of_int 0x00) )
+        u v
 
     let splat v = of_i8x16 v v v v v v v v v v v v v v v v
 
     let add x y = map2 Bitv8.add x y
+
     let sub x y = map2 Bitv8.sub x y
   end
 
@@ -627,11 +631,16 @@ module Bitv128 = struct
       let w8 = f u8 v8 in
       of_i16x8 w1 w2 w3 w4 w5 w6 w7 w8
 
-    let eq u v = map2 Bitv16.eq u v
+    let eq u v =
+      map2
+        (fun x y ->
+          Bool.ite (Bitv16.eq x y) (Bitv16.of_int 0xFFFF) (Bitv16.of_int 0x0000) )
+        u v
 
     let splat v = of_i16x8 v v v v v v v v
 
     let add x y = map2 Bitv16.add x y
+
     let sub x y = map2 Bitv16.sub x y
   end
 
@@ -653,11 +662,16 @@ module Bitv128 = struct
       let w4 = f u4 v4 in
       of_i32x4 w1 w2 w3 w4
 
-    let eq u v = map2 Bitv32.eq u v
+    let eq u v =
+      map2
+        (fun x y ->
+          Bool.ite (Bitv32.eq x y) (Bitv32.of_int 0xFFFF) (Bitv32.of_int 0x0000) )
+        u v
 
     let splat v = of_i32x4 v v v v
 
     let add x y = map2 Bitv32.add x y
+
     let sub x y = map2 Bitv32.sub x y
   end
 
@@ -675,10 +689,18 @@ module Bitv128 = struct
       let w2 = f u2 v2 in
       of_i64x2 w1 w2
 
-    let eq u v = map2 Bitv64.eq u v
+    let eq u v =
+      map2
+        (fun x y ->
+          Bool.ite (Bitv64.eq x y)
+            (Bitv64.of_int64 0xFFFFFFFFL)
+            (Bitv64.of_int64 0x00000000L) )
+        u v
 
     let splat v = of_i64x2 v v
+
     let add x y = map2 Bitv64.add x y
+
     let sub x y = map2 Bitv64.sub x y
   end
 
