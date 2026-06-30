@@ -791,11 +791,17 @@ module Bitv128 : sig
   module I8x16 : sig
     val map : (bitv8 expr -> bitv8 expr) -> t -> t
 
+    val mapi : (int -> bitv8 expr -> bitv8 expr) -> t -> t
+
     val map2 : (bitv8 expr -> bitv8 expr -> bitv8 expr) -> t -> t -> t
+
+    val fold_left : ('acc -> bitv8 expr -> 'acc) -> 'acc -> t -> 'acc
 
     val eq : t -> t -> t
 
     val splat : bitv8 expr -> t
+
+    val bitmask : t -> bitv32 expr
 
     val add : t -> t -> t
 
@@ -805,11 +811,17 @@ module Bitv128 : sig
   module I16x8 : sig
     val map : (bitv16 expr -> bitv16 expr) -> t -> t
 
+    val mapi : (int -> bitv16 expr -> bitv16 expr) -> t -> t
+
     val map2 : (bitv16 expr -> bitv16 expr -> bitv16 expr) -> t -> t -> t
+
+    val fold_left : ('acc -> bitv16 expr -> 'acc) -> 'acc -> t -> 'acc
 
     val eq : t -> t -> t
 
     val splat : bitv16 expr -> t
+
+    val bitmask : t -> bitv32 expr
 
     val add : t -> t -> t
 
@@ -819,11 +831,17 @@ module Bitv128 : sig
   module I32x4 : sig
     val map : (bitv32 expr -> bitv32 expr) -> t -> t
 
+    val mapi : (int -> bitv32 expr -> bitv32 expr) -> t -> t
+
     val map2 : (bitv32 expr -> bitv32 expr -> bitv32 expr) -> t -> t -> t
+
+    val fold_left : ('acc -> bitv32 expr -> 'acc) -> 'acc -> t -> 'acc
 
     val eq : t -> t -> t
 
     val splat : bitv32 expr -> t
+
+    val bitmask : t -> bitv32 expr
 
     val add : t -> t -> t
 
@@ -833,11 +851,17 @@ module Bitv128 : sig
   module I64x2 : sig
     val map : (bitv64 expr -> bitv64 expr) -> t -> t
 
+    val mapi : (int -> bitv64 expr -> bitv64 expr) -> t -> t
+
     val map2 : (bitv64 expr -> bitv64 expr -> bitv64 expr) -> t -> t -> t
+
+    val fold_left : ('acc -> bitv64 expr -> 'acc) -> 'acc -> t -> 'acc
 
     val eq : t -> t -> t
 
     val splat : bitv64 expr -> t
+
+    val bitmask : t -> bitv32 expr
 
     val add : t -> t -> t
 

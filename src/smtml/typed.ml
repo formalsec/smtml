@@ -565,6 +565,29 @@ module Bitv128 = struct
       let v16 = f v16 in
       of_i8x16 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15 v16
 
+    let mapi f v =
+      let v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16
+          =
+        to_i8x16 v
+      in
+      let v1 = f 0 v1 in
+      let v2 = f 1 v2 in
+      let v3 = f 2 v3 in
+      let v4 = f 3 v4 in
+      let v5 = f 4 v5 in
+      let v6 = f 5 v6 in
+      let v7 = f 6 v7 in
+      let v8 = f 7 v8 in
+      let v9 = f 8 v9 in
+      let v10 = f 9 v10 in
+      let v11 = f 10 v11 in
+      let v12 = f 11 v12 in
+      let v13 = f 12 v13 in
+      let v14 = f 13 v14 in
+      let v15 = f 14 v15 in
+      let v16 = f 15 v16 in
+      of_i8x16 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15 v16
+
     let map2 f u v =
       let u1, u2, u3, u4, u5, u6, u7, u8, u9, u10, u11, u12, u13, u14, u15, u16
           =
@@ -592,6 +615,29 @@ module Bitv128 = struct
       let w16 = f u16 v16 in
       of_i8x16 w1 w2 w3 w4 w5 w6 w7 w8 w9 w10 w11 w12 w13 w14 w15 w16
 
+    let fold_left f acc v =
+      let v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16
+          =
+        to_i8x16 v
+      in
+      let acc = f acc v1 in
+      let acc = f acc v2 in
+      let acc = f acc v3 in
+      let acc = f acc v4 in
+      let acc = f acc v5 in
+      let acc = f acc v6 in
+      let acc = f acc v7 in
+      let acc = f acc v8 in
+      let acc = f acc v9 in
+      let acc = f acc v10 in
+      let acc = f acc v11 in
+      let acc = f acc v12 in
+      let acc = f acc v13 in
+      let acc = f acc v14 in
+      let acc = f acc v15 in
+      let acc = f acc v16 in
+      acc
+
     let eq u v =
       map2
         (fun x y ->
@@ -599,6 +645,24 @@ module Bitv128 = struct
         u v
 
     let splat v = of_i8x16 v v v v v v v v v v v v v v v v
+
+    let bitmask v =
+      let _i, acc =
+        fold_left
+          (fun (i, acc) lane ->
+            let sign =
+              Bool.not
+                (Bitv8.eq (Bitv8.logand lane (Bitv8.of_int 0x80)) Bitv8.zero)
+            in
+            let bit =
+              Bool.ite sign
+                (Bitv32.shl (Bitv32.of_int 1) (Bitv32.of_int i))
+                Bitv32.zero
+            in
+            (succ i, Bitv32.logor acc bit) )
+          (0, Bitv32.zero) v
+      in
+      acc
 
     let add x y = map2 Bitv8.add x y
 
@@ -618,6 +682,18 @@ module Bitv128 = struct
       let v8 = f v8 in
       of_i16x8 v1 v2 v3 v4 v5 v6 v7 v8
 
+    let mapi f v =
+      let v1, v2, v3, v4, v5, v6, v7, v8 = to_i16x8 v in
+      let v1 = f 0 v1 in
+      let v2 = f 1 v2 in
+      let v3 = f 2 v3 in
+      let v4 = f 3 v4 in
+      let v5 = f 4 v5 in
+      let v6 = f 5 v6 in
+      let v7 = f 6 v7 in
+      let v8 = f 7 v8 in
+      of_i16x8 v1 v2 v3 v4 v5 v6 v7 v8
+
     let map2 f u v =
       let u1, u2, u3, u4, u5, u6, u7, u8 = to_i16x8 u in
       let v1, v2, v3, v4, v5, v6, v7, v8 = to_i16x8 v in
@@ -631,6 +707,18 @@ module Bitv128 = struct
       let w8 = f u8 v8 in
       of_i16x8 w1 w2 w3 w4 w5 w6 w7 w8
 
+    let fold_left f acc v =
+      let v1, v2, v3, v4, v5, v6, v7, v8 = to_i16x8 v in
+      let acc = f acc v1 in
+      let acc = f acc v2 in
+      let acc = f acc v3 in
+      let acc = f acc v4 in
+      let acc = f acc v5 in
+      let acc = f acc v6 in
+      let acc = f acc v7 in
+      let acc = f acc v8 in
+      acc
+
     let eq u v =
       map2
         (fun x y ->
@@ -638,6 +726,27 @@ module Bitv128 = struct
         u v
 
     let splat v = of_i16x8 v v v v v v v v
+
+    let bitmask v =
+      let _i, acc =
+        fold_left
+          (fun (i, acc) lane ->
+            let sign =
+              Bool.not
+                (Bitv16.eq
+                   (Bitv16.logand lane (Bitv16.of_int 0x8000))
+                   Bitv16.zero )
+            in
+            let acc =
+              Bitv32.logor acc
+                (Bool.ite sign
+                   (Bitv32.shl (Bitv32.of_int 1) (Bitv32.of_int i))
+                   Bitv32.zero )
+            in
+            (succ i, acc) )
+          (0, Bitv32.zero) v
+      in
+      acc
 
     let add x y = map2 Bitv16.add x y
 
@@ -653,6 +762,14 @@ module Bitv128 = struct
       let v4 = f v4 in
       of_i32x4 v1 v2 v3 v4
 
+    let mapi f v =
+      let v1, v2, v3, v4 = to_i32x4 v in
+      let v1 = f 0 v1 in
+      let v2 = f 1 v2 in
+      let v3 = f 2 v3 in
+      let v4 = f 3 v4 in
+      of_i32x4 v1 v2 v3 v4
+
     let map2 f u v =
       let u1, u2, u3, u4 = to_i32x4 u in
       let v1, v2, v3, v4 = to_i32x4 v in
@@ -662,6 +779,14 @@ module Bitv128 = struct
       let w4 = f u4 v4 in
       of_i32x4 w1 w2 w3 w4
 
+    let fold_left f acc v =
+      let v1, v2, v3, v4 = to_i32x4 v in
+      let acc = f acc v1 in
+      let acc = f acc v2 in
+      let acc = f acc v3 in
+      let acc = f acc v4 in
+      acc
+
     let eq u v =
       map2
         (fun x y ->
@@ -669,6 +794,21 @@ module Bitv128 = struct
         u v
 
     let splat v = of_i32x4 v v v v
+
+    let bitmask v =
+      mapi
+        (fun i lane ->
+          let sign =
+            Bool.not
+              (Bitv32.eq
+                 (Bitv32.logand lane (Bitv32.of_int32 Int32.min_int))
+                 Bitv32.zero )
+          in
+          Bool.ite sign
+            (Bitv32.shl (Bitv32.of_int 1) (Bitv32.of_int i))
+            Bitv32.zero )
+        v
+      |> fold_left Bitv32.logor Bitv32.zero
 
     let add x y = map2 Bitv32.add x y
 
@@ -682,12 +822,24 @@ module Bitv128 = struct
       let v2 = f v2 in
       of_i64x2 v1 v2
 
+    let mapi f v =
+      let v1, v2 = to_i64x2 v in
+      let v1 = f 0 v1 in
+      let v2 = f 1 v2 in
+      of_i64x2 v1 v2
+
     let map2 f u v =
       let u1, u2 = to_i64x2 u in
       let v1, v2 = to_i64x2 v in
       let w1 = f u1 v1 in
       let w2 = f u2 v2 in
       of_i64x2 w1 w2
+
+    let fold_left f acc v =
+      let v1, v2 = to_i64x2 v in
+      let acc = f acc v1 in
+      let acc = f acc v2 in
+      acc
 
     let eq u v =
       map2
@@ -698,6 +850,27 @@ module Bitv128 = struct
         u v
 
     let splat v = of_i64x2 v v
+
+    let bitmask v =
+      let _i, acc =
+        fold_left
+          (fun (i, acc) lane ->
+            let sign =
+              Bool.not
+                (Bitv64.eq
+                   (Bitv64.logand lane (Bitv64.of_int64 0x8000000000000000L))
+                   Bitv64.zero )
+            in
+            let acc =
+              Bitv32.logor acc
+                (Bool.ite sign
+                   (Bitv32.shl (Bitv32.of_int 1) (Bitv32.of_int i))
+                   Bitv32.zero )
+            in
+            (succ i, acc) )
+          (0, Bitv32.zero) v
+      in
+      acc
 
     let add x y = map2 Bitv64.add x y
 
