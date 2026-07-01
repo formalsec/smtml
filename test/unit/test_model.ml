@@ -30,7 +30,7 @@ let test_to_json _ =
     tbl
   in
   let model_to_json = Model.to_json model in
-  let model = Fmt.str "%a" (Yojson.pretty_print ~std:true) model_to_json in
+  let model = Fmt.str "%a" (Yojson.Safe.pretty_print ~std:true) model_to_json in
   assert_equal expected model
 
 let test_of_json _ =

@@ -34,7 +34,7 @@ let pp ?(no_values = false) fmt model =
 
 let to_string (model : t) : string = Fmt.str "%a" (pp ~no_values:false) model
 
-let to_json (model : t) : Yojson.t =
+let to_json (model : t) : Yojson.Safe.t =
   let combine = Yojson.Safe.Util.combine in
   let add_assignment sym value assignments =
     let assignment =
@@ -46,7 +46,7 @@ let to_json (model : t) : Yojson.t =
     in
     combine assignments assignment
   in
-  let model :> Yojson.t = Hashtbl.fold add_assignment model (`Assoc []) in
+  let model = Hashtbl.fold add_assignment model (`Assoc []) in
   `Assoc [ ("model", model) ]
 
 (** {b Example}: Model in the json format:
@@ -62,7 +62,7 @@ let to_json (model : t) : Yojson.t =
     ]} *)
 let to_json_string model =
   let model = to_json model in
-  Fmt.str "%a" (Yojson.pretty_print ~std:true) model
+  Fmt.str "%a" (Yojson.Safe.pretty_print ~std:true) model
 
 let to_scfg ~no_value model =
   let open Scfg.Types in
