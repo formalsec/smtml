@@ -850,7 +850,7 @@ let test_printer _ =
   let y = Expr.symbol (Symbol.make ty "y") in
   let e = Expr.binop ty Add x y in
   let serialized = Fmt.str "%a" Expr.Printer.pp_expr e in
-  let parsed = Parse.Smtml.Expr.from_string serialized in
+  let parsed = Parse.Smtml.Expr.from_string serialized |> Result.get_ok in
   check e parsed
 
 let test_printer_query _ =
@@ -859,7 +859,7 @@ let test_printer_query _ =
   let y = Expr.symbol (Symbol.make ty "y") in
   let e = Expr.binop ty Add x y in
   let serialized = Fmt.str "%a" Expr.Printer.pp_query [ e ] in
-  let script = Parse.Smtml.Script.from_string serialized in
+  let script = Parse.Smtml.Script.from_string serialized |> Result.get_ok in
   assert (List.length script = 4)
 
 let test_suite =

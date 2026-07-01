@@ -16,6 +16,6 @@ let of_string = function
   | "batch" -> Ok Batch
   | "cached" -> Ok Cached
   | "incremental" -> Ok Incremental
-  | _mode -> Error (`Msg (Fmt.str "unknown prover mode"))
+  | mode -> Fmt.error_msg "unknown prover mode: %s" mode
 
 let conv = Cmdliner.Arg.conv (of_string, pp)

@@ -83,11 +83,11 @@ let predictor_conv =
     match String.lowercase_ascii s with
     | "gradient-boost" | "gb" -> Ok GradientBoost
     | "decision-tree" | "dt" -> Ok DecisionTree
-    | _ -> Error (`Msg (Printf.sprintf "Unknown model type: %s" s))
+    | _ -> Fmt.error_msg "Unknown model type: %s" s
   in
   let print ppf = function
-    | GradientBoost -> Format.fprintf ppf "gradient-boost"
-    | DecisionTree -> Format.fprintf ppf "decision-tree"
+    | GradientBoost -> Fmt.pf ppf "gradient-boost"
+    | DecisionTree -> Fmt.pf ppf "decision-tree"
   in
   Arg.conv (parse, print)
 
@@ -99,7 +99,7 @@ let pos_int =
     | Some i when i > 0 -> Ok i
     | None | Some _ -> Fmt.error_msg "Expected a positive integer"
   in
-  Arg.conv (parser, Format.pp_print_int)
+  Arg.conv (parser, Fmt.int)
 
 let n_estimators =
   let doc =

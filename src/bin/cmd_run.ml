@@ -46,19 +46,18 @@ let run (s : Settings.Run.t) =
     incr total_tests;
     let start_t = Unix.gettimeofday () in
     let ast =
-      try Ok (Compile.until_rewrite file) with
-      | Parse.Syntax_error err -> Error (`Parsing_error (file, err))
-      | Smtml.Eval.Eval_error err -> Error (`Eval_error err)
+      try Compile.until_rewrite file
+      with Smtml.Eval.Eval_error err -> Error (`Eval_error err)
     in
     let state =
       match ast with
       | Ok _ when s.dry -> state
       | Ok ast ->
         Some (Interpret.start ?state ast ~no_strict_status:s.no_strict_status)
-      | Error (`Parsing_error ((fpath, err_msg) as err)) ->
-        Log.err (fun k -> k "%a: %s" Fpath.pp fpath err_msg);
+      | Error (`Msg msg) ->
+        Log.err (fun k -> k "%a: %s" Fpath.pp file msg);
         incr exception_count;
-        exception_log := err :: !exception_log;
+        exception_log := (file, msg) :: !exception_log;
         state
       | Error (`Eval_error kind) ->
         Log.err (fun k ->

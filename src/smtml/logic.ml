@@ -88,4 +88,4 @@ let of_string logic =
   | "QF_UFNRA" -> Ok QF_UFNRA
   | "UFLRA" -> Ok UFLRA
   | "UFNIA" -> Ok UFNIA
-  | _ -> Error (`Msg (Fmt.str "unknown logic %s" logic))
+  | _ -> Fmt.error_msg "unknown logic %s" logic

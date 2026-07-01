@@ -13,7 +13,7 @@ let benchmarks =
   |> Result.get_ok
 
 let make_test path _ =
-  let script = Smtml.Compile.until_rewrite path in
+  let script = Smtml.Compile.until_rewrite path |> Result.get_ok in
   let _ = Interpreter.start ~no_strict_status:true ~quiet:true script in
   ()
 

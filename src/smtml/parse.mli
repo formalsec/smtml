@@ -8,27 +8,24 @@
 
 (** {1 Exceptions} *)
 
-(** Exception raised when a syntax error occurs during parsing. *)
-exception Syntax_error of string
-
 (** {1 Smt.ml Parsing} *)
 
 module Smtml : sig
   module Script : sig
     (** [from_file file] parses an SMT-ML script from the given [file]. *)
-    val from_file : Fpath.t -> Ast.Script.t
+    val from_file : Fpath.t -> (Ast.Script.t, [> `Msg of string ]) result
 
     (** [from_string s] parses an SMT-ML script from the given string [s]. *)
-    val from_string : string -> Ast.Script.t
+    val from_string : string -> (Ast.Script.t, [> `Msg of string ]) result
   end
 
   module Expr : sig
     (** [from_file file] parses an SMT-ML expression from the given [file]. *)
-    val from_file : Fpath.t -> Expr.t
+    val from_file : Fpath.t -> (Expr.t, [> `Msg of string ]) result
 
     (** [from_string s] parses an SMT-ML expression from the given string [s].
     *)
-    val from_string : string -> Expr.t
+    val from_string : string -> (Expr.t, [> `Msg of string ]) result
   end
 end
 
@@ -37,11 +34,11 @@ end
 module Smtlib : sig
   (** [from_file file] parses an SMT-LIB compliant script from the given [file].
   *)
-  val from_file : Fpath.t -> Ast.Script.t
+  val from_file : Fpath.t -> (Ast.Script.t, [> `Msg of string ]) result
 end
 
 (** {1 Generic Parsing} *)
 
 (** [from_file file] attempts to parse an SMT-ML (.smtml) or SMT-LIB (.smt2)
     script based on the file extension of [file]. *)
-val from_file : Fpath.t -> Ast.Script.t
+val from_file : Fpath.t -> (Ast.Script.t, [> `Msg of string ]) result
