@@ -790,7 +790,9 @@ module Bitv128 = struct
     let eq u v =
       map2
         (fun x y ->
-          Bool.ite (Bitv32.eq x y) (Bitv32.of_int 0xFFFF) (Bitv32.of_int 0x0000) )
+          Bool.ite (Bitv32.eq x y)
+            (Bitv32.of_int32 0xFFFFFFFFl)
+            (Bitv32.of_int32 0x00000000l) )
         u v
 
     let splat v = of_i32x4 v v v v
@@ -845,8 +847,8 @@ module Bitv128 = struct
       map2
         (fun x y ->
           Bool.ite (Bitv64.eq x y)
-            (Bitv64.of_int64 0xFFFFFFFFL)
-            (Bitv64.of_int64 0x00000000L) )
+            (Bitv64.of_int64 0xFFFFFFFFFFFFFFFFL)
+            (Bitv64.of_int64 0x0000000000000000L) )
         u v
 
     let splat v = of_i64x2 v v
