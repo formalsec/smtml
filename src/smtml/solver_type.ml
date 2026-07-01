@@ -21,7 +21,7 @@ let of_string s =
   | "cvc5" -> Ok Cvc5_solver
   | "alt-ergo" -> Ok Altergo_solver
   | "smtzilla" -> Ok Smtzilla_solver
-  | s -> Error (`Msg (Fmt.str "unknown solver %s" s))
+  | s -> Fmt.error_msg "unknown solver %s" s
 
 let pp fmt = function
   | Z3_solver -> Fmt.string fmt "Z3"

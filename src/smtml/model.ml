@@ -109,21 +109,21 @@ module Parse = struct
     module Json = Yojson.Safe
 
     let from_json json =
-      let symbols = Json.Util.member "model" json |> Json.Util.to_assoc in
       let tbl = Hashtbl.create 16 in
       let* () =
+        let symbols = Json.Util.member "model" json |> Json.Util.to_assoc in
         Result.list_iter
           (fun (symbol, json) ->
             let ty = Json.Util.member "ty" json |> Json.Util.to_string in
             let* ty = Ty.of_string ty in
-            let value =
-              (* FIXME: this is a bit hackish in order to reuse the previous code *)
+            let* value =
               match Json.Util.member "value" json with
-              | `Bool x -> Bool.to_string x
-              | `Float x -> Float.to_string x
-              | `Int x -> Int.to_string x
-              | `String x -> x
-              | _ -> assert false
+              | `Bool x -> Ok (Bool.to_string x)
+              | `Float x -> Ok (Float.to_string x)
+              | `Int x -> Ok (Int.to_string x)
+              | `String x -> Ok x
+              | invalid ->
+                Fmt.error_msg "Invalid json value: %a" Json.pp invalid
             in
             let+ value = Value.of_string ty value in
             let key = Symbol.make ty symbol in
@@ -132,13 +132,27 @@ module Parse = struct
       in
       Ok tbl
 
-    let from_string s = Json.from_string s |> from_json
+    let from_string s =
+      let* model =
+        try Ok (Json.from_string s)
+        with Yojson.Json_error msg -> Fmt.error_msg "invalid json: %s" msg
+      in
+      from_json model
 
-    let from_channel chan = Json.from_channel chan |> from_json
+    let from_channel chan =
+      let* model =
+        try Ok (Json.from_channel chan)
+        with Yojson.Json_error msg -> Fmt.error_msg "invalid json: %s" msg
+      in
+      from_json model
 
     let from_file file =
       let file = Fpath.to_string file in
-      Json.from_file ~fname:file file |> from_json
+      let* model =
+        try Ok (Json.from_file ~fname:file file)
+        with Yojson.Json_error msg -> Fmt.error_msg "invalid json: %s" msg
+      in
+      from_json model
   end
 
   module Scfg = struct

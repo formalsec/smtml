@@ -3,5 +3,6 @@
 (* Written by the Smtml programmers *)
 
 let until_rewrite filename =
-  let script = Parse.from_file filename in
+  let open Result.Syntax in
+  let+ script = Parse.from_file filename in
   Rewrite.rewrite script

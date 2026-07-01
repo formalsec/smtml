@@ -2,8 +2,6 @@
 (* Copyright (C) 2023-2026 formalsec *)
 (* Written by the Smtml programmers *)
 
-exception Syntax_error of string
-
 module Smtml = struct
   open Lexer
   open Lexing
@@ -14,15 +12,14 @@ module Smtml = struct
       (pos.pos_cnum - pos.pos_bol + 1)
 
   let parse_with_error parser lexbuf =
-    try parser Lexer.token lexbuf with
-    | SyntaxError msg ->
-      raise (Syntax_error (Fmt.str "%a: %s" pp_pos lexbuf msg))
-    | Parser.Error ->
-      raise (Syntax_error (Fmt.str "%a: syntax error" pp_pos lexbuf))
+    try Ok (parser Lexer.token lexbuf) with
+    | SyntaxError msg -> Fmt.error_msg "%a: %s" pp_pos lexbuf msg
+    | Parser.Error -> Fmt.error_msg "%a: syntax error" pp_pos lexbuf
 
   module Script = struct
     let from_file filename =
-      let res =
+      let open Result.Syntax in
+      let* result =
         Bos.OS.File.with_ic filename
           (fun chan () ->
             let lexbuf = Lexing.from_channel chan in
@@ -31,7 +28,7 @@ module Smtml = struct
             parse_with_error Parser.script lexbuf )
           ()
       in
-      match res with Error (`Msg e) -> Fmt.failwith "%s" e | Ok v -> v
+      result
 
     let from_string contents =
       parse_with_error Parser.script (Lexing.from_string contents)
@@ -39,7 +36,8 @@ module Smtml = struct
 
   module Expr = struct
     let from_file filename =
-      let res =
+      let open Result.Syntax in
+      let* result =
         Bos.OS.File.with_ic filename
           (fun chan () ->
             let lexbuf = Lexing.from_channel chan in
@@ -48,7 +46,7 @@ module Smtml = struct
             parse_with_error Parser.expression lexbuf )
           ()
       in
-      match res with Error (`Msg e) -> Fmt.failwith "%s" e | Ok v -> v
+      result
 
     let from_string contents =
       parse_with_error Parser.expression (Lexing.from_string contents)
@@ -59,18 +57,12 @@ module Smtlib = struct
   let from_file filename =
     try
       let _, st = Smtlib.parse_all (`File (Fpath.to_string filename)) in
-      Lazy.force st
+      Ok (Lazy.force st)
     with
     | Dolmen.Std.Loc.Syntax_error (loc, `Regular msg) ->
-      raise
-        (Syntax_error
-           (Fmt.str "%a: syntax error: %t" Dolmen.Std.Loc.print_compact loc msg)
-        )
+      Fmt.error_msg "%a: syntax error: %t" Dolmen.Std.Loc.print_compact loc msg
     | Dolmen.Std.Loc.Syntax_error (loc, `Advanced (x, _, _, _)) ->
-      raise
-        (Syntax_error
-           (Fmt.str "%a: syntax error: %s" Dolmen.Std.Loc.print_compact loc x)
-        )
+      Fmt.error_msg "%a: syntax error: %s" Dolmen.Std.Loc.print_compact loc x
 end
 
 let from_file filename =
