@@ -39,7 +39,7 @@ val pp : ?no_values:bool -> t Fmt.t
 val to_string : t -> string
 
 (** [to_json tbl] converts [tbl] to a JSON representation. *)
-val to_json : t -> Yojson.t
+val to_json : t -> Yojson.Safe.t
 
 (** [to_json_string tbl] converts [tbl] to a JSON string. *)
 val to_json_string : t -> string
