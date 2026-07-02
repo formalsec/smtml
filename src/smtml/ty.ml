@@ -702,6 +702,7 @@ module Smtlib = struct
     | Ty_str, String_contains -> Fmt.string fmt "str.contains"
     | Ty_str, String_last_index -> assert false
     | Ty_str, String_in_re -> Fmt.string fmt "str.in_re"
+    | _, Implies -> Fmt.string fmt "=>"
     | _ -> assert false
 
   let pp_relop fmt ((ty, op) : t * Relop.t) =

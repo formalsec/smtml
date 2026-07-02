@@ -597,6 +597,26 @@ module F32 = struct
     | Floor -> fp32_of_float @@ Float.floor f
     | Trunc -> fp32_of_float @@ Float.trunc f
     | Is_nan -> if Float.is_nan f then Value.True else Value.False
+    | Is_normal ->
+      begin match Float.classify_float f with
+      | Float.FP_normal -> Value.True
+      | _ -> Value.False
+      end
+    | Is_subnormal ->
+      begin match Float.classify_float f with
+      | Float.FP_subnormal -> Value.True
+      | _ -> Value.False
+      end
+    | Is_negative ->
+      if Float.compare f Float.zero < 0 then Value.True else Value.False
+    | Is_positive ->
+      if Float.compare f Float.zero >= 0 then Value.True else Value.False
+    | Is_infinite -> if Float.is_infinite f then Value.True else Value.False
+    | Is_zero ->
+      begin match Float.classify_float f with
+      | Float.FP_zero -> Value.True
+      | _ -> Value.False
+      end
     | _ -> eval_error (`Unsupported_operator (`Unop op, Ty_fp 32))
 
   (* Stolen from Owi *)
