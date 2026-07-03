@@ -92,9 +92,12 @@
     colibri2.solver
     colibri2.popop_lib
     colibri2.theories.bool
+    colibri2.theories.adt
+    colibri2.theories.array
     colibri2.theories.quantifiers
     colibri2.theories.LRA
     colibri2.theories.LRA.stages.stage2
+    colibri2.theories.nseq
     colibri2.theories.fp
     ->
     colibri2_mappings.default.ml)

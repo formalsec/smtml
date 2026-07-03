@@ -54,6 +54,20 @@ module M = struct
     type optimizer
 
     module Solver = struct
+      let default_theories =
+        [ Colibri2_theories_bool.Ite.th_register
+        ; Colibri2_theories_bool.Boolean.th_register
+        ; Colibri2_theories_bool.Equality.th_register
+        ; Colibri2_theories_adt.Adt.th_register
+        ; Colibri2_theories_array.Array.th_register
+        ; Colibri2_theories_fp.Fp.th_register
+        ; Colibri2_theories_LRA.LRA.th_register
+        ; Colibri2_theories_nseq.NSeq.th_register
+        ; Colibri2_theories_quantifiers.Quantifier.th_register
+        ; Colibri2_theories_quantifiers.Uninterp.th_register
+          (* ; Colibri2_theories_Dseq.Init.th_register *)
+        ]
+
       let mk_scheduler () =
         let scheduler = Scheduler.new_solver ~learning:false () in
         Scheduler.init_theories
@@ -62,8 +76,7 @@ module M = struct
             :: Colibri2_theories_bool.Equality.th_register
             :: Colibri2_theories_bool.Ite.th_register
             :: Colibri2_theories_LRA.LRA.th_register
-            :: Colibri2_theories_fp.Fp.th_register
-            :: Colibri2_core.ForSchedulers.default_theories () )
+            :: Colibri2_theories_fp.Fp.th_register :: default_theories )
           scheduler;
         scheduler
 
