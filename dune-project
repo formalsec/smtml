@@ -52,7 +52,11 @@
   (alt-ergo-lib
    (< "2.6.2"))
   (z3
-   (< "4.16.0")))
+   (< "4.16.0"))
+  (colibri2
+   (<= "0.6.0"))
+  (colibrilib
+   (<= "0.6.0")))
  (depends
   bos
   (cmdliner
