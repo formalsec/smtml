@@ -786,7 +786,40 @@ module Bitv128 : sig
   (** [to_i64x2] splits the 128-bit vector into two 64-bit terms. *)
   val to_i64x2 : t -> bitv64 expr * bitv64 expr
 
-  val any_true : t -> Bool.t
+  val of_f32x4 :
+    float32 expr -> float32 expr -> float32 expr -> float32 expr -> t
+
+  val of_f64x2 : float64 expr -> float64 expr -> t
+
+  val logor : t -> t -> t
+
+  val logand : t -> t -> t
+
+  val lognot : t -> t
+
+  val andnot : t -> t -> t
+
+  val logxor : t -> t -> t
+
+  val bitselect : t -> t -> t -> t
+
+  val replace_lane8 : int -> bitv32 expr -> t -> t
+
+  val replace_lane16 : int -> bitv32 expr -> t -> t
+
+  val replace_lane32 : int -> bitv32 expr -> t -> t
+
+  val replace_lane64 : int -> bitv64 expr -> t -> t
+
+  val extract_lane8 : int -> t -> bitv32 expr
+
+  val extract_lane16 : int -> t -> bitv32 expr
+
+  val extract_lane32 : int -> t -> bitv32 expr
+
+  val extract_lane64 : int -> t -> bitv64 expr
+
+  val any_true : t -> bool expr
 
   module I8x16 : sig
     val map : (bitv8 expr -> bitv8 expr) -> t -> t
@@ -799,13 +832,79 @@ module Bitv128 : sig
 
     val eq : t -> t -> t
 
-    val splat : bitv8 expr -> t
+    val ne : t -> t -> t
+
+    val splat : bitv32 expr -> t
 
     val bitmask : t -> bitv32 expr
 
     val add : t -> t -> t
 
     val sub : t -> t -> t
+
+    val abs : t -> t
+
+    val neg : t -> t
+
+    val popcnt : t -> t
+
+    val all_true : t -> bitv32 expr
+
+    val lt_s : t -> t -> t
+
+    val lt_u : t -> t -> t
+
+    val gt_s : t -> t -> t
+
+    val gt_u : t -> t -> t
+
+    val le_s : t -> t -> t
+
+    val le_u : t -> t -> t
+
+    val ge_s : t -> t -> t
+
+    val ge_u : t -> t -> t
+
+    val shl : bitv32 expr -> t -> t
+
+    val shr_s : bitv32 expr -> t -> t
+
+    val shr_u : bitv32 expr -> t -> t
+
+    val min_s : t -> t -> t
+
+    val min_u : t -> t -> t
+
+    val max_s : t -> t -> t
+
+    val max_u : t -> t -> t
+
+    val add_sat_s : t -> t -> t
+
+    val add_sat_u : t -> t -> t
+
+    val sub_sat_s : t -> t -> t
+
+    val sub_sat_u : t -> t -> t
+
+    val avgr_u : t -> t -> t
+
+    val narrow_i16x8_s : t -> t -> t
+
+    val narrow_i16x8_u : t -> t -> t
+
+    val bitselect : t -> t -> t -> t
+
+    val swizzle : t -> t -> t
+
+    val extract_lane_s : int -> t -> bitv32 expr
+
+    val extract_lane_u : int -> t -> bitv32 expr
+
+    val replace_lane : int -> bitv32 expr -> t -> t
+
+    val shuffle : int array -> t -> t -> t
   end
 
   module I16x8 : sig
@@ -819,13 +918,95 @@ module Bitv128 : sig
 
     val eq : t -> t -> t
 
-    val splat : bitv16 expr -> t
+    val ne : t -> t -> t
 
     val bitmask : t -> bitv32 expr
 
     val add : t -> t -> t
 
     val sub : t -> t -> t
+
+    val mul : t -> t -> t
+
+    val abs : t -> t
+
+    val neg : t -> t
+
+    val all_true : t -> bitv32 expr
+
+    val lt_s : t -> t -> t
+
+    val lt_u : t -> t -> t
+
+    val gt_s : t -> t -> t
+
+    val gt_u : t -> t -> t
+
+    val le_s : t -> t -> t
+
+    val le_u : t -> t -> t
+
+    val ge_s : t -> t -> t
+
+    val ge_u : t -> t -> t
+
+    val min_s : t -> t -> t
+
+    val min_u : t -> t -> t
+
+    val max_s : t -> t -> t
+
+    val max_u : t -> t -> t
+
+    val add_sat_s : t -> t -> t
+
+    val add_sat_u : t -> t -> t
+
+    val sub_sat_s : t -> t -> t
+
+    val sub_sat_u : t -> t -> t
+
+    val q15mulr_sat_s : t -> t -> t
+
+    val shl : bitv32 expr -> t -> t
+
+    val shr_s : bitv32 expr -> t -> t
+
+    val shr_u : bitv32 expr -> t -> t
+
+    val avgr_u : t -> t -> t
+
+    val narrow_i32x4_s : t -> t -> t
+
+    val narrow_i32x4_u : t -> t -> t
+
+    val extend_low_i8x16_s : t -> t
+
+    val extend_low_i8x16_u : t -> t
+
+    val extend_high_i8x16_s : t -> t
+
+    val extend_high_i8x16_u : t -> t
+
+    val extmul_low_i8x16_s : t -> t -> t
+
+    val extmul_low_i8x16_u : t -> t -> t
+
+    val extmul_high_i8x16_s : t -> t -> t
+
+    val extmul_high_i8x16_u : t -> t -> t
+
+    val extadd_pairwise_i8x16_s : t -> t
+
+    val extadd_pairwise_i8x16_u : t -> t
+
+    val extract_lane_s : int -> t -> bitv32 expr
+
+    val extract_lane_u : int -> t -> bitv32 expr
+
+    val replace_lane : int -> bitv32 expr -> t -> t
+
+    val splat : bitv32 expr -> t
   end
 
   module I32x4 : sig
@@ -839,6 +1020,8 @@ module Bitv128 : sig
 
     val eq : t -> t -> t
 
+    val ne : t -> t -> t
+
     val splat : bitv32 expr -> t
 
     val bitmask : t -> bitv32 expr
@@ -846,6 +1029,78 @@ module Bitv128 : sig
     val add : t -> t -> t
 
     val sub : t -> t -> t
+
+    val mul : t -> t -> t
+
+    val neg : t -> t
+
+    val abs : t -> t
+
+    val all_true : t -> bitv32 expr
+
+    val lt_s : t -> t -> t
+
+    val lt_u : t -> t -> t
+
+    val gt_s : t -> t -> t
+
+    val gt_u : t -> t -> t
+
+    val le_s : t -> t -> t
+
+    val le_u : t -> t -> t
+
+    val ge_s : t -> t -> t
+
+    val ge_u : t -> t -> t
+
+    val min_s : t -> t -> t
+
+    val min_u : t -> t -> t
+
+    val max_s : t -> t -> t
+
+    val max_u : t -> t -> t
+
+    val shl : bitv32 expr -> t -> t
+
+    val shr_s : bitv32 expr -> t -> t
+
+    val shr_u : bitv32 expr -> t -> t
+
+    val extend_low_i16x8_s : t -> t
+
+    val extend_low_i16x8_u : t -> t
+
+    val extend_high_i16x8_s : t -> t
+
+    val extend_high_i16x8_u : t -> t
+
+    val extmul_low_i16x8_s : t -> t -> t
+
+    val extmul_low_i16x8_u : t -> t -> t
+
+    val extmul_high_i16x8_s : t -> t -> t
+
+    val extmul_high_i16x8_u : t -> t -> t
+
+    val extadd_pairwise_i16x8_s : t -> t
+
+    val extadd_pairwise_i16x8_u : t -> t
+
+    val dot_i16x8_s : t -> t -> t
+
+    val trunc_sat_f32x4_s : t -> t
+
+    val trunc_sat_f32x4_u : t -> t
+
+    val trunc_sat_f64x2_s_zero : t -> t
+
+    val trunc_sat_f64x2_u_zero : t -> t
+
+    val extract_lane : int -> t -> bitv32 expr
+
+    val replace_lane : int -> bitv32 expr -> t -> t
   end
 
   module I64x2 : sig
@@ -859,6 +1114,8 @@ module Bitv128 : sig
 
     val eq : t -> t -> t
 
+    val ne : t -> t -> t
+
     val splat : bitv64 expr -> t
 
     val bitmask : t -> bitv32 expr
@@ -866,6 +1123,172 @@ module Bitv128 : sig
     val add : t -> t -> t
 
     val sub : t -> t -> t
+
+    val mul : t -> t -> t
+
+    val neg : t -> t
+
+    val abs : t -> t
+
+    val all_true : t -> bitv32 expr
+
+    val lt_s : t -> t -> t
+
+    val gt_s : t -> t -> t
+
+    val le_s : t -> t -> t
+
+    val ge_s : t -> t -> t
+
+    val shl : bitv32 expr -> t -> t
+
+    val shr_s : bitv32 expr -> t -> t
+
+    val shr_u : bitv32 expr -> t -> t
+
+    val extend_low_i32x4_s : t -> t
+
+    val extend_low_i32x4_u : t -> t
+
+    val extend_high_i32x4_s : t -> t
+
+    val extend_high_i32x4_u : t -> t
+
+    val extmul_low_i32x4_s : t -> t -> t
+
+    val extmul_low_i32x4_u : t -> t -> t
+
+    val extmul_high_i32x4_s : t -> t -> t
+
+    val extmul_high_i32x4_u : t -> t -> t
+
+    val extract_lane : int -> t -> bitv64 expr
+
+    val replace_lane : int -> bitv64 expr -> t -> t
+  end
+
+  module F32x4 : sig
+    val abs : t -> t
+
+    val neg : t -> t
+
+    val sqrt : t -> t
+
+    val add : t -> t -> t
+
+    val sub : t -> t -> t
+
+    val mul : t -> t -> t
+
+    val div : t -> t -> t
+
+    val min : t -> t -> t
+
+    val max : t -> t -> t
+
+    val pmin : t -> t -> t
+
+    val pmax : t -> t -> t
+
+    val eq : t -> t -> t
+
+    val ne : t -> t -> t
+
+    val lt : t -> t -> t
+
+    val gt : t -> t -> t
+
+    val le : t -> t -> t
+
+    val ge : t -> t -> t
+
+    val ceil : t -> t
+
+    val floor : t -> t
+
+    val trunc : t -> t
+
+    val nearest : t -> t
+
+    val splat : float32 expr -> t
+
+    val convert_i32x4_s : t -> t
+
+    val convert_i32x4_u : t -> t
+
+    val convert_low_i32x4_s : t -> t
+
+    val convert_low_i32x4_u : t -> t
+
+    val convert_high_i32x4_s : t -> t
+
+    val convert_high_i32x4_u : t -> t
+
+    val demote_f64x2_zero : t -> t
+
+    val extract_lane : int -> t -> float32 expr
+
+    val replace_lane : int -> float32 expr -> t -> t
+  end
+
+  module F64x2 : sig
+    val abs : t -> t
+
+    val neg : t -> t
+
+    val sqrt : t -> t
+
+    val add : t -> t -> t
+
+    val sub : t -> t -> t
+
+    val mul : t -> t -> t
+
+    val div : t -> t -> t
+
+    val min : t -> t -> t
+
+    val max : t -> t -> t
+
+    val pmin : t -> t -> t
+
+    val pmax : t -> t -> t
+
+    val eq : t -> t -> t
+
+    val ne : t -> t -> t
+
+    val lt : t -> t -> t
+
+    val gt : t -> t -> t
+
+    val le : t -> t -> t
+
+    val ge : t -> t -> t
+
+    val ceil : t -> t
+
+    val floor : t -> t
+
+    val trunc : t -> t
+
+    val nearest : t -> t
+
+    val splat : float64 expr -> t
+
+    val convert_low_i32x4_s : t -> t
+
+    val convert_low_i32x4_u : t -> t
+
+    val convert_high_i32x4_s : t -> t
+
+    val convert_high_i32x4_u : t -> t
+
+    val promote_low_f32x4 : t -> t
+
+    val extract_lane : int -> t -> float64 expr
+
+    val replace_lane : int -> float64 expr -> t -> t
   end
 end
 
