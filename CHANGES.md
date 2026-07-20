@@ -1,7 +1,8 @@
 # Changelog
 
-## 0.29.0 - 2026-07-13
+## 0.29.0 - 2026-07-15
 
+- 2026-07-15 Release 0.29.0
 - 2026-07-03 Add support for colibri2.0.6.0
 - 2026-07-03 Add colibri2 conflicts constraint on version <= 0.6.0
 - 2026-07-03 Fix issue 642 Unexpected exception thrown and fix pp_binop
