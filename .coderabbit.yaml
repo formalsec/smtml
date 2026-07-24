@@ -1,0 +1,168 @@
+# SPDX-License-Identifier: MIT
+# Copyright (C) 2023-2026 formalsec
+# Written by the Smtml programmers
+
+language: "en-US"
+early_access: true
+enable_free_tier: true
+
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  high_level_summary_in_walkthrough: true
+  review_status: true
+  collapse_walkthrough: true
+  sequence_diagrams: false
+  changed_files_summary: true
+  estimate_code_review_effort: true
+  poem: false
+  in_progress_fortune: true
+  auto_title_placeholder: "@coderabbitai"
+
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - "main"
+    ignore_title_keywords:
+      - "WIP"
+      - "wip"
+      - "DO NOT MERGE"
+      - "draft"
+
+  path_filters:
+    - "!**/_build/**"
+    - "!**/_opam/**"
+    - "!**/node_modules/**"
+    - "!**/*.opam.locked"
+    - "!**/bisect*.coverage"
+    - "!**/.github/workflows/publish.yml"
+    - "!**/.github/workflows/release.yml"
+
+  path_instructions:
+    - path: "**/*.ml"
+      instructions: |
+        OCaml source files. Review with these principles:
+
+        1. Prefer the type system over runtime checks — use Result/Option instead of raising
+           exceptions for recoverable errors. Return `('a, [> ...]) result` with open polymorphic
+           variant error types when a function can fail in multiple ways.
+        2. Use exceptions only for unrecoverable states: `assert false` for branches proven
+           unreachable; `Fmt.failwith` for unsupported operator/theory combos or not-implemented stubs.
+        3. Follow the dual-API convention: a bare function returns a result, an `_exn`-suffixed
+           variant raises on failure (e.g. `trunc_f32_s` / `trunc_f32_s_exn`).
+        4. Use existing monadic combinators (`Option.Syntax`, `Result.Syntax`, `let+`) instead
+           of manual match nesting.
+        5. Every new `.ml`/`.mli` file must have the SPDX + copyright header:
+           ```
+           (* SPDX-License-Identifier: MIT *)
+           (* Copyright (C) 2023-2026 formalsec *)
+           (* Written by the Smtml programmers *)
+           ```
+        6. Module doc comments use `(** ... *)` at the top of the module.
+        7. Formatting must follow ocamlformat v0.29.0 — margin 80, space-around-lists/arrays/records/variants.
+        8. Be aware of phantom type limitations: `'a expr = private Expr.t` means OCaml can subvert
+           the type distinction. The `BitvN.Make` functor is NOT annotated with `: S`, so
+           inferred return types are loose — check for bitwidth mismatches.
+
+    - path: "**/mappings_intf.ml"
+      instructions: |
+        This is the solver backend interface. New operations must be declared here first.
+        Check that the signature is consistent with the Mappings_intf.M module type and
+        that all solver backends implement the new operation (or return None for optional features).
+
+    - path: "**/*_mappings.default.ml"
+      instructions: |
+        Solver backend implementation. Must implement `Mappings_intf.M`. For features the
+        solver doesn't support, return `None` (optional) or use `assert false` (required).
+        Ensure the implementation is a functor `Fresh_<solver> ()` returning the interface.
+
+    - path: "**/*_mappings.nop.ml"
+      instructions: |
+        Stub backend for when a solver is not installed. All operations should be stubs —
+        check that no actual solver functionality is accidentally enabled in stubs.
+
+    - path: "test/**/*.ml"
+      instructions: |
+        Test files using OUnit2 framework. Verify:
+        1. Tests cover edge cases and error paths, not just happy paths.
+        2. Tests are self-contained and don't depend on external solvers unless part of
+           integration/regression test suites.
+        3. Test names are descriptive of what's being tested.
+
+    - path: "**/*.mli"
+      instructions: |
+        Interface files should have complete odoc documentation for all public functions,
+        types, and modules. Use `(** ... *)` doc comments. Parameters should be documented
+        with `@param` tags, return values with `@return`.
+
+    - path: "**/typed.ml"
+      instructions: |
+        This is the public user-facing API. Phantom types (`'a expr = Expr.t`) enforce
+        type-safe expression construction. Check that:
+        1. No runtime type checks circumvent the phantom type safety.
+        2. SMT operations construct the correct typed terms.
+        3. Any new operators are exposed through the proper typed interface.
+
+    - path: "**/mappings.ml"
+      instructions: |
+        Generic encoding layer. This module contains fallback logic when a solver doesn't
+        implement a feature natively. Check that:
+        1. Fallback encodings are semantically correct.
+        2. The fallback doesn't silently produce incorrect results.
+        3. Optional solver features use the `to_ieee_bv : (term -> term) option` pattern
+           rather than failing hard.
+
+  tools:
+    ast-grep:
+      essential_rules: true
+    shellcheck:
+      enabled: true
+    markdownlint:
+      enabled: true
+    actionlint:
+      enabled: true
+    zizmor:
+      enabled: true
+    ruff:
+      enabled: false
+    biome:
+      enabled: false
+    hadolint:
+      enabled: false
+    golangci-lint:
+      enabled: false
+    phpstan:
+      enabled: false
+    eslint:
+      enabled: false
+    flake8:
+      enabled: false
+    detekt:
+      enabled: false
+    rubocop:
+      enabled: false
+    clang:
+      enabled: false
+    clippy:
+      enabled: false
+    pmd:
+      enabled: false
+
+  finishing_touches:
+    docstrings:
+      enabled: true
+    unit_tests:
+      enabled: false
+    simplify:
+      enabled: false
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  opt_knowledge_base:
+    - "https://v2.ocaml.org/manual/"
+    - "https://ocaml.org/docs"
+    - "https://docs.coderabbit.ai/"
