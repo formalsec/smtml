@@ -262,8 +262,8 @@ module Unop = struct
     | Regexp_plus -> Fmt.string fmt "+"
     | Regexp_opt -> Fmt.string fmt "opt"
     | Regexp_comp -> Fmt.string fmt "comp"
-    | Rotl n -> Fmt.pf fmt "(rotl %d)" n
-    | Rotr n -> Fmt.pf fmt "(rotr %d)" n
+    | Rotl n -> Fmt.pf fmt "rotl %d" n
+    | Rotr n -> Fmt.pf fmt "rotr %d" n
 end
 
 module Binop = struct

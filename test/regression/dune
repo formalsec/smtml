@@ -1,0 +1,4 @@
+(test
+ (name test_regression)
+ (modules test_regression test_issue_655)
+ (libraries smtml str alcotest))
