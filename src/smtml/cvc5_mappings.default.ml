@@ -30,7 +30,7 @@ module Fresh_cvc5 () = struct
 
   type optimizer = unit (* Not supported *)
 
-  type func_decl = unit
+  type func_decl = Term.term
 
   let tm = TermManager.mk_tm ()
 
@@ -505,9 +505,14 @@ module Fresh_cvc5 () = struct
   end
 
   module Func = struct
-    let make _ _ _ = ()
+    let make name args ret =
+      let args = Array.of_list args in
+      let sort = Sort.mk_function_sort tm args ret in
+      Term.mk_const_s tm sort name
 
-    let apply () _ = false_
+    let apply f args =
+      let args = f :: args in
+      Term.mk_term tm Kind.Apply_uf @@ Array.of_list args
   end
 
   module Adt = struct

@@ -1,4 +1,10 @@
 (test
+ (name test_issue_654)
+ (modules test_issue_654)
+ (libraries smtml)
+ (build_if %{lib-available:cvc5}))
+
+(test
  (name test_issue_655)
  (modules test_issue_655)
  (libraries smtml str))

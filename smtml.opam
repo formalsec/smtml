@@ -92,7 +92,7 @@ x-maintenance-intent: [
 ]
 available: arch != "arm32" & arch != "x86_32"
 pin-depends: [
-  ["cvc5.dev" "git+https://github.com/formalsec/ocaml-cvc5.git#902ee161e754193db2ddc0eaa3c0585abecac245" ]
+  ["cvc5.dev" "git+https://github.com/formalsec/ocaml-cvc5.git#9037aabcefb2794739965bc96c354d1e688654b2" ]
   ["colibri2.dev" "git+https://git.frama-c.com/pub/colibrics.git#0380c5965ac3a0596293301bf25e853c45762c46"]
   ["colibrilib.dev" "git+https://git.frama-c.com/pub/colibrics.git#0380c5965ac3a0596293301bf25e853c45762c46"]
   ["benchpress.dev" "git+https://github.com/sneeuwballen/benchpress.git#7f44cdd9f0511afcce2c9ad3c04cc9b72919bcff"]
