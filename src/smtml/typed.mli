@@ -466,6 +466,10 @@ module Bitv : sig
     (** [unsigned_rem t1 t2] computes the unsigned remainder of [t1 / t2]. *)
     val unsigned_rem : t -> t -> t
 
+    (** [smod t1 t2] computes the two's complement signed remainder where the
+        sign follows the divisor (bvsmod in SMT-LIB). *)
+    val smod : t -> t -> t
+
     (** [rotate_left n t] rotates the bits of [t] to the left by [n]. *)
     val rotate_left : int -> t -> t
 

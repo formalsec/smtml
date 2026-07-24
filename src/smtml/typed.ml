@@ -142,6 +142,8 @@ module Bitv = struct
 
     val unsigned_rem : t -> t -> t
 
+    val smod : t -> t -> t
+
     val rotate_left : int -> t -> t
 
     val rotate_right : int -> t -> t
@@ -249,6 +251,8 @@ module Bitv = struct
     let[@inline] rem x y = Expr.binop ty Rem x y
 
     let[@inline] unsigned_rem x y = Expr.binop ty RemU x y
+
+    let[@inline] smod x y = Expr.binop ty Mod x y
 
     let[@inline] rotate_left n x = Expr.unop ty (Rotl n) x
 
@@ -935,7 +939,7 @@ module Int = struct
 
   let[@inline] rem x y = Expr.binop Types.int Rem x y
 
-  let[@inline] mod_ _x _y = assert false
+  let[@inline] mod_ x y = Expr.binop Types.int Mod x y
 
   let[@inline] pow x y = Expr.binop Types.int Pow x y
 

@@ -169,6 +169,7 @@ module Int = struct
     | Sub -> Int.sub v1 v2
     | Mul -> Int.mul v1 v2
     | Div -> Int.div v1 v2
+    | Mod -> v1 mod v2
     | Rem -> Int.rem v1 v2
     | Pow -> exp_by_squaring v1 v2
     | Min -> Int.min v1 v2
@@ -547,6 +548,7 @@ module Bitv = struct
     | Mul -> to_bitv (Bitvector.mul bv1 bv2)
     | Div -> to_bitv (Bitvector.div bv1 bv2)
     | DivU -> to_bitv (Bitvector.div_u bv1 bv2)
+    | Mod -> to_bitv (Bitvector.smod bv1 bv2)
     | Rem -> to_bitv (Bitvector.rem bv1 bv2)
     | RemU -> to_bitv (Bitvector.rem_u bv1 bv2)
     | And -> to_bitv (Bitvector.logand bv1 bv2)

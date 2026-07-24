@@ -132,6 +132,7 @@ module Binop : sig
     | Mul  (** Multiplication. *)
     | Div  (** Division. *)
     | DivU  (** Unsigned division. *)
+    | Mod  (** Modulus. *)
     | Rem  (** Remainder. *)
     | RemU  (** Unsigned remainder. *)
     | Shl  (** Shift left. *)

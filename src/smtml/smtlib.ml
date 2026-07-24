@@ -162,7 +162,7 @@ module Term = struct
       | "-", [ a; b ] -> Expr.raw_binop Ty_none Sub a b
       | "*", [ a; b ] -> Expr.raw_binop Ty_none Mul a b
       | "/", [ a; b ] -> Expr.raw_binop Ty_none Div a b
-      | "mod", [ a; b ] -> Expr.raw_binop Ty_none Rem a b
+      | "mod", [ a; b ] -> Expr.raw_binop Ty_none Mod a b
       | "ite", [ a; b; c ] -> Expr.triop Ty_bool Ite a b c
       | "=", [ a; b ] -> Expr.raw_relop Ty_bool Eq a b
       | "distinct", [ a; b ] -> Expr.raw_relop Ty_bool Ne a b

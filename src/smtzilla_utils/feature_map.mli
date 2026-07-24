@@ -53,6 +53,7 @@ type feat =
   | Mul
   | Div
   | DivU
+  | Mod
   | Rem
   | RemU
   | Shl

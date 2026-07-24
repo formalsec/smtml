@@ -41,6 +41,7 @@ let of_binop (binop : Ty.Binop.t) : Feature_map.feat =
   | Mul -> Mul
   | Div -> Div
   | DivU -> DivU
+  | Mod -> Mod
   | Rem -> Rem
   | RemU -> RemU
   | Shl -> Shl

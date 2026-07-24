@@ -298,8 +298,7 @@ module Fresh_cvc5 () = struct
 
     let lshr t1 t2 = Term.mk_term tm Kind.Bitvector_lshr [| t1; t2 |]
 
-    let smod _ =
-      Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
+    let smod t1 t2 = Term.mk_term tm Kind.Bitvector_smod [| t1; t2 |]
 
     let rem t1 t2 = Term.mk_term tm Kind.Bitvector_srem [| t1; t2 |]
 

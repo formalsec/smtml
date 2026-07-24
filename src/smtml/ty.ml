@@ -273,6 +273,7 @@ module Binop = struct
     | Mul
     | Div
     | DivU
+    | Mod
     | Rem
     | RemU
     | Shl
@@ -309,6 +310,8 @@ module Binop = struct
     | Mul -> 2
     | Div -> 3
     | DivU -> 4
+    (* FIXME: Added recently, setting as 31 not I don't have to bump these *)
+    | Mod -> 31
     | Rem -> 5
     | RemU -> 6
     | Shl -> 7
@@ -345,6 +348,7 @@ module Binop = struct
     | Mul, Mul
     | Div, Div
     | DivU, DivU
+    | Mod, Mod
     | Rem, Rem
     | RemU, RemU
     | Shl, Shl
@@ -372,11 +376,11 @@ module Binop = struct
     | Regexp_inter, Regexp_inter
     | Regexp_diff, Regexp_diff ->
       true
-    | ( ( Add | Sub | Mul | Div | DivU | Rem | RemU | Shl | ShrA | ShrL | And
-        | Or | Xor | Implies | Pow | Min | Max | Copysign | Ext_rotr | Ext_rotl
-        | At | List_cons | List_append | String_prefix | String_suffix
-        | String_contains | String_last_index | String_in_re | Regexp_range
-        | Regexp_inter | Regexp_diff )
+    | ( ( Add | Sub | Mul | Div | DivU | Mod | Rem | RemU | Shl | ShrA | ShrL
+        | And | Or | Xor | Implies | Pow | Min | Max | Copysign | Ext_rotr
+        | Ext_rotl | At | List_cons | List_append | String_prefix
+        | String_suffix | String_contains | String_last_index | String_in_re
+        | Regexp_range | Regexp_inter | Regexp_diff )
       , _ ) ->
       false
 
@@ -386,6 +390,7 @@ module Binop = struct
     | Mul -> Fmt.string fmt "mul"
     | Div -> Fmt.string fmt "div_s"
     | DivU -> Fmt.string fmt "div_u"
+    | Mod -> Fmt.string fmt "mod"
     | Rem -> Fmt.string fmt "rem_s"
     | RemU -> Fmt.string fmt "rem_u"
     | Shl -> Fmt.string fmt "shl"
@@ -695,6 +700,8 @@ module Smtlib = struct
     | (Ty_int | Ty_real), Add -> Fmt.string fmt "+"
     | (Ty_int | Ty_real), Sub -> Fmt.string fmt "-"
     | (Ty_int | Ty_real), Mul -> Fmt.string fmt "*"
+    | (Ty_int | Ty_real), Mod -> Fmt.string fmt "mod"
+    | Ty_bitv _, Mod -> Fmt.string fmt "bvsmod"
     | (Ty_int | Ty_real), Div -> Fmt.string fmt "/"
     | Ty_str, At -> Fmt.string fmt "str.at"
     | Ty_str, String_prefix -> Fmt.string fmt "str.prefixof"

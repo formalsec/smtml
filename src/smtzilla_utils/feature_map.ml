@@ -53,6 +53,7 @@ type feat =
   | Mul
   | Div
   | DivU
+  | Mod
   | Rem
   | RemU
   | Shl
@@ -240,6 +241,7 @@ let feat_to_string = function
   | Mul -> "Mul"
   | Div -> "Div"
   | DivU -> "DivU"
+  | Mod -> "Mod"
   | Rem -> "Rem"
   | RemU -> "RemU"
   | Shl -> "Shl"
@@ -381,6 +383,7 @@ let feat_of_string = function
   | "Mul" -> Mul
   | "Div" -> Div
   | "DivU" -> DivU
+  | "Mod" -> Mod
   | "Rem" -> Rem
   | "RemU" -> RemU
   | "Shl" -> Shl

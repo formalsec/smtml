@@ -134,6 +134,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | Sub -> M.Int.sub t1 t2
           | Mul -> M.Int.mul t1 t2
           | Div -> M.Int.div t1 t2
+          | Mod -> M.Int.mod_ t1 t2
           | Rem -> M.Int.rem t1 t2
           | Pow -> M.Int.pow t1 t2
           | op ->
@@ -393,6 +394,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | ShrL -> Bitv.lshr t1 t2
           | Rem -> Bitv.rem t1 t2
           | RemU -> Bitv.rem_u t1 t2
+          | Mod -> Bitv.smod t1 t2
           | Ext_rotl -> Bitv.ext_rotate_left t1 t2
           | Ext_rotr -> Bitv.ext_rotate_right t1 t2
           | op ->
