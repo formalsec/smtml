@@ -1,0 +1,4 @@
+(test
+ (name test_issue_655)
+ (modules test_issue_655)
+ (libraries smtml str))
