@@ -27,6 +27,7 @@ open Expr
 %token <string> STR
 %token <string> SYMBOL
 %token <Ty.t * Ty.Unop.t> UNARY
+%token <Ty.t * Ty.Unop.t> FAKE_BINARY
 %token <Ty.t * Ty.Binop.t> BINARY
 %token <Ty.t * Ty.Triop.t> TERNARY
 %token <Ty.t * Ty.Relop.t> RELOP
@@ -89,6 +90,18 @@ let paren_op :=
   | PTR; LPAREN; _ = TYPE; x = NUM; RPAREN; offset = sexpr;
     { fun env -> Expr.ptr (Int32.of_int x) (offset env) }
   | (ty, op) = UNARY; e = sexpr; { fun env -> Expr.unop ty op (e env) }
+  | (ty, op) = FAKE_BINARY; n = NUM; e = sexpr;
+    { fun env ->
+        let op =
+          match op with
+          | Rotr 0 -> Ty.Unop.Rotr n
+          | Rotl 0 -> Rotl n
+          | _ ->
+            Fmt.failwith "Malformed fake binary paren_op: %a %d"
+              Ty.Unop.pp op n
+        in
+        Expr.unop ty op (e env)
+    }
   | (ty, op) = BINARY; e1 = sexpr; e2 = sexpr;
     { fun env -> Expr.binop ty op (e1 env) (e2 env) }
   | (ty, op) = TERNARY; e1 = sexpr; e2 = sexpr; e3 = sexpr;
