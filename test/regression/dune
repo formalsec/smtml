@@ -19,6 +19,12 @@
    %{lib-available:colibrilib})))
 
 (test
+ (name test_issue_654)
+ (modules test_issue_654)
+ (libraries smtml)
+ (build_if %{lib-available:cvc5}))
+
+(test
  (name test_regression)
  (modules
   test_regression
