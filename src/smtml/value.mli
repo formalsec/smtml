@@ -14,7 +14,7 @@ type t =
   | True  (** Boolean true. *)
   | False  (** Boolean false. *)
   | Unit  (** Unit value. *)
-  | Int of int  (** Integer value. *)
+  | Int of Z.t  (** Integer value. *)
   | Real of float  (** Real number value. *)
   | Str of string  (** String value. *)
   | Num of Num.t  (** Numeric value. *)

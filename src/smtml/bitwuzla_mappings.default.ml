@@ -40,7 +40,7 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
   let false_ = mk_false ()
 
-  let int _ =
+  let int (_ : Z.t) =
     Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
   let real _ =
@@ -98,7 +98,7 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
   end
 
   module Interp = struct
-    let to_int _ =
+    let to_int (_ : interp) : Z.t =
       Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
 
     let to_real _ =

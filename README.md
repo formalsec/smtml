@@ -184,7 +184,7 @@ val cond : Expr.t = (bool.and a (bool.not b))
 
 ```ocaml
 # let cond =
-    let two = Typed.Int.v 2 in
+    let two = Typed.Int.v (Z.of_int 2) in
     let x = Typed.symbol Typed.Types.int "x" in
     let y = Typed.symbol Typed.Types.string "y" in
     Typed.Int.le y (Typed.Int.add x two)

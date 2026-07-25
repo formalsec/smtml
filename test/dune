@@ -1,4 +1,4 @@
 (library
  (name smtml_test)
  (modules test_harness)
- (libraries fmt smtml alcotest))
+ (libraries fmt smtml alcotest zarith))

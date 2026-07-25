@@ -8,7 +8,7 @@ type t =
   | True
   | False
   | Unit
-  | Int of int
+  | Int of Z.t
   | Real of float
   | Str of string
   | Num of Num.t
@@ -58,7 +58,7 @@ let rec hash v =
   | True -> 1
   | False -> 2
   | Unit -> 3
-  | Int i -> combine 4 i
+  | Int i -> combine 4 (Z.hash i)
   | Real f -> combine 5 (Float.hash f)
   | Str s -> combine 6 (String.hash s)
   | Num n -> combine 7 (Num.hash n)
@@ -79,7 +79,7 @@ let rec compare (a : t) (b : t) : int =
   | Re_none, Re_none | Re_all, Re_all | Re_allchar, Re_allchar -> 0
   | False, True -> -1
   | True, False -> 1
-  | Int a, Int b -> Int.compare a b
+  | Int a, Int b -> Z.compare a b
   | Real a, Real b -> Float.compare a b
   | Str a, Str b -> String.compare a b
   | Num a, Num b -> Num.compare a b
@@ -98,7 +98,7 @@ let rec equal (v1 : t) (v2 : t) : bool =
   match (v1, v2) with
   | True, True | False, False | Unit, Unit | Nothing, Nothing -> true
   | Re_none, Re_none | Re_all, Re_all | Re_allchar, Re_allchar -> true
-  | Int a, Int b -> Int.equal a b
+  | Int a, Int b -> Z.equal a b
   | Real a, Real b -> Float.equal a b
   | Str a, Str b -> String.equal a b
   | Num a, Num b -> Num.equal a b
@@ -117,7 +117,7 @@ let ( let+ ) = map
 
 let default_of_type = function
   | Ty.Ty_bool -> False
-  | Ty_int -> Int 0
+  | Ty_int -> Int Z.zero
   | Ty_real -> Real 0.0
   | Ty_str -> Str ""
   | Ty_bitv m -> Bitv (Bitvector.make Z.zero m)
@@ -134,7 +134,7 @@ let rec pp_with ~printer fmt = function
   | True -> Fmt.string fmt "true"
   | False -> Fmt.string fmt "false"
   | Unit -> Fmt.string fmt "unit"
-  | Int x -> Fmt.int fmt x
+  | Int x -> Z.pp_print fmt x
   | Real x -> Fmt.pf fmt "%F" x
   | Num x -> Num.pp_with ~printer fmt x
   | Bitv bv -> Bitvector.pp_with ~printer fmt bv
@@ -170,9 +170,8 @@ let of_string (cast : Ty.t) v =
     | "false" -> Ok False
     | _ -> Fmt.error_msg "invalid value %s, expected boolean" v )
   | Ty_int -> (
-    match int_of_string_opt v with
-    | None -> Fmt.error_msg "invalid value %s, expected integer" v
-    | Some n -> Ok (Int n) )
+    try Ok (Int (Z.of_string v))
+    with _ -> Fmt.error_msg "invalid value %s, expected integer" v )
   | Ty_real -> (
     match float_of_string_opt v with
     | None -> Fmt.error_msg "invalid value %s, expected real" v
@@ -192,7 +191,7 @@ let rec to_json (v : t) : Yojson.Safe.t =
   | True -> `Bool true
   | False -> `Bool false
   | Unit -> `String "unit"
-  | Int int -> `Int int
+  | Int z -> `Intlit (Z.to_string z)
   | Real real -> `Float real
   | Str str -> `String str
   | Num n -> Num.to_json n
@@ -208,7 +207,7 @@ module Smtlib = struct
   let pp fmt = function
     | True -> Fmt.string fmt "true"
     | False -> Fmt.string fmt "false"
-    | Int x -> Fmt.int fmt x
+    | Int x -> Z.pp_print fmt x
     | Real x -> Fmt.pf fmt "%F" x
     | Num x -> Num.pp_safe fmt x
     | Bitv bv -> Bitvector.pp_safe fmt bv

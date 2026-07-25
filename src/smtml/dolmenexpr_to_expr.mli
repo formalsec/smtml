@@ -54,7 +54,7 @@ module DolmenIntf : sig
 
   val false_ : term
 
-  val int : int -> term
+  val int : Z.t -> term
 
   val real : float -> term
 
@@ -107,7 +107,7 @@ module DolmenIntf : sig
   end
 
   module Interp : sig
-    val to_int : interp -> int
+    val to_int : interp -> Z.t
 
     val to_real : interp -> float
 

@@ -79,6 +79,11 @@ val rotate_left : t -> t -> t
 
 val rotate_right : t -> t -> t
 
+(** [normalize_shift_amount n width] safely reduces a shift/rotate amount [n]
+    modulo [width] and returns it as an [int]. Always succeeds regardless of how
+    large [n] is. *)
+val normalize_shift_amount : Z.t -> int -> int
+
 val lt : t -> t -> bool
 
 val lt_u : t -> t -> bool

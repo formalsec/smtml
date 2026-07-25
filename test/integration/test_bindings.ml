@@ -23,9 +23,9 @@ module Make (Mappings : Smtml.Mappings_intf.M) = struct
     let p1 = const "p1" ty in
     let solver = Solver.make () in
     Solver.add solver
-      [ eq p1 (Func.apply mk_ptr [ int 10; int 8 ])
-      ; eq (Func.apply loc [ p1 ]) (int 10)
-      ; eq (Func.apply ofs [ p1 ]) (int 8)
+      [ eq p1 (Func.apply mk_ptr [ int (Z.of_int 10); int (Z.of_int 8) ])
+      ; eq (Func.apply loc [ p1 ]) (int (Z.of_int 10))
+      ; eq (Func.apply ofs [ p1 ]) (int (Z.of_int 8))
       ];
     Alcotest.(check bool)
       "test_simple_adt"

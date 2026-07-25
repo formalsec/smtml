@@ -17,11 +17,13 @@ module Make (M : Mappings_intf.S) = struct
       Alcotest.(
         check
           (option (testable Value.pp Value.equal))
-          "minimize" (Some (Value.Int 0)) (Optimizer.minimize opt x) ) );
+          "minimize" (Some (Value.Int Z.zero)) (Optimizer.minimize opt x) ) );
     Alcotest.(
       check
         (option (testable Value.pp Value.equal))
-        "maximize" (Some (Value.Int 4)) (Optimizer.maximize opt x) )
+        "maximize"
+        (Some (Value.Int (Z.of_int 4)))
+        (Optimizer.maximize opt x) )
 
   let test =
     ( "test_optimizer"

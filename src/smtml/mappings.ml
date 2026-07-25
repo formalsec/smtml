@@ -124,6 +124,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         let unop op t =
           match op with
           | Unop.Neg -> M.Int.neg t
+          | Abs -> M.ite (M.Int.lt t (M.int Z.zero)) (M.Int.neg t) t
           | op ->
             Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
               __FUNCTION__ Unop.pp op
@@ -169,7 +170,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | Sqrt -> Real.pow e (v 0.5)
           | Ceil ->
             let x_int = M.Real.to_int e in
-            ite (eq (Int.to_real x_int) e) x_int (Int.add x_int (int 1))
+            ite (eq (Int.to_real x_int) e) x_int (Int.add x_int (int Z.one))
           | Floor -> Real.to_int e
           | Nearest | Is_nan | _ ->
             Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__

@@ -44,7 +44,7 @@ module type M = sig
   val false_ : term
 
   (** [int n] constructs an integer term from the given integer [n]. *)
-  val int : int -> term
+  val int : Z.t -> term
 
   (** [real f] constructs a real number term from the given float [f]. *)
   val real : float -> term
@@ -143,7 +143,7 @@ module type M = sig
 
   module Interp : sig
     (** [to_int interp] converts an interpretation to an integer. *)
-    val to_int : interp -> int
+    val to_int : interp -> Z.t
 
     (** [to_real interp] converts an interpretation to a real number. *)
     val to_real : interp -> float

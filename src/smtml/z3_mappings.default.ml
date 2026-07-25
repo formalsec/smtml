@@ -40,7 +40,7 @@ module M = struct
 
     let false_ = Z3.Boolean.mk_false ctx
 
-    let int i = Z3.Arithmetic.Integer.mk_numeral_i ctx i
+    let int i = Z3.Arithmetic.Integer.mk_numeral_s ctx (Z.to_string i)
 
     let real f = Z3.Arithmetic.Real.mk_numeral_s ctx (Float.to_string f)
 
@@ -108,7 +108,7 @@ module M = struct
     end
 
     module Interp = struct
-      let to_int interp = Z.to_int @@ Z3.Arithmetic.Integer.get_big_int interp
+      let to_int interp = Z3.Arithmetic.Integer.get_big_int interp
 
       let to_real interp = Q.to_float @@ Z3.Arithmetic.Real.get_ratio interp
 

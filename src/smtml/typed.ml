@@ -257,17 +257,25 @@ module Bitv = struct
     let[@inline] ext_rotate_left x y =
       match Expr.view y with
       | Val (Bitv bv) ->
-        let n = Bitvector.to_signed bv |> Z.to_int in
+        let m = match ty with Ty.Ty_bitv m -> m | _ -> assert false in
+        let n = Bitvector.normalize_shift_amount (Bitvector.to_signed bv) m in
         Expr.unop ty (Rotl n) x
-      | Val (Int n) -> Expr.unop ty (Rotl n) x
+      | Val (Int n) ->
+        let m = match ty with Ty.Ty_bitv m -> m | _ -> assert false in
+        let n = Bitvector.normalize_shift_amount n m in
+        Expr.unop ty (Rotl n) x
       | _ -> Expr.binop ty Ext_rotl x y
 
     let[@inline] ext_rotate_right x y =
       match Expr.view y with
       | Val (Bitv bv) ->
-        let n = Bitvector.to_signed bv |> Z.to_int in
+        let m = match ty with Ty.Ty_bitv m -> m | _ -> assert false in
+        let n = Bitvector.normalize_shift_amount (Bitvector.to_signed bv) m in
         Expr.unop ty (Rotr n) x
-      | Val (Int n) -> Expr.unop ty (Rotr n) x
+      | Val (Int n) ->
+        let m = match ty with Ty.Ty_bitv m -> m | _ -> assert false in
+        let n = Bitvector.normalize_shift_amount n m in
+        Expr.unop ty (Rotr n) x
       | _ -> Expr.binop ty Ext_rotr x y
 
     let[@inline] eq a b = Expr.relop Ty_bool Eq a b
@@ -2260,6 +2268,8 @@ module Int = struct
   let[@inline] pp fmt x = Expr.pp fmt x
 
   let[@inline] neg x = Expr.unop Types_inner.int Neg x
+
+  let[@inline] abs x = Expr.unop Types_inner.int Abs x
 
   let[@inline] to_real x = Expr.cvtop Types_inner.real Reinterpret_int x
 

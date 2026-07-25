@@ -23,7 +23,7 @@ let test_to_json () =
     let tbl = Hashtbl.create 16 in
     List.iter
       (fun ((s, v) : Symbol.t * Value.t) -> Hashtbl.replace tbl s v)
-      [ (x, Int 1); (y, Real 2.0); (z, True); (u, Str "abc") ];
+      [ (x, Int Z.one); (y, Real 2.0); (z, True); (u, Str "abc") ];
     tbl
   in
   let model_to_json = Model.to_json model in

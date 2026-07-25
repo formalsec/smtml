@@ -268,11 +268,7 @@ rule token = parse
   | "nan" { DEC Float.nan }
   | "inf" { DEC Float.infinity }
   | "-inf" { DEC Float.neg_infinity }
-  | numeral as s {
-    match int_of_string_opt s with
-    | Some i -> NUM i
-    | None -> assert false
-  }
+  | numeral as s { NUM (Z.of_string s) }
   | decimal as s {
     match float_of_string_opt s with
     | Some f -> DEC f

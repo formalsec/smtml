@@ -34,7 +34,7 @@ module Infix = struct
 
   let false_ = Expr.Bool.false_
 
-  let int x = value (Int x)
+  let int x = value (Int (Z.of_int x))
 
   let real x = value (Real x)
 

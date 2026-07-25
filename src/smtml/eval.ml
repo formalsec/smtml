@@ -140,45 +140,39 @@ let[@inline] fp64_of_float (x : float) = to_fp64 (Int64.bits_of_float x)
 (* Operator evaluation *)
 
 module Int = struct
-  let[@inline] raw_unop (op : Ty.Unop.t) (v : int) : int =
+  let[@inline] raw_unop (op : Ty.Unop.t) (v : Z.t) : Z.t =
     match op with
-    | Neg -> Int.neg v
-    | Not -> Int.lognot v
-    | Abs -> Int.abs v
+    | Neg -> Z.neg v
+    | Not -> Z.lognot v
+    | Abs -> Z.abs v
     | _ -> eval_error (`Unsupported_operator (`Unop op, Ty_int))
 
   let[@inline] unop (op : Ty.Unop.t) (v : Value.t) : Value.t =
     let v = of_int 1 (`Unop op) v in
     to_int (raw_unop op v)
 
-  let exp_by_squaring x n =
-    let rec exp_by_squaring2 y x n =
-      if n < 0 then exp_by_squaring2 y (1 / x) ~-n
-      else if n = 0 then y
-      else if n mod 2 = 0 then exp_by_squaring2 y (x * x) (n / 2)
-      else begin
-        assert (n mod 2 = 1);
-        exp_by_squaring2 (x * y) (x * x) ((n - 1) / 2)
-      end
-    in
-    exp_by_squaring2 1 x n
+  let pow base exp =
+    if Z.lt exp Z.zero then
+      eval_error (`Unsupported_operator (`Binop Pow, Ty_int))
+    else if Z.fits_int exp then Z.pow base (Z.to_int exp)
+    else eval_error (`Unsupported_operator (`Binop Pow, Ty_int))
 
   let[@inline] raw_binop (op : Ty.Binop.t) v1 v2 =
     match op with
-    | Add -> Int.add v1 v2
-    | Sub -> Int.sub v1 v2
-    | Mul -> Int.mul v1 v2
-    | Div -> Int.div v1 v2
-    | Rem -> Int.rem v1 v2
-    | Pow -> exp_by_squaring v1 v2
-    | Min -> Int.min v1 v2
-    | Max -> Int.max v1 v2
-    | And -> Int.logand v1 v2
-    | Or -> Int.logor v1 v2
-    | Xor -> Int.logxor v1 v2
-    | Shl -> Int.shift_left v1 v2
-    | ShrL -> Int.shift_right_logical v1 v2
-    | ShrA -> Int.shift_right v1 v2
+    | Add -> Z.add v1 v2
+    | Sub -> Z.sub v1 v2
+    | Mul -> Z.mul v1 v2
+    | Div -> Z.div v1 v2
+    | Rem -> Z.rem v1 v2
+    | Pow -> pow v1 v2
+    | Min -> Z.min v1 v2
+    | Max -> Z.max v1 v2
+    | And -> Z.logand v1 v2
+    | Or -> Z.logor v1 v2
+    | Xor -> Z.logxor v1 v2
+    | Shl -> Z.shift_left v1 (Z.to_int v2)
+    | ShrL -> Z.shift_right_trunc v1 (Z.to_int v2)
+    | ShrA -> Z.shift_right v1 (Z.to_int v2)
     | _ -> eval_error (`Unsupported_operator (`Binop op, Ty_int))
 
   let[@inline] binop (op : Ty.Binop.t) (v1 : Value.t) (v2 : Value.t) : Value.t =
@@ -188,10 +182,10 @@ module Int = struct
 
   let[@inline] raw_relop (op : Ty.Relop.t) a b =
     match op with
-    | Lt -> a < b
-    | Le -> a <= b
-    | Eq -> Int.equal a b
-    | Ne -> not (Int.equal a b)
+    | Lt -> Z.lt a b
+    | Le -> Z.leq a b
+    | Eq -> Z.equal a b
+    | Ne -> not (Z.equal a b)
     | _ -> eval_error (`Unsupported_operator (`Relop op, Ty_int))
 
   let[@inline] relop (op : Ty.Relop.t) (v1 : Value.t) (v2 : Value.t) : bool =
@@ -200,12 +194,12 @@ module Int = struct
     raw_relop op a b
 
   let[@inline] int_of_bool v =
-    match v with Value.True -> 1 | False -> 0 | _ -> assert false
+    match v with Value.True -> Z.one | False -> Z.zero | _ -> assert false
 
   let[@inline] cvtop (op : Ty.Cvtop.t) (v : Value.t) : Value.t =
     match op with
     | OfBool -> to_int (int_of_bool v)
-    | Reinterpret_float -> Int (Int.of_float (of_real 1 (`Cvtop op) v))
+    | Reinterpret_float -> Int (Z.of_float (of_real 1 (`Cvtop op) v))
     | _ -> eval_error (`Unsupported_operator (`Cvtop op, Ty_int))
 end
 
@@ -262,8 +256,8 @@ module Real = struct
       | None -> eval_error `Invalid_format_conversion
       | Some v -> to_real v
       end
-    | Reinterpret_int -> to_real (float_of_int (of_int 1 op' v))
-    | Reinterpret_float -> to_int (Float.to_int (of_real 1 op' v))
+    | Reinterpret_int -> to_real (Z.to_float (of_int 1 op' v))
+    | Reinterpret_float -> to_int (Z.of_float (of_real 1 op' v))
     | _ -> eval_error (`Unsupported_operator (op', Ty_real))
 end
 
@@ -367,7 +361,7 @@ module Str = struct
   let[@inline] unop (op : Ty.Unop.t) v =
     let str = of_str 1 (`Unop op) v in
     match op with
-    | Length -> to_int (String.length str)
+    | Length -> to_int (Z.of_int (String.length str))
     | Trim -> to_str (String.trim str)
     | _ -> eval_error (`Unsupported_operator (`Unop op, Ty_str))
 
@@ -376,7 +370,7 @@ module Str = struct
     let str = of_str 1 op' v1 in
     match op with
     | At -> begin
-      let i = of_int 2 op' v2 in
+      let i = Z.to_int (of_int 2 op' v2) in
       try to_str (Fmt.str "%c" (String.get str i))
       with Invalid_argument _ -> eval_error `Index_out_of_bounds
       end
@@ -391,8 +385,8 @@ module Str = struct
     let str = of_str 1 op' v1 in
     match op with
     | String_extract -> begin
-      let i = of_int 2 op' v2 in
-      let len = of_int 3 op' v3 in
+      let i = Z.to_int (of_int 2 op' v2) in
+      let len = Z.to_int (of_int 3 op' v3) in
       try to_str (String.sub str i len)
       with Invalid_argument _ -> eval_error `Index_out_of_bounds
       end
@@ -402,8 +396,8 @@ module Str = struct
       to_str (replace str t t')
     | String_index ->
       let t = of_str 2 op' v2 in
-      let i = of_int 3 op' v3 in
-      to_int (indexof str t i)
+      let i = Z.to_int (of_int 3 op' v3) in
+      to_int (Z.of_int (indexof str t i))
     | _ -> eval_error (`Unsupported_operator (`Triop op, Ty_str))
 
   let[@inline] raw_relop (op : Ty.Relop.t) a b =
@@ -425,17 +419,16 @@ module Str = struct
     match op with
     | String_to_code ->
       let str = of_str 1 op' v in
-      to_int (Char.code str.[0])
+      to_int (Z.of_int (Char.code str.[0]))
     | String_from_code ->
-      let code = of_int 1 op' v in
+      let code = Z.to_int (of_int 1 op' v) in
       to_str (String.make 1 (Char.chr code))
     | String_to_int -> begin
       let s = of_str 1 op' v in
-      match int_of_string_opt s with
-      | None -> eval_error `Invalid_format_conversion
-      | Some x -> to_int x
+      try to_int (Z.of_string s)
+      with _ -> eval_error `Invalid_format_conversion
       end
-    | String_from_int -> to_str (string_of_int (of_int 1 op' v))
+    | String_from_int -> to_str (Z.to_string (of_int 1 op' v))
     | String_to_float -> begin
       let s = of_str 1 op' v in
       match float_of_string_opt s with
@@ -471,7 +464,7 @@ module Lst = struct
       (* FIXME: Exception handling *)
       begin match lst with _hd :: tl -> List tl | [] -> assert false
       end
-    | Length -> to_int (List.length lst)
+    | Length -> to_int (Z.of_int (List.length lst))
     | Reverse -> List (List.rev lst)
     | _ -> eval_error (`Unsupported_operator (`Unop op, Ty_list))
 
@@ -480,7 +473,7 @@ module Lst = struct
     match op with
     | At ->
       let lst = of_list 1 op' v1 in
-      let i = of_int 2 op' v2 in
+      let i = Z.to_int (of_int 2 op' v2) in
       (* TODO: change datastructure? *)
       begin match List.nth_opt lst i with
       | None -> eval_error `Index_out_of_bounds
@@ -496,7 +489,7 @@ module Lst = struct
     match op with
     | List_set ->
       let lst = of_list 1 op' v1 in
-      let i = of_int 2 op' v2 in
+      let i = Z.to_int (of_int 2 op' v2) in
       let rec set i lst v acc =
         match (i, lst) with
         | 0, _ :: tl -> List.rev_append acc (v :: tl)

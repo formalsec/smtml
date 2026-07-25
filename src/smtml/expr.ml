@@ -325,7 +325,7 @@ let rec unop ty op hte =
   | Head, List (hd :: _) -> hd
   | Tail, List (_ :: tl) -> make (List tl)
   | Reverse, List es -> make (List (List.rev es))
-  | Length, List es -> value (Int (List.length es))
+  | Length, List es -> value (Int (Z.of_int (List.length es)))
   | _ -> raw_unop ty op hte
 
 let raw_binop ty op hte1 hte2 = make (Binop (ty, op, hte1, hte2)) [@@inline]
@@ -394,7 +394,9 @@ let rec binop ty op hte1 hte2 =
     raw_binop ty Mul v x
   | At, List es, Val (Int n) ->
     (* TODO: use another datastructure? *)
-    begin match List.nth_opt es n with None -> assert false | Some v -> v
+    begin match List.nth_opt es (Z.to_int n) with
+    | None -> assert false
+    | Some v -> v
     end
   | (String_contains | String_prefix | String_suffix), _, Val (Str "") ->
     value True

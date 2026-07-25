@@ -38,7 +38,7 @@ module Fresh_cvc5 () = struct
 
   let false_ = Term.mk_false tm
 
-  let int i = Term.mk_int tm i
+  let int i = Term.mk_int tm (Z.to_int i)
 
   let real r = Term.mk_real_s tm (Float.to_string r)
 
@@ -93,7 +93,7 @@ module Fresh_cvc5 () = struct
   end
 
   module Interp = struct
-    let to_int t = Term.get_int t
+    let to_int t = Z.of_int (Term.get_int t)
 
     let to_real t = Term.get_real t
 

@@ -7,11 +7,11 @@ let () =
     Ast.Script.of_exprs
       [ Expr.relop Ty_int Eq
           (Expr.binop Ty_int Add x y)
-          (Expr.value (Value.Int 30))
+          (Expr.value (Value.Int (Z.of_int 30)))
       ; Expr.relop Ty_int Lt
-          (Expr.binop Ty_int Mul (Expr.value (Value.Int 2)) y)
+          (Expr.binop Ty_int Mul (Expr.value (Value.Int (Z.of_int 2))) y)
           x
-      ; Expr.relop Ty_int Lt (Expr.value (Value.Int 10)) y
+      ; Expr.relop Ty_int Lt (Expr.value (Value.Int (Z.of_int 10))) y
       ]
   in
   Fmt.pr "@[<v>%a@]@." Ast.Script.pp script

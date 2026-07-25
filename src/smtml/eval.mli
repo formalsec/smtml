@@ -59,11 +59,11 @@ exception Value of Ty.t
 module Int : sig
   val unop : Ty.Unop.t -> Value.t -> Value.t
 
-  val raw_binop : Ty.Binop.t -> int -> int -> int
+  val raw_binop : Ty.Binop.t -> Z.t -> Z.t -> Z.t
 
   val binop : Ty.Binop.t -> Value.t -> Value.t -> Value.t
 
-  val raw_relop : Ty.Relop.t -> int -> int -> bool
+  val raw_relop : Ty.Relop.t -> Z.t -> Z.t -> bool
 
   val relop : Ty.Relop.t -> Value.t -> Value.t -> bool
 

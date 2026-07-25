@@ -20,7 +20,7 @@ open Expr
 (*%token HOLE*)
 %token EOF
 
-%token <int> NUM
+%token <Z.t> NUM
 %token <float> DEC
 %token <string> HEX
 %token <bool> BOOL
@@ -71,7 +71,7 @@ let stmt :=
     { fun env -> (Ast.Assert (e env), env) }
   | LPAREN; CHECK_SAT; RPAREN; { fun env -> (Ast.Check_sat [], env) }
   | LPAREN; PUSH; RPAREN; { fun env -> (Ast.Push 1, env) }
-  | LPAREN; POP; n = NUM; RPAREN; { fun env -> (Ast.Pop n, env) }
+  | LPAREN; POP; n = NUM; RPAREN; { fun env -> (Ast.Pop (Z.to_int n), env) }
   | LPAREN; GET_MODEL; RPAREN; { fun env -> (Ast.Get_model, env) }
   | LPAREN; SET_LOGIC; l = LOGIC; RPAREN; { fun env -> (Ast.Set_logic l, env) }
 
@@ -88,17 +88,17 @@ let sexpr :=
 
 let paren_op :=
   | PTR; LPAREN; _ = TYPE; x = NUM; RPAREN; offset = sexpr;
-    { fun env -> Expr.ptr (Int32.of_int x) (offset env) }
+    { fun env -> Expr.ptr (Int32.of_int (Z.to_int x)) (offset env) }
   | (ty, op) = UNARY; e = sexpr; { fun env -> Expr.unop ty op (e env) }
   | (ty, op) = FAKE_BINARY; n = NUM; e = sexpr;
     { fun env ->
         let op =
           match op with
-          | Rotr 0 -> Ty.Unop.Rotr n
-          | Rotl 0 -> Rotl n
+          | Rotr 0 -> Ty.Unop.Rotr (Z.to_int n)
+          | Rotl 0 -> Rotl (Z.to_int n)
           | _ ->
-            Fmt.failwith "Malformed fake binary paren_op: %a %d"
-              Ty.Unop.pp op n
+            Fmt.failwith "Malformed fake binary paren_op: %a %a"
+              Ty.Unop.pp op Z.pp_print n
         in
         Expr.unop ty op (e env)
     }
@@ -112,7 +112,7 @@ let paren_op :=
   | (ty, op) = NARY; es = list(sexpr);
     { fun env -> Expr.naryop ty op (List.map (fun e -> e env) es) }
   | EXTRACT; e = sexpr; l = NUM; h = NUM;
-    { fun env -> Expr.extract (e env) ~high:h ~low:l }
+    { fun env -> Expr.extract (e env) ~high:(Z.to_int h) ~low:(Z.to_int l) }
   | CONCAT; e1 = sexpr; e2 = sexpr;
     { fun env -> Expr.concat (e1 env) (e2 env) }
 
@@ -124,8 +124,8 @@ let spec_constant :=
   | LPAREN; ty = TYPE; x = NUM; RPAREN;
     {
       match ty with
-      | Ty_bitv 32 -> Bitv (Bitvector.of_int32 (Int32.of_int x))
-      | Ty_bitv 64 -> Bitv (Bitvector.of_int64 (Int64.of_int x))
+      | Ty_bitv 32 -> Bitv (Bitvector.of_int32 (Z.to_int32 x))
+      | Ty_bitv 64 -> Bitv (Bitvector.of_int64 (Z.to_int64 x))
       | _ -> Fmt.failwith "invalid bitv type"
     }
   | LPAREN; ty = TYPE; x = DEC; RPAREN;

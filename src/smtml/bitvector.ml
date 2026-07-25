@@ -136,10 +136,7 @@ let logxor a b =
   assert (a.width = b.width);
   make (Z.logxor a.value b.value) a.width
 
-let normalize_shift_amount n width =
-  (* FIXME: only works for widths that are powers of 2. *)
-  assert (width > 0 && width land (width - 1) = 0);
-  Z.to_int @@ Z.logand n (Z.of_int (width - 1))
+let normalize_shift_amount n width = Z.to_int (Z.erem n (Z.of_int width))
 
 let shl a n =
   let n = normalize_shift_amount (view n) (numbits a) in

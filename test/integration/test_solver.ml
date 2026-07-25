@@ -125,7 +125,9 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let val_x = Option.bind model (fun m -> Model.evaluate m symbol_x) in
     Alcotest.(check bool)
       "x = 5"
-      (match val_x with Some v -> Value.equal v (Int 5) | None -> false)
+      ( match val_x with
+      | Some v -> Value.equal v (Int (Z.of_int 5))
+      | None -> false )
       true
 
   let test_distinct solver_module =
@@ -136,17 +138,17 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let y = symbol Types.int "y" in
     let z = symbol Types.int "z" in
     Solver.add solver [ (Bool.distinct [ x; y; z ] :> Expr.t) ];
-    Solver.add solver [ (Bool.eq x (Int.v 1) :> Expr.t) ];
-    Solver.add solver [ (Bool.eq y (Int.v 1) :> Expr.t) ];
+    Solver.add solver [ (Bool.eq x (Int.v (Z.of_int 1)) :> Expr.t) ];
+    Solver.add solver [ (Bool.eq y (Int.v (Z.of_int 1)) :> Expr.t) ];
     assert_unsat ~f:"test_distinct_unsat" (Solver.check solver []);
     Solver.reset solver;
     let x = symbol Types.int "x" in
     let y = symbol Types.int "y" in
     let z = symbol Types.int "z" in
     Solver.add solver [ (Bool.distinct [ x; y; z ] :> Expr.t) ];
-    Solver.add solver [ (Bool.eq x (Int.v 1) :> Expr.t) ];
-    Solver.add solver [ (Bool.eq y (Int.v 2) :> Expr.t) ];
-    Solver.add solver [ (Bool.eq z (Int.v 3) :> Expr.t) ];
+    Solver.add solver [ (Bool.eq x (Int.v (Z.of_int 1)) :> Expr.t) ];
+    Solver.add solver [ (Bool.eq y (Int.v (Z.of_int 2)) :> Expr.t) ];
+    Solver.add solver [ (Bool.eq z (Int.v (Z.of_int 3)) :> Expr.t) ];
     assert_sat ~f:"test_distinct_sat" (Solver.check solver [])
 
   let test_lia_1 solver_module =
@@ -157,11 +159,20 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     Solver.add solver Int.[ a + int 1 = int 2 => ((a * int 2) + int 2 = int 4) ];
     assert_sat ~f:"test_lia" (Solver.check solver [])
 
+  let test_exp_large _solver_module =
+    let open Infix in
+    let module Solver = (val _solver_module : Solver_intf.S) in
+    let solver = Solver.create ~logic:QF_LIA () in
+    let pow = Expr.binop Ty_int Pow (int 10) (int 100) in
+    Solver.add solver [ Expr.relop Ty_int Le pow (int 0) ];
+    assert_unsat ~f:"exp 10^100 <= 0" (Solver.check solver [])
+
   let test_lia =
     ( "test_lia"
     , [ Alcotest.test_case "test_lia_0" `Quick (with_solver test_lia_0)
       ; Alcotest.test_case "test_lia_1" `Quick (with_solver test_lia_1)
       ; Alcotest.test_case "test_distinct" `Quick (with_solver test_distinct)
+      ; Alcotest.test_case "test_exp_large" `Quick (with_solver test_exp_large)
       ] )
 
   let test_lra =
@@ -451,7 +462,8 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let re_a = String.(to_re (v "a")) in
     let re_a_star = String.Re.star re_a in
     Solver.add solver [ (String.in_re s re_a_star :> Expr.t) ];
-    Solver.add solver [ (Bool.eq (String.length s) (Int.v 3) :> Expr.t) ];
+    Solver.add solver
+      [ (Bool.eq (String.length s) (Int.v (Z.of_int 3)) :> Expr.t) ];
     assert_sat ~f:"test_re_star" (Solver.check solver []);
     let model = Solver.model solver in
     let val_s =
@@ -479,7 +491,8 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
           ] )
     in
     Solver.add solver [ (String.in_re s re :> Expr.t) ];
-    Solver.add solver [ (Bool.eq (String.length s) (Int.v 5) :> Expr.t) ];
+    Solver.add solver
+      [ (Bool.eq (String.length s) (Int.v (Z.of_int 5)) :> Expr.t) ];
     assert_sat ~f:"test_re_complex" (Solver.check solver []);
     let model = Solver.model solver in
     let val_s =
@@ -540,8 +553,11 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
                Solver.create ~params:(Params.default ()) ~logic:Logic.QF_UFBV ()
              in
              let f = Symbol.(make Ty_int "f") in
-             let app = Expr.app f [ Expr.value (Int 1); Expr.value True ] in
-             Solver.add solver [ Expr.relop Ty_int Eq app (Expr.value (Int 2)) ];
+             let app =
+               Expr.app f [ Expr.value (Int (Z.of_int 1)); Expr.value True ]
+             in
+             Solver.add solver
+               [ Expr.relop Ty_int Eq app (Expr.value (Int (Z.of_int 2))) ];
              assert_sat ~f:"test_uninterpreted_function"
                (Solver.check solver []) ) )
       ] )

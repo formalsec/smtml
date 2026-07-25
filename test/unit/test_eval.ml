@@ -8,7 +8,7 @@ let true_ = Value.True
 
 let false_ = Value.False
 
-let int x = Value.Int x
+let int x = Value.Int (Z.of_int x)
 
 let str x = Value.Str x
 

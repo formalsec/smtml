@@ -96,7 +96,7 @@ module DolmenIntf = struct
 
   let false_ = DTerm._false
 
-  let int i = DTerm.Int.mk (string_of_int i)
+  let int i = DTerm.Int.mk (Z.to_string i)
 
   let real r = DTerm.Real.mk (string_of_float r)
 
@@ -186,7 +186,7 @@ module DolmenIntf = struct
   module Interp = struct
     let to_int interp =
       match DM.Value.extract ~ops:DM.Int.ops interp with
-      | Some z -> Z.to_int z
+      | Some z -> z
       | _ -> assert false
 
     let to_real interp =

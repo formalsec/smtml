@@ -74,14 +74,16 @@ let test_unop_bool () =
 let test_unop_list () =
   let open Infix in
   let ty = Ty.Ty_list in
-  let vlist = list [ Int 1; Int 2; Int 3 ] in
+  let vlist = list [ Int (Z.of_int 1); Int (Z.of_int 2); Int (Z.of_int 3) ] in
   let x = symbol "x" Ty_int in
   let y = symbol "y" Ty_int in
   let slist = Expr.list [ x; y ] in
   check (Expr.unop ty Head vlist) (int 1);
-  check (Expr.unop ty Tail vlist) (list [ Int 2; Int 3 ]);
+  check (Expr.unop ty Tail vlist) (list [ Int (Z.of_int 2); Int (Z.of_int 3) ]);
   check (Expr.unop ty Length vlist) (int 3);
-  check (Expr.unop ty Reverse vlist) (list [ Int 3; Int 2; Int 1 ]);
+  check
+    (Expr.unop ty Reverse vlist)
+    (list [ Int (Z.of_int 3); Int (Z.of_int 2); Int (Z.of_int 1) ]);
   check (Expr.unop ty Head slist) x;
   check (Expr.unop ty Tail slist) (Expr.list [ y ]);
   check (Expr.unop ty Length slist) (int 2);
@@ -161,16 +163,21 @@ let test_binop_string () =
 let test_binop_list () =
   let open Infix in
   let ty = Ty.Ty_list in
-  let clist = list [ Int 0; Int 1; Int 2 ] in
+  let clist = list [ Int (Z.of_int 0); Int (Z.of_int 1); Int (Z.of_int 2) ] in
   check (Expr.binop Ty_list At clist (int 0)) (int 0);
-  check (Expr.binop Ty_list List_cons (int 0) (list [ Int 1; Int 2 ])) clist;
   check
-    (Expr.binop Ty_list List_append (list [ Int 0; Int 1 ]) (list [ Int 2 ]))
+    (Expr.binop Ty_list List_cons (int 0)
+       (list [ Int (Z.of_int 1); Int (Z.of_int 2) ]) )
+    clist;
+  check
+    (Expr.binop Ty_list List_append
+       (list [ Int (Z.of_int 0); Int (Z.of_int 1) ])
+       (list [ Int (Z.of_int 2) ]) )
     clist;
   let slist2 = Expr.list [ int 0; int 1 ] in
   let slist3 = Expr.list [ int 0; int 1; int 2 ] in
   check (Expr.binop ty At slist3 (int 0)) (int 0);
-  check (Expr.binop ty List_append slist2 (list [ Int 2 ])) slist3;
+  check (Expr.binop ty List_append slist2 (list [ Int (Z.of_int 2) ])) slist3;
   check (Expr.binop ty List_cons (int 0) (Expr.list [ int 1; int 2 ])) slist3
 
 let test_binop_i32 () =
@@ -431,8 +438,10 @@ let test_triop_list () =
   let open Infix in
   let ty = Ty.Ty_list in
   check
-    (Expr.triop ty List_set (list [ Int 0; Int 1; Int 2 ]) (int 1) (int 3))
-    (list [ Int 0; Int 3; Int 2 ])
+    (Expr.triop ty List_set
+       (list [ Int (Z.of_int 0); Int (Z.of_int 1); Int (Z.of_int 2) ])
+       (int 1) (int 3) )
+    (list [ Int (Z.of_int 0); Int (Z.of_int 3); Int (Z.of_int 2) ])
 
 let test_triop =
   [ Alcotest.test_case "test_triop_bool" `Quick test_triop_bool
@@ -710,8 +719,8 @@ let test_or_false_rhs () =
 let test_and_fold_constants () =
   let open Infix in
   let x = symbol "x" Ty_int in
-  let v1 = Expr.value (Int 3) in
-  let v2 = Expr.value (Int 6) in
+  let v1 = Expr.value (Int (Z.of_int 3)) in
+  let v2 = Expr.value (Int (Z.of_int 6)) in
   let and_const = Expr.binop Ty_int And x (Expr.binop Ty_int And v1 v2) in
   match (v1.node, v2.node) with
   | Val v1, Val v2 ->

@@ -145,12 +145,15 @@ end
 module Int : sig
   type t = int expr
 
-  val v : int -> t
+  val v : Z.t -> t
 
   val symbol : Symbol.t -> t
 
   (** [neg t] constructs the negation of the integer term [t]. *)
   val neg : t -> t
+
+  (** [abs t] constructs the absolute value of the integer term [t]. *)
+  val abs : t -> t
 
   (** [add t1 t2] constructs the sum of the integer terms [t1] and [t2]. *)
   val add : t -> t -> t

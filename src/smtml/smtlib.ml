@@ -102,9 +102,8 @@ module Term = struct
   let str ?loc:_ (x : string) = Expr.value (Str x)
 
   let int ?loc (x : string) =
-    match int_of_string_opt x with
-    | Some x -> Expr.value (Int x)
-    | None -> Fmt.failwith "%ainvalid int" pp_loc loc
+    try Expr.value (Int (Z.of_string x))
+    with _ -> Fmt.failwith "%ainvalid int" pp_loc loc
 
   let real ?loc (x : string) =
     match float_of_string_opt x with

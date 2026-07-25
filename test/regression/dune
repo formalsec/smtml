@@ -1,4 +1,8 @@
 (test
  (name test_regression)
- (modules test_regression test_issue_655)
- (libraries smtml str alcotest))
+ (modules
+  test_regression
+  test_issue_655
+  test_issue_658
+  test_issue_ext_rotate)
+ (libraries alcotest fmt smtml zarith))

@@ -3,7 +3,7 @@ module Z3 = Optimizer.Z3
 
 let read_int () = Scanf.scanf " %d" (fun x -> x)
 
-let int x = Typed.Int.v x
+let int x = Typed.Int.v (Z.of_int x)
 
 let symbol x = Typed.symbol Typed.Types.int x
 
