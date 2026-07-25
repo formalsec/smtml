@@ -1,11 +1,13 @@
-open OUnit2
+(* SPDX-License-Identifier: MIT *)
+(* Copyright (C) 2023-2026 formalsec *)
+(* Written by the Smtml programmers *)
 
 [@@@ocaml.warning "-26"]
 
 module Make (Mappings : Smtml.Mappings_intf.M) = struct
   open Mappings
 
-  let test_simple_adt _ =
+  let test_simple_adt () =
     let ptr_adt =
       Adt.make "Ptr"
         [ Adt.Cons.make "mk-ptr"
@@ -25,10 +27,13 @@ module Make (Mappings : Smtml.Mappings_intf.M) = struct
       ; eq (Func.apply loc [ p1 ]) (int 10)
       ; eq (Func.apply ofs [ p1 ]) (int 8)
       ];
-    assert (
-      match Solver.check solver ~assumptions:[] with
+    Alcotest.(check bool)
+      "test_simple_adt"
+      ( match Solver.check solver ~assumptions:[] with
       | `Sat -> true
       | `Unknown | `Unsat -> false )
+      true
 
-  let test_adt = "test_adt" >::: [ "test_simple_adt" >:: test_simple_adt ]
+  let test_adt =
+    ("test_adt", [ Alcotest.test_case "test_simple_adt" `Quick test_simple_adt ])
 end

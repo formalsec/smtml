@@ -1,3 +1,7 @@
+(* SPDX-License-Identifier: MIT *)
+(* Copyright (C) 2023-2026 formalsec *)
+(* Written by the Smtml programmers *)
+
 open Smtml
 open Expr
 
@@ -11,23 +15,19 @@ let equal_sat a b =
   | `Sat, `Sat | `Unsat, `Unsat | `Unknown, `Unknown -> true
   | _ -> false
 
+let sat_testable = Alcotest.testable pp_sat equal_sat
+
+let expr_testable = Alcotest.testable Expr.pp Expr.equal
+
 let assert_expected_sat ?f expected result =
-  let pp_diff fmt (expected, result) =
-    Fmt.pf fmt "%a: expected '%a' but got '%a'" (Fmt.option Fmt.string) f pp_sat
-      expected pp_sat result
-  in
-  OUnit2.assert_equal ~cmp:equal_sat ~pp_diff expected result
+  let msg = match f with Some s -> s | None -> "sat check" in
+  Alcotest.check sat_testable msg expected result
 
 let assert_sat ?f result = assert_expected_sat ?f `Sat result
 
 let assert_unsat ?f result = assert_expected_sat ?f `Unsat result
 
-let check a b =
-  let pp_diff fmt (a, b) =
-    Fmt.pf fmt "@.@[<v>Expected:@;  @[<v>'%a'@]@;Real:@;  @[<v>'%a'@]@]" Expr.pp
-      a Expr.pp b
-  in
-  OUnit2.assert_equal ~pp_diff ~cmp:Expr.equal a b
+let check a b = Alcotest.check expr_testable "expression equality" b a
 
 module Infix = struct
   let true_ = Expr.Bool.true_

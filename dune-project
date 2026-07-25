@@ -101,7 +101,7 @@
   (odoc :with-doc)
   (sherlodoc :with-doc)
   ;; Test dependencies
-  (ounit2 :with-test)
+  (alcotest :with-test)
   (bisect_ppx
    (and
     :with-dev-setup

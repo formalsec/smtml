@@ -1,4 +1,7 @@
-open OUnit2
+(* SPDX-License-Identifier: MIT *)
+(* Copyright (C) 2023-2026 formalsec *)
+(* Written by the Smtml programmers *)
+
 open Smtml
 open Smtml_test.Test_harness
 
@@ -13,30 +16,30 @@ let pp_op fmt = function
 let _with_type_error f =
   try f ()
   with Eval.Eval_error (`Type_error { index; value; ty; op; _ }) ->
-    Fmt.failwith
+    Alcotest.failf
       "type error: operator %a.%a argument %d got unexpected value %a" Ty.pp ty
       pp_op op index Value.pp value
 
-let test_hc _ =
+let test_hc () =
   let open Infix in
   let length0 = Expr.Hc.length () in
   let ty = Ty.Ty_bitv 32 in
-  assert (symbol "x" ty == symbol "x" ty);
-  assert (symbol "x" ty != symbol "y" ty);
+  Alcotest.(check bool)
+    "symbol x == symbol x" true
+    (symbol "x" ty == symbol "x" ty);
+  Alcotest.(check bool)
+    "symbol x != symbol y" true
+    (symbol "x" ty != symbol "y" ty);
   let left_a = symbol "x" ty in
   let right_a = symbol "y" ty in
   let left_b = symbol "x" ty in
   let right_b = symbol "y" ty in
   let a = Expr.binop ty Add left_a right_a in
   let b = Expr.binop ty Add left_b right_b in
-  assert (a == b);
-  (* There should be only 3 elements added in the hashcons table: *)
-  (*   1. x *)
-  (*   2. y *)
-  (*   3. x + y *)
-  assert (Expr.Hc.length () - length0 == 3)
+  Alcotest.(check bool) "a == b" true (a == b);
+  Alcotest.(check int) "hashcons count" 3 (Expr.Hc.length () - length0)
 
-let test_unop_int _ =
+let test_unop_int () =
   let open Infix in
   let ty = Ty.Ty_int in
   check (Expr.unop ty Neg (int 1)) (int ~-1);
@@ -44,7 +47,7 @@ let test_unop_int _ =
   let x = symbol "x" ty in
   check (Expr.unop ty Neg (Expr.unop ty Neg x)) x
 
-let test_unop_real _ =
+let test_unop_real () =
   let open Infix in
   let ty = Ty.Ty_real in
   check (Expr.unop ty Neg (real 1.0)) (real (-1.0));
@@ -56,19 +59,19 @@ let test_unop_real _ =
   check (Expr.unop ty Trunc (real 1.504)) (real 1.0);
   check (Expr.unop ty Is_nan (real Float.nan)) true_
 
-let test_unop_string _ =
+let test_unop_string () =
   let open Infix in
   let ty = Ty.Ty_str in
   check (Expr.unop ty Length (string "abc")) (int 3);
   check (Expr.unop ty Trim (string " abc\t\n")) (string "abc")
 
-let test_unop_bool _ =
+let test_unop_bool () =
   let ty = Ty.Ty_bool in
   check (Expr.unop ty Not Expr.Bool.true_) Expr.Bool.false_;
   let x = Expr.symbol (Symbol.make ty "x") in
   check (Expr.unop ty Not (Expr.unop ty Not x)) x
 
-let test_unop_list _ =
+let test_unop_list () =
   let open Infix in
   let ty = Ty.Ty_list in
   let vlist = list [ Int 1; Int 2; Int 3 ] in
@@ -84,43 +87,41 @@ let test_unop_list _ =
   check (Expr.unop ty Length slist) (int 2);
   check (Expr.unop ty Reverse (Expr.unop ty Reverse slist)) slist
 
-let test_unop_i32 _ =
+let test_unop_i32 () =
   let open Infix in
   let ty = Ty.Ty_bitv 32 in
   check (Expr.unop ty Neg (int32 1l)) (int32 (-1l));
   check (Expr.unop ty Not (int32 (-1l))) (int32 0l)
 
-let test_unop_i64 _ =
+let test_unop_i64 () =
   let open Infix in
   let ty = Ty.Ty_bitv 64 in
   check (Expr.unop ty Neg (int64 1L)) (int64 (-1L));
   check (Expr.unop ty Not (int64 (-1L))) (int64 0L)
 
-(* f32 *)
-let test_unop_f32 _ =
+let test_unop_f32 () =
   let open Infix in
   let ty = Ty.Ty_fp 32 in
   check (Expr.unop ty Trunc (float32 0.75)) (float32 0.0)
 
-(* f64 *)
-let test_unop_f64 _ =
+let test_unop_f64 () =
   let open Infix in
   let ty = Ty.Ty_fp 64 in
   check (Expr.unop ty Trunc (float64 0.75)) (float64 0.0)
 
 let test_unop =
-  [ "test_unop_int" >:: test_unop_int
-  ; "test_unop_real" >:: test_unop_real
-  ; "test_unop_stri" >:: test_unop_string
-  ; "test_unop_bool" >:: test_unop_bool
-  ; "test_unop_list" >:: test_unop_list
-  ; "test_unop_i32 " >:: test_unop_i32
-  ; "test_unop_i64 " >:: test_unop_i64
-  ; "test_unop_f32 " >:: test_unop_f32
-  ; "test_unop_f64 " >:: test_unop_f64
+  [ Alcotest.test_case "test_unop_int" `Quick test_unop_int
+  ; Alcotest.test_case "test_unop_real" `Quick test_unop_real
+  ; Alcotest.test_case "test_unop_string" `Quick test_unop_string
+  ; Alcotest.test_case "test_unop_bool" `Quick test_unop_bool
+  ; Alcotest.test_case "test_unop_list" `Quick test_unop_list
+  ; Alcotest.test_case "test_unop_i32" `Quick test_unop_i32
+  ; Alcotest.test_case "test_unop_i64" `Quick test_unop_i64
+  ; Alcotest.test_case "test_unop_f32" `Quick test_unop_f32
+  ; Alcotest.test_case "test_unop_f64" `Quick test_unop_f64
   ]
 
-let test_binop_int _ =
+let test_binop_int () =
   let open Infix in
   let ty = Ty.Ty_int in
   check (Expr.binop ty Add (int 0) (int 42)) (int 42);
@@ -137,9 +138,8 @@ let test_binop_int _ =
   check (Expr.binop ty Shl (int 1) (int 2)) (int 4);
   check (Expr.binop ty ShrA (int 4) (int 2)) (int 1);
   check (Expr.binop ty ShrA (int (-4)) (int 2)) (int (-1))
-(* check (Expr.binop ty ShrL (int (-4)) (int 2)) (int (-1)) *)
 
-let test_binop_real _ =
+let test_binop_real () =
   let open Infix in
   let ty = Ty.Ty_real in
   check (Expr.binop ty Add (real 0.0) (real 42.0)) (real 42.0);
@@ -150,7 +150,7 @@ let test_binop_real _ =
   check (Expr.binop ty Min (real 2.0) (real 4.0)) (real 2.0);
   check (Expr.binop ty Max (real 2.0) (real 4.0)) (real 4.0)
 
-let test_binop_string _ =
+let test_binop_string () =
   let open Infix in
   let ty = Ty.Ty_str in
   check (Expr.binop ty At (string "abc") (int 0)) (string "a");
@@ -158,7 +158,7 @@ let test_binop_string _ =
   check (Expr.binop ty String_suffix (string "ab") (string "abcd")) false_;
   check (Expr.binop ty String_contains (string "abcd") (string "bc")) true_
 
-let test_binop_list _ =
+let test_binop_list () =
   let open Infix in
   let ty = Ty.Ty_list in
   let clist = list [ Int 0; Int 1; Int 2 ] in
@@ -173,7 +173,7 @@ let test_binop_list _ =
   check (Expr.binop ty List_append slist2 (list [ Int 2 ])) slist3;
   check (Expr.binop ty List_cons (int 0) (Expr.list [ int 1; int 2 ])) slist3
 
-let test_binop_i32 _ =
+let test_binop_i32 () =
   let open Infix in
   let ptr = Expr.ptr 8390670l (int32 2l) in
   check (Expr.binop (Ty_bitv 32) Rem ptr (int32 1l)) (int32 0l);
@@ -194,7 +194,7 @@ let test_binop_i32 _ =
     Expr.(binop (Ty_bitv 32) Ext_rotr (int32 2l) (int32 2l))
     (int32 Int32.min_int)
 
-let test_binop_i64 _ =
+let test_binop_i64 () =
   let open Infix in
   check (Expr.binop (Ty_bitv 64) Add (int64 0L) (int64 1L)) (int64 1L);
   check (Expr.binop (Ty_bitv 64) Sub (int64 1L) (int64 0L)) (int64 1L);
@@ -213,7 +213,7 @@ let test_binop_i64 _ =
     (Expr.binop (Ty_bitv 64) Ext_rotr (int64 2L) (int64 2L))
     (int64 Int64.min_int)
 
-let test_binop_f32 _ =
+let test_binop_f32 () =
   let open Infix in
   let ty = Ty.Ty_fp 32 in
   check (Expr.binop ty Copysign (float32 (-4.2)) (float32 2.0)) (float32 4.2);
@@ -223,7 +223,7 @@ let test_binop_f32 _ =
     (Expr.binop ty Copysign (float32 (-4.2)) (float32 (-2.0)))
     (float32 (-4.2))
 
-let test_binop_f64 _ =
+let test_binop_f64 () =
   let open Infix in
   let ty = Ty.Ty_fp 64 in
   check (Expr.binop ty Copysign (float64 (-4.2)) (float64 2.0)) (float64 4.2);
@@ -233,7 +233,7 @@ let test_binop_f64 _ =
     (Expr.binop ty Copysign (float64 (-4.2)) (float64 (-2.0)))
     (float64 (-4.2))
 
-let test_binop_ptr _ =
+let test_binop_ptr () =
   let open Infix in
   let p0 = Expr.ptr 0l (int32 0l) in
   let p1 = Expr.binop (Ty_bitv 32) Add p0 (int32 4l) in
@@ -242,7 +242,7 @@ let test_binop_ptr _ =
   check (Expr.binop (Ty_bitv 32) Sub p1 (int32 4l)) p0;
   check (Expr.binop (Ty_bitv 32) Add (int32 4l) p0) p1
 
-let test_binop_simplifications _ =
+let test_binop_simplifications () =
   let open Infix in
   let x = symbol "x" (Ty_bitv 32) in
   let zero = int32 0l in
@@ -260,19 +260,20 @@ let test_binop_simplifications _ =
     (binop32 Mul (int32 4l) x)
 
 let test_binop =
-  [ "test_binop_int" >:: test_binop_int
-  ; "test_binop_real" >:: test_binop_real
-  ; "test_binop_string" >:: test_binop_string
-  ; "test_binop_list" >:: test_binop_list
-  ; "test_binop_i32" >:: test_binop_i32
-  ; "test_binop_i64" >:: test_binop_i64
-  ; "test_binop_f32" >:: test_binop_f32
-  ; "test_binop_f64" >:: test_binop_f64
-  ; "test_binop_ptr" >:: test_binop_ptr
-  ; "test_binop_simplifications" >:: test_binop_simplifications
+  [ Alcotest.test_case "test_binop_int" `Quick test_binop_int
+  ; Alcotest.test_case "test_binop_real" `Quick test_binop_real
+  ; Alcotest.test_case "test_binop_string" `Quick test_binop_string
+  ; Alcotest.test_case "test_binop_list" `Quick test_binop_list
+  ; Alcotest.test_case "test_binop_i32" `Quick test_binop_i32
+  ; Alcotest.test_case "test_binop_i64" `Quick test_binop_i64
+  ; Alcotest.test_case "test_binop_f32" `Quick test_binop_f32
+  ; Alcotest.test_case "test_binop_f64" `Quick test_binop_f64
+  ; Alcotest.test_case "test_binop_ptr" `Quick test_binop_ptr
+  ; Alcotest.test_case "test_binop_simplifications" `Quick
+      test_binop_simplifications
   ]
 
-let test_relop_bool _ =
+let test_relop_bool () =
   let open Infix in
   let ty = Ty.Ty_bool in
   check (Expr.relop ty Eq (int 0) (int 0)) true_;
@@ -284,7 +285,7 @@ let test_relop_bool _ =
   check (Expr.relop ty Eq (int64 0L) (int64 0L)) true_;
   check (Expr.relop ty Ne (int64 0L) (int64 0L)) false_
 
-let test_relop_int _ =
+let test_relop_int () =
   let open Infix in
   let ty = Ty.Ty_int in
   check (Expr.relop ty Lt (int 0) (int 1)) true_;
@@ -292,7 +293,7 @@ let test_relop_int _ =
   check (Expr.relop ty Lt (int 1) (int 0)) false_;
   check (Expr.relop ty Le (int 1) (int 0)) false_
 
-let test_relop_real _ =
+let test_relop_real () =
   let open Infix in
   let ty = Ty.Ty_real in
   let x = symbol "x" ty in
@@ -303,7 +304,7 @@ let test_relop_real _ =
   check (Expr.relop ty Lt (real 1.0) (real 0.0)) false_;
   check (Expr.relop ty Le (real 1.0) (real 0.0)) false_
 
-let test_relop_string _ =
+let test_relop_string () =
   let open Infix in
   let ty = Ty.Ty_str in
   check (Expr.relop ty Lt (string "a") (string "b")) true_;
@@ -315,7 +316,7 @@ let test_relop_string _ =
   check (Expr.relop ty Eq (string "a") (string "b")) false_;
   check (Expr.relop ty Ne (string "a") (string "b")) true_
 
-let test_relop_i32 _ =
+let test_relop_i32 () =
   let open Infix in
   let ty = Ty.Ty_bitv 32 in
   check (Expr.relop ty Lt (int32 0l) (int32 1l)) true_;
@@ -327,7 +328,7 @@ let test_relop_i32 _ =
   check (Expr.relop ty Le (int32 0l) (int32 1l)) true_;
   check (Expr.relop ty LeU (int32 (-1l)) (int32 0l)) false_
 
-let test_relop_i64 _ =
+let test_relop_i64 () =
   let open Infix in
   let ty = Ty.Ty_bitv 64 in
   check (Expr.relop ty Lt (int64 0L) (int64 1L)) true_;
@@ -339,21 +340,19 @@ let test_relop_i64 _ =
   check (Expr.relop ty Le (int64 0L) (int64 1L)) true_;
   check (Expr.relop ty LeU (int64 (-1L)) (int64 0L)) false_
 
-let test_relop_f32 _ =
+let test_relop_f32 () =
   let open Infix in
   let ty = Ty.Ty_fp 32 in
   let nan0 = float32 Float.nan in
   let nan1 = float32 Float.nan in
-  (* Structual equaility should say nan = nan *)
   check nan0 nan1;
-  (* Concrete evaluation should say nan <> nan *)
   check (Expr.relop ty Eq nan0 nan1) false_;
   check (Expr.relop ty Lt (float32 0.0) (float32 1.0)) true_;
   check (Expr.relop ty Le (float32 0.0) (float32 1.0)) true_;
   check (Expr.relop ty Lt (float32 1.0) (float32 0.0)) false_;
   check (Expr.relop ty Le (float32 1.0) (float32 0.0)) false_
 
-let test_relop_f64 _ =
+let test_relop_f64 () =
   let open Infix in
   let ty = Ty.Ty_fp 64 in
   check (Expr.relop ty Lt (float64 0.0) (float64 1.0)) true_;
@@ -361,7 +360,7 @@ let test_relop_f64 _ =
   check (Expr.relop ty Lt (float64 1.0) (float64 0.0)) false_;
   check (Expr.relop ty Le (float64 1.0) (float64 0.0)) false_
 
-let test_relop_app _ =
+let test_relop_app () =
   let open Infix in
   let ty = Ty.Ty_bool in
   check
@@ -373,7 +372,7 @@ let test_relop_app _ =
   check (Expr.relop ty Eq (app (`Op "undefined")) (int 1)) Expr.Bool.false_;
   check (Expr.relop ty Ne (int 1) (app (`Op "undefined"))) Expr.Bool.true_
 
-let test_relop_ptr _ =
+let test_relop_ptr () =
   let open Infix in
   let ty = Ty.Ty_bitv 32 in
   let p0 = Expr.ptr 0l (int32 0l) in
@@ -391,31 +390,31 @@ let test_relop_ptr _ =
   check (Expr.relop ty Lt (int32 4l) p1) false_;
   check (Expr.relop ty Le p1 (int32 4l)) true_
 
-let test_relop_eq _ =
+let test_relop_eq () =
   let open Infix in
   check (Expr.relop Ty.Ty_int Eq (int 42) (int 42)) true_
 
 let test_relop =
-  [ "test_relop_bool" >:: test_relop_bool
-  ; "test_relop_int" >:: test_relop_int
-  ; "test_relop_real" >:: test_relop_real
-  ; "test_relop_string" >:: test_relop_string
-  ; "test_relop_i32" >:: test_relop_i32
-  ; "test_relop_i64" >:: test_relop_i64
-  ; "test_relop_f32" >:: test_relop_f32
-  ; "test_relop_f64" >:: test_relop_f64
-  ; "test_relop_app" >:: test_relop_app
-  ; "test_relop_ptr" >:: test_relop_ptr
-  ; "test_relop_ptr" >:: test_relop_eq
+  [ Alcotest.test_case "test_relop_bool" `Quick test_relop_bool
+  ; Alcotest.test_case "test_relop_int" `Quick test_relop_int
+  ; Alcotest.test_case "test_relop_real" `Quick test_relop_real
+  ; Alcotest.test_case "test_relop_string" `Quick test_relop_string
+  ; Alcotest.test_case "test_relop_i32" `Quick test_relop_i32
+  ; Alcotest.test_case "test_relop_i64" `Quick test_relop_i64
+  ; Alcotest.test_case "test_relop_f32" `Quick test_relop_f32
+  ; Alcotest.test_case "test_relop_f64" `Quick test_relop_f64
+  ; Alcotest.test_case "test_relop_app" `Quick test_relop_app
+  ; Alcotest.test_case "test_relop_ptr" `Quick test_relop_ptr
+  ; Alcotest.test_case "test_relop_eq" `Quick test_relop_eq
   ]
 
-let test_triop_bool _ =
+let test_triop_bool () =
   let open Infix in
   let ty = Ty.Ty_bool in
   check (Expr.triop ty Ite true_ (int 1) (int 0)) (int 1);
   check (Expr.triop ty Ite false_ (int 1) (int 0)) (int 0)
 
-let test_triop_string _ =
+let test_triop_string () =
   let open Infix in
   let ty = Ty.Ty_str in
   check
@@ -428,7 +427,7 @@ let test_triop_string _ =
     (Expr.triop ty String_replace (string "abcd") (string "bc") (string "ef"))
     (string "aefd")
 
-let test_triop_list _ =
+let test_triop_list () =
   let open Infix in
   let ty = Ty.Ty_list in
   check
@@ -436,26 +435,26 @@ let test_triop_list _ =
     (list [ Int 0; Int 3; Int 2 ])
 
 let test_triop =
-  [ "test_triop_bool" >:: test_triop_bool
-  ; "test_triop_string" >:: test_triop_string
-  ; "test_triop_list" >:: test_triop_list
+  [ Alcotest.test_case "test_triop_bool" `Quick test_triop_bool
+  ; Alcotest.test_case "test_triop_string" `Quick test_triop_string
+  ; Alcotest.test_case "test_triop_list" `Quick test_triop_list
   ]
 
-let test_cvtop_int _ =
+let test_cvtop_int () =
   let open Infix in
   let ty = Ty.Ty_int in
   check (Expr.cvtop ty OfBool true_) (int 1);
   check (Expr.cvtop ty OfBool false_) (int 0);
   check (Expr.cvtop ty Reinterpret_float (real 1.)) (int 1)
 
-let test_cvtop_real _ =
+let test_cvtop_real () =
   let open Infix in
   let ty = Ty.Ty_real in
   check (Expr.cvtop ty ToString (real 1.)) (string "1.");
   check (Expr.cvtop ty OfString (string "1.")) (real 1.);
   check (Expr.cvtop ty Reinterpret_int (int 1)) (real 1.)
 
-let test_cvtop_string _ =
+let test_cvtop_string () =
   let open Infix in
   let ty = Ty.Ty_str in
   check (Expr.cvtop ty String_to_code (string "a")) (int 97);
@@ -464,44 +463,45 @@ let test_cvtop_string _ =
   check (Expr.cvtop ty String_from_int (int 42)) (string "42");
   check (Expr.cvtop ty String_to_float (string "1.")) (real 1.)
 
-let test_cvtop_i32 _ =
+let test_cvtop_i32 () =
   let open Infix in
   check (Expr.cvtop (Ty_bitv 32) TruncSF32 (float32 8.5)) (int32 8l);
   check (Expr.cvtop (Ty_bitv 32) TruncSF64 (float64 8.5)) (int32 8l);
   let x = Expr.symbol (Symbol.make (Ty_bitv 32) "x") in
   let x = Expr.extract x ~high:15 ~low:0 in
-  assert (Ty.equal (Expr.ty x) (Ty_bitv 16));
+  Alcotest.(check bool "ty extract 16" true) (Ty.equal (Expr.ty x) (Ty_bitv 16));
   let x = Expr.cvtop (Ty_bitv 32) (Sign_extend 16) x in
-  assert (Ty.equal (Expr.ty x) (Ty_bitv 32))
+  Alcotest.(check bool "ty sign_extend" true)
+    (Ty.equal (Expr.ty x) (Ty_bitv 32))
 
-let test_cvtop_i64 _ =
+let test_cvtop_i64 () =
   let open Infix in
   check (Expr.cvtop (Ty_bitv 64) TruncSF32 (float32 8.5)) (int64 8L);
   check (Expr.cvtop (Ty_bitv 64) TruncSF64 (float64 8.5)) (int64 8L)
 
-let test_cvtop_f32 _ =
+let test_cvtop_f32 () =
   let open Infix in
   let ty = Ty.Ty_fp 32 in
   check (Expr.cvtop ty ConvertSI32 (int32 8l)) (float32 8.0);
   check (Expr.cvtop ty ConvertSI64 (int64 8L)) (float32 8.0)
 
-let test_cvtop_f64 _ =
+let test_cvtop_f64 () =
   let open Infix in
   let ty = Ty.Ty_fp 64 in
   check (Expr.cvtop ty ConvertSI32 (int32 8l)) (float64 8.0);
   check (Expr.cvtop ty ConvertSI64 (int64 8L)) (float64 8.0)
 
 let test_cvtop =
-  [ "test_cvtop_int" >:: test_cvtop_int
-  ; "test_cvtop_real" >:: test_cvtop_real
-  ; "test_cvtop_string" >:: test_cvtop_string
-  ; "test_cvtop_i32" >:: test_cvtop_i32
-  ; "test_cvtop_i64" >:: test_cvtop_i64
-  ; "test_cvtop_f32" >:: test_cvtop_f32
-  ; "test_cvtop_f64" >:: test_cvtop_f64
+  [ Alcotest.test_case "test_cvtop_int" `Quick test_cvtop_int
+  ; Alcotest.test_case "test_cvtop_real" `Quick test_cvtop_real
+  ; Alcotest.test_case "test_cvtop_string" `Quick test_cvtop_string
+  ; Alcotest.test_case "test_cvtop_i32" `Quick test_cvtop_i32
+  ; Alcotest.test_case "test_cvtop_i64" `Quick test_cvtop_i64
+  ; Alcotest.test_case "test_cvtop_f32" `Quick test_cvtop_f32
+  ; Alcotest.test_case "test_cvtop_f64" `Quick test_cvtop_f64
   ]
 
-let test_naryop_bool _ =
+let test_naryop_bool () =
   let open Infix in
   let ty = Ty.Ty_bool in
   check (Expr.naryop ty Logand [ true_; true_; true_ ]) true_;
@@ -509,7 +509,7 @@ let test_naryop_bool _ =
   check (Expr.naryop ty Logand [ true_; false_; true_ ]) false_;
   check (Expr.naryop ty Logor [ false_; true_; false_ ]) true_
 
-let test_naryop_string _ =
+let test_naryop_string () =
   let open Infix in
   let ty = Ty.Ty_str in
   check
@@ -519,12 +519,11 @@ let test_naryop_string _ =
   check (Expr.naryop ty Concat [ string ""; string "" ]) (string "")
 
 let test_naryop =
-  [ "test_naryop_bool" >:: test_naryop_bool
-  ; "test_naryop_string" >:: test_naryop_string
+  [ Alcotest.test_case "test_naryop_bool" `Quick test_naryop_bool
+  ; Alcotest.test_case "test_naryop_string" `Quick test_naryop_string
   ]
 
-let test_simplify_assoc _ =
-  (* Test simplify of left- and righ- associative operators *)
+let test_simplify_assoc () =
   let open Infix in
   let ty = Ty.Ty_int in
   let x = symbol "x" ty in
@@ -535,28 +534,28 @@ let test_simplify_assoc _ =
   let sym = Expr.raw_binop Ty_int Add (int 3) binary in
   check (Expr.simplify sym) (Expr.raw_binop Ty_int Add (int 13) x)
 
-let test_simplify_extract_i8 _ =
+let test_simplify_extract_i8 () =
   let open Infix in
   let bv = int32 0xDEADBEEFl in
   let extracted = Expr.extract bv ~high:7 ~low:0 in
   let expected = int8 0xEF in
   check extracted expected
 
-let test_simplify_extract_zero_extend _ =
+let test_simplify_extract_zero_extend () =
   let open Infix in
   let x = symbol "x" (Ty_bitv 8) in
   let extended = Expr.cvtop (Ty_bitv 32) (Zero_extend 24) x in
   let extracted = Expr.extract extended ~high:7 ~low:0 in
   check extracted x
 
-let test_simplify_extract_sign_extend _ =
+let test_simplify_extract_sign_extend () =
   let open Infix in
   let x = symbol "x" (Ty_bitv 8) in
   let extended = Expr.cvtop (Ty_bitv 32) (Sign_extend 24) x in
   let extracted = Expr.extract extended ~high:7 ~low:0 in
   check extracted x
 
-let test_simplify_extract_i8_symbol _ =
+let test_simplify_extract_i8_symbol () =
   let open Infix in
   let x = symbol "x" (Ty_bitv 8) in
   let padding = Expr.value (Bitv (Bitvector.make Z.zero 24)) in
@@ -564,15 +563,14 @@ let test_simplify_extract_i8_symbol _ =
   let extracted = Expr.extract concated ~high:7 ~low:0 in
   check extracted x
 
-let test_simplify_extract_i32_symbol _ =
+let test_simplify_extract_i32_symbol () =
   let open Infix in
   let x = symbol "x" (Ty_bitv 32) in
   let concated = Expr.concat (int32 0l) x in
   let extracted = Expr.extract concated ~high:31 ~low:0 in
   check extracted x
 
-(* These two were the simplification leo typically asked for *)
-let test_simplify_extend_i32_of_extracted_i8 _ =
+let test_simplify_extend_i32_of_extracted_i8 () =
   let open Infix in
   let bv = int32 0l in
   let extracted = Expr.extract bv ~high:7 ~low:0 in
@@ -580,7 +578,7 @@ let test_simplify_extend_i32_of_extracted_i8 _ =
   let expected = bv in
   check extended expected
 
-let test_simplify_extend_i64_of_extracted_i8 _ =
+let test_simplify_extend_i64_of_extracted_i8 () =
   let open Infix in
   let bv = int32 0l in
   let extracted = Expr.extract bv ~high:7 ~low:0 in
@@ -589,18 +587,23 @@ let test_simplify_extend_i64_of_extracted_i8 _ =
   check extended expected
 
 let test_simplify_extract =
-  [ "test_simplify_extract_i8" >:: test_simplify_extract_i8
-  ; "test_simplify_extract_zero_extend" >:: test_simplify_extract_zero_extend
-  ; "test_simplify_extract_sign_extend" >:: test_simplify_extract_sign_extend
-  ; "test_simplify_extract_i8_symbol" >:: test_simplify_extract_i8_symbol
-  ; "test_simplify_extract_i32_symbol" >:: test_simplify_extract_i32_symbol
-  ; "test_simplify_extend_i32_of_extracted_i8"
-    >:: test_simplify_extend_i32_of_extracted_i8
-  ; "test_simplify_extend_i64_of_extracted_i8"
-    >:: test_simplify_extend_i64_of_extracted_i8
+  [ Alcotest.test_case "test_simplify_extract_i8" `Quick
+      test_simplify_extract_i8
+  ; Alcotest.test_case "test_simplify_extract_zero_extend" `Quick
+      test_simplify_extract_zero_extend
+  ; Alcotest.test_case "test_simplify_extract_sign_extend" `Quick
+      test_simplify_extract_sign_extend
+  ; Alcotest.test_case "test_simplify_extract_i8_symbol" `Quick
+      test_simplify_extract_i8_symbol
+  ; Alcotest.test_case "test_simplify_extract_i32_symbol" `Quick
+      test_simplify_extract_i32_symbol
+  ; Alcotest.test_case "test_simplify_extend_i32_of_extracted_i8" `Quick
+      test_simplify_extend_i32_of_extracted_i8
+  ; Alcotest.test_case "test_simplify_extend_i64_of_extracted_i8" `Quick
+      test_simplify_extend_i64_of_extracted_i8
   ]
 
-let test_simplify_concat_i32_i32 _ =
+let test_simplify_concat_i32_i32 () =
   let open Infix in
   let a = int32 0xDEADBEEFl in
   let b = int32 0xBADC0FFEl in
@@ -608,7 +611,7 @@ let test_simplify_concat_i32_i32 _ =
   let expected = int64 0xDEADBEEFBADC0FFEL in
   check concated expected
 
-let test_simplify_concat_i32_symbol _ =
+let test_simplify_concat_i32_symbol () =
   let open Infix in
   let x = symbol "x" (Ty_bitv 32) in
   let a = Expr.extract x ~high:7 ~low:0 in
@@ -618,22 +621,23 @@ let test_simplify_concat_i32_symbol _ =
   let concated = Expr.concat d (Expr.concat c (Expr.concat b a)) in
   check concated x
 
-let test_fp_nan_not_geffects _ =
+let test_fp_nan_not_geffects () =
   let open Infix in
   let ty = Ty.Ty_fp 32 in
   let x = symbol "x" ty in
   let y = symbol "y" ty in
-  (* x != x makes isNaN(x) *)
   let expr = Expr.unop Ty_bool Not (Expr.relop ty Le y x) in
   let expected = Expr.unop Ty_bool Not (Expr.relop ty Le y x) in
   check expr expected
 
 let test_simplify_concat =
-  [ "test_simplify_concat_i32_i32" >:: test_simplify_concat_i32_i32
-  ; "test_simplify_concat_i32_symbol" >:: test_simplify_concat_i32_symbol
+  [ Alcotest.test_case "test_simplify_concat_i32_i32" `Quick
+      test_simplify_concat_i32_i32
+  ; Alcotest.test_case "test_simplify_concat_i32_symbol" `Quick
+      test_simplify_concat_i32_symbol
   ]
 
-let test_simplify_reinterpret_int _ =
+let test_simplify_reinterpret_int () =
   let open Infix in
   let sym_0 = symbol "symbol_0" (Ty_fp 32) in
   let lhs =
@@ -651,7 +655,7 @@ let test_simplify_reinterpret_int _ =
   let expected = Expr.binop (Ty_fp 32) Add sym_0 sym_1 in
   check result expected
 
-let test_str_contains_empty_rhs _ =
+let test_str_contains_empty_rhs () =
   let open Infix in
   let str s = Expr.value (Str s) in
   let s = symbol "x" Ty_str in
@@ -659,7 +663,7 @@ let test_str_contains_empty_rhs _ =
   let expected = Expr.value True in
   check e expected
 
-let test_str_prefix_empty_rhs _ =
+let test_str_prefix_empty_rhs () =
   let open Infix in
   let str s = Expr.value (Str s) in
   let s = symbol "x" Ty_str in
@@ -667,7 +671,7 @@ let test_str_prefix_empty_rhs _ =
   let expected = Expr.value True in
   check e expected
 
-let test_str_suffix_empty_rhs _ =
+let test_str_suffix_empty_rhs () =
   let open Infix in
   let str s = Expr.value (Str s) in
   let s = symbol "x" Ty_str in
@@ -675,35 +679,35 @@ let test_str_suffix_empty_rhs _ =
   let expected = Expr.value True in
   check e expected
 
-let test_and_true_rhs _ =
+let test_and_true_rhs () =
   let open Infix in
   let symbol_i name = symbol name Ty_int in
   let s = symbol_i "x" in
   let e = Expr.binop Ty_bool And s (Expr.value True) in
   check e s
 
-let test_and_false_lhs _ =
+let test_and_false_lhs () =
   let open Infix in
   let symbol_i name = symbol name Ty_int in
   let s = symbol_i "x" in
   let e = Expr.binop Ty_bool And (Expr.value False) s in
   check e (Expr.value False)
 
-let test_or_true_rhs _ =
+let test_or_true_rhs () =
   let open Infix in
   let symbol_i name = symbol name Ty_int in
   let s = symbol_i "x" in
   let e = Expr.binop Ty_bool Or s (Expr.value True) in
   check e (Expr.value True)
 
-let test_or_false_rhs _ =
+let test_or_false_rhs () =
   let open Infix in
   let symbol_i name = symbol name Ty_int in
   let s = symbol_i "x" in
   let e = Expr.binop Ty_bool Or s (Expr.value False) in
   check e s
 
-let test_and_fold_constants _ =
+let test_and_fold_constants () =
   let open Infix in
   let x = symbol "x" Ty_int in
   let v1 = Expr.value (Int 3) in
@@ -714,9 +718,9 @@ let test_and_fold_constants _ =
     let folded = Expr.value (Eval.binop Ty_int And v1 v2) in
     let expected = Expr.binop Ty_int And x folded in
     check and_const expected
-  | _ -> assert false
+  | _ -> Alcotest.fail "Expected Val constructors"
 
-let test_ite_same_branches _ =
+let test_ite_same_branches () =
   let open Infix in
   let symbol_i name = symbol name Ty_int in
   let c = symbol_i "cond" in
@@ -724,19 +728,19 @@ let test_ite_same_branches _ =
   let e = Expr.triop Ty_int Ite c x x in
   check e x
 
-let test_to_string_of_string _ =
+let test_to_string_of_string () =
   let open Infix in
   let s = symbol "s" Ty_str in
   let e = Expr.cvtop Ty_str ToString (Expr.cvtop Ty_str OfString s) in
   check e s
 
-let test_zero_extend_0 _ =
+let test_zero_extend_0 () =
   let open Infix in
   let x = symbol "x" (Ty_bitv 32) in
   let e = Expr.cvtop (Ty_bitv 32) (Zero_extend 0) x in
   check e x
 
-let test_string_to_code_from_code _ =
+let test_string_to_code_from_code () =
   let open Infix in
   let s = symbol "s" Ty_str in
   let e =
@@ -745,22 +749,28 @@ let test_string_to_code_from_code _ =
   check e s
 
 let test_simplify_normalize =
-  [ "test_simplify_reinterpret_int" >:: test_simplify_reinterpret_int
-  ; "test_str_contains_empty_rhs" >:: test_str_contains_empty_rhs
-  ; "test_str_prefix_empty_rhs" >:: test_str_prefix_empty_rhs
-  ; "test_str_suffix_empty_rhs" >:: test_str_suffix_empty_rhs
-  ; "test_and_true_rhs" >:: test_and_true_rhs
-  ; "test_and_false_lhs" >:: test_and_false_lhs
-  ; "test_or_true_rhs" >:: test_or_true_rhs
-  ; "test_or_false_rhs" >:: test_or_false_rhs
-  ; "test_and_fold_constants" >:: test_and_fold_constants
-  ; "test_ite_same_branches" >:: test_ite_same_branches
-  ; "test_to_string_of_string" >:: test_to_string_of_string
-  ; "test_zero_extend_0" >:: test_zero_extend_0
-  ; "test_string_to_code_from_code" >:: test_string_to_code_from_code
+  [ Alcotest.test_case "test_simplify_reinterpret_int" `Quick
+      test_simplify_reinterpret_int
+  ; Alcotest.test_case "test_str_contains_empty_rhs" `Quick
+      test_str_contains_empty_rhs
+  ; Alcotest.test_case "test_str_prefix_empty_rhs" `Quick
+      test_str_prefix_empty_rhs
+  ; Alcotest.test_case "test_str_suffix_empty_rhs" `Quick
+      test_str_suffix_empty_rhs
+  ; Alcotest.test_case "test_and_true_rhs" `Quick test_and_true_rhs
+  ; Alcotest.test_case "test_and_false_lhs" `Quick test_and_false_lhs
+  ; Alcotest.test_case "test_or_true_rhs" `Quick test_or_true_rhs
+  ; Alcotest.test_case "test_or_false_rhs" `Quick test_or_false_rhs
+  ; Alcotest.test_case "test_and_fold_constants" `Quick test_and_fold_constants
+  ; Alcotest.test_case "test_ite_same_branches" `Quick test_ite_same_branches
+  ; Alcotest.test_case "test_to_string_of_string" `Quick
+      test_to_string_of_string
+  ; Alcotest.test_case "test_zero_extend_0" `Quick test_zero_extend_0
+  ; Alcotest.test_case "test_string_to_code_from_code" `Quick
+      test_string_to_code_from_code
   ]
 
-let test_simplify_ptr _ =
+let test_simplify_ptr () =
   let open Infix in
   let expected = Expr.ptr 8389648l (int32 16l) in
   let ptr = Expr.ptr 8389648l (int32 0l) in
@@ -770,60 +780,65 @@ let test_simplify_ptr _ =
   check expected real
 
 let test_simplify_unop =
-  [ ( "test_simplify_not_bool_or" >:: fun _ ->
-      let open Infix in
-      let ty = Ty.Ty_bool in
-      let x = symbol "x" ty in
-      let y = symbol "y" ty in
-      let expected =
-        Expr.binop ty And (Expr.unop ty Not x) (Expr.unop ty Not y)
-      in
-      let real = Expr.unop ty Not (Expr.binop ty Or x y) in
-      check expected real )
-  ; ( "test_simplify_not_bitv_or" >:: fun _ ->
-      let open Infix in
-      let ty = Ty.Ty_bitv 32 in
-      let x = symbol "x" ty in
-      let expected = Expr.binop ty And (int32 65535l) (Expr.unop ty Not x) in
-      let real = Expr.unop ty Not (Expr.binop ty Or (int32 0xffff0000l) x) in
-      check expected real )
-  ; ( "test_simplify_not_bool_or_with_cvtops" >:: fun _ ->
-      let open Infix in
-      let ty = Ty.Ty_bool in
-      let x = symbol "x" ty in
-      let y = symbol "y" ty in
-      let expected =
-        Expr.binop ty And (Expr.unop ty Not x) (Expr.unop ty Not y)
-      in
-      let real =
-        Expr.unop ty Not
-          (Expr.cvtop (Ty.Ty_bitv 32) ToBool
-             (Expr.cvtop (Ty.Ty_bitv 32) OfBool (Expr.binop ty Or x y)) )
-      in
-      check expected real )
+  let test_simplify_not_bool_or () =
+    let open Infix in
+    let ty = Ty.Ty_bool in
+    let x = symbol "x" ty in
+    let y = symbol "y" ty in
+    let expected =
+      Expr.binop ty And (Expr.unop ty Not x) (Expr.unop ty Not y)
+    in
+    let real = Expr.unop ty Not (Expr.binop ty Or x y) in
+    check expected real
+  in
+  let test_simplify_not_bitv_or () =
+    let open Infix in
+    let ty = Ty.Ty_bitv 32 in
+    let x = symbol "x" ty in
+    let expected = Expr.binop ty And (int32 65535l) (Expr.unop ty Not x) in
+    let real = Expr.unop ty Not (Expr.binop ty Or (int32 0xffff0000l) x) in
+    check expected real
+  in
+  let test_simplify_not_bool_or_with_cvtops () =
+    let open Infix in
+    let ty = Ty.Ty_bool in
+    let x = symbol "x" ty in
+    let y = symbol "y" ty in
+    let expected =
+      Expr.binop ty And (Expr.unop ty Not x) (Expr.unop ty Not y)
+    in
+    let real =
+      Expr.unop ty Not
+        (Expr.cvtop (Ty.Ty_bitv 32) ToBool
+           (Expr.cvtop (Ty.Ty_bitv 32) OfBool (Expr.binop ty Or x y)) )
+    in
+    check expected real
+  in
+  [ Alcotest.test_case "test_simplify_not_bool_or" `Quick
+      test_simplify_not_bool_or
+  ; Alcotest.test_case "test_simplify_not_bitv_or" `Quick
+      test_simplify_not_bitv_or
+  ; Alcotest.test_case "test_simplify_not_bool_or_with_cvtops" `Quick
+      test_simplify_not_bool_or_with_cvtops
   ]
 
 let test_simplify =
-  [ "test_simplify_assoc" >:: test_simplify_assoc
-  ; "test_fp_nan_not_geffects" >:: test_fp_nan_not_geffects
-  ; "test_simplify_extract" >::: test_simplify_extract
-  ; "test_simplify_concat" >::: test_simplify_concat
-  ; "test_simplify_ptr" >:: test_simplify_ptr
-  ; "test_simplify_unop" >::: test_simplify_unop
-  ; "test_simplify_normalize" >::: test_simplify_normalize
+  [ Alcotest.test_case "test_simplify_assoc" `Quick test_simplify_assoc
+  ; Alcotest.test_case "test_fp_nan_not_geffects" `Quick
+      test_fp_nan_not_geffects
+  ; Alcotest.test_case "test_simplify_ptr" `Quick test_simplify_ptr
   ]
 
-let test_inline_symbol_values_empty (_ : test_ctxt) =
+let test_inline_symbol_values_empty () =
   let symbol_map = Symbol.Map.empty in
   let e =
     let ty = Ty.Ty_bitv 32 in
     Infix.symbol "x" ty
   in
   let e' = Expr.inline_symbol_values symbol_map e in
-  (* We should not have changed the symbol value, and it should even stay physically equal to its original value. *)
-  assert (e == e')
+  Alcotest.(check bool) "symbol unchanged" true (e == e')
 
-let test_inline_symbol_values_replace_one (_ : test_ctxt) =
+let test_inline_symbol_values_replace_one () =
   let n = Value.Bitv (Bitvector.of_int32 42l) in
   let e' =
     let x =
@@ -835,16 +850,16 @@ let test_inline_symbol_values_replace_one (_ : test_ctxt) =
     Expr.inline_symbol_values symbol_map e
   in
   let n = Expr.value n in
-  (* e should now be equal to n because symbol x should have been replaced by n *)
-  assert (e' == n)
+  Alcotest.(check bool) "symbol replaced" true (e' == n)
 
 let test_inline_symbol_values =
-  [ "test_inline_symbol_values_empty" >:: test_inline_symbol_values_empty
-  ; "test_inline_symbol_values_replace_one"
-    >:: test_inline_symbol_values_replace_one
+  [ Alcotest.test_case "test_inline_symbol_values_empty" `Quick
+      test_inline_symbol_values_empty
+  ; Alcotest.test_case "test_inline_symbol_values_replace_one" `Quick
+      test_inline_symbol_values_replace_one
   ]
 
-let test_printer _ =
+let test_printer () =
   let ty = Ty.Ty_bitv 32 in
   let x = Expr.symbol (Symbol.make ty "x") in
   let y = Expr.symbol (Symbol.make ty "y") in
@@ -853,28 +868,31 @@ let test_printer _ =
   let parsed = Parse.Smtml.Expr.from_string serialized |> Result.get_ok in
   check e parsed
 
-let test_printer_query _ =
+let test_printer_query () =
   let ty = Ty.Ty_bitv 32 in
   let x = Expr.symbol (Symbol.make ty "x") in
   let y = Expr.symbol (Symbol.make ty "y") in
   let e = Expr.binop ty Add x y in
   let serialized = Fmt.str "%a" Expr.Printer.pp_query [ e ] in
   let script = Parse.Smtml.Script.from_string serialized |> Result.get_ok in
-  assert (List.length script = 4)
+  Alcotest.(check int) "printer query script length" 4 (List.length script)
 
-let test_suite =
-  "Expression unit tests"
-  >::: [ "test_hc" >:: test_hc
-       ; "test_unop" >::: test_unop
-       ; "test_binop" >::: test_binop
-       ; "test_relop" >::: test_relop
-       ; "test_triop" >::: test_triop
-       ; "test_cvtop" >::: test_cvtop
-       ; "test_naryop" >::: test_naryop
-       ; "test_simplify" >::: test_simplify
-       ; "test_inline_symbol_values" >::: test_inline_symbol_values
-       ; "test_printer" >:: test_printer
-       ; "test_printer_query" >:: test_printer_query
-       ]
-
-let () = run_test_tt_main test_suite
+let () =
+  Alcotest.run "Expression unit tests"
+    [ ("test_hc", [ Alcotest.test_case "test_hc" `Quick test_hc ])
+    ; ("test_unop", test_unop)
+    ; ("test_binop", test_binop)
+    ; ("test_relop", test_relop)
+    ; ("test_triop", test_triop)
+    ; ("test_cvtop", test_cvtop)
+    ; ("test_naryop", test_naryop)
+    ; ("test_simplify", test_simplify)
+    ; ("test_simplify_extract", test_simplify_extract)
+    ; ("test_simplify_concat", test_simplify_concat)
+    ; ("test_simplify_unop", test_simplify_unop)
+    ; ("test_simplify_normalize", test_simplify_normalize)
+    ; ("test_inline_symbol_values", test_inline_symbol_values)
+    ; ("test_printer", [ Alcotest.test_case "test_printer" `Quick test_printer ])
+    ; ( "test_printer_query"
+      , [ Alcotest.test_case "test_printer_query" `Quick test_printer_query ] )
+    ]

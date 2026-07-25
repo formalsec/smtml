@@ -1,13 +1,10 @@
-open OUnit2
+(* SPDX-License-Identifier: MIT *)
+(* Copyright (C) 2023-2026 formalsec *)
+(* Written by the Smtml programmers *)
+
 open Smtml
 
-let assert_equal =
-  let pp_diff fmt (expected, real) =
-    Fmt.pf fmt "Expected: %s@.Real: %s@." expected real
-  in
-  assert_equal ~cmp:String.equal ~pp_diff
-
-let test_to_json _ =
+let test_to_json () =
   let x = Symbol.make Ty_int "x" in
   let y = Symbol.make Ty_real "y" in
   let z = Symbol.make Ty_bool "z" in
@@ -31,9 +28,9 @@ let test_to_json _ =
   in
   let model_to_json = Model.to_json model in
   let model = Fmt.str "%a" (Yojson.Safe.pretty_print ~std:true) model_to_json in
-  assert_equal expected model
+  Alcotest.(check string) "model to_json" expected model
 
-let test_of_json _ =
+let test_of_json () =
   let open Result in
   let model_str =
     {|
@@ -48,9 +45,11 @@ let test_of_json _ =
     |}
   in
   let model = Model.Parse.Json.from_string model_str in
-  assert_bool "cannot parse model" (match model with Ok _ -> true | _ -> false)
+  Alcotest.(check bool)
+    "cannot parse model" true
+    (match model with Ok _ -> true | _ -> false)
 
-let test_rt_json _ =
+let test_rt_json () =
   let x = Symbol.make (Ty_bitv 32) "x" in
   let y = Symbol.make (Ty_bitv 64) "y" in
   let z = Symbol.make (Ty_fp 32) "y" in
@@ -66,27 +65,22 @@ let test_rt_json _ =
   in
   let json_model = Model.to_json_string orig_model in
   match Model.Parse.Json.from_string json_model with
-  | Error (`Msg err) -> Fmt.failwith "%s" err
+  | Error (`Msg err) -> Alcotest.failf "%s" err
   | Ok model -> begin
     let x_val = Model.evaluate model x in
     let y_val = Model.evaluate model y in
     let z_val = Model.evaluate model z in
     match (x_val, y_val, z_val) with
     | Some x_val, Some y_val, Some z_val ->
-      assert_bool "parsed values are incorrect"
+      Alcotest.(check bool)
+        "parsed values are incorrect" true
         ( Value.equal x_val (Bitv (Bitvector.of_int32 Int32.min_int))
         && Value.equal y_val (Bitv (Bitvector.of_int64 Int64.max_int))
         && Value.equal z_val (Num (F32 (Int32.bits_of_float 5.0))) )
-    | _ -> assert false
+    | _ -> Alcotest.fail "rtt json: values not found in model"
     end
 
-let test_json =
-  [ "test_to_json" >:: test_to_json
-  ; "test_of_json" >:: test_of_json
-  ; "test_rt_json" >:: test_rt_json
-  ]
-
-let test_of_scfg _ =
+let test_of_scfg () =
   let open Result in
   let model_str =
     {|
@@ -99,12 +93,16 @@ let test_of_scfg _ =
     |}
   in
   let model = Model.Parse.Scfg.from_string model_str in
-  assert (match model with Ok _ -> true | _ -> false)
+  Alcotest.(check bool)
+    "test_of_scfg" true
+    (match model with Ok _ -> true | _ -> false)
 
-let test_scfg = [ "test_of_scfg" >:: test_of_scfg ]
-
-let test_suite =
-  "Test model serialization"
-  >::: [ "test_json" >::: test_json; "test_scfg" >::: test_scfg ]
-
-let () = run_test_tt_main test_suite
+let () =
+  Alcotest.run "Test model serialization"
+    [ ( "test_json"
+      , [ Alcotest.test_case "test_to_json" `Quick test_to_json
+        ; Alcotest.test_case "test_of_json" `Quick test_of_json
+        ; Alcotest.test_case "test_rt_json" `Quick test_rt_json
+        ] )
+    ; ("test_scfg", [ Alcotest.test_case "test_of_scfg" `Quick test_of_scfg ])
+    ]

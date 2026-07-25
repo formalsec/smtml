@@ -1,26 +1,35 @@
-open OUnit2
+(* SPDX-License-Identifier: MIT *)
+(* Copyright (C) 2023-2026 formalsec *)
+(* Written by the Smtml programmers *)
+
 open Smtml
 
 module Make (M : Mappings_intf.S_with_fresh) = struct
   open Smtml_test.Test_harness
   module Cached = Solver.Cached (M)
 
-  let setup _test_ctxt =
+  let with_solver f () =
     let module Mappings : Mappings_intf.S = M.Fresh.Make () in
-    (module Smtml.Solver.Incremental (Mappings) : Solver_intf.S)
-
-  let teardown _solver_module _test_ctxt = ()
-
-  let with_solver f test_ctxt =
-    let solver_module = bracket setup teardown test_ctxt in
+    let solver_module =
+      (module Smtml.Solver.Incremental (Mappings) : Solver_intf.S)
+    in
     f solver_module
 
-  let test_default_params _ =
-    assert_equal (Params.default_value Timeout) Int32.(to_int max_int);
-    assert_equal (Params.default_value Model) true;
-    assert_equal (Params.default_value Unsat_core) false;
-    assert_equal (Params.default_value Ematching) true;
-    assert_equal (Params.default_value Random_seed) 0
+  let test_default_params _solver_module =
+    Alcotest.(check int)
+      "default timeout"
+      Int32.(to_int max_int)
+      (Params.default_value Timeout);
+    Alcotest.(check bool) "default model" true (Params.default_value Model);
+    Alcotest.(check bool)
+      "default unsat_core" false
+      (Params.default_value Unsat_core);
+    Alcotest.(check bool)
+      "default ematching" true
+      (Params.default_value Ematching);
+    Alcotest.(check int)
+      "default random_seed" 0
+      (Params.default_value Random_seed)
 
   let test_solver_params solver_module =
     let module Solver = (val solver_module : Solver_intf.S) in
@@ -30,17 +39,21 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
         $ (Ematching, false) $ (Parallel, true) $ (Num_threads, 1)
         $ (Debug, false) $ (Random_seed, 1227) )
     in
-    assert (Params.get params Unsat_core);
+    Alcotest.(check bool)
+      "params unsat_core" true
+      (Params.get params Unsat_core);
     let _ : Solver.t = Solver.create ~params () in
     ()
 
   let test_params =
-    "test_params"
-    >::: [ "test_default_params" >:: with_solver test_default_params
-         ; "test_solver_params" >:: with_solver test_solver_params
-         ]
+    ( "test_params"
+    , [ Alcotest.test_case "test_default_params" `Quick
+          (with_solver test_default_params)
+      ; Alcotest.test_case "test_solver_params" `Quick
+          (with_solver test_solver_params)
+      ] )
 
-  let test_cache_hits _ =
+  let test_cache_hits _solver_module =
     let solver = Cached.create ~logic:LIA () in
     let x = Infix.symbol "x" Ty_int in
     let c = Infix.(Int.(int 0 <= x)) in
@@ -48,32 +61,35 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
       let stats = Cached.get_statistics solver in
       let stat = Statistics.Map.find_opt key stats in
       match stat with
-      (* we're using this for cache hitrate so it's always `Int *)
       | Some (`Int s) -> s
-      | _ -> Fmt.failwith "%s should exist and be an int in stats" key
+      | _ -> Alcotest.failf "%s should exist and be an int in stats" key
     in
-    assert (get_stat "cache hits" = 0);
+    Alcotest.(check int) "cache hits initial" 0 (get_stat "cache hits");
     assert_sat (Cached.check_set solver @@ Expr.Set.singleton c);
     assert_sat (Cached.check_set solver @@ Expr.Set.singleton c);
     assert_sat (Cached.check_set solver @@ Expr.Set.singleton c);
-    assert (get_stat "cache misses" = 1);
-    assert (get_stat "cache hits" = 2)
+    Alcotest.(check int) "cache misses" 1 (get_stat "cache misses");
+    Alcotest.(check int) "cache hits" 2 (get_stat "cache hits")
 
-  let test_cache_get_model _ =
+  let test_cache_get_model _solver_module =
     let open Infix in
     let solver = Cached.create ~logic:LIA () in
     let x = symbol "x" Ty_int in
     let set = Expr.Set.of_list Int.[ int 0 <= x; x < int 10 ] in
-    assert (
-      match Cached.get_sat_model solver set with
+    Alcotest.(check bool)
+      "cache get model"
+      ( match Cached.get_sat_model solver set with
       | `Model _ -> true
       | `Unsat | `Unknown -> false )
+      true
 
   let test_cached =
-    "test_cached"
-    >::: [ "test_cache_hits" >:: with_solver test_cache_hits
-         ; "test_cache_get_model" >:: with_solver test_cache_get_model
-         ]
+    ( "test_cached"
+    , [ Alcotest.test_case "test_cache_hits" `Quick
+          (with_solver test_cache_hits)
+      ; Alcotest.test_case "test_cache_get_model" `Quick
+          (with_solver test_cache_get_model)
+      ] )
 
   let test_lia_0 solver_module =
     let open Infix in
@@ -98,18 +114,19 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     Solver.push solver;
     Solver.add solver Int.[ int 0 <= x || x < int 0 ];
     assert_sat ~f:"test" (Solver.check solver []);
-    (* necessary, otherwise the solver doesn't know x and can't produce a model
-       for it *)
     let model = Solver.model ~symbols:[ symbol_x ] solver in
     let val_x = Option.bind model (fun m -> Model.evaluate m symbol_x) in
-    assert (Option.is_some val_x);
+    Alcotest.(check bool) "x has value" true (Option.is_some val_x);
     Solver.pop solver 1;
 
     Solver.add solver [ x = int 5 ];
     assert_sat (Solver.check solver []);
     let model = Solver.model solver in
     let val_x = Option.bind model (fun m -> Model.evaluate m symbol_x) in
-    assert (match val_x with Some v -> Value.equal v (Int 5) | None -> false)
+    Alcotest.(check bool)
+      "x = 5"
+      (match val_x with Some v -> Value.equal v (Int 5) | None -> false)
+      true
 
   let test_distinct solver_module =
     let open Typed in
@@ -141,27 +158,29 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     assert_sat ~f:"test_lia" (Solver.check solver [])
 
   let test_lia =
-    "test_lia"
-    >::: [ "test_lia_0" >:: with_solver test_lia_0
-         ; "test_lia_1" >:: with_solver test_lia_1
-         ; "test_distinct" >:: with_solver test_distinct
-         ]
+    ( "test_lia"
+    , [ Alcotest.test_case "test_lia_0" `Quick (with_solver test_lia_0)
+      ; Alcotest.test_case "test_lia_1" `Quick (with_solver test_lia_1)
+      ; Alcotest.test_case "test_distinct" `Quick (with_solver test_distinct)
+      ] )
 
   let test_lra =
-    "test_lra"
-    >:: with_solver @@ fun solver_module ->
-        let module Solver = (val solver_module : Solver_intf.S) in
-        let solver = Solver.create () in
-        assert_sat ~f:"test_lra"
-          (let x = Expr.symbol Symbol.("x" @: Ty_real) in
-           let y = Expr.symbol Symbol.("y" @: Ty_real) in
-           let c0 = Expr.relop Ty_bool Eq x y in
-           let c1 =
-             Expr.relop Ty_bool Eq
-               (Expr.cvtop Ty_real ToString x)
-               (Expr.cvtop Ty_real ToString y)
-           in
-           Solver.check solver [ c0; c1 ] )
+    ( "test_lra"
+    , [ Alcotest.test_case "test_lra" `Quick
+          (with_solver (fun solver_module ->
+             let module Solver = (val solver_module : Solver_intf.S) in
+             let solver = Solver.create () in
+             assert_sat ~f:"test_lra"
+               (let x = Expr.symbol Symbol.("x" @: Ty_real) in
+                let y = Expr.symbol Symbol.("y" @: Ty_real) in
+                let c0 = Expr.relop Ty_bool Eq x y in
+                let c1 =
+                  Expr.relop Ty_bool Eq
+                    (Expr.cvtop Ty_real ToString x)
+                    (Expr.cvtop Ty_real ToString y)
+                in
+                Solver.check solver [ c0; c1 ] ) ) )
+      ] )
 
   let test_bv_8 solver_module =
     let open Infix in
@@ -188,7 +207,10 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
       ; Expr.relop ty Lt x y && Expr.relop ty Lt y z && Expr.relop ty Lt z w
       ];
     assert_sat ~f:"test_bv_32" (Solver.check solver []);
-    assert (match Solver.model solver with None -> false | Some _m -> true)
+    Alcotest.(check bool)
+      "model exists"
+      (match Solver.model solver with None -> false | Some _m -> true)
+      true
 
   let test_arbitrary_bv solver_module =
     let open Infix in
@@ -239,12 +261,13 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     assert_unsat ~f:"test_bv_ext_rotate_inconsistent" (Solver.check solver [])
 
   let test_bv =
-    "test_bv"
-    >::: [ "test_bv_8" >:: with_solver test_bv_8
-         ; "test_bv_32" >:: with_solver test_bv_32
-         ; "test_arbitrary_bv" >:: with_solver test_arbitrary_bv
-         ; "test_bv_rotate" >:: with_solver test_bv_rotate
-         ]
+    ( "test_bv"
+    , [ Alcotest.test_case "test_bv_8" `Quick (with_solver test_bv_8)
+      ; Alcotest.test_case "test_bv_32" `Quick (with_solver test_bv_32)
+      ; Alcotest.test_case "test_arbitrary_bv" `Quick
+          (with_solver test_arbitrary_bv)
+      ; Alcotest.test_case "test_bv_rotate" `Quick (with_solver test_bv_rotate)
+      ] )
 
   let test_fp_get_value32 solver_module =
     let open Infix in
@@ -318,14 +341,19 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     assert_sat ~f:"test_i32_of_f32" (Solver.check solver [])
 
   let test_fp =
-    "test_fp"
-    >::: [ "test_fp_get_value32" >:: with_solver test_fp_get_value32
-         ; "test_fp_get_value64" >:: with_solver test_fp_get_value64
-         ; "test_fp_sqrt" >:: with_solver test_fp_sqrt
-         ; "test_fp_copysign32" >:: with_solver test_fp_copysign32
-         ; "test_fp_copysign64" >:: with_solver test_fp_copysign64
-         ; "test_to_ieee_bv" >:: with_solver test_to_ieee_bv
-         ]
+    ( "test_fp"
+    , [ Alcotest.test_case "test_fp_get_value32" `Quick
+          (with_solver test_fp_get_value32)
+      ; Alcotest.test_case "test_fp_get_value64" `Quick
+          (with_solver test_fp_get_value64)
+      ; Alcotest.test_case "test_fp_sqrt" `Quick (with_solver test_fp_sqrt)
+      ; Alcotest.test_case "test_fp_copysign32" `Quick
+          (with_solver test_fp_copysign32)
+      ; Alcotest.test_case "test_fp_copysign64" `Quick
+          (with_solver test_fp_copysign64)
+      ; Alcotest.test_case "test_to_ieee_bv" `Quick
+          (with_solver test_to_ieee_bv)
+      ] )
 
   let test_regexp_allchar solver_module =
     let open Typed in
@@ -339,8 +367,12 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let val_s =
       Option.bind model (fun m -> Model.evaluate m (Symbol.make Ty_str "s"))
     in
-    assert (
-      match val_s with Some (Str s) -> Stdlib.String.length s = 1 | _ -> false )
+    Alcotest.(check bool)
+      "allchar length 1"
+      ( match val_s with
+      | Some (Str s) -> Stdlib.String.length s = 1
+      | _ -> false )
+      true
 
   let test_regexp_diff solver_module =
     let open Typed in
@@ -356,10 +388,12 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let val_s =
       Option.bind model (fun m -> Model.evaluate m (Symbol.make Ty_str "s"))
     in
-    assert (
-      match val_s with
+    Alcotest.(check bool)
+      "re_diff: not a"
+      ( match val_s with
       | Some (Str s) -> Stdlib.String.length s = 1 && s <> "a"
       | _ -> false )
+      true
 
   let test_regexp_diff_unsat solver_module =
     let open Typed in
@@ -385,7 +419,10 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let val_s =
       Option.bind model (fun m -> Model.evaluate m (Symbol.make Ty_str "s"))
     in
-    assert (match val_s with Some (Str "ab") -> true | _ -> false)
+    Alcotest.(check bool)
+      "re_concat: 'ab'"
+      (match val_s with Some (Str "ab") -> true | _ -> false)
+      true
 
   let test_regexp_union solver_module =
     let open Typed in
@@ -401,8 +438,10 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let val_s =
       Option.bind model (fun m -> Model.evaluate m (Symbol.make Ty_str "s"))
     in
-    assert (
-      match val_s with Some (Str "a") | Some (Str "b") -> true | _ -> false )
+    Alcotest.(check bool)
+      "re_union: 'a' or 'b'"
+      (match val_s with Some (Str "a") | Some (Str "b") -> true | _ -> false)
+      true
 
   let test_regexp_star solver_module =
     let open Typed in
@@ -418,7 +457,10 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let val_s =
       Option.bind model (fun m -> Model.evaluate m (Symbol.make Ty_str "s"))
     in
-    assert (match val_s with Some (Str "aaa") -> true | _ -> false)
+    Alcotest.(check bool)
+      "re_star: 'aaa'"
+      (match val_s with Some (Str "aaa") -> true | _ -> false)
+      true
 
   let test_regexp_complex solver_module =
     let open Typed in
@@ -427,7 +469,6 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let s = symbol Types.string "s" in
     let re_a = String.(to_re (v "a")) in
     let re_b = String.(to_re (v "b")) in
-    (* (a|b)*abb *)
     let re =
       String.(
         Re.concat
@@ -444,11 +485,13 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let val_s =
       Option.bind model (fun m -> Model.evaluate m (Symbol.make Ty_str "s"))
     in
-    assert (
-      match val_s with
+    Alcotest.(check bool)
+      "re_complex: has suffix abb"
+      ( match val_s with
       | Some (Str s) ->
         Stdlib.String.length s = 5 && Stdlib.String.ends_with s ~suffix:"abb"
       | _ -> false )
+      true
 
   let test_regexp_unsat solver_module =
     let open Typed in
@@ -470,34 +513,38 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     assert_unsat ~f:"test_re_none" (Solver.check solver [])
 
   let test_regexp =
-    "test_regexp"
-    >::: [ "test_re_allchar" >:: with_solver test_regexp_allchar
-         ; "test_re_diff" >:: with_solver test_regexp_diff
-         ; "test_re_diff_unsat" >:: with_solver test_regexp_diff_unsat
-         ; "test_re_concat" >:: with_solver test_regexp_concat
-         ; "test_re_union" >:: with_solver test_regexp_union
-         ; "test_re_star" >:: with_solver test_regexp_star
-         ; "test_re_complex" >:: with_solver test_regexp_complex
-         ; "test_re_unsat" >:: with_solver test_regexp_unsat
-         ; "test_re_none" >:: with_solver test_regexp_none
-         ]
+    ( "test_regexp"
+    , [ Alcotest.test_case "test_re_allchar" `Quick
+          (with_solver test_regexp_allchar)
+      ; Alcotest.test_case "test_re_diff" `Quick (with_solver test_regexp_diff)
+      ; Alcotest.test_case "test_re_diff_unsat" `Quick
+          (with_solver test_regexp_diff_unsat)
+      ; Alcotest.test_case "test_re_concat" `Quick
+          (with_solver test_regexp_concat)
+      ; Alcotest.test_case "test_re_union" `Quick
+          (with_solver test_regexp_union)
+      ; Alcotest.test_case "test_re_star" `Quick (with_solver test_regexp_star)
+      ; Alcotest.test_case "test_re_complex" `Quick
+          (with_solver test_regexp_complex)
+      ; Alcotest.test_case "test_re_unsat" `Quick
+          (with_solver test_regexp_unsat)
+      ; Alcotest.test_case "test_re_none" `Quick (with_solver test_regexp_none)
+      ] )
 
   let test_uninterpreted =
-    "test_uninterpreted_function"
-    >::: [ ( "test_int_bool_app"
-           >:: with_solver @@ fun solver_module ->
-               let module Solver = (val solver_module : Solver_intf.S) in
-               let solver =
-                 Solver.create ~params:(Params.default ()) ~logic:Logic.QF_UFBV
-                   ()
-               in
-               let f = Symbol.(make Ty_int "f") in
-               let app = Expr.app f [ Expr.value (Int 1); Expr.value True ] in
-               Solver.add solver
-                 [ Expr.relop Ty_int Eq app (Expr.value (Int 2)) ];
-               assert_sat ~f:"test_uninterpreted_function"
-                 (Solver.check solver []) )
-         ]
+    ( "test_uninterpreted_function"
+    , [ Alcotest.test_case "test_int_bool_app" `Quick
+          (with_solver (fun solver_module ->
+             let module Solver = (val solver_module : Solver_intf.S) in
+             let solver =
+               Solver.create ~params:(Params.default ()) ~logic:Logic.QF_UFBV ()
+             in
+             let f = Symbol.(make Ty_int "f") in
+             let app = Expr.app f [ Expr.value (Int 1); Expr.value True ] in
+             Solver.add solver [ Expr.relop Ty_int Eq app (Expr.value (Int 2)) ];
+             assert_sat ~f:"test_uninterpreted_function"
+               (Solver.check solver []) ) )
+      ] )
 
   let test_extract_bit_level solver_module =
     let open Infix in
@@ -506,71 +553,70 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
       Solver.create ~params:(Params.default ()) ~logic:QF_BVFP ()
     in
 
-    (* Test 1: Basic extraction - extract bits 3-0 from 0xAF should give 0xF *)
-    let solver = create_solver () in
+    let solver1 = create_solver () in
     let x = int8 0xAF in
     let extracted = Expr.raw_extract x ~high:3 ~low:0 in
-    (* Result type should be 4 bits *)
-    assert_equal (Expr.ty extracted) (Ty.Ty_bitv 4);
-    Solver.add solver
+    Alcotest.(check (testable Ty.pp Ty.equal) "Result type should be 4 bits")
+      (Ty.Ty_bitv 4) (Expr.ty extracted);
+    Solver.add solver1
       [ Expr.raw_relop (Ty_bitv 4) Eq extracted
           (Expr.value (Bitv (Bitvector.make (Z.of_int 0xF) 4)))
       ];
-    assert_sat ~f:"test_extract_low_bits" (Solver.check solver []);
+    assert_sat ~f:"test_extract_low_bits" (Solver.check solver1 []);
 
-    (* Test 2: Basic extraction 2 - extract bits 7-4 from 0xAF should give 0xA *)
-    let solver = create_solver () in
+    let solver2 = create_solver () in
     let extracted_high = Expr.raw_extract x ~high:7 ~low:4 in
-    assert_equal (Expr.ty extracted_high) (Ty.Ty_bitv 4);
-    Solver.add solver
+    Alcotest.(check (testable Ty.pp Ty.equal) "Result type should be 4 bits")
+      (Ty.Ty_bitv 4) (Expr.ty extracted_high);
+    Solver.add solver2
       [ Expr.raw_relop (Ty_bitv 4) Eq extracted_high
           (Expr.value (Bitv (Bitvector.make (Z.of_int 0xA) 4)))
       ];
-    assert_sat ~f:"test_extract_high_bits" (Solver.check solver []);
+    assert_sat ~f:"test_extract_high_bits" (Solver.check solver2 []);
 
-    (* Test 3: Non-byte-aligned extraction - bits 5-2 from 0xAB (10101011) are 1010 = 0xA *)
-    let solver = create_solver () in
+    let solver3 = create_solver () in
     let y = int8 0xAB in
     let extracted_mid = Expr.raw_extract y ~high:5 ~low:2 in
-    assert_equal (Expr.ty extracted_mid) (Ty.Ty_bitv 4);
-    Solver.add solver
+    Alcotest.(check (testable Ty.pp Ty.equal) "Result type should be 4 bits")
+      (Ty.Ty_bitv 4) (Expr.ty extracted_mid);
+    Solver.add solver3
       [ Expr.raw_relop (Ty_bitv 4) Eq extracted_mid
           (Expr.value (Bitv (Bitvector.make (Z.of_int 0xA) 4)))
       ];
-    assert_sat ~f:"test_extract_non_aligned" (Solver.check solver []);
+    assert_sat ~f:"test_extract_non_aligned" (Solver.check solver3 []);
 
-    (* Test 4: Single bit extraction - bit 0 from 0xF should be 1 *)
-    let solver = create_solver () in
+    let solver4 = create_solver () in
     let z = int32 0xFl in
     let single_bit = Expr.raw_extract z ~high:0 ~low:0 in
-    assert_equal (Expr.ty single_bit) (Ty.Ty_bitv 1);
-    Solver.add solver
+    Alcotest.(check (testable Ty.pp Ty.equal) "Result type should be 1 bit")
+      (Ty.Ty_bitv 1) (Expr.ty single_bit);
+    Solver.add solver4
       [ Expr.raw_relop (Ty_bitv 1) Eq single_bit
           (Expr.value (Bitv (Bitvector.make Z.one 1)))
       ];
-    assert_sat ~f:"test_extract_single_bit" (Solver.check solver []);
+    assert_sat ~f:"test_extract_single_bit" (Solver.check solver4 []);
 
-    (* Test 5: Full 32-bit extraction *)
-    let solver = create_solver () in
+    let solver5 = create_solver () in
     let w = int32 0xDEADBEEFl in
     let full_extract = Expr.raw_extract w ~high:31 ~low:0 in
-    assert_equal (Expr.ty full_extract) (Ty.Ty_bitv 32);
-    Solver.add solver
+    Alcotest.(check (testable Ty.pp Ty.equal) "Result type should be 32 bits")
+      (Ty.Ty_bitv 32) (Expr.ty full_extract);
+    Solver.add solver5
       [ Expr.raw_relop (Ty_bitv 32) Eq full_extract (int32 0xDEADBEEFl) ];
-    assert_sat ~f:"test_extract_full_width" (Solver.check solver []);
+    assert_sat ~f:"test_extract_full_width" (Solver.check solver5 []);
 
-    (* Test 6: Symbolic extraction with solver verification *)
-    let solver = create_solver () in
+    let solver6 = create_solver () in
     let sym_x = symbol "bv_x" (Ty_bitv 32) in
-    Solver.add solver [ Expr.relop (Ty_bitv 32) Eq sym_x (int32 0x12345678l) ];
+    Solver.add solver6 [ Expr.relop (Ty_bitv 32) Eq sym_x (int32 0x12345678l) ];
     let sym_extracted = Expr.extract sym_x ~high:15 ~low:8 in
-    (* Bits 15-8 of 0x12345678 should be 0x56 *)
-    Solver.add solver [ Expr.relop (Ty_bitv 8) Eq sym_extracted (int8 0x56) ];
-    assert_sat ~f:"test_extract_symbolic" (Solver.check solver [])
+    Solver.add solver6 [ Expr.relop (Ty_bitv 8) Eq sym_extracted (int8 0x56) ];
+    assert_sat ~f:"test_extract_symbolic" (Solver.check solver6 [])
 
   let test_extract =
-    "test_extract"
-    >::: [ "test_extract_bit_level" >:: with_solver test_extract_bit_level ]
+    ( "test_extract"
+    , [ Alcotest.test_case "test_extract_bit_level" `Quick
+          (with_solver test_extract_bit_level)
+      ] )
 
   let test_bitv32_to_bytes solver_module =
     let open Typed in
@@ -590,7 +636,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
         ; (Bool.eq b3 (v8 0xDE) :> Expr.t)
         ];
       assert_sat ~f:"test_bitv32_to_bytes" (Solver.check solver [])
-    | _ -> OUnit2.assert_failure "Bitv32.to_bytes should return exactly 4 bytes"
+    | _ -> Alcotest.fail "Bitv32.to_bytes should return exactly 4 bytes"
 
   let test_bitv64_to_bytes solver_module =
     let open Typed in
@@ -600,7 +646,6 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let bv_val = Bitvector.make (Z.of_int64 0x0123456789ABCDEFL) 64 in
     let bv = Bitv64.v bv_val in
 
-    (* Match para extrair os 8 bytes da lista *)
     match Bitv64.to_bytes bv with
     | [ b0; b1; b2; b3; b4; b5; b6; b7 ] ->
       let v8 i = Bitv8.v (Bitvector.make (Z.of_int i) 8) in
@@ -615,11 +660,13 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
         ; (Bool.eq b7 (v8 0x01) :> Expr.t)
         ];
       assert_sat ~f:"test_bitv64_to_bytes" (Solver.check solver [])
-    | _ -> OUnit2.assert_failure "Bitv64.to_bytes should return exactly 8 bytes"
+    | _ -> Alcotest.fail "Bitv64.to_bytes should return exactly 8 bytes"
 
   let test_typed_api_consistency =
-    "test_typed_api_consistency"
-    >::: [ "test_bitv32_to_bytes" >:: with_solver test_bitv32_to_bytes
-         ; "test_bitv64_to_bytes" >:: with_solver test_bitv64_to_bytes
-         ]
+    ( "test_typed_api_consistency"
+    , [ Alcotest.test_case "test_bitv32_to_bytes" `Quick
+          (with_solver test_bitv32_to_bytes)
+      ; Alcotest.test_case "test_bitv64_to_bytes" `Quick
+          (with_solver test_bitv64_to_bytes)
+      ] )
 end

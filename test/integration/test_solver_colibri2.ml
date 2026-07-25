@@ -1,21 +1,23 @@
-open OUnit2
+(* SPDX-License-Identifier: MIT *)
+(* Copyright (C) 2023-2026 formalsec *)
+(* Written by the Smtml programmers *)
+
 open Smtml
 open Smtml_test_solver
 
-let is_available =
-  "is_available" >:: fun _ -> assert_equal Colibri2_mappings.is_available true
+let is_available () =
+  Alcotest.(check bool)
+    "Colibri2 is_available" true Colibri2_mappings.is_available
 
-let test_suite =
+let () =
   let module C2 = Test_solver.Make (Colibri2_mappings) in
-  "Colibri2"
-  >::: [ is_available
-       ; C2.test_params
-       ; C2.test_cached
-       ; C2.test_bv
-       ; C2.test_fp
-       ; C2.test_lia
-       ; C2.test_extract
-       ; C2.test_typed_api_consistency
-       ]
-
-let () = run_test_tt_main test_suite
+  Alcotest.run "Colibri2"
+    [ ("is_available", [ Alcotest.test_case "is_available" `Quick is_available ])
+    ; C2.test_params
+    ; C2.test_cached
+    ; C2.test_bv
+    ; C2.test_fp
+    ; C2.test_lia
+    ; C2.test_extract
+    ; C2.test_typed_api_consistency
+    ]

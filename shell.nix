@@ -17,7 +17,7 @@ pkgs.mkShell {
     ocamlformat
     ocp-browser
     odoc
-    ounit2
+    alcotest
   ];
   buildInputs = with pkgs.ocamlPackages; [
     bos

@@ -1,21 +1,25 @@
-open OUnit2
+(* SPDX-License-Identifier: MIT *)
+(* Copyright (C) 2023-2026 formalsec *)
+(* Written by the Smtml programmers *)
+
 open Smtml
 open Smtml_test_solver
 
-let is_available =
-  "is_available" >:: fun _ -> assert_equal Bitwuzla_mappings.is_available true
+let is_available () =
+  Alcotest.(check bool)
+    "Bitwuzla is_available" true Bitwuzla_mappings.is_available
 
-let test_suite =
+let () =
   let module Bitwuzla = Test_solver.Make (Bitwuzla_mappings) in
-  "Bitwuzla"
-  >::: [ is_available
-       ; Bitwuzla.test_params
-       ; Bitwuzla.test_bv
-       ; "test_bv_ext_rotate"
-         >:: Bitwuzla.with_solver Bitwuzla.test_bv_ext_rotate
-       ; Bitwuzla.test_fp
-       ; Bitwuzla.test_extract
-       ; Bitwuzla.test_typed_api_consistency
-       ]
-
-let () = run_test_tt_main test_suite
+  Alcotest.run "Bitwuzla"
+    [ ("is_available", [ Alcotest.test_case "is_available" `Quick is_available ])
+    ; Bitwuzla.test_params
+    ; Bitwuzla.test_bv
+    ; ( "test_bv_ext_rotate"
+      , [ Alcotest.test_case "test_bv_ext_rotate" `Quick
+            (Bitwuzla.with_solver Bitwuzla.test_bv_ext_rotate)
+        ] )
+    ; Bitwuzla.test_fp
+    ; Bitwuzla.test_extract
+    ; Bitwuzla.test_typed_api_consistency
+    ]
