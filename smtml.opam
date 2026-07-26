@@ -60,11 +60,12 @@ depends: [
 ]
 depopts: ["alt-ergo-lib" "bitwuzla-cxx" "colibri2" "cvc5" "z3"]
 conflicts: [
-  "bitwuzla-cxx" {< "0.6.0"}
   "alt-ergo-lib" {< "2.6.2"}
-  "z3" {< "4.16.0"}
+  "bitwuzla-cxx" {< "0.6.0"}
   "colibri2" {< "0.6.0"}
   "colibrilib" {< "0.6.0"}
+  "cvc5" {< "1.3.0-2"}
+  "z3" {< "4.16.0"}
 ]
 build: [
   ["dune" "subst"] {dev}
@@ -92,7 +93,6 @@ x-maintenance-intent: [
 ]
 available: arch != "arm32" & arch != "x86_32"
 pin-depends: [
-  ["cvc5.dev" "git+https://github.com/formalsec/ocaml-cvc5.git#902ee161e754193db2ddc0eaa3c0585abecac245" ]
   ["colibri2.dev" "git+https://git.frama-c.com/pub/colibrics.git#0380c5965ac3a0596293301bf25e853c45762c46"]
   ["colibrilib.dev" "git+https://git.frama-c.com/pub/colibrics.git#0380c5965ac3a0596293301bf25e853c45762c46"]
   ["benchpress.dev" "git+https://github.com/sneeuwballen/benchpress.git#7f44cdd9f0511afcce2c9ad3c04cc9b72919bcff"]

@@ -47,16 +47,18 @@
  ; Change here sould be mirrored in "conflicts"
  (depopts alt-ergo-lib bitwuzla-cxx colibri2 cvc5 z3)
  (conflicts
-  (bitwuzla-cxx
-   (< "0.6.0"))
   (alt-ergo-lib
    (< "2.6.2"))
-  (z3
-   (< "4.16.0"))
+  (bitwuzla-cxx
+   (< "0.6.0"))
   (colibri2
    (< "0.6.0"))
   (colibrilib
-   (< "0.6.0")))
+   (< "0.6.0"))
+  (cvc5
+   (< "1.3.0-2"))
+  (z3
+   (< "4.16.0")))
  (depends
   bos
   (cmdliner
