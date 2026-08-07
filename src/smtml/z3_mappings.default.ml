@@ -46,6 +46,9 @@ module M = struct
 
     let const sym ty = Z3.Expr.mk_const_s ctx sym ty
 
+    (* Same as constants *)
+    let var sym ty = const sym ty
+
     let not_ e = Z3.Boolean.mk_not ctx e
 
     let and_ e1 e2 = Z3.Boolean.mk_and ctx [ e1; e2 ]
@@ -533,7 +536,7 @@ module M = struct
           (fun const ->
             let x = Z3.Symbol.to_string (Z3.FuncDecl.get_name const) in
             let t = Types.to_ety (Z3.FuncDecl.get_range const) in
-            Symbol.make t x )
+            Symbol.make_const t x )
           (Z3.Model.get_const_decls model)
 
       let eval ?ctx:_ ?(completion = false) model term =

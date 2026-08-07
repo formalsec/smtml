@@ -30,8 +30,13 @@ let[@inline] view (x : 'a expr) : Expr.expr = Expr.view x
 
 let[@inline] simplify (x : 'a expr) : 'a expr = Expr.simplify x
 
-let[@inline] symbol (ty : 'a ty) (x : string) : 'a expr =
-  Expr.symbol (Symbol.make ty x)
+let[@inline] const (ty : 'a ty) (x : string) : 'a expr =
+  Expr.symbol (Symbol.make_const ty x)
+
+let[@inline] var (ty : 'a ty) (x : string) : 'a expr =
+  Expr.symbol (Symbol.make_var ty x)
+
+let symbol = const
 
 let[@inline] get_symbols (x : 'a expr list) : Symbol.t list = Expr.get_symbols x
 
@@ -78,6 +83,10 @@ module Bool = struct
     Expr.triop ty_bool Ite c r1 r2
 
   let[@inline] split_conjunctions x = Expr.split_conjunctions x
+
+  let[@inline] forall vars expr = Expr.forall vars expr
+
+  let[@inline] exists vars expr = Expr.exists vars expr
 end
 
 module Bitv = struct
@@ -2434,7 +2443,7 @@ module Func = struct
   let rec compile : type fn r. (fn, r) t -> string -> Expr.t list -> fn =
    fun (spec : (fn, r) t) name args ->
     match spec with
-    | Ret ret_ty -> Expr.app (Symbol.make ret_ty name) (List.rev args)
+    | Ret ret_ty -> Expr.app (Symbol.make_const ret_ty name) (List.rev args)
     | Arg (_arg_ty, next) -> fun arg -> compile next name (arg :: args)
 
   let make name spec = compile spec name []

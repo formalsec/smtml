@@ -40,6 +40,8 @@ module M = struct
 
     let const _ = assert false
 
+    let var _ = assert false
+
     let not_ _ = assert false
 
     let and_ _ = assert false

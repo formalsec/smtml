@@ -91,8 +91,8 @@ Example: Bitvector arithmetic
 {@ocaml[
 # open Smtml;;
 # let cond =
-  let x = Typed.symbol Typed.Types.bitv8 "x" in
-  let y = Typed.symbol Typed.Types.bitv8 "y" in
+  let x = Typed.const Typed.Types.bitv8 "x" in
+  let y = Typed.const Typed.Types.bitv8 "y" in
   let sum = Typed.Bitv8.add x y in
   let num = Typed.Bitv8.v (Bitvector.of_int8 42) in
   Typed.Bitv8.eq sum num;;
@@ -121,7 +121,7 @@ val model : Model.t = (model
     (x i8 9)
     (y i8 33))
 # let x_val =
-  let x = Symbol.make (Ty_bitv 8) "x" in
+  let x = Symbol.make_const (Ty_bitv 8) "x" in
   Model.evaluate model x;;
 val x_val : Value.t option = Some (Value.Bitv <abstr>)
 ]}

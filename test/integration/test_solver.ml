@@ -134,17 +134,17 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let open Typed in
     let module Solver = (val solver_module : Solver_intf.S) in
     let solver = Solver.create ~logic:LIA () in
-    let x = symbol Types.int "x" in
-    let y = symbol Types.int "y" in
-    let z = symbol Types.int "z" in
+    let x = const Types.int "x" in
+    let y = const Types.int "y" in
+    let z = const Types.int "z" in
     Solver.add solver [ (Bool.distinct [ x; y; z ] :> Expr.t) ];
     Solver.add solver [ (Bool.eq x (Int.v (Z.of_int 1)) :> Expr.t) ];
     Solver.add solver [ (Bool.eq y (Int.v (Z.of_int 1)) :> Expr.t) ];
     assert_unsat ~f:"test_distinct_unsat" (Solver.check solver []);
     Solver.reset solver;
-    let x = symbol Types.int "x" in
-    let y = symbol Types.int "y" in
-    let z = symbol Types.int "z" in
+    let x = const Types.int "x" in
+    let y = const Types.int "y" in
+    let z = const Types.int "z" in
     Solver.add solver [ (Bool.distinct [ x; y; z ] :> Expr.t) ];
     Solver.add solver [ (Bool.eq x (Int.v (Z.of_int 1)) :> Expr.t) ];
     Solver.add solver [ (Bool.eq y (Int.v (Z.of_int 2)) :> Expr.t) ];
@@ -240,7 +240,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let open Typed in
     let module Solver = (val solver_module : Solver_intf.S) in
     let solver = Solver.create ~params:(Params.default ()) ~logic:QF_BVFP () in
-    let x = symbol Types.bitv8 "rotate_x" in
+    let x = const Types.bitv8 "rotate_x" in
     let input = Bitv8.of_int 0x36 in
     let rotated_left = Bitv8.rotate_left 3 x in
     let rotated_right = Bitv8.rotate_right 3 x in
@@ -257,8 +257,8 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let open Typed in
     let module Solver = (val solver_module : Solver_intf.S) in
     let solver = Solver.create ~params:(Params.default ()) ~logic:QF_BVFP () in
-    let x = symbol Types.bitv8 "ext_rotate_x" in
-    let shift = symbol Types.bitv8 "ext_rotate_shift" in
+    let x = const Types.bitv8 "ext_rotate_x" in
+    let shift = const Types.bitv8 "ext_rotate_shift" in
     let rotated_left = Bitv8.ext_rotate_left x shift in
     let rotated_right = Bitv8.ext_rotate_right x shift in
     Solver.add solver
@@ -370,13 +370,14 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let open Typed in
     let module Solver = (val solver_module : Solver_intf.S) in
     let solver = Solver.create () in
-    let s = symbol Types.string "s" in
+    let s = const Types.string "s" in
     let allchar = String.Re.allchar in
     Solver.add solver [ (String.in_re s allchar :> Expr.t) ];
     assert_sat ~f:"test_re_allchar" (Solver.check solver []);
     let model = Solver.model solver in
     let val_s =
-      Option.bind model (fun m -> Model.evaluate m (Symbol.make Ty_str "s"))
+      Option.bind model (fun m ->
+        Model.evaluate m (Symbol.make_const Ty_str "s") )
     in
     Alcotest.(check bool)
       "allchar length 1"
@@ -389,7 +390,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let open Typed in
     let module Solver = (val solver_module : Solver_intf.S) in
     let solver = Solver.create () in
-    let s = symbol Types.string "s" in
+    let s = const Types.string "s" in
     let re_az = String.(Re.range (v "a") (v "z")) in
     let re_a = String.(to_re (v "a")) in
     let re_not_a = String.Re.diff re_az re_a in
@@ -397,7 +398,8 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     assert_sat ~f:"test_re_diff" (Solver.check solver []);
     let model = Solver.model solver in
     let val_s =
-      Option.bind model (fun m -> Model.evaluate m (Symbol.make Ty_str "s"))
+      Option.bind model (fun m ->
+        Model.evaluate m (Symbol.make_const Ty_str "s") )
     in
     Alcotest.(check bool)
       "re_diff: not a"
@@ -410,7 +412,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let open Typed in
     let module Solver = (val solver_module : Solver_intf.S) in
     let solver = Solver.create () in
-    let s = symbol Types.string "s" in
+    let s = const Types.string "s" in
     let re_a = String.(to_re (v "a")) in
     let re_diff_a_a = String.Re.diff re_a re_a in
     Solver.add solver [ (String.in_re s re_diff_a_a :> Expr.t) ];
@@ -420,7 +422,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let open Typed in
     let module Solver = (val solver_module : Solver_intf.S) in
     let solver = Solver.create () in
-    let s = symbol Types.string "s" in
+    let s = const Types.string "s" in
     let re_a = String.(to_re (v "a")) in
     let re_b = String.(to_re (v "b")) in
     let re_ab = String.Re.concat [ re_a; re_b ] in
@@ -428,7 +430,8 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     assert_sat ~f:"test_re_concat" (Solver.check solver []);
     let model = Solver.model solver in
     let val_s =
-      Option.bind model (fun m -> Model.evaluate m (Symbol.make Ty_str "s"))
+      Option.bind model (fun m ->
+        Model.evaluate m (Symbol.make_const Ty_str "s") )
     in
     Alcotest.(check bool)
       "re_concat: 'ab'"
@@ -439,7 +442,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let open Typed in
     let module Solver = (val solver_module : Solver_intf.S) in
     let solver = Solver.create () in
-    let s = symbol Types.string "s" in
+    let s = const Types.string "s" in
     let re_a = String.(to_re (v "a")) in
     let re_b = String.(to_re (v "b")) in
     let re_a_or_b = String.Re.union [ re_a; re_b ] in
@@ -447,7 +450,8 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     assert_sat ~f:"test_re_union" (Solver.check solver []);
     let model = Solver.model solver in
     let val_s =
-      Option.bind model (fun m -> Model.evaluate m (Symbol.make Ty_str "s"))
+      Option.bind model (fun m ->
+        Model.evaluate m (Symbol.make_const Ty_str "s") )
     in
     Alcotest.(check bool)
       "re_union: 'a' or 'b'"
@@ -458,7 +462,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let open Typed in
     let module Solver = (val solver_module : Solver_intf.S) in
     let solver = Solver.create () in
-    let s = symbol Types.string "s" in
+    let s = const Types.string "s" in
     let re_a = String.(to_re (v "a")) in
     let re_a_star = String.Re.star re_a in
     Solver.add solver [ (String.in_re s re_a_star :> Expr.t) ];
@@ -467,7 +471,8 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     assert_sat ~f:"test_re_star" (Solver.check solver []);
     let model = Solver.model solver in
     let val_s =
-      Option.bind model (fun m -> Model.evaluate m (Symbol.make Ty_str "s"))
+      Option.bind model (fun m ->
+        Model.evaluate m (Symbol.make_const Ty_str "s") )
     in
     Alcotest.(check bool)
       "re_star: 'aaa'"
@@ -478,7 +483,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let open Typed in
     let module Solver = (val solver_module : Solver_intf.S) in
     let solver = Solver.create () in
-    let s = symbol Types.string "s" in
+    let s = const Types.string "s" in
     let re_a = String.(to_re (v "a")) in
     let re_b = String.(to_re (v "b")) in
     let re =
@@ -496,7 +501,8 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     assert_sat ~f:"test_re_complex" (Solver.check solver []);
     let model = Solver.model solver in
     let val_s =
-      Option.bind model (fun m -> Model.evaluate m (Symbol.make Ty_str "s"))
+      Option.bind model (fun m ->
+        Model.evaluate m (Symbol.make_const Ty_str "s") )
     in
     Alcotest.(check bool)
       "re_complex: has suffix abb"
@@ -510,7 +516,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let open Typed in
     let module Solver = (val solver_module : Solver_intf.S) in
     let solver = Solver.create () in
-    let s = symbol Types.string "s" in
+    let s = const Types.string "s" in
     let re_a = String.(to_re (v "a")) in
     let re_b = String.(to_re (v "b")) in
     Solver.add solver [ (String.in_re s re_a :> Expr.t) ];
@@ -521,7 +527,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let open Typed in
     let module Solver = (val solver_module : Solver_intf.S) in
     let solver = Solver.create () in
-    let s = symbol Types.string "s" in
+    let s = const Types.string "s" in
     Solver.add solver [ (String.(in_re s Re.none) :> Expr.t) ];
     assert_unsat ~f:"test_re_none" (Solver.check solver [])
 
@@ -552,7 +558,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
              let solver =
                Solver.create ~params:(Params.default ()) ~logic:Logic.QF_UFBV ()
              in
-             let f = Symbol.(make Ty_int "f") in
+             let f = Symbol.(make_const Ty_int "f") in
              let app =
                Expr.app f [ Expr.value (Int (Z.of_int 1)); Expr.value True ]
              in

@@ -1,4 +1,24 @@
 (test
+ (name test_issue_662)
+ (modules test_issue_662)
+ (libraries smtml)
+ (build_if
+  (and
+   %{lib-available:bitwuzla-cxx}
+   %{lib-available:cvc5}
+   %{lib-available:z3})))
+
+(test
+ (name test_issue_662_1)
+ (modules test_issue_662_1)
+ (libraries smtml)
+ (build_if
+  (and
+   %{lib-available:alt-ergo-lib}
+   %{lib-available:z3}
+   %{lib-available:colibrilib})))
+
+(test
  (name test_regression)
  (modules
   test_regression

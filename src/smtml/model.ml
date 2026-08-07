@@ -126,7 +126,7 @@ module Parse = struct
                 Fmt.error_msg "Invalid json value: %a" Json.pp invalid
             in
             let+ value = Value.of_string ty value in
-            let key = Symbol.make ty symbol in
+            let key = Symbol.make_const ty symbol in
             Hashtbl.add tbl key value )
           symbols
       in
@@ -174,7 +174,7 @@ module Parse = struct
               let* ty = Ty.of_string ty in
               let* value = Scfg.Query.get_param 2 symbol in
               let+ value = Value.of_string ty value in
-              let key = Symbol.make ty name in
+              let key = Symbol.make_const ty name in
               Hashtbl.add tbl key value )
             symbols
         in

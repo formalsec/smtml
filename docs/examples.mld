@@ -72,7 +72,7 @@ let read_int () = Scanf.scanf " %d" (fun x -> x)
 
 let int x = Typed.Int.v (Z.of_int x)
 
-let symbol x = Typed.symbol Typed.Types.int x
+let symbol x = Typed.const Typed.Types.int x
 
 let ( = ) x y = Typed.Int.eq x y
 

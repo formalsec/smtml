@@ -124,12 +124,9 @@ module M = struct
       let get_new_syms ctx =
         Symbol.Map.fold
           (fun _ t acc ->
-            let c =
-              match (t : DTerm.t) with
-              | { term_descr = Cst c; _ } -> c
-              | _ -> assert false
-            in
-            ConstSet.add c acc )
+            match (t : DTerm.t) with
+            | { term_descr = Cst c; _ } -> ConstSet.add c acc
+            | _ -> acc )
           ctx ConstSet.empty
 
       let add ?(ctx = Symbol.Map.empty) (s : solver) (el : term list) : unit =
@@ -157,7 +154,7 @@ module M = struct
 
       let aeid_to_sym ((hs, tyl, ty) : AEL.Id.typed) =
         assert (match tyl with [] -> true | _ -> false);
-        Symbol.make (aety_to_ty ty) (AEL.Hstring.view hs)
+        Symbol.make_const (aety_to_ty ty) (AEL.Hstring.view hs)
 
       let cgraph_to_value hs g =
         match (g : AEL.ModelMap.graph) with

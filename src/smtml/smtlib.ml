@@ -73,8 +73,9 @@ module Term = struct
       | "roundTowardPositive" | "RTP" | "roundTowardNegative" | "RTN"
       | "roundTowardZero" | "RTZ" ->
         Expr.symbol { id with ty = Ty_roundingMode }
-      | "re.all" | "re.allchar" | "re.none" ->
-        Expr.symbol { id with ty = Ty_regexp }
+      | "re.all" -> Expr.value Re_all
+      | "re.allchar" -> Expr.value Re_allchar
+      | "re.none" -> Expr.value Re_none
       | _ -> Expr.symbol id
       end
     | Term, Indexed { basename = base; indices } ->

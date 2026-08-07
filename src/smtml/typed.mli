@@ -40,9 +40,18 @@ val view : 'a expr -> Expr.expr
     simplifications on the expression [e]. *)
 val simplify : 'a expr -> 'a expr
 
-(** [symbol ty name] creates a symbolic constant of type [ty] with the given
-    [name]. *)
+(** [const ty name] creates a symbolic constant of type [ty] with the given
+    [name], belonging to the term namespace. *)
+val const : 'a ty -> string -> 'a expr
+
+(** [var ty name] creates a symbolic variable of type [ty] with the given
+    [name], belonging to the variable namespace. Use with quantifiers ([forall],
+    [exists]). *)
+val var : 'a ty -> string -> 'a expr
+
+(** @deprecated Use {!const} instead. *)
 val symbol : 'a ty -> string -> 'a expr
+[@@deprecated "Use [Typed.const] instead"]
 
 (** [get_symbols es] returns a list of all unique symbols appearing in the list
     of expressions [es]. *)
@@ -138,6 +147,12 @@ module Bool : sig
   (** [split_conjunctions t] breaks a conjunction term into a set of its
       top-level conjuncts. *)
   val split_conjunctions : t -> Expr.Set.t
+
+  (** [forall vars e] constructs a universally quantified expression. *)
+  val forall : 'a expr list -> t -> t
+
+  (** [exists vars e] constructs an existentially quantified expression. *)
+  val exists : 'a expr list -> t -> t
 
   val pp : t Fmt.t
 end

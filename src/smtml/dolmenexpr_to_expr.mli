@@ -60,6 +60,8 @@ module DolmenIntf : sig
 
   val const : string -> ty -> term
 
+  val var : string -> ty -> term
+
   val not_ : term -> term
 
   val and_ : term -> term -> term

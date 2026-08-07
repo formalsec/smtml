@@ -48,6 +48,8 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
   let const symbol ty = mk_const ~symbol ty
 
+  let var symbol ty = mk_var ~symbol ty
+
   let not_ t = mk_term1 Kind.Not t
 
   let and_ t1 t2 = mk_term2 Kind.And t1 t2
@@ -68,11 +70,15 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
   let ite cond t1 t2 = mk_term3 Kind.Ite cond t1 t2
 
-  let forall _ =
-    Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
+  let forall vars body =
+    List.fold_right
+      (fun var body -> mk_term Kind.Forall [| var; body |])
+      vars body
 
-  let exists _ =
-    Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
+  let exists vars body =
+    List.fold_right
+      (fun var body -> mk_term Kind.Exists [| var; body |])
+      vars body
 
   module Types = struct
     let int = mk_bool_sort ()

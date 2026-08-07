@@ -83,9 +83,13 @@ let compare a b =
 
 let equal a b = phys_equal a b || compare a b = 0
 
-let make ty name = name @: ty
+let create ty name namespace = { ty; name; namespace }
 
-let make3 ty name namespace = { ty; name; namespace }
+let make_const ty name = name @: ty
+
+let make_var ty name = { ty; name = Name.simple name; namespace = var }
+
+let make = make_const
 
 let mk namespace name = { ty = Ty_none; name = Name.simple name; namespace }
 
@@ -126,6 +130,6 @@ module Smtlib = struct
     match namespace with
     | Term -> pp_name fmt name
     | Sort -> Ty.Smtlib.pp fmt ty
-    | Var -> assert false
+    | Var -> pp_name fmt name
     | Attr -> assert false
 end

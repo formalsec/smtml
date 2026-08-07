@@ -68,7 +68,7 @@ let test_unop_string () =
 let test_unop_bool () =
   let ty = Ty.Ty_bool in
   check (Expr.unop ty Not Expr.Bool.true_) Expr.Bool.false_;
-  let x = Expr.symbol (Symbol.make ty "x") in
+  let x = Expr.symbol (Symbol.make_const ty "x") in
   check (Expr.unop ty Not (Expr.unop ty Not x)) x
 
 let test_unop_list () =
@@ -476,7 +476,7 @@ let test_cvtop_i32 () =
   let open Infix in
   check (Expr.cvtop (Ty_bitv 32) TruncSF32 (float32 8.5)) (int32 8l);
   check (Expr.cvtop (Ty_bitv 32) TruncSF64 (float64 8.5)) (int32 8l);
-  let x = Expr.symbol (Symbol.make (Ty_bitv 32) "x") in
+  let x = Expr.symbol (Symbol.make_const (Ty_bitv 32) "x") in
   let x = Expr.extract x ~high:15 ~low:0 in
   Alcotest.(check bool "ty extract 16" true) (Ty.equal (Expr.ty x) (Ty_bitv 16));
   let x = Expr.cvtop (Ty_bitv 32) (Sign_extend 16) x in
@@ -852,7 +852,7 @@ let test_inline_symbol_values_replace_one () =
   let e' =
     let x =
       let ty = Ty.Ty_bitv 32 in
-      Symbol.make ty "x"
+      Symbol.make_const ty "x"
     in
     let symbol_map = Symbol.Map.add x n Symbol.Map.empty in
     let e = Expr.symbol x in
@@ -870,8 +870,8 @@ let test_inline_symbol_values =
 
 let test_printer () =
   let ty = Ty.Ty_bitv 32 in
-  let x = Expr.symbol (Symbol.make ty "x") in
-  let y = Expr.symbol (Symbol.make ty "y") in
+  let x = Expr.symbol (Symbol.make_const ty "x") in
+  let y = Expr.symbol (Symbol.make_const ty "y") in
   let e = Expr.binop ty Add x y in
   let serialized = Fmt.str "%a" Expr.Printer.pp_expr e in
   let parsed = Parse.Smtml.Expr.from_string serialized |> Result.get_ok in
@@ -879,8 +879,8 @@ let test_printer () =
 
 let test_printer_query () =
   let ty = Ty.Ty_bitv 32 in
-  let x = Expr.symbol (Symbol.make ty "x") in
-  let y = Expr.symbol (Symbol.make ty "y") in
+  let x = Expr.symbol (Symbol.make_const ty "x") in
+  let y = Expr.symbol (Symbol.make_const ty "y") in
   let e = Expr.binop ty Add x y in
   let serialized = Fmt.str "%a" Expr.Printer.pp_query [ e ] in
   let script = Parse.Smtml.Script.from_string serialized |> Result.get_ok in

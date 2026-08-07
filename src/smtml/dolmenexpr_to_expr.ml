@@ -102,6 +102,8 @@ module DolmenIntf = struct
 
   let const s ty = DTerm.of_cst (DTerm.Const.mk (Dolmen_std.Path.global s) ty)
 
+  let var s ty = DTerm.of_var (DTerm.Var.mk s ty)
+
   let not_ = DTerm.neg
 
   let and_ a b = DTerm._and [ a; b ]
@@ -487,7 +489,7 @@ module DolmenIntf = struct
         ; id_ty
         ; _
         } ->
-        Symbol.make (Types.to_ety id_ty) name
+        Symbol.make_const (Types.to_ety id_ty) name
       | _ ->
         Fmt.failwith {|Unsupported constant term "%a"|} DExpr.Print.term_cst c
 

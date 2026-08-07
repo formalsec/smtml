@@ -64,7 +64,7 @@ let stmt :=
   | LPAREN; LET_CONST; x = SYMBOL; t = TYPE; RPAREN;
     {
       fun env ->
-        ( Ast.Declare_const { id = Symbol.make t x; sort = Symbol.make t x }
+        ( Ast.Declare_const { id = Symbol.make_const t x; sort = Symbol.make_const t x }
         , Env.add x t env )
     }
   | LPAREN; ASSERT; e = sexpr; RPAREN;
@@ -80,8 +80,8 @@ let sexpr :=
     {
       fun env ->
         match Env.find_opt x env with
-        | None -> Expr.symbol (Symbol.make Ty_none x)
-        | Some v -> Expr.symbol (Symbol.make v x)
+        | None -> Expr.symbol (Symbol.make_const Ty_none x)
+        | Some v -> Expr.symbol (Symbol.make_const v x)
     }
   | c = spec_constant; { fun _env -> value c }
   | LPAREN; op = paren_op; RPAREN; { op }

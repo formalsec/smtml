@@ -57,13 +57,21 @@ val var : namespace
     term (function, constant) namespace. *)
 val ( @: ) : string -> Ty.t -> t
 
-(** [make ty s] creates a symbol with type [ty] and name [s] in the term
-    (function, constant) namespace. *)
-val make : Ty.t -> string -> t
-
-(** [make3 ty name ns] creates a symbol with type [ty], name [name], and
+(** [create ty name ns] creates a symbol with type [ty], name [name], and
     namespace [ns]. *)
-val make3 : Ty.t -> name -> namespace -> t
+val create : Ty.t -> name -> namespace -> t
+
+(** [make_const ty s] creates a symbol with type [ty] and name [s] in the term
+    (function, constant) namespace. *)
+val make_const : Ty.t -> string -> t
+
+(** @deprecated Use {!make_const} instead. *)
+val make : Ty.t -> string -> t
+[@@deprecated "Use [Symbol.make_const] instead"]
+
+(** [make_var ty s] creates a symbol with type [ty] and name [s] in the variable
+    namespace, for use with quantifiers ([forall], [exists]). *)
+val make_var : Ty.t -> string -> t
 
 (** [mk ns s] creates a symbol with name [s] in the specified namespace [ns]
     with a default type. *)

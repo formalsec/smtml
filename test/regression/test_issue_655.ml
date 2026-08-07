@@ -4,7 +4,7 @@
 
 let test_serialization () =
   let open Smtml in
-  let z = Typed.Bitv32.symbol (Symbol.make (Ty_bitv 32) "z") in
+  let z = Typed.Bitv32.symbol (Symbol.make_const (Ty_bitv 32) "z") in
   let expr = Typed.Bitv32.popcnt (Typed.Bitv32.rotate_right 91 z) in
   let expr = Typed.Bitv32.le_u Typed.Bitv32.one expr in
   let parse =

@@ -1,8 +1,8 @@
 open Smtml
 
 let () =
-  let x = Expr.symbol @@ Symbol.make Ty_int "x" in
-  let y = Expr.symbol @@ Symbol.make Ty_int "y" in
+  let x = Expr.symbol @@ Symbol.make_const Ty_int "x" in
+  let y = Expr.symbol @@ Symbol.make_const Ty_int "y" in
   let script =
     Ast.Script.of_exprs
       [ Expr.relop Ty_int Eq

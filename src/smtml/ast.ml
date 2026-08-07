@@ -69,7 +69,7 @@ module Script = struct
   type nonrec t = t list
 
   let const (id : Symbol.t) =
-    let sort = Symbol.make3 id.ty id.name Symbol.sort in
+    let sort = Symbol.create id.ty id.name Symbol.sort in
     Declare_const { id; sort }
 
   let assert_ e = Assert e

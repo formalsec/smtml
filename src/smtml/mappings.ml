@@ -67,6 +67,16 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
             let sym = M.const name (get_type s.ty) in
             (Smap.add s sym ctx, sym)
 
+      let make_var (ctx : symbol_ctx) (s : Symbol.t) : symbol_ctx * M.term =
+        let name =
+          match s.name with Simple name -> name | _ -> assert false
+        in
+        match Smap.find_opt s ctx with
+        | Some sym -> (ctx, sym)
+        | None ->
+          let var = M.var name (get_type (Symbol.type_of s)) in
+          (Smap.add s var ctx, var)
+
       module Bool_impl = struct
         let true_ = M.true_
 
@@ -685,11 +695,12 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           let base = v (Bitv base) in
           let ctx, offset = encode_expr ctx offset in
           (ctx, binop (Ty_bitv 32) Add base offset)
-        | Symbol { name = Simple "re.all"; _ } -> (ctx, M.Re.all ())
-        | Symbol { name = Simple "re.none"; _ } -> (ctx, M.Re.none ())
-        | Symbol { name = Simple "re.allchar"; _ } -> (ctx, M.Re.allchar ())
-        | Symbol sym -> make_symbol ctx sym
-        (* FIXME: add a way to support building these expressions without apps *)
+        | Symbol sym ->
+          begin match sym.namespace with
+          | Var -> make_var ctx sym
+          | _ -> make_symbol ctx sym
+          end
+          (* FIXME: add a way to support building these expressions without apps *)
         | App ({ name = Simple "fp.add"; _ }, [ rm; a; b ]) ->
           let ctx, a = encode_expr ctx a in
           let ctx, b = encode_expr ctx b in

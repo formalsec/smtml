@@ -44,6 +44,8 @@ module Fresh_cvc5 () = struct
 
   let const symbol ty = Term.mk_const_s tm ty symbol
 
+  let var symbol ty = Term.mk_var_s tm ty symbol
+
   let not_ t = Term.mk_term tm Kind.Not [| t |]
 
   let and_ t1 t2 = Term.mk_term tm Kind.And [| t1; t2 |]
@@ -64,11 +66,13 @@ module Fresh_cvc5 () = struct
 
   let ite cond t1 t2 = Term.mk_term tm Kind.Ite [| cond; t1; t2 |]
 
-  let forall _ =
-    Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
+  let forall vars expr =
+    let var_list = Term.mk_term tm Kind.Variable_list (Array.of_list vars) in
+    Term.mk_term tm Kind.Forall [| var_list; expr |]
 
-  let exists _ =
-    Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
+  let exists vars expr =
+    let var_list = Term.mk_term tm Kind.Variable_list (Array.of_list vars) in
+    Term.mk_term tm Kind.Exists [| var_list; expr |]
 
   module Types = struct
     let int = Sort.mk_int_sort tm

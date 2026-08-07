@@ -54,7 +54,7 @@ module Infix = struct
 
   let app x = value (App (x, []))
 
-  let symbol name ty = symbol (Symbol.make ty name)
+  let symbol name ty = symbol (Symbol.make_const ty name)
 
   let ( = ) i1 i2 = relop Ty_bool Eq i1 i2
 

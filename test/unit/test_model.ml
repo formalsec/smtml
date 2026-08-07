@@ -5,10 +5,10 @@
 open Smtml
 
 let test_to_json () =
-  let x = Symbol.make Ty_int "x" in
-  let y = Symbol.make Ty_real "y" in
-  let z = Symbol.make Ty_bool "z" in
-  let u = Symbol.make Ty_str "u" in
+  let x = Symbol.make_const Ty_int "x" in
+  let y = Symbol.make_const Ty_real "y" in
+  let z = Symbol.make_const Ty_bool "z" in
+  let u = Symbol.make_const Ty_str "u" in
   let expected =
     {|{
   "model": {
@@ -50,9 +50,9 @@ let test_of_json () =
     (match model with Ok _ -> true | _ -> false)
 
 let test_rt_json () =
-  let x = Symbol.make (Ty_bitv 32) "x" in
-  let y = Symbol.make (Ty_bitv 64) "y" in
-  let z = Symbol.make (Ty_fp 32) "y" in
+  let x = Symbol.make_const (Ty_bitv 32) "x" in
+  let y = Symbol.make_const (Ty_bitv 64) "y" in
+  let z = Symbol.make_const (Ty_fp 32) "y" in
   let orig_model : Model.t =
     let tbl = Hashtbl.create 16 in
     List.iter

@@ -53,6 +53,9 @@ module type M = sig
   *)
   val const : string -> ty -> term
 
+  (** [var name ty] constructs a var term with the given name and type. *)
+  val var : string -> ty -> term
+
   (** [not_ t] constructs the logical negation of the term [t]. *)
   val not_ : term -> term
 

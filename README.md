@@ -156,8 +156,8 @@ module Z3 :
 val solver : Z3.t = <abstr>
 
 # let cond =
-    let a = Expr.symbol (Symbol.make Ty.Ty_bool "a") in
-    let b = Expr.symbol (Symbol.make Ty.Ty_bool "b") in
+    let a = Expr.symbol (Symbol.make_const Ty.Ty_bool "a") in
+    let b = Expr.symbol (Symbol.make_const Ty.Ty_bool "b") in
     Expr.(binop Ty_bool And a (unop Ty_bool Not b));;
 val cond : Expr.t = (bool.and a (bool.not b))
 
@@ -184,8 +184,8 @@ val cond : Expr.t = (bool.and a (bool.not b))
 ```ocaml
 # let cond =
     let two = Typed.Int.v (Z.of_int 2) in
-    let x = Typed.symbol Typed.Types.int "x" in
-    let y = Typed.symbol Typed.Types.string "y" in
+    let x = Typed.const Typed.Types.int "x" in
+    let y = Typed.const Typed.Types.string "y" in
     Typed.Int.le y (Typed.Int.add x two)
 Line 5, characters 18-19:
 Error: The value y has type string Typed.expr
@@ -197,7 +197,7 @@ Error: The value y has type string Typed.expr
 
 ```ocaml
 # let cond =
-    let x = Typed.symbol Typed.Types.bitv32 "x" in
+    let x = Typed.const Typed.Types.bitv32 "x" in
     let y = Typed.Bitv32.v (Bitvector.of_int32 0xdeadbeefl) in
     let sum = Typed.Bitv32.add x y in
     Typed.Bitv32.eq sum (Typed.Bitv32.v (Bitvector.of_int32 0xffffffffl))

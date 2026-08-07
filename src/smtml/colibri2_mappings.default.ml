@@ -142,12 +142,9 @@ module M = struct
           ~some:(fun ctx ->
             Symbol.Map.fold
               (fun _ t acc ->
-                let c =
-                  match (t : DTerm.t) with
-                  | { term_descr = Cst c; _ } -> c
-                  | _ -> assert false
-                in
-                ConstSet.add c acc )
+                match (t : DTerm.t) with
+                | { term_descr = Cst c; _ } -> ConstSet.add c acc
+                | _ -> acc )
               ctx ConstSet.empty )
           ctx
 
