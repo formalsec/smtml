@@ -116,7 +116,6 @@ $ bisect-ppx-report html    # Detailed Report in _coverage/index.html
 ## Quick Start
 
 ```ocaml
-# #require "smtml";;
 # open Smtml;;
 # #install_printer Expr.pp;;
 # #install_printer Value.pp;;

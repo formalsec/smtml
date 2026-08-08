@@ -1,11 +1,6 @@
 (mdx
- (enabled_if
-  (and
-   %{lib-available:z3}
-   (not %{lib-available:alt-ergo-lib})
-   (not %{lib-available:bitwuzla-cxx})
-   (not %{lib-available:colibri2.core})
-   (not %{lib-available:cvc5}))))
+ (libraries smtml smtml.prelude zarith fmt)
+ (enabled_if %{lib-available:z3}))
 
 (env
  (release

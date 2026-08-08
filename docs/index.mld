@@ -20,7 +20,6 @@ opam install smtml
 
 Basic usage in OCaml toplevel:
 {@ocaml[
-# #require "smtml";;
 # #install_printer Smtml.Expr.pp;;
 # let pp_model = Smtml.Model.pp ~no_values:false;;
 val pp_model : Smtml.Model.t Fmt.t = <fun>
