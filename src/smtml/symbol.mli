@@ -93,7 +93,7 @@ val hash : t -> int
 val compare : t -> t -> int
 
 (** [equal sym1 sym2] checks if [sym1] and [sym2] are equal. *)
-val equal : t -> t -> Bool.t
+val equal : t -> t -> bool
 
 (** {1 Pretty Printing} *)
 

@@ -62,7 +62,7 @@ val string_of_type : t -> string
 
 (** [of_string s] attempts to parse the string [s] into a type. Returns [Ok t]
     if successful, or an error message otherwise. *)
-val of_string : string -> (t, [> `Msg of string ]) Result.t
+val of_string : string -> (t, [> `Msg of string ]) result
 
 (** {1 Type Size} *)
 

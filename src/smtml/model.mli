@@ -60,42 +60,42 @@ module Parse : sig
   (** {2 JSON Parsing} *)
   module Json : sig
     (** [from_string s] parses a symbol table from a JSON string. *)
-    val from_string : string -> (t, [> `Msg of string ]) Result.t
+    val from_string : string -> (t, [> `Msg of string ]) result
 
     (** [from_channel ic] parses a symbol table from a JSON input channel. *)
-    val from_channel : in_channel -> (t, [> `Msg of string ]) Result.t
+    val from_channel : in_channel -> (t, [> `Msg of string ]) result
 
     (** [from_file path] parses a symbol table from a JSON file. *)
-    val from_file : Fpath.t -> (t, [> `Msg of string ]) Result.t
+    val from_file : Fpath.t -> (t, [> `Msg of string ]) result
   end
 
   (** {2 SCFG Parsing} *)
   module Scfg : sig
     (** [from_string s] parses a symbol table from an SCFG string. *)
-    val from_string : string -> (t, [> `Msg of string ]) Result.t
+    val from_string : string -> (t, [> `Msg of string ]) result
 
     (** [from_channel ic] parses a symbol table from an SCFG input channel. *)
-    val from_channel : in_channel -> (t, [> `Msg of string ]) Result.t
+    val from_channel : in_channel -> (t, [> `Msg of string ]) result
 
     (** [from_file path] parses a symbol table from an SCFG file. *)
-    val from_file : Fpath.t -> (t, [> `Msg of string ]) Result.t
+    val from_file : Fpath.t -> (t, [> `Msg of string ]) result
   end
 
   (** {2 SMT-LIB Parsing} *)
   module Smtlib : sig
     (** [from_string s] parses a symbol table from an SMT-LIB string.
         {b Warning:} Not implemented. *)
-    val from_string : string -> (t, [> `Msg of string ]) Result.t
+    val from_string : string -> (t, [> `Msg of string ]) result
     [@@alert unsafe "not implemented"]
 
     (** [from_channel ic] parses a symbol table from an SMT-LIB input channel.
         {b Warning:} Not implemented. *)
-    val from_channel : in_channel -> (t, [> `Msg of string ]) Result.t
+    val from_channel : in_channel -> (t, [> `Msg of string ]) result
     [@@alert unsafe "not implemented"]
 
     (** [from_file path] parses a symbol table from an SMT-LIB file.
         {b Warning:} Not implemented. *)
-    val from_file : Fpath.t -> (t, [> `Msg of string ]) Result.t
+    val from_file : Fpath.t -> (t, [> `Msg of string ]) result
     [@@alert unsafe "not implemented"]
   end
 end

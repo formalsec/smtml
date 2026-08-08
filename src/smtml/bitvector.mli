@@ -10,17 +10,17 @@ val of_int8 : int -> t
 
 val of_int16 : int -> t
 
-val of_int32 : Int32.t -> t
+val of_int32 : int32 -> t
 
-val of_int64 : Int64.t -> t
+val of_int64 : int64 -> t
 
 val view : t -> Z.t
 
 val to_signed : t -> Z.t
 
-val to_int32 : t -> Int32.t
+val to_int32 : t -> int32
 
-val to_int64 : t -> Int64.t
+val to_int64 : t -> int64
 
 val numbits : t -> int
 

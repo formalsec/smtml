@@ -540,8 +540,8 @@ module Bitv16 : Bitv.S with type w = bitv16
 module Bitv32 : sig
   include Bitv.S with type w = bitv32
 
-  (** [of_int32 i] creates a 32-bit vector from an OCaml [Int32.t]. *)
-  val of_int32 : Int32.t -> t
+  (** [of_int32 i] creates a 32-bit vector from an OCaml [int32]. *)
+  val of_int32 : int32 -> t
 
   (** [of_int8_s t] sign-extends an 8-bit vector to 32 bits. *)
   val of_int8_s : bitv8 expr -> t
@@ -625,8 +625,8 @@ end
 module Bitv64 : sig
   include Bitv.S with type w = bitv64
 
-  (** [of_int64 i] creates a 64-bit vector from an OCaml [Int64.t]. *)
-  val of_int64 : Int64.t -> t
+  (** [of_int64 i] creates a 64-bit vector from an OCaml [int64]. *)
+  val of_int64 : int64 -> t
 
   (** [of_int32 t] zero-extends a 32-bit vector to 64 bits. *)
   val of_int32 : bitv32 expr -> t
@@ -781,7 +781,7 @@ module Bitv128 : sig
   val to_i32x4 : t -> bitv32 expr * bitv32 expr * bitv32 expr * bitv32 expr
 
   (** [of_int64x2] constructs a 128-bit vector from two 64-bit integers. *)
-  val of_int64x2 : Int64.t -> Int64.t -> t
+  val of_int64x2 : int64 -> int64 -> t
 
   (** [of_i64x2] constructs a 128-bit vector from two 64-bit lanes. *)
   val of_i64x2 : bitv64 expr -> bitv64 expr -> t
