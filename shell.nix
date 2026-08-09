@@ -36,6 +36,7 @@ pkgs.mkShell {
     mtime
     ocaml_intrinsics
     prelude
+    ppx_enumerate
     scfg
     sexplib
     tls-lwt

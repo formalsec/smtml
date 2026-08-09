@@ -136,6 +136,15 @@ let commands =
         [ extract_features_cmd; extract_queries_cmd; regression_cmd; train_cmd ]
   in
 
+  let cmd_ls =
+    let info =
+      let doc = "List available solvers" in
+      Cmd.info "ls" ~doc
+    in
+    let term = Term.(const Cmd_ls.run $ const ()) in
+    Cmd.v info term
+  in
+
   let info = Cmd.info ~version "smtml" in
   Cmd.group info
-    [ cmd_run; cmd_to_smt2; cmd_to_smtml; cmd_version; cmd_smtzilla ]
+    [ cmd_version; cmd_run; cmd_to_smt2; cmd_to_smtml; cmd_smtzilla; cmd_ls ]
