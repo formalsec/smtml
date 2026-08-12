@@ -30,8 +30,6 @@ let parse_file filename =
   List.rev files
 
 let run (s : Settings.Run.t) =
-  (* ~debug ~dry ~print_statistics ~no_strict_status ~solver_type *)
-  (*   ~solver_mode ~from_file ~filenames = *)
   if s.debug then Logs.Src.set_level Log.src (Some Logs.Debug);
   Logs.set_reporter @@ Logs.format_reporter ();
   let module Solver = (val get_solver s.debug s.solver_type s.solver_mode) in
