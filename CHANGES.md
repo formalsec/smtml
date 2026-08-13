@@ -1,7 +1,24 @@
 # Changelog
 
-## 0.29.0 - 2026-07-13
+## 0.30.0 - 2026-08-13
 
+- 2026-08-13 Quantifer support and unification of API for creation of const/var
+- 2026-08-13 Remove commented code block in cmd_run.ml
+- 2026-08-12 Add `ls` command to quickly list installed solvers and versions
+- 2026-08-09 Allow mdx blocks to execute if you have at least z3 installed
+- 2026-08-08 Reduce Smtml_prelude type shadowing
+- 2026-07-30 Replace ocaml integer values with arbitrary-precision integers ([#658](https://github.com/formalsec/smtml/issues/658))
+- 2026-07-26 Unpin cvc5 package and add conflicts clause
+- 2026-07-25 Fix rotate operator serialization ([#655](https://github.com/formalsec/smtml/issues/655))
+- 2026-07-25 Migrate testing framework to alcotest from ounit2
+- 2026-07-24 Allow coderabbit to approve my PRs
+- 2026-07-24 Try out coderabbit
+- 2026-07-24 Add AGENTS.md
+- 2026-07-22 Complete SIMD
+
+## 0.29.0 - 2026-07-15
+
+- 2026-07-15 Release 0.29.0
 - 2026-07-03 Add support for colibri2.0.6.0
 - 2026-07-03 Add colibri2 conflicts constraint on version <= 0.6.0
 - 2026-07-03 Fix issue 642 Unexpected exception thrown and fix pp_binop
