@@ -86,6 +86,7 @@ jobs:
 
       - name: Install ${{ matrix.solver }}
         run: |
+          opam update
           opam install -y . --deps-only --with-test
           opam install ${{ matrix.solver }}
 
