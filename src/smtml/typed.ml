@@ -48,6 +48,11 @@ let ty_bool : bool ty = Ty_bool
 module Bool = struct
   type t = bool expr
 
+  let of_val = function
+    | Expr.Val True -> Some true
+    | Val False -> Some false
+    | _ -> None
+
   let true_ = Expr.value True
 
   let false_ = Expr.value False
@@ -58,11 +63,28 @@ module Bool = struct
 
   let[@inline] pp fmt x = Expr.pp fmt x
 
-  let[@inline] not e = Expr.Bool.not e
+  let[@inline] not e =
+    let bexpr = Expr.view e in
+    match of_val bexpr with
+    | Some b -> of_bool (not b)
+    | None -> (
+      match bexpr with
+      | Unop (Ty_bool, Not, cond) -> cond
+      | _ -> Expr.unop Ty_bool Not e )
 
-  let[@inline] and_ a b = Expr.Bool.and_ a b
+  let[@inline] and_ a b =
+    match (of_val (Expr.view a), of_val (Expr.view b)) with
+    | Some true, _ -> b
+    | _, Some true -> a
+    | Some false, _ | _, Some false -> false_
+    | _ -> Expr.binop ty_bool And a b
 
-  let[@inline] or_ a b = Expr.Bool.or_ a b
+  let[@inline] or_ a b =
+    match (of_val (Expr.view a), of_val (Expr.view b)) with
+    | Some false, _ -> b
+    | _, Some false -> a
+    | Some true, _ | _, Some true -> true_
+    | _ -> Expr.binop ty_bool Or a b
 
   let[@inline] logand es = Expr.naryop ty_bool Logand es
 
@@ -70,14 +92,14 @@ module Bool = struct
 
   let[@inline] xor a b = Expr.binop ty_bool Xor a b
 
-  let[@inline] implies a b = Expr.Bool.implies a b
+  let[@inline] implies a b = Expr.binop ty_bool Implies a b
 
   let[@inline] eq (a : 'a expr) (b : 'a expr) = Expr.relop ty_bool Eq a b
 
   let[@inline] distinct (es : 'a expr list) =
-    (* Typically this encodes a symbolic constraint: (distinct x y z), so no
-       need to waste time trying to simplify. Just use `raw_naryop`. *)
-    Expr.raw_naryop ty_bool Distinct es
+    (* Constant-folds when all operands are values; otherwise this typically
+       encodes a symbolic constraint (distinct x y z) and stays un-simplified. *)
+    Expr.naryop ty_bool Distinct es
 
   let[@inline] ite c (r1 : 'a expr) (r2 : 'a expr) : 'a expr =
     Expr.triop ty_bool Ite c r1 r2

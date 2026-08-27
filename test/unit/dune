@@ -6,5 +6,6 @@
   test_extract_bits
   test_model
   test_statistics
-  test_smtlib_pp)
+  test_smtlib_pp
+  test_typed_bool)
  (libraries fmt smtml smtml_test yojson alcotest zarith))
