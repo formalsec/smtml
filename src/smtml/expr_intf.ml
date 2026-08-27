@@ -337,35 +337,55 @@ module type S = sig
   (** {1 Boolean Expressions} *)
 
   module Bool : sig
-    (** The constant [true] expression. *)
+    (** The constant [true] expression.
+        @deprecated Use {!Typed.Bool.true_} instead. *)
     val true_ : t
+    [@@deprecated "Use [Typed.Bool.true_] instead"]
 
-    (** The constant [false] expression. *)
+    (** The constant [false] expression.
+        @deprecated Use {!Typed.Bool.false_} instead. *)
     val false_ : t
+    [@@deprecated "Use [Typed.Bool.false_] instead"]
 
-    (** [v b] constructs a Boolean expression from a boolean value. *)
+    (** [v b] constructs a Boolean expression from a boolean value.
+        @deprecated Use {!Typed.Bool.of_bool} instead. *)
     val v : bool -> t
+    [@@deprecated "Use [Typed.Bool.of_bool] instead"]
 
-    (** [not expr] constructs the logical negation of an expression. *)
+    (** [not expr] constructs the logical negation of an expression.
+        @deprecated Use {!Typed.Bool.not} instead. *)
     val not : t -> t
+    [@@deprecated "Use [Typed.Bool.not] instead"]
 
-    (** [equal expr1 expr2] constructs an equality expression. *)
+    (** [equal expr1 expr2] constructs an equality expression.
+        @deprecated Use {!Typed.Bool.eq} instead. *)
     val equal : t -> t -> t
+    [@@deprecated "Use [Typed.Bool.eq] instead"]
 
-    (** [distinct expr1 expr2] constructs a distinctness expression. *)
+    (** [distinct expr1 expr2] constructs a distinctness expression.
+        @deprecated Use {!Typed.Bool.distinct} instead. *)
     val distinct : t -> t -> t
+    [@@deprecated "Use [Typed.Bool.distinct] instead"]
 
-    (** [and_ expr1 expr2] constructs a logical AND expression. *)
+    (** [and_ expr1 expr2] constructs a logical AND expression.
+        @deprecated Use {!Typed.Bool.and_} instead. *)
     val and_ : t -> t -> t
+    [@@deprecated "Use [Typed.Bool.and_] instead"]
 
-    (** [or_ expr1 expr2] constructs a logical OR expression. *)
+    (** [or_ expr1 expr2] constructs a logical OR expression.
+        @deprecated Use {!Typed.Bool.or_} instead. *)
     val or_ : t -> t -> t
+    [@@deprecated "Use [Typed.Bool.or_] instead"]
 
-    (** [implies expr1 expr2] constructs a logical implication. *)
+    (** [implies expr1 expr2] constructs a logical implication.
+        @deprecated Use {!Typed.Bool.implies} instead. *)
     val implies : t -> t -> t
+    [@@deprecated "Use [Typed.Bool.implies] instead"]
 
-    (** [ite cond then_ else_] constructs an if-then-else expression. *)
+    (** [ite cond then_ else_] constructs an if-then-else expression.
+        @deprecated Use {!Typed.Bool.ite} instead. *)
     val ite : t -> t -> t -> t
+    [@@deprecated "Use [Typed.Bool.ite] instead"]
   end
 
   (** {1 Set Module} *)

@@ -23,11 +23,11 @@ let concat = raw_concat
 let simplify = Fun.id
 
 module Bool = struct
-  let true_ = Bool.true_
+  let true_ = value True
 
-  let false_ = Bool.false_
+  let false_ = value False
 
-  let v = Bool.v
+  let v b = if b then true_ else false_
 
   let not a = raw_unop Ty_bool Not a
 

@@ -67,7 +67,7 @@ let test_unop_string () =
 
 let test_unop_bool () =
   let ty = Ty.Ty_bool in
-  check (Expr.unop ty Not Expr.Bool.true_) Expr.Bool.false_;
+  check (Expr.unop ty Not (Expr.value True)) (Expr.value False);
   let x = Expr.symbol (Symbol.make_const ty "x") in
   check (Expr.unop ty Not (Expr.unop ty Not x)) x
 
@@ -372,12 +372,12 @@ let test_relop_app () =
   let ty = Ty.Ty_bool in
   check
     (Expr.relop ty Eq (app (`Op "undefined")) (app (`Op "undefined")))
-    Expr.Bool.true_;
+    (Expr.value True);
   check
     (Expr.relop ty Ne (app (`Op "undefined")) (app (`Op "undefined")))
-    Expr.Bool.false_;
-  check (Expr.relop ty Eq (app (`Op "undefined")) (int 1)) Expr.Bool.false_;
-  check (Expr.relop ty Ne (int 1) (app (`Op "undefined"))) Expr.Bool.true_
+    (Expr.value False);
+  check (Expr.relop ty Eq (app (`Op "undefined")) (int 1)) (Expr.value False);
+  check (Expr.relop ty Ne (int 1) (app (`Op "undefined"))) (Expr.value True)
 
 let test_relop_ptr () =
   let open Infix in
