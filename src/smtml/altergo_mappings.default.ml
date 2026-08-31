@@ -183,6 +183,15 @@ module M = struct
         | { f = Int z; _ } -> DM.Int.mk z
         | { f = Real q; _ } -> DM.Real.mk q
         | { f = Bitv (n, z); _ } -> DM.Bitv.mk n z
+        | { f = Op Minus; xs = [ a; b ]; _ } -> (
+          match (AEL.Expr.term_view a, AEL.Expr.term_view b) with
+          | { f = Int za; _ }, { f = Int zb; _ } when Z.equal za Z.zero ->
+            DM.Int.mk (Z.neg zb)
+          | { f = Real qa; _ }, { f = Real qb; _ } when Q.equal qa Q.zero ->
+            DM.Real.mk (Q.neg qb)
+          | _ ->
+            Fmt.failwith "Altergo_mappings: ae_expr_to_dvalue(%a)"
+              AEL.Expr.print e )
         | _ ->
           Fmt.failwith "Altergo_mappings: ae_expr_to_dvalue(%a)" AEL.Expr.print
             e
