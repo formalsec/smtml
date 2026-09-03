@@ -793,8 +793,17 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           let ctx, vars = encode_exprs ctx vars in
           let ctx, body = encode_expr ctx body in
           (ctx, M.exists vars body)
-        | List _ | Binder _ ->
-          Fmt.failwith "Cannot encode expression: %a" Expr.pp hte
+        | Binder (Let_in, vars, body) ->
+          let bindings =
+            List.map
+              (fun var ->
+                match Expr.view var with
+                | App (sym, [ value ]) -> (sym, value)
+                | _ -> Fmt.failwith "Invalid let-in binding: %a" Expr.pp var )
+              vars
+          in
+          encode_expr ctx (Expr.inline bindings body)
+        | List _ -> Fmt.failwith "Cannot encode expression: %a" Expr.pp hte
 
       and encode_exprs ctx (es : Expr.t list) : symbol_ctx * M.term list =
         let ctx, exprs =

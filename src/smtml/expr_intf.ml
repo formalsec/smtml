@@ -69,6 +69,10 @@ module type S = sig
       of [set] by its image in [symbol_map]. *)
   val inline_symbol_values : Value.t Symbol.Map.t -> t -> t
 
+  (** [inline bindings e] substitutes each [symbol] in [bindings] by its
+      associated value expression throughout [e]. *)
+  val inline : (Symbol.t * t) list -> t -> t
+
   (** {1 Pretty Printing} *)
 
   module Printer : sig
@@ -125,9 +129,9 @@ module type S = sig
       given bindings and body. *)
   val binder : Binder.t -> t list -> t -> t
 
-  (** [let_in bindings body] constructs a let-binding expression with the given
-      bindings and body. *)
-  val let_in : t list -> t -> t
+  (** [let_in bindings body] constructs a let-binding expression where
+      [bindings] is a list of [(symbol, value)] pairs and [body] is the body. *)
+  val let_in : (Symbol.t * t) list -> t -> t
 
   (** [forall bindings body] constructs a universal quantification expression
       with the given bindings and body. *)

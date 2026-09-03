@@ -19,6 +19,12 @@
    %{lib-available:colibrilib})))
 
 (test
+ (name test_issue_666)
+ (modules test_issue_666)
+ (libraries smtml zarith)
+ (build_if %{lib-available:z3}))
+
+(test
  (name test_regression)
  (modules
   test_regression

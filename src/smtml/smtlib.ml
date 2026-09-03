@@ -328,7 +328,16 @@ module Term = struct
       (* Ids can only be symbols. Any other expr here is super wrong *)
       assert false
 
-  let letand ?loc:_ (vars : t list) (body : t) : t = Expr.let_in vars body
+  let letand ?loc:_ (vars : t list) (body : t) : t =
+    let bindings =
+      List.map
+        (fun v ->
+          match Expr.view v with
+          | Expr.App (sym, [ value ]) -> (sym, value)
+          | _ -> Fmt.failwith "letand: invalid binding: %a" Expr.pp v )
+        vars
+    in
+    Expr.let_in bindings body
 
   let forall ?loc:_ (vars : t list) (body : t) : t = Expr.forall vars body
 

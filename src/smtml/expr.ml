@@ -290,7 +290,8 @@ let app symbol args = make (App (symbol, args))
 
 let[@inline] binder bt vars expr = make (Binder (bt, vars, expr))
 
-let let_in vars body = binder Let_in vars body
+let let_in bindings body =
+  binder Let_in (List.map (fun (sym, value) -> app sym [ value ]) bindings) body
 
 let forall vars body = binder Forall vars body
 
@@ -753,14 +754,19 @@ module Smtlib = struct
     | Binder _ -> assert false
 end
 
-let inline_symbol_values map e =
+let inline (bindings : (Symbol.t * t) list) (e : t) : t =
+  let map =
+    List.fold_left
+      (fun m (sym, value) -> Symbol.Map.add sym value m)
+      Symbol.Map.empty bindings
+  in
   let rec aux e =
     match view e with
     | Val _ -> e
     | Symbol symbol ->
       begin match Symbol.Map.find_opt symbol map with
       | None -> e
-      | Some v -> value v
+      | Some value -> value
       end
     | Ptr e ->
       let offset = aux e.offset in
@@ -801,10 +807,17 @@ let inline_symbol_values map e =
       let e2 = aux e2 in
       concat e1 e2
     | Binder (b, vars, e) ->
+      let vars = List.map aux vars in
       let e = aux e in
       binder b vars e
   in
   aux e
+
+let inline_symbol_values map e =
+  let bindings =
+    List.map (fun (sym, v) -> (sym, value v)) (Symbol.Map.bindings map)
+  in
+  inline bindings e
 
 module Set = struct
   include Set.Make (Key)
