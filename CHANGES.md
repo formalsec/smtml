@@ -1,7 +1,18 @@
 # Changelog
 
+## 0.31.0 - 2026-09-07
+
+- 2026-09-07 Fmt
+- 2026-09-07 Skipping functions from ctx for now since we don't support their models
+- 2026-09-07 Add test with uninterpreted functions for alt-ergo and colibri2
+- 2026-09-07 FIx handling of uninterpreted function by Alt-Ergo and Colibri2
+- 2026-08-31 Add test for alt-ergo with negative values in model
+- 2026-08-31 Fix model recovery from Alt-Ergo for negative values
+- 2026-08-25 Remove colibri2 pinned dependency
+
 ## 0.30.0 - 2026-08-13
 
+- 2026-08-13 Release 0.30.0
 - 2026-08-13 Quantifer support and unification of API for creation of const/var
 - 2026-08-13 Remove commented code block in cmd_run.ml
 - 2026-08-12 Add `ls` command to quickly list installed solvers and versions
