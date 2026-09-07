@@ -30,9 +30,9 @@ let assert_unsat ?f result = assert_expected_sat ?f `Unsat result
 let check a b = Alcotest.check expr_testable "expression equality" b a
 
 module Infix = struct
-  let true_ = Expr.Bool.true_
+  let true_ = value True
 
-  let false_ = Expr.Bool.false_
+  let false_ = value False
 
   let int x = value (Int (Z.of_int x))
 
