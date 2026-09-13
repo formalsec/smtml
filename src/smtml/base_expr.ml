@@ -139,7 +139,9 @@ let rec ty (hte : t) : Ty.t =
   | Ptr _ -> Ty_bitv 32
   | Symbol x -> Symbol.type_of x
   | List _ -> Ty_list
-  | App (sym, _) -> begin match sym.ty with Ty_none -> Ty_app | ty -> ty end
+  | App (sym, _) ->
+    begin match sym.ty with Ty_none -> Ty_app | ty -> ty
+    end
   | Unop (ty, _, _) -> ty
   | Binop (ty, _, _, _) -> ty
   | Triop (_, Ite, _, hte1, hte2) ->

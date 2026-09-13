@@ -84,9 +84,9 @@ let memoize_ty (hte : t) : Ty.t =
         | Ptr _ -> Ty_bitv 32
         | Symbol x -> Symbol.type_of x
         | List _ -> Ty_list
-        | App (sym, _) -> begin
-          match sym.ty with Ty_none -> Ty_app | ty -> ty
-        end
+        | App (sym, _) ->
+          begin match sym.ty with Ty_none -> Ty_app | ty -> ty
+          end
         | Unop (ty, _, _) -> ty
         | Binop (ty, _, _, _) -> ty
         | Triop (_, Ite, _, hte1, hte2) ->
@@ -223,12 +223,12 @@ let forall vars body = binder Forall vars body
 
 let exists vars body = binder Exists vars body
 
-let normalize_eq_or_ne op (ty', e1, e2) =
+let[@warning "-32"] normalize_eq_or_ne op (ty', e1, e2) =
   let make_relop lhs rhs = Relop (ty', op, lhs, rhs) in
   let ty1, ty2 = (memoize_ty e1, memoize_ty e2) in
   if not (Ty.equal ty1 ty2) then make_relop e1 e2
-  else begin
-    match ty1 with
+  else
+    begin match ty1 with
     | Ty_bitv m ->
       let binop = make (Binop (ty1, Sub, e1, e2)) in
       let zero = make (Val (Bitv (Bitvector.make Z.zero m))) in
@@ -242,7 +242,7 @@ let normalize_eq_or_ne op (ty', e1, e2) =
       let zero = make (Val (Real 0.)) in
       make_relop binop zero
     | _ -> make_relop e1 e2
-  end
+    end
 
 let negate_relop (hte : t) : t =
   let e =
@@ -559,7 +559,6 @@ let extract (hte : t) ~(high : int) ~(low : int) : t =
   | _ ->
     if high - low + 1 = Ty.bitsize (ty hte) then hte
     else raw_extract hte ~high ~low
-
 
 let raw_concat (msb : t) (lsb : t) : t = make (Concat (msb, lsb)) [@@inline]
 

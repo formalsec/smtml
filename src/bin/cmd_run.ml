@@ -44,7 +44,7 @@ let run (s : Settings.Run.t) =
   let run_file state file =
     Log.debug (fun k -> k "File %a..." Fpath.pp file);
     incr total_tests;
-    let start_t = Unix.gettimeofday () in    
+    let start_t = Unix.gettimeofday () in
     Fun.protect ~finally:(fun () ->
       if s.print_statistics then (
         let exec_t = Unix.gettimeofday () -. start_t in
@@ -61,12 +61,11 @@ let run (s : Settings.Run.t) =
       | Ok ast ->
         let old_handler = ref Sys.Signal_default in
         let timeout_sec = float_of_int s.timeout /. 1000. in
-        Fun.protect
-          ~finally:(fun () ->
-            ignore
-              (Unix.setitimer Unix.ITIMER_REAL
-                 { it_value = 0.; it_interval = 0. } );
-            ignore (Sys.signal Sys.sigalrm !old_handler) )
+        Fun.protect ~finally:(fun () ->
+          ignore
+            (Unix.setitimer Unix.ITIMER_REAL
+               { it_value = 0.; it_interval = 0. } );
+          ignore (Sys.signal Sys.sigalrm !old_handler) )
         @@ fun () ->
         old_handler :=
           Sys.signal Sys.sigalrm (Sys.Signal_handle (fun _ -> raise Timeout));
