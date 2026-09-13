@@ -150,7 +150,6 @@
    %{targets}
    (run %{dep:simplifier_dsl.exe}))))
 
-
 (rule
  (targets
   colibri2_mappings.nop.ml
