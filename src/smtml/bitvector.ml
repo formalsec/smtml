@@ -161,6 +161,15 @@ let rem_u a b =
   if Z.equal b.value Z.zero then raise Division_by_zero;
   make (Z.rem a.value b.value) a.width
 
+let smod a b =
+  assert (a.width = b.width);
+  if Z.equal b.value Z.zero then a
+  else
+    let sa = to_signed a in
+    let sb = to_signed b in
+    let rem = Z.sub sa (Z.mul (Z.fdiv sa sb) sb) in
+    make rem a.width
+
 let rotate_left bv n =
   let n = normalize_shift_amount (view n) (numbits bv) in
   let left_part = Z.shift_left bv.value n in

@@ -69,6 +69,7 @@ let of_binop (binop : Ty.Binop.t) : Feature_map.feat =
   | Regexp_range -> Regexp_range
   | Regexp_inter -> Regexp_inter
   | Regexp_diff -> Regexp_diff
+  | Mod -> Mod
 
 let of_triop (triop : Ty.Triop.t) : Feature_map.feat =
   match triop with
@@ -223,6 +224,7 @@ let all_feats : Feature_map.feat array =
      ; DivU
      ; Rem
      ; RemU
+     ; Mod
      ; Shl
      ; ShrA
      ; ShrL

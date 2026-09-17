@@ -81,6 +81,7 @@ type feat =
   | Regexp_range
   | Regexp_inter
   | Regexp_diff
+  | Mod
   (* Triops *)
   | Ite
   | List_set
@@ -268,6 +269,7 @@ let feat_to_string = function
   | Regexp_range -> "Regexp_range"
   | Regexp_inter -> "Regexp_inter"
   | Regexp_diff -> "Regexp_diff"
+  | Mod -> "Mod"
   | Ite -> "Ite"
   | List_set -> "List_set"
   | String_extract -> "String_extract"
@@ -409,6 +411,7 @@ let feat_of_string = function
   | "Regexp_range" -> Regexp_range
   | "Regexp_inter" -> Regexp_inter
   | "Regexp_diff" -> Regexp_diff
+  | "Mod" -> Mod
   | "Ite" -> Ite
   | "List_set" -> List_set
   | "String_extract" -> String_extract

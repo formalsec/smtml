@@ -301,6 +301,7 @@ module Binop = struct
     | Regexp_range
     | Regexp_inter
     | Regexp_diff
+    | Mod
   [@@deriving ord]
 
   let hash = function
@@ -337,6 +338,7 @@ module Binop = struct
     | Regexp_range -> 28
     | Regexp_inter -> 29
     | Regexp_diff -> 30
+    | Mod -> 31
 
   let equal o1 o2 =
     match (o1, o2) with
@@ -370,13 +372,14 @@ module Binop = struct
     | String_in_re, String_in_re
     | Regexp_range, Regexp_range
     | Regexp_inter, Regexp_inter
-    | Regexp_diff, Regexp_diff ->
+    | Regexp_diff, Regexp_diff
+    | Mod, Mod ->
       true
     | ( ( Add | Sub | Mul | Div | DivU | Rem | RemU | Shl | ShrA | ShrL | And
         | Or | Xor | Implies | Pow | Min | Max | Copysign | Ext_rotr | Ext_rotl
         | At | List_cons | List_append | String_prefix | String_suffix
         | String_contains | String_last_index | String_in_re | Regexp_range
-        | Regexp_inter | Regexp_diff )
+        | Regexp_inter | Regexp_diff | Mod )
       , _ ) ->
       false
 
@@ -412,6 +415,7 @@ module Binop = struct
     | Regexp_range -> Fmt.string fmt "range"
     | Regexp_inter -> Fmt.string fmt "inter"
     | Regexp_diff -> Fmt.string fmt "diff"
+    | Mod -> Fmt.string fmt "mod"
 end
 
 module Relop = struct
@@ -703,6 +707,8 @@ module Smtlib = struct
     | Ty_str, String_last_index -> assert false
     | Ty_str, String_in_re -> Fmt.string fmt "str.in_re"
     | _, Implies -> Fmt.string fmt "=>"
+    | Ty_int, Mod -> Fmt.string fmt "mod"
+    | Ty_bitv _, Mod -> Fmt.string fmt "bvsmod"
     | _ -> assert false
 
   let pp_relop fmt ((ty, op) : t * Relop.t) =

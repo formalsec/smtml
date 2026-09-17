@@ -81,6 +81,7 @@ type feat =
   | Regexp_range
   | Regexp_inter
   | Regexp_diff
+  | Mod
   (* Triops *)
   | Ite
   | List_set
