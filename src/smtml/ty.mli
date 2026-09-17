@@ -164,6 +164,7 @@ module Binop : sig
     | Regexp_range  (** Range of characters. *)
     | Regexp_inter  (** Intersection of regular expressions. *)
     | Regexp_diff  (** Difference of regular expressions. *)
+    | Mod  (** Modulus *)
   [@@deriving ord]
 
   val hash : t -> int

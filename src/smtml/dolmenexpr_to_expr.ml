@@ -221,7 +221,7 @@ module DolmenIntf = struct
 
     let to_bv = DTerm.Bitv.of_int
 
-    let mod_ = DTerm.Int.rem_f
+    let mod_ = DTerm.Int.rem_e
   end
 
   module Real = struct
@@ -339,6 +339,8 @@ module DolmenIntf = struct
     let rem = DTerm.Bitv.srem
 
     let rem_u = DTerm.Bitv.urem
+
+    let smod = DTerm.Bitv.smod
 
     let rotate_left n t = DTerm.Bitv.rotate_left n t
 

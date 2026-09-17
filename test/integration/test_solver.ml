@@ -167,12 +167,29 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     Solver.add solver [ Expr.relop Ty_int Le pow (int 0) ];
     assert_unsat ~f:"exp 10^100 <= 0" (Solver.check solver [])
 
+  let test_int_mod solver_module =
+    let open Typed in
+    let module Solver = (val solver_module : Solver_intf.S) in
+    let solver = Solver.create ~params:(Params.default ()) ~logic:QF_LIA () in
+    let x = const Types.int "mod_x" in
+    let y = const Types.int "mod_y" in
+    let res = Int.mod_ x y in
+    Solver.add solver
+      [ (Bool.eq x (Int.v (Z.of_int (-7))) :> Expr.t)
+      ; (Bool.eq y (Int.v (Z.of_int 3)) :> Expr.t)
+      ; (Bool.eq res (Int.v (Z.of_int 2)) :> Expr.t)
+      ];
+    assert_sat ~f:"test_int_mod" (Solver.check solver []);
+    Solver.add solver [ (Bool.eq res (Int.v (Z.of_int (-1))) :> Expr.t) ];
+    assert_unsat ~f:"test_int_mod_inconsistent" (Solver.check solver [])
+
   let test_lia =
     ( "test_lia"
     , [ Alcotest.test_case "test_lia_0" `Quick (with_solver test_lia_0)
       ; Alcotest.test_case "test_lia_1" `Quick (with_solver test_lia_1)
       ; Alcotest.test_case "test_distinct" `Quick (with_solver test_distinct)
       ; Alcotest.test_case "test_exp_large" `Quick (with_solver test_exp_large)
+      ; Alcotest.test_case "test_int_mod" `Quick (with_solver test_int_mod)
       ] )
 
   let test_lra =
@@ -271,6 +288,22 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     Solver.add solver [ (Bool.eq rotated_right (Bitv8.of_int 0xC7) :> Expr.t) ];
     assert_unsat ~f:"test_bv_ext_rotate_inconsistent" (Solver.check solver [])
 
+  let test_bv_smod solver_module =
+    let open Typed in
+    let module Solver = (val solver_module : Solver_intf.S) in
+    let solver = Solver.create ~params:(Params.default ()) ~logic:QF_BVFP () in
+    let x = const Types.bitv32 "smod_x" in
+    let y = const Types.bitv32 "smod_y" in
+    let res = Bitv32.smod x y in
+    Solver.add solver
+      [ (Bool.eq x (Bitv32.of_int 7) :> Expr.t)
+      ; (Bool.eq y (Bitv32.of_int (-3)) :> Expr.t)
+      ; (Bool.eq res (Bitv32.of_int (-2)) :> Expr.t)
+      ];
+    assert_sat ~f:"test_bv_smod" (Solver.check solver []);
+    Solver.add solver [ (Bool.eq res (Bitv32.of_int 1) :> Expr.t) ];
+    assert_unsat ~f:"test_bv_smod_inconsistent" (Solver.check solver [])
+
   let test_bv =
     ( "test_bv"
     , [ Alcotest.test_case "test_bv_8" `Quick (with_solver test_bv_8)
@@ -278,6 +311,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
       ; Alcotest.test_case "test_arbitrary_bv" `Quick
           (with_solver test_arbitrary_bv)
       ; Alcotest.test_case "test_bv_rotate" `Quick (with_solver test_bv_rotate)
+      ; Alcotest.test_case "test_smod" `Quick (with_solver test_bv_smod)
       ] )
 
   let test_fp_get_value32 solver_module =

@@ -146,6 +146,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | Mul -> M.Int.mul t1 t2
           | Div -> M.Int.div t1 t2
           | Rem -> M.Int.rem t1 t2
+          | Mod -> M.Int.mod_ t1 t2
           | Pow -> M.Int.pow t1 t2
           | op ->
             Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
@@ -404,6 +405,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           | ShrL -> Bitv.lshr t1 t2
           | Rem -> Bitv.rem t1 t2
           | RemU -> Bitv.rem_u t1 t2
+          | Mod -> Bitv.smod t1 t2
           | Ext_rotl -> Bitv.ext_rotate_left t1 t2
           | Ext_rotr -> Bitv.ext_rotate_right t1 t2
           | op ->

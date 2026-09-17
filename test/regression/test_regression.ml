@@ -6,7 +6,11 @@
 
 let () =
   Alcotest.run "regression"
-    [ ( "issue_655"
+    [ ( "issue_649"
+      , [ Alcotest.test_case "test_int_mod" `Quick Test_issue_649.test_int_mod
+        ; Alcotest.test_case "test_i32_mod" `Quick Test_issue_649.test_i32_mod
+        ] )
+    ; ( "issue_655"
       , [ Alcotest.test_case "test_serialization" `Quick
             Test_issue_655.test_serialization
         ] )

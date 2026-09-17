@@ -283,11 +283,11 @@ module DolmenIntf : sig
 
     val lshr : term -> term -> term
 
-    val smod : term -> term -> term
-
     val rem : term -> term -> term
 
     val rem_u : term -> term -> term
+
+    val smod : term -> term -> term
 
     val rotate_left : int -> term -> term
 

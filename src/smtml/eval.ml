@@ -164,6 +164,7 @@ module Int = struct
     | Mul -> Z.mul v1 v2
     | Div -> Z.div v1 v2
     | Rem -> Z.rem v1 v2
+    | Mod -> Z.erem v1 v2
     | Pow -> pow v1 v2
     | Min -> Z.min v1 v2
     | Max -> Z.max v1 v2
@@ -542,6 +543,7 @@ module Bitv = struct
     | DivU -> to_bitv (Bitvector.div_u bv1 bv2)
     | Rem -> to_bitv (Bitvector.rem bv1 bv2)
     | RemU -> to_bitv (Bitvector.rem_u bv1 bv2)
+    | Mod -> to_bitv (Bitvector.smod bv1 bv2)
     | And -> to_bitv (Bitvector.logand bv1 bv2)
     | Or -> to_bitv (Bitvector.logor bv1 bv2)
     | Xor -> to_bitv (Bitvector.logxor bv1 bv2)

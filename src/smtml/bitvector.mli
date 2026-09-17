@@ -75,6 +75,8 @@ val rem : t -> t -> t
 
 val rem_u : t -> t -> t
 
+val smod : t -> t -> t
+
 val rotate_left : t -> t -> t
 
 val rotate_right : t -> t -> t

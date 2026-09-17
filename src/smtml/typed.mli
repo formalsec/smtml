@@ -187,7 +187,7 @@ module Int : sig
   *)
   val rem : t -> t -> t
 
-  (** [mod t1 t2] constructs the modules operator *)
+  (** [mod t1 t2] constructs the modulus operator *)
   val mod_ : t -> t -> t
 
   (** [pow t1 t2] constructs the power of the integer terms [t1] and [t2]. *)
@@ -483,6 +483,9 @@ module Bitv : sig
 
     (** [unsigned_rem t1 t2] computes the unsigned remainder of [t1 / t2]. *)
     val unsigned_rem : t -> t -> t
+
+    (** [smod t1 t2] computes the signed modulus operator. *)
+    val smod : t -> t -> t
 
     (** [rotate_left n t] rotates the bits of [t] to the left by [n]. *)
     val rotate_left : int -> t -> t
