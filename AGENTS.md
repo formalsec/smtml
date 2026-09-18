@@ -40,7 +40,6 @@ Key modules:
   (* Copyright (C) 2023-2026 formalsec *)
   (* Written by the Smtml programmers *)
   ```
-- Module doc comments use `(** ... *)` at the top of the module.
 
 ## Principles
 
