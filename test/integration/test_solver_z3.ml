@@ -25,6 +25,7 @@ let () =
             (Z3_solv.with_solver Z3_solv.test_bv_ext_rotate)
         ] )
     ; Z3_solv.test_fp
+    ; Z3_solv.test_string
     ; Z3_solv.test_regexp
     ; Z3_solv.test_uninterpreted
     ; Z3_bindings.test_adt

@@ -886,6 +886,121 @@ let test_printer_query () =
   let script = Parse.Smtml.Script.from_string serialized |> Result.get_ok in
   Alcotest.(check int) "printer query script length" 4 (List.length script)
 
+let check_return_type msg (expected : Ty.t) (e : Expr.t) =
+  Alcotest.(check (testable Ty.pp Ty.equal)) msg expected (Expr.return_type e)
+
+let test_return_type_distinct_from_ty () =
+  let open Infix in
+  let s = symbol "s" Ty_str in
+  let e = Expr.unop Ty_str Length s in
+  Alcotest.(check (testable Ty.pp Ty.equal))
+    "ty keeps the theory" Ty_str (Expr.ty e);
+  check_return_type "return_type is int" Ty_int e
+
+let test_return_type_string () =
+  let open Infix in
+  let s = symbol "s" Ty_str in
+  let t = symbol "t" Ty_str in
+  check_return_type "str.len" Ty_int (Expr.unop Ty_str Length s);
+  check_return_type "str.to_code" Ty_int (Expr.cvtop Ty_str String_to_code s);
+  check_return_type "str.from_code" Ty_str
+    (Expr.cvtop Ty_str String_from_code (int 1));
+  check_return_type "str.to_int" Ty_int (Expr.cvtop Ty_str String_to_int s);
+  check_return_type "str.from_int" Ty_str
+    (Expr.cvtop Ty_str String_from_int (int 1));
+  check_return_type "str.to_float" Ty_real (Expr.cvtop Ty_str String_to_float s);
+  check_return_type "str.to_re" Ty_regexp (Expr.cvtop Ty_str String_to_re s);
+  check_return_type "str.contains" Ty_bool
+    (Expr.binop Ty_str String_contains s t);
+  check_return_type "str.prefixof" Ty_bool (Expr.binop Ty_str String_prefix s t);
+  check_return_type "str.suffixof" Ty_bool (Expr.binop Ty_str String_suffix s t);
+  check_return_type "str.in_re" Ty_bool
+    (Expr.binop Ty_str String_in_re s (Expr.value Value.Re_all));
+  check_return_type "str.last_indexof" Ty_int
+    (Expr.binop Ty_str String_last_index s t);
+  check_return_type "str.substr" Ty_str
+    (Expr.triop Ty_str String_extract s (int 0) (int 1));
+  check_return_type "str.indexof" Ty_int
+    (Expr.triop Ty_str String_index s t (int 0));
+  check_return_type "str.replace" Ty_str
+    (Expr.triop Ty_str String_replace s t t)
+
+let test_return_type_arithmetic () =
+  let open Infix in
+  let x = symbol "x" Ty_int in
+  let y = symbol "y" Ty_int in
+  check_return_type "int add" Ty_int (Expr.binop Ty_int Add x y);
+  let bx = symbol "bx" (Ty_bitv 8) in
+  let by = symbol "by" (Ty_bitv 8) in
+  check_return_type "bv add" (Ty_bitv 8) (Expr.binop (Ty_bitv 8) Add bx by);
+  check_return_type "extract" (Ty_bitv 16)
+    (Expr.extract (symbol "w" (Ty_bitv 32)) ~high:15 ~low:0);
+  check_return_type "concat" (Ty_bitv 16) (Expr.concat bx by);
+  let fx = symbol "fx" (Ty_fp 32) in
+  let fy = symbol "fy" (Ty_fp 32) in
+  check_return_type "fp add" (Ty_fp 32) (Expr.binop (Ty_fp 32) Add fx fy)
+
+let test_return_type_predicates () =
+  let open Infix in
+  let x = symbol "x" Ty_int in
+  let y = symbol "y" Ty_int in
+  check_return_type "int lt" Ty_bool (Expr.relop Ty_int Lt x y);
+  let bx = symbol "bx" (Ty_bitv 8) in
+  let by = symbol "by" (Ty_bitv 8) in
+  check_return_type "bv eq" Ty_bool (Expr.relop (Ty_bitv 8) Eq bx by)
+
+let test_return_type_cvtops () =
+  let open Infix in
+  let bx = symbol "bx" (Ty_bitv 32) in
+  check_return_type "to_bool" Ty_bool (Expr.cvtop (Ty_bitv 32) ToBool bx);
+  let r = symbol "r" Ty_real in
+  check_return_type "real to_string" Ty_str (Expr.cvtop Ty_real ToString r);
+  let i = symbol "i" Ty_int in
+  check_return_type "reinterpret_int" Ty_real
+    (Expr.cvtop Ty_real Reinterpret_int i);
+  let b8 = symbol "b8" (Ty_bitv 8) in
+  check_return_type "zero_extend" (Ty_bitv 32)
+    (Expr.cvtop (Ty_bitv 32) (Zero_extend 24) b8);
+  check_return_type "sign_extend" (Ty_bitv 32)
+    (Expr.cvtop (Ty_bitv 32) (Sign_extend 24) b8)
+
+let test_return_type_ite_naryop () =
+  let open Infix in
+  let c = symbol "c" Ty_bool in
+  let x = symbol "x" Ty_int in
+  let y = symbol "y" Ty_int in
+  check_return_type "ite of relops" Ty_bool
+    (Expr.triop Ty_bool Ite c (Expr.relop Ty_int Lt x y)
+       (Expr.relop Ty_int Le y x) );
+  let s = symbol "s" Ty_str in
+  let t = symbol "t" Ty_str in
+  check_return_type "str concat" Ty_str (Expr.naryop Ty_str Concat [ s; t ]);
+  let b1 = symbol "b1" Ty_bool in
+  let b2 = symbol "b2" Ty_bool in
+  check_return_type "logand" Ty_bool (Expr.naryop Ty_bool Logand [ b1; b2 ])
+
+let test_return_type_unary () =
+  let open Infix in
+  check_return_type "bool not" Ty_bool
+    (Expr.unop Ty_bool Not (symbol "b" Ty_bool));
+  let bx = symbol "bx" (Ty_bitv 8) in
+  check_return_type "bitv not" (Ty_bitv 8) (Expr.unop (Ty_bitv 8) Not bx);
+  check_return_type "int not" Ty_int (Expr.unop Ty_int Not (symbol "i" Ty_int))
+
+let test_return_type =
+  [ Alcotest.test_case "test_return_type_distinct_from_ty" `Quick
+      test_return_type_distinct_from_ty
+  ; Alcotest.test_case "test_return_type_string" `Quick test_return_type_string
+  ; Alcotest.test_case "test_return_type_arithmetic" `Quick
+      test_return_type_arithmetic
+  ; Alcotest.test_case "test_return_type_predicates" `Quick
+      test_return_type_predicates
+  ; Alcotest.test_case "test_return_type_cvtops" `Quick test_return_type_cvtops
+  ; Alcotest.test_case "test_return_type_ite_naryop" `Quick
+      test_return_type_ite_naryop
+  ; Alcotest.test_case "test_return_type_unary" `Quick test_return_type_unary
+  ]
+
 let () =
   Alcotest.run "Expression unit tests"
     [ ("test_hc", [ Alcotest.test_case "test_hc" `Quick test_hc ])
@@ -904,4 +1019,5 @@ let () =
     ; ("test_printer", [ Alcotest.test_case "test_printer" `Quick test_printer ])
     ; ( "test_printer_query"
       , [ Alcotest.test_case "test_printer_query" `Quick test_printer_query ] )
+    ; ("test_return_type", test_return_type)
     ]
