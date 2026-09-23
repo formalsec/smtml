@@ -281,9 +281,7 @@ module M = struct
 
     module Re = struct
       let allchar () =
-        Z3native.mk_re_allchar (Obj.magic ctx)
-          (Obj.magic (Z3.Seq.mk_re_sort ctx Types.string))
-        |> Obj.magic
+        Z3.Seq.mk_re_allchar ctx (Z3.Seq.mk_re_sort ctx Types.string)
 
       let all () = Z3.Seq.mk_re_full ctx (Z3.Seq.mk_re_sort ctx Types.string)
 

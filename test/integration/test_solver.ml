@@ -429,16 +429,10 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let allchar = String.Re.allchar in
     Solver.add solver [ (String.in_re s allchar :> Expr.t) ];
     assert_sat ~f:"test_re_allchar" (Solver.check solver []);
-    let model = Solver.model solver in
-    let val_s =
-      Option.bind model (fun m ->
-        Model.evaluate m (Symbol.make_const Ty_str "s") )
-    in
+    let value = Solver.get_value solver (String.length s :> Expr.t) in
     Alcotest.(check bool)
       "allchar length 1" true
-      ( match val_s with
-      | Some (Str s) -> Stdlib.String.length s = 1
-      | _ -> false )
+      (match Expr.view value with Val (Int v) -> Z.equal Z.one v | _ -> false)
 
   let test_regexp_diff solver_module =
     let open Typed in
