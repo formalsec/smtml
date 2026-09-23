@@ -53,6 +53,11 @@ module type S = sig
   (** [ty expr] determines the type of an expression. *)
   val ty : t -> Ty.t
 
+  (** [return_type expr] determines the type of the value produced by [expr].
+      Unlike {!val:ty}, this is the actual result type and not the theory used
+      to encode the expression. *)
+  val return_type : t -> Ty.t
+
   (** [is_symbolic expr] checks if an expression is symbolic (i.e., contains
       symbolic variables). *)
   val is_symbolic : t -> bool

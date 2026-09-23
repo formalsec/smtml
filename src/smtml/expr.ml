@@ -167,6 +167,70 @@ let rec ty (hte : t) : Ty.t =
       Fmt.failwith "Invalid concat of (%a) with (%a)" Ty.pp t1 Ty.pp t2 )
   | Binder (_, _, e) -> ty e
 
+let rec return_type (hte : t) : Ty.t =
+  match view hte with
+  | Val v -> Value.type_of v
+  | Ptr _ -> Ty_bitv 32
+  | Symbol s -> Symbol.type_of s
+  | List _ -> Ty_list
+  | App (sym, _) ->
+    begin match sym.ty with Ty_none -> Ty_app | ty -> ty
+    end
+  | Relop _ -> Ty_bool
+  | Unop (ty, op, _) -> (
+    match op with
+    | Is_normal | Is_subnormal | Is_negative | Is_positive | Is_infinite
+    | Is_nan | Is_zero ->
+      Ty_bool
+    | Length -> Ty_int
+    | Regexp_star | Regexp_loop _ | Regexp_plus | Regexp_opt | Regexp_comp ->
+      Ty_regexp
+    | Not | Neg | Clz | Ctz | Popcnt | Abs | Sqrt | Ceil | Floor | Trunc
+    | Nearest | Head | Tail | Reverse | Trim | Rotl _ | Rotr _ ->
+      ty )
+  | Binop (ty, op, _, _) -> (
+    match op with
+    | String_prefix | String_suffix | String_contains | String_in_re -> Ty_bool
+    | String_last_index -> Ty_int
+    | Regexp_range | Regexp_inter | Regexp_diff -> Ty_regexp
+    | Add | Sub | Mul | Div | DivU | Rem | RemU | Shl | ShrA | ShrL | And | Or
+    | Xor | Implies | Pow | Min | Max | Copysign | Ext_rotl | Ext_rotr | At
+    | List_cons | List_append | Mod ->
+      ty )
+  | Triop (_, Ite, _, e1, e2) ->
+    let ty1 = return_type e1 in
+    assert (Ty.equal ty1 (return_type e2));
+    ty1
+  | Triop (ty, op, _, _, _) -> (
+    match op with
+    | String_index -> Ty_int
+    | List_set | String_extract | String_replace | String_replace_all
+    | String_replace_re | String_replace_re_all | Ite ->
+      ty )
+  | Cvtop (_, (Zero_extend m | Sign_extend m), e) -> (
+    match return_type e with Ty_bitv n -> Ty_bitv (n + m) | _ -> assert false )
+  | Cvtop (ty, op, _) -> (
+    match op with
+    | ToBool -> Ty_bool
+    | ToString -> Ty_str
+    | String_to_code | String_to_int -> Ty_int
+    | String_to_re -> Ty_regexp
+    | String_to_float -> Ty_real
+    | OfString | OfBool | Reinterpret_int | Reinterpret_float | DemoteF64
+    | PromoteF32 | ConvertSI32 | ConvertUI32 | ConvertSI64 | ConvertUI64
+    | TruncSF32 | TruncUF32 | TruncSF64 | TruncUF64 | Trunc_sat_f32_s
+    | Trunc_sat_f32_u | Trunc_sat_f64_s | Trunc_sat_f64_u | WrapI64
+    | String_from_code | String_from_int | Sign_extend _ | Zero_extend _ ->
+      ty )
+  | Naryop (ty, _, _) -> ty
+  | Extract (_, h, l) -> Ty_bitv (h - l + 1)
+  | Concat (e1, e2) -> (
+    match (return_type e1, return_type e2) with
+    | Ty_bitv n1, Ty_bitv n2 -> Ty_bitv (n1 + n2)
+    | t1, t2 ->
+      Fmt.failwith "Invalid concat of (%a) with (%a)" Ty.pp t1 Ty.pp t2 )
+  | Binder (_, _, e) -> return_type e
+
 let rec is_symbolic (v : t) : bool =
   match view v with
   | Val _ -> false

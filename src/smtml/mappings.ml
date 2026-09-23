@@ -876,7 +876,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
     let value ({ model = m; ctx } : model) (c : Expr.t) : Value.t =
       let ctx, e = Encoder.encode_expr ctx c in
-      Encoder.value_of_term ~ctx m (Expr.ty c) e
+      Encoder.value_of_term ~ctx m (Expr.return_type c) e
 
     let values_of_model ?symbols ({ model; ctx } as model0) =
       let m = Hashtbl.create 512 in

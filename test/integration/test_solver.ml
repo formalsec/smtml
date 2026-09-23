@@ -400,6 +400,27 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
           (with_solver test_to_ieee_bv)
       ] )
 
+  let test_string_length_model solver_module =
+    let open Typed in
+    let module Solver = (val solver_module : Solver_intf.S) in
+    let solver = Solver.create () in
+    let s = const Types.string "s" in
+    Solver.add solver
+      [ (Bool.eq (String.length s) (Int.v (Z.of_int 3)) :> Expr.t) ];
+    assert_sat ~f:"test_string_length_model" (Solver.check solver []);
+    let value = Solver.get_value solver (String.length s :> Expr.t) in
+    Alcotest.(check bool)
+      "str.len model is an Int value" true
+      ( match Expr.view value with
+      | Val (Int v) -> Z.equal v (Z.of_int 3)
+      | _ -> false )
+
+  let test_string =
+    ( "test_string"
+    , [ Alcotest.test_case "test_string_length_model" `Quick
+          (with_solver test_string_length_model)
+      ] )
+
   let test_regexp_allchar solver_module =
     let open Typed in
     let module Solver = (val solver_module : Solver_intf.S) in
@@ -414,11 +435,10 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
         Model.evaluate m (Symbol.make_const Ty_str "s") )
     in
     Alcotest.(check bool)
-      "allchar length 1"
+      "allchar length 1" true
       ( match val_s with
       | Some (Str s) -> Stdlib.String.length s = 1
       | _ -> false )
-      true
 
   let test_regexp_diff solver_module =
     let open Typed in
