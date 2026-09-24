@@ -314,6 +314,59 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
       ; Alcotest.test_case "test_smod" `Quick (with_solver test_bv_smod)
       ] )
 
+  let test_array_select_store solver_module =
+    let open Infix in
+    let module Solver = (val solver_module : Solver_intf.S) in
+    let solver = Solver.create ~params:(Params.default ()) ~logic:QF_ABV () in
+    let elem_ty = Ty.Ty_bitv 8 in
+    let idx_ty = Ty.Ty_bitv 8 in
+    let arr_ty = Ty.Ty_array (idx_ty, elem_ty) in
+    let a = symbol "a" arr_ty in
+    let i = symbol "i" idx_ty in
+    let v = symbol "v" elem_ty in
+    let store = Expr.triop arr_ty Store a i v in
+    let select = Expr.binop elem_ty Select store i in
+    Solver.add solver [ Expr.relop elem_ty Eq select v ];
+    (* select (store(a, i, v), i) = v *)
+    assert_sat ~f:"test_array_select_store" (Solver.check solver [])
+
+  let test_array_frame_axiom solver_module =
+    let open Infix in
+    let module Solver = (val solver_module : Solver_intf.S) in
+    let solver = Solver.create ~params:(Params.default ()) ~logic:QF_ABV () in
+    let elem_ty = Ty.Ty_bitv 8 in
+    let idx_ty = Ty.Ty_bitv 8 in
+    let arr_ty = Ty.Ty_array (idx_ty, elem_ty) in
+    let a = symbol "a" arr_ty in
+    let store = Expr.triop arr_ty Store a (int8 0) (int8 42) in
+    let select_after = Expr.binop elem_ty Select store (int8 1) in
+    let select_before = Expr.binop elem_ty Select a (int8 1) in
+    (* select (store(a, 0, 42), 1) <> select (a, 1) *)
+    Solver.add solver [ Expr.relop elem_ty Ne select_after select_before ];
+    assert_unsat ~f:"test_array_frame_axiom" (Solver.check solver [])
+
+  let test_array_eq solver_module =
+    let open Infix in
+    let module Solver = (val solver_module : Solver_intf.S) in
+    let solver = Solver.create ~params:(Params.default ()) ~logic:QF_ABV () in
+    let arr_ty = Ty.Ty_array (Ty_bitv 8, Ty_bitv 8) in
+    let a = symbol "a" arr_ty in
+    let i = symbol "i" (Ty_bitv 8) in
+    let select = Expr.binop (Ty_bitv 8) Select a i in
+    let store = Expr.triop arr_ty Store a i select in
+    (* a <> store(a, i, select(a, i)) *)
+    Solver.add solver [ Expr.relop arr_ty Ne store a ];
+    assert_unsat ~f:"test_array_eq" (Solver.check solver [])
+
+  let test_array =
+    ( "test_array"
+    , [ Alcotest.test_case "test_array_select_store" `Quick
+          (with_solver test_array_select_store)
+      ; Alcotest.test_case "test_array_frame_axiom" `Quick
+          (with_solver test_array_frame_axiom)
+      ; Alcotest.test_case "test_array_eq" `Quick (with_solver test_array_eq)
+      ] )
+
   let test_fp_get_value32 solver_module =
     let open Infix in
     let module Solver = (val solver_module : Solver_intf.S) in

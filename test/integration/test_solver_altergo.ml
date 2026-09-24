@@ -17,6 +17,8 @@ let () =
     ; Alt_ergo.test_cached
     ; Alt_ergo.test_lia
     ; Alt_ergo.test_bv
+      (* ; Alt_ergo.test_array *)
+      (* Bug fixed in the development version of Alt-Ergo, not yet released. *)
     ; Alt_ergo.test_extract
     ; Alt_ergo.test_typed_api_consistency
     ]

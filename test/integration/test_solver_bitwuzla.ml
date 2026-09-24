@@ -15,6 +15,7 @@ let () =
     [ ("is_available", [ Alcotest.test_case "is_available" `Quick is_available ])
     ; Bitwuzla.test_params
     ; Bitwuzla.test_bv
+    ; Bitwuzla.test_array
     ; ( "test_bv_ext_rotate"
       , [ Alcotest.test_case "test_bv_ext_rotate" `Quick
             (Bitwuzla.with_solver Bitwuzla.test_bv_ext_rotate)

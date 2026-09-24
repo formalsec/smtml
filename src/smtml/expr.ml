@@ -195,7 +195,7 @@ let rec return_type (hte : t) : Ty.t =
     | Regexp_range | Regexp_inter | Regexp_diff -> Ty_regexp
     | Add | Sub | Mul | Div | DivU | Rem | RemU | Shl | ShrA | ShrL | And | Or
     | Xor | Implies | Pow | Min | Max | Copysign | Ext_rotl | Ext_rotr | At
-    | List_cons | List_append | Mod ->
+    | List_cons | List_append | Mod | Select ->
       ty )
   | Triop (_, Ite, _, e1, e2) ->
     let ty1 = return_type e1 in
@@ -205,7 +205,7 @@ let rec return_type (hte : t) : Ty.t =
     match op with
     | String_index -> Ty_int
     | List_set | String_extract | String_replace | String_replace_all
-    | String_replace_re | String_replace_re_all | Ite ->
+    | String_replace_re | String_replace_re_all | Ite | Store ->
       ty )
   | Cvtop (_, (Zero_extend m | Sign_extend m), e) -> (
     match return_type e with Ty_bitv n -> Ty_bitv (n + m) | _ -> assert false )
