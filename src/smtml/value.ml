@@ -127,7 +127,7 @@ let default_of_type = function
   | Ty_unit -> Unit
   | Ty_none -> Nothing
   | Ty_regexp -> Re_none
-  | (Ty_fp _ | Ty_app | Ty_roundingMode) as ty ->
+  | (Ty_fp _ | Ty_app | Ty_array _ | Ty_roundingMode) as ty ->
     Fmt.failwith "No default value for type %a" Ty.pp ty
 
 let rec pp_with ~printer fmt = function
@@ -183,7 +183,7 @@ let of_string (cast : Ty.t) v =
     | "re.all" -> Ok Re_all
     | "re.allchar" -> Ok Re_allchar
     | _ -> Fmt.error_msg "invalid value %s, expected regular expression" v )
-  | Ty_app | Ty_list | Ty_none | Ty_unit | Ty_roundingMode ->
+  | Ty_app | Ty_array _ | Ty_list | Ty_none | Ty_unit | Ty_roundingMode ->
     Fmt.error_msg "unsupported parsing values of type %a" Ty.pp cast
 
 let rec to_json (v : t) : Yojson.Safe.t =

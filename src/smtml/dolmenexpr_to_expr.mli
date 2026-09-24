@@ -97,6 +97,8 @@ module DolmenIntf : sig
 
     val bitv : int -> ty
 
+    val array : ty -> ty -> ty
+
     val float : int -> int -> ty
 
     val roundingMode : ty
@@ -434,6 +436,12 @@ module DolmenIntf : sig
     val make : string -> ty list -> ty -> func_decl
 
     val apply : func_decl -> term list -> term
+  end
+
+  module Arrays : sig
+    val select : term -> term -> term
+
+    val store : term -> term -> term -> term
   end
 
   module Model : sig

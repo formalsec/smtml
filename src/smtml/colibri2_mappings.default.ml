@@ -154,7 +154,21 @@ module M = struct
         Scheduler.add_assertion s.scheduler (fun d ->
           List.iter (fun e -> new_assertion d e) es )
 
-      let cvalue_to_dvalue (ty : DTy.t) v =
+      let default_dvalue (ty : DTy.t) =
+        match ty with
+        | { ty_descr = TyApp ({ builtin = DBuiltin.Prop; _ }, _); _ } ->
+          DM.Bool.mk false
+        | { ty_descr = TyApp ({ builtin = DBuiltin.Int; _ }, _); _ } ->
+          DM.Int.mk Z.zero
+        | { ty_descr = TyApp ({ builtin = DBuiltin.Real; _ }, _); _ } ->
+          DM.Real.mk Q.zero
+        | { ty_descr = TyApp ({ builtin = DBuiltin.Bitv n; _ }, _); _ } ->
+          DM.Bitv.mk n Z.zero
+        | _ ->
+          Fmt.failwith "%s: no default value for type %a" __FUNCTION__ DTy.print
+            ty
+
+      let rec cvalue_to_dvalue (ty : DTy.t) v =
         match ty with
         | { ty_descr = TyApp ({ builtin = DBuiltin.Prop; _ }, _); _ } -> (
           match C2V.value Colibri2_theories_bool.Boolean.BoolValue.key v with
@@ -176,7 +190,38 @@ module M = struct
           match C2V.value Colibri2_theories_fp.Fp_value.key v with
           | Some f -> DM.Fp.mk f
           | _ -> assert false )
+        | { ty_descr =
+              TyApp ({ builtin = DBuiltin.Array; _ }, [ idx_ty; elem_ty ])
+          ; _
+          } -> (
+          let module Array_value = Colibri2_theories_array.Array_value in
+          let module NSeqValue = Colibri2_theories_nseq.Common.NSeqValue in
+          (* Colibri2 represents array models in different ways, either as
+             arrays or as "unbounded" sequences. *)
+          match C2V.value NSeqValue.key v with
+          | Some { vals; other; _ } ->
+            let default =
+              match other with
+              | Some other -> cvalue_to_dvalue elem_ty other
+              | None -> default_dvalue elem_ty
+            in
+            mk_array idx_ty elem_ty default vals
+          | None -> (
+            let (C2V.Value (kind, av)) = C2V.kind v in
+            match C2V.Kind.Eq.eq_type kind Array_value.ArrayModelVal.key with
+            | Colibri2_stdlib.Std.Poly.Eq ->
+              let default, vals = Array_value.get_values av in
+              mk_array idx_ty elem_ty (cvalue_to_dvalue elem_ty default) vals
+            | Neq -> assert false ) )
         | _ -> assert false
+
+      and mk_array idx_ty elem_ty default vals =
+        C2V.PT.fold
+          (fun i e acc ->
+            DM.Array.store acc
+              (cvalue_to_dvalue idx_ty i)
+              (cvalue_to_dvalue elem_ty e) )
+          vals (DM.Array.const default)
 
       let mk_model syms d : model =
         ConstSet.fold_left

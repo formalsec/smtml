@@ -130,6 +130,10 @@ module type M = sig
     (** [bitv n] represents a bitvector type of width [n]. *)
     val bitv : int -> ty
 
+    (** [array idx elem] represents the type of arrays with the index type [idx]
+        to the element type [elem]. *)
+    val array : ty -> ty -> ty
+
     (** [float e s] represents a floating-point type with exponent width [e] and
         significand width [s]. *)
     val float : int -> int -> ty
@@ -717,6 +721,17 @@ module type M = sig
     (** [apply f args] applies the function declaration [f] to the arguments
         [args]. *)
     val apply : func_decl -> term list -> term
+  end
+
+  (** {2 Array Handling} *)
+
+  module Arrays : sig
+    (** [select a i] retrieves the element of array [a] at index [i]. *)
+    val select : term -> term -> term
+
+    (** [store a i v] returns the array obtained by associating the index [i] to
+        the element [v] in the array [a]. *)
+    val store : term -> term -> term -> term
   end
 
   (** {2 Algebraic Data Type Handling} *)

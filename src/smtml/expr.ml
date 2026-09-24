@@ -493,8 +493,8 @@ let rec relop ty (op : Ty.Relop.t) hte1 hte2 =
   let can_be_shortcuted =
     match ty with
     | Ty.Ty_bool | Ty_bitv _ | Ty_int | Ty_unit -> both_phys_eq
-    | Ty_fp _ | Ty_app | Ty_list | Ty_real | Ty_regexp | Ty_roundingMode
-    | Ty_none | Ty_str ->
+    | Ty_fp _ | Ty_app | Ty_array _ | Ty_list | Ty_real | Ty_regexp
+    | Ty_roundingMode | Ty_none | Ty_str ->
       false
   in
   match (op, view hte1, view hte2) with

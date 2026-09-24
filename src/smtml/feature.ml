@@ -59,6 +59,8 @@ let of_binop (binop : Ty.Binop.t) : Feature_map.feat =
   | At -> At
   | List_cons -> List_cons
   | List_append -> List_append
+  (* Array *)
+  | Select -> Select
   (* String *)
   | String_prefix -> String_prefix
   | String_suffix -> String_suffix
@@ -75,6 +77,8 @@ let of_triop (triop : Ty.Triop.t) : Feature_map.feat =
   match triop with
   | Ite -> Ite
   | List_set -> List_set
+  (* Array *)
+  | Store -> Store
   (* String *)
   | String_extract -> String_extract
   | String_replace -> String_replace
@@ -128,6 +132,7 @@ let of_cvtop (cvtop : Ty.Cvtop.t) : Feature_map.feat =
 let of_ty (ty : Ty.t) : Feature_map.feat =
   match ty with
   | Ty_app -> Ty_app
+  | Ty_array _ -> Ty_array
   | Ty_bitv _ -> Ty_bitv
   | Ty_bool -> Ty_bool
   | Ty_fp _ -> Ty_fp
@@ -241,6 +246,7 @@ let all_feats : Feature_map.feat array =
      ; At
      ; List_cons
      ; List_append
+     ; Select
      ; String_prefix
      ; String_suffix
      ; String_contains
@@ -252,6 +258,7 @@ let all_feats : Feature_map.feat array =
      ; (* Triops *)
        Ite
      ; List_set
+     ; Store
      ; String_extract
      ; String_replace
      ; String_index
@@ -301,6 +308,7 @@ let all_feats : Feature_map.feat array =
      ; Regexp_union
      ; (* Types *)
        Ty_app
+     ; Ty_array
      ; Ty_bitv
      ; Ty_bool
      ; Ty_fp

@@ -73,6 +73,7 @@ type feat =
   | At
   | List_cons
   | List_append
+  | Select
   | String_prefix
   | String_suffix
   | String_contains
@@ -85,6 +86,7 @@ type feat =
   (* Triops *)
   | Ite
   | List_set
+  | Store
   | String_extract
   | String_replace
   | String_index
@@ -135,6 +137,7 @@ type feat =
   | Distinct
   (* Types *)
   | Ty_app
+  | Ty_array
   | Ty_bitv
   | Ty_bool
   | Ty_fp
@@ -261,6 +264,7 @@ let feat_to_string = function
   | At -> "At"
   | List_cons -> "List_cons"
   | List_append -> "List_append"
+  | Select -> "Select"
   | String_prefix -> "String_prefix"
   | String_suffix -> "String_suffix"
   | String_contains -> "String_contains"
@@ -272,6 +276,7 @@ let feat_to_string = function
   | Mod -> "Mod"
   | Ite -> "Ite"
   | List_set -> "List_set"
+  | Store -> "Store"
   | String_extract -> "String_extract"
   | String_replace -> "String_replace"
   | String_index -> "String_index"
@@ -318,6 +323,7 @@ let feat_to_string = function
   | Regexp_union -> "Regexp_union"
   | Distinct -> "Distinct"
   | Ty_app -> "Ty_app"
+  | Ty_array -> "Ty_array"
   | Ty_bitv -> "Ty_bitv"
   | Ty_bool -> "Ty_bool"
   | Ty_fp -> "Ty_fp"
@@ -403,6 +409,7 @@ let feat_of_string = function
   | "At" -> At
   | "List_cons" -> List_cons
   | "List_append" -> List_append
+  | "Select" -> Select
   | "String_prefix" -> String_prefix
   | "String_suffix" -> String_suffix
   | "String_contains" -> String_contains
@@ -414,6 +421,7 @@ let feat_of_string = function
   | "Mod" -> Mod
   | "Ite" -> Ite
   | "List_set" -> List_set
+  | "Store" -> Store
   | "String_extract" -> String_extract
   | "String_replace" -> String_replace
   | "String_index" -> String_index
@@ -460,6 +468,7 @@ let feat_of_string = function
   | "Regexp_union" -> Regexp_union
   | "Distinct" -> Distinct
   | "Ty_app" -> Ty_app
+  | "Ty_array" -> Ty_array
   | "Ty_bitv" -> Ty_bitv
   | "Ty_bool" -> Ty_bool
   | "Ty_fp" -> Ty_fp

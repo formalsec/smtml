@@ -73,6 +73,7 @@ type feat =
   | At
   | List_cons
   | List_append
+  | Select
   | String_prefix
   | String_suffix
   | String_contains
@@ -85,6 +86,7 @@ type feat =
   (* Triops *)
   | Ite
   | List_set
+  | Store
   | String_extract
   | String_replace
   | String_index
@@ -135,6 +137,7 @@ type feat =
   | Distinct
   (* Types *)
   | Ty_app
+  | Ty_array
   | Ty_bitv
   | Ty_bool
   | Ty_fp
