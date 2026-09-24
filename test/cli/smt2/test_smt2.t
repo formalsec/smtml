@@ -48,6 +48,10 @@ Test BitVector parsing:
     (x i3 2)
     (y i5 5))
 
+Test Array parsing:
+  $ smtml run test_array_sort.smt2
+  sat
+
 Test FloatingPoint parsing:
   $ smtml run test_fp.smt2
   sat

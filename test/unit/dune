@@ -1,5 +1,6 @@
 (tests
  (names
+  test_array
   test_bitvector
   test_eval
   test_expr

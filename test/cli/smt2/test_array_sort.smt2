@@ -1,0 +1,5 @@
+(declare-fun a () (Array (_ BitVec 8) (_ BitVec 8)))
+(declare-fun i () (_ BitVec 8))
+(declare-fun v () (_ BitVec 8))
+(assert (= (select (store a i v) i) v))
+(check-sat)
