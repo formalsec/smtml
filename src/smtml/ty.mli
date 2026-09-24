@@ -19,6 +19,7 @@ type _ cast =
 (** The type [t] represents smtml types. *)
 type t =
   | Ty_app  (** Application type. *)
+  | Ty_array of t * t  (** Array type with an index type and an element type. *)
   | Ty_bitv of int  (** Bitvector type with a specified bit width. *)
   | Ty_bool  (** Boolean type. *)
   | Ty_fp of int  (** Floating-point type with a specified bit width. *)
@@ -150,6 +151,7 @@ module Binop : sig
     | At  (** List indexing. *)
     | List_cons  (** List construction. *)
     | List_append  (** List concatenation. *)
+    | Select  (** Array selection. (select (Array I E) I E) *)
     (* String operations *)
     | String_prefix
       (** Check if a string is a prefix. (str.prefixof String String Bool) *)
@@ -208,6 +210,7 @@ module Triop : sig
   type t =
     | Ite  (** If-then-else. *)
     | List_set  (** Set an element in a list. *)
+    | Store  (** Array update. (store (Array I E) I E (Array I E)) *)
     (* String operations *)
     | String_extract  (** Extract a substring. (str.substr String Int Int) *)
     | String_replace
