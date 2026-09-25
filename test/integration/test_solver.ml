@@ -326,9 +326,9 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     let v = symbol "v" elem_ty in
     let store = Expr.triop arr_ty Store a i v in
     let select = Expr.binop elem_ty Select store i in
-    Solver.add solver [ Expr.relop elem_ty Eq select v ];
-    (* select (store(a, i, v), i) = v *)
-    assert_sat ~f:"test_array_select_store" (Solver.check solver [])
+    Solver.add solver [ Expr.relop elem_ty Ne select v ];
+    (* select (store(a, i, v), i) <> v *)
+    assert_unsat ~f:"test_array_select_store" (Solver.check solver [])
 
   let test_array_frame_axiom solver_module =
     let open Infix in
