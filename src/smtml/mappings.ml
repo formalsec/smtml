@@ -934,6 +934,9 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
             | Func _ ->
               (* TODO: support models/values for uninterpreted functions *)
               ()
+            | Sym _ when match sym.ty with Ty_array _ -> true | _ -> false ->
+              (* TODO: support models/values for arrays *)
+              ()
             | Sym term ->
               let v = Encoder.value_of_term ~ctx model sym.ty term in
               Hashtbl.add m sym v )
