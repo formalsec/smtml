@@ -2458,6 +2458,8 @@ module String = struct
 end
 
 module Arrays = struct
+  type ('i, 'e) array
+
   module type Sort = sig
     type s
 
@@ -2465,9 +2467,9 @@ module Arrays = struct
   end
 
   module Make (I : Sort) (E : Sort) = struct
-    type t = Expr.t
+    type t = (I.s, E.s) array expr
 
-    let ty = Ty.Ty_array (I.ty, E.ty)
+    let ty : (I.s, E.s) array ty = Ty.Ty_array (I.ty, E.ty)
 
     let symbol x = Expr.symbol x
 

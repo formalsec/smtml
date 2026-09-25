@@ -39,7 +39,7 @@ let test_typed () =
         let ty = Typed.Types.bool
       end)
   in
-  Alcotest.check ty_testable "ty" arr A.ty
+  Alcotest.check ty_testable "ty" arr (Typed.Types.to_ty A.ty)
 
 let () =
   Alcotest.run "Array unit tests"
