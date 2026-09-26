@@ -111,18 +111,10 @@ module Fresh_cvc5 () = struct
       then String.sub s 1 (String.length s - 2)
       else s
 
-    let to_bitv t bitwidth =
+    let to_bitv t _ =
       assert (Term.is_bv t);
-      let set (s : string) (i : int) (n : char) =
-        let bs = Bytes.of_string s in
-        Bytes.set bs i n;
-        Bytes.to_string bs
-      in
-      let bv =
-        let bv = Term.get_bv t bitwidth in
-        if String.starts_with ~prefix:"#" bv then set bv 0 '0' else bv
-      in
-      Z.of_string bv
+      (* Simply ask cvc5 to provide bit-vector values in decimal base  *)
+      Z.of_string (Term.get_bv t 10)
 
     let to_float _t _ebits _sbits = assert false
 
