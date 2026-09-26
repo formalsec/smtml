@@ -48,6 +48,19 @@ let test_value () =
      value) are dropped *)
   Alcotest.check ty_testable "type_of" arr (Value.type_of v)
 
+let test_eval () =
+  let open Infix in
+  let arr_v = Value.array arr ~default:False [ (Value.Int Z.one, True) ] in
+  (* [select] and [store] on array values are constant folded *)
+  check (Expr.binop Ty_bool Select (Expr.value arr_v) (int 1)) true_;
+  check (Expr.binop Ty_bool Select (Expr.value arr_v) (int 2)) false_;
+  let arr_v' = Expr.triop arr Store (Expr.value arr_v) (int 2) true_ in
+  check arr_v'
+    (Expr.value
+       (Value.array arr ~default:False
+          [ (Value.Int Z.one, True); (Value.Int (Z.of_int 2), True) ] ) );
+  check (Expr.relop arr Eq (Expr.value arr_v) arr_v') false_
+
 let test_typed () =
   let module A =
     Typed.Arrays.Make
@@ -70,6 +83,7 @@ let () =
       , [ Alcotest.test_case "test_ty" `Quick test_ty
         ; Alcotest.test_case "test_expr" `Quick test_expr
         ; Alcotest.test_case "test_value" `Quick test_value
+        ; Alcotest.test_case "test_eval" `Quick test_eval
         ; Alcotest.test_case "test_typed" `Quick test_typed
         ] )
     ]
