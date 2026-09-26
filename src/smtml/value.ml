@@ -15,6 +15,11 @@ type t =
   | Bitv of Bitvector.t
   | List of t list
   | App : [> `Op of string ] * t list -> t
+  | Array of
+      { ty : Ty.t
+      ; default : t
+      ; entries : (t * t) list
+      }
   | Re_none
   | Re_all
   | Re_allchar
@@ -31,6 +36,7 @@ let type_of (v : t) : Ty.t =
   | Bitv bv -> Ty_bitv (Bitvector.numbits bv)
   | List _ -> Ty_list
   | App _ -> Ty_app
+  | Array { ty; _ } -> ty
   | Re_none | Re_all | Re_allchar -> Ty_regexp
   | Nothing -> Ty_none
 
@@ -49,6 +55,7 @@ let discr = function
   | Re_all -> 11
   | Re_allchar -> 12
   | Nothing -> 13
+  | Array _ -> 14
 
 (* Optimized mixer (DJB2 variant). Inlines to simple arithmetic. *)
 let[@inline] combine h v = (h * 33) + v
@@ -71,9 +78,18 @@ let rec hash v =
   | Re_all -> 12
   | Re_allchar -> 13
   | Nothing -> 14
+  | Array { ty; default; entries } ->
+    let h = combine (combine 15 (Ty.hash ty)) (hash default) in
+    List.fold_left
+      (fun acc (i, v) -> combine acc (combine (hash i) (hash v)))
+      h entries
   | App _ -> assert false
 
-let rec compare (a : t) (b : t) : int =
+let rec compare_entry (i1, v1) (i2, v2) =
+  let c = compare i1 i2 in
+  if c <> 0 then c else compare v1 v2
+
+and compare (a : t) (b : t) : int =
   match (a, b) with
   | True, True | False, False | Unit, Unit | Nothing, Nothing -> 0
   | Re_none, Re_none | Re_all, Re_all | Re_allchar, Re_allchar -> 0
@@ -88,8 +104,15 @@ let rec compare (a : t) (b : t) : int =
   | App (`Op op1, vs1), App (`Op op2, vs2) ->
     let c = String.compare op1 op2 in
     if c = 0 then List.compare compare vs1 vs2 else c
+  | ( Array { ty = ty1; default = d1; entries = e1 }
+    , Array { ty = ty2; default = d2; entries = e2 } ) ->
+    let c = Ty.compare ty1 ty2 in
+    if c <> 0 then c
+    else
+      let c = compare d1 d2 in
+      if c <> 0 then c else List.compare compare_entry e1 e2
   | ( ( True | False | Unit | Int _ | Real _ | Str _ | Num _ | Bitv _ | List _
-      | App _ | Re_none | Re_all | Re_allchar | Nothing )
+      | App _ | Array _ | Re_none | Re_all | Re_allchar | Nothing )
     , _ ) ->
     (* TODO: I don't know if this is always semantically correct *)
     Int.compare (discr a) (discr b)
@@ -106,16 +129,36 @@ let rec equal (v1 : t) (v2 : t) : bool =
   | List l1, List l2 -> List.equal equal l1 l2
   | App (`Op op1, vs1), App (`Op op2, vs2) ->
     String.equal op1 op2 && List.equal equal vs1 vs2
+  | ( Array { ty = ty1; default = d1; entries = e1 }
+    , Array { ty = ty2; default = d2; entries = e2 } ) ->
+    Ty.equal ty1 ty2 && equal d1 d2
+    && List.equal (fun (i1, v1) (i2, v2) -> equal i1 i2 && equal v1 v2) e1 e2
   | ( ( True | False | Unit | Int _ | Real _ | Str _ | Num _ | Bitv _ | List _
-      | App _ | Re_none | Re_all | Re_allchar | Nothing )
+      | App _ | Array _ | Re_none | Re_all | Re_allchar | Nothing )
     , _ ) ->
     false
+
+let array ty ~default entries =
+  (* Keep the first binding of each index (since the outer stores appear first,
+     the first binding of an index shadows/replaces the other ones), drop
+     bindings that are equal to the default, and sort the rest by index so that
+     semantically equivalent arrays have the same representation. *)
+  let entries =
+    List.fold_left
+      (fun acc (i, v) ->
+        if List.exists (fun (i', _) -> equal i i') acc then acc
+        else (i, v) :: acc )
+      [] entries
+    |> List.filter (fun (_, v) -> not (equal v default))
+    |> List.sort compare_entry
+  in
+  Array { ty; default; entries }
 
 let map v f = match v with Nothing -> Nothing | _ -> f v
 
 let ( let+ ) = map
 
-let default_of_type = function
+let rec default_of_type = function
   | Ty.Ty_bool -> False
   | Ty_int -> Int Z.zero
   | Ty_real -> Real 0.0
@@ -127,7 +170,8 @@ let default_of_type = function
   | Ty_unit -> Unit
   | Ty_none -> Nothing
   | Ty_regexp -> Re_none
-  | (Ty_fp _ | Ty_app | Ty_array _ | Ty_roundingMode) as ty ->
+  | Ty_array (_, elem) as ty -> array ty ~default:(default_of_type elem) []
+  | (Ty_fp _ | Ty_app | Ty_roundingMode) as ty ->
     Fmt.failwith "No default value for type %a" Ty.pp ty
 
 let rec pp_with ~printer fmt = function
@@ -145,6 +189,13 @@ let rec pp_with ~printer fmt = function
     Fmt.pf fmt "@[<hov 1>%s(%a)@]" op
       (Fmt.list ~sep:Fmt.comma (pp_with ~printer))
       vs
+  | Array { default; entries; _ } ->
+    let pp_entry fmt (i, v) =
+      Fmt.pf fmt "%a -> %a;@ " (pp_with ~printer) i (pp_with ~printer) v
+    in
+    Fmt.pf fmt "@[<hov 1>[%a_ -> %a]@]"
+      (Fmt.list ~sep:Fmt.nop pp_entry)
+      entries (pp_with ~printer) default
   | Re_none -> Fmt.string fmt "re.none"
   | Re_all -> Fmt.string fmt "re.all"
   | Re_allchar -> Fmt.string fmt "re.allchar"
@@ -197,6 +248,13 @@ let rec to_json (v : t) : Yojson.Safe.t =
   | Num n -> Num.to_json n
   | Bitv bv -> Bitvector.to_json bv
   | List l -> `List (List.map to_json l)
+  | Array { default; entries; _ } ->
+    `Assoc
+      [ ("default", to_json default)
+      ; ( "entries"
+        , `List
+            (List.map (fun (i, v) -> `List [ to_json i; to_json v ]) entries) )
+      ]
   | Re_none -> `String "re.none"
   | Re_all -> `String "re.all"
   | Re_allchar -> `String "re.allchar"
@@ -204,7 +262,7 @@ let rec to_json (v : t) : Yojson.Safe.t =
   | App _ -> assert false
 
 module Smtlib = struct
-  let pp fmt = function
+  let rec pp fmt = function
     | True -> Fmt.string fmt "true"
     | False -> Fmt.string fmt "false"
     | Int x -> Z.pp_print fmt x
@@ -215,6 +273,13 @@ module Smtlib = struct
     | Re_none -> Fmt.string fmt "re.none"
     | Re_all -> Fmt.string fmt "re.all"
     | Re_allchar -> Fmt.string fmt "re.allchar"
+    | Array { ty; default; entries } ->
+      let rec pp_stores fmt = function
+        | [] -> Fmt.pf fmt "((as const %a) %a)" Ty.Smtlib.pp ty pp default
+        | (i, v) :: entries ->
+          Fmt.pf fmt "(store %a %a %a)" pp_stores entries pp i pp v
+      in
+      pp_stores fmt entries
     | Unit -> assert false
     | List _ -> assert false
     | App _ -> assert false

@@ -22,6 +22,13 @@ type t =
   | List of t list  (** List of values. *)
   | App : [> `Op of string ] * t list -> t
     (** Application of an operator to a list of values. *)
+  | Array of
+      { ty : Ty.t  (** The array type. *)
+      ; default : t  (** the default value for all indices not in [entries]. *)
+      ; entries : (t * t) list
+          (** unique index/value bindings, sorted by index, with no value equal
+              to [default]*)
+      }  (** Array value (with normalised [entries]). *)
   | Re_none
   | Re_all
   | Re_allchar
@@ -42,6 +49,16 @@ val compare : t -> t -> int
 (** [equal v1 v2] returns [true] if [v1] and [v2] are equal, otherwise [false].
 *)
 val equal : t -> t -> bool
+
+(** {1 Construction} *)
+
+(** [array ty ~default entries] is the array of type [ty], with the (index,
+    value) pairs in [entries], and the default value [default] for all indices
+    not in [entries].
+
+    If an index is bound multiple times in [entries], only its first occurence
+    is kept (as it corresponds to the outermost [store]) *)
+val array : Ty.t -> default:t -> (t * t) list -> t
 
 (** {1 Mapping} *)
 

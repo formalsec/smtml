@@ -125,6 +125,11 @@ module Fresh_cvc5 () = struct
       Z.of_string bv
 
     let to_float _t _ebits _sbits = assert false
+
+    let to_array t =
+      match Term.get_array t with
+      | entries, default -> Some (default, entries)
+      | exception Invalid_argument _ -> None
   end
 
   module Int = struct
