@@ -551,6 +551,38 @@ module Bitv : sig
   module Make (W : Width) : S with type w = W.w
 end
 
+(** SMT Arrays, parameterised by their index and element sorts. *)
+module Arrays : sig
+  (** The type of arrays with index sort ['i] and element sort ['e]. *)
+  type ('i, 'e) array
+
+  (** The index or element sort of an array: a type [s] and its type witness
+      [ty]. *)
+  module type Sort = sig
+    type s
+
+    val ty : s ty
+  end
+
+  (** [Make (I) (E)] provides arrays from index sort [I] to element sort [E]. *)
+  module Make (I : Sort) (E : Sort) : sig
+    (** The type of arrays from index sort [I.s] to element sort [E.s]. *)
+    type t = (I.s, E.s) array expr
+
+    (** [ty] is the array type [Ty_array (I.ty, E.ty)]. *)
+    val ty : (I.s, E.s) array ty
+
+    val symbol : Symbol.t -> t
+
+    (** [select a i] retrieves the element of array [a] at index [i]. *)
+    val select : t -> I.s expr -> E.s expr
+
+    (** [store a i v] returns the array obtained from [a] by mapping index [i]
+        to value [v]. *)
+    val store : t -> I.s expr -> E.s expr -> t
+  end
+end
+
 module Bitv8 : Bitv.S with type w = bitv8
 
 module Bitv16 : Bitv.S with type w = bitv16

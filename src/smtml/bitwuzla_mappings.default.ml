@@ -91,6 +91,8 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
     let bitv bitwidth = mk_bv_sort bitwidth
 
+    let array idx elem = mk_array_sort idx elem
+
     let float ebits sbits = mk_fp_sort ebits sbits
 
     let roundingMode = mk_rm_sort ()
@@ -137,6 +139,15 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
       | 32 -> Int32.float_of_bits (Int64.to_int32 int64_)
       | 64 -> Int64.float_of_bits int64_
       | _ -> assert false
+
+    let rec to_array t =
+      match (Term.kind t, Term.children t) with
+      | Kind.Store, [| a; i; v |] ->
+        Option.map
+          (fun (default, entries) -> (default, (i, v) :: entries))
+          (to_array a)
+      | Kind.Const_array, [| default |] -> Some (default, [])
+      | _ -> None
   end
 
   module Int = struct
@@ -675,6 +686,12 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
   module Smtlib = struct
     let pp ?name:_ ?logic:_ ?status:_ _fmt _ =
       Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
+  end
+
+  module Arrays = struct
+    let select a i = mk_term2 Kind.Select a i
+
+    let store a i v = mk_term3 Kind.Store a i v
   end
 end
 

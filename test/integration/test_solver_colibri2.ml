@@ -16,6 +16,8 @@ let () =
     ; C2.test_params
     ; C2.test_cached
     ; C2.test_bv
+    ; C2.test_array
+    ; C2.test_array_model
     ; C2.test_fp
     ; C2.test_lia
     ; C2.test_extract

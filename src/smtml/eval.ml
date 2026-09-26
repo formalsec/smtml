@@ -106,6 +106,11 @@ let[@inline] to_str x = Value.Str x
 let[@inline] of_list n op v =
   match v with Value.List x -> x | _ -> raise_type_mismatch n op v Ty_list
 
+let[@inline] of_array n op v =
+  match v with
+  | Value.Array { ty; default; entries } -> (ty, default, entries)
+  | _ -> raise_type_mismatch n op v (Ty_array (Ty_none, Ty_none))
+
 let[@inline] of_bitv n op v =
   match v with Value.Bitv x -> x | _ -> raise_type_mismatch n op v (Ty_bitv 0)
 
@@ -505,6 +510,29 @@ module Lst = struct
     match op with
     | Concat -> List (List.concat_map (of_list 0 op') vs)
     | _ -> eval_error (`Unsupported_operator (`Naryop op, Ty_list))
+end
+
+module Arrays = struct
+  let[@inline] select v1 v2 =
+    let _, default, entries = of_array 1 (`Binop Select) v1 in
+    begin match List.find_opt (fun (i, _) -> Value.equal i v2) entries with
+    | Some (_, e) -> e
+    | None -> default
+    end
+
+  let[@inline] store v1 v2 v3 =
+    let ty, default, entries = of_array 1 (`Triop Store) v1 in
+    (* Add the new binding as an outer one so that it shadows the ones that
+       come underneath it *)
+    Value.array ty ~default ((v2, v3) :: entries)
+
+  let[@inline] relop (op : Ty.Relop.t) v1 v2 =
+    (* [Value.array] ensures arrays are normalized *)
+    match op with
+    | Eq -> Value.equal v1 v2
+    | Ne -> not (Value.equal v1 v2)
+    | Lt | LtU | Le | LeU ->
+      eval_error (`Unsupported_operator (`Relop op, Value.type_of v1))
 end
 
 module I64 = struct
@@ -1010,27 +1038,35 @@ let unop ty op v =
   | Ty_bitv _ -> Bitv.unop op v
   | Ty_fp 32 -> F32.unop op v
   | Ty_fp 64 -> F64.unop op v
-  | Ty_fp _ | Ty_app | Ty_unit | Ty_none | Ty_regexp | Ty_roundingMode ->
+  | Ty_fp _ | Ty_app | Ty_array _ | Ty_unit | Ty_none | Ty_regexp
+  | Ty_roundingMode ->
     eval_error (`Unsupported_theory ty)
 
 let binop ty op v1 v2 =
-  match ty with
-  | Ty.Ty_int -> Int.binop op v1 v2
-  | Ty_real -> Real.binop op v1 v2
-  | Ty_bool -> Bool.binop op v1 v2
-  | Ty_str -> Str.binop op v1 v2
-  | Ty_list -> Lst.binop op v1 v2
-  | Ty_bitv _ -> Bitv.binop op v1 v2
-  | Ty_fp 32 -> F32.binop op v1 v2
-  | Ty_fp 64 -> F64.binop op v1 v2
-  | Ty_fp _ | Ty_app | Ty_unit | Ty_none | Ty_regexp | Ty_roundingMode ->
-    eval_error (`Unsupported_theory ty)
+  match op with
+  | Ty.Binop.Select ->
+    (* Select can be any element value, so we can't match on it by type *)
+    Arrays.select v1 v2
+  | _ -> (
+    match ty with
+    | Ty.Ty_int -> Int.binop op v1 v2
+    | Ty_real -> Real.binop op v1 v2
+    | Ty_bool -> Bool.binop op v1 v2
+    | Ty_str -> Str.binop op v1 v2
+    | Ty_list -> Lst.binop op v1 v2
+    | Ty_bitv _ -> Bitv.binop op v1 v2
+    | Ty_fp 32 -> F32.binop op v1 v2
+    | Ty_fp 64 -> F64.binop op v1 v2
+    | Ty_fp _ | Ty_app | Ty_array _ | Ty_unit | Ty_none | Ty_regexp
+    | Ty_roundingMode ->
+      eval_error (`Unsupported_theory ty) )
 
 let triop ty op v1 v2 v3 =
   match ty with
   | Ty.Ty_bool -> Bool.triop op v1 v2 v3
   | Ty_str -> Str.triop op v1 v2 v3
   | Ty_list -> Lst.triop op v1 v2 v3
+  | Ty_array _ -> Arrays.store v1 v2 v3
   | ty -> eval_error (`Unsupported_theory ty)
 
 let relop ty op v1 v2 =
@@ -1042,6 +1078,7 @@ let relop ty op v1 v2 =
   | Ty_bitv _ -> Bitv.relop op v1 v2
   | Ty_fp 32 -> F32.relop op v1 v2
   | Ty_fp 64 -> F64.relop op v1 v2
+  | Ty_array _ -> Arrays.relop op v1 v2
   | ty -> eval_error (`Unsupported_theory ty)
 
 let cvtop ty op v =

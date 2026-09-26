@@ -2457,6 +2457,30 @@ module String = struct
   end
 end
 
+module Arrays = struct
+  type ('i, 'e) array
+
+  module type Sort = sig
+    type s
+
+    val ty : s ty
+  end
+
+  module Make (I : Sort) (E : Sort) = struct
+    type t = (I.s, E.s) array expr
+
+    let ty : (I.s, E.s) array ty = Ty.Ty_array (I.ty, E.ty)
+
+    let symbol x = Expr.symbol x
+
+    let[@inline] select (a : t) (i : I.s expr) : E.s expr =
+      Expr.binop E.ty Select a i
+
+    let[@inline] store (a : t) (i : I.s expr) (v : E.s expr) : t =
+      Expr.triop ty Store a i v
+  end
+end
+
 module Func = struct
   type ('fn, 'r) t =
     | Ret : 'r ty -> ('r expr, 'r) t

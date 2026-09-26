@@ -88,6 +88,8 @@ module M = struct
 
       let bitv n = Z3.BitVector.mk_sort ctx n
 
+      let array idx elem = Z3.Z3Array.mk_sort ctx idx elem
+
       let float eb sb = Z3.FloatingPoint.mk_sort ctx eb sb
 
       let roundingMode = Z3.FloatingPoint.RoundingMode.mk_sort ctx
@@ -96,7 +98,7 @@ module M = struct
 
       let ty term = Z3.Expr.get_sort term
 
-      let to_ety sort =
+      let rec to_ety sort =
         match Z3.Sort.get_sort_kind sort with
         | Z3enums.INT_SORT -> Ty.Ty_int
         | REAL_SORT -> Ty.Ty_real
@@ -107,6 +109,10 @@ module M = struct
           let ebits = Z3.FloatingPoint.get_ebits ctx sort in
           let sbits = Z3.FloatingPoint.get_sbits ctx sort in
           Ty.Ty_fp (ebits + sbits)
+        | ARRAY_SORT ->
+          let idx = to_ety (Z3.Z3Array.get_domain sort) in
+          let elem = to_ety (Z3.Z3Array.get_range sort) in
+          Ty.Ty_array (idx, elem)
         | _ -> assert false
     end
 
@@ -167,6 +173,16 @@ module M = struct
           | 32 -> Int32.float_of_bits @@ Int64.to_int32 fp_bits
           | 64 -> Int64.float_of_bits fp_bits
           | _ -> assert false
+
+      let rec to_array interp =
+        match Z3.Expr.get_args interp with
+        | [ a; i; v ] when Z3.Z3Array.is_store interp ->
+          Option.map
+            (fun (default, entries) -> (default, (i, v) :: entries))
+            (to_array a)
+        | [ default ] when Z3.Z3Array.is_constant_array interp ->
+          Some (default, [])
+        | _ -> None
     end
 
     module Int = struct
@@ -482,6 +498,12 @@ module M = struct
       let make name params ret = Z3.FuncDecl.mk_func_decl_s ctx name params ret
 
       let apply f params = Z3.FuncDecl.apply f params
+    end
+
+    module Arrays = struct
+      let select a i = Z3.Z3Array.mk_select ctx a i
+
+      let store a i v = Z3.Z3Array.mk_store ctx a i v
     end
 
     module Adt = struct

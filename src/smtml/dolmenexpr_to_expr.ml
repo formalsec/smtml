@@ -159,9 +159,11 @@ module DolmenIntf = struct
 
     let regexp = DTy.string_reg_lang
 
+    let array = DTy.array
+
     let ty = DTerm.ty
 
-    let to_ety (ty : DTy.t) : Ty.t =
+    let rec to_ety (ty : DTy.t) : Ty.t =
       match ty with
       | { ty_descr = TyApp ({ builtin = DBuiltin.Int; _ }, _); _ } -> Ty_int
       | { ty_descr = TyApp ({ builtin = DBuiltin.Real; _ }, _); _ } -> Ty_real
@@ -182,6 +184,9 @@ module DolmenIntf = struct
         Ty_fp 32
       | { ty_descr = TyApp ({ builtin = DBuiltin.Float (11, 53); _ }, _); _ } ->
         Ty_fp 64
+      | { ty_descr = TyApp ({ builtin = DBuiltin.Array; _ }, [ idx; elem ]); _ }
+        ->
+        Ty_array (to_ety idx, to_ety elem)
       | _ -> Fmt.failwith {|Unsupported dolmen type "%a"|} DTy.print ty
   end
 
@@ -212,6 +217,12 @@ module DolmenIntf = struct
       match DM.Value.extract ~ops:DM.Fp.ops interp with
       | Some f -> Farith.F.to_float Farith.Mode.NE f
       | _ -> assert false
+
+    let to_array interp =
+      match DM.Value.extract ~ops:DM.Array.ops interp with
+      | Some { base = Const default; map } ->
+        Some (default, DM.Value.Map.bindings map)
+      | Some { base = Abstract _; _ } | None -> None
   end
 
   module Int = struct
@@ -455,6 +466,12 @@ module DolmenIntf = struct
       DTerm.Const.mk (Dolmen_std.Path.global name) (DTy.arrow tyl ty)
 
     let apply f tl = DTerm.apply_cst f [] tl
+  end
+
+  module Arrays = struct
+    let select = DTerm.Array.select
+
+    let store = DTerm.Array.store
   end
 
   module Adt = struct

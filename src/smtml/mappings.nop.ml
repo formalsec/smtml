@@ -77,6 +77,8 @@ module M = struct
 
       let bitv _ = `Ty
 
+      let array _ _ = `Ty
+
       let float _ _ = `Ty
 
       let roundingMode = `Ty
@@ -100,6 +102,8 @@ module M = struct
       let to_bitv _ = assert false
 
       let to_float _ = assert false
+
+      let to_array _ = assert false
     end
 
     module Int = struct
@@ -394,6 +398,12 @@ module M = struct
       let make _ _ _ = `Func_decl
 
       let apply `Func_decl _ = `Term
+    end
+
+    module Arrays = struct
+      let select _ _ = assert false
+
+      let store _ _ _ = assert false
     end
 
     module Adt = struct

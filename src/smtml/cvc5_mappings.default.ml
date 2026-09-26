@@ -85,6 +85,8 @@ module Fresh_cvc5 () = struct
 
     let bitv bitwidth = Sort.mk_bv_sort tm bitwidth
 
+    let array idx elem = Sort.mk_array_sort tm idx elem
+
     let float ebits sbits = Sort.mk_fp_sort tm ebits sbits
 
     let roundingMode = Sort.mk_rm_sort tm
@@ -109,20 +111,17 @@ module Fresh_cvc5 () = struct
       then String.sub s 1 (String.length s - 2)
       else s
 
-    let to_bitv t bitwidth =
+    let to_bitv t _ =
       assert (Term.is_bv t);
-      let set (s : string) (i : int) (n : char) =
-        let bs = Bytes.of_string s in
-        Bytes.set bs i n;
-        Bytes.to_string bs
-      in
-      let bv =
-        let bv = Term.get_bv t bitwidth in
-        if String.starts_with ~prefix:"#" bv then set bv 0 '0' else bv
-      in
-      Z.of_string bv
+      (* Simply ask cvc5 to provide bit-vector values in decimal base  *)
+      Z.of_string (Term.get_bv t 10)
 
     let to_float _t _ebits _sbits = assert false
+
+    let to_array t =
+      match Term.get_array t with
+      | entries, default -> Some (default, entries)
+      | exception Invalid_argument _ -> None
   end
 
   module Int = struct
@@ -642,6 +641,12 @@ module Fresh_cvc5 () = struct
   module Smtlib = struct
     let pp ?name:_ ?logic:_ ?status:_ _fmt _ =
       Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
+  end
+
+  module Arrays = struct
+    let select a i = Term.mk_term tm Kind.Select [| a; i |]
+
+    let store a i v = Term.mk_term tm Kind.Store [| a; i; v |]
   end
 end
 
