@@ -620,7 +620,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Re_none -> M.Re.none ()
         | Re_all -> M.Re.all ()
         | Re_allchar -> M.Re.allchar ()
-        | List _ | App _ | Unit | Nothing ->
+        | List _ | App _ | Array _ | Unit | Nothing ->
           Fmt.failwith "Unsupported encoding of value '%a'" Value.pp value
 
       let unop ty op t =
@@ -851,12 +851,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         in
         (ctx, List.rev exprs)
 
-      let value_of_term ?ctx model ty term =
-        let v =
-          match M.Model.eval ?ctx ~completion:true model term with
-          | Some v -> v
-          | None -> Fmt.failwith "value_of_term: unable to fetch solver value"
-        in
+      let rec value_of_interp ty v =
         match ty with
         | Ty_int -> Value.Int (M.Interp.to_int v)
         | Ty_real -> Value.Real (M.Interp.to_real v)
@@ -877,11 +872,42 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Ty_fp 64 ->
           let float = M.Interp.to_float v 11 53 in
           Value.Num (F64 (Int64.bits_of_float float))
-        | Ty_fp _ | Ty_list | Ty_app | Ty_array _ | Ty_unit | Ty_none
-        | Ty_regexp | Ty_roundingMode ->
+        | Ty_array _ -> (
+          match array_of_interp ty v with
+          | Some v -> v
+          | None ->
+            Fmt.failwith
+              "value_of_term: unsupported model completion for theory '%a'"
+              Ty.pp ty )
+        | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp
+        | Ty_roundingMode ->
           Fmt.failwith
             "value_of_term: unsupported model completion for theory '%a'" Ty.pp
             ty
+
+      (* [None] when the solver can't decompose the array value [v] *)
+      and array_of_interp ty v =
+        match ty with
+        | Ty_array (idx, elem) ->
+          Option.map
+            (fun (default, entries) ->
+              let default = value_of_interp elem default in
+              let entries =
+                List.map
+                  (fun (i, e) -> (value_of_interp idx i, value_of_interp elem e))
+                  entries
+              in
+              Value.array ty ~default entries )
+            (M.Interp.to_array v)
+        | _ -> assert false
+
+      let eval_term ?ctx model term =
+        match M.Model.eval ?ctx ~completion:true model term with
+        | Some v -> v
+        | None -> Fmt.failwith "value_of_term: unable to fetch solver value"
+
+      let value_of_term ?ctx model ty term =
+        value_of_interp ty (eval_term ?ctx model term)
     end
 
     type model =
@@ -934,9 +960,16 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
             | Func _ ->
               (* TODO: support models/values for uninterpreted functions *)
               ()
-            | Sym _ when match sym.ty with Ty_array _ -> true | _ -> false ->
-              (* TODO: support models/values for arrays *)
-              ()
+            | Sym term when match sym.ty with Ty_array _ -> true | _ -> false
+              -> (
+              match
+                Encoder.array_of_interp sym.ty
+                  (Encoder.eval_term ~ctx model term)
+              with
+              | Some v -> Hashtbl.add m sym v
+              | None ->
+                (* TODO: should this be a crash? *)
+                () )
             | Sym term ->
               let v = Encoder.value_of_term ~ctx model sym.ty term in
               Hashtbl.add m sym v )

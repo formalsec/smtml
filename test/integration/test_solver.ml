@@ -367,6 +367,37 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
       ; Alcotest.test_case "test_array_eq" `Quick (with_solver test_array_eq)
       ] )
 
+  let test_array_get_value solver_module =
+    let open Infix in
+    let module Solver = (val solver_module : Solver_intf.S) in
+    let solver = Solver.create ~logic:QF_ABV () in
+    let arr_ty = Ty.Ty_array (Ty_bitv 8, Ty_bitv 8) in
+    let a = symbol "a" arr_ty in
+    (* select(a, i) = 42 *)
+    Solver.add solver
+      [ Expr.relop (Ty_bitv 8) Eq
+          (Expr.binop (Ty_bitv 8) Select a (int8 1))
+          (int8 42)
+      ];
+    assert_sat ~f:"test_array_get_value" (Solver.check solver []);
+    match Expr.view (Solver.get_value solver a) with
+    | Val (Array { default; entries; _ } as arr_v) ->
+      Alcotest.(check bool)
+        "array type" true
+        (Ty.equal (Value.type_of arr_v) arr_ty);
+      let at_1 =
+        Option.value ~default
+          (List.assoc_opt (Value.Bitv (Bitvector.of_int8 1)) entries)
+      in
+      check (Expr.value at_1) (int8 42)
+    | _ -> Alcotest.fail "expected an array value"
+
+  let test_array_model =
+    ( "test_array_model"
+    , [ Alcotest.test_case "test_array_get_value" `Quick
+          (with_solver test_array_get_value)
+      ] )
+
   let test_fp_get_value32 solver_module =
     let open Infix in
     let module Solver = (val solver_module : Solver_intf.S) in

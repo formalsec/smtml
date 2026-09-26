@@ -122,6 +122,8 @@ module DolmenIntf : sig
     val to_bitv : interp -> int -> Z.t
 
     val to_float : interp -> int -> int -> float
+
+    val to_array : interp -> (interp * (interp * interp) list) option
   end
 
   module Int : sig

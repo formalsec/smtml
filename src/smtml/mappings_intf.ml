@@ -172,6 +172,11 @@ module type M = sig
     (** [to_float interp e s] converts an interpretation to a floating-point
         number with exponent width [e] and significand width [s]. *)
     val to_float : interp -> int -> int -> float
+
+    (** [to_array interp] converts an interpretation of an array to its default
+        value and its list of (index, value) bindings. Returns [None] when the
+        solver can't convert the value. *)
+    val to_array : interp -> (interp * (interp * interp) list) option
   end
 
   (** {2 Integer Operations} *)

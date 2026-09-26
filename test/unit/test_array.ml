@@ -7,6 +7,8 @@ open Smtml_test.Test_harness
 
 let ty_testable = Alcotest.testable Ty.pp Ty.equal
 
+let value_testable = Alcotest.testable Value.pp Value.equal
+
 let arr = Ty.Ty_array (Ty_int, Ty_bool)
 
 let test_ty () =
@@ -24,6 +26,27 @@ let test_expr () =
   let select = Expr.binop Ty_bool Select store (int 0) in
   Alcotest.check ty_testable "store" arr (Expr.ty store);
   Alcotest.check ty_testable "select" Ty_bool (Expr.ty select)
+
+let test_value () =
+  let v =
+    Value.array arr ~default:False
+      [ (Value.Int (Z.of_int 2), True)
+      ; (Value.Int (Z.of_int 1), True)
+      ; (Value.Int (Z.of_int 0), False)
+      ; (Value.Int (Z.of_int 1), False)
+      ]
+  in
+  Alcotest.check value_testable "normalised"
+    (Array
+       { ty = arr
+       ; default = False
+       ; entries =
+           [ (Value.Int (Z.of_int 1), True); (Value.Int (Z.of_int 2), True) ]
+       } )
+    v;
+  (* The second binding of index 1 and the binding of 0 to false (the default
+     value) are dropped *)
+  Alcotest.check ty_testable "type_of" arr (Value.type_of v)
 
 let test_typed () =
   let module A =
@@ -46,6 +69,7 @@ let () =
     [ ( "test_array"
       , [ Alcotest.test_case "test_ty" `Quick test_ty
         ; Alcotest.test_case "test_expr" `Quick test_expr
+        ; Alcotest.test_case "test_value" `Quick test_value
         ; Alcotest.test_case "test_typed" `Quick test_typed
         ] )
     ]

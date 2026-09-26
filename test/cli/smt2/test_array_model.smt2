@@ -1,0 +1,5 @@
+(declare-fun a () (Array Int Int))
+(assert (= (select a 1) 42))
+(assert (= (select a 2) 7))
+(check-sat)
+(get-model)

@@ -173,6 +173,16 @@ module M = struct
           | 32 -> Int32.float_of_bits @@ Int64.to_int32 fp_bits
           | 64 -> Int64.float_of_bits fp_bits
           | _ -> assert false
+
+      let rec to_array interp =
+        match Z3.Expr.get_args interp with
+        | [ a; i; v ] when Z3.Z3Array.is_store interp ->
+          Option.map
+            (fun (default, entries) -> (default, (i, v) :: entries))
+            (to_array a)
+        | [ default ] when Z3.Z3Array.is_constant_array interp ->
+          Some (default, [])
+        | _ -> None
     end
 
     module Int = struct

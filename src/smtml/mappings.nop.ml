@@ -102,6 +102,8 @@ module M = struct
       let to_bitv _ = assert false
 
       let to_float _ = assert false
+
+      let to_array _ = assert false
     end
 
     module Int = struct

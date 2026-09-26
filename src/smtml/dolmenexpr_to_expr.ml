@@ -217,6 +217,12 @@ module DolmenIntf = struct
       match DM.Value.extract ~ops:DM.Fp.ops interp with
       | Some f -> Farith.F.to_float Farith.Mode.NE f
       | _ -> assert false
+
+    let to_array interp =
+      match DM.Value.extract ~ops:DM.Array.ops interp with
+      | Some { base = Const default; map } ->
+        Some (default, DM.Value.Map.bindings map)
+      | Some { base = Abstract _; _ } | None -> None
   end
 
   module Int = struct

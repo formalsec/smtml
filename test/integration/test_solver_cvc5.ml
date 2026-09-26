@@ -17,6 +17,7 @@ let () =
     ; Cvc5_solv.test_bv
     ; Cvc5_solv.test_string
     ; Cvc5_solv.test_array
+    ; Cvc5_solv.test_array_model
     ; Cvc5_solv.test_regexp
     ; Cvc5_solv.test_extract
     ; Cvc5_solv.test_typed_api_consistency

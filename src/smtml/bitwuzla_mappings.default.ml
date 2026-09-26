@@ -139,6 +139,15 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
       | 32 -> Int32.float_of_bits (Int64.to_int32 int64_)
       | 64 -> Int64.float_of_bits int64_
       | _ -> assert false
+
+    let rec to_array t =
+      match (Term.kind t, Term.children t) with
+      | Kind.Store, [| a; i; v |] ->
+        Option.map
+          (fun (default, entries) -> (default, (i, v) :: entries))
+          (to_array a)
+      | Kind.Const_array, [| default |] -> Some (default, [])
+      | _ -> None
   end
 
   module Int = struct
