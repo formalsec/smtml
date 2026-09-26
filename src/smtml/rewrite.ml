@@ -112,7 +112,11 @@ let rec rewrite_expr (type_map, expr_map) hte =
     let hte2 = rewrite_expr (type_map, expr_map) hte2 in
     let elem_ty =
       match Expr.ty hte1 with
-      | Ty_array (_, elem) -> elem
+      | Ty_array (index, elem) ->
+        if not (Ty.equal (Expr.ty hte2) index) then
+          Fmt.failwith "select: expected index type %a, got %a" Ty.pp index
+            Ty.pp (Expr.ty hte2)
+        else elem
       | ty -> Fmt.failwith "select: expected array type, got %a" Ty.pp ty
     in
     (* None case is needed because we don't properly parse array types *)
@@ -131,7 +135,14 @@ let rec rewrite_expr (type_map, expr_map) hte =
     let hte3 = rewrite_expr (type_map, expr_map) hte3 in
     let arr_ty =
       match Expr.ty hte1 with
-      | Ty_array _ as arr_ty -> arr_ty
+      | Ty_array (index, elem) as arr_ty ->
+        if not (Ty.equal (Expr.ty hte2) index) then
+          Fmt.failwith "store: expected index type %a, got %a" Ty.pp index Ty.pp
+            (Expr.ty hte2)
+        else if not (Ty.equal (Expr.ty hte3) elem) then
+          Fmt.failwith "store: expected element type %a, got %a" Ty.pp elem
+            Ty.pp (Expr.ty hte3)
+        else arr_ty
       | ty -> Fmt.failwith "store: expected array type, got %a" Ty.pp ty
     in
     (* None case is needed because we don't properly parse array types *)
