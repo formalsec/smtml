@@ -36,7 +36,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let f64_to_i64 = M.Func.make "f64_to_i64" [ f64 ] i64
 
-      let[@inline] get_type ty =
+      let rec get_type ty =
         match ty with
         | Ty_int -> M.Types.int
         | Ty_real -> M.Types.real
@@ -50,6 +50,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Ty_fp 64 -> f64
         | Ty_roundingMode -> M.Types.roundingMode
         | Ty_regexp -> M.Types.regexp
+        | Ty_array (idx, elem) -> M.Types.array (get_type idx) (get_type elem)
         | (Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none) as ty ->
           Fmt.failwith "Trying to use unsupported theory: %a@." Ty.pp ty
 
@@ -582,6 +583,30 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         (*   Z3.FuncDecl.mk_func_decl_s ctx "StringToF64" [ str_sort ] fp64_sort *)
       end)
 
+      module Array_impl = struct
+        let binop op t1 t2 =
+          match op with
+          | Binop.Select -> M.Arrays.select t1 t2
+          | op ->
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Binop.pp op
+
+        let triop op t1 t2 t3 =
+          match op with
+          | Triop.Store -> M.Arrays.store t1 t2 t3
+          | op ->
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Triop.pp op
+
+        let relop op t1 t2 =
+          match op with
+          | Relop.Eq -> M.eq t1 t2
+          | Ne -> M.distinct [ t1; t2 ]
+          | op ->
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Relop.pp op
+      end
+
       let v (value : Value.t) : M.term =
         match value with
         | True -> Bool_impl.true_
@@ -608,23 +633,31 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Ty_bitv bitwidth -> Bitv_impl.unop bitwidth op t
         | Ty_fp 32 -> Float32_impl.unop op t
         | Ty_fp 64 -> Float64_impl.unop op t
-        | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_roundingMode ->
+        | Ty_fp _ | Ty_list | Ty_app | Ty_array _ | Ty_unit | Ty_none
+        | Ty_roundingMode ->
           Fmt.failwith "Unsupported encoding of unary operators for theory '%a'"
             Ty.pp ty
 
       let binop ty op t1 t2 =
-        match ty with
-        | Ty.Ty_int -> Int_impl.binop op t1 t2
-        | Ty_real -> Real_impl.binop op t1 t2
-        | Ty_bool -> Bool_impl.binop op t1 t2
-        | Ty_str -> String_impl.binop op t1 t2
-        | Ty_regexp -> Regexp_impl.binop op t1 t2
-        | Ty_bitv _bitwidth -> Bitv_impl.binop op t1 t2
-        | Ty_fp 32 -> Float32_impl.binop op t1 t2
-        | Ty_fp 64 -> Float64_impl.binop op t1 t2
-        | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_roundingMode ->
-          Fmt.failwith
-            "Unsupported encoding of binary operators for theory '%a'" Ty.pp ty
+        (* [Select]'s type is the array's element type, not the array type
+           itself, so it can't be dispatched on [ty] like every other binop. *)
+        match op with
+        | Binop.Select -> Array_impl.binop op t1 t2
+        | _ -> (
+          match ty with
+          | Ty.Ty_int -> Int_impl.binop op t1 t2
+          | Ty_real -> Real_impl.binop op t1 t2
+          | Ty_bool -> Bool_impl.binop op t1 t2
+          | Ty_str -> String_impl.binop op t1 t2
+          | Ty_regexp -> Regexp_impl.binop op t1 t2
+          | Ty_bitv _bitwidth -> Bitv_impl.binop op t1 t2
+          | Ty_fp 32 -> Float32_impl.binop op t1 t2
+          | Ty_fp 64 -> Float64_impl.binop op t1 t2
+          | Ty_fp _ | Ty_list | Ty_app | Ty_array _ | Ty_unit | Ty_none
+          | Ty_roundingMode ->
+            Fmt.failwith
+              "Unsupported encoding of binary operators for theory '%a'" Ty.pp
+              ty )
 
       let triop ty op t1 t2 t3 =
         match ty with
@@ -633,6 +666,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Ty_bitv _bitwidth -> Bitv_impl.triop op t1 t2 t3
         | Ty_fp 32 -> Float32_impl.triop op t1 t2 t3
         | Ty_fp 64 -> Float64_impl.triop op t1 t2 t3
+        | Ty_array _ -> Array_impl.triop op t1 t2 t3
         | Ty_int | Ty_real | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none
         | Ty_regexp | Ty_roundingMode ->
           Fmt.failwith
@@ -647,6 +681,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Ty_bitv _bitwidth -> Bitv_impl.relop op t1 t2
         | Ty_fp 32 -> Float32_impl.relop op t1 t2
         | Ty_fp 64 -> Float64_impl.relop op t1 t2
+        | Ty_array _ -> Array_impl.relop op t1 t2
         | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp
         | Ty_roundingMode ->
           Fmt.failwith "Unsupported encoding of relop operators for theory '%a'"
@@ -661,8 +696,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Ty_bitv bitwidth -> Bitv_impl.cvtop bitwidth op t
         | Ty_fp 32 -> Float32_impl.cvtop op t
         | Ty_fp 64 -> Float64_impl.cvtop op t
-        | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp
-        | Ty_roundingMode ->
+        | Ty_fp _ | Ty_list | Ty_app | Ty_array _ | Ty_unit | Ty_none
+        | Ty_regexp | Ty_roundingMode ->
           Fmt.failwith
             "Unsupported encoding of convert operators for theory '%a'" Ty.pp ty
 
@@ -842,8 +877,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Ty_fp 64 ->
           let float = M.Interp.to_float v 11 53 in
           Value.Num (F64 (Int64.bits_of_float float))
-        | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp
-        | Ty_roundingMode ->
+        | Ty_fp _ | Ty_list | Ty_app | Ty_array _ | Ty_unit | Ty_none
+        | Ty_regexp | Ty_roundingMode ->
           Fmt.failwith
             "value_of_term: unsupported model completion for theory '%a'" Ty.pp
             ty
@@ -898,6 +933,9 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
             match decl with
             | Func _ ->
               (* TODO: support models/values for uninterpreted functions *)
+              ()
+            | Sym _ when match sym.ty with Ty_array _ -> true | _ -> false ->
+              (* TODO: support models/values for arrays *)
               ()
             | Sym term ->
               let v = Encoder.value_of_term ~ctx model sym.ty term in

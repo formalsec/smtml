@@ -9,6 +9,7 @@ type _ cast =
 
 type t =
   | Ty_app
+  | Ty_array of t * t
   | Ty_bitv of int
   | Ty_bool
   | Ty_fp of int
@@ -34,11 +35,14 @@ let discr = function
   | Ty_roundingMode -> 9
   | Ty_bitv n -> 10 + (2 * n)
   | Ty_fp n -> 11 + (2 * n)
+  (* Cheating by treating Ty_array as a special case in the compare function,
+     its safer but this function should not be called from elsewhere. *)
+  | Ty_array _ -> assert false
 
 (* Optimized mixer (DJB2 variant). Inlines to simple arithmetic. *)
 let[@inline] combine h v = (h * 33) + v
 
-let hash = function
+let rec hash = function
   | Ty_app -> 1
   | Ty_bitv width -> combine 2 width
   | Ty_bool -> 3
@@ -51,8 +55,16 @@ let hash = function
   | Ty_unit -> 10
   | Ty_regexp -> 11
   | Ty_roundingMode -> 12
+  | Ty_array (idx, elem) -> combine (combine 13 (hash idx)) (hash elem)
 
-let compare t1 t2 = compare (discr t1) (discr t2)
+let rec compare t1 t2 =
+  match (t1, t2) with
+  | Ty_array (i1, e1), Ty_array (i2, e2) ->
+    let c = compare i1 i2 in
+    if c <> 0 then c else compare e1 e2
+  | Ty_array _, _ -> 1
+  | _, Ty_array _ -> -1
+  | _, _ -> Int.compare (discr t1) (discr t2)
 
 let equal t1 t2 = compare t1 t2 = 0
 
@@ -61,7 +73,7 @@ type printer =
   | With_type
   | Without_type
 
-let pp fmt = function
+let rec pp fmt = function
   | Ty_int -> Fmt.string fmt "int"
   | Ty_real -> Fmt.string fmt "real"
   | Ty_bool -> Fmt.string fmt "bool"
@@ -70,6 +82,7 @@ let pp fmt = function
   | Ty_fp n -> Fmt.pf fmt "f%d" n
   | Ty_list -> Fmt.string fmt "list"
   | Ty_app -> Fmt.string fmt "app"
+  | Ty_array (idx, elem) -> Fmt.pf fmt "(array %a %a)" pp idx pp elem
   | Ty_unit -> Fmt.string fmt "unit"
   | Ty_none -> Fmt.string fmt "none"
   | Ty_regexp -> Fmt.string fmt "regexp"
@@ -112,8 +125,8 @@ let bitsize (ty : t) : int =
   | Ty_bool -> 1
   | Ty_int -> 32
   | Ty_bitv n | Ty_fp n -> n
-  | Ty_real | Ty_str | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_regexp
-  | Ty_roundingMode ->
+  | Ty_real | Ty_str | Ty_list | Ty_app | Ty_array _ | Ty_unit | Ty_none
+  | Ty_regexp | Ty_roundingMode ->
     assert false
 
 let size ty = bitsize ty / 8
@@ -291,6 +304,8 @@ module Binop = struct
     | At
     | List_cons
     | List_append
+    (* Array *)
+    | Select
     (* String *)
     | String_prefix
     | String_suffix
@@ -328,17 +343,19 @@ module Binop = struct
     | At -> 20
     | List_cons -> 21
     | List_append -> 22
+    (* Array *)
+    | Select -> 23
     (* String *)
-    | String_prefix -> 23
-    | String_suffix -> 24
-    | String_contains -> 25
-    | String_last_index -> 26
-    | String_in_re -> 27
+    | String_prefix -> 24
+    | String_suffix -> 25
+    | String_contains -> 26
+    | String_last_index -> 27
+    | String_in_re -> 28
     (* Regexp *)
-    | Regexp_range -> 28
-    | Regexp_inter -> 29
-    | Regexp_diff -> 30
-    | Mod -> 31
+    | Regexp_range -> 29
+    | Regexp_inter -> 30
+    | Regexp_diff -> 31
+    | Mod -> 32
 
   let equal o1 o2 =
     match (o1, o2) with
@@ -365,6 +382,7 @@ module Binop = struct
     | At, At
     | List_cons, List_cons
     | List_append, List_append
+    | Select, Select
     | String_prefix, String_prefix
     | String_suffix, String_suffix
     | String_contains, String_contains
@@ -377,7 +395,7 @@ module Binop = struct
       true
     | ( ( Add | Sub | Mul | Div | DivU | Rem | RemU | Shl | ShrA | ShrL | And
         | Or | Xor | Implies | Pow | Min | Max | Copysign | Ext_rotr | Ext_rotl
-        | At | List_cons | List_append | String_prefix | String_suffix
+        | At | List_cons | List_append | Select | String_prefix | String_suffix
         | String_contains | String_last_index | String_in_re | Regexp_range
         | Regexp_inter | Regexp_diff | Mod )
       , _ ) ->
@@ -407,6 +425,7 @@ module Binop = struct
     | At -> Fmt.string fmt "at"
     | List_cons -> Fmt.string fmt "cons"
     | List_append -> Fmt.string fmt "append"
+    | Select -> Fmt.string fmt "select"
     | String_prefix -> Fmt.string fmt "prefixof"
     | String_suffix -> Fmt.string fmt "suffixof"
     | String_contains -> Fmt.string fmt "contains"
@@ -454,6 +473,8 @@ module Triop = struct
   type t =
     | Ite
     | List_set
+    (* Array *)
+    | Store
     (* String *)
     | String_extract
     | String_replace
@@ -466,18 +487,21 @@ module Triop = struct
   let hash = function
     | Ite -> 0
     | List_set -> 1
+    (* Array *)
+    | Store -> 2
     (* String *)
-    | String_extract -> 2
-    | String_replace -> 3
-    | String_index -> 4
-    | String_replace_all -> 5
-    | String_replace_re -> 6
-    | String_replace_re_all -> 7
+    | String_extract -> 3
+    | String_replace -> 4
+    | String_index -> 5
+    | String_replace_all -> 6
+    | String_replace_re -> 7
+    | String_replace_re_all -> 8
 
   let equal op1 op2 =
     match (op1, op2) with
     | Ite, Ite
     | List_set, List_set
+    | Store, Store
     | String_extract, String_extract
     | String_replace, String_replace
     | String_index, String_index
@@ -485,13 +509,15 @@ module Triop = struct
     | String_replace_re, String_replace_re
     | String_replace_re_all, String_replace_re_all ->
       true
-    | ( ( Ite | List_set | String_extract | String_replace | String_index
-        | String_replace_all | String_replace_re | String_replace_re_all )
+    | ( ( Ite | List_set | Store | String_extract | String_replace
+        | String_index | String_replace_all | String_replace_re
+        | String_replace_re_all )
       , _ ) ->
       false
 
   let pp fmt = function
     | Ite -> Fmt.string fmt "ite"
+    | Store -> Fmt.string fmt "store"
     | String_extract -> Fmt.string fmt "substr"
     | String_replace -> Fmt.string fmt "replace"
     | String_index -> Fmt.string fmt "indexof"
@@ -675,12 +701,13 @@ module Naryop = struct
 end
 
 module Smtlib = struct
-  let pp fmt = function
+  let rec pp fmt = function
     | Ty_int -> Fmt.string fmt "Int"
     | Ty_real -> Fmt.string fmt "Real"
     | Ty_bool -> Fmt.string fmt "Bool"
     | Ty_str -> Fmt.string fmt "String"
     | Ty_bitv n -> Fmt.pf fmt "(_ BitVec %d)" n
+    | Ty_array (idx, elem) -> Fmt.pf fmt "(Array %a %a)" pp idx pp elem
     | Ty_fp _n -> assert false
     | Ty_list -> assert false
     | Ty_app -> assert false

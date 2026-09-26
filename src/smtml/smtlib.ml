@@ -40,6 +40,10 @@ module Term = struct
       | "Float64" -> Expr.symbol { id with ty = Ty_fp 64 }
       | "RoundingMode" -> Expr.symbol { id with ty = Ty_roundingMode }
       | "RegLan" -> Expr.symbol { id with ty = Ty_regexp }
+      | "Array" ->
+        (* Since we parse the `Array` type application const first before its arguments, we put Ty_none in the meantime before setting the real type when creating the terms.
+        TODO: this can be avoided by using Dolmen's SMT-LIB parser directly. *)
+        Expr.symbol { id with ty = Ty_none }
       | _ ->
         begin match Hashtbl.find_opt custom_sorts name with
         | Some ty -> Expr.symbol { id with ty }
@@ -146,6 +150,19 @@ module Term = struct
 
   let apply ?loc (id : t) (args : t list) : t =
     match Expr.view id with
+    | Symbol ({ namespace = Sort; name = Simple "Array"; _ } as sort_id) ->
+      begin match args with
+      | [ i; e ] ->
+        let ity, ety =
+          match (Expr.view i, Expr.view e) with
+          | Symbol { ty = ity; _ }, Symbol { ty = ety; _ } -> (ity, ety)
+          | _ ->
+            Fmt.failwith "%acould not parse Array sort arguments: %a %a" pp_loc
+              loc Expr.pp i Expr.pp e
+        in
+        Expr.symbol { sort_id with ty = Ty_array (ity, ety) }
+      | _ -> Fmt.failwith "%ainvalid Array sort application" pp_loc loc
+      end
     | Symbol ({ namespace = Term; name = Simple name; _ } as symbol) ->
       begin match (name, args) with
       | "-", [ a ] -> Expr.raw_unop Ty_none Neg a
@@ -164,6 +181,8 @@ module Term = struct
       | "/", [ a; b ] -> Expr.raw_binop Ty_none Div a b
       | "mod", [ a; b ] -> Expr.raw_binop Ty_none Mod a b
       | "ite", [ a; b; c ] -> Expr.triop Ty_bool Ite a b c
+      | "select", [ a; i ] -> Expr.raw_binop Ty_none Select a i
+      | "store", [ a; i; v ] -> Expr.raw_triop Ty_none Store a i v
       | "=", [ a; b ] -> Expr.raw_relop Ty_bool Eq a b
       | "distinct", [ a; b ] -> Expr.raw_relop Ty_bool Ne a b
       | ">", [ a; b ] -> Expr.raw_relop Ty_none Lt b a

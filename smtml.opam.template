@@ -1,4 +1,5 @@
 available: arch != "arm32" & arch != "x86_32"
 pin-depends: [
   ["benchpress.dev" "git+https://github.com/sneeuwballen/benchpress.git#7f44cdd9f0511afcce2c9ad3c04cc9b72919bcff"]
+  ["cvc5.dev" "git+https://github.com/formalsec/ocaml-cvc5.git#cdb07ddb6fd30fc12e86efe5f599dac97436748d"]
 ]

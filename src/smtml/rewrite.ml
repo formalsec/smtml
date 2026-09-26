@@ -107,11 +107,37 @@ let rec rewrite_expr (type_map, expr_map) hte =
     let hte = rewrite_expr (type_map, expr_map) hte in
     let ty = rewrite_ty ty [ Expr.ty hte ] in
     Expr.unop ty op hte
+  | Binop (ty, Select, hte1, hte2) ->
+    let hte1 = rewrite_expr (type_map, expr_map) hte1 in
+    let hte2 = rewrite_expr (type_map, expr_map) hte2 in
+    let elem_ty =
+      match Expr.ty hte1 with
+      | Ty_array (_, elem) -> elem
+      | ty -> Fmt.failwith "select: expected array type, got %a" Ty.pp ty
+    in
+    (* None case is needed because we don't properly parse array types *)
+    if not (Ty.equal ty elem_ty || Ty.equal ty Ty_none) then
+      Fmt.failwith "select: expected element type %a, got %a" Ty.pp elem_ty
+        Ty.pp ty;
+    Expr.binop elem_ty Select hte1 hte2
   | Binop (ty, op, hte1, hte2) ->
     let hte1 = rewrite_expr (type_map, expr_map) hte1 in
     let hte2 = rewrite_expr (type_map, expr_map) hte2 in
     let ty = rewrite_ty ty [ Expr.ty hte1; Expr.ty hte2 ] in
     Expr.binop ty op hte1 hte2
+  | Triop (ty, Store, hte1, hte2, hte3) ->
+    let hte1 = rewrite_expr (type_map, expr_map) hte1 in
+    let hte2 = rewrite_expr (type_map, expr_map) hte2 in
+    let hte3 = rewrite_expr (type_map, expr_map) hte3 in
+    let arr_ty =
+      match Expr.ty hte1 with
+      | Ty_array _ as arr_ty -> arr_ty
+      | ty -> Fmt.failwith "store: expected array type, got %a" Ty.pp ty
+    in
+    (* None case is needed because we don't properly parse array types *)
+    if not (Ty.equal ty arr_ty || Ty.equal ty Ty_none) then
+      Fmt.failwith "store: expected array type %a, got %a" Ty.pp arr_ty Ty.pp ty;
+    Expr.triop arr_ty Store hte1 hte2 hte3
   | Triop (ty, op, hte1, hte2, hte3) ->
     let hte1 = rewrite_expr (type_map, expr_map) hte1 in
     let hte2 = rewrite_expr (type_map, expr_map) hte2 in

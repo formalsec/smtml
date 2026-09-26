@@ -85,6 +85,8 @@ module Fresh_cvc5 () = struct
 
     let bitv bitwidth = Sort.mk_bv_sort tm bitwidth
 
+    let array idx elem = Sort.mk_array_sort tm idx elem
+
     let float ebits sbits = Sort.mk_fp_sort tm ebits sbits
 
     let roundingMode = Sort.mk_rm_sort tm
@@ -642,6 +644,12 @@ module Fresh_cvc5 () = struct
   module Smtlib = struct
     let pp ?name:_ ?logic:_ ?status:_ _fmt _ =
       Fmt.failwith "%s:%d: %s not implemented" __MODULE__ __LINE__ __FUNCTION__
+  end
+
+  module Arrays = struct
+    let select a i = Term.mk_term tm Kind.Select [| a; i |]
+
+    let store a i v = Term.mk_term tm Kind.Store [| a; i; v |]
   end
 end
 

@@ -1010,7 +1010,8 @@ let unop ty op v =
   | Ty_bitv _ -> Bitv.unop op v
   | Ty_fp 32 -> F32.unop op v
   | Ty_fp 64 -> F64.unop op v
-  | Ty_fp _ | Ty_app | Ty_unit | Ty_none | Ty_regexp | Ty_roundingMode ->
+  | Ty_fp _ | Ty_app | Ty_array _ | Ty_unit | Ty_none | Ty_regexp
+  | Ty_roundingMode ->
     eval_error (`Unsupported_theory ty)
 
 let binop ty op v1 v2 =
@@ -1023,7 +1024,8 @@ let binop ty op v1 v2 =
   | Ty_bitv _ -> Bitv.binop op v1 v2
   | Ty_fp 32 -> F32.binop op v1 v2
   | Ty_fp 64 -> F64.binop op v1 v2
-  | Ty_fp _ | Ty_app | Ty_unit | Ty_none | Ty_regexp | Ty_roundingMode ->
+  | Ty_fp _ | Ty_app | Ty_array _ | Ty_unit | Ty_none | Ty_regexp
+  | Ty_roundingMode ->
     eval_error (`Unsupported_theory ty)
 
 let triop ty op v1 v2 v3 =
