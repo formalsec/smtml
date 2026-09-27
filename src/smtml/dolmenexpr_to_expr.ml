@@ -472,6 +472,11 @@ module DolmenIntf = struct
     let select = DTerm.Array.select
 
     let store = DTerm.Array.store
+
+    (* Currently not supported in Alt-Ergo and Colibri2, but it will be soon
+       (at least in Colibri2) *)
+    let const _ _ =
+      Fmt.failwith "%s: constant arrays are not supported" __MODULE__
   end
 
   module Adt = struct

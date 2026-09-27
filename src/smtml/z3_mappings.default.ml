@@ -504,6 +504,8 @@ module M = struct
       let select a i = Z3.Z3Array.mk_select ctx a i
 
       let store a i v = Z3.Z3Array.mk_store ctx a i v
+
+      let const idx v = Z3.Z3Array.mk_const_array ctx idx v
     end
 
     module Adt = struct

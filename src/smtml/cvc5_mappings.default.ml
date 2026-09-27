@@ -647,6 +647,11 @@ module Fresh_cvc5 () = struct
     let select a i = Term.mk_term tm Kind.Select [| a; i |]
 
     let store a i v = Term.mk_term tm Kind.Store [| a; i; v |]
+
+    (* TODO: Technically cvc5 can support them with a special cmdline option.
+       but it needs to be added to ocaml-cvc5 first. *)
+    let const _ _ =
+      Fmt.failwith "%s: constant arrays are not supported" __MODULE__
   end
 end
 

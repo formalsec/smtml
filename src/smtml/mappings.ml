@@ -607,7 +607,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
               __FUNCTION__ Relop.pp op
       end
 
-      let v (value : Value.t) : M.term =
+      let rec v (value : Value.t) : M.term =
         match value with
         | True -> Bool_impl.true_
         | False -> Bool_impl.false_
@@ -620,6 +620,12 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Re_none -> M.Re.none ()
         | Re_all -> M.Re.all ()
         | Re_allchar -> M.Re.allchar ()
+        | Array { ty = Ty_array (idx, _); default; entries } ->
+          (* [entries] bind distinct indices, so the stores commute *)
+          List.fold_left
+            (fun a (i, e) -> M.Arrays.store a (v i) (v e))
+            (M.Arrays.const (get_type idx) (v default))
+            entries
         | List _ | App _ | Array _ | Unit | Nothing ->
           Fmt.failwith "Unsupported encoding of value '%a'" Value.pp value
 
@@ -860,6 +866,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           let str = M.Interp.to_string v in
           Value.Str str
         | Ty_bitv 1 ->
+          (* TODO: this is problematic, bv[1] read as a boolean: different
+             types. *)
           let b = M.Interp.to_bitv v 1 in
           if Z.equal b Z.one then Value.True
           else (
@@ -891,15 +899,23 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Ty_array (idx, elem) ->
           Option.map
             (fun (default, entries) ->
-              let default = value_of_interp elem default in
+              let default = arr_entry_of_interp elem default in
               let entries =
                 List.map
-                  (fun (i, e) -> (value_of_interp idx i, value_of_interp elem e))
+                  (fun (i, e) ->
+                    (arr_entry_of_interp idx i, arr_entry_of_interp elem e) )
                   entries
               in
               Value.array ty ~default entries )
             (M.Interp.to_array v)
         | _ -> assert false
+
+      (* one-bit components are kept as bit-vectors so that they match the
+         array's type. *)
+      and arr_entry_of_interp ty v =
+        match ty with
+        | Ty_bitv 1 -> Value.Bitv (Bitvector.make (M.Interp.to_bitv v 1) 1)
+        | _ -> value_of_interp ty v
 
       let eval_term ?ctx model term =
         match M.Model.eval ?ctx ~completion:true model term with
