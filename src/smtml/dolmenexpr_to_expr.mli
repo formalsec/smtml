@@ -123,6 +123,9 @@ module DolmenIntf : sig
 
     val to_float : interp -> int -> int -> float
 
+    (** [to_array interp] converts an interpretation of an array to its default
+        value and its list of (index, value) bindings, or [None] if it can't be
+        converted. *)
     val to_array : interp -> (interp * (interp * interp) list) option
   end
 
@@ -445,6 +448,8 @@ module DolmenIntf : sig
 
     val store : term -> term -> term -> term
 
+    (** [const index_ty v] is always [None], since constant arrays aren't
+        supported by Colibri2 and Alt-Ergo yet. *)
     val const : ty -> term -> term option
   end
 

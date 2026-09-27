@@ -52,7 +52,10 @@ val equal : t -> t -> bool
 
 (** [semantic_equal v1 v2] while [equal] is structural equality, for arrays we
     need a special semantic equality because structurally unequal arrays can be
-    semantically equal. *)
+    semantically equal. (i.e. two array values can have different structures but
+    have the same values at every index, e.g. arrays with different default
+    values where one has no stores, and the other has stores that cover all
+    indices with the default value of the first) *)
 val semantic_equal : t -> t -> bool
 
 (** [array_select ~default entries i] is the value bound to the index [i] in
@@ -66,7 +69,10 @@ val array_select : default:t -> (t * t) list -> t -> t
     not in [entries].
 
     If an index is bound multiple times in [entries], only its first occurence
-    is kept (as it corresponds to the outermost [store]) *)
+    is kept (as it corresponds to the outermost [store]).
+
+    Fails if the index type of [ty] is an array type, since arrays indexed by
+    arrays aren't supported. *)
 val array : Ty.t -> default:t -> (t * t) list -> t
 
 (** {1 Mapping} *)

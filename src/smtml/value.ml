@@ -138,6 +138,21 @@ let rec equal (v1 : t) (v2 : t) : bool =
     , _ ) ->
     false
 
+let dedup_indices entries =
+  List.stable_sort (fun (i1, _) (i2, _) -> compare i1 i2) entries
+  |> List.fold_left
+       (fun acc ((i, _) as binding) ->
+         match acc with
+         | (i', _) :: _ when compare i i' = 0 -> acc
+         | _ -> binding :: acc )
+       []
+  |> List.rev
+
+let array_select ~default entries i =
+  match List.find_opt (fun (i', _) -> equal i i') entries with
+  | Some (_, e) -> e
+  | None -> default
+
 (* The idea is to consider [Value.equal] as a structural value equality, in
    practice, its the same as semantic equality for all other values since they
    have unique normal forms, but for arrays with finite index types, you can
@@ -146,41 +161,42 @@ let rec equal (v1 : t) (v2 : t) : bool =
    function that does not simply check that array are structually equal. *)
 let rec semantic_equal v1 v2 =
   match (v1, v2) with
-  | ( Array { ty = Ty_array (idx, _); default = d1; entries = e1 }
-    , Array { default = d2; entries = e2; _ } ) ->
-    (* Indices can be arrays, so they're deduplicated semantically too *)
-    let indices = dedup_indices (e1 @ e2) |> List.map fst in
-    let equal_at_indices =
-      List.for_all
-        (fun i ->
-          semantic_equal
-            (array_select ~default:d1 e1 i)
-            (array_select ~default:d2 e2 i) )
-        indices
-    in
-    equal_at_indices
-    && ( semantic_equal d1 d2
-       ||
-       match Ty.cardinality idx with
-       | Some n -> Z.equal n (Z.of_int (List.length indices))
-       | None -> false )
+  | ( Array { ty = Ty_array (ind_ty, _) as ty1; default = d1; entries = e1 }
+    , Array { ty = ty2; default = d2; entries = e2 } ) -> (
+    Ty.equal ty1 ty2
+    &&
+    if semantic_equal d1 d2 then
+      (* Entries are sorted, bind distinct indices, and don't bind the
+         default, so they must be the same *)
+      List.equal
+        (fun (i1, v1) (i2, v2) -> equal i1 i2 && semantic_equal v1 v2)
+        e1 e2
+    else
+      (* With different defaults, every index must be bound in one of the
+         arrays *)
+      match Ty.cardinality ind_ty with
+      | Some n when Z.leq n (Z.of_int (List.length e1 + List.length e2)) ->
+        equal_on_all_indices n d1 d2 e1 e2
+      | _ -> false )
   | _ -> equal v1 v2
 
-and array_select ~default entries i =
-  match List.find_opt (fun (i', _) -> semantic_equal i i') entries with
-  | Some (_, e) -> e
-  | None -> default
-
-(* Keeps the first binding of each index *)
-and dedup_indices entries =
-  List.fold_left
-    (fun acc (i, v) ->
-      if List.exists (fun (i', _) -> semantic_equal i i') acc then acc
-      else (i, v) :: acc )
-    [] entries
-  |> List.rev
+(* [n] is the cardinality of the index type, and [d1] and [d2] are different *)
+and equal_on_all_indices n d1 d2 e1 e2 =
+  let indices = dedup_indices (e1 @ e2) |> List.map fst in
+  Z.equal n (Z.of_int (List.length indices))
+  && List.for_all
+       (fun i ->
+         semantic_equal
+           (array_select ~default:d1 e1 i)
+           (array_select ~default:d2 e2 i) )
+       indices
 
 let array ty ~default entries =
+  begin match ty with
+  | Ty_array (Ty_array _, _) ->
+    Fmt.failwith "Value.array: arrays indexed by arrays are not supported"
+  | _ -> ()
+  end;
   (* Keep the first binding of each index (since the outer stores appear first,
      the first binding of an index shadows/replaces the other ones), drop
      bindings that are equal to the default, and sort the rest by index. *)
