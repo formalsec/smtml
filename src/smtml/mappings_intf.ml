@@ -737,6 +737,10 @@ module type M = sig
     (** [store a i v] returns the array obtained by associating the index [i] to
         the element [v] in the array [a]. *)
     val store : term -> term -> term -> term
+
+    (** [const index_ty v] is the constant array with index type [index_ty] that
+        maps every index to [v]. *)
+    val const : ty -> term -> term
   end
 
   (** {2 Algebraic Data Type Handling} *)

@@ -404,6 +404,8 @@ module M = struct
       let select _ _ = assert false
 
       let store _ _ _ = assert false
+
+      let const _ _ = assert false
     end
 
     module Adt = struct

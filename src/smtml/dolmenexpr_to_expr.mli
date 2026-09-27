@@ -444,6 +444,8 @@ module DolmenIntf : sig
     val select : term -> term -> term
 
     val store : term -> term -> term -> term
+
+    val const : ty -> term -> term
   end
 
   module Model : sig

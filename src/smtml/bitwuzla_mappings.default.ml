@@ -692,6 +692,8 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
     let select a i = mk_term2 Kind.Select a i
 
     let store a i v = mk_term3 Kind.Store a i v
+
+    let const idx v = mk_const_array (mk_array_sort idx (Term.sort v)) v
   end
 end
 
