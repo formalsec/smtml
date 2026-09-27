@@ -111,40 +111,6 @@ let[@inline] of_array n op v =
   | Value.Array { ty; default; entries } -> (ty, default, entries)
   | _ -> raise_type_mismatch n op v (Ty_array (Ty_none, Ty_none))
 
-let array_select ~default entries i =
-  match List.find_opt (fun (i', _) -> Value.equal i i') entries with
-  | Some (_, e) -> e
-  | None -> default
-
-(* The idea is to consider [Value.equal] as a structural value equality, in
-   practice, its the same as semantic equality for all other values since they
-   have unique normal forms, but for arrays with finite index types, you can
-   fully rewrite an array's indices so that its equal to another array with a
-   different default value, which is why we need a special semantic equality
-   function that does not simply check that array are structually equal. *)
-let rec semantic_equality v1 v2 =
-  match (v1, v2) with
-  | ( Value.Array { ty = Ty_array (idx, _); default = d1; entries = e1 }
-    , Value.Array { default = d2; entries = e2; _ } ) ->
-    let indices =
-      List.sort_uniq Value.compare (List.map fst e1 @ List.map fst e2)
-    in
-    let equal_at_indices =
-      List.for_all
-        (fun i ->
-          semantic_equality
-            (array_select ~default:d1 e1 i)
-            (array_select ~default:d2 e2 i) )
-        indices
-    in
-    equal_at_indices
-    && ( semantic_equality d1 d2
-       ||
-       match Ty.cardinality idx with
-       | Some n -> Z.equal n (Z.of_int (List.length indices))
-       | None -> false )
-  | _ -> Value.equal v1 v2
-
 let[@inline] of_bitv n op v =
   match v with Value.Bitv x -> x | _ -> raise_type_mismatch n op v (Ty_bitv 0)
 
@@ -332,8 +298,8 @@ module Bool = struct
 
   let[@inline] relop (op : Ty.Relop.t) v1 v2 =
     match op with
-    | Eq -> semantic_equality v1 v2
-    | Ne -> not (semantic_equality v1 v2)
+    | Eq -> Value.semantic_equal v1 v2
+    | Ne -> not (Value.semantic_equal v1 v2)
     | _ -> eval_error (`Unsupported_operator (`Relop op, Ty_bool))
 
   let[@inline] naryop (op : Ty.Naryop.t) vs =
@@ -363,7 +329,7 @@ module Bool = struct
     | Distinct ->
       let rec loop = function
         | [] -> true
-        | v :: vs -> (not (List.exists (Value.equal v) vs)) && loop vs
+        | v :: vs -> (not (List.exists (Value.semantic_equal v) vs)) && loop vs
       in
       to_bool (loop vs)
     | _ -> eval_error (`Unsupported_operator (`Naryop op, Ty_bool))
@@ -549,7 +515,7 @@ end
 module Arrays = struct
   let[@inline] select v1 v2 =
     let _, default, entries = of_array 1 (`Binop Select) v1 in
-    array_select ~default entries v2
+    Value.array_select ~default entries v2
 
   let[@inline] store v1 v2 v3 =
     let ty, default, entries = of_array 1 (`Triop Store) v1 in
@@ -559,8 +525,8 @@ module Arrays = struct
 
   let[@inline] relop (op : Ty.Relop.t) v1 v2 =
     match op with
-    | Eq -> semantic_equality v1 v2
-    | Ne -> not (semantic_equality v1 v2)
+    | Eq -> Value.semantic_equal v1 v2
+    | Ne -> not (Value.semantic_equal v1 v2)
     | Lt | LtU | Le | LeU ->
       eval_error (`Unsupported_operator (`Relop op, Value.type_of v1))
 end

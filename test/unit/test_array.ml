@@ -92,6 +92,16 @@ let test_eval_eq_finite_index () =
        (Value.array arr ~default:False []) )
     false_
 
+let test_cardinality () =
+  let card = Alcotest.(option (testable Z.pp_print Z.equal)) in
+  Alcotest.check card "bool" (Some (Z.of_int 2)) (Ty.cardinality Ty_bool);
+  Alcotest.check card "int" None (Ty.cardinality Ty_int);
+  Alcotest.check card "bv16"
+    (Some (Z.shift_left Z.one 16))
+    (Ty.cardinality (Ty_bitv 16));
+  Alcotest.check card "bv17 is treated as infinite" None
+    (Ty.cardinality (Ty_bitv 17))
+
 let test_typed () =
   let module A =
     Typed.Arrays.Make
@@ -117,6 +127,7 @@ let () =
         ; Alcotest.test_case "test_eval" `Quick test_eval
         ; Alcotest.test_case "test_eval_eq_finite_index" `Quick
             test_eval_eq_finite_index
+        ; Alcotest.test_case "test_cardinality" `Quick test_cardinality
         ; Alcotest.test_case "test_typed" `Quick test_typed
         ] )
     ]
