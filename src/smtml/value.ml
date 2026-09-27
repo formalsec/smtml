@@ -182,14 +182,20 @@ let rec semantic_equal v1 v2 =
 
 (* [n] is the cardinality of the index type, and [d1] and [d2] are different *)
 and equal_on_all_indices n d1 d2 e1 e2 =
-  let indices = dedup_indices (e1 @ e2) |> List.map fst in
-  Z.equal n (Z.of_int (List.length indices))
-  && List.for_all
-       (fun i ->
-         semantic_equal
-           (array_select ~default:d1 e1 i)
-           (array_select ~default:d2 e2 i) )
-       indices
+  (* Entries are sorted, so we just check them one by one, if an entry is
+     missing on one side, compare the other with the default value *)
+  let rec eq count e1 e2 =
+    match (e1, e2) with
+    | [], [] -> Z.equal n (Z.of_int count)
+    | (_, v1) :: e1', [] -> aux v1 d2 e1' [] count
+    | [], (_, v2) :: e2' -> aux d1 v2 [] e2' count
+    | (i1, v1) :: e1', (i2, v2) :: e2' ->
+      let c = compare i1 i2 in
+      if c = 0 then aux v1 v2 e1' e2' count
+      else if c < 0 then aux v1 d2 e1' e2 count
+      else aux d1 v2 e1 e2' count
+  and aux v1 v2 e1 e2 count = semantic_equal v1 v2 && eq (count + 1) e1 e2 in
+  eq 0 e1 e2
 
 let array ty ~default entries =
   begin match ty with
