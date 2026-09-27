@@ -739,8 +739,9 @@ module type M = sig
     val store : term -> term -> term -> term
 
     (** [const index_ty v] is the constant array with index type [index_ty] that
-        maps every index to [v]. *)
-    val const : ty -> term -> term
+        maps every index to [v], or [None] if the solver can't build constant
+        arrays. *)
+    val const : ty -> term -> term option
   end
 
   (** {2 Algebraic Data Type Handling} *)

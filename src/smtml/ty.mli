@@ -74,9 +74,9 @@ val size : t -> int
 val bitsize : t -> int
 
 (** [cardinality t] is the number of inhabitants of the type [t], used for array
-    index types.
-    Returns Some n] if [t] has [n] inhabitants, or [None] if [t] is infinite.
-      Bit-vectors wider than 16 bits and arrays are treated as infinite. *)
+    index types. Returns [Some n] if [t] has [n] inhabitants, or [None] if [t]
+    is infinite. Bit-vectors wider than 16 bits, and arrays whose index or
+    element type has more than [2 ^ 16] inhabitants, are treated as infinite. *)
 val cardinality : t -> Z.t option
 
 (** {1 Unary Operations} *)

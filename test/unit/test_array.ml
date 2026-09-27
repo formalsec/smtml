@@ -100,7 +100,33 @@ let test_cardinality () =
     (Some (Z.shift_left Z.one 16))
     (Ty.cardinality (Ty_bitv 16));
   Alcotest.check card "bv17 is treated as infinite" None
-    (Ty.cardinality (Ty_bitv 17))
+    (Ty.cardinality (Ty_bitv 17));
+  let bb_arr_ty = Ty.Ty_array (Ty_bool, Ty_bool) in
+  Alcotest.check card "array(bool, bool)"
+    (Some (Z.of_int 4))
+    (Ty.cardinality bb_arr_ty);
+  Alcotest.check card "array(array(bool, bool), bool)"
+    (Some (Z.of_int 16))
+    (Ty.cardinality (Ty_array (bb_arr_ty, Ty_bool)));
+  Alcotest.check card "array(int, bool)" None (Ty.cardinality arr);
+  Alcotest.check card "array(bv32, bv8) is treated as infinite" None
+    (Ty.cardinality (Ty_array (Ty_bitv 32, Ty_bitv 8)));
+  let open Infix in
+  let outer_ty = Ty.Ty_array (bb_arr_ty, Ty_bool) in
+  let idx d e = Value.array bb_arr_ty ~default:d e in
+  let all_true d =
+    Value.array outer_ty ~default:d
+      [ (idx False [], True)
+      ; (idx True [], True)
+      ; (idx False [ (True, True) ], True)
+      ; (idx False [ (False, True) ], True)
+      ]
+  in
+  check
+    (Expr.relop outer_ty Eq
+       (Expr.value (all_true False))
+       (Expr.value (Value.array outer_ty ~default:True [])) )
+    true_
 
 let test_typed () =
   let module A =

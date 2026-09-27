@@ -620,12 +620,16 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Re_none -> M.Re.none ()
         | Re_all -> M.Re.all ()
         | Re_allchar -> M.Re.allchar ()
-        | Array { ty = Ty_array (idx, _); default; entries } ->
-          (* [entries] bind distinct indices, so the stores commute *)
-          List.fold_left
-            (fun a (i, e) -> M.Arrays.store a (v i) (v e))
-            (M.Arrays.const (get_type idx) (v default))
-            entries
+        | Array { ty = Ty_array (idx, _); default; entries } -> (
+          match M.Arrays.const (get_type idx) (v default) with
+          | Some arr ->
+            (* [entries] bind distinct indices, so the stores commute *)
+            List.fold_left
+              (fun a (i, e) -> M.Arrays.store a (v i) (v e))
+              arr entries
+          | None ->
+            Fmt.failwith "Unsupported encoding of array value '%a'" Value.pp
+              value )
         | List _ | App _ | Array _ | Unit | Nothing ->
           Fmt.failwith "Unsupported encoding of value '%a'" Value.pp value
 

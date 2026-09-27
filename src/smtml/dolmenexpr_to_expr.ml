@@ -475,8 +475,7 @@ module DolmenIntf = struct
 
     (* Currently not supported in Alt-Ergo and Colibri2, but it will be soon
        (at least in Colibri2) *)
-    let const _ _ =
-      Fmt.failwith "%s: constant arrays are not supported" __MODULE__
+    let const _ _ = None
   end
 
   module Adt = struct
