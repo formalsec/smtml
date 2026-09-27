@@ -61,6 +61,37 @@ let test_eval () =
           [ (Value.Int Z.one, True); (Value.Int (Z.of_int 2), True) ] ) );
   check (Expr.relop arr Eq (Expr.value arr_v) arr_v') false_
 
+let test_eval_eq_finite_index () =
+  let open Infix in
+  let eq ty a b = Expr.relop ty Eq (Expr.value a) (Expr.value b) in
+  let bb_arr_ty = Ty.Ty_array (Ty_bool, Ty_bool) in
+  let const_true = Value.array bb_arr_ty ~default:True [] in
+  (* Every index is bound, so the default is unused *)
+  let full_rewrite =
+    Value.array bb_arr_ty ~default:False [ (True, True); (False, True) ]
+  in
+  check (eq bb_arr_ty full_rewrite const_true) true_;
+  check (eq Ty_bool full_rewrite const_true) true_;
+  check
+    (Expr.relop bb_arr_ty Ne (Expr.value full_rewrite) (Expr.value const_true))
+    false_;
+  let partial = Value.array bb_arr_ty ~default:False [ (True, True) ] in
+  check (eq bb_arr_ty partial const_true) false_;
+  let bv2 i = Value.Bitv (Bitvector.make (Z.of_int i) 2) in
+  let arr_bv2 = Ty.Ty_array (Ty_bitv 2, Ty_bool) in
+  check
+    (eq arr_bv2
+       (Value.array arr_bv2 ~default:True
+          [ (bv2 0, False); (bv2 1, False); (bv2 2, False); (bv2 3, False) ] )
+       (Value.array arr_bv2 ~default:False []) )
+    true_;
+  (* Infinite index type: different defaults always differ somewhere *)
+  check
+    (eq arr
+       (Value.array arr ~default:True [ (Value.Int Z.zero, False) ])
+       (Value.array arr ~default:False []) )
+    false_
+
 let test_typed () =
   let module A =
     Typed.Arrays.Make
@@ -84,6 +115,8 @@ let () =
         ; Alcotest.test_case "test_expr" `Quick test_expr
         ; Alcotest.test_case "test_value" `Quick test_value
         ; Alcotest.test_case "test_eval" `Quick test_eval
+        ; Alcotest.test_case "test_eval_eq_finite_index" `Quick
+            test_eval_eq_finite_index
         ; Alcotest.test_case "test_typed" `Quick test_typed
         ] )
     ]

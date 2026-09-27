@@ -73,6 +73,10 @@ val size : t -> int
 (** [bitsize t] returns the size (in bits) of the type [t], if applicable. *)
 val bitsize : t -> int
 
+(** [cardinality t] is the number of inhabitants of the type [t], or [None] if
+    its infinite. *)
+val cardinality : t -> Z.t option
+
 (** {1 Unary Operations} *)
 
 module Unop : sig
