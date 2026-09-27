@@ -131,15 +131,20 @@ let bitsize (ty : t) : int =
 
 let size ty = bitsize ty / 8
 
+(* Wider bit-vectors are treated as infinite because the size of arrays with
+   such types as indices is too big to fit in an int which makes checking
+   equality on all indices hard. *)
+let max_finite_bitv_width = 16
+
 let cardinality (ty : t) : Z.t option =
   match ty with
   | Ty_bool -> Some (Z.of_int 2)
   | Ty_unit ->
     (* TODO: is this type ever really used? *)
     Some Z.one
-  | Ty_bitv n -> Some (Z.shift_left Z.one n)
-  | Ty_int | Ty_real | Ty_fp _ | Ty_str | Ty_list | Ty_app | Ty_array _
-  | Ty_none | Ty_regexp | Ty_roundingMode ->
+  | Ty_bitv n when n <= max_finite_bitv_width -> Some (Z.shift_left Z.one n)
+  | Ty_int | Ty_real | Ty_fp _ | Ty_bitv _ | Ty_str | Ty_array _ | Ty_list
+  | Ty_app | Ty_none | Ty_regexp | Ty_roundingMode ->
     None
 
 module Unop = struct

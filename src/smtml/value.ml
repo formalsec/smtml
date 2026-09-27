@@ -138,18 +138,55 @@ let rec equal (v1 : t) (v2 : t) : bool =
     , _ ) ->
     false
 
+(* The idea is to consider [Value.equal] as a structural value equality, in
+   practice, its the same as semantic equality for all other values since they
+   have unique normal forms, but for arrays with finite index types, you can
+   fully rewrite an array's indices so that its equal to another array with a
+   different default value, which is why we need a special semantic equality
+   function that does not simply check that array are structually equal. *)
+let rec semantic_equal v1 v2 =
+  match (v1, v2) with
+  | ( Array { ty = Ty_array (idx, _); default = d1; entries = e1 }
+    , Array { default = d2; entries = e2; _ } ) ->
+    (* Indices can be arrays, so they're deduplicated semantically too *)
+    let indices = dedup_indices (e1 @ e2) |> List.map fst in
+    let equal_at_indices =
+      List.for_all
+        (fun i ->
+          semantic_equal
+            (array_select ~default:d1 e1 i)
+            (array_select ~default:d2 e2 i) )
+        indices
+    in
+    equal_at_indices
+    && ( semantic_equal d1 d2
+       ||
+       match Ty.cardinality idx with
+       | Some n -> Z.equal n (Z.of_int (List.length indices))
+       | None -> false )
+  | _ -> equal v1 v2
+
+and array_select ~default entries i =
+  match List.find_opt (fun (i', _) -> semantic_equal i i') entries with
+  | Some (_, e) -> e
+  | None -> default
+
+(* Keeps the first binding of each index *)
+and dedup_indices entries =
+  List.fold_left
+    (fun acc (i, v) ->
+      if List.exists (fun (i', _) -> semantic_equal i i') acc then acc
+      else (i, v) :: acc )
+    [] entries
+  |> List.rev
+
 let array ty ~default entries =
   (* Keep the first binding of each index (since the outer stores appear first,
      the first binding of an index shadows/replaces the other ones), drop
-     bindings that are equal to the default, and sort the rest by index so that
-     semantically equivalent arrays have the same representation. *)
+     bindings that are equal to the default, and sort the rest by index. *)
   let entries =
-    List.fold_left
-      (fun acc (i, v) ->
-        if List.exists (fun (i', _) -> equal i i') acc then acc
-        else (i, v) :: acc )
-      [] entries
-    |> List.filter (fun (_, v) -> not (equal v default))
+    dedup_indices entries
+    |> List.filter (fun (_, v) -> not (semantic_equal v default))
     |> List.sort compare_entry
   in
   Array { ty; default; entries }

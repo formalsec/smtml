@@ -50,6 +50,15 @@ val compare : t -> t -> int
 *)
 val equal : t -> t -> bool
 
+(** [semantic_equal v1 v2] while [equal] is structural equality, for arrays we
+    need a special semantic equality because structurally unequal arrays can be
+    semantically equal. *)
+val semantic_equal : t -> t -> bool
+
+(** [array_select ~default entries i] is the value bound to the index [i] in
+    [entries], returns [default] if there [i] is not bound in [entries]. *)
+val array_select : default:t -> (t * t) list -> t -> t
+
 (** {1 Construction} *)
 
 (** [array ty ~default entries] is the array of type [ty], with the (index,
