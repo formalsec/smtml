@@ -131,6 +131,17 @@ let bitsize (ty : t) : int =
 
 let size ty = bitsize ty / 8
 
+let cardinality (ty : t) : Z.t option =
+  match ty with
+  | Ty_bool -> Some (Z.of_int 2)
+  | Ty_unit ->
+    (* TODO: is this type ever really used? *)
+    Some Z.one
+  | Ty_bitv n -> Some (Z.shift_left Z.one n)
+  | Ty_int | Ty_real | Ty_fp _ | Ty_str | Ty_list | Ty_app | Ty_array _
+  | Ty_none | Ty_regexp | Ty_roundingMode ->
+    None
+
 module Unop = struct
   type t =
     | Neg
