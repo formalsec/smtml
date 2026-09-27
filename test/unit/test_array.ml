@@ -92,6 +92,26 @@ let test_eval_eq_finite_index () =
        (Value.array arr ~default:False []) )
     false_
 
+let test_semantic_equal () =
+  let bb_arr_ty = Ty.Ty_array (Ty_bool, Ty_bool) in
+  (* Different types, same default and bindings *)
+  Alcotest.(check bool)
+    "different types" false
+    (Value.semantic_equal
+       (Value.array bb_arr_ty ~default:False [])
+       (Value.array arr ~default:False []) );
+  (* Same default: entries are compared one by one *)
+  let int i = Value.Int (Z.of_int i) in
+  let a entries = Value.array arr ~default:False entries in
+  Alcotest.(check bool)
+    "same entries" true
+    (Value.semantic_equal
+       (a [ (int 1, True); (int 2, True) ])
+       (a [ (int 2, True); (int 1, True) ]) );
+  Alcotest.(check bool)
+    "different entries" false
+    (Value.semantic_equal (a [ (int 1, True) ]) (a [ (int 2, True) ]))
+
 let test_cardinality () =
   let card = Alcotest.(option (testable Z.pp_print Z.equal)) in
   Alcotest.check card "bool" (Some (Z.of_int 2)) (Ty.cardinality Ty_bool);
@@ -111,22 +131,12 @@ let test_cardinality () =
   Alcotest.check card "array(int, bool)" None (Ty.cardinality arr);
   Alcotest.check card "array(bv32, bv8) is treated as infinite" None
     (Ty.cardinality (Ty_array (Ty_bitv 32, Ty_bitv 8)));
-  let open Infix in
-  let outer_ty = Ty.Ty_array (bb_arr_ty, Ty_bool) in
-  let idx d e = Value.array bb_arr_ty ~default:d e in
-  let all_true d =
-    Value.array outer_ty ~default:d
-      [ (idx False [], True)
-      ; (idx True [], True)
-      ; (idx False [ (True, True) ], True)
-      ; (idx False [ (False, True) ], True)
-      ]
-  in
-  check
-    (Expr.relop outer_ty Eq
-       (Expr.value (all_true False))
-       (Expr.value (Value.array outer_ty ~default:True [])) )
-    true_
+  (* Arrays indexed by arrays aren't supported *)
+  Alcotest.check_raises "array indexed by arrays"
+    (Failure "Value.array: arrays indexed by arrays are not supported")
+    (fun () ->
+    ignore
+      (Value.array (Ty_array (bb_arr_ty, Ty_bool)) ~default:False [] : Value.t) )
 
 let test_typed () =
   let module A =
@@ -153,6 +163,7 @@ let () =
         ; Alcotest.test_case "test_eval" `Quick test_eval
         ; Alcotest.test_case "test_eval_eq_finite_index" `Quick
             test_eval_eq_finite_index
+        ; Alcotest.test_case "test_semantic_equal" `Quick test_semantic_equal
         ; Alcotest.test_case "test_cardinality" `Quick test_cardinality
         ; Alcotest.test_case "test_typed" `Quick test_typed
         ] )

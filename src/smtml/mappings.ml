@@ -900,26 +900,34 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       (* [None] when the solver can't decompose the array value [v] *)
       and array_of_interp ty v =
         match ty with
+        | Ty_array (Ty_array _, _) ->
+          (* TODO: Arrays indexed by arrays aren't supported by [Value.array]
+             yet *)
+          None
         | Ty_array (idx, elem) ->
-          Option.map
-            (fun (default, entries) ->
-              let default = arr_entry_of_interp elem default in
-              let entries =
-                List.map
-                  (fun (i, e) ->
-                    (arr_entry_of_interp idx i, arr_entry_of_interp elem e) )
-                  entries
-              in
-              Value.array ty ~default entries )
-            (M.Interp.to_array v)
+          let open Option.Syntax in
+          let* default, entries = M.Interp.to_array v in
+          let* default = arr_entry_of_interp elem default in
+          let+ entries =
+            List.fold_left
+              (fun acc (i, e) ->
+                let* acc in
+                let* i = arr_entry_of_interp idx i in
+                let+ e = arr_entry_of_interp elem e in
+                (i, e) :: acc )
+              (Some []) entries
+          in
+          Value.array ty ~default (List.rev entries)
         | _ -> assert false
 
-      (* one-bit components are kept as bit-vectors so that they match the
+      (* One-bit components are kept as bit-vectors so that they match the
          array's type. *)
       and arr_entry_of_interp ty v =
         match ty with
-        | Ty_bitv 1 -> Value.Bitv (Bitvector.make (M.Interp.to_bitv v 1) 1)
-        | _ -> value_of_interp ty v
+        | Ty_bitv 1 ->
+          Some (Value.Bitv (Bitvector.make (M.Interp.to_bitv v 1) 1))
+        | Ty_array _ -> array_of_interp ty v
+        | _ -> Some (value_of_interp ty v)
 
       let eval_term ?ctx model term =
         match M.Model.eval ?ctx ~completion:true model term with
