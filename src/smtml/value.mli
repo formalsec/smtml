@@ -22,17 +22,23 @@ type t =
   | List of t list  (** List of values. *)
   | App : [> `Op of string ] * t list -> t
     (** Application of an operator to a list of values. *)
-  | Array of
-      { ty : Ty.t  (** The array type. *)
-      ; default : t  (** the default value for all indices not in [entries]. *)
-      ; entries : (t * t) list
-          (** unique index/value bindings, sorted by index, with no value equal
-              to [default]*)
-      }  (** Array value (with normalised [entries]). *)
+  | Array of array_value  (** Array value. *)
   | Re_none
   | Re_all
   | Re_allchar
   | Nothing  (** Represents an undefined or missing value. *)
+
+(** Array value (with normalised [entries]).
+
+    Array values are private to make sure that they are only created through the
+    {!array} function, which guarantees that they are normalized. *)
+and array_value = private
+  { ty : Ty.t  (** The array type. *)
+  ; default : t  (** the default value for all indices not in [entries]. *)
+  ; entries : (t * t) list
+      (** unique index/value bindings, sorted by index, with no value equal to
+          [default]*)
+  }
 
 (** [type_of v] returns the type of the value [v]. *)
 val type_of : t -> Ty.t
@@ -50,14 +56,6 @@ val compare : t -> t -> int
 *)
 val equal : t -> t -> bool
 
-(** [semantic_equal v1 v2] while [equal] is structural equality, for arrays we
-    need a special semantic equality because structurally unequal arrays can be
-    semantically equal. (i.e. two array values can have different structures but
-    have the same values at every index, e.g. arrays with different default
-    values where one has no stores, and the other has stores that cover all
-    indices with the default value of the first) *)
-val semantic_equal : t -> t -> bool
-
 (** [array_select ~default entries i] is the value bound to the index [i] in
     [entries], returns [default] if there [i] is not bound in [entries]. *)
 val array_select : default:t -> (t * t) list -> t -> t
@@ -69,10 +67,7 @@ val array_select : default:t -> (t * t) list -> t -> t
     not in [entries].
 
     If an index is bound multiple times in [entries], only its first occurence
-    is kept (as it corresponds to the outermost [store]).
-
-    Fails if the index type of [ty] is an array type, since arrays indexed by
-    arrays aren't supported. *)
+    is kept (as it corresponds to the outermost [store]). *)
 val array : Ty.t -> default:t -> (t * t) list -> t
 
 (** {1 Mapping} *)
