@@ -448,9 +448,9 @@ module DolmenIntf : sig
 
     val store : term -> term -> term -> term
 
-    (** [const index_ty v] is always [None], since constant arrays aren't
-        supported by Colibri2 and Alt-Ergo yet. *)
-    val const : ty -> term -> term option
+    (** [const] is [None], since constant arrays aren't supported by Colibri2
+        and Alt-Ergo yet. *)
+    val const : (ty -> term -> term) option
   end
 
   module Model : sig
