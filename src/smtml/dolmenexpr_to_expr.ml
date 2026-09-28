@@ -475,7 +475,7 @@ module DolmenIntf = struct
 
     (* Currently not supported in Alt-Ergo and Colibri2, but it will be soon
        (at least in Colibri2) *)
-    let const _ _ = None
+    let const = None
   end
 
   module Adt = struct

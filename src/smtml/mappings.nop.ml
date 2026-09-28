@@ -405,7 +405,7 @@ module M = struct
 
       let store _ _ _ = assert false
 
-      let const _ _ = assert false
+      let const = None
     end
 
     module Adt = struct

@@ -650,7 +650,7 @@ module Fresh_cvc5 () = struct
 
     (* TODO: Technically cvc5 can support them with a special cmdline option.
        but it needs to be added to ocaml-cvc5 first. *)
-    let const _ _ = None
+    let const = None
   end
 end
 

@@ -505,7 +505,7 @@ module M = struct
 
       let store a i v = Z3.Z3Array.mk_store ctx a i v
 
-      let const idx v = Some (Z3.Z3Array.mk_const_array ctx idx v)
+      let const = Some (fun idx v -> Z3.Z3Array.mk_const_array ctx idx v)
     end
 
     module Adt = struct
