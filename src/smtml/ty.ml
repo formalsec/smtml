@@ -131,10 +131,9 @@ let bitsize (ty : t) : int =
 
 let size ty = bitsize ty / 8
 
-(* Wider bit-vectors are treated as infinite because the size of arrays with
-   such types as indices is too big to fit in an int which makes checking
-   equality on all indices hard. *)
-let max_finite_bitv_width = 16
+(* Wider bit-vectors are treated as infinite, so that listing all the indices
+   of an array stays cheap. *)
+let max_finite_bitv_width = 8
 
 let max_finite_cardinality = Z.shift_left Z.one max_finite_bitv_width
 
@@ -151,7 +150,7 @@ let rec cardinality (ty : t) : Z.t option =
     let* n_elem = cardinality elem in
     if Z.equal n_elem Z.one then Some Z.one
     else if Z.gt n_idx (Z.of_int max_finite_bitv_width) then
-      (* [n_elem ^ n_idx > 2 ^ 16], don't compute it *)
+      (* [n_elem ^ n_idx > 2 ^ 8], don't compute it *)
       None
     else
       let card = Z.pow n_elem (Z.to_int n_idx) in

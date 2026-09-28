@@ -143,11 +143,9 @@ let test_cardinality () =
   let card = Alcotest.(option (testable Z.pp_print Z.equal)) in
   Alcotest.check card "bool" (Some (Z.of_int 2)) (Ty.cardinality Ty_bool);
   Alcotest.check card "int" None (Ty.cardinality Ty_int);
-  Alcotest.check card "bv16"
-    (Some (Z.shift_left Z.one 16))
-    (Ty.cardinality (Ty_bitv 16));
-  Alcotest.check card "bv17 is treated as infinite" None
-    (Ty.cardinality (Ty_bitv 17));
+  Alcotest.check card "bv8" (Some (Z.of_int 256)) (Ty.cardinality (Ty_bitv 8));
+  Alcotest.check card "bv9 is treated as infinite" None
+    (Ty.cardinality (Ty_bitv 9));
   let bb_arr_ty = Ty.Ty_array (Ty_bool, Ty_bool) in
   Alcotest.check card "array(bool, bool)"
     (Some (Z.of_int 4))
@@ -158,10 +156,13 @@ let test_cardinality () =
   Alcotest.check card "array(int, bool)" None (Ty.cardinality arr);
   Alcotest.check card "array(bv32, bv8) is treated as infinite" None
     (Ty.cardinality (Ty_array (Ty_bitv 32, Ty_bitv 8)));
-  Alcotest.check card "array(bv5, bool) is treated as infinite" None
-    (Ty.cardinality (Ty_array (Ty_bitv 5, Ty_bool)));
-  Alcotest.check card "array(bool, bv16) is treated as infinite" None
-    (Ty.cardinality (Ty_array (Ty_bool, Ty_bitv 16)))
+  Alcotest.check card "array(bv3, bool)"
+    (Some (Z.of_int 256))
+    (Ty.cardinality (Ty_array (Ty_bitv 3, Ty_bool)));
+  Alcotest.check card "array(bv4, bool) is treated as infinite" None
+    (Ty.cardinality (Ty_array (Ty_bitv 4, Ty_bool)));
+  Alcotest.check card "array(bool, bv8) is treated as infinite" None
+    (Ty.cardinality (Ty_array (Ty_bool, Ty_bitv 8)))
 
 let test_typed () =
   let module A =
