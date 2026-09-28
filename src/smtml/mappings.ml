@@ -947,10 +947,6 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       (* [None] when the solver can't decompose the array value [v] *)
       and array_of_interp ty v =
         match ty with
-        | Ty_array (Ty_array _, _) ->
-          (* TODO: Arrays indexed by arrays aren't supported by [Value.array]
-             yet *)
-          None
         | Ty_array (idx, elem) ->
           let open Option.Syntax in
           let* default, entries = M.Interp.to_array v in

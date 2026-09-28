@@ -15,15 +15,17 @@ type t =
   | Bitv of Bitvector.t
   | List of t list
   | App : [> `Op of string ] * t list -> t
-  | Array of
-      { ty : Ty.t
-      ; default : t
-      ; entries : (t * t) list
-      }
+  | Array of array_value
   | Re_none
   | Re_all
   | Re_allchar
   | Nothing
+
+and array_value =
+  { ty : Ty.t
+  ; default : t
+  ; entries : (t * t) list
+  }
 
 let type_of (v : t) : Ty.t =
   match v with
@@ -153,65 +155,90 @@ let array_select ~default entries i =
   | Some (_, e) -> e
   | None -> default
 
-(* The idea is to consider [Value.equal] as a structural value equality, in
-   practice, its the same as semantic equality for all other values since they
-   have unique normal forms, but for arrays with finite index types, you can
-   fully rewrite an array's indices so that its equal to another array with a
-   different default value, which is why we need a special semantic equality
-   function that does not simply check that array are structually equal. *)
-let rec semantic_equal v1 v2 =
-  match (v1, v2) with
-  | ( Array { ty = Ty_array (ind_ty, _) as ty1; default = d1; entries = e1 }
-    , Array { ty = ty2; default = d2; entries = e2 } ) -> (
-    Ty.equal ty1 ty2
-    &&
-    if semantic_equal d1 d2 then
-      (* Entries are sorted, bind distinct indices, and don't bind the
-         default, so they must be the same *)
-      List.equal
-        (fun (i1, v1) (i2, v2) -> equal i1 i2 && semantic_equal v1 v2)
-        e1 e2
-    else
-      (* With different defaults, every index must be bound in one of the
-         arrays *)
-      match Ty.cardinality ind_ty with
-      | Some n when Z.leq n (Z.of_int (List.length e1 + List.length e2)) ->
-        equal_on_all_indices n d1 d2 e1 e2
-      | _ -> false )
-  | _ -> equal v1 v2
+(* The value that appears the most in [vs], if there is a tie, choose the
+   smallest one *)
+let most_common_elem vs =
+  (* The number of occurrences of each value, in decreasing order of values *)
+  let counts =
+    List.fold_left
+      (fun counts v ->
+        match counts with
+        | (v', c) :: counts when equal v v' -> (v', c + 1) :: counts
+        | _ -> (v, 1) :: counts )
+      [] (List.sort compare vs)
+  in
+  match counts with
+  | [] -> assert false
+  | count :: counts ->
+    fst
+      (List.fold_left
+         (fun (v, c) (v', c') -> if c' >= c then (v', c') else (v, c))
+         count counts )
 
-(* [n] is the cardinality of the index type, and [d1] and [d2] are different *)
-and equal_on_all_indices n d1 d2 e1 e2 =
-  (* Entries are sorted, so we just check them one by one, if an entry is
-     missing on one side, compare the other with the default value *)
-  let rec eq count e1 e2 =
-    match (e1, e2) with
-    | [], [] -> Z.equal n (Z.of_int count)
-    | (_, v1) :: e1', [] -> aux v1 d2 e1' [] count
-    | [], (_, v2) :: e2' -> aux d1 v2 [] e2' count
-    | (i1, v1) :: e1', (i2, v2) :: e2' ->
-      let c = compare i1 i2 in
-      if c = 0 then aux v1 v2 e1' e2' count
-      else if c < 0 then aux v1 d2 e1' e2 count
-      else aux d1 v2 e1 e2' count
-  and aux v1 v2 e1 e2 count = semantic_equal v1 v2 && eq (count + 1) e1 e2 in
-  eq 0 e1 e2
+(* Binds every index in the sorted [indices] to its value in the sorted
+   [entries], or to [default] *)
+let rec bind_all ~default indices entries =
+  match (indices, entries) with
+  | [], _ -> []
+  | i :: indices, (i', v) :: entries' when compare i i' = 0 ->
+    (i, v) :: bind_all ~default indices entries'
+  | i :: indices, _ -> (i, default) :: bind_all ~default indices entries
 
-let array ty ~default entries =
-  begin match ty with
-  | Ty_array (Ty_array _, _) ->
-    Fmt.failwith "Value.array: arrays indexed by arrays are not supported"
-  | _ -> ()
-  end;
+(* Arrays are kept in a canonical form, so that [equal], [compare] and [hash]
+   are semantic: entries are sorted, bind distinct indices, and don't bind the
+   default, which is the value at the most indices (ties are broken by
+   [compare]). With a finite index type, arrays with different defaults can
+   otherwise be equal, e.g. for [(Array Bool Bool)], [[true -> true; _ -> false]]
+   and [[false -> false; _ -> true]]. *)
+let rec array ty ~default entries =
   (* Keep the first binding of each index (since the outer stores appear first,
-     the first binding of an index shadows/replaces the other ones), drop
-     bindings that are equal to the default, and sort the rest by index. *)
+     the first binding of an index shadows/replaces the other ones), and drop
+     bindings that are equal to the default. *)
   let entries =
-    dedup_indices entries
-    |> List.filter (fun (_, v) -> not (semantic_equal v default))
-    |> List.sort compare_entry
+    dedup_indices entries |> List.filter (fun (_, v) -> not (equal v default))
+  in
+  let default, entries =
+    match ty with
+    | Ty_array (idx, _) -> canonical_default idx ~default entries
+    | _ -> (default, entries)
   in
   Array { ty; default; entries }
+
+(* [entries] are sorted by index, and none of them has the value [default].
+   The default is the value of every index missing from [entries], so if
+   [entries] cover less than half of the indices, the default is already the
+   most common value. Otherwise, we list the value of every index, and the most
+   common one becomes the new default. *)
+and canonical_default idx ~default entries =
+  match Ty.cardinality idx with
+  | Some card when Z.to_int card <= 2 * List.length entries ->
+    (* Index type is finite and small so no overflow *)
+    let entries = bind_all ~default (domain idx) entries in
+    let default = most_common_elem (List.map snd entries) in
+    (default, List.filter (fun (_, v) -> not (equal v default)) entries)
+  | _ -> (default, entries)
+
+(* The sorted values of a "small" type with a finite [Ty.cardinality] *)
+and domain (ty : Ty.t) : t list =
+  match ty with
+  | Ty_bool -> [ False; True ]
+  | Ty_unit -> [ Unit ]
+  | Ty_bitv n ->
+    List.init (1 lsl n) (fun i -> Bitv (Bitvector.make (Z.of_int i) n))
+  | Ty_array (idx, elem) -> (
+    (* All the functions from [idx] to [elem] *)
+    match domain elem with
+    | [] -> []
+    | default :: _ as elems ->
+      (* Arbitrary default because we bind all indices before selecting the
+         "best" default value *)
+      List.fold_left
+        (fun fs i ->
+          List.concat_map (fun f -> List.map (fun e -> (i, e) :: f) elems) fs )
+        [ [] ] (domain idx)
+      |> List.map (fun entries -> array ty ~default entries)
+      |> List.sort compare )
+  | _ -> assert false
 
 let map v f = match v with Nothing -> Nothing | _ -> f v
 

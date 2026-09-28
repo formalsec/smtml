@@ -298,8 +298,8 @@ module Bool = struct
 
   let[@inline] relop (op : Ty.Relop.t) v1 v2 =
     match op with
-    | Eq -> Value.semantic_equal v1 v2
-    | Ne -> not (Value.semantic_equal v1 v2)
+    | Eq -> Value.equal v1 v2
+    | Ne -> not (Value.equal v1 v2)
     | _ -> eval_error (`Unsupported_operator (`Relop op, Ty_bool))
 
   let[@inline] naryop (op : Ty.Naryop.t) vs =
@@ -329,7 +329,7 @@ module Bool = struct
     | Distinct ->
       let rec loop = function
         | [] -> true
-        | v :: vs -> (not (List.exists (Value.semantic_equal v) vs)) && loop vs
+        | v :: vs -> (not (List.exists (Value.equal v) vs)) && loop vs
       in
       to_bool (loop vs)
     | _ -> eval_error (`Unsupported_operator (`Naryop op, Ty_bool))
@@ -525,8 +525,8 @@ module Arrays = struct
 
   let[@inline] relop (op : Ty.Relop.t) v1 v2 =
     match op with
-    | Eq -> Value.semantic_equal v1 v2
-    | Ne -> not (Value.semantic_equal v1 v2)
+    | Eq -> Value.equal v1 v2
+    | Ne -> not (Value.equal v1 v2)
     | Lt | LtU | Le | LeU ->
       eval_error (`Unsupported_operator (`Relop op, Value.type_of v1))
 end

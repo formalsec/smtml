@@ -149,9 +149,13 @@ let rec cardinality (ty : t) : Z.t option =
     let open Option.Syntax in
     let* n_idx = cardinality idx in
     let* n_elem = cardinality elem in
-    if Z.leq n_idx max_finite_cardinality && Z.leq n_elem max_finite_cardinality
-    then Some (Z.pow n_elem (Z.to_int n_idx))
-    else None
+    if Z.equal n_elem Z.one then Some Z.one
+    else if Z.gt n_idx (Z.of_int max_finite_bitv_width) then
+      (* [n_elem ^ n_idx > 2 ^ 16], don't compute it *)
+      None
+    else
+      let card = Z.pow n_elem (Z.to_int n_idx) in
+      if Z.leq card max_finite_cardinality then Some card else None
   | Ty_int | Ty_real | Ty_fp _ | Ty_bitv _ | Ty_str | Ty_list | Ty_app | Ty_none
   | Ty_regexp | Ty_roundingMode ->
     None
