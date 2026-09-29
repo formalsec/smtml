@@ -397,6 +397,9 @@ let raw_binop ty op hte1 hte2 = make (Binop (ty, op, hte1, hte2)) [@@inline]
 let rec binop ty op hte1 hte2 =
   match (op, view hte1, view hte2) with
   | Ty.Binop.(String_in_re | Regexp_range), _, _ -> raw_binop ty op hte1 hte2
+  | Select, Val (Array { ty = Ty_array (idx, _); _ }), Val _
+    when Ty.is_not_canonical idx ->
+    raw_binop ty op hte1 hte2
   | op, Val v1, Val v2 -> value (Eval.binop ty op v1 v2)
   | Sub, Ptr { base = b1; offset = os1 }, Ptr { base = b2; offset = os2 } ->
     if Bitvector.equal b1 b2 then binop ty Sub os1 os2
@@ -479,6 +482,9 @@ let triop ty op e1 e2 e3 =
   | Ty.Triop.Ite, Val True, _, _ -> e2
   | Ite, Val False, _, _ -> e3
   | Ite, _, _, _ when equal e2 e3 -> e2
+  | Store, Val (Array { ty = Ty_array (idx, _); _ }), Val _, Val _
+    when Ty.is_not_canonical idx ->
+    raw_triop ty op e1 e2 e3
   | op, Val v1, Val v2, Val v3 -> value (Eval.triop ty op v1 v2 v3)
   | Ite, _, Triop (_, Ite, c2, r1, r2), Triop (_, Ite, _, _, _) ->
     let else_ = raw_triop ty Ite e1 r2 e3 in

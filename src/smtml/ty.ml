@@ -148,6 +148,11 @@ and is_singleton = function
   | Ty_list | Ty_app | Ty_regexp | Ty_none ->
     false
 
+let rec is_not_canonical = function
+  | Ty_array (idx, elem) ->
+    is_finite idx || is_not_canonical idx || is_not_canonical elem
+  | _ -> false
+
 let cardinality = function
   | Ty_bool -> Some (Z.of_int 2)
   | Ty_unit -> Some Z.one
