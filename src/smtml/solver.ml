@@ -144,16 +144,15 @@ module Cached (Mappings_ : Mappings.S) = struct
 
     type solver = Mappings.solver
 
+    module Cache = Cache.Strong
+
     type t =
       { solver : solver
       ; mutable top : Expr.Set.t
       ; stack : Expr.Set.t Stack.t
       ; mutable last_check : Expr.Set.t option
+      ; cache : [ `Sat | `Unsat | `Unknown ] Cache.t
       }
-
-    module Cache = Cache.Strong
-
-    let cache = Cache.create 256
 
     let pp_statistics fmt s = pp_statistics fmt s.solver
 
@@ -162,10 +161,16 @@ module Cached (Mappings_ : Mappings.S) = struct
       ; top = Expr.Set.empty
       ; stack = Stack.create ()
       ; last_check = None
+      ; cache = Cache.create 256
       }
 
-    let clone ({ solver; top; stack; last_check } : t) : t =
-      { solver = clone solver; top; stack = Stack.copy stack; last_check }
+    let clone ({ solver; top; stack; last_check; cache } : t) : t =
+      { solver = clone solver
+      ; top
+      ; stack = Stack.copy stack
+      ; last_check
+      ; cache = Cache.copy cache
+      }
 
     let push ({ top; stack; solver; _ } : t) : unit =
       Mappings.Solver.push solver;
@@ -186,7 +191,8 @@ module Cached (Mappings_ : Mappings.S) = struct
     let reset (s : t) =
       Mappings.Solver.reset s.solver;
       Stack.clear s.stack;
-      s.top <- Expr.Set.empty
+      s.top <- Expr.Set.empty;
+      Cache.reset s.cache
 
     let add (s : t) (es : Expr.t list) : unit =
       s.top <- Expr.Set.(union (of_list es) s.top)
@@ -197,8 +203,8 @@ module Cached (Mappings_ : Mappings.S) = struct
 
     let get_statistics (s : t) : Statistics.t =
       let stats = get_statistics s.solver in
-      let cache_hits = Cache.hits cache in
-      let cache_misses = Cache.misses cache in
+      let cache_hits = Cache.hits s.cache in
+      let cache_misses = Cache.misses s.cache in
       stats
       |> Statistics.Map.add "cache misses" (`Int cache_misses)
       |> Statistics.Map.add "cache hits" (`Int cache_hits)
@@ -218,11 +224,11 @@ module Cached (Mappings_ : Mappings.S) = struct
     let check_set s es =
       let assert_ = Expr.Set.union es s.top in
       s.last_check <- Some assert_;
-      match Cache.find_opt cache assert_ with
+      match Cache.find_opt s.cache assert_ with
       | Some res -> res
       | None ->
         let result = check_set s.solver assert_ in
-        Cache.add cache assert_ result;
+        Cache.add s.cache assert_ result;
         result
 
     let check (s : t) (es : Expr.t list) = check_set s (Expr.Set.of_list es)
