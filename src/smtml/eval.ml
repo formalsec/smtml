@@ -32,6 +32,7 @@ type error_kind =
   | `Integer_overflow
   | `Index_out_of_bounds
   | `Invalid_format_conversion
+  | `Undecidable_array_equality
   | `Unsupported_operator of op_type * Ty.t
   | `Unsupported_theory of Ty.t
   | `Type_error of type_error_info
@@ -47,6 +48,9 @@ let pp_error_kind fmt err =
   | `Index_out_of_bounds -> Fmt.string fmt "Index out of bounds"
   | `Invalid_format_conversion ->
     Fmt.string fmt "Invalid format conversion string"
+  | `Undecidable_array_equality ->
+    Fmt.string fmt
+      "The equality of these arrays can't be decided without a solver"
   | `Unsupported_operator (op, ty) ->
     Fmt.pf fmt "The operator '%a' is not supported for type '%a'" pp_op_type op
       Ty.pp ty
@@ -65,6 +69,11 @@ exception Value of Ty.t
 (* Exception helpers *)
 
 let eval_error kind = raise (Eval_error kind)
+
+let of_comparison : Value.comparison -> bool = function
+  | Equal -> true
+  | Different -> false
+  | Unknown -> eval_error `Undecidable_array_equality
 
 let type_error n v ty op msg =
   eval_error (`Type_error { index = n; value = v; ty; op; msg })
@@ -298,8 +307,8 @@ module Bool = struct
 
   let[@inline] relop (op : Ty.Relop.t) v1 v2 =
     match op with
-    | Eq -> Value.equal v1 v2
-    | Ne -> not (Value.equal v1 v2)
+    | Eq -> of_comparison (Value.semantic_equal v1 v2)
+    | Ne -> not (of_comparison (Value.semantic_equal v1 v2))
     | _ -> eval_error (`Unsupported_operator (`Relop op, Ty_bool))
 
   let[@inline] naryop (op : Ty.Naryop.t) vs =
@@ -326,12 +335,12 @@ module Bool = struct
           vs
       in
       if Option.is_some exists_true then Value.True else Value.False
-    | Distinct ->
-      let rec loop = function
-        | [] -> true
-        | v :: vs -> (not (List.exists (Value.equal v) vs)) && loop vs
-      in
-      to_bool (loop vs)
+    | Distinct -> (
+      (* [Different] if all the values are pairwise different *)
+      match Value.semantic_distinct vs with
+      | Different -> Value.True
+      | Equal -> Value.False
+      | Unknown -> eval_error `Undecidable_array_equality )
     | _ -> eval_error (`Unsupported_operator (`Naryop op, Ty_bool))
 end
 
@@ -519,14 +528,12 @@ module Arrays = struct
 
   let[@inline] store v1 v2 v3 =
     let ty, default, entries = of_array 1 (`Triop Store) v1 in
-    (* Add the new binding as an outer one so that it shadows the ones that
-       come underneath it *)
-    Value.array ty ~default ((v2, v3) :: entries)
+    Value.array_store ty ~default entries v2 v3
 
   let[@inline] relop (op : Ty.Relop.t) v1 v2 =
     match op with
-    | Eq -> Value.equal v1 v2
-    | Ne -> not (Value.equal v1 v2)
+    | Eq -> of_comparison (Value.semantic_equal v1 v2)
+    | Ne -> not (of_comparison (Value.semantic_equal v1 v2))
     | Lt | LtU | Le | LeU ->
       eval_error (`Unsupported_operator (`Relop op, Value.type_of v1))
 end

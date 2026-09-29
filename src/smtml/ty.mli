@@ -73,6 +73,14 @@ val size : t -> int
 (** [bitsize t] returns the size (in bits) of the type [t], if applicable. *)
 val bitsize : t -> int
 
+(** [is_finite t] is [true] if the type [t] has finitely many inhabitants. *)
+val is_finite : t -> bool
+
+(** [cardinality t] is [Some n] if the type [t] is known to have [n]
+    inhabitants, and [None] if it is infinite, or finite but not computed
+    (floating-point numbers and arrays). *)
+val cardinality : t -> Z.t option
+
 (** {1 Unary Operations} *)
 
 module Unop : sig

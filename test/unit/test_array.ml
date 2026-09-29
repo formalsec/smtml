@@ -68,7 +68,15 @@ let test_eval () =
     (Expr.value
        (Value.array arr ~default:False
           [ (Value.Int Z.one, True); (Value.Int (Z.of_int 2), True) ] ) );
-  check (Expr.relop arr Eq (Expr.value arr_v) arr_v') false_
+  check (Expr.relop arr Eq (Expr.value arr_v) arr_v') false_;
+  (* Storing the default removes the binding, other stores replace it *)
+  let store i v = Expr.triop arr Store (Expr.value arr_v) (int i) v in
+  check (store 1 false_) (Expr.value (Value.array arr ~default:False []));
+  check (store 1 true_) (Expr.value arr_v);
+  check (store 0 true_)
+    (Expr.value
+       (Value.array arr ~default:False
+          [ (Value.Int Z.zero, True); (Value.Int Z.one, True) ] ) )
 
 let test_equal () =
   let bb_arr_ty = Ty.Ty_array (Ty_bool, Ty_bool) in
@@ -87,6 +95,21 @@ let test_equal () =
   Alcotest.(check bool)
     "different entries" false
     (Value.equal (a [ (int 1, True) ]) (a [ (int 2, True) ]))
+
+let test_semantic_equal () =
+  let open Infix in
+  let eq ty v1 v2 = Expr.relop ty Eq (Expr.value v1) (Expr.value v2) in
+  let bb_arr_ty = Ty.Ty_array (Ty_bool, Ty_bool) in
+  let mk_arr ~default entries = Value.array bb_arr_ty ~default entries in
+  let false_true_array = mk_arr ~default:False [ (True, True) ] in
+  (* [false -> false; true -> true] *)
+  check
+    (eq bb_arr_ty false_true_array (mk_arr ~default:True [ (False, False) ]))
+    true_;
+  (* [false -> false; true -> true] <> [false -> true; true -> false] *)
+  check
+    (eq bb_arr_ty false_true_array (mk_arr ~default:True [ (True, False) ]))
+    false_
 
 let test_array_indices () =
   let open Infix in
@@ -125,6 +148,7 @@ let () =
         ; Alcotest.test_case "test_value" `Quick test_value
         ; Alcotest.test_case "test_eval" `Quick test_eval
         ; Alcotest.test_case "test_equal" `Quick test_equal
+        ; Alcotest.test_case "test_semantic_equal" `Quick test_semantic_equal
         ; Alcotest.test_case "test_array_indices" `Quick test_array_indices
         ; Alcotest.test_case "test_typed" `Quick test_typed
         ] )

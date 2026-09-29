@@ -60,6 +60,21 @@ val equal : t -> t -> bool
     [entries], returns [default] if there [i] is not bound in [entries]. *)
 val array_select : default:t -> (t * t) list -> t -> t
 
+(** The result of a comparison that can't always be decided. *)
+type comparison =
+  | Equal
+  | Different
+  | Unknown
+
+(** [semantic_equal v1 v2] is [Equal] or [Different] if [v1] and [v2] are known
+    to be equal or different, and [Unknown] if it can't be determined. *)
+val semantic_equal : t -> t -> comparison
+
+(** [semantic_distinct vs] is [Different] if the values in [vs] are known to be
+    pairwise different, [Equal] if at least two of them are known to be equal,
+    and [Unknown] otherwise. *)
+val semantic_distinct : t list -> comparison
+
 (** {1 Construction} *)
 
 (** [array ty ~default entries] is the array of type [ty], with the (index,
@@ -69,6 +84,11 @@ val array_select : default:t -> (t * t) list -> t -> t
     If an index is bound multiple times in [entries], only its first occurence
     is kept (as it corresponds to the outermost [store]). *)
 val array : Ty.t -> default:t -> (t * t) list -> t
+
+(** [array_store ty ~default entries i v] is the array {!array}
+    [ty ~default entries] where [i] is bound to [v], with [entries] already
+    normalized. *)
+val array_store : Ty.t -> default:t -> (t * t) list -> t -> t -> t
 
 (** {1 Mapping} *)
 

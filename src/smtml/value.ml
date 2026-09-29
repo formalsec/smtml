@@ -158,10 +158,106 @@ let array_select ~default entries i =
   | Some (_, e) -> e
   | None -> default
 
-(* Solvers are assumed to produce the same model value for semantically
-   equivalent arrays, so array values are compared structurally. *)
+(* [equal], [compare] and [hash] compare the structure of arrays, which
+   can differ for semantically equivalent arrays, [semantic_equal] compares
+   their semantic values *)
 let array ty ~default entries =
   Array { ty; default; entries = dedup_indices ~default entries }
+
+let array_store ty ~default entries i v =
+  let rec store = function
+    | [] when equal v default -> []
+    | [] -> [ (i, v) ]
+    | ((i', _) as entry) :: entries' as entries ->
+      let c = compare i i' in
+      if c > 0 then entry :: store entries'
+      else
+        let entries = if c = 0 then entries' else entries in
+        if equal v default then entries else (i, v) :: entries
+  in
+  Array { ty; default; entries = store entries }
+
+type comparison =
+  | Equal
+  | Different
+  | Unknown
+
+(* Values are equal if all their parts are *)
+let both a b =
+  match (a, b) with
+  | Different, _ | _, Different -> Different
+  | Equal, b -> b
+  | Unknown, _ -> Unknown
+
+let rec is_not_canonical (ty : Ty.t) =
+  match ty with
+  | Ty_array (idx, elem) ->
+    Ty.is_finite idx || is_not_canonical idx || is_not_canonical elem
+  | _ -> false
+
+let rec semantic_equal v1 v2 =
+  match (v1, v2) with
+  | ( Array { ty = Ty_array (idx, _) as ty1; default = d1; entries = e1 }
+    , Array { ty = ty2; default = d2; entries = e2 } ) ->
+    if not (Ty.equal ty1 ty2) then Different
+    else if is_not_canonical idx then
+      (* non-canonical indices means that different representations do not
+         imply distinction *)
+      if equal v1 v2 then Equal else Unknown
+    else
+      let defaults = semantic_equal d1 d2 in
+      (* Entries are sorted, so we check them one by one, if an index is only
+         bound in one array, its value is compared with the default value of the
+         other array *)
+      let rec check_indices acc n e1 e2 =
+        match (acc, e1, e2) with
+        | Different, _, _ | _, [], [] -> (acc, n)
+        | _, (_, v1) :: e1, [] ->
+          check_indices (both acc (semantic_equal v1 d2)) (n + 1) e1 []
+        | _, [], (_, v2) :: e2 ->
+          check_indices (both acc (semantic_equal d1 v2)) (n + 1) [] e2
+        | _, (i1, v1) :: e1', (i2, v2) :: e2' ->
+          let c = compare i1 i2 in
+          if c = 0 then
+            check_indices (both acc (semantic_equal v1 v2)) (n + 1) e1' e2'
+          else if c < 0 then
+            check_indices (both acc (semantic_equal v1 d2)) (n + 1) e1' e2
+          else check_indices (both acc (semantic_equal d1 v2)) (n + 1) e1 e2'
+      in
+      begin match defaults with
+      | Different when not (Ty.is_finite idx) ->
+        (* There are always indices that aren't bound in either array *)
+        Different
+      | _ -> (
+        let acc, n = check_indices Equal 0 e1 e2 in
+        (* The indices that aren't bound in either array take the default
+           values, there are none left if the [n] bound indices are all the
+           indices *)
+        match Ty.cardinality idx with
+        | Some card when Z.leq card (Z.of_int n) -> acc
+        | None when Ty.is_finite idx -> (
+          match defaults with Different -> both acc Unknown | c -> both acc c )
+        | Some _ | None -> both acc defaults )
+      end
+  | _ -> if equal v1 v2 then Equal else Different
+
+let semantic_distinct vs =
+  (* Values are distinct if all pairs are different, so stop at the first pair
+     that is equal *)
+  let rec loop acc = function
+    | [] -> acc
+    | v :: vs ->
+      let rec pairs acc = function
+        | [] -> loop acc vs
+        | v' :: vs' -> (
+          match semantic_equal v v' with
+          | Equal -> Equal
+          | Different -> pairs acc vs'
+          | Unknown -> pairs Unknown vs' )
+      in
+      pairs acc vs
+  in
+  loop Different vs
 
 let map v f = match v with Nothing -> Nothing | _ -> f v
 
