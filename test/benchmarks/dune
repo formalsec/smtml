@@ -1,3 +1,9 @@
 (executable
  (name test_collections_c)
+ (modules test_collections_c)
  (libraries bos fpath fmt alcotest smtml))
+
+(executable
+ (name bench_micro)
+ (modules bench_micro)
+ (libraries smtml fmt unix zarith))

@@ -11,7 +11,46 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
     open Ty
     module Smap = Symbol.Map
 
-    type symbol_ctx = (M.term, M.func_decl) decl Smap.t
+    module Emap = Map.Make (struct
+      type t = Expr.t
+
+      let compare = Expr.compare
+    end)
+
+    (* Number of encoding memo entries kept per context. Bounds the memory used
+       by the cache for long-running solvers; once exceeded, new expressions are
+       still encoded, but no longer memoized.
+
+       Can be overridden with [SMTML_MAX_MEMO_ENTRIES]; setting it to [0]
+       disables encoding memoization entirely (used by the micro-benchmarks to
+       measure its effect). *)
+    let default_max_memo_entries = 1_000_000
+
+    let max_memo_entries =
+      match Bos.OS.Env.var "SMTML_MAX_MEMO_ENTRIES" with
+      | None -> default_max_memo_entries
+      | Some s -> (
+        match int_of_string_opt s with
+        | Some n when n >= 0 -> n
+        | Some _ | None -> default_max_memo_entries )
+
+    type symbol_ctx =
+      { syms : (M.term, M.func_decl) decl Smap.t
+      ; memo : M.term Emap.t
+      ; memo_size : int
+      }
+
+    let empty_ctx = { syms = Smap.empty; memo = Emap.empty; memo_size = 0 }
+
+    let with_syms (ctx : symbol_ctx) syms = { ctx with syms }
+
+    let add_memo (ctx : symbol_ctx) e term =
+      if ctx.memo_size >= max_memo_entries then ctx
+      else
+        { ctx with
+          memo = Emap.add e term ctx.memo
+        ; memo_size = ctx.memo_size + 1
+        }
 
     module Encoder = struct
       let i8 = M.Types.bitv 8
@@ -60,23 +99,23 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         in
         if M.Internals.caches_consts then
           let sym = M.const name (get_type s.ty) in
-          (Smap.add s (Sym sym) ctx, sym)
+          (with_syms ctx (Smap.add s (Sym sym) ctx.syms), sym)
         else
-          match Smap.find_opt s ctx with
+          match Smap.find_opt s ctx.syms with
           | Some (Sym sym) -> (ctx, sym)
           | Some (Func _) | None ->
             let sym = M.const name (get_type s.ty) in
-            (Smap.add s (Sym sym) ctx, sym)
+            (with_syms ctx (Smap.add s (Sym sym) ctx.syms), sym)
 
       let make_var (ctx : symbol_ctx) (s : Symbol.t) : symbol_ctx * M.term =
         let name =
           match s.name with Simple name -> name | _ -> assert false
         in
-        match Smap.find_opt s ctx with
+        match Smap.find_opt s ctx.syms with
         | Some (Sym sym) -> (ctx, sym)
         | Some (Func _) | None ->
           let var = M.var name (get_type (Symbol.type_of s)) in
-          (Smap.add s (Sym var) ctx, var)
+          (with_syms ctx (Smap.add s (Sym var) ctx.syms), var)
 
       module Bool_impl = struct
         let true_ = M.true_
@@ -737,6 +776,13 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | _ -> Fmt.failwith "unknown rouding mode: %a" Expr.pp rm
 
       let rec encode_expr ctx (hte : Expr.t) : symbol_ctx * M.term =
+        match Emap.find_opt hte ctx.memo with
+        | Some term -> (ctx, term)
+        | None ->
+          let ctx, term = encode_expr_uncached ctx hte in
+          (add_memo ctx hte term, term)
+
+      and encode_expr_uncached ctx (hte : Expr.t) : symbol_ctx * M.term =
         match Expr.view hte with
         | Val value -> (ctx, v value)
         | Ptr { base; offset } ->
@@ -795,12 +841,12 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           let tys = List.map (fun e -> get_type @@ Expr.ty e) args in
           let ctx, arguments = encode_exprs ctx args in
           let ctx, func =
-            match Smap.find_opt sym ctx with
+            match Smap.find_opt sym ctx.syms with
             | Some (Func func) -> (ctx, func)
             | Some (Sym _) -> assert false
             | None ->
               let func = M.Func.make name tys ty in
-              (Smap.add sym (Func func) ctx, func)
+              (with_syms ctx (Smap.add sym (Func func) ctx.syms), func)
           in
           let term = M.Func.apply func arguments in
           (ctx, term)
@@ -966,7 +1012,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
     let value ({ model = m; ctx } : model) (c : Expr.t) : Value.t =
       let ctx, e = Encoder.encode_expr ctx c in
-      Encoder.value_of_term ~ctx m (Expr.return_type c) e
+      Encoder.value_of_term ~ctx:ctx.syms m (Expr.return_type c) e
 
     let values_of_model ?symbols ({ model; ctx } as model0) =
       let m = Hashtbl.create 512 in
@@ -974,7 +1020,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       | Some symbols ->
         List.iter
           (fun sym ->
-            match Smap.find_opt sym ctx with
+            match Smap.find_opt sym ctx.syms with
             | Some (Func _) ->
               (* TODO: support models/values for uninterpreted functions *)
               ()
@@ -993,16 +1039,16 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
               -> (
               match
                 Encoder.array_of_interp sym.ty
-                  (Encoder.eval_term ~ctx model term)
+                  (Encoder.eval_term ~ctx:ctx.syms model term)
               with
               | Some v -> Hashtbl.add m sym v
               | None ->
                 (* TODO: should this be a crash? *)
                 () )
             | Sym term ->
-              let v = Encoder.value_of_term ~ctx model sym.ty term in
+              let v = Encoder.value_of_term ~ctx:ctx.syms model sym.ty term in
               Hashtbl.add m sym v )
-          ctx );
+          ctx.syms );
       m
 
     let set_debug _ = ()
@@ -1010,14 +1056,14 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
     module Smtlib = struct
       let pp ?name ?logic ?status fmt htes =
         (* FIXME: I don't know if encoding with the empty map is ok :\ *)
-        let _, terms = Encoder.encode_exprs Smap.empty htes in
+        let _, terms = Encoder.encode_exprs empty_ctx htes in
         M.Smtlib.pp ?name ?logic ?status fmt terms
     end
 
     module Solver = struct
       let make ?params ?logic () =
         let ctx = Stack.create () in
-        Stack.push Smap.empty ctx;
+        Stack.push empty_ctx ctx;
         { solver = M.Solver.make ?params ?logic ()
         ; ctx
         ; last_ctx = None
@@ -1056,7 +1102,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
 
       let reset (s : solver) =
         Stack.clear s.ctx;
-        Stack.push Smap.empty s.ctx;
+        Stack.push empty_ctx s.ctx;
         s.last_ctx <- None;
         s.assumptions <- [];
         s.unchecked_assumptions <- [];
@@ -1072,7 +1118,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
               List.rev_append exprs s.unchecked_assumptions;
           let ctx, exprs = Encoder.encode_exprs ctx exprs in
           Stack.push ctx s.ctx;
-          M.Solver.add s.solver ~ctx exprs
+          M.Solver.add s.solver ~ctx:ctx.syms exprs
 
       let check (s : solver) ~assumptions =
         match Stack.top_opt s.ctx with
@@ -1086,7 +1132,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           s.last_ctx <- Some ctx;
           Utils.check_log_query
             (fun () ->
-              M.Solver.check s.solver ~ctx ~assumptions:encoded_assuptions )
+              M.Solver.check s.solver ~ctx:ctx.syms
+                ~assumptions:encoded_assuptions )
             M.Internals.name (List.rev assumptions)
 
       let model { solver; last_ctx; assumptions; last_assumptions; _ } =
@@ -1113,7 +1160,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
     module Optimizer = struct
       let make () =
         let ctx = Stack.create () in
-        Stack.push Smap.empty ctx;
+        Stack.push empty_ctx ctx;
         { opt = M.Optimizer.make (); ctx }
 
       let push { opt; _ } = M.Optimizer.push opt
