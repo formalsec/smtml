@@ -131,6 +131,32 @@ let bitsize (ty : t) : int =
 
 let size ty = bitsize ty / 8
 
+let rec is_finite = function
+  | Ty_bool | Ty_unit | Ty_bitv _ | Ty_fp _ | Ty_roundingMode -> true
+  | Ty_array (idx, elem) ->
+    (* Arrays into a type with a single inhabitant have a single inhabitant,
+       even with infinitely many indices *)
+    is_singleton elem || (is_finite idx && is_finite elem)
+  | Ty_int | Ty_real | Ty_str | Ty_list | Ty_app | Ty_regexp | Ty_none -> false
+
+(* Needed to deal with arrays of unit which are technically a single value.
+   TODO: investigate if we can get rid of unit as its not an smt-lib type *)
+and is_singleton = function
+  | Ty_unit -> true
+  | Ty_array (_, elem) -> is_singleton elem
+  | Ty_bool | Ty_bitv _ | Ty_fp _ | Ty_roundingMode | Ty_int | Ty_real | Ty_str
+  | Ty_list | Ty_app | Ty_regexp | Ty_none ->
+    false
+
+let cardinality = function
+  | Ty_bool -> Some (Z.of_int 2)
+  | Ty_unit -> Some Z.one
+  | Ty_bitv n -> Some (Z.shift_left Z.one n)
+  | Ty_roundingMode -> Some (Z.of_int 5)
+  | Ty_fp _ | Ty_array _ | Ty_int | Ty_real | Ty_str | Ty_list | Ty_app
+  | Ty_regexp | Ty_none ->
+    None
+
 module Unop = struct
   type t =
     | Neg

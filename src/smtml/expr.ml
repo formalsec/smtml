@@ -500,6 +500,13 @@ let rec relop ty (op : Ty.Relop.t) hte1 hte2 =
   match (op, view hte1, view hte2) with
   | (Eq | Le | LeU), _, _ when can_be_shortcuted -> value True
   | (Ne | Lt | LtU), _, _ when can_be_shortcuted -> value False
+  | (Eq | Ne), Val (Array _ as v1), Val (Array _ as v2) -> (
+    (* Only simplify when the arrays are known to be semantically equal or
+       different *)
+    match Value.semantic_equal v1 v2 with
+    | Equal -> value (match op with Ne -> False | _ -> True)
+    | Different -> value (match op with Ne -> True | _ -> False)
+    | Unknown -> raw_relop ty op hte1 hte2 )
   | op, Val v1, Val v2 -> value (if Eval.relop ty op v1 v2 then True else False)
   | Ne, Val (Real v), _ | Ne, _, Val (Real v) ->
     if Float.is_nan v || Float.is_infinite v then value True
@@ -619,9 +626,16 @@ let naryop ty op hexps =
       end
   in
 
-  match extract_values [] hexps with
-  | Some vlist -> value (Eval.naryop ty op vlist)
-  | None ->
+  match (op, extract_values [] hexps) with
+  | Ty.Naryop.Distinct, Some (Value.Array _ :: _ as vlist) -> (
+    (* Only simplify when the arrays are known to be semantically distinct
+       or not *)
+    match Value.semantic_distinct vlist with
+    | Different -> value True
+    | Equal -> value False
+    | Unknown -> raw_naryop ty op hexps )
+  | _, Some vlist -> value (Eval.naryop ty op vlist)
+  | _, None ->
     begin match (ty, op) with
     | Ty_str, Concat ->
       let rec concat_exprs acc = function
