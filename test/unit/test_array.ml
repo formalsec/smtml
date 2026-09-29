@@ -112,7 +112,6 @@ let test_semantic_equal () =
     false_
 
 let test_array_indices () =
-  let open Infix in
   let bb_arr_ty = Ty.Ty_array (Ty_bool, Ty_bool) in
   let outer_ty = Ty.Ty_array (bb_arr_ty, Ty_int) in
   let id = Value.array bb_arr_ty ~default:False [ (True, True) ] in
@@ -121,8 +120,9 @@ let test_array_indices () =
     Value.array outer_ty ~default:(Int Z.zero)
       [ (id, Int Z.one); (neg, Int (Z.of_int 2)) ]
   in
-  check (Expr.binop Ty_int Select (Expr.value outer) (Expr.value id)) (int 1);
-  check (Expr.binop Ty_int Select (Expr.value outer) (Expr.value neg)) (int 2)
+  (* Indices can have several representations, so [select] is not folded *)
+  let select = Expr.binop Ty_int Select (Expr.value outer) (Expr.value id) in
+  check select (Expr.raw_binop Ty_int Select (Expr.value outer) (Expr.value id))
 
 let test_typed () =
   let module A =
