@@ -64,7 +64,7 @@ conflicts: [
   "bitwuzla-cxx" {< "0.6.0"}
   "colibri2" {< "0.6"}
   "colibrilib" {< "0.6"}
-  "cvc5" {< "1.3.0-2"}
+  "cvc5" {< "1.3.0-3"}
   "z3" {< "5.0.0"}
 ]
 build: [
@@ -94,5 +94,4 @@ x-maintenance-intent: [
 available: arch != "arm32" & arch != "x86_32"
 pin-depends: [
   ["benchpress.dev" "git+https://github.com/sneeuwballen/benchpress.git#7f44cdd9f0511afcce2c9ad3c04cc9b72919bcff"]
-  ["cvc5.dev" "git+https://github.com/formalsec/ocaml-cvc5.git#22e183f3b8b83bc3ebb43f0c24ddfd15fa682ebd"]
 ]
