@@ -140,105 +140,28 @@ let rec equal (v1 : t) (v2 : t) : bool =
     , _ ) ->
     false
 
-let dedup_indices entries =
+(* Keep the first binding of each index (since the outer stores appear first,
+   the first binding of an index shadows/replaces the other ones), and drop
+   bindings that are equal to the default. *)
+let dedup_indices ~default entries =
   List.stable_sort (fun (i1, _) (i2, _) -> compare i1 i2) entries
   |> List.fold_left
-       (fun acc ((i, _) as binding) ->
-         match acc with
-         | (i', _) :: _ when compare i i' = 0 -> acc
-         | _ -> binding :: acc )
-       []
-  |> List.rev
+       (fun (last, acc) ((i, v) as binding) ->
+         match last with
+         | Some i' when compare i i' = 0 -> (last, acc)
+         | _ -> (Some i, if equal v default then acc else binding :: acc) )
+       (None, [])
+  |> snd |> List.rev
 
 let array_select ~default entries i =
   match List.find_opt (fun (i', _) -> equal i i') entries with
   | Some (_, e) -> e
   | None -> default
 
-(* The value that appears the most in [vs], if there is a tie, choose the
-   smallest one *)
-let most_common_elem vs =
-  (* The number of occurrences of each value, in decreasing order of values *)
-  let counts =
-    List.fold_left
-      (fun counts v ->
-        match counts with
-        | (v', c) :: counts when equal v v' -> (v', c + 1) :: counts
-        | _ -> (v, 1) :: counts )
-      [] (List.sort compare vs)
-  in
-  match counts with
-  | [] -> assert false
-  | count :: counts ->
-    fst
-      (List.fold_left
-         (fun (v, c) (v', c') -> if c' >= c then (v', c') else (v, c))
-         count counts )
-
-(* Binds every index in the sorted [indices] to its value in the sorted
-   [entries], or to [default] *)
-let rec bind_all ~default indices entries =
-  match (indices, entries) with
-  | [], _ -> []
-  | i :: indices, (i', v) :: entries' when compare i i' = 0 ->
-    (i, v) :: bind_all ~default indices entries'
-  | i :: indices, _ -> (i, default) :: bind_all ~default indices entries
-
-(* Arrays are kept in a canonical form, so that [equal], [compare] and [hash]
-   are semantic: entries are sorted, bind distinct indices, and don't bind the
-   default, which is the value at the most indices (ties are broken by
-   [compare]). With a finite index type, arrays with different defaults can
-   otherwise be equal, e.g. for [(Array Bool Bool)], [[true -> true; _ -> false]]
-   and [[false -> false; _ -> true]]. *)
-let rec array ty ~default entries =
-  (* Keep the first binding of each index (since the outer stores appear first,
-     the first binding of an index shadows/replaces the other ones), and drop
-     bindings that are equal to the default. *)
-  let entries =
-    dedup_indices entries |> List.filter (fun (_, v) -> not (equal v default))
-  in
-  let default, entries =
-    match ty with
-    | Ty_array (idx, _) -> canonical_default idx ~default entries
-    | _ -> (default, entries)
-  in
-  Array { ty; default; entries }
-
-(* [entries] are sorted by index, and none of them has the value [default].
-   The default is the value of every index missing from [entries], so if
-   [entries] cover less than half of the indices, the default is already the
-   most common value. Otherwise, we list the value of every index, and the most
-   common one becomes the new default. *)
-and canonical_default idx ~default entries =
-  match Ty.cardinality idx with
-  | Some card when Z.to_int card <= 2 * List.length entries ->
-    (* Index type is finite and small so no overflow *)
-    let entries = bind_all ~default (domain idx) entries in
-    let default = most_common_elem (List.map snd entries) in
-    (default, List.filter (fun (_, v) -> not (equal v default)) entries)
-  | _ -> (default, entries)
-
-(* The sorted values of a "small" type with a finite [Ty.cardinality] *)
-and domain (ty : Ty.t) : t list =
-  match ty with
-  | Ty_bool -> [ False; True ]
-  | Ty_unit -> [ Unit ]
-  | Ty_bitv n ->
-    List.init (1 lsl n) (fun i -> Bitv (Bitvector.make (Z.of_int i) n))
-  | Ty_array (idx, elem) -> (
-    (* All the functions from [idx] to [elem] *)
-    match domain elem with
-    | [] -> []
-    | default :: _ as elems ->
-      (* Arbitrary default because we bind all indices before selecting the
-         "best" default value *)
-      List.fold_left
-        (fun fs i ->
-          List.concat_map (fun f -> List.map (fun e -> (i, e) :: f) elems) fs )
-        [ [] ] (domain idx)
-      |> List.map (fun entries -> array ty ~default entries)
-      |> List.sort compare )
-  | _ -> assert false
+(* Solvers are assumed to produce the same model value for semantically
+   equivalent arrays, so array values are compared structurally. *)
+let array ty ~default entries =
+  Array { ty; default; entries = dedup_indices ~default entries }
 
 let map v f = match v with Nothing -> Nothing | _ -> f v
 

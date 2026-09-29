@@ -131,34 +131,6 @@ let bitsize (ty : t) : int =
 
 let size ty = bitsize ty / 8
 
-(* Wider bit-vectors are treated as infinite, so that listing all the indices
-   of an array stays cheap. *)
-let max_finite_bitv_width = 8
-
-let max_finite_cardinality = Z.shift_left Z.one max_finite_bitv_width
-
-let rec cardinality (ty : t) : Z.t option =
-  match ty with
-  | Ty_bool -> Some (Z.of_int 2)
-  | Ty_unit ->
-    (* TODO: is this type ever really used? *)
-    Some Z.one
-  | Ty_bitv n when n <= max_finite_bitv_width -> Some (Z.shift_left Z.one n)
-  | Ty_array (idx, elem) ->
-    let open Option.Syntax in
-    let* n_idx = cardinality idx in
-    let* n_elem = cardinality elem in
-    if Z.equal n_elem Z.one then Some Z.one
-    else if Z.gt n_idx (Z.of_int max_finite_bitv_width) then
-      (* [n_elem ^ n_idx > 2 ^ 8], don't compute it *)
-      None
-    else
-      let card = Z.pow n_elem (Z.to_int n_idx) in
-      if Z.leq card max_finite_cardinality then Some card else None
-  | Ty_int | Ty_real | Ty_fp _ | Ty_bitv _ | Ty_str | Ty_list | Ty_app | Ty_none
-  | Ty_regexp | Ty_roundingMode ->
-    None
-
 module Unop = struct
   type t =
     | Neg

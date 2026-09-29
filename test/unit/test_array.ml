@@ -46,7 +46,16 @@ let test_value () =
   end;
   (* The second binding of index 1 and the binding of 0 to false (the default
      value) are dropped *)
-  Alcotest.check ty_testable "type_of" arr (Value.type_of v)
+  Alcotest.check ty_testable "type_of" arr (Value.type_of v);
+  (* The outer binding of 1 to false (the default value) still shadows the inner
+     one *)
+  Alcotest.check value_testable "shadowed by the default"
+    (Value.array arr ~default:False [ (Value.Int Z.zero, True) ])
+    (Value.array arr ~default:False
+       [ (Value.Int Z.zero, True)
+       ; (Value.Int Z.one, False)
+       ; (Value.Int Z.one, True)
+       ] )
 
 let test_eval () =
   let open Infix in
@@ -61,44 +70,8 @@ let test_eval () =
           [ (Value.Int Z.one, True); (Value.Int (Z.of_int 2), True) ] ) );
   check (Expr.relop arr Eq (Expr.value arr_v) arr_v') false_
 
-let test_eval_eq_finite_index () =
-  let open Infix in
-  let eq ty a b = Expr.relop ty Eq (Expr.value a) (Expr.value b) in
+let test_equal () =
   let bb_arr_ty = Ty.Ty_array (Ty_bool, Ty_bool) in
-  let const_true = Value.array bb_arr_ty ~default:True [] in
-  (* Every index is bound, so the default is unused *)
-  let full_rewrite =
-    Value.array bb_arr_ty ~default:False [ (True, True); (False, True) ]
-  in
-  check (eq bb_arr_ty full_rewrite const_true) true_;
-  check (eq Ty_bool full_rewrite const_true) true_;
-  check
-    (Expr.relop bb_arr_ty Ne (Expr.value full_rewrite) (Expr.value const_true))
-    false_;
-  let partial = Value.array bb_arr_ty ~default:False [ (True, True) ] in
-  check (eq bb_arr_ty partial const_true) false_;
-  let bv2 i = Value.Bitv (Bitvector.make (Z.of_int i) 2) in
-  let arr_bv2 = Ty.Ty_array (Ty_bitv 2, Ty_bool) in
-  check
-    (eq arr_bv2
-       (Value.array arr_bv2 ~default:True
-          [ (bv2 0, False); (bv2 1, False); (bv2 2, False); (bv2 3, False) ] )
-       (Value.array arr_bv2 ~default:False []) )
-    true_;
-  (* Infinite index type: different defaults always differ somewhere *)
-  check
-    (eq arr
-       (Value.array arr ~default:True [ (Value.Int Z.zero, False) ])
-       (Value.array arr ~default:False []) )
-    false_
-
-let test_semantic_equal () =
-  let bb_arr_ty = Ty.Ty_array (Ty_bool, Ty_bool) in
-  (* Both are the identity *)
-  let id1 = Value.array bb_arr_ty ~default:False [ (True, True) ] in
-  let id2 = Value.array bb_arr_ty ~default:True [ (False, False) ] in
-  Alcotest.check value_testable "same function" id1 id2;
-  Alcotest.(check int) "same hash" (Value.hash id1) (Value.hash id2);
   (* Different types, same default and bindings *)
   Alcotest.(check bool)
     "different types" false
@@ -119,50 +92,14 @@ let test_array_indices () =
   let open Infix in
   let bb_arr_ty = Ty.Ty_array (Ty_bool, Ty_bool) in
   let outer_ty = Ty.Ty_array (bb_arr_ty, Ty_int) in
-  let const b = Value.array bb_arr_ty ~default:b [] in
-  let id1 = Value.array bb_arr_ty ~default:False [ (True, True) ] in
-  let id2 = Value.array bb_arr_ty ~default:True [ (False, False) ] in
+  let id = Value.array bb_arr_ty ~default:False [ (True, True) ] in
   let neg = Value.array bb_arr_ty ~default:False [ (False, True) ] in
-  (* [id1] and [id2] are the same index, so the second binding is dropped *)
   let outer =
     Value.array outer_ty ~default:(Int Z.zero)
-      [ (id1, Int Z.one); (id2, Int (Z.of_int 2)) ]
+      [ (id, Int Z.one); (neg, Int (Z.of_int 2)) ]
   in
-  check (Expr.binop Ty_int Select (Expr.value outer) (Expr.value id2)) (int 1);
-  (* All 4 indices are bound to 1 *)
-  Alcotest.check value_testable "all indices bound"
-    (Value.array outer_ty ~default:(Int Z.one) [])
-    (Value.array outer_ty ~default:(Int Z.zero)
-       [ (id1, Int Z.one)
-       ; (neg, Int Z.one)
-       ; (const True, Int Z.one)
-       ; (const False, Int Z.one)
-       ] )
-
-let test_cardinality () =
-  let card = Alcotest.(option (testable Z.pp_print Z.equal)) in
-  Alcotest.check card "bool" (Some (Z.of_int 2)) (Ty.cardinality Ty_bool);
-  Alcotest.check card "int" None (Ty.cardinality Ty_int);
-  Alcotest.check card "bv8" (Some (Z.of_int 256)) (Ty.cardinality (Ty_bitv 8));
-  Alcotest.check card "bv9 is treated as infinite" None
-    (Ty.cardinality (Ty_bitv 9));
-  let bb_arr_ty = Ty.Ty_array (Ty_bool, Ty_bool) in
-  Alcotest.check card "array(bool, bool)"
-    (Some (Z.of_int 4))
-    (Ty.cardinality bb_arr_ty);
-  Alcotest.check card "array(array(bool, bool), bool)"
-    (Some (Z.of_int 16))
-    (Ty.cardinality (Ty_array (bb_arr_ty, Ty_bool)));
-  Alcotest.check card "array(int, bool)" None (Ty.cardinality arr);
-  Alcotest.check card "array(bv32, bv8) is treated as infinite" None
-    (Ty.cardinality (Ty_array (Ty_bitv 32, Ty_bitv 8)));
-  Alcotest.check card "array(bv3, bool)"
-    (Some (Z.of_int 256))
-    (Ty.cardinality (Ty_array (Ty_bitv 3, Ty_bool)));
-  Alcotest.check card "array(bv4, bool) is treated as infinite" None
-    (Ty.cardinality (Ty_array (Ty_bitv 4, Ty_bool)));
-  Alcotest.check card "array(bool, bv8) is treated as infinite" None
-    (Ty.cardinality (Ty_array (Ty_bool, Ty_bitv 8)))
+  check (Expr.binop Ty_int Select (Expr.value outer) (Expr.value id)) (int 1);
+  check (Expr.binop Ty_int Select (Expr.value outer) (Expr.value neg)) (int 2)
 
 let test_typed () =
   let module A =
@@ -187,11 +124,8 @@ let () =
         ; Alcotest.test_case "test_expr" `Quick test_expr
         ; Alcotest.test_case "test_value" `Quick test_value
         ; Alcotest.test_case "test_eval" `Quick test_eval
-        ; Alcotest.test_case "test_eval_eq_finite_index" `Quick
-            test_eval_eq_finite_index
-        ; Alcotest.test_case "test_semantic_equal" `Quick test_semantic_equal
+        ; Alcotest.test_case "test_equal" `Quick test_equal
         ; Alcotest.test_case "test_array_indices" `Quick test_array_indices
-        ; Alcotest.test_case "test_cardinality" `Quick test_cardinality
         ; Alcotest.test_case "test_typed" `Quick test_typed
         ] )
     ]
