@@ -5,6 +5,7 @@
   test_eval
   test_expr
   test_extract_bits
+  test_lru
   test_model
   test_statistics
   test_smtlib_pp
