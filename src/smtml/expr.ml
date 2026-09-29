@@ -714,7 +714,7 @@ let rec simplify_expr ?(in_relop = false) (hte : t) : t =
     (* Not simplifying anything atm *)
     hte
 
-module Cache = Hashtbl.Make (struct
+module Cache = Lru.Make (struct
   type nonrec t = t
 
   let hash = hash
@@ -724,7 +724,7 @@ end)
 
 let simplify =
   (* TODO: it may make sense to share the cache with simplify_expr ? *)
-  let cache = Cache.create 512 in
+  let cache = Cache.create 4096 in
   fun e ->
     match Cache.find_opt cache e with
     | Some simplified -> simplified
