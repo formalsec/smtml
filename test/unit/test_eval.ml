@@ -376,7 +376,25 @@ module Bool_test = struct
         (Eval.relop Ty_bool Eq true_ true_);
       Alcotest.(check bool)
         "0l = 0l" true
-        (Eval.relop (Ty_bitv 32) Eq (int32 0l) (int32 0l))
+        (Eval.relop (Ty_bitv 32) Eq (int32 0l) (int32 0l));
+      (* In SMT-LIB all NaNs are equal and [+0] and [-0] are different *)
+      Alcotest.(check bool)
+        "+0. = -0." false
+        (Eval.relop Ty_bool Eq (float32 0.) (float32 (-0.)));
+      Alcotest.(check bool)
+        "nan = nan" true
+        (Eval.relop Ty_bool Eq (float64 Float.nan) (float64 (-.Float.nan)));
+      (* [fp.eq] is IEEE equality: So any comparison with nan is false, and
+         all zeros are true *)
+      Alcotest.(check bool)
+        "fp.eq +0. -0." true
+        (Eval.relop (Ty_fp 32) Eq (float32 0.) (float32 (-0.)));
+      Alcotest.(check bool)
+        "fp.eq nan nan" false
+        (Eval.relop (Ty_fp 64) Eq (float64 Float.nan) (float64 (-.Float.nan)))
+      (* TODO: this is confusing, Eq is fp.eq or = (which have different
+         semantics) depending on the type? (which is a priori a type
+         parameter of eq?)  *)
     in
     let test_ne () =
       Alcotest.(check bool)
