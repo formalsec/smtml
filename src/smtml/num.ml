@@ -12,16 +12,25 @@ let type_of (n : t) =
 (* Optimized mixer (DJB2 variant). Inlines to simple arithmetic. *)
 let[@inline] combine h v = (h * 33) + v
 
+(* Give all nans the same hash *)
 let hash = function
+  | F32 n when Float.is_nan (Int32.float_of_bits n) -> combine 1 0
+  | F64 n when Float.is_nan (Int64.float_of_bits n) -> combine 2 0
   | F32 n -> combine 1 (Int32.hash n)
   | F64 n -> combine 2 (Int64.hash n)
+
+(* In SMT-LIB, all NaNs are equal, and [-0.] and [+0.] are different *)
+let compare_float x y =
+  let c = Float.compare x y in
+  if c <> 0 || Float.is_nan x then c
+  else Bool.compare (Float.sign_bit y) (Float.sign_bit x)
 
 let compare n1 n2 =
   match (n1, n2) with
   | F32 i1, F32 i2 ->
-    Float.compare (Int32.float_of_bits i1) (Int32.float_of_bits i2)
+    compare_float (Int32.float_of_bits i1) (Int32.float_of_bits i2)
   | F64 i1, F64 i2 ->
-    Float.compare (Int64.float_of_bits i1) (Int64.float_of_bits i2)
+    compare_float (Int64.float_of_bits i1) (Int64.float_of_bits i2)
   | F32 _, F64 _ -> -1
   | F64 _, _ -> 1
 
