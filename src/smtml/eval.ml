@@ -50,7 +50,8 @@ let pp_error_kind fmt err =
     Fmt.string fmt "Invalid format conversion string"
   | `Undecidable_array_equality ->
     Fmt.string fmt
-      "The equality of these arrays can't be decided without a solver"
+      "The equality of these arrays or array indices can't be decided without \
+       a solver"
   | `Unsupported_operator (op, ty) ->
     Fmt.pf fmt "The operator '%a' is not supported for type '%a'" pp_op_type op
       Ty.pp ty
@@ -522,12 +523,20 @@ module Lst = struct
 end
 
 module Arrays = struct
+  (* Indices with several representations can't be matched structurally *)
+  let check_indices : Ty.t -> unit = function
+    | Ty_array (idx, _) when Ty.is_not_canonical idx ->
+      eval_error `Undecidable_array_equality
+    | _ -> ()
+
   let[@inline] select v1 v2 =
-    let _, default, entries = of_array 1 (`Binop Select) v1 in
+    let ty, default, entries = of_array 1 (`Binop Select) v1 in
+    check_indices ty;
     Value.array_select ~default entries v2
 
   let[@inline] store v1 v2 v3 =
     let ty, default, entries = of_array 1 (`Triop Store) v1 in
+    check_indices ty;
     Value.array_store ty ~default entries v2 v3
 
   let[@inline] relop (op : Ty.Relop.t) v1 v2 =

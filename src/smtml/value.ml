@@ -189,18 +189,12 @@ let both a b =
   | Equal, b -> b
   | Unknown, _ -> Unknown
 
-let rec is_not_canonical (ty : Ty.t) =
-  match ty with
-  | Ty_array (idx, elem) ->
-    Ty.is_finite idx || is_not_canonical idx || is_not_canonical elem
-  | _ -> false
-
 let rec semantic_equal v1 v2 =
   match (v1, v2) with
   | ( Array { ty = Ty_array (idx, _) as ty1; default = d1; entries = e1 }
     , Array { ty = ty2; default = d2; entries = e2 } ) ->
     if not (Ty.equal ty1 ty2) then Different
-    else if is_not_canonical idx then
+    else if Ty.is_not_canonical idx then
       (* non-canonical indices means that different representations do not
          imply distinction *)
       if equal v1 v2 then Equal else Unknown

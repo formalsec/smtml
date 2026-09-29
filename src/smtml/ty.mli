@@ -76,6 +76,10 @@ val bitsize : t -> int
 (** [is_finite t] is [true] if the type [t] has finitely many inhabitants. *)
 val is_finite : t -> bool
 
+(** [is_not_canonical t] is [true] if values of type [t] can have different
+    syntactic representations but represent the same semantic value. *)
+val is_not_canonical : t -> bool
+
 (** [cardinality t] is [Some n] if the type [t] is known to have [n]
     inhabitants, and [None] if it is infinite, or finite but not computed
     (floating-point numbers and arrays). *)
