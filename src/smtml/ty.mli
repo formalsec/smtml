@@ -73,12 +73,6 @@ val size : t -> int
 (** [bitsize t] returns the size (in bits) of the type [t], if applicable. *)
 val bitsize : t -> int
 
-(** [cardinality t] is the number of inhabitants of the type [t], used for array
-    index types. Returns [Some n] if [t] has [n] inhabitants, or [None] if [t]
-    is infinite. Types with more than [2 ^ 8] inhabitants (e.g. bit-vectors
-    wider than 8 bits) are treated as infinite. *)
-val cardinality : t -> Z.t option
-
 (** {1 Unary Operations} *)
 
 module Unop : sig
