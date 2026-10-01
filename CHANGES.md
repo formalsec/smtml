@@ -1,7 +1,53 @@
 # Changelog
 
+## 0.31.0 - 2026-10-01
+
+- 2026-09-30 Fix testsuite
+- 2026-09-30 Don't fold select/store when array indices aren't canonical
+- 2026-09-30 Use structural equality for models and semantic equality for arrays in expr and eval, leave as symbolic if equality can't be decided
+- 2026-09-30 Assume that syntactically different arrays are semantically different
+- 2026-09-30 Treat the domains of arrays with an index type with a cardinality of over 2^8 as infinite
+- 2026-09-30 Properly "normalize" arrays + support for nested arrays (as indices)
+- 2026-09-30 Add bounded per-solver memoization of encoded expressions
+- 2026-09-30 Prevent unbounded growth of memory in caches
+- 2026-09-30 Add bounded hash tabled with least-recently-used eviction
+- 2026-09-30 Bump cvc5 to latest release and remove dev pin
+- 2026-09-30 Fix SMT-LIB semantics on float nans and zeros
+- 2026-09-28 Fix colibri2 conflicts
+- 2026-09-28 Add support for uninterpreted function in cvc5 ([#654](https://github.com/formalsec/smtml/issues/654))
+- 2026-09-28 Make the const array function an option
+- 2026-09-28 Better equality checking function for array values
+- 2026-09-28 Give up support for arrays with arrays as indices for now
+- 2026-09-28 Compute cardinality for "small" array types, and make const array function return an option
+- 2026-09-28 Move semantic value equality checking to Value.ml and fix it
+- 2026-09-28 Properly do semantic equality checking on array values
+- 2026-09-28 Add support for const arrays (as queries) and properly encore array values
+- 2026-09-28 Add evaluation for array operations with constant arguments
+- 2026-09-28 Typecheck array op arguments
+- 2026-09-28 Fix cvc5 bit-vector model reading
+- 2026-09-28 Add support for array models
+- 2026-09-28 Update cvc5 pin
+- 2026-09-27 Properly show array type in typed interface + fix tests
+- 2026-09-27 Ignore array models for now
+- 2026-09-27 Add tests for arrays
+- 2026-09-27 Add support for arrays
+- 2026-09-27 Pin ocaml-cvc5 version
+- 2026-09-26 Bump z3 to 5.1.0 ([#561](https://github.com/formalsec/smtml/issues/561))
+- 2026-09-26 Fix model generation for expressions with different return types
+- 2026-09-18 Implement and fix modulo operator in ints and bitvectors ([#649](https://github.com/formalsec/smtml/issues/649))
+- 2026-09-18 Remove doc level comment requirement from AGENTS.md
+- 2026-09-16 Start depracting the `Expr.Bool` ([#624](https://github.com/formalsec/smtml/issues/624))
+- 2026-09-07 Fmt
+- 2026-09-07 Skipping functions from ctx for now since we don't support their models
+- 2026-09-07 Add test with uninterpreted functions for alt-ergo and colibri2
+- 2026-09-07 FIx handling of uninterpreted function by Alt-Ergo and Colibri2
+- 2026-08-31 Add test for alt-ergo with negative values in model
+- 2026-08-31 Fix model recovery from Alt-Ergo for negative values
+- 2026-08-25 Remove colibri2 pinned dependency
+
 ## 0.30.0 - 2026-08-13
 
+- 2026-08-13 Release 0.30.0
 - 2026-08-13 Quantifer support and unification of API for creation of const/var
 - 2026-08-13 Remove commented code block in cmd_run.ml
 - 2026-08-12 Add `ls` command to quickly list installed solvers and versions
