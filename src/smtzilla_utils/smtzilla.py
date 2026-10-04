@@ -94,6 +94,10 @@ delta_col = "delta"
 def mk_data(path):
     data = pd.read_csv(path)
 
+    # Keep only check-sat rows (model rows are ignored for now and they always
+    # have a the same features as the previous check-sat row)
+    data = data[~data[model_col]].drop(model_col, axis=1)
+
     # Drop columns where all values are 0
     data = data.loc[:, (data != 0).any(axis=0)]
 
@@ -224,7 +228,9 @@ def gbrt_to_dict(model, feature_names):
     model_dict = {
         "n_estimators": model.n_estimators,
         "init_value": (
-            float(model.init_.constant_) if hasattr(model.init_, "constant_") else 0.0
+            float(model.init_.constant_.item())
+            if hasattr(model.init_, "constant_")
+            else 0.0
         ),
         "trees": [],
     }
@@ -297,8 +303,6 @@ def simulation(data, models, feature_cols):
 
 
 data, feature_cols = mk_data(str(args.PATH))
-# currently not used
-data.drop("model", axis=1, inplace=True)
 
 if args.pp_stats:
     pp_stats(data, feature_cols)
