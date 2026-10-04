@@ -91,11 +91,15 @@ let model_of_json json =
       }
   else DTModel (tree_of_json model_data)
 
-let read_models_from_file filename =
-  let json = Yojson.Safe.from_file filename in
+let models_of_json json =
   json |> to_assoc
   |> List.map (fun (solver_name, solver_json) ->
     (solver_name, model_of_json solver_json) )
+
+let read_models_from_string s = models_of_json (Yojson.Safe.from_string s)
+
+let read_models_from_file filename =
+  models_of_json (Yojson.Safe.from_file filename)
 
 let rec eval_tree (feats : Feature_map.t) = function
   | Leaf v -> v
