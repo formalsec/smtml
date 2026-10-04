@@ -6,7 +6,7 @@ open Smtml
 
 let get_solver debug solver_type solver_mode =
   let module Mappings : Mappings.S_with_fresh =
-    (val Solver_type.to_mappings solver_type)
+    (val Solver_dispatcher.mappings_of_solver solver_type)
   in
   Mappings.set_debug debug;
   match solver_mode with

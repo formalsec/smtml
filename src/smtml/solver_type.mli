@@ -3,8 +3,8 @@
 (* Written by the Smtml programmers *)
 
 (** Solver Type Module. This module defines types and utilities for working with
-    different SMT solvers, including parsing, pretty-printing, availability
-    checks, and mapping retrieval. *)
+    different SMT solvers, including parsing and pretty-printing. Availability
+    checks and mapping retrieval are in {!Solver_dispatcher}. *)
 
 (** {1 Solver Types} *)
 
@@ -36,15 +36,3 @@ val pp : t Fmt.t
 
 (** [conv] provides a command-line argument converter for solver types. *)
 val conv : t Cmdliner.Arg.conv
-
-(** {1 Solver Availability} *)
-
-(** [is_available solver] checks whether the given solver is available in the
-    current environment. *)
-val is_available : t -> bool
-
-(** {1 Solver Mappings} *)
-
-(** [to_mappings solver] retrieves the corresponding solver mappings module for
-    the given solver type. *)
-val to_mappings : t -> (module Mappings.S_with_fresh)

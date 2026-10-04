@@ -5,6 +5,19 @@
 open Smtzilla_utils
 open Mappings_intf
 
+let mappings_of_name name : (module Mappings.S_with_fresh) option =
+  match Solver_type.of_string name with
+  | Ok Z3_solver -> Some (module Z3_mappings)
+  | Ok Bitwuzla_solver -> Some (module Bitwuzla_mappings)
+  | Ok (Colibri2_solver | Cvc5_solver | Altergo_solver | Smtzilla_solver)
+  | Error _ ->
+    None
+
+let is_solver_available name =
+  match mappings_of_name name with
+  | Some (module M) -> M.is_available
+  | None -> false
+
 let available_models : ((string * Regression_model.t) list, string) result =
   let env_var = "MODEL_FILE_PATH" in
   let models =
@@ -28,7 +41,15 @@ let available_models : ((string * Regression_model.t) list, string) result =
        got: [%a]"
       Fmt.(list ~sep:comma string)
       (List.map fst models)
-  | models -> models
+  | Ok models as ok -> (
+    match
+      List.find_opt (fun (name, _) -> not (is_solver_available name)) models
+    with
+    | Some (name, _) ->
+      Fmt.error "SMTZilla: the solver %s used by the model is not available"
+        name
+    | None -> ok )
+  | Error _ as err -> err
 
 let get_models () =
   match available_models with
@@ -109,10 +130,11 @@ module Fresh = struct
         | Some s -> s
         | None ->
           let (module S) : (module Mappings.S_with_fresh) =
-            match name with
-            | "z3" -> init_solver_instance (module Z3_mappings)
-            | "bitwuzla" -> init_solver_instance (module Bitwuzla_mappings)
-            | _ -> Fmt.failwith "SMTZilla: Unknown solver %s" name
+            match mappings_of_name name with
+            | Some m -> init_solver_instance m
+            | None ->
+              (* [available_models] only keeps models of available solvers *)
+              assert false
           in
           let instance = S.Solver.make () in
           List.iter

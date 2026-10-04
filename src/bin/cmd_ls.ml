@@ -27,7 +27,7 @@ let package_name = function
 let get_availability solv_ty =
   match package_name solv_ty with
   | None ->
-    if Solver_type.is_available solv_ty then Installed_via "Z3/Bitwuzla"
+    if Solver_dispatcher.is_available solv_ty then Installed_via "Z3/Bitwuzla"
     else Not_installed
   | Some name ->
     begin match Build_info.V1.Statically_linked_libraries.find ~name with
