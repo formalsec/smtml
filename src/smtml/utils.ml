@@ -36,7 +36,11 @@ let write =
       ref []
     in
     let close () =
-      if List.compare_length_with !log_entries 0 <> 0 then
+      (* Clear entries after every call to close to avoid duplicate writing when
+         sigterm is called after at_exit *)
+      let entries = !log_entries in
+      log_entries := [];
+      if List.compare_length_with entries 0 <> 0 then
         try
           let oc =
             (* open with wr/r/r rights, create if it does not exit and append to
@@ -45,13 +49,17 @@ let write =
               [ Open_creat; Open_binary; Open_append ]
               0o644 (Fpath.to_string path)
           in
-          Marshal.to_channel oc !log_entries [];
+          Marshal.to_channel oc entries [];
           Out_channel.close oc
         with e ->
           Fmt.failwith "Failed to write log: %s@." (Printexc.to_string e)
     in
     at_exit close;
-    Sys.set_signal Sys.sigterm (Sys.Signal_handle (fun _ -> close ()));
+    Sys.set_signal Sys.sigterm
+      (Sys.Signal_handle
+         (fun _ ->
+           close ();
+           exit 143 ) );
     (* write *)
     let mutex = Mutex.create () in
     fun ~model solver_name assumptions time status ->
