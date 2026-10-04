@@ -202,9 +202,12 @@ module Fresh = struct
         s.stmts <- Pop n :: s.stmts
 
       let reset s =
-        Hashtbl.iter
-          (fun _ (SolverInst ((module S), instance)) -> S.Solver.reset instance)
-          s.solver_instances
+        (* just recreate the solvers instead of relying on their reset
+           functions, notably since bitwuzla doesn't support reset *)
+        Hashtbl.reset s.solver_instances;
+        s.expr_acc <- [];
+        s.stmts <- [];
+        s.last_solver <- None
 
       let clone_solver_inst (SolverInst ((module S), _)) =
         let (module NewS) = init_solver_instance (module S) in
