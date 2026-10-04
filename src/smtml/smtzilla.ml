@@ -151,9 +151,27 @@ module Fresh = struct
         one of the solver types? *)
 
       let check s ~assumptions =
-        let best_solver_name = get_best_solver (s.expr_acc @ assumptions) in
-        (* TODO: (s.expr_acc @ assumptions) is not really correct as s.expr_acc
-          does not take into account pushes and pops.  *)
+        let best_solver_name =
+          (* TODO: (s.expr_acc @ assumptions) is not really correct as
+            s.expr_acc does not take into account pushes and pops.  *)
+          match s.expr_acc @ assumptions with
+          | [] ->
+            (* If the query is empty, its trivially sat and there are no
+               features to extract, just use the first available solver *)
+            let name =
+              match s.last_solver with
+              | Some name -> name
+              | None -> (
+                (* TODO: this is probably unreachable. More generally empty
+                   queries should return the last result without even reaching
+                   the solver *)
+                match get_models () with
+                | (name, _) :: _ -> name
+                | [] -> assert false )
+            in
+            name
+          | exprs -> get_best_solver exprs
+        in
         s.last_solver <- Some best_solver_name;
         let (SolverInst ((module S), solver_inst)) =
           get_solver_instance s best_solver_name
