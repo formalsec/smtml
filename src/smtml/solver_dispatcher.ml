@@ -11,7 +11,8 @@ let is_available = function
   | Cvc5_solver -> Cvc5_mappings.is_available
   | Altergo_solver -> Altergo_mappings.is_available
   | Smtzilla_solver ->
-    Z3_mappings.is_available || Bitwuzla_mappings.is_available
+    Smtzilla.is_available
+    && (Z3_mappings.is_available || Bitwuzla_mappings.is_available)
 
 let available = List.filter is_available supported_solvers
 

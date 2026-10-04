@@ -32,6 +32,8 @@ type t =
 
 val pp : t Fmt.t
 
+val read_models_from_string : string -> (string * t) list
+
 val read_models_from_file : string -> (string * t) list
 
 val choose_best : (score * 'a) list -> 'a

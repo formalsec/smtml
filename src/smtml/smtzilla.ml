@@ -5,11 +5,35 @@
 open Smtzilla_utils
 open Mappings_intf
 
-let available_models : (string * Regression_model.t) list =
+let available_models : ((string * Regression_model.t) list, string) result =
   let env_var = "MODEL_FILE_PATH" in
-  match Bos.OS.Env.var env_var with
-  | Some path -> Regression_model.read_models_from_file path
-  | None -> Regression_model_default.default_models
+  let models =
+    match Bos.OS.Env.var env_var with
+    | None -> Ok Regression_model_default.default_models
+    | Some path -> (
+      let open Smtml_prelude.Result.Syntax in
+      match
+        let* path = Fpath.of_string path in
+        let* path = Bos.OS.File.must_exist path in
+        Bos.OS.File.read path
+      with
+      | Ok content -> Ok (Regression_model.read_models_from_string content)
+      | Error (`Msg msg) ->
+        Fmt.error "SMTZilla: failed to load the model: %s" msg )
+  in
+  match models with
+  | Ok (([] | [ _ ]) as models) ->
+    Fmt.error
+      "SMTZilla: the loaded model must be trained on at least two solvers, \
+       got: [%a]"
+      Fmt.(list ~sep:comma string)
+      (List.map fst models)
+  | models -> models
+
+let get_models () =
+  match available_models with
+  | Ok models -> models
+  | Error msg -> Fmt.failwith "%s" msg
 
 module Fresh = struct
   module Make () = struct
@@ -41,6 +65,7 @@ module Fresh = struct
 
     module Solver = struct
       let make ?params:_ ?logic:_ () =
+        let (_ : (string * Regression_model.t) list) = get_models () in
         { solver_instances = Hashtbl.create 16
         ; expr_acc = []
         ; stmts = []
@@ -62,7 +87,7 @@ module Fresh = struct
             (fun (name, model) ->
               let score = Regression_model.predict feats model in
               (score, name) )
-            available_models
+            (get_models ())
         in
         let name = Regression_model.choose_best scores in
         Log.info (fun k -> k "Selected solver %s" name);
@@ -231,15 +256,6 @@ module Fresh = struct
   end
 end
 
-let is_available =
-  match available_models with
-  | [] -> false
-  | [ (name, _) ] ->
-    Fmt.failwith
-      "SMTZilla: the loaded model was only trained on %s, you should either \
-       use a model that is trained on more than one model, or use %s solver \
-       directly"
-      name name
-  | _ -> true
+let is_available = Result.is_ok available_models
 
 include Fresh.Make ()
