@@ -5,80 +5,50 @@
 open Smtml_prelude.Result.Syntax
 open Feature_map
 
-(* initialize feature map with all zeros *)
-
-let extract_feats_aux : Expr.t -> t =
-  let rec visit depth (feats : t) (e : Expr.t) =
+(* Uses hashes to memoize feats and heights and not redo it for expression for
+   which it was already done *)
+let rec extract_feats_aux memo (feats : t) (e : Expr.t) : int * t =
+  match Hashtbl.find_opt memo e.Hc.tag with
+  | Some height -> (height, feats)
+  | None ->
     let feats = incr_feat (Feature.of_expr_kind e.node (Expr.ty e)) feats in
-    match Expr.view e with
-    | Val _ | Symbol _ -> (depth, feats)
-    | Ptr { offset; _ } -> visit (depth + 1) feats offset
-    | List lst ->
+    let feats, children =
+      match Expr.view e with
+      | Val _ | Symbol _ -> (feats, [])
+      | Ptr { offset; _ } -> (feats, [ offset ])
+      | List lst | App (_, lst) -> (feats, lst)
+      | Naryop (ty, naryop, lst) ->
+        let feats = incr_feat (Feature.of_ty ty) feats in
+        (incr_feat (Feature.of_naryop naryop) feats, lst)
+      | Unop (ty, unop, t) ->
+        let feats = incr_feat (Feature.of_ty ty) feats in
+        (incr_feat (Feature.of_unop unop) feats, [ t ])
+      | Cvtop (ty, cvtop, t) ->
+        let feats = incr_feat (Feature.of_ty ty) feats in
+        (incr_feat (Feature.of_cvtop cvtop) feats, [ t ])
+      | Extract (t, _, _) -> (feats, [ t ])
+      | Binop (ty, binop, e1, e2) ->
+        let feats = incr_feat (Feature.of_ty ty) feats in
+        (incr_feat (Feature.of_binop binop) feats, [ e1; e2 ])
+      | Relop (ty, relop, e1, e2) ->
+        let feats = incr_feat (Feature.of_ty ty) feats in
+        (incr_feat (Feature.of_relop relop) feats, [ e1; e2 ])
+      | Concat (e1, e2) -> (feats, [ e1; e2 ])
+      | Triop (ty, triop, e1, e2, e3) ->
+        let feats = incr_feat (Feature.of_ty ty) feats in
+        (incr_feat (Feature.of_triop triop) feats, [ e1; e2; e3 ])
+      | Binder (_, lst, t) -> (feats, t :: lst)
+    in
+    let height, feats =
       List.fold_left
-        (fun (depth, feats) e ->
-          let depth', feats = visit depth feats e in
-          (Int.max depth depth', feats) )
-        (depth + 1, feats)
-        lst
-    | Naryop (ty, naryop, lst) ->
-      let feats = incr_feat (Feature.of_ty ty) feats in
-      let feats = incr_feat (Feature.of_naryop naryop) feats in
-      List.fold_left
-        (fun (depth, feats) e ->
-          let depth', feats = visit depth feats e in
-          (Int.max depth depth', feats) )
-        (depth + 1, feats)
-        lst
-    | App (_, lst) ->
-      List.fold_left
-        (fun (depth, feats) e ->
-          let depth', feats = visit depth feats e in
-          (Int.max depth depth', feats) )
-        (depth + 1, feats)
-        lst
-    | Unop (ty, unop, t) ->
-      let feats = incr_feat (Feature.of_ty ty) feats in
-      let feats = incr_feat (Feature.of_unop unop) feats in
-      visit (depth + 1) feats t
-    | Cvtop (ty, cvtop, t) ->
-      let feats = incr_feat (Feature.of_ty ty) feats in
-      let feats = incr_feat (Feature.of_cvtop cvtop) feats in
-      visit (depth + 1) feats t
-    | Extract (t, _, _) -> visit (depth + 1) feats t
-    | Binop (ty, binop, e1, e2) ->
-      let feats = incr_feat (Feature.of_ty ty) feats in
-      let feats = incr_feat (Feature.of_binop binop) feats in
-      let depth1, feats = visit (depth + 1) feats e1 in
-      let depth2, feats = visit (depth + 1) feats e2 in
-      (Int.max depth1 depth2, feats)
-    | Relop (ty, relop, e1, e2) ->
-      let feats = incr_feat (Feature.of_ty ty) feats in
-      let feats = incr_feat (Feature.of_relop relop) feats in
-      let depth1, feats = visit (depth + 1) feats e1 in
-      let depth2, feats = visit (depth + 1) feats e2 in
-      (Int.max depth1 depth2, feats)
-    | Concat (e1, e2) ->
-      let depth1, feats = visit (depth + 1) feats e1 in
-      let depth2, feats = visit (depth + 1) feats e2 in
-      (Int.max depth1 depth2, feats)
-    | Triop (ty, triop, e1, e2, e3) ->
-      let feats = incr_feat (Feature.of_ty ty) feats in
-      let feats = incr_feat (Feature.of_triop triop) feats in
-      let depth1, feats = visit (depth + 1) feats e1 in
-      let depth2, feats = visit (depth + 1) feats e2 in
-      let depth3, feats = visit (depth + 1) feats e3 in
-      (Int.max (Int.max depth1 depth2) depth3, feats)
-    | Binder (_, lst, t) ->
-      List.fold_left
-        (fun (depth, feats) e ->
-          let depth', feats = visit depth feats e in
-          (Int.max depth depth', feats) )
-        (depth + 1, feats)
-        (t :: lst)
-  in
-  fun expr ->
-    let depth, feats = visit 1 empty expr in
-    add_depth depth feats
+        (fun (height, feats) child ->
+          let child_height, feats = extract_feats_aux memo feats child in
+          (Int.max height child_height, feats) )
+        (0, feats) children
+    in
+    let height = height + 1 in
+    Hashtbl.add memo e.Hc.tag height;
+    (height, feats)
 
 let rec read_marshalled_queries results ic : unit =
   let res :
@@ -102,19 +72,20 @@ let read_marshalled_file (path : Fpath.t) =
   res >>| fun () -> List.rev !results
 
 let extract_feats assertions : t =
-  let feats, depth_acc =
+  (* Memoization table for the heights and the features of visited expressions
+   *)
+  let memo = Hashtbl.create 64 in
+  let feats, max_depth, depth_acc =
     List.fold_left
-      (fun (feats_acc, depth_acc) expr ->
-        let feats = extract_feats_aux expr in
-        let depth_acc = depth_acc + get_depth feats in
-        let feats_acc = union feats feats_acc in
-        (feats_acc, depth_acc) )
-      (empty, 0) assertions
+      (fun (feats, max_depth, depth_acc) expr ->
+        let depth, feats = extract_feats_aux memo feats expr in
+        (feats, Int.max max_depth depth, depth_acc + depth) )
+      (empty, 0, 0) assertions
   in
   let nb_exprs = List.length assertions in
   add_nb_queries nb_exprs
   @@ add_mean_depth (depth_acc / nb_exprs)
-  @@ rename_depth_to_max_depth feats
+  @@ rename_depth_to_max_depth (add_depth max_depth feats)
 
 let extract_feats_wtime assertions runtime =
   add_time (Int64.to_int runtime) (extract_feats assertions)
