@@ -10,9 +10,7 @@ let is_available = function
   | Colibri2_solver -> Colibri2_mappings.is_available
   | Cvc5_solver -> Cvc5_mappings.is_available
   | Altergo_solver -> Altergo_mappings.is_available
-  | Smtzilla_solver ->
-    Smtzilla.is_available
-    && (Z3_mappings.is_available || Bitwuzla_mappings.is_available)
+  | Smtzilla_solver -> Smtzilla.is_available
 
 let available = List.filter is_available supported_solvers
 

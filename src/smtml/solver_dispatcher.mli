@@ -9,10 +9,7 @@
 
 (** {1 Solver Availability} *)
 
-(** [is_available solver] checks if the given solver is available.
-
-    {b Note:} This function will be deprecated in favor of
-    [Solver_type.is_available]. *)
+(** [is_available solver] checks if the given solver is available. *)
 val is_available : Solver_type.t -> bool
 
 (** [available] returns a list of all available solvers.

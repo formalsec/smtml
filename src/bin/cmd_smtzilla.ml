@@ -225,7 +225,7 @@ let rec queries_from_ic smt2pp destdir seen cnt ic =
   queries_from_ic smt2pp destdir seen cnt ic
 
 let extract_queries ?logic (path : Fpath.t) (destdir : Fpath.t) =
-  let (module M) = Solver_type.to_mappings Solver_type.Z3_solver in
+  let (module M) = Solver_dispatcher.mappings_of_solver Z3_solver in
   if not M.is_available then
     Fmt.failwith "Query extraction to smt file depends on Z3";
   let smt2pp = M.Smtlib.pp ?logic in

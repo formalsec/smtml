@@ -6,7 +6,7 @@ open Smtml
 
 let run (settings : Settings.To_smt2.t) =
   let module Mappings : Mappings_intf.S_with_fresh =
-    (val Solver_type.to_mappings settings.solver_type)
+    (val Solver_dispatcher.mappings_of_solver settings.solver_type)
   in
   Mappings.set_debug settings.debug;
   let ast =
