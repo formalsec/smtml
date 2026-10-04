@@ -330,7 +330,7 @@ let all_feature_names =
 
 let feats_to_str solver_name model feats =
   let values =
-    solver_name :: Bool.to_string model :: "solver" :: "model"
+    solver_name :: Bool.to_string model
     :: Array.fold_right
          (fun feat acc -> string_of_int (Feature_map.get_feat feat feats) :: acc)
          all_feats []
