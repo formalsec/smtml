@@ -143,8 +143,8 @@ def mk_models(
                 model, X, Y, cv=kf, scoring="neg_mean_absolute_error"
             )
             print(
-                f"[CV] Solver {solver:10} | Average MAE = \
-                  {-cv_scores.mean():.2f} ± {cv_scores.std():.2f}\n"
+                f"[CV] Solver {solver:10} | Average MAE = "
+                f"{-cv_scores.mean():.2f} ± {cv_scores.std():.2f}\n"
             )
     return models
 
@@ -166,28 +166,22 @@ def pp_stats(data, feature_cols):
     for threshold in [0.5, 0.8, 0.9, 0.95, 0.99]:
         high_dispersion = stats[stats["rel_diff"] > threshold]
         print(
-            f"[INFO] Number of groups with high dispersion (>{int(threshold*100)}%): \
-              {len(high_dispersion)}"
+            f"[INFO] Number of groups with high dispersion "
+            f"(>{int(threshold*100)}%): {len(high_dispersion)}"
         )
     print("")
 
 
-def debug_gb(data, models, feature_cols):
-    for model_name in models:
-        model = models[model_name]
+def debug_gb(models, feature_cols):
+    for solver, model in models.items():
         feature_importance = model.feature_importances_
         sorted_idx = np.argsort(feature_importance)[::-1]
-        for solver in data[solver_col].unique():
-            X = data[data[solver_col] == solver][feature_cols]
-            print(f"\n=== Top 10 Features for {solver}:")
-            for i in sorted_idx[:10]:  # top 10 features
-                print(f"{X.columns[i]}: {feature_importance[i]:.4f}")
+        print(f"\n=== Top 10 Features for {solver}:")
+        for i in sorted_idx[:10]:  # top 10 features
+            print(f"{feature_cols[i]}: {feature_importance[i]:.4f}")
 
-            n_estimators, n_classes = model.estimators_.shape
-            for i in range(n_estimators):
-                for j in range(n_classes):
-                    tree = model.estimators_[i, j]
-                    print(export_text(tree, feature_names=list(X.columns)))
+        for tree in model.estimators_[:, 0]:
+            print(export_text(tree, feature_names=feature_cols))
 
 
 def debug_no_gb(data, models, feature_cols):
@@ -318,7 +312,7 @@ models = mk_models(
 
 if args.debug:
     if args.gradient_boost:
-        debug_gb(data, models, feature_cols)
+        debug_gb(models, feature_cols)
     else:
         debug_no_gb(data, models, feature_cols)
 
