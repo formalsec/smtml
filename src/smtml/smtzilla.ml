@@ -73,6 +73,11 @@ module Fresh = struct
       ; mutable expr_acc : Expr.t list
       ; mutable stmts : stmt list
       ; mutable last_solver : string option
+      ; params : Params.t option
+      ; logic : Logic.t option
+      ; simplifier : bool
+          (* Whether to call [add_simplifier] on solver instances, used only
+             for z3 *)
       }
 
     type model =
@@ -85,12 +90,15 @@ module Fresh = struct
     type handle = unit
 
     module Solver = struct
-      let make ?params:_ ?logic:_ () =
+      let make ?params ?logic () =
         let (_ : (string * Regression_model.t) list) = get_models () in
         { solver_instances = Hashtbl.create 16
         ; expr_acc = []
         ; stmts = []
         ; last_solver = None
+        ; params
+        ; logic
+        ; simplifier = false
         }
 
       let add s new_exprs =
@@ -136,7 +144,10 @@ module Fresh = struct
               (* [available_models] only keeps models of available solvers *)
               assert false
           in
-          let instance = S.Solver.make () in
+          let instance = S.Solver.make ?params:s.params ?logic:s.logic () in
+          let instance =
+            if s.simplifier then S.Solver.add_simplifier instance else instance
+          in
           List.iter
             (function
               | Assertions exprs -> S.Solver.add instance exprs
@@ -209,9 +220,12 @@ module Fresh = struct
         s.stmts <- [];
         s.last_solver <- None
 
-      let clone_solver_inst (SolverInst ((module S), _)) =
+      let clone_solver_inst s (SolverInst ((module S), _)) =
         let (module NewS) = init_solver_instance (module S) in
-        let new_inst = NewS.Solver.make () in
+        let new_inst = NewS.Solver.make ?params:s.params ?logic:s.logic () in
+        let new_inst =
+          if s.simplifier then NewS.Solver.add_simplifier new_inst else new_inst
+        in
         SolverInst ((module NewS), new_inst)
 
       let clone s =
@@ -219,7 +233,7 @@ module Fresh = struct
         Hashtbl.iter
           (fun name (SolverInst ((module S), inst)) ->
             let (SolverInst ((module NewS), new_inst)) =
-              clone_solver_inst (SolverInst ((module S), inst))
+              clone_solver_inst s (SolverInst ((module S), inst))
             in
             (* Add previously added statements *)
             List.iter
@@ -253,7 +267,7 @@ module Fresh = struct
             let instance = S.Solver.add_simplifier instance in
             Some (SolverInst ((module S), instance)) )
           s.solver_instances;
-        s
+        { s with simplifier = true }
 
       let get_statistics s =
         Hashtbl.fold
