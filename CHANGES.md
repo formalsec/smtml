@@ -2,6 +2,7 @@
 
 ## 0.31.0 - 2026-10-01
 
+- 2026-10-01 Release 0.31.0
 - 2026-09-30 Fix testsuite
 - 2026-09-30 Don't fold select/store when array indices aren't canonical
 - 2026-09-30 Use structural equality for models and semantic equality for arrays in expr and eval, leave as symbolic if equality can't be decided
