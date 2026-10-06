@@ -28,9 +28,10 @@ let available_models : ((string * Regression_model.t) list, string) result =
       match
         let* path = Fpath.of_string path in
         let* path = Bos.OS.File.must_exist path in
-        Bos.OS.File.read path
+        let* content = Bos.OS.File.read path in
+        Regression_model.read_models_from_string content
       with
-      | Ok content -> Ok (Regression_model.read_models_from_string content)
+      | Ok models -> Ok models
       | Error (`Msg msg) ->
         Fmt.error "SMTZilla: failed to load the model: %s" msg )
   in

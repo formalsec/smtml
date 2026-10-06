@@ -96,7 +96,11 @@ let models_of_json json =
   |> List.map (fun (solver_name, solver_json) ->
     (solver_name, model_of_json solver_json) )
 
-let read_models_from_string s = models_of_json (Yojson.Safe.from_string s)
+let read_models_from_string s =
+  match models_of_json (Yojson.Safe.from_string s) with
+  | models -> Ok models
+  | exception (Yojson.Json_error msg | Type_error (msg, _) | Failure msg) ->
+    Error (`Msg msg)
 
 let read_models_from_file filename =
   models_of_json (Yojson.Safe.from_file filename)
