@@ -5,6 +5,6 @@
  (deps
   (source_tree examples)
   ./examples/product_mix.exe)
- (libraries smtml smtml.prelude zarith fmt)
+ (libraries smtml smtml.prelude zarith fmt unix)
  (enabled_if %{lib-available:z3})
  (files :standard - *.mld))
