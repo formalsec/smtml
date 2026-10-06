@@ -1,5 +1,5 @@
 (mdx
- (libraries smtml smtml.prelude zarith fmt)
+ (libraries smtml smtml.prelude zarith fmt unix)
  (enabled_if %{lib-available:z3}))
 
 (env
