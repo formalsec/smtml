@@ -32,15 +32,19 @@ let write =
   | Some path ->
     let log_entries :
       (string * Expr.t list * bool * int64 * [ `Sat | `Unknown | `Unsat ]) list
-      ref =
-      ref []
+      Atomic.t =
+      Atomic.make []
+    in
+    let rec update_entries f =
+      let entries = Atomic.get log_entries in
+      if not (Atomic.compare_and_set log_entries entries (f entries)) then
+        update_entries f
     in
     let close () =
-      (* Clear entries after every call to close to avoid duplicate writing when
-         sigterm is called after at_exit *)
-      let entries = !log_entries in
-      log_entries := [];
-      if List.compare_length_with entries 0 <> 0 then
+      (* Take the entries, so that they are not written again when sigterm is
+         called after at_exit *)
+      let entries = Atomic.exchange log_entries [] in
+      if List.compare_length_with entries 0 <> 0 then (
         try
           let oc =
             (* open with wr/r/r rights, create if it does not exit and append to
@@ -52,7 +56,9 @@ let write =
           Marshal.to_channel oc entries [];
           Out_channel.close oc
         with e ->
-          Fmt.failwith "Failed to write log: %s@." (Printexc.to_string e)
+          (* If the run raises, put back the entries *)
+          update_entries (fun newer -> newer @ entries);
+          Fmt.failwith "Failed to write log: %s@." (Printexc.to_string e) )
     in
     at_exit close;
     Sys.set_signal Sys.sigterm
@@ -61,10 +67,9 @@ let write =
            close ();
            exit 143 ) );
     (* write *)
-    let mutex = Mutex.create () in
     fun ~model solver_name assumptions time status ->
       let entry = (solver_name, assumptions, model, time, status) in
-      protect mutex (fun () -> log_entries := entry :: !log_entries)
+      update_entries (fun entries -> entry :: entries)
 
 let check_log_query (f : unit -> [ `Sat | `Unknown | `Unsat ]) name assumptions
     =
