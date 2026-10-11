@@ -1,0 +1,28 @@
+(executable
+ (public_name main)
+ (modules
+  cli
+  cmd_print_parse
+  cmd_smt
+  cmp_model
+  crowbar
+  gen
+  main
+  op
+  solvers
+  state
+  theory)
+ (libraries
+  afl-persistent
+  cmdliner
+  fmt
+  fmt.tty
+  fmt.cli
+  logs
+  logs.cli
+  logs.fmt
+  smtml
+  smtml.prelude
+  str
+  unix
+  zarith))
