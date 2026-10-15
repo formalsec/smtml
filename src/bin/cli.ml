@@ -52,6 +52,14 @@ let no_strict_status =
   let doc = "Disable strict status checking" in
   Arg.(value & flag & info [ "no-strict-status" ] ~doc)
 
+let timeout =
+  let doc = "Set a timeout (in milliseconds) for each SMT solver call" in
+  Arg.(value & opt int 0 & info [ "t"; "timeout" ] ~doc)
+
+let no_simpls =
+  let doc = "Disable simplifications during rewriting" in
+  Arg.(value & flag & info [ "no-simpls" ] ~doc)
+
 let from_file =
   let doc =
     "File containing a list of files to run. This argument discards any \
@@ -76,13 +84,15 @@ let commands =
       and+ dry
       and+ print_statistics
       and+ no_strict_status
+      and+ no_simpls
+      and+ timeout
       and+ solver_type
       and+ solver_mode
       and+ from_file
       and+ filenames in
       let settings =
         Settings.Run.make ~debug ~dry ~print_statistics ~no_strict_status
-          ~solver_type ~solver_mode ?from_file filenames
+          ~no_simpls ~timeout ~solver_type ~solver_mode ?from_file filenames
       in
       Cmd_run.run settings
     in

@@ -326,6 +326,11 @@ module type S = sig
   (** [simplify expr] simplifies an expression until a fixpoint is reached. *)
   val simplify : t -> t
 
+  (** [simplify_with_rules expr] simplifies [expr] with the rules of
+      [rules.dsl]. (for testing, eventually activate them instead of the
+      existing simplifications?) *)
+  val simplify_with_rules : t -> t
+
   (** {1 Hash-Consing Module} *)
 
   module Hc : sig
