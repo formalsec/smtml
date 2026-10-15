@@ -107,7 +107,7 @@ let rec rewrite_expr (type_map, expr_map) hte ~no_simpls =
   | Unop (ty, op, hte) ->
     let hte = rewrite_expr (type_map, expr_map) hte ~no_simpls in
     let ty = rewrite_ty ty [ Expr.ty hte ] in
-    if no_simpls then Expr.unop ty op hte else Expr.raw_unop ty op hte
+    if no_simpls then Expr.raw_unop ty op hte else Expr.unop ty op hte
   | Binop (ty, Select, hte1, hte2) ->
     let hte1 = rewrite_expr (type_map, expr_map) hte1 ~no_simpls in
     let hte2 = rewrite_expr (type_map, expr_map) hte2 ~no_simpls in
@@ -124,14 +124,14 @@ let rec rewrite_expr (type_map, expr_map) hte ~no_simpls =
     if not (Ty.equal ty elem_ty || Ty.equal ty Ty_none) then
       Fmt.failwith "select: expected element type %a, got %a" Ty.pp elem_ty
         Ty.pp ty;
-    if no_simpls then Expr.binop elem_ty Select hte1 hte2
-    else Expr.raw_binop elem_ty Select hte1 hte2
+    if no_simpls then Expr.raw_binop elem_ty Select hte1 hte2
+    else Expr.binop elem_ty Select hte1 hte2
   | Binop (ty, op, hte1, hte2) ->
     let hte1 = rewrite_expr (type_map, expr_map) hte1 ~no_simpls in
     let hte2 = rewrite_expr (type_map, expr_map) hte2 ~no_simpls in
     let ty = rewrite_ty ty [ Expr.ty hte1; Expr.ty hte2 ] in
-    if no_simpls then Expr.binop ty op hte1 hte2
-    else Expr.raw_binop ty op hte1 hte2
+    if no_simpls then Expr.raw_binop ty op hte1 hte2
+    else Expr.binop ty op hte1 hte2
   | Triop (ty, Store, hte1, hte2, hte3) ->
     let hte1 = rewrite_expr (type_map, expr_map) hte1 ~no_simpls in
     let hte2 = rewrite_expr (type_map, expr_map) hte2 ~no_simpls in
@@ -151,40 +151,40 @@ let rec rewrite_expr (type_map, expr_map) hte ~no_simpls =
     (* None case is needed because we don't properly parse array types *)
     if not (Ty.equal ty arr_ty || Ty.equal ty Ty_none) then
       Fmt.failwith "store: expected array type %a, got %a" Ty.pp arr_ty Ty.pp ty;
-    if no_simpls then Expr.triop arr_ty Store hte1 hte2 hte3
-    else Expr.raw_triop arr_ty Store hte1 hte2 hte3
+    if no_simpls then Expr.raw_triop arr_ty Store hte1 hte2 hte3
+    else Expr.triop arr_ty Store hte1 hte2 hte3
   | Triop (ty, op, hte1, hte2, hte3) ->
     let hte1 = rewrite_expr (type_map, expr_map) hte1 ~no_simpls in
     let hte2 = rewrite_expr (type_map, expr_map) hte2 ~no_simpls in
     let hte3 = rewrite_expr (type_map, expr_map) hte3 ~no_simpls in
-    if no_simpls then Expr.triop ty op hte1 hte2 hte3
-    else Expr.raw_triop ty op hte1 hte2 hte3
+    if no_simpls then Expr.raw_triop ty op hte1 hte2 hte3
+    else Expr.triop ty op hte1 hte2 hte3
   | Relop (ty, ((Eq | Ne) as op), hte1, hte2) when not (Ty.equal Ty_none ty) ->
     let hte1 = rewrite_expr (type_map, expr_map) hte1 ~no_simpls in
     let hte2 = rewrite_expr (type_map, expr_map) hte2 ~no_simpls in
-    if no_simpls then Expr.relop ty op hte1 hte2
-    else Expr.raw_relop ty op hte1 hte2
+    if no_simpls then Expr.raw_relop ty op hte1 hte2
+    else Expr.relop ty op hte1 hte2
   | Relop (ty, op, hte1, hte2) ->
     let hte1 = rewrite_expr (type_map, expr_map) hte1 ~no_simpls in
     let hte2 = rewrite_expr (type_map, expr_map) hte2 ~no_simpls in
     let ty = rewrite_ty ty [ Expr.ty hte1; Expr.ty hte2 ] in
-    if no_simpls then Expr.relop ty op hte1 hte2
-    else Expr.raw_relop ty op hte1 hte2
+    if no_simpls then Expr.raw_relop ty op hte1 hte2
+    else Expr.relop ty op hte1 hte2
   | Cvtop (ty, op, hte) ->
     let hte = rewrite_expr (type_map, expr_map) hte ~no_simpls in
     let ty = rewrite_ty ty [ Expr.ty hte ] in
-    if no_simpls then Expr.cvtop ty op hte else Expr.raw_cvtop ty op hte
+    if no_simpls then Expr.raw_cvtop ty op hte else Expr.cvtop ty op hte
   | Naryop (ty, op, htes) ->
     let htes = List.map (rewrite_expr (type_map, expr_map) ~no_simpls) htes in
-    if no_simpls then Expr.naryop ty op htes else Expr.raw_naryop ty op htes
+    if no_simpls then Expr.raw_naryop ty op htes else Expr.naryop ty op htes
   | Extract (hte, h, l) ->
     let hte = rewrite_expr (type_map, expr_map) hte ~no_simpls in
-    if no_simpls then Expr.extract hte ~high:h ~low:l
-    else Expr.raw_extract hte ~high:h ~low:l
+    if no_simpls then Expr.raw_extract hte ~high:h ~low:l
+    else Expr.extract hte ~high:h ~low:l
   | Concat (hte1, hte2) ->
     let hte1 = rewrite_expr (type_map, expr_map) hte1 ~no_simpls in
     let hte2 = rewrite_expr (type_map, expr_map) hte2 ~no_simpls in
-    if no_simpls then Expr.concat hte1 hte2 else Expr.raw_concat hte1 hte2
+    if no_simpls then Expr.raw_concat hte1 hte2 else Expr.concat hte1 hte2
   | Binder (Let_in, vars, e) ->
     (* Then, we rewrite the types of the expr *)
     let expr_map =
