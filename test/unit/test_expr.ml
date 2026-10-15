@@ -228,7 +228,11 @@ let test_binop_f32 () =
   check (Expr.binop ty Copysign (float32 4.2) (float32 2.0)) (float32 4.2);
   check
     (Expr.binop ty Copysign (float32 (-4.2)) (float32 (-2.0)))
-    (float32 (-4.2))
+    (float32 (-4.2));
+  let x = symbol "x" ty
+  and zero = float32 0. in
+  check (Expr.binop ty Add x (float32 (-0.))) x;
+  check (Expr.binop ty Add x zero) (Expr.raw_binop ty Add x zero)
 
 let test_binop_f64 () =
   let open Infix in
@@ -238,7 +242,11 @@ let test_binop_f64 () =
   check (Expr.binop ty Copysign (float64 4.2) (float64 2.0)) (float64 4.2);
   check
     (Expr.binop ty Copysign (float64 (-4.2)) (float64 (-2.0)))
-    (float64 (-4.2))
+    (float64 (-4.2));
+  let x = symbol "x" ty
+  and zero = float64 0. in
+  check (Expr.binop ty Add x (float64 (-0.))) x;
+  check (Expr.binop ty Add x zero) (Expr.raw_binop ty Add x zero)
 
 let test_binop_ptr () =
   let open Infix in
@@ -498,7 +506,11 @@ let test_cvtop_f64 () =
   let open Infix in
   let ty = Ty.Ty_fp 64 in
   check (Expr.cvtop ty ConvertSI32 (int32 8l)) (float64 8.0);
-  check (Expr.cvtop ty ConvertSI64 (int64 8L)) (float64 8.0)
+  check (Expr.cvtop ty ConvertSI64 (int64 8L)) (float64 8.0);
+  let demoted = Expr.cvtop (Ty_fp 32) DemoteF64 (symbol "x" ty) in
+  check
+    (Expr.cvtop ty PromoteF32 demoted)
+    (Expr.raw_cvtop ty PromoteF32 demoted)
 
 let test_cvtop =
   [ Alcotest.test_case "test_cvtop_int" `Quick test_cvtop_int
@@ -653,7 +665,7 @@ let test_simplify_reinterpret_int () =
     Expr.binop (Ty_fp 32) Add
       (Expr.cvtop (Ty_fp 32) Reinterpret_int
          (Expr.cvtop (Ty_bitv 32) Reinterpret_float sym_0) )
-      (float32 0.)
+      (float32 (-0.))
   in
   let sym_1 = symbol "symbol_1" (Ty_fp 32) in
   let rhs =
