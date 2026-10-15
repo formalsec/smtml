@@ -429,10 +429,11 @@ let rec binop ty op hte1 hte2 =
   | (Add | Or), _, Val (Bitv bv) when Bitvector.eqz bv -> hte1
   | Add, _, Val (Real -0.) -> hte1
   | Add, Val (Real -0.), _ -> hte2
-  | Add, _, Val (Num (F32 -0l)) -> hte1
-  | Add, Val (Num (F32 -0l)), _ -> hte2
-  | Add, _, Val (Num (F64 -0L)) -> hte1
-  | Add, Val (Num (F64 -0L)), _ -> hte2
+  (* Use bit-pattern of -0.0, not the number *)
+  | Add, _, Val (Num (F32 0x8000_0000l)) -> hte1
+  | Add, Val (Num (F32 0x8000_0000l)), _ -> hte2
+  | Add, _, Val (Num (F64 0x8000_0000_0000_0000L)) -> hte1
+  | Add, Val (Num (F64 0x8000_0000_0000_0000L)), _ -> hte2
   | (And | Mul), _, Val (Bitv bv) when Bitvector.eqz bv -> hte2
   | And, Val True, _ -> hte2
   | And, _, Val True -> hte1
@@ -611,7 +612,6 @@ let rec cvtop theory op hte =
     hte
   | ToString, Cvtop (_, OfString, e1) -> e1
   | OfString, Cvtop (_, ToString, e1) -> e1
-  | PromoteF32, Cvtop (_, DemoteF64, e1) -> e1
   | DemoteF64, Cvtop (_, PromoteF32, e1) -> e1
   | Zero_extend 0, _ -> hte
   | Sign_extend 0, _ -> hte
