@@ -612,6 +612,26 @@ let simplify =
       in
       loop e
 
+let rec simplify_with_rules (hte : t) : t =
+  let simplify = simplify_with_rules in
+  match view hte with
+  | Val _ | Symbol _ | Binder _ -> hte
+  | Ptr { base; offset } -> make (Ptr { base; offset = simplify offset })
+  | List es -> list (List.map simplify es)
+  | App (x, es) -> app x (List.map simplify es)
+  | Unop (ty, op, e) -> Simplifier.simplify_unop ty op (simplify e)
+  | Binop (ty, op, e1, e2) ->
+    Simplifier.simplify_binop ty op (simplify e1) (simplify e2)
+  | Triop (ty, op, e1, e2, e3) ->
+    Simplifier.simplify_triop ty op (simplify e1) (simplify e2) (simplify e3)
+  | Relop (ty, op, e1, e2) ->
+    Simplifier.simplify_relop ty op (simplify e1) (simplify e2)
+  | Cvtop (ty, op, e) -> raw_cvtop ty op (simplify e)
+  | Naryop (ty, op, es) ->
+    Simplifier.simplify_naryop ty op (List.map simplify es)
+  | Extract (e, high, low) -> Simplifier.simplify_extract (simplify e) high low
+  | Concat (e1, e2) -> raw_concat (simplify e1) (simplify e2)
+
 module Bool = struct
   open Ty
 
