@@ -72,27 +72,27 @@ module CodeGen = struct
         (ast_lhs_to_ocaml_pattern a1 (lvl + 1))
         (ast_lhs_to_ocaml_pattern a2 (lvl + 1))
     | LConstructor ("Ne", [ a1; a2 ]) ->
-      Fmt.str "Relop (_, Ne, %s, %s)"
+      Fmt.str "Relop (rty, Ne, %s, %s)"
         (ast_lhs_to_ocaml_pattern a1 (lvl + 1))
         (ast_lhs_to_ocaml_pattern a2 (lvl + 1))
     | LConstructor ("Eq", [ a1; a2 ]) ->
-      Fmt.str "Relop (_, Eq, %s, %s)"
+      Fmt.str "Relop (rty, Eq, %s, %s)"
         (ast_lhs_to_ocaml_pattern a1 (lvl + 1))
         (ast_lhs_to_ocaml_pattern a2 (lvl + 1))
     | LConstructor ("Lt", [ a1; a2 ]) ->
-      Fmt.str "Relop (_, Lt, %s, %s)"
+      Fmt.str "Relop (rty, Lt, %s, %s)"
         (ast_lhs_to_ocaml_pattern a1 (lvl + 1))
         (ast_lhs_to_ocaml_pattern a2 (lvl + 1))
     | LConstructor ("Le", [ a1; a2 ]) ->
-      Fmt.str "Relop (_, Le, %s, %s)"
+      Fmt.str "Relop (rty, Le, %s, %s)"
         (ast_lhs_to_ocaml_pattern a1 (lvl + 1))
         (ast_lhs_to_ocaml_pattern a2 (lvl + 1))
     | LConstructor ("Gt", [ a1; a2 ]) ->
-      Fmt.str "Relop (_, Gt, %s, %s)"
+      Fmt.str "Relop (rty, Gt, %s, %s)"
         (ast_lhs_to_ocaml_pattern a1 (lvl + 1))
         (ast_lhs_to_ocaml_pattern a2 (lvl + 1))
     | LConstructor ("Ge", [ a1; a2 ]) ->
-      Fmt.str "Relop (_, Ge, %s, %s)"
+      Fmt.str "Relop (rty, Ge, %s, %s)"
         (ast_lhs_to_ocaml_pattern a1 (lvl + 1))
         (ast_lhs_to_ocaml_pattern a2 (lvl + 1))
     | LConstructor ("Ite", [ a1; a2; a3 ]) ->
@@ -147,20 +147,8 @@ module CodeGen = struct
         |> String.concat "; "
       in
       Fmt.str "[ %s ]" items_str
-    | RConstructor ("Eq", [ a1; a2 ]) ->
-      Fmt.str "simplify_relop ty Eq (%s) (%s)"
-        (ast_rhs_to_ocaml_expr a1 vars)
-        (ast_rhs_to_ocaml_expr a2 vars)
-    | RConstructor ("Ne", [ a1; a2 ]) ->
-      Fmt.str "simplify_relop ty Ne (%s) (%s)"
-        (ast_rhs_to_ocaml_expr a1 vars)
-        (ast_rhs_to_ocaml_expr a2 vars)
-    | RConstructor ("Lt", [ a1; a2 ]) ->
-      Fmt.str "simplify_relop ty Lt (%s) (%s)"
-        (ast_rhs_to_ocaml_expr a1 vars)
-        (ast_rhs_to_ocaml_expr a2 vars)
-    | RConstructor ("Le", [ a1; a2 ]) ->
-      Fmt.str "simplify_relop ty Le (%s) (%s)"
+    | RConstructor ((("Eq" | "Ne" | "Lt" | "Le") as op), [ a1; a2 ]) ->
+      Fmt.str "simplify_relop rty %s (%s) (%s)" op
         (ast_rhs_to_ocaml_expr a1 vars)
         (ast_rhs_to_ocaml_expr a2 vars)
     | RConstructor ("Add", [ a1; a2 ]) ->
@@ -239,8 +227,15 @@ module CodeGen = struct
         | _ -> Fmt.failwith "Unsupported argument to size(): must be a variable"
       in
       if lvl = 1 then
-        Fmt.str "Ty.size (ty (make %s))" (ast_cond_to_ocaml_expr arg vars)
-      else Fmt.str "Ty.size (ty %s)" (ast_cond_to_ocaml_expr arg vars)
+        Fmt.str "Ty.bitsize (ty (make %s))" (ast_cond_to_ocaml_expr arg vars)
+      else Fmt.str "Ty.bitsize (ty %s)" (ast_cond_to_ocaml_expr arg vars)
+    | CApp ("fp", [ CPat (LVar v) ]) ->
+      let lvl =
+        try List.assoc v vars
+        with Not_found -> Fmt.failwith "Unknown variable in fp(): %s" v
+      in
+      Fmt.str "(match Base_expr.ty %s with Ty_fp _ -> true | _ -> false)"
+        (if lvl = 1 then Fmt.str "(make %s)" v else v)
     | CNamespacedApp ("Bitvector", "eqz", [ arg ]) ->
       Fmt.str "(Bitvector.eqz %s)" (ast_cond_to_ocaml_expr arg vars)
     | CNamespacedApp ("Bitvector", "eq_one", [ arg ]) ->
@@ -623,7 +618,8 @@ module LeanGen = struct
       in
       let stmt =
         match r.cond with
-        | None -> Fmt.str "%s %s %s" lhs_str relation rhs_str
+        | None | Some (CNot (CApp ("fp", _))) ->
+          Fmt.str "%s %s %s" lhs_str relation rhs_str
         | Some cond ->
           Fmt.str "%s →\n %s %s %s"
             (cond_to_lean cond vars_tbl)
