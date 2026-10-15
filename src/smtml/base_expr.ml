@@ -132,8 +132,7 @@ let[@inline] view (hte : t) = hte.node
 
 let[@inline] compare (hte1 : t) (hte2 : t) = compare hte1.tag hte2.tag
 
-(** The return type of an expression *)
-let rec ty (hte : t) : Ty.t =
+let ty_aux (ty : t -> Ty.t) (hte : t) : Ty.t =
   match view hte with
   | Val x -> Value.type_of x
   | Ptr _ -> Ty_bitv 32
@@ -162,6 +161,9 @@ let rec ty (hte : t) : Ty.t =
     | t1, t2 ->
       Fmt.failwith "Invalid concat of (%a) with (%a)" Ty.pp t1 Ty.pp t2 )
   | Binder (_, _, e) -> ty e
+
+(** The return type of an expression *)
+let rec ty (hte : t) : Ty.t = ty_aux ty hte
 
 let rec is_symbolic (v : t) : bool =
   match view v with
