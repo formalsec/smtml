@@ -1,7 +1,25 @@
 # Changelog
 
+## 0.32.0 - 2026-10-19
+
+- 2026-10-07 Fix runtest
+- 2026-10-06 Use atomic for recorded queries
+- 2026-10-06 Catch potential exception from parsing JSON model
+- 2026-10-06 Pass params, logics and add_simplifier to solver instances used by smtzilla
+- 2026-10-06 Use memoization during feature extraction
+- 2026-10-06 Fix duplicate query logging
+- 2026-10-06 Fix smtzilla reset
+- 2026-10-06 Don't let smtzilla crash on empty queries
+- 2026-10-06 Move solver availability check and retrieval to solver_dispatcher
+- 2026-10-06 Detter debugging in smtzilla's python script
+- 2026-10-06 Update smtzilla python script to numpy 2.5 + drop model rows (not just the column
+- 2026-10-06 Better/safer model loading in smtzilla
+- 2026-10-06 Fix feats_to_str
+- 2026-10-06 Add unix to mdx's dependencies
+
 ## 0.31.0 - 2026-10-01
 
+- 2026-10-01 Release 0.31.0
 - 2026-09-30 Fix testsuite
 - 2026-09-30 Don't fold select/store when array indices aren't canonical
 - 2026-09-30 Use structural equality for models and semantic equality for arrays in expr and eval, leave as symbolic if equality can't be decided
