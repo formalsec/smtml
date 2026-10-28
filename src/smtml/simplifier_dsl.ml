@@ -490,7 +490,7 @@ module LeanGen = struct
       Fmt.str "[%s]"
         (List.map (fun i -> to_lean i vars_tbl) items |> String.concat ", ")
     | LConstructor ("Not", [ arg ]) -> Fmt.str "¬%s" (to_lean arg vars_tbl)
-    | LConstructor ("Neg", [ arg ]) -> Fmt.str "¬%s" (to_lean arg vars_tbl)
+    | LConstructor ("Neg", [ arg ]) -> Fmt.str "-(%s)" (to_lean arg vars_tbl)
     | LConstructor ("Add", [ a1; a2 ]) ->
       Fmt.str "(%s) + (%s)" (to_lean a1 vars_tbl) (to_lean a2 vars_tbl)
     | LConstructor ("Sub", [ a1; a2 ]) ->
@@ -573,6 +573,7 @@ module LeanGen = struct
           classes := "DecidableEq ty" :: !classes
         | LConstructor (("Add" | "Sub" | "Mul"), _) ->
           classes := "CommRing ty" :: !classes
+        | LConstructor ("Neg", _) -> classes := "Neg ty" :: !classes
         | LConstructor (("Lt" | "Le" | "Gt" | "Ge"), _) ->
           classes := "LinearOrder ty" :: !classes
         | LConstructor (_, args) -> List.iter detect_classes args

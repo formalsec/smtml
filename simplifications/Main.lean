@@ -4,8 +4,8 @@ lemma simplification_unop_000001 {_ty : Type}  (x : Bool) :
   ¬¬x ↔ x :=
 by simp
 
-lemma simplification_unop_000002 {_ty : Type}  (x : _ty) :
-  ¬¬x = x :=
+lemma simplification_unop_000002 {ty : Type} [InvolutiveNeg ty] (x : ty) :
+  -(-x) = x :=
 by simp
 
 lemma simplification_unop_000003 {ty : Type} [DecidableEq ty] (e2 e1 : ty) :
