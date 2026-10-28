@@ -143,12 +143,10 @@
  (libraries fmt fpath bos menhirLib))
 
 (rule
- (targets simplifier.ml)
+ (targets simplifier.ml simplifier_theorems.lean)
  (deps rules.dsl simplifier_dsl.exe)
  (action
-  (with-stdout-to
-   %{targets}
-   (run %{dep:simplifier_dsl.exe}))))
+  (run %{dep:simplifier_dsl.exe})))
 
 (rule
  (targets
