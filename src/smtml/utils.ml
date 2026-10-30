@@ -6,7 +6,7 @@ let run_and_time_call ~use f =
   let start_counter = Mtime_clock.counter () in
   let result = f () in
   let span = Mtime_clock.count start_counter in
-  use (Mtime.Span.to_float_ns span);
+  use (Mtime.Span.to_float_ns span *. 1e-9);
   result
 
 let query_log_path : Fpath.t option =

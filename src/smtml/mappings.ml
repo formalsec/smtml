@@ -1141,7 +1141,7 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
           Option.iter
             (fun usage_before ->
               Utils.add_check_sat_and_commit
-                (Mtime.Span.to_float_ns (Mtime_clock.count usage_before)) )
+                (Mtime.Span.to_float_ns (Mtime_clock.count usage_before) *. 1e-9) )
             usage_before;
           res
 
