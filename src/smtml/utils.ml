@@ -152,7 +152,11 @@ let () =
   | None -> ()
   | Some _ ->
     at_exit close_perf_log;
-    Sys.set_signal Sys.sigterm (Sys.Signal_handle (fun _ -> close_perf_log ()))
+    Sys.set_signal Sys.sigterm
+      (Sys.Signal_handle
+         (fun _ ->
+           close_perf_log ();
+           exit 143 ) )
 
 let start_test_timing (name : string) =
   match perf_log_path with
