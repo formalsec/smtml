@@ -42,7 +42,7 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
     ; raw_unop fp32 Neg (raw_unop fp32 Neg f)
     ; not_ (raw_relop bv32 Ne a b)
     ; not_ (raw_relop fp32 Eq f g)
-    ; not_ (raw_relop Ty_bool Eq f g)
+    ; not_ (raw_relop Ty_bool Eq x y)
     ; not_ (raw_relop bv32 Lt a b)
     ; not_ (raw_relop Ty_int Le i j)
     ; raw_binop Ty_bool And (value True) x
