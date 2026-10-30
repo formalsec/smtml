@@ -130,10 +130,13 @@ let close_perf_log () =
 
       Fmt.pf ppf "test_name,parse_time_s,rewrite_time_s,check_sat_time_s\n";
 
+      let quote s =
+        Fmt.str "\"%s\"" (String.concat "\"\"" (String.split_on_char '"' s))
+      in
       List.iter
         (fun e ->
-          Fmt.pf ppf "%s,%.9f,%.9f,%.9f\n" e.test_name e.parse_s e.rewrite_s
-            e.check_sat_s )
+          Fmt.pf ppf "%s,%.9f,%.9f,%.9f\n" (quote e.test_name) e.parse_s
+            e.rewrite_s e.check_sat_s )
         entries;
 
       Fmt.flush ppf ();
