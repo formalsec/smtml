@@ -567,13 +567,10 @@ module Arrays : sig
   val symbol : ('i, 'e) array ty -> string -> ('i, 'e) array expr
 
   (** [const aty default] is the constant array of type [aty] mapping every
-      index to [default] (which must be a concrete value).
+      index to [default].
 
-      {b Warning.} Supported by z3 and Bitwuzla, fails at solve time for cvc5,
-      Alt-Ergo and Colibri2.
-
-      TODO: fail earlier when its not supported by the solver + support symbolic
-      default values. *)
+      {b Warning.} Supported by z3 and Bitwuzla, fails at encoding time for
+      cvc5, Alt-Ergo and Colibri2. *)
   val const : ('i, 'e) array ty -> 'e expr -> ('i, 'e) array expr
 
   (** [select a i] retrieves the element of array [a] at index [i]. *)

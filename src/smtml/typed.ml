@@ -2467,14 +2467,9 @@ module Arrays = struct
     ('i, 'e) array expr =
     Expr.symbol (Symbol.make_const aty name)
 
-  let const (aty : ('i, 'e) array ty) (default : 'e expr) : ('i, 'e) array expr
-      =
-    match Expr.view default with
-    | Val v -> Expr.value (Value.array aty ~default:v [])
-    | _ ->
-      Fmt.failwith
-        "Arrays.const: the default value must be concrete, but got '%a'" Expr.pp
-        default
+  let[@inline] const (aty : ('i, 'e) array ty) (default : 'e expr) :
+    ('i, 'e) array expr =
+    Expr.unop aty Array_const default
 
   let[@inline] select (a : ('i, 'e) array expr) (i : 'i expr) : 'e expr =
     let elem_ty =

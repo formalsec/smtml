@@ -68,6 +68,7 @@ type feat =
   | Copysign
   | Rotl
   | Rotr
+  | Array_const
   | Ext_rotl
   | Ext_rotr
   | At
@@ -259,6 +260,7 @@ let feat_to_string = function
   | Copysign -> "Copysign"
   | Rotl -> "Rotl"
   | Rotr -> "Rotr"
+  | Array_const -> "Array_const"
   | Ext_rotl -> "Ext_rotl"
   | Ext_rotr -> "Ext_rotr"
   | At -> "At"
@@ -404,6 +406,7 @@ let feat_of_string = function
   | "Copysign" -> Copysign
   | "Rotl" -> Rotl
   | "Rotr" -> Rotr
+  | "Array_const" -> Array_const
   | "Ext_rotl" -> Ext_rotl
   | "Ext_rotr" -> Ext_rotr
   | "At" -> At

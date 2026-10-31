@@ -68,6 +68,7 @@ type feat =
   | Copysign
   | Rotl
   | Rotr
+  | Array_const
   | Ext_rotl
   | Ext_rotr
   | At

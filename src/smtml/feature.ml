@@ -33,6 +33,7 @@ let of_unop (unop : Ty.Unop.t) : Feature_map.feat =
   | Regexp_comp -> Regexp_comp
   | Rotl _ -> Rotl
   | Rotr _ -> Rotr
+  | Array_const -> Array_const
 
 let of_binop (binop : Ty.Binop.t) : Feature_map.feat =
   match binop with
@@ -221,6 +222,7 @@ let all_feats : Feature_map.feat array =
      ; Regexp_plus
      ; Regexp_opt
      ; Regexp_comp
+     ; Array_const
      ; (* Binops *)
        Add
      ; Sub
