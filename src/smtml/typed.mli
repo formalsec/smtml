@@ -551,36 +551,36 @@ module Bitv : sig
   module Make (W : Width) : S with type w = W.w
 end
 
-(** SMT Arrays, parameterised by their index and element sorts. *)
+(** SMT Arrays, parameterised by their index and element sorts.
+
+    Array expressions have type [('i, 'e) array expr], with ['i] and ['e] being
+    the index and element sorts respectively. *)
 module Arrays : sig
   (** The type of arrays with index sort ['i] and element sort ['e]. *)
   type ('i, 'e) array
 
-  (** The index or element sort of an array: a type [s] and its type witness
-      [ty]. *)
-  module type Sort = sig
-    type s
+  (** [ty index elem] is the array type [(array index elem)]. *)
+  val ty : 'i ty -> 'e ty -> ('i, 'e) array ty
 
-    val ty : s ty
-  end
+  (** [symbol aty name] is the (uninterpreted) symbolic array constant [name] of
+      type [aty]. *)
+  val symbol : ('i, 'e) array ty -> string -> ('i, 'e) array expr
 
-  (** [Make (I) (E)] provides arrays from index sort [I] to element sort [E]. *)
-  module Make (I : Sort) (E : Sort) : sig
-    (** The type of arrays from index sort [I.s] to element sort [E.s]. *)
-    type t = (I.s, E.s) array expr
+  (** [const aty default] is the constant array of type [aty] mapping every
+      index to [default] (which must be a concrete value).
 
-    (** [ty] is the array type [Ty_array (I.ty, E.ty)]. *)
-    val ty : (I.s, E.s) array ty
+      {b Warning.} Supported by z3 and Bitwuzla, fails at solve time for cvc5,
+      Alt-Ergo and Colibri2.
 
-    val symbol : Symbol.t -> t
+      TODO: fail earlier when its not supported by the solver + support symbolic
+      default values. *)
+  val const : ('i, 'e) array ty -> 'e expr -> ('i, 'e) array expr
 
-    (** [select a i] retrieves the element of array [a] at index [i]. *)
-    val select : t -> I.s expr -> E.s expr
+  (** [select a i] retrieves the element of array [a] at index [i]. *)
+  val select : ('i, 'e) array expr -> 'i expr -> 'e expr
 
-    (** [store a i v] returns the array obtained from [a] by mapping index [i]
-        to value [v]. *)
-    val store : t -> I.s expr -> E.s expr -> t
-  end
+  (** [store a i v] returns [a] with index [i] mapped to [v]. *)
+  val store : ('i, 'e) array expr -> 'i expr -> 'e expr -> ('i, 'e) array expr
 end
 
 module Bitv8 : Bitv.S with type w = bitv8
