@@ -2460,25 +2460,29 @@ end
 module Arrays = struct
   type ('i, 'e) array
 
-  module type Sort = sig
-    type s
+  let[@inline] ty (idx : 'i ty) (elem : 'e ty) : ('i, 'e) array ty =
+    Ty.Ty_array (idx, elem)
 
-    val ty : s ty
-  end
+  let[@inline] symbol (aty : ('i, 'e) array ty) (name : string) :
+    ('i, 'e) array expr =
+    Expr.symbol (Symbol.make_const aty name)
 
-  module Make (I : Sort) (E : Sort) = struct
-    type t = (I.s, E.s) array expr
+  let[@inline] const (aty : ('i, 'e) array ty) (default : 'e expr) :
+    ('i, 'e) array expr =
+    Expr.unop aty Array_const default
 
-    let ty : (I.s, E.s) array ty = Ty.Ty_array (I.ty, E.ty)
+  let[@inline] select (a : ('i, 'e) array expr) (i : 'i expr) : 'e expr =
+    let elem_ty =
+      match Expr.ty a with
+      | Ty.Ty_array (_, elem) -> elem
+      (* The phantom type guarantees [a] is an array *)
+      | _ -> assert false
+    in
+    Expr.binop elem_ty Select a i
 
-    let symbol x = Expr.symbol x
-
-    let[@inline] select (a : t) (i : I.s expr) : E.s expr =
-      Expr.binop E.ty Select a i
-
-    let[@inline] store (a : t) (i : I.s expr) (v : E.s expr) : t =
-      Expr.triop ty Store a i v
-  end
+  let[@inline] store (a : ('i, 'e) array expr) (i : 'i expr) (v : 'e expr) :
+    ('i, 'e) array expr =
+    Expr.triop (Expr.ty a) Store a i v
 end
 
 module Func = struct

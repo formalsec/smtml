@@ -197,6 +197,8 @@ module Unop = struct
     | Regexp_comp
     | Rotl of int
     | Rotr of int
+    (* Array *)
+    | Array_const
   [@@deriving ord]
 
   let hash = function
@@ -236,6 +238,7 @@ module Unop = struct
     | Regexp_comp -> 27
     | Rotl n -> combine 28 n
     | Rotr n -> combine 29 n
+    | Array_const -> 30
 
   let equal o1 o2 =
     match (o1, o2) with
@@ -266,14 +269,15 @@ module Unop = struct
     | Regexp_loop _, Regexp_loop _
     | Regexp_plus, Regexp_plus
     | Regexp_opt, Regexp_opt
-    | Regexp_comp, Regexp_comp ->
+    | Regexp_comp, Regexp_comp
+    | Array_const, Array_const ->
       true
     | Rotl a, Rotl b | Rotr a, Rotr b -> a = b
     | ( ( Neg | Not | Clz | Popcnt | Ctz | Abs | Sqrt | Is_normal | Is_subnormal
         | Is_negative | Is_positive | Is_infinite | Is_nan | Is_zero | Ceil
         | Floor | Trunc | Nearest | Head | Tail | Reverse | Length | Trim
         | Regexp_star | Regexp_loop _ | Regexp_plus | Regexp_opt | Regexp_comp
-        | Rotl _ | Rotr _ )
+        | Rotl _ | Rotr _ | Array_const )
       , _ ) ->
       false
 
@@ -308,6 +312,7 @@ module Unop = struct
     | Regexp_comp -> Fmt.string fmt "comp"
     | Rotl n -> Fmt.pf fmt "rotl %d" n
     | Rotr n -> Fmt.pf fmt "rotr %d" n
+    | Array_const -> Fmt.string fmt "const"
 end
 
 module Binop = struct
@@ -750,6 +755,7 @@ module Smtlib = struct
   let pp_unop fmt ((ty, op) : t * Unop.t) =
     match (ty, op) with
     | Ty_bool, Not -> Fmt.string fmt "not"
+    | Ty_array _, Array_const -> Fmt.pf fmt "(as const %a)" pp ty
     | _ -> assert false
 
   let pp_binop fmt ((ty, op) : t * Binop.t) =

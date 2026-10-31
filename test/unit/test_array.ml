@@ -125,20 +125,27 @@ let test_array_indices () =
   check select (Expr.raw_binop Ty_int Select (Expr.value outer) (Expr.value id))
 
 let test_typed () =
-  let module A =
-    Typed.Arrays.Make
-      (struct
-        type s = int
-
-        let ty = Typed.Types.int
-      end)
-      (struct
-        type s = bool
-
-        let ty = Typed.Types.bool
-      end)
-  in
-  Alcotest.check ty_testable "ty" arr (Typed.Types.to_ty A.ty)
+  let open Typed in
+  let aty = Arrays.ty Types.int Types.bool in
+  Alcotest.check ty_testable "ty" arr (Types.to_ty aty);
+  let a = Arrays.symbol aty "a" in
+  Alcotest.check ty_testable "symbol" arr (Expr.ty (Unsafe.unwrap a));
+  let select = Arrays.select a (Int.v Z.zero) in
+  Alcotest.check ty_testable "select" Ty_bool (Expr.ty (Unsafe.unwrap select));
+  let store = Arrays.store a (Int.v Z.zero) Bool.true_ in
+  Alcotest.check ty_testable "store" arr (Expr.ty (Unsafe.unwrap store));
+  (* A concrete default folds to a constant-array value *)
+  let c = Arrays.const aty Bool.false_ in
+  Alcotest.check value_testable "const folds"
+    (Value.array arr ~default:False [])
+    (match Expr.view (Unsafe.unwrap c) with Val v -> v | _ -> assert false);
+  (* A symbolic default stays a const node *)
+  let b = Bool.symbol (Symbol.make_const Ty_bool "b") in
+  let c = Arrays.const aty b in
+  Alcotest.check ty_testable "symbolic const" arr (Expr.ty (Unsafe.unwrap c));
+  match Expr.view (Unsafe.unwrap c) with
+  | Unop (ty, Array_const, _) -> Alcotest.check ty_testable "const node" arr ty
+  | _ -> Alcotest.fail "expected an Array_const node"
 
 let () =
   Alcotest.run "Array unit tests"

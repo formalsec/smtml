@@ -123,6 +123,10 @@ module Unop : sig
     | Regexp_comp  (** Complement. *)
     | Rotl of int  (** Rotate left. *)
     | Rotr of int  (** Rotate right. *)
+    (* Array operations *)
+    | Array_const
+      (** Constant array. [((as const (Array I E)) x)] is the array mapping
+          every index to [x]. *)
   [@@deriving ord]
 
   val hash : t -> int
