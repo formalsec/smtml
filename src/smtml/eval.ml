@@ -529,6 +529,11 @@ module Arrays = struct
       eval_error `Undecidable_array_equality
     | _ -> ()
 
+  let[@inline] unop ty (op : Ty.Unop.t) v =
+    match op with
+    | Array_const -> Value.array ty ~default:v []
+    | _ -> eval_error (`Unsupported_operator (`Unop op, ty))
+
   let[@inline] select v1 v2 =
     let ty, default, entries = of_array 1 (`Binop Select) v1 in
     check_indices ty;
@@ -1050,8 +1055,8 @@ let unop ty op v =
   | Ty_bitv _ -> Bitv.unop op v
   | Ty_fp 32 -> F32.unop op v
   | Ty_fp 64 -> F64.unop op v
-  | Ty_fp _ | Ty_app | Ty_array _ | Ty_unit | Ty_none | Ty_regexp
-  | Ty_roundingMode ->
+  | Ty_array _ -> Arrays.unop ty op v
+  | Ty_fp _ | Ty_app | Ty_unit | Ty_none | Ty_regexp | Ty_roundingMode ->
     eval_error (`Unsupported_theory ty)
 
 let binop ty op v1 v2 =

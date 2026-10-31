@@ -623,6 +623,18 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
       end)
 
       module Array_impl = struct
+        let unop idx_ty op t =
+          match op with
+          | Unop.Array_const -> (
+            match M.Arrays.const with
+            | Some const -> const idx_ty t
+            | None ->
+              Fmt.failwith "%s doesn't support constant arrays" M.Internals.name
+            )
+          | op ->
+            Fmt.failwith {|%s: Unsupported %s operator "%a"|} __MODULE__
+              __FUNCTION__ Unop.pp op
+
         let binop op t1 t2 =
           match op with
           | Binop.Select -> M.Arrays.select t1 t2
@@ -683,8 +695,8 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | Ty_bitv bitwidth -> Bitv_impl.unop bitwidth op t
         | Ty_fp 32 -> Float32_impl.unop op t
         | Ty_fp 64 -> Float64_impl.unop op t
-        | Ty_fp _ | Ty_list | Ty_app | Ty_array _ | Ty_unit | Ty_none
-        | Ty_roundingMode ->
+        | Ty_array (idx, _) -> Array_impl.unop (get_type idx) op t
+        | Ty_fp _ | Ty_list | Ty_app | Ty_unit | Ty_none | Ty_roundingMode ->
           Fmt.failwith "Unsupported encoding of unary operators for theory '%a'"
             Ty.pp ty
 

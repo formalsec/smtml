@@ -186,7 +186,7 @@ let rec return_type (hte : t) : Ty.t =
     | Regexp_star | Regexp_loop _ | Regexp_plus | Regexp_opt | Regexp_comp ->
       Ty_regexp
     | Not | Neg | Clz | Ctz | Popcnt | Abs | Sqrt | Ceil | Floor | Trunc
-    | Nearest | Head | Tail | Reverse | Trim | Rotl _ | Rotr _ ->
+    | Nearest | Head | Tail | Reverse | Trim | Rotl _ | Rotr _ | Array_const ->
       ty )
   | Binop (ty, op, _, _) -> (
     match op with
