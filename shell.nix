@@ -20,6 +20,7 @@ pkgs.mkShell {
     alcotest
   ];
   buildInputs = with pkgs.ocamlPackages; [
+    afl-persistent
     bos
     cmdliner
     cohttp-lwt-unix
