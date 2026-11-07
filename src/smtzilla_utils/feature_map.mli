@@ -47,6 +47,9 @@ type feat =
   | Regexp_plus
   | Regexp_opt
   | Regexp_comp
+  | Rotl
+  | Rotr
+  | Array_const
   (* Binops *)
   | Add
   | Sub
@@ -66,9 +69,6 @@ type feat =
   | Min
   | Max
   | Copysign
-  | Rotl
-  | Rotr
-  | Array_const
   | Ext_rotl
   | Ext_rotr
   | At
