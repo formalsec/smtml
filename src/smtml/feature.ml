@@ -222,6 +222,8 @@ let all_feats : Feature_map.feat array =
      ; Regexp_plus
      ; Regexp_opt
      ; Regexp_comp
+     ; Rotl
+     ; Rotr
      ; Array_const
      ; (* Binops *)
        Add
@@ -243,8 +245,6 @@ let all_feats : Feature_map.feat array =
      ; Min
      ; Max
      ; Copysign
-     ; Rotl
-     ; Rotr
      ; At
      ; List_cons
      ; List_append
