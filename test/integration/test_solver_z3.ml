@@ -22,6 +22,7 @@ let () =
     ; Z3_solv.test_bv
     ; Z3_solv.test_array
     ; Z3_solv.test_array_model
+    ; Z3_solv.test_array_const
     ; ( "test_bv_ext_rotate"
       , [ Alcotest.test_case "test_bv_ext_rotate" `Quick
             (Z3_solv.with_solver Z3_solv.test_bv_ext_rotate)

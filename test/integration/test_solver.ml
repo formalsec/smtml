@@ -398,6 +398,28 @@ module Make (M : Mappings_intf.S_with_fresh) = struct
           (with_solver test_array_get_value)
       ] )
 
+  let test_array_const_symbolic solver_module =
+    let open Typed in
+    let module Solver = (val solver_module : Solver_intf.S) in
+    let solver = Solver.create ~params:(Params.default ()) ~logic:QF_ABV () in
+    let aty = Arrays.ty Bitv8.ty Bitv8.ty in
+    let default = const Bitv8.ty "b" in
+    let a = Arrays.const aty default in
+    let i = const Bitv8.ty "i" in
+    let j = const Bitv8.ty "j" in
+    Solver.add solver
+      [ (Bitv8.eq (Arrays.select a i) (Bitv8.of_int 42) :> Expr.t) ];
+    assert_sat ~f:"test_array_const_symbolic" (Solver.check solver []);
+    Solver.add solver
+      [ (Bitv8.eq (Arrays.select a j) (Bitv8.of_int 43) :> Expr.t) ];
+    assert_unsat ~f:"test_array_const_symbolic" (Solver.check solver [])
+
+  let test_array_const =
+    ( "test_array_const"
+    , [ Alcotest.test_case "test_array_const_symbolic" `Quick
+          (with_solver test_array_const_symbolic)
+      ] )
+
   let test_fp_get_value32 solver_module =
     let open Infix in
     let module Solver = (val solver_module : Solver_intf.S) in
