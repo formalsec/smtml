@@ -12,9 +12,11 @@ let () =
   let module Z3_opt = Test_optimizer.Make (Z3_mappings) in
   let module Z3_solv = Test_solver.Make (Z3_mappings) in
   let module Z3_bindings = Test_bindings.Make (Z3_mappings.M) in
+  let module Z3_rules = Test_simplifier_rules.Make (Z3_mappings) in
   Alcotest.run "Z3"
     [ ("is_available", [ Alcotest.test_case "is_available" `Quick is_available ])
     ; Z3_opt.test
+    ; Z3_rules.test
     ; Z3_solv.test_params
     ; Z3_solv.test_cached
     ; Z3_solv.test_lia

@@ -33,3 +33,6 @@ nix/profiles/
 /.ci
 
 res-*
+
+# Lean
+simplifications/.lake

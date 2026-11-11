@@ -26,6 +26,7 @@ module type S = sig
        ?state:exec_state
     -> ?quiet:bool
     -> no_strict_status:bool
+    -> timeout:int
     -> Ast.Script.t
     -> exec_state
 end
