@@ -69,7 +69,9 @@
   (dune-site
    (>= "3.20"))
   (dolmen
-   (>= "0.10"))
+   (and
+    (>= "0.10")
+    (< "0.11")))
   (dolmen_type
    (>= "0.10"))
   (dolmen_model
