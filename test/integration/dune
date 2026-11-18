@@ -1,6 +1,6 @@
 (library
  (name smtml_test_solver)
- (modules test_bindings test_solver test_optimizer)
+ (modules test_bindings test_solver test_optimizer test_simplifier_rules)
  (libraries fmt smtml smtml_test alcotest zarith))
 
 (test

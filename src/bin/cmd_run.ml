@@ -29,6 +29,8 @@ let parse_file filename =
   in
   List.rev files
 
+exception Timeout
+
 let run (s : Settings.Run.t) =
   if s.debug then Logs.Src.set_level Log.src (Some Logs.Debug);
   Logs.set_reporter @@ Logs.format_reporter ();
@@ -43,15 +45,37 @@ let run (s : Settings.Run.t) =
     Log.debug (fun k -> k "File %a..." Fpath.pp file);
     incr total_tests;
     let start_t = Unix.gettimeofday () in
-    let ast =
-      try Compile.until_rewrite file
-      with Smtml.Eval.Eval_error err -> Error (`Eval_error err)
-    in
-    let state =
+    Fun.protect ~finally:(fun () ->
+      if s.print_statistics then (
+        let exec_t = Unix.gettimeofday () -. start_t in
+        total_t := !total_t +. exec_t;
+        Log.app (fun m -> m "Run %a in %.06f" Fpath.pp file exec_t) ) )
+    @@ fun () ->
+    try
+      let ast =
+        try Compile.until_rewrite file ~no_simpls:s.no_simpls
+        with Smtml.Eval.Eval_error err -> Error (`Eval_error err)
+      in
       match ast with
       | Ok _ when s.dry -> state
       | Ok ast ->
-        Some (Interpret.start ?state ast ~no_strict_status:s.no_strict_status)
+        let old_handler = ref Sys.Signal_default in
+        let timeout_sec = float_of_int s.timeout /. 1000. in
+        Fun.protect ~finally:(fun () ->
+          ignore
+            (Unix.setitimer Unix.ITIMER_REAL
+               { it_value = 0.; it_interval = 0. } );
+          ignore (Sys.signal Sys.sigalrm !old_handler) )
+        @@ fun () ->
+        old_handler :=
+          Sys.signal Sys.sigalrm (Sys.Signal_handle (fun _ -> raise Timeout));
+        if timeout_sec > 0. then
+          ignore
+            (Unix.setitimer Unix.ITIMER_REAL
+               { it_value = timeout_sec; it_interval = 0. } );
+        Some
+          (Interpret.start ?state ast ~no_strict_status:s.no_strict_status
+             ~timeout:s.timeout )
       | Error (`Msg msg) ->
         Log.err (fun k -> k "%a: %s" Fpath.pp file msg);
         incr exception_count;
@@ -63,20 +87,39 @@ let run (s : Settings.Run.t) =
             kind );
         incr exception_count;
         state
-    in
-    if s.print_statistics then (
-      let exec_t = Unix.gettimeofday () -. start_t in
-      total_t := !total_t +. exec_t;
-      Log.app (fun m -> m "Run %a in %.06f" Fpath.pp file exec_t) );
-    state
+    with
+    | Timeout ->
+      let err_msg =
+        Printf.sprintf "Timeout during interpretation after %d ms" s.timeout
+      in
+      Log.err (fun k -> k "File %a: %s" Fpath.pp file err_msg);
+      incr exception_count;
+      exception_log := (file, err_msg) :: !exception_log;
+      state
+    | ex ->
+      let err_msg = Printexc.to_string ex in
+      Log.err (fun k ->
+        k "Unhandled exception processing file %a: %s" Fpath.pp file err_msg );
+      incr exception_count;
+      exception_log := (file, err_msg) :: !exception_log;
+      state
   in
 
   let run_dir prev_state d =
-    Bos.OS.Dir.fold_contents ~traverse:`Any
-      (fun path state ->
-        if Fpath.has_ext ".smt2" path then run_file state path else state )
-      prev_state d
-    |> Result.get_ok
+    let result =
+      Bos.OS.Dir.fold_contents ~traverse:`Any
+        (fun path state ->
+          if Fpath.has_ext ".smt2" path then run_file state path else state )
+        prev_state d
+    in
+    match result with
+    | Error (`Msg e) ->
+      let err_msg = "Error traversing directory: " ^ e in
+      Log.err (fun k -> k "%a: %s" Fpath.pp d err_msg);
+      incr exception_count;
+      exception_log := (d, err_msg) :: !exception_log;
+      prev_state
+    | Ok state -> state
   in
 
   let run_path prev_state path =
@@ -87,9 +130,18 @@ let run (s : Settings.Run.t) =
       | Ok false ->
         Log.warn (fun k -> k "%a: No such file or directory" Fpath.pp path);
         prev_state
-      | Ok true ->
-        if Sys.is_directory (Fpath.to_string path) then run_dir prev_state path
-        else run_file prev_state path
+      | Ok true -> (
+        try
+          if Sys.is_directory (Fpath.to_string path) then
+            run_dir prev_state path
+          else run_file prev_state path
+        with ex ->
+          let err_msg = Printexc.to_string ex in
+          Log.err (fun k ->
+            k "Error processing path %a: %s" Fpath.pp path err_msg );
+          incr exception_count;
+          exception_log := (path, err_msg) :: !exception_log;
+          prev_state )
       | Error (`Msg err) ->
         Log.err (fun k -> k "%s" err);
         prev_state )
@@ -114,8 +166,9 @@ let run (s : Settings.Run.t) =
     | exns ->
       let total = !total_tests in
       let exceptions = !exception_count in
-      assert (total > 0);
-      let percentage = float exceptions /. float total *. 100.0 in
+      let percentage =
+        if total = 0 then 0.0 else float exceptions /. float total *. 100.0
+      in
       let log_file = Fpath.v (Filename.temp_file "smtml" "exceptions.sexp") in
       let* () =
         Bos.OS.File.writef log_file

@@ -16,8 +16,12 @@ let benchmarks =
   |> Result.get_ok
 
 let make_test path () =
-  let script = Smtml.Compile.until_rewrite path |> Result.get_ok in
-  let _ = Interpreter.start ~no_strict_status:true ~quiet:true script in
+  let script =
+    Smtml.Compile.until_rewrite path ~no_simpls:false |> Result.get_ok
+  in
+  let _ =
+    Interpreter.start ~no_strict_status:true ~quiet:true ~timeout:0 script
+  in
   ()
 
 let () =
