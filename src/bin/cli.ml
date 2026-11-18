@@ -68,6 +68,10 @@ let from_file =
   Arg.(
     value & opt (some fpath) None & info [ "F"; "from-file" ] ~doc ~docv:"VAL" )
 
+let arcl_eval =
+  let doc = "Automated Reasoning and Computational Logic : Evaluation" in
+  Arg.(value & opt int 0 & info [ "arcl" ] ~doc)
+
 let info_run =
   let doc = "Runs one or more scripts using. Also supports directory inputs" in
   Cmd.info "run" ~doc
@@ -83,9 +87,10 @@ let cmd_run =
   and+ solver_type
   and+ solver_mode
   and+ from_file
+  and+ arcl_eval
   and+ filenames in
   Cmd_run.run ~debug ~dry ~print_statistics ~no_strict_status ~no_simpls
-    ~timeout ~solver_type ~solver_mode ~from_file ~filenames
+    ~timeout ~solver_type ~solver_mode ~from_file ~arcl_eval ~filenames
 
 let info_to_smt2 =
   let doc = "Convert .smtml into .smt2" in

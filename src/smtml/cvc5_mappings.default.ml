@@ -557,6 +557,8 @@ module Fresh_cvc5 () = struct
 
     let model solver = Some solver
 
+    let unsat_core _ = assert false
+
     let add_simplifier solver = solver
 
     let interrupt _ = ()

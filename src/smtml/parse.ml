@@ -36,9 +36,9 @@ module Smtml = struct
 end
 
 module Smtlib = struct
-  let from_file filename =
+  let parse_with_error data =
     try
-      let _, st = Smtlib.parse_all (`File (Fpath.to_string filename)) in
+      let _, st = Smtlib.parse_all data in
       Lazy.force st
     with
     | Dolmen.Std.Loc.Syntax_error (loc, `Regular msg) ->
@@ -51,6 +51,10 @@ module Smtlib = struct
         (Syntax_error
            (Fmt.str "%a: syntax error: %s" Dolmen.Std.Loc.print_compact loc x)
         )
+
+  let from_file filename = parse_with_error (`File (Fpath.to_string filename))
+
+  let from_string contents = parse_with_error (`Contents ("", contents))
 end
 
 let from_file filename =

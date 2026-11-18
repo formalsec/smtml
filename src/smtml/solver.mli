@@ -4,3 +4,9 @@
 
 (** @inline *)
 include Solver_intf.Intf
+
+val slice_algorithm : bool ref
+
+val unsat_cache : bool ref
+
+val unsat_plus : bool ref

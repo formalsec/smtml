@@ -27,8 +27,37 @@ let parse_file filename =
 
 exception Timeout
 
+let init_arcl_eval = function
+  | 1 -> Rewrite.Symb_normalizer.symb_renaming := true
+  | 2 -> Solver.slice_algorithm := true
+  | 3 -> Solver.unsat_cache := true
+  | 4 ->
+    Solver.unsat_cache := true;
+    Solver.unsat_plus := true
+  | 5 ->
+    Rewrite.Symb_normalizer.symb_renaming := true;
+    Solver.slice_algorithm := true
+  | 6 ->
+    Rewrite.Symb_normalizer.symb_renaming := true;
+    Solver.unsat_cache := true
+  | 7 ->
+    Rewrite.Symb_normalizer.symb_renaming := true;
+    Solver.unsat_cache := true;
+    Solver.unsat_plus := true
+  | 8 ->
+    Rewrite.Symb_normalizer.symb_renaming := true;
+    Solver.slice_algorithm := true;
+    Solver.unsat_cache := true
+  | 9 ->
+    Rewrite.Symb_normalizer.symb_renaming := true;
+    Solver.slice_algorithm := true;
+    Solver.unsat_cache := true;
+    Solver.unsat_plus := true
+  | _ -> ()
+
 let run ~debug ~dry ~print_statistics ~no_strict_status ~no_simpls ~timeout
-  ~solver_type ~solver_mode ~from_file ~filenames =
+  ~solver_type ~solver_mode ~from_file ~arcl_eval ~filenames =
+  init_arcl_eval arcl_eval;
   if debug then Logs.Src.set_level Log.src (Some Logs.Debug);
   Logs.set_reporter @@ Logs.format_reporter ();
   let module Solver = (val get_solver debug solver_type solver_mode) in
@@ -40,12 +69,12 @@ let run ~debug ~dry ~print_statistics ~no_strict_status ~no_simpls ~timeout
   let run_file state file =
     Log.debug (fun k -> k "File %a..." Fpath.pp file);
     incr total_tests;
-    let start_t = Unix.gettimeofday () in    
+    let start_t = Unix.gettimeofday () in
     Fun.protect ~finally:(fun () ->
       if print_statistics then (
         let exec_t = Unix.gettimeofday () -. start_t in
         total_t := !total_t +. exec_t;
-        Log.app (fun m -> m "Run %a in %.06f" Fpath.pp file exec_t) ) )
+        Log.err (fun m -> m "Run %a in %.06f" Fpath.pp file exec_t) ) )
     @@ fun () ->
     try
       let ast =
@@ -58,25 +87,29 @@ let run ~debug ~dry ~print_statistics ~no_strict_status ~no_simpls ~timeout
         let old_handler = ref Sys.Signal_default in
         let timeout_sec = float_of_int timeout /. 1000. in
         Fun.protect ~finally:(fun () ->
-          ignore (Unix.setitimer Unix.ITIMER_REAL { it_value = 0.; it_interval = 0. });
-          ignore (Sys.signal Sys.sigalrm !old_handler);
-        )
+          ignore
+            (Unix.setitimer Unix.ITIMER_REAL
+               { it_value = 0.; it_interval = 0. } );
+          ignore (Sys.signal Sys.sigalrm !old_handler) )
         @@ fun () ->
-        old_handler := Sys.signal Sys.sigalrm (Sys.Signal_handle (fun _ -> raise Timeout));
-        if timeout_sec > 0. then (
-          ignore (Unix.setitimer Unix.ITIMER_REAL { it_value = timeout_sec; it_interval = 0. })
-        );
+        old_handler :=
+          Sys.signal Sys.sigalrm (Sys.Signal_handle (fun _ -> raise Timeout));
+        if timeout_sec > 0. then
+          ignore
+            (Unix.setitimer Unix.ITIMER_REAL
+               { it_value = timeout_sec; it_interval = 0. } );
         Some (Interpret.start ?state ast ~no_strict_status ~timeout)
-
       | Error (`Parsing_error ((fpath, err_msg) as err)) ->
         Log.err (fun k -> k "%a: %s" Fpath.pp fpath err_msg);
         incr exception_count;
         exception_log := err :: !exception_log;
-        state    
-    with 
+        state
+    with
     | Timeout ->
-      let err_msg = Printf.sprintf "Timeout during interpretation after %d ms" timeout in
-      Log.err (fun k -> k "File %a: %s" Fpath.pp file err_msg);
+      let err_msg =
+        Printf.sprintf "Timeout during interpretation after %d ms" timeout
+      in
+      Log.app (fun k -> k "File %a: %s" Fpath.pp file err_msg);
       incr exception_count;
       exception_log := (file, err_msg) :: !exception_log;
       state
@@ -129,7 +162,7 @@ let run ~debug ~dry ~print_statistics ~no_strict_status ~no_simpls ~timeout
         Log.err (fun k -> k "%s" err);
         prev_state )
   in
-  let _ =
+  let state =
     match from_file with
     | None -> List.fold_left run_path None filenames
     | Some file -> (
@@ -139,7 +172,83 @@ let run ~debug ~dry ~print_statistics ~no_strict_status ~no_simpls ~timeout
         None
       | Ok files -> List.fold_left run_file None files )
   in
-  if print_statistics then Log.app (fun k -> k "total time: %.06f" !total_t);
+  if print_statistics then (
+    let ( cache_hits
+        , cache_misses
+        , slice_count
+        , slice_factor
+        , slice_ts
+        , unsat_caches
+        , unsat_hits
+        , unsat_misses
+        , unsat_plus
+        , unsat_cache_ts
+        , unsat_plus_ts ) =
+      match state with
+      | None -> (0, 0, 0, 0, 0.0, 0, 0, 0, 0, 0.0, 0.0)
+      | Some state' -> (
+        let stats = Solver.get_statistics state'.solver in
+        let cache_hits = Statistics.Map.find_opt "cache hits" stats in
+        let cache_misses = Statistics.Map.find_opt "cache misses" stats in
+        let slice_count = Statistics.Map.find_opt "slice count" stats in
+        let slice_factor = Statistics.Map.find_opt "slice factor" stats in
+        let slice_ts = Statistics.Map.find_opt "slice ts" stats in
+        let unsat_caches = Statistics.Map.find_opt "unsat caches" stats in
+        let unsat_hits = Statistics.Map.find_opt "unsat hits" stats in
+        let unsat_misses = Statistics.Map.find_opt "unsat misses" stats in
+        let unsat_plus = Statistics.Map.find_opt "unsat plus" stats in
+        let unsat_cache_ts = Statistics.Map.find_opt "unsat cache ts" stats in
+        let unsat_plus_ts = Statistics.Map.find_opt "unsat plus ts" stats in
+        match
+          ( cache_hits
+          , cache_misses
+          , slice_count
+          , slice_factor
+          , slice_ts
+          , unsat_caches
+          , unsat_hits
+          , unsat_misses
+          , unsat_plus
+          , unsat_cache_ts
+          , unsat_plus_ts )
+        with
+        | ( Some (`Int cache_hits')
+          , Some (`Int cache_misses')
+          , Some (`Int slice_count')
+          , Some (`Int slice_factor')
+          , Some (`Float slice_ts')
+          , Some (`Int unsat_caches')
+          , Some (`Int unsat_hits')
+          , Some (`Int unsat_misses')
+          , Some (`Int unsat_plus')
+          , Some (`Float unsat_cache_ts')
+          , Some (`Float unsat_plus_ts') ) ->
+          ( cache_hits'
+          , cache_misses'
+          , slice_count'
+          , slice_factor'
+          , slice_ts'
+          , unsat_caches'
+          , unsat_hits'
+          , unsat_misses'
+          , unsat_plus'
+          , unsat_cache_ts'
+          , unsat_plus_ts' )
+        | _ -> (0, 0, 0, 0, 0.0, 0, 0, 0, 0, 0.0, 0.0) )
+    in
+    Log.err (fun k -> k "");
+    Log.err (fun k -> k "total time: %.06f" !total_t);
+    Log.err (fun k -> k "cache hits: %d" cache_hits);
+    Log.err (fun k -> k "cache misses: %d" cache_misses);
+    Log.err (fun k -> k "slice total: %d" slice_count);
+    Log.err (fun k -> k "slice factor: %d" slice_factor);
+    Log.err (fun k -> k "slice time: %f" slice_ts);
+    Log.err (fun k -> k "unsat caches: %d" unsat_caches);
+    Log.err (fun k -> k "unsat hits: %d" unsat_hits);
+    Log.err (fun k -> k "unsat misses: %d" unsat_misses);
+    Log.err (fun k -> k "unsat plus: %d" unsat_plus);
+    Log.err (fun k -> k "unsat cache time: %f" unsat_cache_ts);
+    Log.err (fun k -> k "unsat plus time: %f" unsat_plus_ts) );
   let write_exception_log =
     let open Smtml_prelude.Result in
     function

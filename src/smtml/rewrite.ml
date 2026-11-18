@@ -14,6 +14,30 @@
 
 module Symb_map = Map.Make (Symbol)
 
+module Symb_normalizer = struct
+  let symb_renaming = ref false
+
+  let symb_tbl = ref Symb_map.empty
+
+  let symb_counter = ref 0
+
+  let reset () =
+    symb_tbl := Symb_map.empty;
+    symb_counter := 0
+
+  let normalize v =
+    match (!symb_renaming, Symb_map.find_opt v !symb_tbl) with
+    | false, _ -> v
+    | true, Some v' -> v'
+    | true, None ->
+      incr symb_counter;
+      let name = Fmt.str "#__#v%d#__#" !symb_counter in
+      let symb = Symbol.make (Symbol.type_of v) name in
+      symb_tbl := Symb_map.add v symb !symb_tbl;
+      symb_tbl := Symb_map.add symb symb !symb_tbl;
+      symb
+end
+
 (* TODO: Add proper logs *)
 let debug = false
 
@@ -65,17 +89,19 @@ let rec rewrite_expr (type_map, expr_map) hte ~no_simpls =
     let base = Bitvector.to_int32 base in
     Expr.ptr base (rewrite_expr (type_map, expr_map) offset ~no_simpls)
   | Symbol sym -> begin
+    let sym' = Symb_normalizer.normalize sym in
     (* Avoid rewriting well-typed symbols already *)
-    if not (Ty.equal Ty_none (Symbol.type_of sym)) then hte
+    if not (Ty.equal Ty_none (Symbol.type_of sym')) then hte
     else
-      match Symb_map.find_opt sym type_map with
+      match Symb_map.find_opt sym' type_map with
       | None -> (
-        match Symb_map.find_opt sym expr_map with
-        | None -> Fmt.failwith "Undefined symbol: %a" Symbol.pp sym
+        match Symb_map.find_opt sym' expr_map with
+        | None -> Fmt.failwith "Undefined symbol: %a" Symbol.pp sym'
         | Some expr -> expr )
-      | Some ty -> Expr.symbol { sym with ty }
+      | Some ty -> Expr.symbol { sym' with ty }
   end
-  | List htes -> Expr.list (List.map (rewrite_expr (type_map, expr_map) ~no_simpls) htes)
+  | List htes ->
+    Expr.list (List.map (rewrite_expr (type_map, expr_map) ~no_simpls) htes)
   | App
       ( ({ name = Simple ("fp.add" | "fp.sub" | "fp.mul" | "fp.div"); _ } as sym)
       , [ rm; a; b ] ) ->
@@ -99,17 +125,18 @@ let rec rewrite_expr (type_map, expr_map) hte ~no_simpls =
     let ty = rewrite_ty Ty_none [ Expr.ty a ] in
     Expr.app { sym with ty } [ rm; a ]
   | App (sym, htes) ->
-    let sym =
-      match Symb_map.find_opt sym type_map with
-      | None -> Fmt.failwith "Undefined symbol: %a" Symbol.pp sym
-      | Some ty -> { sym with ty }
+    let sym' = Symb_normalizer.normalize sym in
+    let sym'' =
+      match Symb_map.find_opt sym' type_map with
+      | None -> Fmt.failwith "Undefined symbol: %a" Symbol.pp sym'
+      | Some ty -> { sym' with ty }
     in
-    Expr.app sym (List.map (rewrite_expr (type_map, expr_map) ~no_simpls) htes)
+    Expr.app sym''
+      (List.map (rewrite_expr (type_map, expr_map) ~no_simpls) htes)
   | Unop (ty, op, hte) ->
     let hte = rewrite_expr (type_map, expr_map) hte ~no_simpls in
     let ty = rewrite_ty ty [ Expr.ty hte ] in
-    if no_simpls then Expr.unop ty op hte
-    else Expr.raw_unop ty op hte
+    if no_simpls then Expr.unop ty op hte else Expr.raw_unop ty op hte
   | Binop (ty, op, hte1, hte2) ->
     let hte1 = rewrite_expr (type_map, expr_map) hte1 ~no_simpls in
     let hte2 = rewrite_expr (type_map, expr_map) hte2 ~no_simpls in
@@ -136,12 +163,10 @@ let rec rewrite_expr (type_map, expr_map) hte ~no_simpls =
   | Cvtop (ty, op, hte) ->
     let hte = rewrite_expr (type_map, expr_map) hte ~no_simpls in
     let ty = rewrite_ty ty [ Expr.ty hte ] in
-    if no_simpls then Expr.cvtop ty op hte
-    else Expr.raw_cvtop ty op hte
+    if no_simpls then Expr.cvtop ty op hte else Expr.raw_cvtop ty op hte
   | Naryop (ty, op, htes) ->
     let htes = List.map (rewrite_expr (type_map, expr_map) ~no_simpls) htes in
-    if no_simpls then Expr.naryop ty op htes
-    else Expr.raw_naryop ty op htes
+    if no_simpls then Expr.naryop ty op htes else Expr.raw_naryop ty op htes
   | Extract (hte, h, l) ->
     let hte = rewrite_expr (type_map, expr_map) hte ~no_simpls in
     if no_simpls then Expr.extract hte ~high:h ~low:l
@@ -149,8 +174,7 @@ let rec rewrite_expr (type_map, expr_map) hte ~no_simpls =
   | Concat (hte1, hte2) ->
     let hte1 = rewrite_expr (type_map, expr_map) hte1 ~no_simpls in
     let hte2 = rewrite_expr (type_map, expr_map) hte2 ~no_simpls in
-    if no_simpls then Expr.concat hte1 hte2
-    else Expr.raw_concat hte1 hte2
+    if no_simpls then Expr.concat hte1 hte2 else Expr.raw_concat hte1 hte2
   | Binder (Let_in, vars, e) ->
     (* Then, we rewrite the types of the expr *)
     let expr_map =
@@ -161,7 +185,8 @@ let rec rewrite_expr (type_map, expr_map) hte ~no_simpls =
             (* Searches the outer expr_map. Because I don't think the list of
                var bindings are in scope for themselves? *)
             let e = rewrite_expr (type_map, expr_map) e ~no_simpls in
-            Symb_map.add sym e map
+            let sym' = Symb_normalizer.normalize sym in
+            Symb_map.add sym' e map
           | _ -> assert false )
         expr_map vars
     in
@@ -173,7 +198,8 @@ let rec rewrite_expr (type_map, expr_map) hte ~no_simpls =
           match Expr.view e with
           | App (sym, [ e ]) ->
             let ty = Expr.ty e in
-            (Symb_map.add sym ty map, Expr.symbol { sym with ty } :: vars)
+            let sym' = Symb_normalizer.normalize sym in
+            (Symb_map.add sym' ty map, Expr.symbol { sym' with ty } :: vars)
           | _ -> assert false )
         (type_map, []) vars
     in
@@ -187,16 +213,25 @@ let rewrite_cmd type_map cmd ~no_simpls =
     let hte = rewrite_expr (type_map, Symb_map.empty) hte ~no_simpls in
     (type_map, Ast.Assert hte)
   | Check_sat htes ->
-    let htes = List.map (rewrite_expr (type_map, Symb_map.empty) ~no_simpls) htes in
+    let htes =
+      List.map (rewrite_expr (type_map, Symb_map.empty) ~no_simpls) htes
+    in
     (type_map, Check_sat htes)
-  | Declare_const { id; sort } as cmd -> (Symb_map.add id sort.ty type_map, cmd)
-  | Declare_fun { id; sort; _ } as cmd -> (Symb_map.add id sort.ty type_map, cmd)
+  | Declare_const { id; sort } as cmd ->
+    let id' = Symb_normalizer.normalize id in
+    (Symb_map.add id' sort.ty type_map, cmd)
+  | Declare_fun { id; sort; _ } as cmd ->
+    let id' = Symb_normalizer.normalize id in
+    (Symb_map.add id' sort.ty type_map, cmd)
   | Get_value htes ->
-    let htes = List.map (rewrite_expr (type_map, Symb_map.empty) ~no_simpls) htes in
+    let htes =
+      List.map (rewrite_expr (type_map, Symb_map.empty) ~no_simpls) htes
+    in
     (type_map, Get_value htes)
   | cmd -> (type_map, cmd)
 
 let rewrite script ~no_simpls =
+  Symb_normalizer.reset ();
   let _, cmds =
     List.fold_left
       (fun (type_map, cmds) cmd ->

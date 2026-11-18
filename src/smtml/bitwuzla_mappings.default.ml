@@ -548,6 +548,8 @@ module Fresh_bitwuzla (B : Bitwuzla_cxx.S) : M = struct
 
     let model solver = Some solver
 
+    let unsat_core _ = assert false
+
     let add_simplifier solver =
       (* does nothing *)
       solver

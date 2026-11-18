@@ -446,6 +446,8 @@ module Nop = struct
 
       let model _ = die ()
 
+      let unsat_core _ = die ()
+
       let add_simplifier _ = die ()
 
       let interrupt _ = die ()

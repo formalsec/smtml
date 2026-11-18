@@ -51,6 +51,7 @@
   parser
   rewrite
   simplifier
+  slicing
   smtlib
   solver
   solver_dispatcher
@@ -124,15 +125,8 @@
 
 (executable
  (name simplifier_dsl)
- (modules
-  simplifier_ast
-  simplifier_lexer
-  simplifier_parser
-  simplifier_dsl)
- (libraries
-  fmt
-  bos
-  menhirLib))
+ (modules simplifier_ast simplifier_lexer simplifier_parser simplifier_dsl)
+ (libraries fmt bos menhirLib))
 
 (rule
  (targets simplifier.ml)
@@ -141,7 +135,6 @@
   (with-stdout-to
    %{targets}
    (run %{dep:simplifier_dsl.exe}))))
-
 
 (rule
  (targets

@@ -584,6 +584,13 @@ module M = struct
 
       let model solver = Z3.Solver.get_model solver
 
+      let unsat_core solver =
+        let core = Z3.Solver.get_unsat_core solver in
+        match List.rev core with
+        | [] -> None
+        | hd :: [] -> Some (Z3.SMT.benchmark_to_smtstring ctx "" "" "" "" [] hd)
+        | hd :: tl -> Some (Z3.SMT.benchmark_to_smtstring ctx "" "" "" "" tl hd)
+
       let add_simplifier solver =
         let simplify = Z3.Simplifier.mk_simplifier ctx "simplify" in
         let solver_eqs = Z3.Simplifier.mk_simplifier ctx "solve-eqs" in

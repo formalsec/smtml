@@ -27,6 +27,9 @@ module Smtlib : sig
   (** [from_file file] parses an SMT-LIB compliant script from the given [file].
   *)
   val from_file : Fpath.t -> Ast.script
+
+  (** [from_str s] parses an SMT-LIB compliant script from the given string [s].*)
+  val from_string : string -> Ast.script
 end
 
 (** {1 Generic Parsing} *)

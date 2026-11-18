@@ -184,7 +184,6 @@ module Set = struct
     Hashtbl.fold (fun k () acc -> k :: acc) tbl []
 end
 
-
 let ptr base offset = make (Ptr { base = Bitvector.of_int32 base; offset })
 
 let loc l = make (Loc l)
@@ -333,7 +332,6 @@ let rec cvtop theory op hte =
     hte
   | _ -> raw_cvtop theory op hte
 
-
 let[@inline] raw_extract (hte : t) ~(high : int) ~(low : int) : t =
   make (Extract (hte, high, low))
 
@@ -351,7 +349,6 @@ let extract (hte : t) ~(high : int) ~(low : int) : t =
   | Concat (e, _), 8, 4 when Ty.size (ty e) = 4 -> e
   | _ ->
     if high - low = Ty.size (ty hte) then hte else raw_extract hte ~high ~low
-
 
 let raw_concat (msb : t) (lsb : t) : t = make (Concat (msb, lsb)) [@@inline]
 

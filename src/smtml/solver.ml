@@ -4,6 +4,12 @@
 
 include Solver_intf
 
+let slice_algorithm = ref false
+
+let unsat_cache = ref false
+
+let unsat_plus = ref false
+
 let ( let+ ) o f = Option.map f o
 
 module Base (M : Mappings_intf.S) = struct
@@ -145,11 +151,15 @@ module Cached (Mappings_ : Mappings.S) = struct
       ; mutable top : Expr.Set.t
       ; stack : Expr.Set.t Stack.t
       ; mutable last_check : Expr.Set.t option
+      ; mutable sliced : int * int * float
+      ; mutable unsat : int * int * float * float
       }
 
     module Cache = Cache.Strong
 
     let cache = Cache.create 256
+
+    let unsat = Cache.create 32
 
     let cache_hits () = Cache.hits cache
 
@@ -162,10 +172,18 @@ module Cached (Mappings_ : Mappings.S) = struct
       ; top = Expr.Set.empty
       ; stack = Stack.create ()
       ; last_check = None
+      ; sliced = (0, 0, 0.0)
+      ; unsat = (0, 0, 0.0, 0.0)
       }
 
-    let clone ({ solver; top; stack; last_check } : t) : t =
-      { solver = clone solver; top; stack = Stack.copy stack; last_check }
+    let clone ({ solver; top; stack; last_check; sliced; unsat } : t) : t =
+      { solver = clone solver
+      ; top
+      ; stack = Stack.copy stack
+      ; last_check
+      ; sliced
+      ; unsat
+      }
 
     let push ({ top; stack; solver; _ } : t) : unit =
       Mappings.Solver.push solver;
@@ -195,7 +213,26 @@ module Cached (Mappings_ : Mappings.S) = struct
 
     let get_assertions (s : t) : Expr.t list = Expr.Set.to_list s.top [@@inline]
 
-    let get_statistics (s : t) : Statistics.t = get_statistics s.solver
+    let get_statistics (s : t) : Statistics.t =
+      let stats = get_statistics s.solver in
+      let cache_hits = Cache.hits cache in
+      let cache_misses = Cache.misses cache in
+      let unsat_hits = Cache.hits unsat in
+      let unsat_misses = Cache.misses unsat in
+      let slice_count, slice_factor, slice_ts = s.sliced in
+      let unsat_cache, unsat_plus, unsat_cache_ts, unsat_plus_ts = s.unsat in
+      stats
+      |> Statistics.Map.add "cache misses" (`Int cache_misses)
+      |> Statistics.Map.add "cache hits" (`Int cache_hits)
+      |> Statistics.Map.add "slice count" (`Int slice_count)
+      |> Statistics.Map.add "slice factor" (`Int slice_factor)
+      |> Statistics.Map.add "slice ts" (`Float slice_ts)
+      |> Statistics.Map.add "unsat caches" (`Int unsat_cache)
+      |> Statistics.Map.add "unsat hits" (`Int unsat_hits)
+      |> Statistics.Map.add "unsat misses" (`Int unsat_misses)
+      |> Statistics.Map.add "unsat plus" (`Int unsat_plus)
+      |> Statistics.Map.add "unsat cache ts" (`Float unsat_cache_ts)
+      |> Statistics.Map.add "unsat plus ts" (`Float unsat_plus_ts)
 
     let get_sat_model ?symbols s set =
       let assert_ = Expr.Set.union set s.top in
@@ -209,15 +246,78 @@ module Cached (Mappings_ : Mappings.S) = struct
       | `Sat -> model ?symbols s.solver
       | `Unsat | `Unknown -> None
 
-    let check_set s es =
-      let assert_ = Expr.Set.union es s.top in
-      s.last_check <- Some assert_;
-      match Cache.find_opt cache assert_ with
+    let rec break_conjunctions (e : Expr.t) : Expr.t list =
+      match Expr.view e with
+      | Binop (_, And, e1, e2) -> break_conjunctions e1 @ break_conjunctions e2
+      | Naryop (_, Logand, es) -> List.concat_map break_conjunctions es
+      | _ -> [ e ]
+
+    let has_unsat_plus s es =
+      if !unsat_plus then (
+        let start_ts = Unix.gettimeofday () in
+        let cores = Cache.to_seq_keys unsat in
+        let unsat_caches, unsat_plus, unsat_cache_ts, unsat_plus_ts = s.unsat in
+        if Seq.exists (fun core -> Expr.Set.subset core es) cores then (
+          let end_ts = Unix.gettimeofday () -. start_ts in
+          let unsat_plus' = unsat_plus + 1 in
+          let unsat_plus_ts' = unsat_plus_ts +. end_ts in
+          s.unsat <- (unsat_caches, unsat_plus', unsat_cache_ts, unsat_plus_ts');
+          true )
+        else
+          let end_ts = Unix.gettimeofday () -. start_ts in
+          let unsat_plus_ts' = unsat_plus_ts +. end_ts in
+          s.unsat <- (unsat_caches, unsat_plus, unsat_cache_ts, unsat_plus_ts');
+          false )
+      else false
+
+    let has_unsat_core s es =
+      if !unsat_cache then
+        if Option.is_some (Cache.find_opt unsat es) then true
+        else has_unsat_plus s es
+      else false
+
+    let cache_unsat_core s res =
+      match (!unsat_cache, res) with
+      | true, `Unsat ->
+        let start_ts = Unix.gettimeofday () in
+        let unsat_caches, unsat_plus, unsat_cache_ts, unsat_plus_ts = s.unsat in
+        let core = Mappings.Solver.unsat_core s.solver in
+        Option.iter (fun c -> Cache.add unsat c `Unsat) core;
+        let end_ts = Unix.gettimeofday () -. start_ts in
+        let unsat_cache_ts' = unsat_cache_ts +. end_ts in
+        s.unsat <- (unsat_caches + 1, unsat_plus, unsat_cache_ts', unsat_plus_ts)
+      | _ -> ()
+
+    let slice_formula s es =
+      let start_ts = Unix.gettimeofday () in
+      let slices = Slicing.slice es in
+      let end_ts = Unix.gettimeofday () -. start_ts in
+      let count, factor, ts = s.sliced in
+      if List.length slices = 1 then s.sliced <- (count, factor, ts +. end_ts)
+      else s.sliced <- (count + 1, factor + List.length slices, ts +. end_ts);
+      slices
+
+    let rec check_set_rec ?(sliced = false) s es =
+      let check_sliced = check_set_rec ~sliced:true in
+      let break_f e k = Expr.Set.(union (of_list (break_conjunctions e)) k) in
+      let check_f k e = match k with `Sat -> check_sliced s e | _ -> k in
+      let es' = if sliced then es else Expr.Set.(fold break_f es empty) in
+      s.last_check <- Some es';
+      match Cache.find_opt cache es' with
       | Some res -> res
+      | None when (not sliced) && has_unsat_core s es' ->
+        Cache.add cache es' `Unsat;
+        `Unsat
+      | None when (not sliced) && !slice_algorithm ->
+        let slices = slice_formula s es in
+        List.fold_left check_f `Sat slices
       | None ->
-        let result = check_set s.solver assert_ in
-        Cache.add cache assert_ result;
+        let result = check_set s.solver es' in
+        cache_unsat_core s result;
+        Cache.add cache es' result;
         result
+
+    let check_set s es = check_set_rec s (Expr.Set.union es s.top)
 
     let check (s : t) (es : Expr.t list) = check_set s (Expr.Set.of_list es)
 

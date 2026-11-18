@@ -976,6 +976,16 @@ module Make (M_with_make : M_with_make) : S_with_fresh = struct
         | None ->
           Fmt.failwith "model: Trying to fetch model berfore check-sat call"
 
+      let unsat_core (s : solver) =
+        match M.Solver.unsat_core s.solver with
+        | None -> None
+        | Some formula ->
+          let filter_f = function Ast.Assert e -> Some e | _ -> None in
+          let stmts = Parse.Smtlib.from_string formula in
+          let simpl = Rewrite.rewrite stmts ~no_simpls:true in
+          let assertions = List.filter_map filter_f simpl in
+          Some (Expr.Set.of_list assertions)
+
       let add_simplifier s =
         { s with solver = M.Solver.add_simplifier s.solver }
 

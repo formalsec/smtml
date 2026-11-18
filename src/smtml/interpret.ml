@@ -12,7 +12,10 @@ module Make (Solver : Solver_intf.S) = struct
   type exec_state = solver state
 
   let init_state stmts expected_status ~timeout =
-    let params = Params.(default () $ (Model, true) $ (Timeout, timeout)) in
+    let params =
+      Params.(
+        default () $ (Model, true) $ (Timeout, timeout) $ (Unsat_core, true) )
+    in
     let solver = Solver.create ~params () in
     Solver.push solver;
     { stmts; smap = Hashtbl.create 16; solver; expected_status }

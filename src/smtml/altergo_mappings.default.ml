@@ -219,6 +219,8 @@ module M = struct
 
       let model (s : solver) : model option = s.model
 
+      let unsat_core _ = assert false
+
       let add_simplifier s = s
 
       let interrupt _ =

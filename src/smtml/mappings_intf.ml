@@ -787,6 +787,10 @@ module type M = sig
         exists. *)
     val model : solver -> model option
 
+    (** [unsat core solver] retrieves the unsat core from the solver [solver],
+        if the formula is unsatisfiable *)
+    val unsat_core : solver -> string option
+
     (** [add_simplifier solver] adds a simplifier to the solver [solver]. *)
     val add_simplifier : solver -> solver
 
@@ -953,6 +957,10 @@ module type S = sig
     (** [model solver] retrieves the model from the solver [solver], if one
         exists. *)
     val model : solver -> model option
+
+    (** [unsat core solver] retrieves the unsat core from the solver [solver],
+        if the formula is unsatisfiable *)
+    val unsat_core : solver -> Expr.Set.t option
 
     (** [interrupt solver] interrupts the current solver operation. *)
     val interrupt : solver -> unit
